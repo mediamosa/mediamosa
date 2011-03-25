@@ -1,0 +1,121 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for delete multiple assets simultaneously.
+  */
+class MediaMosaAssetMultipleDeleteTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - delete multiple assets',
+      'description' => 'Testing delete multiple assets simultaneously related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing delete multiple assets simultaneously, see: ticket 497.
+  function testAssetMultipleDelete() {
+
+    //
+    // Delete multiple assets.
+    // [post] asset/delete?asset_id[].
+    //
+
+    // Create assets.
+    $a_asset_ids = array();
+    for ($i = 0; $i < 3; $i++) {
+      $a_asset_ids[] = $this->createAsset();
+    }
+
+    // Delete multiple assets.
+    $response = $this->deleteAssetMultiple($a_asset_ids);
+
+    // Check the result.
+    $a_assets = mediamosa_lib::responsexml2array($response['xml']);
+    $aids = array();
+    foreach ($a_assets['items']['item'] as $asset) {
+      // Collect the data for the next test.
+      $aids[] = $asset['asset_id'];
+      // Test.
+      $this->assertTrue(
+        in_array($asset['asset_id'], $a_asset_ids),
+        t("Asset was deleted.")
+      );
+    }
+    foreach ($a_asset_ids as $asset_id) {
+      $this->assertTrue(
+        in_array($asset_id, $aids),
+        t("Asset was deleted.")
+      );
+    }
+
+    // Check the result.
+    foreach ($a_asset_ids as $asset_id) {
+      $a_asset = $this->getAsset($asset_id, array(), array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+    }
+
+    //
+    // Delete multiple assets with changed ownership.
+    // [post] asset/delete?asset_id[].
+    //
+
+    // Set up.
+    $i_key = 0;
+
+    // Create assets.
+    $a_asset_ids = array();
+    for ($i = 0; $i < 3; $i++) {
+      $a_asset_ids[] = $this->createAsset();
+    }
+
+    // Change the owner for an asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::OWNER_ID => 'John Doe',
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'true',
+    );
+    $response = $this->updateAsset($a_asset_ids[$i_key], $a_parameters);
+
+    // Delete multiple assets.
+    $response = $this->deleteAssetMultiple($a_asset_ids);
+
+    // Check the result.
+    foreach ($a_asset_ids as $key => $asset_id) {
+      if ($key == $i_key) {
+        $a_asset = $this->getAsset($asset_id);
+      }
+      else {
+        $a_asset = $this->getAsset($asset_id, array(), array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+      }
+    }
+  }
+}

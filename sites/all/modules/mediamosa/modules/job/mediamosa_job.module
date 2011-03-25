@@ -1,0 +1,540 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Jobs module.
+ */
+
+/**
+ * Trigger the server REST CRONs based on the server settings.
+ */
+function mediamosa_job_cron() {
+
+  try {
+    // If we are in simpletest, this cron will generate problems because its
+    // triggered during install and we are still not finished.
+    if (mediamosa::in_simpletest_sandbox()) {
+      return;
+    }
+
+    $start = time();
+    mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
+
+    // Trigger process servers.
+    mediamosa_server::trigger();
+
+    // Trigger job scheduler.
+    mediamosa_job_scheduler::trigger();
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_job_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_job_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  $rest_calls['mediafile/$mediafile_id/analyse'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_analyse_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['job/$job_id/progress'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_set_upload_progress',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['job/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['job/$job_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_cancel',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_user_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_mediafile_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['job/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['video/transcode/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/transcode/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['video/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_transcode',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_transcode',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_retranscode',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+  );
+
+  $rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_still_for_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Alias.
+  $rest_calls['video/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST] = $rest_calls['mediafile/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls['video/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
+
+  $rest_calls['server/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_jobserver_job_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['server/jobstart'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_jobserver_job_start',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['server/$job_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_jobserver_job_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['cron/jobscheduler'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_jobscheduler',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_scheduler',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  $rest_calls['cron/jobserver'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_jobserver',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_job_mediamosa_register_rest_call_doc() {
+
+  $rest_calls = array();
+
+  $rest_calls['mediafile/$mediafile_id/analyse'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Analyse a mediafile',
+    mediamosa_rest_call::DESCRIPTION => 'Mediafiles have all sorts of technical metadata such as filesize, mimetype, video container. This is determined by the analyse process in MediaMosa, which is automatically started on a file after upload or after it is generated by a transcode. With this rest call it is possible to reanalyse an existing mediafile. This may be usefull in cases where the underlying analyse tools (for example ffmpeg, file) are updated.
+
+The response returns a job_id. The job_id can be used to obtain information about the status of the job, or its detailed results. When the job is finished, the mediafile metadata is updated. If the file is the original file of an asset, the duration of the video (in case of a video or audio) and mimetype is updated in the asset information.
+
+The analyse process also determines if the file needs to be hinted. If the ega setting (see admin interface), defines that unhinted videofiles must be hinted, this proces is added after the analyse. Hinting is currently implemented for mp4, and flv (metadata).',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/analyse [POST] user_id=foo&hint=FALSE',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The unique job id of the analyse job. Can be used to obtain the status/result of a job.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>7599</job_id>
+</item>',
+  );
+
+  $rest_calls['job/$job_id/progress'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Change the status and other data of a job.',
+    mediamosa_rest_call::DESCRIPTION => 'Change the status and other data of a job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['job/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['job/$job_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a job by canceling it.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a job by canceling it.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'job/1/delete<br /><br />user_id = "testuser"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['user/$user_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a listing of the given user ID as owner of the jobs.',
+    mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given user ID as owner of the jobs.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/joblist',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>10</id>
+    <owner>admin</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>-1</priority>
+    <job_type>ANALYSE</job_type>
+    <started>07-04-2010 16:11</started>
+    <started_unix>1270649471</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
+  );
+
+  $rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the job listing of the given asset ID.',
+    mediamosa_rest_call::DESCRIPTION => nl2br(mediamosa_io::file_get_contents(drupal_get_path('module', 'mediamosa') . '/docs/joblist_cql.txt')),
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/joblist?user_id=usertest',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>9598</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>-1</priority>
+    <job_type>ANALYSE</job_type>
+    <started>17-06-2009 20:04</started>
+    <started_unix>1245261872</started_unix>
+    <error_description>FFmpeg version SVN-r15936, Copyright (c) 2000-2008 Fabrice Bellard, et al.
+  configuration: --enable-libx264 --enable-gpl --enable-pthreads --enable-libmp3lame --enable-libfaac --enable-libfaad --enable-libvorbis --enable-libtheora --enable-libgsm --enable-libxvid
+  libavutil     49.12. 0 / 49.12. 0
+  libavcodec    52. 3. 0 / 52. 3. 0
+  libavformat   52.23. 1 / 52.23. 1
+  libavdevice   52. 1. 0 / 52. 1. 0
+  built on Nov 26 2008 10:17:33, gcc: 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+
+Seems stream 0 codec frame rate differs from container frame rate: 1000.00 (1000/1) -&gt; 15.00 (15/1)
+Input #0, flv, from \'/mnt/naspcd1/vpx-acc/data/1/1zVCthfDab50KwdksbsqGJU7\':
+  Duration: 00:00:20.40, start: 0.000000, bitrate: 40 kb/s
+    Stream #0.0: Video: flv, yuv420p, 352x288, 15.00 tb(r)
+    Stream #0.1: Audio: mp3, 22050 Hz, stereo, s16, 40 kb/s
+At least one output file must be specified</error_description>
+  </item>
+  <item id="2">
+    <id>9594</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>UPLOAD</job_type>
+    <started>17-06-2009 20:01</started>
+    <started_unix>1245261706</started_unix>
+    <error_description></error_description>
+  </item>
+  <item id="3">
+    <id>9595</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>ANALYSE</job_type>
+    <started>17-06-2009 20:03</started>
+    <started_unix>1245261781</started_unix>
+    <error_description>FFmpeg version SVN-r15936, Copyright (c) 2000-2008 Fabrice Bellard, et al.
+  configuration: --enable-libx264 --enable-gpl --enable-pthreads --enable-libmp3lame --enable-libfaac --enable-libfaad --enable-libvorbis --enable-libtheora --enable-libgsm --enable-libxvid
+  libavutil     49.12. 0 / 49.12. 0
+  libavcodec    52. 3. 0 / 52. 3. 0
+  libavformat   52.23. 1 / 52.23. 1
+  libavdevice   52. 1. 0 / 52. 1. 0
+  built on Nov 26 2008 10:17:33, gcc: 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from \'/mnt/naspcd1/vpx-acc/data/m/mHFdpBJz9dTK911fRpI14MKK\':
+  Duration: 00:00:20.00, start: 0.000000, bitrate: 5863 kb/s
+    Stream #0.0(eng): Video: qtrle, rgb32, 640x480, 24.00 tb(r)
+    Stream #0.1(eng): Audio: pcm_s16be, 44100 Hz, stereo, s16, 1411 kb/s
+At least one output file must be specified</error_description>
+  </item>
+  <item id="4">
+    <id>9596</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>TRANSCODE</job_type>
+    <started>17-06-2009 20:03</started>
+    <started_unix>1245261811</started_unix>
+    <error_description></error_description>
+  </item>
+  <item id="5">
+    <id>9597</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>STILL</job_type>
+    <started>17-06-2009 20:05</started>
+    <started_unix>1245261932</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
+  );
+
+  $rest_calls['mediafile/$mediafile_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a listing of the given mediafile ID.',
+    mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given mediafile ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/joblist?user_id=admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>13</id>
+    <owner>admin</owner>
+    <status>WAITING</status>
+    <progress>0.000</progress>
+    <priority>0</priority>
+    <job_type>TRANSCODE</job_type>
+    <started></started>
+    <started_unix></started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
+  );
+
+  $rest_calls['job/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a listing of the given job ID.',
+    mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given job ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'job/2/status?user_id=testuser',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>2</id>
+    <owner>testuser</owner>
+    <status>FAILED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>ANALYSE</job_type>
+    <started>12-04-2010 00:37</started>
+    <started_unix>1271025432</started_unix>
+    <error_description>File not found (/mnt/vpx/data/C/ChKULGlBh0T65P1MnPKsJhNG)</error_description>
+  </item>
+</items>',
+  );
+
+  // Alias.
+  $rest_calls['video/transcode/$job_id/status'][mediamosa_rest_call::METHOD_GET] = $rest_calls['job/$job_id/status'][mediamosa_rest_call::METHOD_GET];
+
+  $rest_calls['mediafile/transcode/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a listing of the given job ID.',
+    mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given job ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/transcode/12/status?user_id=admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>12</id>
+    <owner>admin</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>STILL</job_type>
+    <started>07-04-2010 17:22</started>
+    <started_unix>1270653732</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
+  );
+
+  $rest_calls['video/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a transcode job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a transcode job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['mediafile/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a transcode job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a transcode job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/transcode',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>14</job_id>
+  </item>
+</items>',
+  );
+
+  $rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a retranscode job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a retranscode job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/retranscode',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>14</job_id>
+  </item>
+</items>',
+  );
+
+  $rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create still job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a process job for creating a still from a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/Cd2WoNCzHX14mfLwbxbPgowc/still/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('job_id' => 'ID of the created Still job.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>15839</job_id>
+  </item>
+</items>',
+  );
+
+  $rest_calls['mediafile/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create still job for mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create still job for mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/still/create<br />
+user_id=admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>15</job_id>
+  </item>
+</items>',
+  );
+
+  $rest_calls['server/joblist'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the listing server jobs.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing server jobs.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['server/jobstart'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Start a server job.',
+    mediamosa_rest_call::DESCRIPTION => 'Start a server job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['server/$job_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a server job.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a server job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['cron/jobscheduler'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Run the cron cycle for jobscheduler.',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for jobscheduler.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $rest_calls['cron/jobserver'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Run the cron cycle for jobserver.',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for jobserver.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  return $rest_calls;
+}

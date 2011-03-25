@@ -1,0 +1,238 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for play proxy acl.
+  */
+class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'PlayProxy - asset/mediafile play proxy acl tests',
+      'description' => 'Testing asset mediafile play proxy ACL related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile delete, see: ticket 69.
+  function testPlayProxyAcl() {
+
+    //
+    // Set up the environment
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+
+    // Touch a temporary mediafile.
+    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
+    $is_touched = mediamosa_io::touch($filename);
+    $this->assertTrue(
+      $is_touched,
+      t('Create an empty mediafile on SAN/NAS: @filename', array('@filename' => $filename))
+    );
+
+    //
+    // Test with the play_restriction_end is in the past.
+    // Expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('-1 week'));
+    $end_time = date('Y-m-d H:i:s', strtotime('-1 day'));
+
+    // Update the asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
+
+    // Check the function directly.
+    $start_time = time() - (7*24*60*60); // One week in the past.
+    $end_time = time() - (24*60*60); // One day in the past.
+    try {
+      $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
+      $this->assertTrue(
+        FALSE,
+        t("The check_time_restrictions() accepted the wrong value.")
+      );
+    }
+    catch (Exception $e) {
+      $this->assertTrue(
+        $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_END,
+        t("The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_END error.")
+      );
+    }
+
+    //
+    // Test with the play_restriction_start is in the future.
+    // Expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('+1 day'));
+    $end_time = date('Y-m-d H:i:s', strtotime('+1 week'));
+
+    // Update the asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
+
+    // Check the function directly.
+    $start_time = time() + (24*60*60); // One day in the future.
+    $end_time = time() + (7*24*60*60); // One week in the future.
+    try {
+      $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
+      $this->assertTrue(
+        FALSE,
+        t("The check_time_restrictions() accepted the wrong value.")
+      );
+    }
+    catch (Exception $e) {
+      $this->assertTrue(
+        $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_START,
+        t("The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_START error.")
+      );
+    }
+
+    //
+    // Test with correct data.
+    // play_restriction_start is in the past.
+    // play_restriction_end is in the future.
+    // Don't expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $end_time = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+    // Update the asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Check the function directly.
+    $start_time = time() - (24*60*60); // One day in the past.
+    $end_time = time() + (24*60*60); // One day in the future.
+    try {
+      $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
+      $this->assertTrue(
+        TRUE,
+        t("The check_time_restrictions() accepted the good values.")
+      );
+    }
+    catch (Exception $e) {
+      $this->assertTrue(
+        FALSE,
+        t("The check_time_restrictions() doesn't accepted the good values.")
+      );
+    }
+
+    //
+    // Delete temporary items.
+    //
+
+    // Delete the temporary mediafile.
+    if ($is_touched) {
+      $this->assertTrue(
+        mediamosa_io::unlink($filename),
+        t('Delete the mediafile on SAN/NAS: @filename', array('@filename' => $filename))
+      );
+    }
+  }
+}

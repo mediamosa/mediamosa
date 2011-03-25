@@ -1,0 +1,27 @@
+; $Id $
+
+name = "Contents browser"
+description = "Use this module to be able to browse through assets, collections, and REST calls definitions."
+package = "MediaMosa - Maintenance"
+version = "2.3.0"
+core = 7.x
+
+; Used files.
+files[] = mediamosa_maintenance_browse.module
+files[] = mediamosa_maintenance_browse_asset.inc
+files[] = mediamosa_maintenance_browse_collection.inc
+files[] = mediamosa_maintenance_browse_errorcode.inc
+files[] = mediamosa_maintenance_browse_history.inc
+files[] = mediamosa_maintenance_browse_restcalls.inc
+files[] = mediamosa_maintenance_browse_revision.inc
+files[] = mediamosa_maintenance_browse_simpletest.inc
+files[] = mediamosa_maintenance_browse.inc
+
+; Dependencies
+dependencies[] = mediamosa
+dependencies[] = mediamosa_app
+dependencies[] = mediamosa_asset
+dependencies[] = mediamosa_collection
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance
+dependencies[] = simpletest

@@ -1,0 +1,902 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for aut/ACL.
+  */
+class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'AUT - PlayProxy play access',
+      'description' => 'Testing the AUT module, previously known as ACL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  /**
+   * Wrapper for play proxy.
+   * use pp_call_* (!).
+   */
+  private function pp_call($line, $asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    $a_parameters[mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID] = $mediafile_id;
+    $a_parameters[mediamosa_rest_call_asset_mediafile_play::USER_ID] = $user_id;
+
+    if (isset($group_id)) {
+      $a_parameters[mediamosa_rest_call_asset_mediafile_play::GROUP_ID] = $group_id;
+    }
+
+    if (isset($domain)) {
+      $a_parameters[mediamosa_rest_call_asset_mediafile_play::DOMAIN] = $domain;
+    }
+
+    if (isset($realm)) {
+      $a_parameters[mediamosa_rest_call_asset_mediafile_play::REALM] = $realm;
+    }
+
+    return $this->play_proxy(__FILE__, $line, $asset_id, $a_parameters, $a_expected_result_ids);
+  }
+
+  /**
+   * Call for EGA 1.
+   */
+  private function pp_call_1($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    $old_ega = $this->toEga_1();
+    $a_trace = debug_backtrace();
+    $result = $this->pp_call($a_trace[0]['line'], $asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, $a_expected_result_ids);
+    $this->toEga($old_ega);
+    return $result;
+  }
+
+  /**
+   * same as pp_call_1, except expecting aut failure.
+   */
+  private function pp_call_1_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
+    return $this->pp_call_1($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+  /**
+   * Call for EGA 2.
+   */
+  private function pp_call_2($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    $old_ega = $this->toEga_2();
+    $a_trace = debug_backtrace();
+    $result = $this->pp_call($a_trace[0]['line'], $asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, $a_expected_result_ids);
+    $this->toEga($old_ega);
+    return $result;
+  }
+
+  /**
+   * same as pp_call_2, except expecting aut failure.
+   */
+  private function pp_call_2_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
+    return $this->pp_call_2($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+
+  /**
+   * Call for EGA 3.
+   */
+  private function pp_call_3($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    $old_ega = $this->toEga_3();
+    $a_trace = debug_backtrace();
+    $result =  $this->pp_call($a_trace[0]['line'], $asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, $a_expected_result_ids);
+    $this->toEga($old_ega);
+    return $result;
+  }
+
+  /**
+   * same as pp_call_3, except expecting aut failure.
+   */
+  private function pp_call_3_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
+    return $this->pp_call_3($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Remake of test #96
+  public function testAut() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    $this->toEga_1();
+
+    // Create a upload test file with asset and mediafile.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Make sure we can not create a master app as slave app. This will create
+    // problems in our ACL queries.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array($app_id_1),
+    );
+
+    // Only provide what we dont expect to be none-ok.
+    $a_expected_results = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array($app_id_1 => mediamosa_error::ERRORCODE_MASTERSLAVE_OWN_APP)
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters, 'May not add own app as slave', $a_expected_results);
+
+    // Step 1: test all user_id auts.
+
+    // test 1: default is a mediafile not protected, so playproxy ok.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'john_doe');
+
+    // test 2: owner ok.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // test 3: andere app mag helemaal niet
+    $result = $this->pp_call_2_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // test 4: deny access, execpt for user in own app.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => array('johndoe'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // unknown cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown');
+
+    // check on required.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, '', FALSE, FALSE, FALSE, array(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER));
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER] == 'johndoe', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Get the aut rules with is_app_admin.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id, array(mediamosa_rest_call_aut_mediafile_get_rights::USER_ID => 'anybody', mediamosa_rest_call_aut_mediafile_get_rights::IS_APP_ADMIN => 'true'));
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER] == 'johndoe', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // unknown can play again.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
+
+    // Set as private.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => 'true',
+    );
+
+    // Set private on asset.
+    $this->toEga_1();
+    $a_response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // Set private off, unapp on.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => 'false',
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'true',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
+    );
+
+    // Set private off, unappropriate on asset.
+    $this->toEga_1();
+    $a_response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Owner cant play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+
+    // johndoe cant play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', FALSE, FALSE, FALSE, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+
+    // Set private off, unapp off.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => 'false',
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'false',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
+    );
+
+    // Set private off, unappropriate on asset.
+    $this->toEga_1();
+    $a_response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // unknown can play again.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
+
+
+    // Step 2: Test aut_group.
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP => array('randgroup'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, 'mygroup');
+
+    // johndoe cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe');
+
+    // johndoe in randgroup can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', 'randgroup');
+
+    // unknown in empty group cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown', '');
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP] == 'randgroup', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // unknown can play again.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
+
+    // other app cant play.
+    $result = $this->pp_call_2_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+
+    // Step 3: Test aut_app.
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array($app_id_2),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // unknown can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown', 'randgroup');
+
+    // other app cant.
+    $result = $this->pp_call_3_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // new app can.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP] == $app_id_2, 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // unknown can play again.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
+
+    // other app cant play.
+    $result = $this->pp_call_2_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // step 4: test aut_app/aut_user.
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array($app_id_2),
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'johndoe',
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // unknown cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown');
+
+    // other app cant.
+    $result = $this->pp_call_3_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // new app can.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER] == 'johndoe', 'Check if rights where set.');
+    $this->assertTrue($a_xml['items']['item'][1][mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP] == $app_id_2, 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 2, '2 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // johndoe can play again, not matter the domain.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // johndoe can play again, not matter the domain.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'madcap.nl');
+
+    // other app cant play.
+    $result = $this->pp_call_2_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Step 5: Test aut_domain.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array('surfnet.nl'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe');
+
+    // Johndoe can play from surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // Johndoe can play from flex.surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'flex.surfnet.nl');
+
+    // Johndoe cant play from madcap.nl.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, 'madcap.nl');
+
+    // Johndoe cant play from net.nl.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, 'net.nl');
+
+    // All can play from foo.surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown', NULL, 'foo.surfnet.nl');
+
+    // Other app cant play from surfnet.nl.
+    $result = $this->pp_call_3_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, NULL, 'surfnet.nl');
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN] == 'surfnet.nl', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play from any realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@surfnet.nl');
+
+    // Johndoe can play from any realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.surfnet.nl');
+
+    // Step 6: Test aut_realm.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => array('@surfnet.nl'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe');
+
+    // Unknown can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown', NULL, NULL, 'unknown@surfnet.nl');
+
+    // Johndoe can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@surfnet.nl');
+
+    // Johndoe can play from sub-realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.surfnet.nl');
+
+    // Johndoe cant play from realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@smurfnet.nl');
+
+    // Johndoe cant play from sub-realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.smurfnet.nl');
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM] == '@surfnet.nl', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@surfnet.nl');
+
+    // Johndoe can play from sub-realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.surfnet.nl');
+
+    // Johndoe can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@smurfnet.nl');
+
+    // Johndoe can play from sub-realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.smurfnet.nl');
+
+    // Step 7: more aut_realm.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => array('jan@surfnet.nl'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe');
+
+    // Johndoe can play with right realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'jan@surfnet.nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@surfnet.nl');
+
+    // Unknown cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown', NULL, NULL, 'unknown@surfnet.nl');
+
+    // Johndoe cant play with right sub-realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'jan@flex.surfnet.nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, '@surfnet.nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'surfnet.nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, '.nl');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, '');
+
+    // Johndoe cant play with wrong realm.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.surfnet.nl');
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM] == 'jan@surfnet.nl', 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'surfnet.nl');
+
+    // Johndoe can play from realm.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'flex.surfnet.nl');
+
+    // Create Aut group.
+    $this->toEga_1();
+    $this->createAutGroup('HO.group', mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN);
+
+    // Add hostname.
+    $this->createAutHostname('HO.group', array('surfnet.nl'));
+
+    // Step 7: aut_realm and aut_domain.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array('HO.group'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // Johndoe cant play with stoa.nl.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, 'stoa.nl');
+
+    // Johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'bicycle.surfnet.nl');
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array($app_id_2),
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array('surfnet.nl'),
+    );
+
+    // Check if aut isnt allowed.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe cant play.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe');
+
+    // Johndoe can play from surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // Johndoe can play from flex.surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'flex.surfnet.nl');
+
+    // Johndoe cant play from madcap.nl.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, 'madcap.nl');
+
+    // Johndoe can play from flex.surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown', NULL, 'foo.surfnet.nl');
+
+    // Owner cant play from other app.
+    $result = $this->pp_call_3_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, NULL, 'surfnet.nl');
+
+    // Owner cant play also from 2, must be same domain.
+    $result = $this->pp_call_2_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Owner can play from 2, same domain.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, NULL, 'surfnet.nl');
+
+    // Johndoe can play from 2, same domain.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // Unknown can play from 2, same domain.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, 'unknown', NULL, 'foo.surfnet.nl');
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => array('johndoe'),
+    );
+
+    // Add...
+    $this->toEga_1();
+    $a_response = $this->addMediafileAut($mediafile_id, $a_parameters);
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // Johndoe can play from surfnet.nl.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'johndoe',
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    );
+
+    // Set rights.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Get the aut rules.
+    $this->toEga_1();
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Check rights.
+    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER] == 'johndoe', 'Check if rights where set.');
+    $this->assertTrue($a_xml['items']['item'][1][mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP] == $app_id_2, 'Check if rights where set.');
+    $this->assertTrue(count($a_xml['items']['item']) == 2, '2 rights set');
+
+    // Owner can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
+
+    // Johndoe can play.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe');
+
+    // Unknown cant play with other domain.
+    $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown', NULL, 'surfnet.nl');
+
+    // Johndoe can play with other domain.
+    $result = $this->pp_call_1($asset_id, $mediafile_id, 'johndoe', NULL, 'surfnet.nl');
+
+    // Unknown can play with other app_id.
+    $result = $this->pp_call_2($asset_id, $mediafile_id, 'unknown', NULL, 'surfnet.nl');
+
+    // Delete rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id);
+
+    // Create a upload test file with asset and mediafile.
+    $this->toEga_1();
+    $a_upload_2 = $this->uploadTestFile();
+    $asset_id_2 = $a_upload_2['asset_id'];
+    $mediafile_id_2 = $a_upload_2['mediafile_id'];
+
+    // Create Aut group.
+    $this->toEga_1();
+    $this->createAutGroup('academia5.group', mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN);
+
+    // Add hostname.
+    $this->createAutHostname('academia5.group', array('surfnet.nl'));
+
+    // Create Aut group.
+    $this->toEga_2();
+    $this->createAutGroup('academia5.group', mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN);
+
+    // Add hostname.
+    $this->createAutHostname('academia5.group', array('xs4all.nl'));
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'academia5.group',
+    );
+
+    // Set rights.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id_2, $a_parameters);
+
+    // Unknown cant play with wrong domain.
+    $result = $this->pp_call_2_cant($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'foo.nl');
+
+    // Unknown cant play with wrong domain.
+    $result = $this->pp_call_2_cant($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'surfnet.nl');
+
+    // Unknown can play with domain.
+    $result = $this->pp_call_2($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'xs4all.nl');
+
+    // Unknown cant play with domain.
+    $result = $this->pp_call_1_cant($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'xs4all.nl');
+
+    // Create a upload test file with asset and mediafile.
+    $this->toEga_1();
+    $a_upload_3 = $this->uploadTestFile();
+    $asset_id_3 = $a_upload_3['asset_id'];
+    $mediafile_id_3 = $a_upload_3['mediafile_id'];
+
+    // Create Aut group.
+    $this->toEga_1();
+    $this->createAutGroup('@ACADEMIA.group', mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM);
+
+    // Add hostname.
+    $this->createAutHostname('@ACADEMIA.group', array('@xs4all.nl', '@madcap.nl'));
+
+    // Create Aut group.
+    $this->toEga_2();
+    $this->createAutGroup('@ACADEMIA.group', mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM);
+
+    // Add hostname.
+    $this->createAutHostname('@ACADEMIA.group', array('@xs4all.nl', '@uva.nl'));
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@ACADEMIA.group',
+    );
+
+    // Set rights.
+    $this->toEga_1();
+    $a_response = $this->setMediafileAut($mediafile_id_3, $a_parameters);
+
+    // Test master.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_REALM => '@madcap.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_1();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'TRUE', 'Got access');
+
+    // Test master.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_REALM => '@uva.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_1();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'FALSE', 'Failed access');
+
+
+    // Test with @madcap.nl.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@madcap.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_1();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'TRUE', 'Got access');
+
+    // Test with @uva.nl.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@uva.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_1();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'FALSE', 'Failed access');
+
+    // Test with @madcap.nl (app 2).
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@madcap.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_2();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'FALSE', 'Failed access');
+
+    // Test with @uva.nl.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@uva.nl',
+      mediamosa_rest_call_asset_get::USER_ID => 'unknown',
+    );
+
+    $this->toEga_2();
+    $a_asset = $this->getAsset($asset_id_3, $a_parameters);
+    $this->assertTrue($a_asset['granted'] == 'TRUE', 'Got access');
+
+
+    // Step 8: Collection tests.
+
+    // Create collection.
+    $this->toEga_1();
+    $coll_id = $this->createCollection();
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
+
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    );
+
+    // Set rights.
+    $this->toEga_1();
+    $a_response = $this->setCollectionAut($coll_id, $a_parameters);
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
+
+    // Add a asset to the new collection.
+    // Create a upload test file with asset and mediafile.
+    $upload_3 = $this->uploadTestFile();
+    $asset_id_3 = $upload_3['asset_id'];
+    $mediafile_id_3 = $upload_3['mediafile_id'];
+    $this->createCollectionAssetRelation($coll_id, array($asset_id_2));
+
+    // Do collection search again.
+    $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
+
+    // Now master slave it to app-1, collection now found.
+    $this->setMediafileAut($mediafile_id_3,  array('aut_app' => array($app_id_2)));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_3('', array());
+
+    // Remove rights.
+    $this->toEga_1();
+    $this->deleteCollectionAut($coll_id);
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_2('', array());
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_3('', array());
+  }
+}

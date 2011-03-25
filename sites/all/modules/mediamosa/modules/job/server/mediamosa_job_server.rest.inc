@@ -1,0 +1,314 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The job server module.
+  */
+
+
+/**
+ * URI: /server/joblist
+ * Method: GET
+ *
+ * Internal only.
+ *
+ * 1.x: vpx_jobserver_get_jobs_status
+ *
+ */
+class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $jobs = mediamosa_job_server::search();
+
+    foreach ($jobs as $job) {
+      $mediamosa->add_item($job);
+    }
+  }
+}
+
+/**
+ * URI: /server/jobstart
+ * Method: POST
+ *
+ * Internal only.
+ *
+ * 1.x: vpx_jobserver_add_job
+ *
+ */
+class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const JOB_ID = 'job_id';
+  const JOB_TYPE = 'job_type';
+  const MEDIAFILE_SRC = 'mediafile_src';
+  const TOOL = 'tool';
+  const FILE_EXTENSION = 'file_extension';
+  const COMMAND = 'command';
+  const FRAMETIME = 'frametime';
+  const SIZE = 'size';
+  const H_PADDING = 'h_padding';
+  const V_PADDING = 'v_padding';
+  const TAG = 'tag';
+  const BLACKSTILL_CHECK = 'blackstill_check';
+  const STILL_TYPE = 'still_type';
+  const STILL_PER_MEDIAFILE = 'still_per_mediafile';
+  const STILL_EVERY_SECOND = 'still_every_second';
+  const START_FRAME = 'start_frame';
+  const END_FRAME = 'end_frame';
+  const VIDEO_DURATION= 'video_duration';
+  const FPS = 'fps';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::JOB_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'The job ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::JOB_TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
+          self::VAR_DESCRIPTION => 'The job type.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::MEDIAFILE_SRC => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The mediafile destination filename.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::TOOL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Tool used for transcode, used with transcode job.',
+        ),
+        self::FILE_EXTENSION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_DESCRIPTION => 'file extension of the file, used with transcode job.',
+        ),
+        self::COMMAND => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COMMAND,
+          self::VAR_DESCRIPTION => 'Command used with transcode, used with transcode job.',
+        ),
+        self::FRAMETIME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still frametime.',
+        ),
+        self::SIZE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Size of the still.',
+        ),
+        self::H_PADDING => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still horizontal padding.',
+        ),
+        self::V_PADDING => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still vertical padding.',
+        ),
+        self::TAG => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Still tag.',
+        ),
+        self::BLACKSTILL_CHECK => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Check if result end with a empty still (black).',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::STILL_TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+        ),
+        self::STILL_PER_MEDIAFILE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+        ),
+        self::STILL_EVERY_SECOND => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Stills every second.',
+        ),
+        self::START_FRAME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still start frame.',
+        ),
+        self::END_FRAME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still end frame.',
+        ),
+        self::VIDEO_DURATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Video duration.',
+        ),
+        self::FPS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Frame per second.',
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $job_id = $this->get_param_value(self::JOB_ID);
+    $job_type = $this->get_param_value(self::JOB_TYPE);
+    $mediafile_id_src = $this->get_param_value(self::MEDIAFILE_SRC);
+
+    // Webservice must be enabled.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_JOBS, $a_app_ids);
+
+    // Based on type, call job creation.
+    switch ($job_type) {
+      case mediamosa_job_server_db::JOB_TYPE_ANALYSE:
+        mediamosa_job_server::create_job_analyse($job_id, $mediafile_id_src);
+        break;
+
+      case mediamosa_job_server_db::JOB_TYPE_STILL:
+        $a_still_parameters = array(
+          'still_type' => $this->get_param_value(self::STILL_TYPE),
+          'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
+          'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
+          'start_frame' => $this->get_param_value(self::START_FRAME),
+          'end_frame' => $this->get_param_value(self::END_FRAME),
+          'tag' => $this->get_param_value(self::TAG),
+          'video_duration' => $this->get_param_value(self::VIDEO_DURATION),
+          'fps' => $this->get_param_value(self::FPS),
+        );
+
+        // Get params.
+        $frametime = $this->get_param_value(self::FRAMETIME);
+        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id));
+        $h_padding = $this->get_param_value(self::H_PADDING);
+        $v_padding = $this->get_param_value(self::V_PADDING);
+        $blackstill_check = $this->get_param_value(self::BLACKSTILL_CHECK);
+
+        mediamosa_job_server::create_job_still($job_id, $mediafile_id_src, $frametime, $size, $h_padding, $v_padding, $blackstill_check, $a_still_parameters);
+        break;
+
+      case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
+        $tool = $this->get_param_value(self::TOOL);
+        $file_extension = $this->get_param_value(self::FILE_EXTENSION);
+        $command = $this->get_param_value(self::COMMAND);
+
+        mediamosa_job_server::create_job_transcode($job_id, $mediafile_id_src, $tool, $file_extension, $command);
+        break;
+
+      default:
+        // Create job.
+        mediamosa_job_server::create_job($job_id, $job_type, $mediafile_id_src);
+        break;
+    }
+
+    // Set ok.
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /server/$job_id/delete
+ * Method: POST
+ *
+ * Internal only.
+ *
+ * 1.x: vpx_jobserver_remove_job_on_server
+ *
+ */
+class mediamosa_rest_call_jobserver_job_delete extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const JOB_ID = 'job_id';
+  const KILLJOB = 'killjob';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::JOB_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'The job ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::KILLJOB => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'The job ID.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $job_id = $this->get_param_value(self::JOB_ID);
+    $killjob = $this->get_param_value(self::KILLJOB);
+
+    mediamosa_job_server::delete_job($job_id, $killjob);
+
+  }
+}

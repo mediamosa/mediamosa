@@ -1,0 +1,266 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * FTP Batch.
+  */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_ftp_batch_mediamosa_register_rest_call() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_assets_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // internals
+  $a_rest_calls['ftp_batch/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id/assets/add'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_assets_add',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_ftp_batch_mediamosa_register_rest_call_doc() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the listing of the FTP batches.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch [GET]',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <batch_id>1</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/transcoding_7-2.vuf</vuf>
+    <started>2009-05-20 11:59:21</started>
+    <finished>2009-05-20 11:59:23</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="2">
+    <batch_id>17</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-06 12:14:29</started>
+    <finished>2009-10-06 12:14:30</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="3">
+    <batch_id>35</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>//mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-12 16:38:32</started>
+    <finished>2009-10-12 16:38:33</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="4">
+    <batch_id>36</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-12 16:59:54</started>
+    <finished>2009-10-12 16:59:56</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="5">
+    <batch_id>37</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-12 17:03:44</started>
+    <finished>2009-10-12 17:03:45</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="6">
+    <batch_id>38</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-12 17:04:34</started>
+    <finished>2009-10-12 17:04:37</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="7">
+    <batch_id>39</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test.vuf</vuf>
+    <started>2009-10-16 12:00:17</started>
+    <finished>2009-10-16 12:00:18</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="8">
+    <batch_id>40</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test2.vuf</vuf>
+    <started>2009-10-16 12:05:16</started>
+    <finished>2009-10-16 12:05:17</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="9">
+    <batch_id>41</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test2.vuf</vuf>
+    <started>2009-10-16 12:11:12</started>
+    <finished>2009-10-16 12:11:13</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+  <item id="10">
+    <batch_id>42</batch_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/test2.vuf</vuf>
+    <started>2009-10-16 12:12:38</started>
+    <finished>2009-10-16 12:12:38</finished>
+    <email_address>someone@somewhere.com</email_address>
+  </item>
+</items>',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve a FTP Batch.',
+    mediamosa_rest_call::DESCRIPTION => 'Gets detailed information about a batch.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch/23 [GET] ',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <batch_id>1</batch_id>
+    <app_id>1</app_id>
+    <owner_id>foofoofoo</owner_id>
+    <group_id></group_id>
+    <vuf>/mnt/naspcd1/vpx-acc/ftp/foofoofoo001/transcoding_7-2.vuf</vuf>
+    <started>2009-05-20 11:59:21</started>
+    <finished>2009-05-20 11:59:23</finished>
+    <email_address>someone@somewhere.com</email_address>
+    <email_contents>Handling video with reference ID misc_007_transcoding_2
+Handling video with reference ID misc_007_transcoding_2
+New asset ID: SzMEqYPIiIZZUnR7kGzVG5LX
+New mediafile ID: S7YrGbmIeZ4M36eTuLF03RfQ
+    </email_contents>
+  </item>
+</items>',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+  );
+
+  $a_rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the assets linked to the batch.',
+    mediamosa_rest_call::DESCRIPTION => 'Get a list of all assets touched by the given batch id. This means newly created asset_id\'s and modified asset_id\'s.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch/23/assets ',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>10KkoxGpjIbQIgp5LklENOcg</asset_id>
+  </item>
+  <item id="2">
+    <asset_id>1dH0tJyJDbdvEZpeoXt9JwuW</asset_id>
+  </item>
+  <item id="3">
+    <asset_id>1GFEV2FX4RTshl9PgJjvTqTD</asset_id>
+  </item>
+  <item id="4">
+    <asset_id>1grFyZeSGL0D1oCYAgeoFNNP</asset_id>
+  </item>
+  <item id="5">
+    <asset_id>1gUC7D0233sWihfHTNUU6YKu</asset_id>
+  </item>
+  <item id="6">
+    <asset_id>1O8jShEt16vaZkaCJwdX9UgL</asset_id>
+  </item>
+  <item id="7">
+    <asset_id>2BcRpKCfNfrSKlvfgsayCmAc</asset_id>
+  </item>
+  <item id="8">
+    <asset_id>2ImQhkKfH9KmsxeaWuKoKFMt</asset_id>
+  </item>
+  <item id="9">
+    <asset_id>303odyfYtC0pHmQ0iAzcVvDz</asset_id>
+  </item>
+  <item id="10">
+    <asset_id>3HHdyr0L0bwBRWLRhDsbaLLH</asset_id>
+  </item>
+</items>',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+  );
+
+  return $a_rest_calls;
+}

@@ -1,0 +1,22 @@
+; $Id $
+
+name = "Authorization"
+description = "The authorization module handles access to assets, media and other objects."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_aut.module
+files[] = mediamosa_aut.rest.inc
+files[] = mediamosa_aut.test
+files[] = mediamosa_aut.masterslave.test
+files[] = mediamosa_aut.ega.test
+files[] = mediamosa_aut.owner.test
+files[] = mediamosa_aut.rights.test
+files[] = mediamosa_aut.group_masterslave.test
+files[] = mediamosa_aut.group.test
+files[] = mediamosa_aut.mediafiles.test

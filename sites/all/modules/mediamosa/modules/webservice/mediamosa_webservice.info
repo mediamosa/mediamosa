@@ -1,0 +1,13 @@
+; $Id $
+
+name = "Webservice managment"
+description = "The webservice module enables parts of the mediamosa core on global or application level."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_webservice.module

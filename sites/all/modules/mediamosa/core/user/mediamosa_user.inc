@@ -1,0 +1,416 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * User management module.
+  */
+
+class mediamosa_user {
+
+  // ------------------------------------------------------------------ Functions static.
+  /**
+   * Get the user.
+   *
+   * @param string $user_id
+   *  The user to retrieve.
+   * @param integer $app_id
+   *  The application ID.
+   */
+  static public function get($user_id, $app_id, array $a_fields = NULL) {
+    return mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
+      ->fields('u', $a_fields)
+      ->condition(mediamosa_user_db::NAME, $user_id)
+      ->condition(mediamosa_user_db::APP_ID, $app_id)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Update the user.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   * @param integer $quotum
+   *  The allowed disk usage.
+   * @param string $group_id
+   *  Group ID.
+   */
+  static public function update($app_id, $user_id, $quotum, $group_id) {
+
+    $a_fields = array();
+
+    if (isset($quotum)) {
+      $a_fields[mediamosa_user_db::QUOTUM] = $quotum;
+    }
+
+    if (isset($group_id)) {
+      $a_fields[mediamosa_user_db::GROUP_ID] = $group_id;
+    }
+
+    if (!count($a_fields)) {
+      return;
+    }
+
+    // Add changed value.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+    mediamosa_db::db_update(mediamosa_user_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_user_db::NAME, $user_id)
+      ->condition(mediamosa_user_db::APP_ID, $app_id)
+      ->execute();
+  }
+
+  /**
+   * Delete the user.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   */
+  static public function delete($app_id, $user_id) {
+    mediamosa_db::db_query(
+      'DELETE FROM {#mediamosa_user} WHERE #name = :user_id AND #app_id = :app_id',
+      array(
+        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
+        '#name' => mediamosa_user_db::NAME,
+        ':user_id' => $user_id,
+        '#app_id' => mediamosa_user_db::APP_ID,
+        ':app_id' => $app_id
+      )
+    );
+  }
+
+  /**
+   * Create a user.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   * @param integer $quotum
+   *  The allowed disk usage.
+   * @param string $group_id
+   *  Group ID.
+   */
+  static public function create($app_id, $user_id, $quotum, $group_id) {
+
+    // Values to insert.
+    $a_fields = array(
+      mediamosa_user_db::GROUP_ID => $group_id,
+      mediamosa_user_db::APP_ID => $app_id,
+      mediamosa_user_db::NAME => $user_id,
+      mediamosa_user_db::QUOTUM => $quotum,
+    );
+
+    // Enrich with created/changed.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert.
+    return mediamosa_db::db_insert(mediamosa_user_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
+
+  /**
+   * Get quota of user.
+   *
+   * 1.x: _user_management_get_quota
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @param string $group_id
+   */
+  static public function get_quota($app_id, $user_id = '', $group_id = '') {
+
+    return mediamosa_db::db_query(
+      'SELECT app.#quota * 1024 AS app_quota_mb, g.#quotum AS group_quota_mb, u.#quotum AS owner_quota_mb FROM {#mediamosa_app} AS app
+       LEFT JOIN {#mediamosa_user_group} AS g ON g.#group_id = :group_id AND g.#app_id = app.#app_id
+       LEFT JOIN {#mediamosa_user} AS u ON u.#name = :user_id AND u.#app_id = app.#app_id
+       WHERE app.#app_id = :app_id',
+      array(
+        '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
+        '#mediamosa_user_group' => mediamosa_user_group_db::TABLE_NAME,
+        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
+        '#quota' => mediamosa_app_db::QUOTA,
+        '#quotum' => mediamosa_user_group_db::QUOTUM,
+        '#group_id' => mediamosa_user_group_db::ID,
+        ':group_id' => $group_id,
+        '#app_id' => mediamosa_app_db::APP_ID,
+        ':app_id' => $app_id,
+        '#name' => mediamosa_user_db::NAME,
+        ':user_id' => $user_id,
+      )
+    )->fetchAssoc();
+  }
+
+  /**
+   * Get the available diskspace of user/group.
+   *
+   * 1.x:_user_management_get_diskspace
+   *
+   * @param string $subject
+   * @param string $id
+   * @param integer $app_id
+   *
+   * @return array
+   */
+  function get_diskspace($subject, $id, $app_id) {
+    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $mbytes = mediamosa_db::db_query(
+      'SELECT SUM(mfmd.#val_int) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
+       JOIN {#mediamosa_asset_mediafile_metadata} AS mfmd ON mfmd.#mediafile_id = mf.#mediafile_id
+       WHERE mf.#subject_id = :id AND mf.#app_id = :app_id AND mfmd.#prop_id_filesize = :prop_id_filesize',
+      array(
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+        '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+        '#subject_id' => $subject . '_id',
+        '#prop_id_filesize' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+        ':id' => $id,
+        ':app_id' => $app_id,
+        ':prop_id_filesize' => $prop_id_filesize,
+      )
+    )->fetchField();
+
+    return array(
+      'diskspace_used_mb' => (int)round($mbytes),
+    );
+  }
+
+  /**
+   * Check if the user has enough quota.
+   *
+   * 1.x: _user_management_check_user_quota
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  The user ID / Owner ID.
+   * @param string $group_id
+   *  The group ID.
+   *
+   * @param bool $return_free
+   */
+  static public function check_user_quota($app_id, $user_id = '', $group_id = '', $return_free = FALSE) {
+    // Quota is reported in MB.
+    $a_quota = self::get_quota($app_id, $user_id, $group_id);
+
+    if (!empty($a_quota)) {
+      foreach (array('app' => $app_id, 'group' => $group_id, 'owner' => $user_id) as $subject => $var) {
+        if ($var != '' && !is_null($var)) {
+          // Get the diskspace used of subject.
+          $a_diskspace_used = self::get_diskspace($subject, $var, $app_id);
+
+          $a_quota[$subject . '_used_mb'] = $a_diskspace_used['diskspace_used_mb'];
+          $a_quota[$subject . '_free_mb'] = $a_quota[$subject . '_quota_mb'] - $a_diskspace_used['diskspace_used_mb'];
+
+          // Unlimited quota ?
+          if ($a_quota[$subject . '_quota_mb'] != 0) {
+            !isset($a_quota['quota_available_mb']) ? $a_quota['quota_available_mb'] = $a_quota[$subject . '_free_mb'] : $a_quota['quota_available_mb'] = min($a_quota['quota_available_mb'], $a_quota[$subject . '_free_mb']);
+          }
+        }
+      }
+    }
+
+    if (!isset($a_quota['quota_available_mb'])) {
+      $a_quota['quota_available_mb'] = 0;
+    }
+
+    if ($return_free) {
+      return (int)$a_quota['quota_available_mb'];
+    }
+
+    return ($a_quota['quota_available_mb'] >= 0);
+  }
+
+  /**
+   * Check if the user has enough quota and throw exception when failed.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  The user ID / Owner ID.
+   * @param string $group_id
+   *  The group ID.
+   */
+  static public function must_have_user_quota($app_id, $user_id = '', $group_id = '') {
+    if (!self::check_user_quota($app_id, $user_id, $group_id)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NOT_ENOUGH_FREE_QUOTA);
+    }
+  }
+
+  /**
+   * Collect and calculate users quota.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User / Owner ID.
+   */
+  static public function get_user_quota($app_id, $user_id) {
+
+    $total = mediamosa_db::db_query(
+      'SELECT COUNT(*) AS total FROM
+       (
+         (SELECT #name FROM {#mediamosa_user} WHERE #name = :user_id AND #app_id = :app_id)
+         UNION
+         (SELECT #owner_id FROM {#mediamosa_collection} WHERE #owner_id = :user_id AND #app_id = :app_id)
+         UNION
+         (SELECT #owner_id FROM {#mediamosa_asset} AS a WHERE #owner_id = :user_id AND #app_id = :app_id)
+         UNION
+         (SELECT #owner_id FROM {#mediamosa_asset_mediafile} WHERE #owner_id = :user_id AND #app_id = :app_id)
+       ) tmp',
+      array(
+        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
+        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#name' => mediamosa_user_db::NAME,
+        '#owner_id' => mediamosa_collection_db::OWNER_ID,
+        ':user_id' => $user_id,
+        '#app_id' => mediamosa_collection_db::APP_ID,
+        ':app_id' => $app_id,
+      )
+    )->fetchField();
+
+    // Removed: new users that havent created anything will not be able to see
+    // its quota.
+    if (!$total) {
+      throw new mediamosa_exception_error_userman_invalid_user(array('@user_id' => $user_id));
+    }
+
+    // Get the user.
+    $a_user = mediamosa_user::get($user_id, $app_id, array(mediamosa_user_db::GROUP_ID, mediamosa_user_db::CREATED, mediamosa_user_db::CHANGED));
+    if (!$a_user) {
+      $a_user = array(
+        'group_id' => '',
+        'created' => '',
+        'changed' => '',
+      );
+    }
+
+    // Get the quota.
+    $a_quota = mediamosa_user::get_quota($app_id, $user_id, $a_user[mediamosa_user_db::GROUP_ID]);
+
+    // owner is unclear: use user for output
+    $a_quota['user_quota_mb'] = (int)$a_quota['owner_quota_mb'];
+    $a_quota['group_quota_mb'] = (int)$a_quota['group_quota_mb']; // int so we have '0' as value when empty
+    unset($a_quota['owner_quota_mb']);
+
+    // Get free diskspace.
+    $diskspace_free = mediamosa_user::check_user_quota($app_id, $user_id, $a_user[mediamosa_user_db::GROUP_ID], TRUE);
+
+    // Collection diskspace used on group/user/app.
+    $a_diskspace_used = array(
+      'user' => mediamosa_user::get_diskspace('owner', $user_id, $app_id),
+      'group' => mediamosa_user::get_diskspace('group', $a_user[mediamosa_user_db::GROUP_ID], $app_id),
+      'app' => mediamosa_user::get_diskspace('app', $app_id, $app_id)
+    );
+
+    // Make one array.
+    return array_merge(
+      $a_quota,
+      array(
+        'app_diskspace_used_mb' => $a_diskspace_used['app']['diskspace_used_mb'],
+        'group_diskspace_used_mb' => $a_diskspace_used['group']['diskspace_used_mb'],
+        'user_diskspace_used_mb' => $a_diskspace_used['user']['diskspace_used_mb'],
+        'quota_available_mb' => $diskspace_free,
+        'user_over_quota' => ($diskspace_free < 0 ? 'true' : 'false')
+      ),
+      $a_user
+    );
+  }
+
+  /**
+   * Helper function for collecting data.
+   *
+   * 1.x: _user_management_fetch_items
+   *
+   * @param $is_users
+   *  TRUE for mediamosa_user or FALSE for mediamosa_user_group
+   * @param $app_id
+   *  Application ID.
+   * @param $offset
+   *  Offset in result set.
+   * @param $limit
+   *  Limit of items in result set.
+   * @param $group_id
+   *  The group ID (optional).
+   */
+  function get_all($is_users, $app_id, $offset, $limit, $group_id = NULL) {
+
+    // Do the query.
+    $result = mediamosa_db::db_query_range(
+      'SELECT SQL_CALC_FOUND_ROWS DISTINCT tmp.#select, g.#quotum, g.#created, g.#changed FROM
+        (
+          (SELECT DISTINCT #element FROM {#mediamosa_asset} WHERE #app_id = :app_id and #element IS NOT NULL)
+          UNION
+          (SELECT DISTINCT #element FROM {#mediamosa_asset_mediafile} WHERE #app_id = :app_id and #element IS NOT NULL)
+          UNION
+          (SELECT DISTINCT #element FROM {#mediamosa_collection} WHERE #app_id = :app_id and #element IS NOT NULL)
+          UNION
+          (SELECT DISTINCT #select2 FROM {#table} WHERE #app_id = :app_id)
+        ) AS tmp
+       LEFT JOIN {#table} AS g ON g.#column1 = tmp.#column2 AND g.app_id = :app_id
+       LEFT JOIN {#mediamosa_app} AS app ON app.#app_id = :app_id
+       #WHERE',
+      $offset,
+      $limit,
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
+        '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
+        '#select' => $is_users ? 'owner_id AS user_id, group_id' : 'group_id',
+        '#select2' => $is_users ? 'name AS owner_id' : 'group_id',
+        '#table' => $is_users ? mediamosa_user_db::TABLE_NAME : mediamosa_user_group_db::TABLE_NAME,
+        '#element' => $is_users ? 'owner_id' : 'group_id',
+        '#column1' => $is_users ? 'name' : 'group_id',
+        '#column2' => $is_users ? 'owner_id' : 'group_id',
+        '#app_id' => mediamosa_user_db::APP_ID,
+        '#quotum' => mediamosa_user_db::QUOTUM,
+        '#created' => mediamosa_user_db::CREATED,
+        '#changed' => mediamosa_user_db::CHANGED,
+        ':app_id' => $app_id,
+        '#where' => !is_null($group_id) ? strtr(' WHERE #group_id = :group_id', array('#group_id' => mediamosa_user_group_db::ID, ':group_id' => mediamosa_db::escape_string_quoted($group_id))) : ''
+      )
+    );
+
+    // Set found rows.
+    $result->found_rows = mediamosa_db::db_found_rows();
+
+    // Return the result.
+    return $result;
+  }
+}
+

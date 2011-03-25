@@ -1,0 +1,88 @@
+; $Id $
+
+name = "Asset"
+description = "The asset module contains all submodules for asset like mediafile, metadata, access layer etc."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_asset.module
+files[] = mediamosa_asset.rest.inc
+files[] = mediamosa_asset.test
+files[] = mediamosa_asset.cql.test
+files[] = mediamosa_asset.cql_asset_collection.test
+files[] = mediamosa_asset.cql_isprivate.test
+files[] = mediamosa_asset.cql_acl_context.test
+files[] = mediamosa_asset.function.test
+files[] = mediamosa_asset.search.test
+files[] = mediamosa_asset.delete.test
+files[] = mediamosa_asset.vpx_still_url.test
+files[] = mediamosa_asset.cql_appcoll.test
+files[] = mediamosa_asset.cql_mediafile_duration.test
+
+; Collection <-> Asset link table.
+files[] = collection/mediamosa_asset_collection.rest.inc
+
+; Media.
+files[] = mediafile/mediamosa_asset_mediafile.rest.inc
+files[] = mediafile/mediamosa_asset_mediafile.streaming.test
+files[] = mediafile/mediamosa_asset_mediafile.delete.test
+files[] = mediafile/mediamosa_asset_mediafile.function.test
+files[] = mediafile/mediamosa_asset_mediafile.download.test
+files[] = mediafile/mediamosa_asset_mediafile.create.test
+
+; Mediafile Metadata.
+files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc
+files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
+files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
+
+; Mediafile Play Proxy.
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.ticket_mechanisme.test
+
+; Mediafile Still.
+files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.inc
+files[] = mediafile/still/download/mediamosa_asset_mediafile_still.permanent_link.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.audio_file.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
+
+; Mediafile Still Download.
+files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc
+files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.test
+
+; Mediafile Still Upload.
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.rest.inc
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.test
+
+; Mediafile Upload.
+files[] = mediafile/upload/mediamosa_asset_mediafile_upload.rest.inc
+files[] = mediafile/upload/mediamosa_asset_mediafile_upload.test
+
+; Mediafile Download.
+files[] = mediafile/download/mediamosa_asset_mediafile_download.rest.inc
+files[] = mediafile/download/mediamosa_asset_mediafile_download.test
+
+; Metadata.
+files[] = metadata/mediamosa_asset_metadata.rest.inc
+
+; Metadata Property.
+files[] = metadata/property/mediamosa_asset_metadata_property.rest.inc
+files[] = metadata/property/mediamosa_asset_metadata_property.test
+
+; Metadata Property Group.
+files[] = metadata/property/group/mediamosa_asset_metadata_property_group.rest.inc
+
+; Supplement.
+files[] = supplement/mediamosa_asset_supplement.rest.inc
+files[] = supplement/mediamosa_asset_supplement.test
+files[] = supplement/mediamosa_asset_supplement_delete.test
+files[] = supplement/mediamosa_asset_supplement_add.test

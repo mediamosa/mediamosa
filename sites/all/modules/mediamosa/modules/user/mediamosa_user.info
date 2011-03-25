@@ -1,0 +1,23 @@
+; $Id $
+
+name = "User"
+description = "This module contains all MediaMosa User related functions."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+; because of class override for search.
+dependencies[] = mediamosa_asset
+; because of fav. REST code that re-uses class from collection.
+dependencies[] = mediamosa_collection
+
+; Used files.
+files[] = mediamosa_user.module
+files[] = mediamosa_user.rest.inc
+files[] = mediamosa_user.test
+files[] = mediamosa_user.quota.test
+files[] = group/mediamosa_user_group.rest.inc
+files[] = favorite/mediamosa_user_favorite.rest.inc
+files[] = favorite/mediamosa_user_favorite.test

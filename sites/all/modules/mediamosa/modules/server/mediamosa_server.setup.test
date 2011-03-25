@@ -1,0 +1,177 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Test if the server is setup as expected.
+  */
+
+
+ /**
+  * @file
+  * CQL test file.
+  */
+class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - server setup',
+      'description' => 'Server setup checks if job servers are setup correctly and other checks.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+  /**
+   * Test job server setup.
+   */
+  public function testSetup() {
+    // Get the server status list.
+    // get_status_enabled_job_processor also tests if all job servers return 200 and valid XML.
+    $server_statuses = mediamosa_server::get_status_enabled_job_processor();
+    $server_hosts = $server_ids = array();
+
+    foreach ($server_statuses as $server_status) {
+      $this->pass(strtr('Found job server, type: @type, host: @uri, mediamosa_installation_id: @server_id.',
+        array(
+          '@type' => $server_status['enabled_server']['server_type'],
+          '@uri' => $server_status['enabled_server']['server_uri'],
+          '@server_id' => $server_status['status']['server_id'],
+        )
+      ));
+
+      $this->assertFalse(empty($server_status), 'Found enabled server.');
+      $this->assertFalse(empty($server_status['status']['server_id']), 'Found server ID; ' . $server_status['status']['server_id']);
+
+      $server_hosts[$server_status['status']['host']] = $server_status['status']['server_id'];
+      $server_ids[$server_status['status']['server_id']] = $server_status['status']['server_id'];
+    }
+
+    // All servers must have own server_id.
+    $this->assertTrue(count($server_ids) == count($server_hosts), 'All enabled servers have different installation IDs. Make sure each server has own mediamosa_installation_id specified in settings.php.');
+
+    // Get all enabled servers.
+    $enabled_servers = mediamosa_server::get_enabled();
+
+    // Now trigger all enabled servers and compare versions.
+    foreach ($enabled_servers as $enabled_server) {
+      $response = NULL;
+      try {
+        $expecting_codes = array(601);
+
+        switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
+          case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+            $url_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])), TRUE);
+
+            $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url_split['host'] . $url_split['uri'] . '/version')));
+            $response = mediamosa_http::drupal_http_request($url_split['host'] . $url_split['uri'] . '/version', array('method' => 'GET'));
+            break;
+
+          case mediamosa_server_db::SERVER_TYPE_UPLOAD:
+
+            $server_url = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])));
+            $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $server_url)));
+
+            // We know it will fail, but we dont care, we just want to know the version.
+            $response = mediamosa_http::drupal_http_request($server_url, array('method' => 'GET'));
+            $expecting_codes = array(1002, 1601);
+            break;
+
+          case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
+          case mediamosa_server_db::SERVER_TYPE_STILL:
+          default:
+            break;
+        }
+      }
+      catch (Exception $e) {
+        $this->fail(t('Unable to execute version REST call on server @uri.', array('@uri' => $enabled_server[mediamosa_server_db::SERVER_URI])));
+        $this->var_export_fail($e->getMessage());
+        continue;
+      }
+
+      if (!isset($response)) {
+        continue;
+      }
+
+      $this->assertTrue($response->code == '200', t('Call to version REST returned a 200 result (header: @header)', array('@header' => var_export($response, TRUE))));
+
+      try {
+        $xml = new SimpleXMLElement($response->data);
+        $this->assertTrue(in_array($xml->header->request_result_id, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request_result_id)));
+
+        // Now compare versions.
+        $xml_ver = isset($xml->header->vpx_version) ? $xml->header->vpx_version : $xml->header->version;
+        $our_ver = mediamosa_version::MEDIAMOSA_VERSION;
+        $this->assertTrue(
+          $xml_ver == $our_ver,
+          t(
+            'Compare of server with name @name, uri @uri, returned version @xml_ver with our version @our_ver',
+            array(
+              '@name' => $enabled_server[mediamosa_server_db::SERVER_NAME],
+              '@uri' => $enabled_server[mediamosa_server_db::SERVER_URI],
+              '@xml_ver' => $xml_ver,
+              '@our_ver' => $our_ver
+            )
+          )
+        );
+      }
+      catch (Exception $e) {
+        $this->fail(t('Unable to parse returned XML on server name @name, @uri.', array('@name' => $enabled_server[mediamosa_server_db::SERVER_URI], '@uri' => $enabled_server[mediamosa_server_db::SERVER_NAME])));
+        $this->var_export_fail($response->data);
+        $this->var_export_fail($e->getMessage());
+        continue;
+      }
+    }
+
+    // Check if we have a default upload server.
+    $upload_server = mediamosa_server::get_random_upload();
+    $this->assertFalse(empty($upload_server), 'Found default enabled upload server.');
+
+    // Check if we have at least one download server.
+    $download_servers = mediamosa_server::get_enabled_download();
+
+    foreach ($download_servers as $download_server) {
+      $this->pass(strtr('Found download server, type: @type, host: @uri.',
+        array(
+          '@type' => $download_server[mediamosa_server_db::SERVER_TYPE],
+          '@uri' => $download_server[mediamosa_server_db::SERVER_URI],
+        )
+      ));
+    }
+
+    // Must have one.
+    $this->assertFalse(empty($download_server), 'Found at least one enabled download server.');
+  }
+}

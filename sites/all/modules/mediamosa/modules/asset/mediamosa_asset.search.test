@@ -1,0 +1,151 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for asset search empty assets.
+  */
+class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - search empty assets tests',
+      'description' => 'Testing asset search empty asset flags.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile delete, see: ticket 831.
+  function testAssetSearchEmpty() {
+
+    // Create 3 assets.
+    $asset_ids = array(
+      'asset_id_1' => $this->createAsset(),
+      'asset_id_2' => $this->createAsset(),
+      'asset_id_3' => $this->createAsset(),
+    );
+
+    // Create mediafile for the second.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'true',
+    );
+    $mediafile_id_2 = $this->createMediafile($asset_ids['asset_id_2'], $a_parameters);
+
+    //
+    // Start checking hide empty assets.
+    //
+
+    // Search assets with hide_empty_asset = FALSE.
+    //
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'false',
+    );
+    $a_assets = $this->searchAsset(10, $a_parameters);
+
+    // Check the result: we should give back all.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == count($asset_ids),
+      t('Response has the good amount of assets (@count).', array('@count' => count($asset_ids)))
+    );
+    foreach ($a_assets['items']['item'] as $asset) {
+      $this->assertTrue(
+        in_array($asset['asset_id'], $asset_ids),
+        t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
+      );
+    }
+
+    // Search assets with hide_empty_asset = TRUE.
+    //
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'true',
+    );
+    $a_assets = $this->searchAsset(10, $a_parameters);
+
+    // Check the result: we should give back all.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 1,
+      t('Response has the good amount of assets (1).')
+    );
+    foreach ($a_assets['items']['item'] as $asset) {
+      $this->assertTrue(
+        $asset['asset_id'] == $asset_ids['asset_id_2'],
+        t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
+      );
+    }
+
+    // Create mediafile for the first.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'true',
+    );
+    $mediafile_id_1 = $this->createMediafile($asset_ids['asset_id_1'], $a_parameters);
+
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'true',
+    );
+    $a_assets = $this->searchAsset(10, $a_parameters);
+
+    // Check the result: we should give back all.
+    unset($asset_ids['asset_id_3']);
+    $this->assertTrue(
+      count($a_assets['items']['item']) == count($asset_ids),
+      t('Response has the good amount of assets (@count).', array('@count' => count($asset_ids)))
+    );
+    foreach ($a_assets['items']['item'] as $asset) {
+      $this->assertTrue(
+        in_array($asset['asset_id'], $asset_ids),
+        t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
+      );
+    }
+
+    // Now check the search parameters.
+    $search_params = mediamosa_rest_call_asset_search::get_search_params();
+
+    // Do search on every item.
+    foreach ($search_params as $field => $type) {
+      $a_parameters = array();
+      switch ($type) {
+        case mediamosa_sdk::TYPE_SEARCH_DATETIME:
+          $a_parameters[$field] = '2010-01-01 00:00:00';
+          break;
+
+        case mediamosa_sdk::TYPE_SEARCH_INT:
+          $a_parameters[$field] = '1234';
+           break;
+
+        default:
+        case mediamosa_sdk::TYPE_SEARCH_STRING:
+          $a_parameters[$field] = 'foo';
+          break;
+      }
+      $a_assets = $this->searchAsset(10, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    }
+  }
+}

@@ -1,0 +1,138 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Installer for job table.
+ */
+
+require_once 'mediamosa_integrity_check_db.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_integrity_check_install() {
+  // Create table.
+  mediamosa::drupal_install_schema(mediamosa_integrity_check_db::TABLE_NAME);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_integrity_check_uninstall() {
+  // Drop variables.
+  variable_del('mediamosa_integrity_run_date_start', 'never');
+  variable_del('mediamosa_integrity_run_date_end', 'never');
+
+  // Drop table.
+  mediamosa::drupal_uninstall_schema(mediamosa_integrity_check_db::TABLE_NAME);
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_integrity_check_schema() {
+  $schema[mediamosa_integrity_check_db::TABLE_NAME] = array(
+    'description' => t('The integrity check table.'),
+    'fields' => array(
+      mediamosa_integrity_check_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'description' => t('Primary Key: Unique ID.'),
+      ),
+      mediamosa_integrity_check_db::OBJECT_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_integrity_check_db::OBJECT_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The object ID.'),
+      ),
+      mediamosa_integrity_check_db::TYPE => array(
+        'description' => t('The type of the integrity check problem.'),
+        'type' => "enum('" . implode("','", array(mediamosa_integrity_check_db::TYPE_ERROR, mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE, mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD, mediamosa_integrity_check_db::TYPE_MISSING_STILLFILE, mediamosa_integrity_check_db::TYPE_MISSING_STILLRECORD)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_integrity_check_db::TYPE_ERROR, mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE, mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD, mediamosa_integrity_check_db::TYPE_MISSING_STILLFILE, mediamosa_integrity_check_db::TYPE_MISSING_STILLRECORD)) . "')",
+      ),
+      mediamosa_integrity_check_db::APP_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => t('The application ID.'),
+      ),
+      mediamosa_integrity_check_db::OWNER_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_integrity_check_db::OWNER_ID_LENGTH,
+        'not null' => FALSE,
+        'description' => t('The owner ID.'),
+      ),
+      mediamosa_integrity_check_db::CREATED => array(
+        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE,
+        'description' => t('The date and time when integrity check was created.'),
+      ),
+      mediamosa_integrity_check_db::CHANGED => array(
+        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'default' => NULL,
+        'description' => t('The date and time when integrity was changed last.'),
+      ),
+      mediamosa_integrity_check_db::SIZE => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => t('The file size.'),
+      ),
+      mediamosa_integrity_check_db::MTIME => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => t('The file modify time.'),
+      ),
+      mediamosa_integrity_check_db::CTIME => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => t('The file change time.'),
+      ),
+      mediamosa_integrity_check_db::DETAILS => array(
+        'type' => 'varchar',
+        'length' => mediamosa_integrity_check_db::DETAILS_LENGTH,
+        'not null' => FALSE,
+        'description' => t('The details of the integrity check.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_integrity_check_db::ID),
+    'indexes' => array(
+      'idx_object_id' => array(mediamosa_integrity_check_db::OBJECT_ID),
+      'idx_app_id' => array(mediamosa_integrity_check_db::APP_ID),
+      'idx_owner_id' => array(mediamosa_integrity_check_db::OWNER_ID),
+      'idx_size' => array(mediamosa_integrity_check_db::SIZE),
+    ),
+  );
+
+  return $schema;
+}

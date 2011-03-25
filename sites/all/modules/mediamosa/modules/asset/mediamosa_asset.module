@@ -1,0 +1,1987 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The asset module.
+ */
+
+/*
+ * Implements hook_cron().
+ */
+function mediamosa_asset_cron() {
+  // We don't need garbage cleanup in simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    $start = time();
+    mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
+
+    $run_last = variable_get('mediamosa_asset_cron_last', NULL);
+
+    // may run?
+    if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
+      // For the next time...
+      variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
+
+      // Do garbage cleanup.
+      mediamosa_asset::do_garbage_cleanup();
+    }
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_asset_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_asset_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Asset search.
+  $rest_calls['asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    // Set default so we dont fail when we are called for vars.
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
+  );
+
+  // Collection asset search.
+  $rest_calls['collection/$coll_id/asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    // Set default so we dont fail when we are called for vars.
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
+  );
+
+  // Change owner ship/group on asset/mediafile/collections.
+  $rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_change_ownership',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of asset based on owner/app/group.
+  $rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get Asset Media Metadata.
+  $rest_calls['metadata_tag'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
+  );
+
+  // Create Asset Media Metadata.
+  $rest_calls['metadata_tag/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete Asset Media Metadata.
+  $rest_calls['metadata_tag/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $rest_calls['mediafile/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete from mediafile.
+  $rest_calls['mediafile/$mediafile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_delete_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the stills from mediafile.
+  $rest_calls['mediafile/$mediafile_id/still'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_still_for_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Get the stills.
+  $rest_calls['asset/$asset_id/still'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Delete stills from asset.
+  $rest_calls['asset/$asset_id/still/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_delete_stills',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Set default stills from asset.
+  $rest_calls['asset/$asset_id/still/default'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_default',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+    // Set order still from asset.
+  $rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_order',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Upload still.
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_upload_mediafile_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Upload still.
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_PUT] = $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_PUT][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_1_0;
+
+  // Get mediafiles of asset.
+  $rest_calls['asset/$asset_id/mediafile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_asset_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create mediafile.
+  $rest_calls['asset/$asset_id/mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_create_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create mediafile.
+  $rest_calls['mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_create_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update mediafile.
+  $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_update_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update mediafile.
+  $rest_calls['mediafile/$mediafile_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_update_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get favorites count of asset.
+  $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get favorites count of asset.
+  $rest_calls['asset/$asset_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the asset.
+  $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get multiple assets.
+  $rest_calls['assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_assets_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create the asset.
+  $rest_calls['asset/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset.
+  $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset.
+  $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete all given asset.
+  $rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete_all',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create link between asset and collection.
+  $rest_calls['collection/$coll_id/asset_relation'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete all links for asset on all collections.
+  $rest_calls['asset/$asset_id/collection_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_delete_asset_from_all_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_5,
+  );
+
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/collections/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/count_collections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count per prop_id per content.
+  $rest_calls['tagcount'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_tagcount',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_propperty',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Count per prop_id per content.
+  $rest_calls['asset/$asset_id/metadata'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the asset supplement.
+  $rest_calls['asset/$asset_id/supplement'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $rest_calls['supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $rest_calls['supplement/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/$supplement_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['supplement/$supplement_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['supplement/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Play a mediafile.
+  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Play a mediafile.
+  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_put',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_put',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  // Download file.
+  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  // Allowed on POST as well.
+  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
+
+  // Still.
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_STILL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+
+  // Allowed on POST as well.
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+
+  // Set the version of the new rest calls to 2.3.
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
+  $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
+  $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
+
+  // Upload progress.
+  $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadprogress',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_3_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_PLAIN,
+  );
+
+  // In sandbox we have /still as special REST call so we don't have problems
+  // with apache alias on /still.
+  if (mediamosa::get()->in_simpletest_sandbox()) {
+    $rest_calls['simpletest/still/$still_id'] = $rest_calls['still/$still_id'];
+    $rest_calls['simpletest/still/ticket/$ticket_id'] = $rest_calls['still/ticket/$ticket_id'];
+    $rest_calls['simpletest/still/$still_prefix/$still_id'] = $rest_calls['still/$still_prefix/$still_id'];
+  }
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_asset_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  // Asset search.
+  $rest_calls['asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search for assets based on input parameters and return a list of found assets.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => array(
+      '/asset?limit=200&order_by=created&order_direction=desc&title[]=test [GET]',
+      '/asset?limit=2&offset=3 [GET]',
+    ),
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>10061</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-naa</owner_id>
+    <group_id>beeldengeluid</group_id>
+    <videotimestamp>2004-09-10 22:22:08</videotimestamp>
+    <videotimestampmodified>2004-09-10 22:22:08</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <is_protected>FALSE</is_protected>
+    <dublin_core>
+      <type>Video</type>
+      <language>EN</language>
+      <title>kurkentrekker.mpg</title>
+      <creator>naa</creator>
+      <publisher>naa</publisher>
+     <description>this kurkentrekker.mpg of naa was n/naa/mpeg/kurkentrekker.mpg</description>
+      <date>2004-09-10 22:22:08</date>
+      <format></format>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+  <item id="2">
+    <asset_id>10062</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-naa</owner_id>
+    <group_id>beeldengeluid</group_id>
+    <videotimestamp>2004-09-10 22:22:08</videotimestamp>
+    <videotimestampmodified></videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <is_protected>FALSE</is_protected>
+    <created>2008-04-07 09:53:44</created>
+    <changed>2008-04-17 23:44:44</changed>
+    <dublin_core>
+      <type>Video</type>
+      <language>EN</language>
+      <title>interculturele-mpeg1-vhs.mpg</title>
+      <creator>naa</creator>
+      <publisher>naa</publisher>
+     <description>this interculturele-mpeg1-vhs.mpg of naa was n/naa/mpeg/interculturele-mpeg1-vhs.mpg</description>
+      <date>2004-09-10 22:22:08</date>
+      <format></format>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+</items>',
+  );
+
+  // Get the asset.
+  $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Getting asset details.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the details of an asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item' => 'Full description of the asset including the metadata in XML format.',
+      'asset_id' => 'Asset id of the object.',
+      'app_id' => 'Application ID of the asset.',
+      'provider_id' => 'ID of the source provider.',
+      'owner_id' => 'The user ID of the owner of the asset.',
+      'group_id' => 'The group ID of the asset.',
+      'videotimestamp' => 'Set once when metadata or mediafiles are added.',
+      'videotimestampmodified' => 'Set each time when changes are made to metadata or mediafiles .',
+      'play_restriction_start' => 'The start datetime of play restriction.',
+      'play_restriction_end' => 'The end datetime of play restriction.',
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+    <app_id>4</app_id>
+    <provider_id></provider_id>
+    <owner_id>owner</owner_id>
+    <group_id></group_id>
+    <videotimestamp>2009-06-11 16:07:38</videotimestamp>
+    <videotimestampmodified>2009-09-23 14:40:54</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <mediafile_duration>00:00:45.7</mediafile_duration>
+    <mediafile_container_type>asf</mediafile_container_type>
+    <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <is_external>FALSE</is_external>
+    <viewed>1631</viewed>
+    <played>97</played>
+    <is_empty_asset>FALSE</is_empty_asset>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <has_streamable_mediafiles>FALSE</has_streamable_mediafiles>
+    <dublin_core>
+      <type></type>
+      <format></format>
+      <language>nl</language>
+      <title>Test title</title>
+      <creator></creator>
+      <publisher></publisher>
+      <subject></subject>
+      <description>Test description</description>
+      <contributor></contributor>
+      <date></date>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+    <czp>
+      <schemanaam>http://your_wle/</schemanaam>
+      <identificatiecode>http://your_wle/asset/M9FyEFTVy0zFzpbOv7DaEH4U</identificatiecode>
+      <titel></titel>
+      <taal></taal>
+      <beschrijving></beschrijving>
+      <sleutelwoord></sleutelwoord>
+      <aggregatieniveau>niveau</aggregatieniveau>
+      <versie>x</versie>
+      <status>final</status>
+      <soort_leermateriaal>Evaluatie- en toetsmateriaal</soort_leermateriaal>
+      <beoogde_eindgebruiker>Auteur</beoogde_eindgebruiker>
+      <context>VVE</context>
+      <beoogde_leeftijdsgroep></beoogde_leeftijdsgroep>
+      <kosten>nee</kosten>
+      <auteursrechten>Ja</auteursrechten>
+      <omschrijving_rechten>x</omschrijving_rechten>
+      <classificatie>x</classificatie>
+    </czp>
+    <ega_view_url>http://your_ega_view_url/viewasset/M9FyEFTVy0zFzpbOv7DaEH4U</ega_view_url>
+    <is_favorite>FALSE</is_favorite>
+    <granted>TRUE</granted>
+    <vpx_still_url>http://your_vpx/still/Em4fKZU6iiKuuWrgbcQ86vPR</vpx_still_url>
+    <ega_still_url>http://your_still_url/M9FyEFTVy0zFzpbOv7DaEH4U</ega_still_url>
+    <mediafiles>
+      <mediafile id="1">
+        <mediafile_id>9PIxRij3YGRgenkyjwOT7zyS</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>TRUE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testfilename.wmv</filename>
+        <uri></uri>
+        <transcode_profile_id></transcode_profile_id>
+        <tool></tool>
+        <command></command>
+        <file_extension></file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:03</created>
+        <changed>2009-09-23 14:40:02</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>test</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>wmv3</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>384</width>
+          <height>288</height>
+          <fps>25</fps>
+          <audio_codec>wmav2</audio_codec>
+          <sample_rate>44100</sample_rate>
+          <channels>2</channels>
+          <file_duration>00:00:45.7</file_duration>
+          <container_type>asf</container_type>
+          <bitrate>1023</bitrate>
+          <bpp>0.37</bpp>
+          <filesize>5851382</filesize>
+          <mime_type>video/x-ms-asf</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>FALSE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_stream_url>
+      </mediafile>
+      <mediafile id="2">
+        <mediafile_id>2vi8R0dDLXyCKE3vC6qYL2bG</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>FALSE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testvideo.flv</filename>
+        <uri></uri>
+        <transcode_profile_id>2</transcode_profile_id>
+        <tool>ffmpeg</tool>
+        <command>videobitrate:200000;size:320x240;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
+        <file_extension>flv</file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:30</created>
+        <changed>2009-09-22 15:19:49</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>transcoded</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>flv</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>320</width>
+          <height>240</height>
+          <fps>25</fps>
+          <audio_codec>mp3</audio_codec>
+          <sample_rate>22050</sample_rate>
+          <channels>1</channels>
+          <file_duration>00:00:45.6</file_duration>
+          <container_type>flv</container_type>
+          <bitrate>200</bitrate>
+          <bpp>0.1</bpp>
+          <filesize>1828989</filesize>
+          <mime_type>video/x-flv</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>TRUE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_stream_url>
+      </mediafile>
+    </mediafiles>
+  </item>
+</items>',
+  );
+
+  // Get the asset.
+  $rest_calls['assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Getting multiple asset details.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the details of assets.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/assets?asset_id[]=VlN2ZDKv9rpsfmBAWpvfiw1zQ6z',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item' => 'Full description of the asset including the metadata in XML format.',
+      'asset_id' => 'Asset id of the object.',
+      'app_id' => 'Application ID of the asset.',
+      'provider_id' => 'ID of the source provider.',
+      'owner_id' => 'The user ID of the owner of the asset.',
+      'group_id' => 'The group ID of the asset.',
+      'videotimestamp' => 'Set once when metadata or mediafiles are added.',
+      'videotimestampmodified' => 'Set each time when changes are made to metadata or mediafiles .',
+      'play_restriction_start' => 'The start datetime of play restriction.',
+      'play_restriction_end' => 'The end datetime of play restriction.',
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+    <app_id>4</app_id>
+    <provider_id></provider_id>
+    <owner_id>owner</owner_id>
+    <group_id></group_id>
+    <videotimestamp>2009-06-11 16:07:38</videotimestamp>
+    <videotimestampmodified>2009-09-23 14:40:54</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <mediafile_duration>00:00:45.7</mediafile_duration>
+    <mediafile_container_type>asf</mediafile_container_type>
+    <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <is_external>FALSE</is_external>
+    <viewed>1631</viewed>
+    <played>97</played>
+    <is_empty_asset>FALSE</is_empty_asset>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <has_streamable_mediafiles>FALSE</has_streamable_mediafiles>
+    <dublin_core>
+      <type></type>
+      <format></format>
+      <language>nl</language>
+      <title>Test title</title>
+      <creator></creator>
+      <publisher></publisher>
+      <subject></subject>
+      <description>Test description</description>
+      <contributor></contributor>
+      <date></date>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+    <czp>
+      <schemanaam>http://your_wle/</schemanaam>
+      <identificatiecode>http://your_wle/asset/M9FyEFTVy0zFzpbOv7DaEH4U</identificatiecode>
+      <titel></titel>
+      <taal></taal>
+      <beschrijving></beschrijving>
+      <sleutelwoord></sleutelwoord>
+      <aggregatieniveau>niveau</aggregatieniveau>
+      <versie>x</versie>
+      <status>final</status>
+      <soort_leermateriaal>Evaluatie- en toetsmateriaal</soort_leermateriaal>
+      <beoogde_eindgebruiker>Auteur</beoogde_eindgebruiker>
+      <context>VVE</context>
+      <beoogde_leeftijdsgroep></beoogde_leeftijdsgroep>
+      <kosten>nee</kosten>
+      <auteursrechten>Ja</auteursrechten>
+      <omschrijving_rechten>x</omschrijving_rechten>
+      <classificatie>x</classificatie>
+    </czp>
+    <ega_view_url>http://your_ega_view_url/viewasset/M9FyEFTVy0zFzpbOv7DaEH4U</ega_view_url>
+    <is_favorite>FALSE</is_favorite>
+    <granted>TRUE</granted>
+    <vpx_still_url>http://your_vpx/still/Em4fKZU6iiKuuWrgbcQ86vPR</vpx_still_url>
+    <ega_still_url>http://your_still_url/M9FyEFTVy0zFzpbOv7DaEH4U</ega_still_url>
+    <mediafiles>
+      <mediafile id="1">
+        <mediafile_id>9PIxRij3YGRgenkyjwOT7zyS</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>TRUE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testfilename.wmv</filename>
+        <uri></uri>
+        <transcode_profile_id></transcode_profile_id>
+        <tool></tool>
+        <command></command>
+        <file_extension></file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:03</created>
+        <changed>2009-09-23 14:40:02</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>test</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>wmv3</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>384</width>
+          <height>288</height>
+          <fps>25</fps>
+          <audio_codec>wmav2</audio_codec>
+          <sample_rate>44100</sample_rate>
+          <channels>2</channels>
+          <file_duration>00:00:45.7</file_duration>
+          <container_type>asf</container_type>
+          <bitrate>1023</bitrate>
+          <bpp>0.37</bpp>
+          <filesize>5851382</filesize>
+          <mime_type>video/x-ms-asf</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>FALSE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_stream_url>
+      </mediafile>
+      <mediafile id="2">
+        <mediafile_id>2vi8R0dDLXyCKE3vC6qYL2bG</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>FALSE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testvideo.flv</filename>
+        <uri></uri>
+        <transcode_profile_id>2</transcode_profile_id>
+        <tool>ffmpeg</tool>
+        <command>videobitrate:200000;size:320x240;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
+        <file_extension>flv</file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:30</created>
+        <changed>2009-09-22 15:19:49</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>transcoded</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>flv</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>320</width>
+          <height>240</height>
+          <fps>25</fps>
+          <audio_codec>mp3</audio_codec>
+          <sample_rate>22050</sample_rate>
+          <channels>1</channels>
+          <file_duration>00:00:45.6</file_duration>
+          <container_type>flv</container_type>
+          <bitrate>200</bitrate>
+          <bpp>0.1</bpp>
+          <filesize>1828989</filesize>
+          <mime_type>video/x-flv</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>TRUE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_stream_url>
+      </mediafile>
+    </mediafiles>
+  </item>
+</items>',
+  );
+
+  // Collection asset search.
+  $rest_calls['collection/$coll_id/asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search within a collection',
+    mediamosa_rest_call::DESCRIPTION => 'Search for assets based on input parameters and return a list of found assets within the given collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z/asset?limit=200&order_by=created&order_direction=desc&title[]=test',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '
+  <item id="1">
+    <asset_id>1</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-zfontys</owner_id>
+    <group_id>fontys</group_id>
+    <videotimestamp>2004-09-10 19:59:26</videotimestamp>
+    <videotimestampmodified></videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <locked>FALSE</locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <dublin_core>
+      <type>Video</type>
+      <language>NL</language>
+      <title>bijeenkomst mediatheken 10 maart</title>
+      <creator>g.bierens</creator>
+      <description>De personeelsbijeenkomst voor alle medewerkers van de mediatheken stond in het teken van "De medewerker als partner in learning communities". Het doel was om de aanstaande veranderingen in de mediatheken in een strategisch perspectief te zetten.</description>
+      <date>2004-09-10 19:59:26</date>
+      <format></format>
+      <publisher></publisher>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative>De medewerker als partner in learning communities</title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+  <item id="2">
+    <asset_id>15745</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-zfontys</owner_id>
+    <group_id>fontys</group_id>
+    <videotimestamp>2005-08-23 13:44:26</videotimestamp>
+    <videotimestampmodified></videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <locked>FALSE</locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <dublin_core>
+      <type>Video</type>
+      <language>NL</language>
+      <title>Fontys Mediatheek TF Introductiefilm</title>
+      <creator>Fokke M&#xFC;ller</creator>
+      <creator>Erik Oomen</creator>
+      <description>Mediatheek introductie</description>
+      <date>2005-08-23 13:44:26</date>
+      <format></format>
+      <publisher></publisher>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+</items>',
+  );
+
+  // Change owner ship/group on asset/mediafile/collections.
+  $rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Change the ownership of objects.',
+    mediamosa_rest_call::DESCRIPTION => 'Change the ownership and/or group of assets, mediafiles and collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'change_ownership<br /><br />old_owner_id = "testuser"<br />new_owner_id = "testuser2"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile>1</mediafile>
+  </item>
+  <item id="2">
+    <asset>1</asset>
+  </item>
+  <item id="3">
+    <collection>3</collection>
+  </item>
+</items>',
+  );
+
+  // Count number of asset based on owner/app/group.
+  $rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return the number of asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Counts the number of assets based on owner and/or group_id. ',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/count?owner_id=testuser',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+  );
+
+  // Get Asset Media Metadata.
+  $rest_calls['metadata_tag'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve metadata definitions.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the asset metadata definitions.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag?include_default_definitions=true&limit=10&order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <prop_id>125</prop_id>
+    <name>Example</name>
+    <prop_group>app_14</prop_group>
+    <type>CHAR</type>
+    <created>2010-04-08 16:08:01</created>
+    <changed>2010-04-08 16:08:01</changed>
+  </item>
+</items>',
+  );
+
+  // Create Asset Media Metadata.
+  $rest_calls['metadata_tag/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a asset metadata definition.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a asset metadata definition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag/create<br />
+name=Example&type=char',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <prop_id>125</prop_id>
+    <app_id>14</app_id>
+    <propgroup_id>5</propgroup_id>
+    <prop_name>Example</prop_name>
+    <type>CHAR</type>
+    <min_occurences>0</min_occurences>
+    <max_occurences>0</max_occurences>
+    <created>2010-04-08 16:08:01</created>
+    <changed>2010-04-08 16:08:01</changed>
+  </item>
+</items>',
+  );
+
+  // Delete Asset Media Metadata.
+  $rest_calls['metadata_tag/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a metadata definition.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete an asset metadata definition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag/delete<br />
+name=Example&delete=cascade',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $rest_calls['mediafile/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return the number of mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of mediafile based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'The amount is in the <header> the <item_count_total>6254</item_count_total>',
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return information about a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Return information about a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr?show_stills=true',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <mediafile_id_source></mediafile_id_source>
+    <tag></tag>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <is_original_file>TRUE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Test.wmv</filename>
+    <uri></uri>
+    <transcode_profile_id></transcode_profile_id>
+    <tool></tool>
+    <command></command>
+    <file_extension></file_extension>
+    <is_protected>FALSE</is_protected>
+    <created>2010-01-22 16:22:54</created>
+    <changed>2010-04-08 17:49:39</changed>
+    <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+    <still>
+      <mediafile_id>GqrqS9UYfyKAsrW73mPVAyRH</mediafile_id>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <mediafile_id_source>OW35AQyoPNUSi4iINunmS2nr</mediafile_id_source>
+      <tag></tag>
+      <app_id>14</app_id>
+      <owner_id>admin</owner_id>
+      <group_id></group_id>
+      <is_original_file>FALSE</is_original_file>
+      <is_downloadable>FALSE</is_downloadable>
+      <is_streamable>FALSE</is_streamable>
+      <is_still>TRUE</is_still>
+      <filename>GqrqS9UYfyKAsrW73mPVAyRH</filename>
+      <uri></uri>
+      <sannas_mount_point>/srv/mediamosa_install</sannas_mount_point>
+      <transcode_profile_id></transcode_profile_id>
+      <tool></tool>
+      <command></command>
+      <file_extension>jpeg</file_extension>
+      <is_protected>FALSE</is_protected>
+      <created>2010-01-22 16:23:21</created>
+      <changed>2010-01-22 16:23:21</changed>
+      <transcode_inherits_acl>TRUE</transcode_inherits_acl>
+      <metadata_id>3</metadata_id>
+      <video_codec></video_codec>
+      <colorspace></colorspace>
+      <width>176</width>
+      <height>144</height>
+      <fps></fps>
+      <audio_codec></audio_codec>
+      <sample_rate></sample_rate>
+      <channels></channels>
+      <file_duration></file_duration>
+      <container_type></container_type>
+      <bitrate></bitrate>
+      <bpp></bpp>
+      <filesize>6165</filesize>
+      <mime_type>image/jpeg</mime_type>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+      <still_time_code>7</still_time_code>
+      <still_order>0</still_order>
+      <still_type>NORMAL</still_type>
+      <still_format>jpeg</still_format>
+      <still_default>TRUE</still_default>
+      <still_ticket>http://mediamosa2/still/f1MZGcHaodK9t7UODeCPNW5B</still_ticket>
+    </still>
+    <metadata>
+      <video_codec>wmv3</video_codec>
+      <colorspace>yuv420p</colorspace>
+      <width>320</width>
+      <height>240</height>
+      <fps>25</fps>
+      <audio_codec>wmav2</audio_codec>
+      <sample_rate>32000</sample_rate>
+      <channels>2</channels>
+      <file_duration>00:00:29.92</file_duration>
+      <container_type>asf</container_type>
+      <bitrate>265</bitrate>
+      <bpp>0.14</bpp>
+      <filesize>993480</filesize>
+      <mime_type>video/x-ms-asf</mime_type>
+      <created>2010-01-22 16:22:55</created>
+      <changed>2010-01-22 16:22:55</changed>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url></ega_stream_url>
+    <ega_play_url></ega_play_url>
+  </item>
+</items>',
+  );
+
+  // Delete from mediafile.
+  $rest_calls['mediafile/$mediafile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Get the stills from mediafile.
+  $rest_calls['mediafile/$mediafile_id/still'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Recieve the still information.',
+    mediamosa_rest_call::DESCRIPTION => 'Recieve the still information of a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/still?user_id=admin&autostart=true',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://mediamosa2/still/g2hJMVii7ND9UbKaoNu6xwMw</output>
+    <content_type></content_type>
+    <ticket_id>g2hJMVii7ND9UbKaoNu6xwMw</ticket_id>
+    <stills id="1">
+      <still_id>GqrqS9UYfyKAsrW73mPVAyRH</still_id>
+      <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <app_id>14</app_id>
+      <owner_id>admin</owner_id>
+      <filename>GqrqS9UYfyKAsrW73mPVAyRH</filename>
+      <mediafile_id_source>OW35AQyoPNUSi4iINunmS2nr</mediafile_id_source>
+      <tag></tag>
+      <width>176</width>
+      <height>144</height>
+      <filesize>6165</filesize>
+      <mime_type>image/jpeg</mime_type>
+      <still_time_code>7</still_time_code>
+      <still_order>0</still_order>
+      <still_format>jpeg</still_format>
+      <still_type>NORMAL</still_type>
+      <still_default>TRUE</still_default>
+      <ticket>V2cbOQCJcasaabUtUIXIqW23</ticket>
+      <still_ticket>http://mediamosa2/still/V2cbOQCJcasaabUtUIXIqW23</still_ticket>
+    </stills>
+  </item>
+</items>',
+  );
+
+  // Get the still.
+  $rest_calls['asset/$asset_id/still'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the still information of a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the complete still list of the given asset ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/2XCvTieR5AnFDWZadHjbM6fl/still?user_id=testuser&mediafile_id=ZWm0J9IuWlfoU7qoeT9LDl9H',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('output' => 'The external URL you can use to see the avatar.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://download.mediamosa.local/still/n2Ybk1bPL6jRgkSSLUiYxfLn</output>
+    <content_type></content_type>
+    <ticket_id>n2Ybk1bPL6jRgkSSLUiYxfLn</ticket_id>
+  </item>
+</items>',
+  );
+
+  // Delete stills from asset.
+  $rest_calls['asset/$asset_id/still/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete stills from an asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete all the still from this asset, or when mediafile_id was specified, only stills generated from that mediafile. ',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/4BVZIK8gpwDUFGyR8nnDiL7V/still/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Set default stills from asset.
+  $rest_calls['asset/$asset_id/still/default'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set the default still for an asset.',
+    mediamosa_rest_call::DESCRIPTION => 'You can set the default flag for a still, all other stills of the asset are set to false. Only one default still exists is set for one asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/4BVZIK8gpwDUFGyR8nnDiL7V/still/default',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+    // Set order still from asset.
+  $rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set the order for still of a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'The order is a number like a weight. The higher the weight, the higher it will return in the result.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/still/order<br /><br />mediafile_id = "F2tpgYq4XFLTk9MjlT6FdPLh"<br />order = 10<br />still_id = "1gP1MlYMmieBvir2wLdHfUJI"<br />user_id = "testuser"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Upload still.
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Upload still image.',
+    mediamosa_rest_call::DESCRIPTION => 'Still images can be uploaded to existing mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/B93Y4bJxLRof608OtHofiK9C/still/upload<br /><br />mediafile_id = "2rw3r5235gdg"<br />"upload_ticket = "j89y492b84"<br />order = 2<br />default = "TRUE"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item>
+    <still_id>f608OtH9CB9R3Y4ofiKbJxLo</still_id>
+  </item>
+</items>',
+  );
+
+  // Upload still.
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::TITLE => 'Upload still image.',
+    mediamosa_rest_call::DESCRIPTION => 'Still images can be uploaded to existing mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/B93Y4bJxLRof608OtHofiK9C/still/upload<br /><br />mediafile_id = "2rw3r5235gdg"<br />"upload_ticket = "j89y492b84"<br />order = 2<br />default = "TRUE"<br />filename = "test.jpg"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item>
+    <still_id>f608OtH9CB9R3Y4ofiKbJxLo</still_id>
+  </item>
+</items>',
+  );
+
+  // Get mediafiles of asset.
+  $rest_calls['asset/$asset_id/mediafile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get mediafiles of asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a detailed list of the mediafiles of an asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/mediafile',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>1zVCthfDab50KwdksbsqGJU7</mediafile_id>
+    <asset_id>F2J4KfIVAiwicAygMfXpPUuT</asset_id>
+    <mediafile_id_source>mHFdpBJz9dTK911fRpI14MKK</mediafile_id_source>
+    <tag></tag>
+    <app_id>5</app_id>
+    <owner_id>SURFNET.michiel</owner_id>
+    <group_id></group_id>
+    <is_original_file>FALSE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Introduction.flv</filename>
+    <uri></uri>
+    <transcode_profile_id>13</transcode_profile_id>
+    <tool>ffmpeg</tool>
+    <command>videobitrate:200000;fps:15;size:352x288;videocodec:flv;audiocodec:libmp3lame;audiobitrate:40000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
+    <file_extension>flv</file_extension>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <created>2009-06-17 18:04:17</created>
+    <changed>2009-09-21 13:03:04</changed>
+    <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+    <metadata>
+      <video_codec>flv</video_codec>
+      <colorspace>yuv420p</colorspace>
+      <width>352</width>
+      <height>288</height>
+      <fps>15.00</fps>
+      <audio_codec>mp3</audio_codec>
+      <sample_rate>22050</sample_rate>
+      <channels>stereo</channels>
+      <file_duration>00:00:20.4</file_duration>
+      <container_type>flv</container_type>
+      <bitrate>40</bitrate>
+      <bpp>0.03</bpp>
+      <filesize>491381</filesize>
+      <mime_type>video/x-flv</mime_type>
+      <created>2009-06-17 18:04:48</created>
+      <changed>2009-11-10 17:02:37</changed>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>TRUE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=1zVCthfDab50KwdksbsqGJU7</ega_stream_url>
+    <ega_play_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=1zVCthfDab50KwdksbsqGJU7</ega_play_url>
+  </item>
+  <item id="2">
+    <mediafile_id>mHFdpBJz9dTK911fRpI14MKK</mediafile_id>
+    <asset_id>F2J4KfIVAiwicAygMfXpPUuT</asset_id>
+    <mediafile_id_source></mediafile_id_source>
+    <tag></tag>
+    <app_id>5</app_id>
+    <owner_id>SURFNET.michiel</owner_id>
+    <group_id>default</group_id>
+    <is_original_file>TRUE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Introduction.mov</filename>
+    <uri></uri>
+    <transcode_profile_id></transcode_profile_id>
+    <tool></tool>
+    <command></command>
+    <file_extension></file_extension>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <created>2009-06-17 17:51:58</created>
+    <changed>2009-09-21 13:03:04</changed>
+    <transcode_inherits_acl>TRUE</transcode_inherits_acl>
+    <metadata>
+      <video_codec>qtrle</video_codec>
+      <colorspace>rgb32</colorspace>
+      <width>640</width>
+      <height>480</height>
+      <fps>24.00</fps>
+      <audio_codec>pcm_s16be</audio_codec>
+      <sample_rate>44100</sample_rate>
+      <channels>stereo</channels>
+      <file_duration>00:00:20.0</file_duration>
+      <container_type>mov;mp4;m4a;3gp;3g2;mj2</container_type>
+      <bitrate>5863</bitrate>
+      <bpp>0.8</bpp>
+      <filesize>14659968</filesize>
+      <mime_type>video/quicktime</mime_type>
+      <created>2009-06-17 18:03:17</created>
+      <changed>2009-11-10 17:02:37</changed>
+      <is_hinted>TRUE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=mHFdpBJz9dTK911fRpI14MKK</ega_stream_url>
+    <ega_play_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=mHFdpBJz9dTK911fRpI14MKK</ega_play_url>
+  </item>
+</items>',
+  );
+
+  // Create mediafile.
+  $rest_calls['asset/$asset_id/mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a default mediafile under given asset ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/1kr9rRFs6ljcBNNtpM8T5AI3/mediafile/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('mediafile_id' => 'The mediafile ID of the created mediafile.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>a1RSbqQNSieYbDTgXS4zlW7G</mediafile_id>
+  </item>
+</items>',
+  );
+
+  // Create mediafile.
+  $rest_calls['mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>ERTpgSptYbqvUaYUJGrryyML</mediafile_id>
+  </item>
+</items>',
+  );
+
+  // Update mediafile.
+  $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Update a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr<br />
+tag=Best',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Update mediafile.
+  $rest_calls['mediafile/$mediafile_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/uploadticket/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
+    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
+    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+    <progress_id>1234567</progress_id>
+  </item>
+</items>',
+  );
+
+  // Create ticket for upload.
+  $rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Get favorites count of asset.
+  $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns the number of favorites that an asset as been made favorite.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/8rJd5sznz424iB65wjjDuvqx/favorites/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Get favorites count of asset.
+  $rest_calls['asset/$asset_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET];
+
+  // Create the asset.
+  $rest_calls['asset/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'The asset create REST call will create a empty asset without metadata and/or mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/create
+user_id = "username"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('asset_id' => 'The ID of created asset.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>q1WmtebDr9F8eberUIjKrhTa</asset_id>
+  </item>
+</items>',
+  );
+
+  // Update the asset.
+  $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the fields of a asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z', 'play_restriction_start="2007-12-05 08:30:00"', 'play_restriction_end="2007-12-31 10:00:00"'),
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Delete the asset.
+  $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'By calling this REST call you can remove a asset from the database. Assets can only be removed when no longer attached media files to this asset or if the delete=cascade parameter is used. If you remove an asset, then stills, metadata and collection links are removed too.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '<p>/asset/q1WmtebDr9F8eberUIjKrhTa/delete</p><p>delete = "cascade"</p>',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Delete all given asset.
+  $rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete all assets using the given asset IDs.',
+    mediamosa_rest_call::DESCRIPTION => 'Same as asset/$asset_id/delete, except it wiil allow you to delete more than one asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/delete<br /><br />asset_id[] = "S2Eg3Fzh2Rdw5dLbArmgqRKr"<br />asset_id[] = "Eg3Fzh2Rdw5dLbArmgqRKrer"<br />userid = "SURFgroepen.frans"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>S2Eg3Fzh2Rdw5dLbArmgqRKr</asset_id>
+    <result>error</result>
+    <result_id>709</result_id>
+    <result_description>MM - there are still 4 mediafile(s) present in this asset.</result_description>
+  </item>
+  <item id="2">
+    <asset_id>Eg3Fzh2Rdw5dLbArmgqRKrer</asset_id>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+  </item>
+</items>',
+  );
+
+  // Create link between asset and collection.
+  $rest_calls['collection/$coll_id/asset_relation'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Adds one or more assets to a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Adds one of more assets to a collection. A asset can belong to more than one collection at the same time. The asset_id parameter supports an array of asset id\'s. The response returns a result record (result_id, result) per asset_id given. Possible errors are "707 MM - the asset is already present in the collection" or "700 MM - asset_id=x1AjaVsefW8gVjZjsKmQRWsF9uM was not found in the database"',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id[]=x1AjaVW8gVjZjsKmQRWsF9uM&user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+    <item id="1">
+      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+      <asset_id>X2OJSIuWKPUZUsdSNlsE8Tcx</asset_id>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </item>
+    <item id="2">
+      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+      <asset_id>x1AjaVW8gVjZjsKmQRWsF9uM</asset_id>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </item>
+  </items>
+',
+  );
+
+  // Delete all links for asset on all collections.
+  $rest_calls['asset/$asset_id/collection_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create link between asset and collection.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Count the number of collections where given asset is related to.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns the number of collections where the given asset is related to. This number is stored in the header->item_count_total. The <items> array is empty in this call.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/1kr9rRFs6ljcBNNtpM8T5AI3/collection/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE, // indicate no response fields.
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<header>
+  <item_count>0</item_count>
+  <item_count_total>1</item_count_total>
+  <item_offset>0</item_offset>
+  ...
+</header>',
+  );
+
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/collections/count'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET];
+  // Count number of collections of one asset.
+  $rest_calls['asset/$asset_id/count_collections'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET];
+
+  // Count per prop_id per content.
+  $rest_calls['tagcount'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a list of tags',
+    mediamosa_rest_call::DESCRIPTION => 'Return a list of tags of one property and their count, a count more than 1 means multiple occourance of the same tag value.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'tagcount?prop_id=3&limit=10',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <count>6</count>
+    <tag>en</tag>
+  </item>
+</items>',
+  );
+
+  // Count per prop_id per content.
+  $rest_calls['asset/$asset_id/metadata'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create metadata for the asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/2RcNiH26TY50e23MY3xw78cq/metadata<br /><br />description = "test description"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('metadata_parameter' => 'the created/replaced metadata field value'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <description>test description</description>
+  </item>
+</items>',
+  );
+
+  // Get the asset supplement.
+  $rest_calls['asset/$asset_id/supplement'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Return the supplement object with the data in BASE64 format.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <supplement_id>w27fFVLXbXIQqUuiTAqDe7Hx</supplement_id>
+    <asset_id>S2Eg3Fzh2Rdw5dLbArmgqRKr</asset_id>
+    <tag></tag>
+    <oai_prefix></oai_prefix>
+    <oai_namespaceuri></oai_namespaceuri>
+    <oai_schemalocation></oai_schemalocation>
+    <created>2010-04-08 15:42:41</created>
+    <changed>2010-04-08 15:50:54</changed>
+    <supplement_base64>YmxhYmxh</supplement_base64>
+  </item>
+</items>',
+  );
+
+  // Create the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create the supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a empty supplement object.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('supplement_id' => 'The ID of the created empty supplement.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <supplement_id>w27fFVLXbXIQqUuiTAqDe7Hx</supplement_id>
+  </item>
+</items>',
+  );
+
+  // Update the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Store the supplement data in the supplement db object. The maximum size is 64k.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/w27fFVLXbXIQqUuiTAqDe7Hx/update<br /><br />user_id  = "testuser"<br />supplement  = "my binary test, this can be anything as long is not bigger than 64k."',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Update the asset supplement.
+  $rest_calls['supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Update the asset supplement.
+  $rest_calls['supplement/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['asset/$asset_id/supplement/$supplement_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Deletes the supplement of the asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/w27fFVLXbXIQqUuiTAqDe7Hx/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Delete the asset supplement.
+  $rest_calls['supplement/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // Play a mediafile.
+  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Play a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/k1QmUkhpAvRNU9mBl871oQfq/play<br /><br />mediafile_id = "T2hLaHNlDROR6UTYJFn2b8Cz"<br />user_id = "testuser"<br />response = "download"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://mediamosa.local/download/T2hLaHNlDROR6UTYJFn2b8Cz/Filename_not_set</output>
+    <content_type></content_type>
+    <ticket_id>T2hLaHNlDROR6UTYJFn2b8Cz</ticket_id>
+  </item>
+</items>',
+  );
+
+  // Play a mediafile.
+  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Play a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // @TODO!
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Upload a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] mediafile/upload',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::TITLE => 'Upload a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[PUT] mediafile/upload',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::TITLE => 'Upload a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload<br />
+user_id=admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Download file.
+  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Download a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/j89y492b84/foo.mpg',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
+  );
+
+  // Allowed on POST as well.
+  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
+
+  // Still.
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Enables viewing of stills',
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills with permanent url using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'still/142',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
+  );
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Enables viewing of stills',
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills with temporary url using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'still/ticket/aH1E',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
+  );
+
+  // Allowed on POST as well.
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET];
+
+  // Upload progress.
+  $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the upload progress.',
+    mediamosa_rest_call::DESCRIPTION => 'Allows to retrieve the upload progress of an upload using APC extension.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/uploadprogress&id=1442',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '{"status":1,"percentage":-1,"message":"Uploading"}',
+  );
+
+  return $rest_calls;
+}

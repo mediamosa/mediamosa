@@ -1,0 +1,645 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+define('MEDIAMOSA_TEST_LUA_LPEG', 'Usage: vpx-analyse BASE_PATH HASH [--always_hint_mp4] [--always_insert_metadata]');
+
+/**
+ * @file
+ * The status configuration module.
+ */
+
+/**
+ * Constants.
+ */
+
+/**
+ * Warning level for Apache.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING', '2');
+
+/**
+ * Warning level for Lua.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_LUA_WARNING', '5');
+
+/**
+ * Warning level for Yamdi.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_YAMDI_WARNING', '1.5');
+
+/**
+ * Warning level for FFmpeg.
+ * 0.5 was released at March 10, 2009 with SVN-r19159.
+ * FFmpeg version SVN-r19159-Sherpya, Copyright (c) 2000-2009 Fabrice Bellard, et al.
+ * FFmpeg version 0.5, Copyright (c) 2000-2009 Fabrice Bellard, et al.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING', '0.5');
+/**
+ * Warning level for FFmpeg.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', 'SVN-r19159');
+
+/**
+ * Generate information for the status page.
+ */
+function _mediamosa_maintenance_status_configuration_generate() {
+
+  // For several topics we provide a link to webpages with configuration hints.
+  $helper_links = array(
+    'lua' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f' => '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
+    'lpeg' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f' => '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
+    'yamdi' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Yamdi'),
+    'lav2yuv' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Lav2yuv'),
+    'mp4box' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#MP4Box'),
+    'innodb_flush_log_at_trx_commit' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_log_at_trx_commit'),
+    'innodb_flush_method' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_method'),
+  );
+
+  $results = array();
+
+  // -------------------------------------------------------------- PHP modules.
+  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
+  $loaded_extensions = get_loaded_extensions();
+
+  $missing = array();
+  foreach ($required_extensions as $extension) {
+    if (!in_array($extension, $loaded_extensions)) {
+      $missing[] = $extension;
+    }
+  }
+
+  $results['php_modules'] = array(
+    'title' => t('PHP modules'),
+    'value' => empty($missing) ? t('All required modules found') : format_plural(count($missing), 'The following PHP module is missing: @missing', 'The following PHP modules are missing: @missing', array('@missing' => implode(', ', $missing))),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($missing)),
+  );
+
+  // ------------------------------------------------------------------ PHP ini.
+  $php_upload_max_filesize = ini_get('upload_max_filesize');
+  $php_upload_max_filesize_ok = drupal_substr($php_upload_max_filesize, 0, -1) >= 100 && in_array(drupal_substr($php_upload_max_filesize, -1), array('M', 'G'));
+
+  $results['php_max_filesize'] = array(
+    'title' => t('PHP maximum filesize'),
+    'value' => $php_upload_max_filesize_ok ? $php_upload_max_filesize : t('upload_max_filesize should be at least 100M. Currently: %current_value', array('%current_value' => $php_upload_max_filesize)),
+    'severity' => _mediamosa_maintenance_status_okwarning($php_upload_max_filesize_ok),
+  );
+
+  $php_memory_limit = ini_get('memory_limit');
+  $php_memory_limit_ok = drupal_substr($php_memory_limit, 0, -1) >= 128 && in_array(drupal_substr($php_memory_limit, -1), array('M', 'G'));
+
+  $results['php_memory_limit'] = array(
+    'title' => t('PHP memory limit'),
+    'value' => $php_memory_limit_ok ? $php_memory_limit : t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)),
+    'severity' => _mediamosa_maintenance_status_okwarning($php_memory_limit_ok),
+  );
+
+  $php_post_max_size = ini_get('post_max_size');
+  $php_post_max_size_ok = drupal_substr($php_post_max_size, 0, -1) >= 100 && in_array(drupal_substr($php_post_max_size, -1), array('M', 'G'));
+
+  $results['php_post_max'] = array(
+    'title' => t('PHP post maximum size'),
+    'value' => $php_post_max_size_ok ? $php_post_max_size : t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)),
+    'severity' => _mediamosa_maintenance_status_okwarning($php_post_max_size_ok),
+  );
+
+  // Applications.
+
+  // FFmpeg.
+  // Just here for notice prev.
+  $exec_output = array();
+  $ffmpeg_found = mediamosa_io::command_installed('ffmpeg -version', $exec_output);
+  $version = $ffmpeg_found ? reset($exec_output) : t('FFmpeg not found');
+
+  // Grap the available codecs.
+  if ($ffmpeg_found) {
+    $exec_output_codecs = array();
+    mediamosa_io::command_installed('ffmpeg -codecs', $exec_output_codecs);
+
+    $form_ffmpeg['mediamosa_solr'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Available codecs'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#attached' => array('library' => array('system', 'drupal.collapse')),
+      '#attributes' => array('class' => array('collapsible', 'collapsed')),
+    );
+
+    unset($exec_output_codecs[0]);
+    $form_ffmpeg['mediamosa_solr']['codecs'] = array(
+      '#markup' => '<pre>' . implode("\n", $exec_output_codecs) . '</pre>',
+    );
+
+    $version .= drupal_render($form_ffmpeg);
+  }
+
+  $results['app_ffmpeg'] = array(
+    'title' => t('FFMpeg'),
+    'value' => $version,
+    'severity' => _mediamosa_maintenance_status_okerror($ffmpeg_found),
+  );
+
+  $exec_output = array();
+  $lua_found = mediamosa_io::command_installed('lua -v', $exec_output);
+  $status_line = $lua_found ? _mediamosa_maintenance_status_search_in_array('copyright', $exec_output) : t('Lua not found');
+  $version = $lua_found ? drupal_substr($status_line, drupal_strlen('Lua ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_lua'] = array(
+    'title' => t('LUA'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($lua_found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_LUA_WARNING),
+    'description' => $lua_found ? '' : t('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => $helper_links['lua'])),
+  );
+
+  // LUA test.
+  $exec_output = array();
+  exec('lua ' . escapeshellcmd(DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa_maintenance_status')) . '/configuration/lua/lua_test', $exec_output);
+  $lua_run = !empty($exec_output) && reset($exec_output) == 'lua works';
+
+  $results['app_lua_run'] = array(
+    'title' => t('LUA run script'),
+    'value' => $lua_run ? t('Script test success') : t('Failed to execute LUA test script'),
+    'severity' => _mediamosa_maintenance_status_okerror($lua_run),
+  );
+
+  // Lpeg.
+  $exec_output = array();
+  exec('lua ' . escapeshellcmd(DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa_maintenance_status')) . '/configuration/lua/lua_lpeg_test', $exec_output);
+  $lua_lpeg_found = !empty($exec_output) && reset($exec_output) == 'lpeg works';
+
+  // Lua Lpeg.
+  $results['app_lua_lpeg'] = array(
+    'title' => t('LHA Lpeg'),
+    'value' => $lua_lpeg_found ? 'Installed' : 'Not installed' ,
+    'severity' => _mediamosa_maintenance_status_okerror($lua_lpeg_found),
+    'description' => $lua_lpeg_found ? '' : t('Install Lpeg extension for LUA. You can find more information how to install Lpeg !here', array('!here' => $helper_links['lpeg'])),
+  );
+
+  // Yamdi.
+  $yamdi_found = mediamosa_io::command_installed('yamdi -h', $exec_output, array(0, 1));
+  $results['app_yamdi'] = array(
+    'title' => t('Yamdi'),
+    'severity' => _mediamosa_maintenance_status_okwarning($yamdi_found),
+    'value' => $yamdi_found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('Not installed'),
+    'description' => $yamdi_found ? '' : t('Yamdi is not installed, but is optional. You can find more information how to install Yamdi !here', array('!here' => $helper_links['yamdi'])),
+  );
+
+  // MP4Box.
+  $mp4box_found = mediamosa_io::command_installed('MP4Box -version', $exec_output);
+
+  $results['app_mp4box'] = array(
+    'title' => t('MP4Box'),
+    'value' => $mp4box_found ? reset($exec_output) : 'Not installed',
+    'severity' => _mediamosa_maintenance_status_okwarning($mp4box_found),
+    'description' => $mp4box_found ? '' : t('MP4Box is not installed, but is optional. You can find more information how to install MP4Box !here', array('!here' => $helper_links['mp4box'])),
+  );
+
+  // Lav2yuv.
+  $lav2yuv_found = mediamosa_io::command_installed('lav2yuv', $exec_output);
+  $results['app_lav2yuv'] = array(
+    'title' => t('Luv2yuv'),
+    'value' => $lav2yuv_found ? t('Installed') : t('Not installed'),
+    'severity' => _mediamosa_maintenance_status_okwarning($lav2yuv_found),
+    'description' => $lav2yuv_found ? '' : t('Luv2yuv is not installed, but is optional. You can find more information how to install lav2yuv !here', array('!here' => $helper_links['lav2yuv'])),
+  );
+
+  $found_apache = drupal_substr(drupal_strtolower($_SERVER['SERVER_SOFTWARE']), 0, 7) == 'apache/';
+  $version = $found_apache ? (int) drupal_substr(drupal_strtolower($_SERVER['SERVER_SOFTWARE']), 7) : 0;
+  $version_ok = $found_apache ? $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING : TRUE;
+  $results['web_server'] = array(
+    'title' => t('Web server'),
+    'value' => $_SERVER['SERVER_SOFTWARE'],
+    'severity' => _mediamosa_maintenance_status_okwarning($version_ok),
+  );
+
+  if (function_exists('apache_get_modules')) {
+    // Apache mod_rewrite.
+    $apache_modules = call_user_func('apache_get_modules');
+    $found_mod_rewrite = in_array('mod_rewrite', $apache_modules);
+    $results['apache_mod_rewrite'] = array(
+      'title' => t('Apache mod rewrite'),
+      'value' => $found_mod_rewrite ? t('Installed') : t('Not installed'),
+      'severity' => _mediamosa_maintenance_status_okerror($found_mod_rewrite),
+      'description' => $found_mod_rewrite ? '' : t("MediaMosa requires the apache module 'mod_rewrite'"),
+    );
+  }
+
+  // Clean url.
+  $clean_url = variable_get('clean_url', 0);
+  $results['drupal_clean_url'] = array(
+    'title' => t('Drupal clean URL'),
+    'value' => $clean_url ? t('Enabled') : t('Disabled'),
+    'severity' => _mediamosa_maintenance_status_okerror($clean_url == 1),
+    'description' => $clean_url ? '' : t("MediaMosa requires clean url, enable the option !here", array('!here' => l('here', 'admin/config/search/clean-urls'))),
+  );
+
+  // MediaMosa version.
+  $results['mediamosa_version'] = array(
+    'title' => t('MediaMosa version'),
+    'value' => mediamosa_version::MEDIAMOSA_VERSION,
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // Database settings.
+
+  $result = mediamosa_db::db_query("SHOW VARIABLES");
+  $rows = $result->fetchAllKeyed();
+
+  $results['database_innodb'] = array(
+    'title' => t('Database innodb'),
+    'value' => t('Enabled'),
+    'severity' => _mediamosa_maintenance_status_okerror($rows['have_innodb'] == 'YES'),
+  );
+
+  $results['database_innodb_buffer_pool_size'] = array(
+    'title' => t('Database innodb optimize'),
+    'value' => t('innodb_buffer_pool_size = @size. Should be bigger than @expected.', array('@size' => format_size($rows['innodb_buffer_pool_size']), '@expected' => format_size(32 * 1024 * 1024))),
+    //'description' => t('You can set this up to 50 - 80 % of total installed RAM, but beware of setting memory usage too high.'),
+    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_buffer_pool_size'] / 1048576) >= 32),
+  );
+
+  $results['database_innodb_log_file_size'] = array(
+    'title' => t('Database innodb optimize'),
+    'value' => t('innodb_log_file_size = @size.', array('@size' => format_size($rows['innodb_log_file_size']))),
+    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_log_file_size'] / 1048576) >= 2),
+  );
+
+  // Privileges.
+
+  // Create table.
+  $test_table_name = 'mediamosa__' . mt_rand(1000, 9999);
+
+  // Test schema.
+  $schema = array(
+    'fields' => array(
+      'test' => array(
+        'description' => 'testing....',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    )
+  );
+
+  // Create table, if we can...
+  try {
+    mediamosa_db::db_create_table($test_table_name, $schema);
+  }
+  catch (PDOException $e) {
+  }
+
+  $create_table = db_table_exists($test_table_name);
+  $results['database_privileges_create_table'] = array(
+    'title' => t('Database create table'),
+    'value' => $create_table ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okwarning($create_table),
+  );
+
+  // Alter table.
+  $spec = array(
+    'description' => 'testing....',
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+
+  try {
+    mediamosa_db::db_change_field($test_table_name, 'test', 'test_id', $spec);
+    $changed_field = TRUE;
+  }
+  catch (Exception $e) {
+    $changed_field = FALSE;
+  }
+
+  $results['database_privileges_alter_table'] = array(
+    'title' => t('Database alter table'),
+    'value' => $changed_field ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okwarning($changed_field),
+  );
+
+  // Insert.
+  try {
+    mediamosa_db::db_insert($test_table_name)
+      ->fields(array('test_id' => 5))
+      ->execute();
+
+    $inserted_row = TRUE;
+  }
+  catch (PDOException $e) {
+    $inserted_row = FALSE;
+  }
+
+  try {
+    $selected = (int) mediamosa_db::db_select($test_table_name, 'tt')
+      ->fields('tt', array('test_id'))
+      ->execute()
+      ->fetchField();
+  }
+  catch (PDOException $e) {
+    $selected = FALSE;
+  }
+
+  $results['database_privileges_select'] = array(
+    'title' => t('Database select'),
+    'value' => $selected !== FALSE ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okerror($selected == 5),
+  );
+
+  $results['database_privileges_insert'] = array(
+    'title' => t('Database insert'),
+    'value' => $inserted_row ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okerror($inserted_row),
+  );
+
+  // Update.
+  $result = mediamosa_db::db_query('UPDATE {#table_name} SET test_id = 9', array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    mediamosa_db::db_update($test_table_name)
+      ->fields(array('test_id' => 9))
+      ->condition('test_id', 5)
+      ->execute();
+
+    $updated_allowed = TRUE;
+  }
+  catch (Exception $e) {
+    $updated_allowed = FALSE;
+  }
+  $results['database_privileges_update'] = array(
+    'title' => t('Database update'),
+    'value' => $updated_allowed ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okerror($updated_allowed),
+  );
+
+  try {
+    mediamosa_db::db_delete($test_table_name)
+      ->condition('test_id', 9)
+      ->execute();
+
+    $deleted_allowed = TRUE;
+  }
+  catch (Exception $e) {
+    $deleted_allowed = FALSE;
+  }
+
+  $results['database_privileges_delete'] = array(
+    'title' => t('Database delete'),
+    'value' => $deleted_allowed ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okerror($deleted_allowed),
+  );
+
+  // Drop table.
+  $exists_before = mediamosa_db::db_table_exists($test_table_name);
+
+  try {
+    mediamosa_db::db_drop_table($test_table_name);
+  }
+  catch (PDOException $e) {
+    // Ignore.
+    $message = $e->getMessage();
+  }
+  $exists_after = mediamosa_db::db_table_exists($test_table_name);
+
+  $drop_allowed = $exists_before && !$exists_after;
+  $results['database_privileges_drop_table'] = array(
+    'title' => t('Database drop table'),
+    'value' => $drop_allowed ? t('Privilege allowed') : t('Privilege denied'),
+    'severity' => _mediamosa_maintenance_status_okwarning($drop_allowed),
+  );
+
+  // Database schema check.
+  // TODO: Check foreign keys too.
+
+  // Is the schemas ok?
+  $is_schemas = TRUE;
+
+  // Schema differences.
+  $schema_description = '';
+
+  // Scan the install files.
+  $files = file_scan_directory('sites/all/modules/mediamosa', '/^.*\.install\.inc$/');
+  $test_table_prefix = 'mediamosa__' . mt_rand(1000, 9999);
+
+  // Go through the install files.
+  foreach ($files as $file) {
+    require_once $file->uri;
+    $function_name = str_replace('.install', '_schema', $file->name);
+    $module_name = str_replace('.install', '', $file->name);
+    if (is_callable($function_name)) {
+      // Get the schemas.
+      $schemas = call_user_func($function_name);
+
+      // Install the schemas.
+      $make_foreignkey = FALSE;
+      mediamosa::drupal_install_schema($module_name, $test_table_prefix, $make_foreignkey);
+
+      // Get schemas one by one.
+      foreach ($schemas as $original_table_name => $schema) {
+        $test_table_name = $test_table_prefix . $original_table_name;
+
+        try {
+          // Get the table details of the original table.
+          $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+            '#table_name' => $original_table_name,
+          ))->fetchAssoc();
+        }
+        catch (PDOException $e) {
+          $original_table_result = array('create table' => '');
+        }
+
+        // Get the table details of the test table.
+        $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+          '#table_name' => $test_table_name,
+        ))->fetchAssoc();
+
+        // Replace the test table name.
+        $test_table_result = str_replace($test_table_name, $original_table_name, $test_table_result);
+
+        // Clear the foreign keys.
+        if (strpos($original_table_result['create table'], 'CONSTRAINT') !== FALSE) {
+          // Clear the last ','.
+          $original_table_result['create table'] = str_replace(",\n  CONSTRAINT", "\n  CONSTRAINT", $original_table_result['create table']);
+
+          $original_table_result['create table'] = explode("\n", $original_table_result['create table']);
+          // Clear the CONSTRAINT lines.
+          foreach ($original_table_result['create table'] as $key => $line) {
+            if (strpos($line, 'CONSTRAINT') !== FALSE) {
+              unset($original_table_result['create table'][$key]);
+            }
+          }
+          // Clear the indexes of foreing keys.
+          foreach ($schema['foreign keys'] as $index_col_name => $value) {
+            $key = array_search(
+              '  KEY "fk_' . $original_table_name . '_' . $index_col_name . '" ("' . $index_col_name . '")',
+              $original_table_result['create table']
+            );
+            if ($key) {
+              unset($original_table_result['create table'][$key]);
+              if ($key > 0) {
+                $original_table_result['create table'][$key-1] = drupal_substr($original_table_result['create table'][$key-1], 0, -1);
+              }
+            }
+          }
+          $original_table_result['create table'] = implode("\n", $original_table_result['create table']);
+
+        }
+        // Are they same?
+        if ($original_table_result['create table'] != $test_table_result['create table']) {
+          // Make info for displaying the differences.
+          $current_diff = mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']);
+          $schema_diff = mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']);
+          // Is there any difference (not just two lines are in the different order)?
+          if ($current_diff || $schema_diff) {
+            $schema_description .= $original_table_name . ":\n";
+            $schema_description .= "Current:\n" . ($current_diff ? $current_diff . "\n" : '');
+            $schema_description .= "Schema:\n" . ($schema_diff ? $schema_diff . "\n" : '');
+            $schema_description .= "\n";
+            //$schema_description .= "Orig: " . print_r($original_table_result, TRUE) . "\n\n Test: " . print_r($test_table_result, TRUE) . "\n\n";
+            $is_schemas = FALSE;
+          }
+        }
+
+// Drop the test table.
+        mediamosa_db::db_drop_table($test_table_name);
+      }
+    }
+  }
+  $results['database_schemas'] = array(
+    'title' => t('Database schema'),
+    'value' => $is_schemas ? t("Schema's match database installation") : t("Schema's do not match database installation"),
+    'description' => $is_schemas ? '' : '<pre>' . $schema_description . '</pre>',
+    'severity' => _mediamosa_maintenance_status_okwarning($is_schemas),
+  );
+
+  // Making the report.
+  return array(
+    'configuration' => array(
+      'title' => t('Configuration'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_maintenance_status_configuration_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_collect = array();
+  if (!$reset) {
+    $mediamosa_status_collect = variable_get('mediamosa_status_collect_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_collect)) {
+    $mediamosa_status_collect = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_maintenance_status_configuration_generate());
+    variable_set('mediamosa_status_collect_' . mediamosa::get_server_id(), $mediamosa_status_collect);
+  }
+
+  return $mediamosa_status_collect['statuses'];
+}
+
+/**
+ * Implements hook_mediamosa_status_collect_realtime().
+ *
+ * Collect the information always, no caching. Only for front status page.
+ */
+function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_realtime() {
+  $results_drupal = array();
+
+  // ----------------------------------------------- sites/default/settings.php.
+  global $conf;
+
+  $results_drupal['host'] = array(
+    'title' => t('Interface host'),
+    'value' => $_SERVER['SERVER_NAME'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['conf'] = array(
+    'title' => t('Settings file used'),
+    'value' => DRUPAL_ROOT . '/' . conf_path() . '/settings.php',
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // If writable, drupal will create it when needed.
+  $public_writable = file_exists('public://') && is_writable('public://');
+
+  $results_drupal['public_write'] = array(
+    'title' => variable_get('file_public_path', conf_path() . '/files'),
+    'value' => $public_writable ? t('Found & Writable') : t('@dir not writable on @server_name', array('@dir' => DRUPAL_ROOT . '/' . variable_get('file_public_path', conf_path() . '/files'), '@server_name' => $_SERVER['SERVER_NAME'])),
+    'severity' => _mediamosa_maintenance_status_okerror($public_writable),
+  );
+
+  $results_drupal['install_id'] = array(
+    'title' => t('Interface installation ID'),
+    'value' => $conf['mediamosa_installation_id'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app'] = array(
+    'title' => t('App interface'),
+    'value' => $conf['mediamosa_app'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app_upload'] = array(
+    'title' => t('Upload interface'),
+    'value' => $conf['mediamosa_app_upload'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app_download'] = array(
+    'title' => t('Download interface'),
+    'value' => $conf['mediamosa_app_download'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['admin'] = array(
+    'title' => t('Admin interface'),
+    'value' => $conf['mediamosa_admin'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // Get default search engine.
+  $mediamosa_search_engine = mediamosa_search::get_search_engine();
+
+  $results_drupal['search_engine'] = array(
+    'title' => t('Selected search engine'),
+    'value' => $mediamosa_search_engine['title'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  return array(
+    'configuration' => array(
+      'title' => t('Configuration'),
+      'results' => $results_drupal,
+      'in_status_output' => TRUE,
+    ),
+  );
+}

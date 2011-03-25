@@ -1,0 +1,24 @@
+/* $Id: $ */
+
+TH.simpletest_test {
+  width: 300px;
+}
+
+DIV.form-item-asset-id, DIV.form-item-mediafile-id, DIV.form-item-free-search {
+	padding-top: 0px;
+  padding-bottom: 3px;
+}
+
+DIV.form-item-asset-id {
+  float:left;
+  padding-top: 0px;
+  padding-right: 8px;
+}
+
+DIV.form-item-mediafile-id {
+  padding-top: 0px;
+}
+
+#mediamosa-dblog-filters {
+  clear:both;
+}

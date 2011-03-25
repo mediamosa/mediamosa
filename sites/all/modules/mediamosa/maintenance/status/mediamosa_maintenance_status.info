@@ -1,0 +1,17 @@
+; $Id $
+
+name = "Status view page"
+description = "The status module allows you to view the status of your MediaMosa installation."
+package = "MediaMosa - Maintenance"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
+
+; Used files.
+files[] = mediamosa_maintenance_status.module
+files[] = mediamosa_maintenance_status.install
+files[] = mediamosa_maintenance_status.rest.inc
+files[] = mediamosa_maintenance_status.theme.inc

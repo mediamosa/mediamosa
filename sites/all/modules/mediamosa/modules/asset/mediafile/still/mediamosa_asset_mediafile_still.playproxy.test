@@ -1,0 +1,89 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Play proxy still unittests.
+ *
+ * Based on tickets mediamosa 1:
+ * ticket_261
+ */
+
+class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Play proxy - Stills',
+      'description' => 'Play proxy calls on the stills.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testStillPlayProxy() {
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+
+    // Still list.
+    $a_still_list = $a_stills['stills'];
+
+    // Some tests.
+    $this->assertTrue(isset($a_stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($a_stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($a_stills['ticket_id']), 'Found the ticket ID.');
+
+    // Test the output, do output call.
+    $still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from '@url' (code = @code)", array('@url' => $still_url, '@code' => $result->code))
+    );
+  }
+}

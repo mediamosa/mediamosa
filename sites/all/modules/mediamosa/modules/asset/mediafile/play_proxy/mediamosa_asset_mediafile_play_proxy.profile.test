@@ -1,0 +1,101 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for play proxy profile play request.
+  */
+class MediaMosaAssetMediafilePlayProxyProfileTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'PlayProxy - asset/mediafile play proxy profile play request tests',
+      'description' => 'Testing asset mediafile play proxy profile play request related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile delete, see: ticket 227.
+  function testPlayProxyProfile() {
+
+    // Upload a test file.
+    $response = $this->uploadTestFile();
+    $asset_id = $response['asset_id'];
+    $mediafile_id = $response['mediafile_id'];
+
+    // Ask mediafile download url.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 59, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
+
+    // Update mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Ask mediafile download url.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 72, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Ask mediafile download url, incorrect.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id . '_incorrect',
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 79, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND));
+
+    // Ask mediafile download url, incorrect.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 86, $asset_id . '_incorrect', $a_parameters, array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+
+    // Get the mediafile.
+    //$a_mediafile = $this->getMediafile($mediafile_id);
+    // Dump the content.
+    //$this->var_export($a_mediafile);
+
+    // Ask mediafile download url with profile id.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => mt_rand(1, 9999),
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 99, $asset_id . '_incorrect', $a_parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID));
+  }
+}

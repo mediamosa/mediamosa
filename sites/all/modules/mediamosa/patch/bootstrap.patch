@@ -1,0 +1,52 @@
+Index: bootstrap.inc
+===================================================================
+--- a/includes/bootstrap.inc  Wed Dec 01 10:58:56 2010 +0100
++++ b/includes/bootstrap.inc  Wed Dec 01 12:58:31 2010 +0100
+@@ -601,18 +601,24 @@
+     // in drupal_settings_initialize().
+     if (!empty($_SERVER['HTTP_HOST'])) {
+       $cookie_domain = $_SERVER['HTTP_HOST'];
+-      // Strip leading periods, www., and port numbers from cookie domain.
+-      $cookie_domain = ltrim($cookie_domain, '.');
+-      if (strpos($cookie_domain, 'www.') === 0) {
+-        $cookie_domain = substr($cookie_domain, 4);
+-      }
+-      $cookie_domain = explode(':', $cookie_domain);
+-      $cookie_domain = '.' . $cookie_domain[0];
+     }
+   }
++
++  // Strip leading periods, and port numbers from cookie domain.
++  $cookie_domain = ltrim($cookie_domain, '.');
++  $cookie_domain = '.' . array_shift(explode(':', $cookie_domain));
++
+   // Per RFC 2109, cookie domains must contain at least one dot other than the
+   // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
++  // todo: how about co.uk type of domains?
+   if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
++    if (count(explode('.', $cookie_domain)) > 3) {
++      // remove first part before the dot and replace by a dot only
++      $cookie_domain = explode('.', substr($cookie_domain, 1), 2);
++      array_shift($cookie_domain);
++      $cookie_domain = '.' . implode($cookie_domain);
++    }
++
+     ini_set('session.cookie_domain', $cookie_domain);
+   }
+   // To prevent session cookies from being hijacked, a user can configure the
+@@ -2308,6 +2314,15 @@
+ 
+   if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+     list(, $prefix, $time, $salt, $hmac) = $matches;
++
++    // Fix problem when using load balancers, filectime() and fileinode() will
++    // not work for our simpletests running on load balancers (bootstrap.inc)
++    // will not be same. Also same problem when mixing linux and windows
++    // servers.
++    $test_prefix = $prefix;
++    return $test_prefix;
++
++
+     $check_string =  $prefix . ';' . $time . ';' . $salt;
+     // We use the salt from settings.php to make the HMAC key, since
+     // the database is not yet initialized and we can't access any Drupal variables.

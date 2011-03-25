@@ -1,0 +1,15 @@
+; $Id $
+
+name = "Server status view page"
+description = "If you enable this module then the MediaMosa status page will be extended with server status."
+package = "MediaMosa - Maintenance"
+version = "2.2.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance_status
+
+; Used files.
+files[] = mediamosa_maintenance_status_server.module

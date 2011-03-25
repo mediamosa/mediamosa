@@ -1,0 +1,334 @@
+; $Id: $
+name = "MediaMosa"
+description = "Open source media management and distribution platform."
+package = "MediaMosa - Core"
+version = "2.3.8.1361"
+core = 7.x
+
+configure = admin/mediamosa/config/global
+
+; Dependencies (module names)
+; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
+dependencies[] = simpletest
+dependencies[] = mediamosa_sdk
+
+; Used files.
+
+; Core class.
+files[] = mediamosa.module
+files[] = mediamosa.permission.class.inc
+files[] = mediamosa.version.inc
+files[] = mediamosa.inc
+files[] = mediamosa.install
+files[] = mediamosa.rest.inc
+files[] = mediamosa.settings.inc
+
+; Error. (1st for dependency).
+files[] = core/error/mediamosa_error_db.inc
+files[] = core/error/mediamosa_error.inc
+files[] = core/error/mediamosa_error.install.inc
+files[] = core/watchdog/mediamosa_watchdog.install.inc
+
+; Library. (2nd for dependency).
+files[] = lib/mediamosa_datetime.inc
+files[] = lib/mediamosa_db_query.inc
+files[] = lib/mediamosa_db.inc
+files[] = lib/mediamosa_debug.inc
+files[] = lib/mediamosa_exception.inc
+files[] = lib/mediamosa_gd.inc
+files[] = lib/mediamosa_http.inc
+files[] = lib/mediamosa_io.inc
+files[] = lib/mediamosa_lib.inc
+files[] = lib/mediamosa_search.inc
+files[] = lib/mediamosa_log.inc
+files[] = lib/mediamosa_type.inc
+files[] = lib/mediamosa_unicode.inc
+
+; dblog
+files[] = core/watchdog/mediamosa_watchdog.inc
+files[] = core/watchdog/mediamosa_watchdog_db.inc
+
+; CQL.
+files[] = cql/mediamosa_cql.class.inc
+files[] = cql/mediamosa_cql_context.class.inc
+files[] = cql/mediamosa_cql_exceptions.inc
+files[] = cql/mediamosa_cql_part.class.inc
+files[] = cql/mediamosa_cql_part_group.class.inc
+files[] = cql/mediamosa_cql_prefix_assignment.class.inc
+
+; Response class.
+files[] = response/mediamosa_response.inc
+files[] = response/mediamosa_response_connector.inc
+files[] = response/mediamosa_response.test
+
+; Rest interface class.
+files[] = rest/mediamosa_rest_call.inc
+files[] = rest/mediamosa_rest.inc
+files[] = rest/mediamosa_rest.rest.inc
+
+; Aut class.
+files[] = core/aut/mediamosa_aut.inc
+files[] = core/aut/mediamosa_aut.install.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave_db.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave.install.inc
+files[] = core/aut/group/mediamosa_aut_group_db.inc
+files[] = core/aut/group/mediamosa_aut_group.inc
+files[] = core/aut/group/mediamosa_aut_group.install.inc
+files[] = core/aut/name/mediamosa_aut_name_db.inc
+files[] = core/aut/name/mediamosa_aut_name.inc
+files[] = core/aut/name/mediamosa_aut_name.install.inc
+files[] = core/aut/object/mediamosa_aut_object_db.inc
+files[] = core/aut/object/mediamosa_aut_object.inc
+files[] = core/aut/object/mediamosa_aut_object.install.inc
+
+; App class.
+files[] = core/app/mediamosa_app_db.inc
+files[] = core/app/mediamosa_app.inc
+files[] = core/app/mediamosa_app.install.inc
+
+; App Authentication class.
+files[] = core/app/authentication/mediamosa_app_authentication.inc
+
+; Webservice class.
+files[] = core/webservice/mediamosa_webservice_db.inc
+files[] = core/webservice/mediamosa_webservice.inc
+files[] = core/webservice/mediamosa_webservice.install.inc
+
+; Webservice App class.
+files[] = core/webservice/app/mediamosa_webservice_app_db.inc
+files[] = core/webservice/app/mediamosa_webservice_app.inc
+files[] = core/webservice/app/mediamosa_webservice_app.install.inc
+
+; CQL.
+files[] = core/cql/mediamosa_core_cql.inc
+
+; Asset.
+files[] = core/asset/mediamosa_asset_db.inc
+files[] = core/asset/mediamosa_asset.inc
+files[] = core/asset/mediamosa_asset_search.inc
+files[] = core/asset/mediamosa_asset.install.inc
+
+; Asset Delete.
+files[] = core/asset/delete/mediamosa_asset_delete_db.inc
+files[] = core/asset/delete/mediamosa_asset_delete.inc
+files[] = core/asset/delete/mediamosa_asset_delete.install.inc
+
+; Asset Mediafile.
+files[] = core/asset/mediafile/mediamosa_asset_mediafile_db.inc
+files[] = core/asset/mediafile/mediamosa_asset_mediafile.inc
+files[] = core/asset/mediafile/mediamosa_asset_mediafile.install.inc
+
+; Asset Mediafile Metadata.
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata_db.inc
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.inc
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.install.inc
+
+; Asset Mediafile Metadata Property.
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property_db.inc
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property.inc
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property.install.inc
+
+; Asset Mediafile Playproxy.
+files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
+
+; Asset Mediafile Still.
+files[] = core/asset/mediafile/still/mediamosa_asset_mediafile_still.inc
+
+; Asset Mediafile Upload.
+files[] = core/asset/mediafile/upload/mediamosa_asset_mediafile_upload.inc
+
+; Asset Metadata.
+files[] = core/asset/metadata/mediamosa_asset_metadata_db.inc
+files[] = core/asset/metadata/mediamosa_asset_metadata.inc
+files[] = core/asset/metadata/mediamosa_asset_metadata.install.inc
+
+; Asset Metadata Property.
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property_db.inc
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.inc
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.install.inc
+
+; Asset Metadata Property Group.
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group_db.inc
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
+
+; Asset Supplement.
+files[] = core/asset/supplement/mediamosa_asset_supplement_db.inc
+files[] = core/asset/supplement/mediamosa_asset_supplement.inc
+files[] = core/asset/supplement/mediamosa_asset_supplement.install.inc
+
+; Collection.
+files[] = core/collection/mediamosa_collection_db.inc
+files[] = core/collection/mediamosa_collection_search.inc
+files[] = core/collection/mediamosa_collection.inc
+files[] = core/collection/mediamosa_collection.install.inc
+
+; Asset Collection.
+files[] = core/asset/collection/mediamosa_asset_collection_db.inc
+files[] = core/asset/collection/mediamosa_asset_collection.inc
+files[] = core/asset/collection/mediamosa_asset_collection.install.inc
+
+; FTP Batch.
+files[] = core/ftp_batch/mediamosa_ftp_batch_db.inc
+files[] = core/ftp_batch/mediamosa_ftp_batch.inc
+files[] = core/ftp_batch/mediamosa_ftp_batch.install.inc
+
+; FTP Batch Asset.
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset_db.inc
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.inc
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.install.inc
+
+; FTP User.
+files[] = core/ftp_user/mediamosa_ftp_user_db.inc
+
+; Job.
+files[] = core/job/mediamosa_job_db.inc
+files[] = core/job/mediamosa_job.inc
+files[] = core/job/mediamosa_job.install.inc
+
+; Job Scheduler.
+files[] = core/job/scheduler/mediamosa_job_scheduler.inc
+
+; Job Server.
+files[] = core/job/server/mediamosa_job_server_db.inc
+files[] = core/job/server/mediamosa_job_server.inc
+files[] = core/job/server/mediamosa_job_server.install.inc
+
+; Job Server Analyse.
+files[] = core/job/server/analyse/mediamosa_job_server_analyse_db.inc
+files[] = core/job/server/analyse/mediamosa_job_server_analyse.install.inc
+
+; Job Server Still.
+files[] = core/job/server/still/mediamosa_job_server_still_db.inc
+files[] = core/job/server/still/mediamosa_job_server_still.inc
+files[] = core/job/server/still/mediamosa_job_server_still.install.inc
+
+; Job Server Transcode.
+files[] = core/job/server/transcode/mediamosa_job_server_transcode_db.inc
+files[] = core/job/server/transcode/mediamosa_job_server_transcode.inc
+files[] = core/job/server/transcode/mediamosa_job_server_transcode.install.inc
+
+; Job Still.
+files[] = core/job/still/mediamosa_job_still_db.inc
+files[] = core/job/still/mediamosa_job_still.inc
+files[] = core/job/still/mediamosa_job_still.install.inc
+
+; Job Transcode.
+files[] = core/job/transcode/mediamosa_job_transcode_db.inc
+files[] = core/job/transcode/mediamosa_job_transcode.inc
+files[] = core/job/transcode/mediamosa_job_transcode.install.inc
+
+; Job Upload.
+files[] = core/job/upload/mediamosa_job_upload_db.inc
+files[] = core/job/upload/mediamosa_job_upload.inc
+files[] = core/job/upload/mediamosa_job_upload.install.inc
+
+; Node type load/insert/delete/update related code.
+files[] = core/node/mediamosa_node.inc
+files[] = core/node/mediamosa_node.install.inc
+files[] = core/node/mediamosa_node_mediamosa_app.inc
+files[] = core/node/mediamosa_node_mediamosa_server.inc
+files[] = core/node/mediamosa_node_mediamosa_settings.inc
+files[] = core/node/mediamosa_node_mediamosa_transcoding_profile.inc
+files[] = core/node/revision/mediamosa_node_revision_db.inc
+files[] = core/node/revision/mediamosa_node_revision.inc
+files[] = core/node/revision/mediamosa_node_revision.install.inc
+
+; Statistics
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used.install.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload_db.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload.install.inc
+files[] = core/statistics/job/mediamosa_statistics_job_db.inc
+files[] = core/statistics/job/mediamosa_statistics_job.install.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log_db.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log.install.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request_db.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request.install.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request_db.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request.install.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper_db.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper.install.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket_db.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket.install.inc
+files[] = core/statistics/mediamosa_statistics.inc
+files[] = core/statistics/mediamosa_statistics.install.inc
+
+; Storage.
+files[] = core/configuration/storage/mediamosa_configuration_storage.inc
+
+; Server.
+files[] = core/server/mediamosa_server.install.inc
+files[] = core/server/mediamosa_server.inc
+files[] = core/server/mediamosa_server_db.inc
+
+; Server Job.
+files[] = core/server/job/mediamosa_server_job_db.inc
+files[] = core/server/job/mediamosa_server_job.inc
+files[] = core/server/job/mediamosa_server_job.install.inc
+
+; Server Streaming.
+files[] = core/server/streaming/mediamosa_server_streaming.install.inc
+
+; Server Streaming Container.
+files[] = core/server/streaming/container/mediamosa_server_streaming_container_db.inc
+files[] = core/server/streaming/container/mediamosa_server_streaming_container.install.inc
+
+; Server Tool.
+files[] = core/server/tool/mediamosa_server_tool.install.inc
+files[] = core/server/tool/mediamosa_server_tool_db.inc
+
+; Ticket.
+files[] = core/ticket/mediamosa_ticket_db.inc
+files[] = core/ticket/mediamosa_ticket.inc
+files[] = core/ticket/mediamosa_ticket.install.inc
+
+; Transcode.
+files[] = core/transcode/mediamosa_transcode.install.inc
+files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
+files[] = core/transcode/profile/mediamosa_transcode_profile.inc
+files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
+
+; Tool params.
+files[] = core/tool/params/mediamosa_tool_params.install.inc
+files[] = core/tool/params/mediamosa_tool_params_db.inc
+files[] = core/tool/params/mediamosa_tool_params.inc
+
+; Tool mapping.
+files[] = core/tool/mapping/mediamosa_tool_mapping.install.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping_db.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping.inc
+
+; Tool.
+files[] = core/tool/mediamosa_tool.install.inc
+
+; User.
+files[] = core/user/mediamosa_user_db.inc
+files[] = core/user/mediamosa_user.inc
+files[] = core/user/mediamosa_user.install.inc
+
+; User Group.
+files[] = core/user/group/mediamosa_user_group_db.inc
+files[] = core/user/group/mediamosa_user_group.inc
+files[] = core/user/group/mediamosa_user_group.install.inc
+
+; User Favorite.
+files[] = core/user/favorite/mediamosa_user_favorite_db.inc
+files[] = core/user/favorite/mediamosa_user_favorite.inc
+files[] = core/user/favorite/mediamosa_user_favorite.install.inc
+
+; Simpletest Class.
+files[] = simpletest/mediamosa.simpletest.inc
+files[] = simpletest/mediamosa.simpletest.ega.inc
+files[] = simpletest/mediamosa.simpletest.ega.job.inc
+files[] = simpletest/mediamosa.simpletest.ega.test
+files[] = simpletest/mediamosa.simpletest.ega.job.test
+files[] = simpletest/mediamosa.simpletest.rest.inc
+
+; Patch tests.
+files[] = patch/mediamosa_cookie_domain.test
+
+; Core tests.
+files[] = mediamosa.timezone.test
+

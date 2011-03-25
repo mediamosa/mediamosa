@@ -1,0 +1,15 @@
+; $Id $
+
+name = "Application"
+description = "The application module enables different applications to access MediaMosa within their own database and section in MediaMosa."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+; dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_app.module
+files[] = mediamosa_app.rest.inc
+files[] = mediamosa_app.test

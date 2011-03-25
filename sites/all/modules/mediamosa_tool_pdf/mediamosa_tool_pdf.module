@@ -1,0 +1,147 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * PDF tool module.
+ */
+
+// Constants.
+
+/**
+ * Implements hook_mediamosa_tool_can_analyse().
+ */
+function mediamosa_tool_pdf_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_pdf::is_supported($mime_type);
+}
+
+/**
+ * Implements hook_mediamosa_tool_analyse().
+ *
+ * @param array $job_ext
+ */
+function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
+  $command_type = 'mediamosa_tool_pdf';
+  $tool_id = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
+  $execution_command = 'pdfinfo @mediafile_location';
+  $separator = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR;
+  mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
+}
+
+/**
+ * Implements hook_mediamosa_tool_options().
+ */
+function mediamosa_tool_pdf_mediamosa_tool_options() {
+  return array(
+    'name' => t('PDF'),
+    'description' => t('PDF files'),
+    'tool' => mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID,
+  );
+}
+
+/**
+ * Implements hook_mediamosa_tool_iteration().
+ *
+ * Get tool id.
+ */
+function mediamosa_tool_pdf_mediamosa_tool_iteration() {
+  return mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
+}
+
+/**
+ * Generate information for the status page.
+ */
+function _mediamosa_tool_pdf_status_generate() {
+  // For several topics we provide a link to webpages with configuration hints.
+  $helper_links = array(
+    'pdf2swf' => l('here', 'http://mediamosa.org/trac/wiki/pdf2swf'),
+    'pdfinfo' => l('here', 'http://mediamosa.org/trac/wiki/pdfinfo'),
+  );
+
+  $results = array();
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('pdf2swf -V', $exec_output);
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('part of', $exec_output) : t('pdf2swf not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('pdf2swf - part of swftools ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_pdf2swf'] = array(
+    'title' => t('PDF tool: pdf2swf'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_pdf::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING),
+    'description' => $found ? '' : t('Install pdf2swf. You can find more information how to install pdf2swf !here', array('!here' => $helper_links['pdf2swf'])),
+  );
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('pdfinfo -v', $exec_output, array(0, 99));
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('pdfinfo not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('pdfinfo version ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_pdfinfo'] = array(
+    'title' => t('PDF tool: pdfinfo'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_pdf::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING),
+    'description' => $found ? '' : t('Install pdfinfo. You can find more information how to install pdfinfo !here', array('!here' => $helper_links['pdfinfo'])),
+  );
+
+  // Making the report.
+  return array(
+    'configuration' => array(
+      'title' => t('Image tool'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_tool_pdf_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_collect = array();
+  if (!$reset) {
+    $mediamosa_status_collect = variable_get('mediamosa_status_pdf_collect_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_collect)) {
+    $mediamosa_status_collect = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_tool_pdf_status_generate());
+    variable_set('mediamosa_status_pdf_collect_' . mediamosa::get_server_id(), $mediamosa_status_collect);
+  }
+
+  return $mediamosa_status_collect['statuses'];
+}

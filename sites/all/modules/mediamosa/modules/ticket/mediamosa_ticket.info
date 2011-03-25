@@ -1,0 +1,13 @@
+; $Id $
+
+name = "Ticket"
+description = "The ticket module enables creation of timed expired tickets for access files, stills and other media."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_ticket.module

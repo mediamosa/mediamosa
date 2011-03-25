@@ -1,0 +1,12 @@
+; $Id: $
+name = "MediaMosa - REST remapper POST to GET"
+description = "Copies and remaps all REST POST calls to /post2get/[REST CALL] and makes them GET. The existing POST variants are left unchanged. <b>Do not enable this module if you do not need it, for developers intended only.</b>"
+package = "MediaMosa - SDK"
+version = "2.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_restcalls_post2get.module

@@ -1,0 +1,418 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * User module.
+  */
+
+function mediamosa_user_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['user'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a list of users.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user?limit=10&offset=0 [GET] ',
+    mediamosa_rest_call::DESCRIPTION => 'With this call you get a list of all known users. User integrity is not forced in MediaMosa, but rather left to the application builder. There is however some basic knowledge of users. The /user... restcalls can be used to store basic user data. So if you create an asset with a user, this will succeed regardless the user exists in the userlist. The main purpose for the user lists in MediaMosa is the storage of the quotum per user/group.
+
+This call returns all users which are created with /user/create and searches for all users who created objects (assets, mediafiles, collections). If the user has some quota information, this is added to the output.',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <user_id>admin</user_id>
+    <group_id></group_id>
+    <quotum></quotum>
+    <created></created>
+    <changed></changed>
+  </item>
+</items>',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+  );
+
+  $rest_calls['user/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a user.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a new user.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user/create [POST] user=foo&quotum=0&group_id=bar',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
+<request_result_id>601</request_result_id> ',
+  );
+
+  $rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the user information.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the user, group and quota information.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user/foo [GET] ',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'user_quota_mb' => 'Available diskspace of user in megabytes.',
+      'user_diskspace_used_mb' => 'Current diskspace used in megabytes.',
+      'user_over_quota' => '(boolean, true/false), Is the user over quota.',
+      'group_quota_mb' => 'Available diskspace of the group, the user is member of, in megabytes.',
+      'group_diskspace_used_mb' => 'Current diskspace used of the group, the user is member of, in megabytes.',
+      'app_quota_mb' => 'Total available diskspace for the application.',
+      'app_diskspace_used_mb' => 'Total current diskspace used by the application.',
+      'quota_available_mb' => '',
+      'group_id' => 'Name of the group, the user is member of.',
+      'created' => 'Datetime when the user was created.',
+      'changed' => 'Datetime of the last change in the user details.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '
+<items>
+  <item id="1">
+    <group_quota_mb>0</group_quota_mb>
+    <app_quota_mb>0</app_quota_mb>
+    <user_quota_mb>0</user_quota_mb>
+    <app_diskspace_used_mb>0</app_diskspace_used_mb>
+    <group_diskspace_used_mb>0</group_diskspace_used_mb>
+    <user_diskspace_used_mb>0</user_diskspace_used_mb>
+    <quota_available_mb>0</quota_available_mb>
+    <user_over_quota>false</user_over_quota>
+    <group_id></group_id>
+    <created>2010-03-16 15:44:44</created>
+    <changed>2010-03-16 15:44:44</changed>
+  </item>
+</items>',
+  );
+
+  $rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the user information.',
+    mediamosa_rest_call::DESCRIPTION => 'With this call you can add disk space to a user and group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user/admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['user/$user_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a user.',
+    mediamosa_rest_call::DESCRIPTION => 'Deletes a user. The collections/assets/mediafiles of the user will not be deleted. This means that as long as there are objects belonging to the user, the user will appear in the /user [GET] lists. If the user must be deleted everywhere, you must change the owner of these objects first.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user/delete [POST] user=foo&quotum=0&group_id=bar',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
+<request_result_id>601</request_result_id> ',
+  );
+
+  $rest_calls['user/$fav_user_id/favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search for favorites.',
+    mediamosa_rest_call::DESCRIPTION => 'Search for favorites.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites?fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <app_id>14</app_id>
+    <provider_id></provider_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <videotimestamp>2010-01-22 16:22:45</videotimestamp>
+    <videotimestampmodified>2010-01-22 16:22:54</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <is_locked>FALSE</is_locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <mediafile_duration>00:00:29.92</mediafile_duration>
+    <mediafile_container_type>asf</mediafile_container_type>
+    <is_external>FALSE</is_external>
+    <is_empty_asset>FALSE</is_empty_asset>
+    <viewed>185</viewed>
+    <played>105</played>
+    <is_protected>FALSE</is_protected>
+    <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <dublin_core>
+      <contributor></contributor>
+      <coverage_spatial></coverage_spatial>
+      <coverage_temporal></coverage_temporal>
+      <creator></creator>
+      <date></date>
+      <description></description>
+      <format></format>
+      <identifier></identifier>
+      <language>nl</language>
+      <publisher></publisher>
+      <relation></relation>
+      <rights></rights>
+      <source></source>
+      <subject></subject>
+      <title>test</title>
+      <type></type>
+    </dublin_core>
+    <qualified_dublin_core>
+      <created></created>
+      <description_abstract></description_abstract>
+      <format_extent></format_extent>
+      <format_medium></format_medium>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <isreferencedby></isreferencedby>
+      <issued></issued>
+      <license></license>
+      <rightsholder></rightsholder>
+      <title_alternative></title_alternative>
+    </qualified_dublin_core>
+    <is_favorite>FALSE</is_favorite>
+    <granted>TRUE</granted>
+    <vpx_still_url>http://mediamosa2/still/F1cAk7KYiDIGYVHQKnk32YPy</vpx_still_url>
+    <ega_still_url></ega_still_url>
+  </item>
+</items>',
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Add a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Add a user favorite. This can be a collection or an asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/create<br />
+fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite using favorite ID, favorite type and favorite user ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/delete<br />
+fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Delete a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite using favorite ID, favorite type and favorite user ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/delete?fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Group calls
+  $rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a list of groups.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a list of all available groups.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/group [GET]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <group_id>mygroup</group_id>
+    <quotum>0</quotum>
+    <created>2009-11-06 17:54:52</created>
+    <changed>2008-07-17 13:54:42</changed>
+  </item>
+  <item id="2">
+    <group_id>Simpletest test group</group_id>
+    <quotum></quotum>
+    <created>2008-09-03 12:24:42</created>
+    <changed>2008-09-17 12:44:42</changed>
+  </item>
+</items>',
+  );
+
+  $rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a new group.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a new user group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/create<br /><br />group_id = "mygroup"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a group details.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_quota_mb>10240000</app_quota_mb>
+    <group_quota_mb>0</group_quota_mb>
+    <app_diskspace_used_mb>8435543</app_diskspace_used_mb>
+    <group_diskspace_used_mb>5843399</group_diskspace_used_mb>
+    <quota_available_mb>1804457</quota_available_mb>
+    <group_over_quota>false</group_over_quota>
+    <created>2009-11-06 17:54:52</created>
+    <changed>2008-07-17 13:54:42</changed>
+  </item>
+</items>',
+  );
+
+  $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a group.',
+    mediamosa_rest_call::DESCRIPTION => 'Update the quotum value of a user group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup<br /><br />quotum = "456"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Alias.
+  $rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST] = $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST];
+
+  $rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a group.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user group, it can not be deleted if it still contains group members.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_user_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  $rest_calls['user'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id/set_group'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_set_group',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$user_id/set_quotum'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_set_quotum',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/add'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Add a user favorite. This can be a collection or an asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['user/$fav_user_id/favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(
+      mediamosa_rest_call_user_favorite_search::APP_ID => 1,
+      mediamosa_rest_call_user_favorite_search::FAV_TYPE => mediamosa_user_favorite_db::FAV_TYPE_ASSET,
+    ),
+  );
+
+  $rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+
+  $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Alias.
+  $rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST] = $rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
+
+  $rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  return $rest_calls;
+}

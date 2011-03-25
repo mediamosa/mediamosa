@@ -1,0 +1,205 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for play proxy ticket mechanisme.
+  */
+class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'PlayProxy - asset/mediafile play proxy ticket mechanisme tests',
+      'description' => 'Testing asset mediafile play proxy ticket mechanisme related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  function testBugReportMediaMosaOrgTicket422() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create 2 mediafiles.
+    $mediafile_id_1 = $this->createMediafile($asset_id);
+    $mediafile_id_2 = $this->createMediafile($asset_id);
+
+    // Upload 2 mediafiles.
+    $filename_1 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1, $this->getTestVideo());
+    $filename_2 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_2, $this->getTestVideo_ogg());
+
+    // Now transcode both.
+
+    // Create transcode job.
+    $job_id_1 = $this->createMediafileTranscode($mediafile_id_1);
+    $job_id_2 = $this->createMediafileTranscode($mediafile_id_2);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Get the mediafile_ids.
+    $mediafile_ids = array();
+
+    // Add mediafile clean up.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          // Get the transcodes.
+          if (!in_array($mediafile_child['mediafile_id'], array($mediafile_id_1, $mediafile_id_2))) {
+            $mediafile_ids[$mediafile_child['mediafile_id']] = $mediafile_child['mediafile_id'];
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+        // Get the transcodes.
+        if (!in_array($mediafile['mediafile_id'], array($mediafile_id_1, $mediafile_id_2))) {
+          $mediafile_ids[$mediafile['mediafile_id']] = $mediafile['mediafile_id'];
+        }
+      }
+    }
+
+    // 2 transcodes must be found.
+    $this->assertEqual(count($mediafile_ids), 2, 'Found 2 transcodes.');
+
+    // Ok try to play them.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI,
+      mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
+      mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => 1,
+    );
+    $xml = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    $this->var_export($xml);
+
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI,
+      mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
+      mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => 1,
+    );
+    $xml = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Now get the tickets from the database.
+    $result = mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_ticket} WHERE #mediafile_id IN(:mediafile_ids)',
+      array(
+        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
+        '#mediafile_id' => mediamosa_ticket_db::MEDIAFILE_ID,
+        ':mediafile_ids' => $mediafile_ids,
+      )
+    )->fetchAll();
+
+    $this->var_export($result, 'Ticket DB dump');
+
+    // Now remove found mediafile ids.
+    foreach ($result as $ticket) {
+      unset($mediafile_ids[$ticket['mediafile_id']]);
+    }
+
+    // All tickets must be used for all mediafile_ids.
+    $this->assertTrue(!count($mediafile_ids), 'All mediafiles got tickets');
+  }
+
+  // Testing mediafile play proxy ticket, see: ticket 72.
+  function testPlayProxyTicketMechanisme() {
+
+    // Preparation.
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+    $filename = $a_upload['filename'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Update mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Play proxy create ticket.
+
+    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
+      // Ask mediafile download url.
+      $a_parameters = array(
+        mediamosa_rest_call_asset_mediafile_play::RESPONSE => $subject,
+        mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      );
+      $a_xml = $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+      $output = $a_xml['items']['item']['output'];
+
+      switch ($subject) {
+        case 'plain':
+          // Play proxy function tests if we get ok.
+          break;
+        case 'metafile':
+          $test_string = '<asx version="3.0">';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Mediafile output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+        case 'object':
+          $test_string = '<object id=';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Object output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+        default:
+          // Test the output, do output call.
+          $output = str_replace('/still/', '/simpletest/still/', $output);
+
+          // Get the file.
+          $result = mediamosa_http::drupal_http_request($output);
+
+          // Check response.
+          $this->assertTrue(
+            $result->code == 200,
+            t("File exists (@subject): '@url' (code = @code)", array('@subject' => $subject, '@url' => $output, '@code' => $result->code))
+          );
+      }
+    }
+  }
+}

@@ -1,0 +1,145 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Unit test for User / Group.
+ * Coversion of;
+ * trac_tickets_203
+ */
+
+class MediaMosaUserTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'User/Group - quota common tests',
+      'description' => 'The (quota) user and group unit tests.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testUserAndGroupQuota() {
+    $user_id = $this->randomName();
+    $group_id = $this->randomName();
+
+    $quotum = rand(100, 9999);
+    $a_parameters = array(
+      mediamosa_rest_call_group_create::QUOTUM => $quotum,
+    );
+
+    // Create group.
+    $this->createGroup($group_id, $a_parameters);
+
+    // Check if created (is done by getGroup).
+    $a_group = $this->getGroup($group_id);
+
+    // Check if quotum was stored.
+    $this->assertTrue($a_group['group_quota_mb'] == $quotum, 'Quotum is stored ok');
+
+    // Now change the quotum.
+    $a_parameters = array(
+      mediamosa_rest_call_group_create::QUOTUM => ++$quotum,
+    );
+
+    // Update group.
+    $this->updateGroup($group_id, $a_parameters);
+
+    // Check if created (is done by getGroup).
+    $a_group = $this->getGroup($group_id);
+
+    // Check if quotum was stored.
+    $this->assertTrue($a_group['group_quota_mb'] == $quotum, 'Quotum is stored ok');
+
+    // Create user.
+    $this->createUser($user_id, $a_parameters);
+
+    // Check if created (is done by getUser).
+    $a_user = $this->getUser($user_id);
+
+    // Check if quotum was stored.
+    $this->assertTrue($a_user['user_quota_mb'] == $quotum, 'Quotum is stored ok');
+
+    // Now change the quotum.
+    $a_parameters = array(
+      mediamosa_rest_call_user_create::QUOTUM => ++$quotum,
+    );
+
+    // Update group.
+    $this->updateUser($user_id, $a_parameters);
+
+    // Check if created (is done by getUser).
+    $a_user = $this->getUser($user_id);
+
+    // Check if quotum was stored.
+    $this->assertTrue($a_user['user_quota_mb'] == $quotum, 'Quotum is stored ok');
+
+    // Get user list.
+    $a_users = $this->getUserList();
+
+    // Create asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+      mediamosa_rest_call_asset_create::GROUP_ID => $group_id,
+    );
+    $asset_id = $this->createAsset($a_parameters);
+
+    // Create mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::USER_ID => $user_id,
+      mediamosa_rest_call_create_mediafile::GROUP_ID => $group_id,
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+
+    // Some random filesize.
+    $filesize = mt_rand(1, 10) * 1024 * 1024; // in bytes
+
+    // Create metadata.
+    $metadatas = array(
+      array(
+        'value' => $filesize,
+        'prop_name' => mediamosa_asset_mediafile_metadata::FILESIZE,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+      ),
+    );
+    mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
+
+    // Get user.
+    $a_user = $this->getUser($user_id);
+
+    // Must be same as filesize.
+    $this->assertTrue($a_user['user_diskspace_used_mb'] == $filesize / (1024 * 1024), 'filesize must match');
+
+    // Get user.
+    $a_group = $this->getGroup($group_id);
+
+    // Must be same as filesize.
+    $this->assertTrue($a_group['group_diskspace_used_mb'] == $filesize / (1024 * 1024), 'filesize must match');
+  }
+}

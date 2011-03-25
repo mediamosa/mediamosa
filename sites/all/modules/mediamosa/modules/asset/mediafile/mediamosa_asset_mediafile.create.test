@@ -1,0 +1,242 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for mediafile create.
+  */
+class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - create tests',
+      'description' => 'Testing asset mediafile create related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile create, see: ticket 268.
+  function testMediafileCreate() {
+
+    //
+    // Set up.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Save mediafile_id.
+    $mediafiles = array();
+
+    //
+    // Make a new mediafile.
+    //
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Save mediafile_id.
+    $mediafiles['1'] = $mediafile_id;
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the mediafile_id.
+    $this->assertTrue(
+      $a_mediafile['mediafile_id'] == $mediafile_id,
+      t("Mediafile has the good id.")
+    );
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 1;
+    $this->assertTrue(
+      count($a_asset_mediafile['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($a_asset_mediafile['items']['item']), '@expected' => $expected))
+    );
+
+    //
+    // Make the 2nd mediafile.
+    //
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Save mediafile_id.
+    $mediafiles['2'] = $mediafile_id;
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the mediafile_id.
+    $this->assertTrue(
+      $a_mediafile['mediafile_id'] == $mediafile_id,
+      t("Mediafile has the good id.")
+    );
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 2;
+    $this->assertTrue(
+      count($a_asset_mediafile['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($a_asset_mediafile['items']['item']), '@expected' => $expected))
+    );
+
+    //
+    // Make the 3rd mediafile.
+    //
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Save mediafile_id.
+    $mediafiles['3'] = $mediafile_id;
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the mediafile_id.
+    $this->assertTrue(
+      $a_mediafile['mediafile_id'] == $mediafile_id,
+      t("Mediafile has the good id.")
+    );
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 3;
+    $this->assertTrue(
+      count($a_asset_mediafile['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($a_asset_mediafile['items']['item']), '@expected' => $expected))
+    );
+
+    //
+    // Make the 4th mediafile (transcoded).
+    //
+
+    // Create a mediafile.
+    $do_internal = TRUE;
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafiles['1'],
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), $do_internal);
+
+    // Save mediafile_id.
+    $mediafiles['4'] = $mediafile_id;
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the mediafile_id.
+    $this->assertTrue(
+      $a_mediafile['mediafile_id'] == $mediafile_id,
+      t("Mediafile has the good id.")
+    );
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 4;
+    $this->assertTrue(
+      count($a_asset_mediafile['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($a_asset_mediafile['items']['item']), '@expected' => $expected))
+    );
+
+    // We have still 3 original mediafile.
+    $expected = 3;
+    $counted = 0;
+    foreach ($a_asset_mediafile['items']['item'] as $mf) {
+      if ($mf['is_original_file'] == 'TRUE') {
+        $counted++;
+      }
+    }
+
+    $this->assertTrue(
+      $counted == $expected,
+      t("Get the original mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => $counted, '@expected' => $expected))
+    );
+
+    //
+    // Make the 5th mediafile (transcoded).
+    //
+
+    // Create a mediafile.
+    $do_internal = TRUE;
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafiles['1'],
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), $do_internal);
+
+    // Save mediafile_id.
+    $mediafiles['5'] = $mediafile_id;
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the mediafile_id.
+    $this->assertTrue(
+      $a_mediafile['mediafile_id'] == $mediafile_id,
+      t("Mediafile has the right id.")
+    );
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 5;
+    $this->assertTrue(
+      count($a_asset_mediafile['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($a_asset_mediafile['items']['item']), '@expected' => $expected))
+    );
+
+    // We have still 3 original mediafile.
+    $expected = 3;
+    $counted = 0;
+    foreach ($a_asset_mediafile['items']['item'] as $mediafile) {
+      if ($mediafile['is_original_file'] == 'TRUE') {
+        $counted++;
+      }
+    }
+
+    $this->assertTrue(
+      $counted == $expected,
+      t("Get the original mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => $counted, '@expected' => $expected))
+    );
+  }
+}

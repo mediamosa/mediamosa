@@ -1,0 +1,89 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for supplement delete.
+  */
+class MediaMosaAssetSupplementDeleteTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset supplement - delete tests',
+      'description' => 'Testing asset supplement delete related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset supplement, see: ticket 535.
+  function testSuplementDelete() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create content.
+    $supplement = 'test';
+
+    // Create supplement.
+    $supplement_id = $this->createAssetSupplement($asset_id);
+
+    // Update the supplement.
+    $this->updateAssetSupplement($asset_id, $supplement_id, $supplement);
+
+    // Get supplements.
+    $get_supplements = $this->getAssetSupplement($asset_id);
+
+    // Check the supplements.
+    $is_supplement = FALSE;
+    foreach ($get_supplements['items']['item'] as $sup) {
+      if (base64_decode($sup['supplement_base64']) == $supplement) {
+        $is_supplement = TRUE;
+        break;
+      }
+    }
+    $this->assertTrue(
+      $is_supplement,
+      t("Supplement has the good value")
+    );
+
+    //
+    // Delete the supplement.
+    // [post] supplement/$supplement_id/delete.
+    //
+
+    // Delete supplement.
+    $response = $this->deleteAssetSupplement($asset_id, $supplement_id);
+
+    // Get supplements.
+    $get_supplements = $this->getAssetSupplement($asset_id, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+  }
+}

@@ -1,0 +1,263 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * MediaMosa tool.
+  */
+
+require_once 'params/mediamosa_tool_params.inc';
+require_once 'mapping/mediamosa_tool_mapping.inc';
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_tool_help($path, $arg) {
+
+  switch ($path) {
+    case 'admin/mediamosa/config/tool_params':
+      return '<p>' . t('Tool params are used by the transcoding profiles.') . '</p>';
+
+    case 'admin/mediamosa/config/tool_mapping':
+      return '<p>' . t('Specify how the input data from tools are mapped to asset metadata during the analyse fase.') . '</p>';
+  }
+}
+
+function mediamosa_tool_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get transcode parameters.',
+    mediamosa_rest_call::DESCRIPTION => 'Get transcode parameters.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/parameter',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <transcode_mapping_id>1</transcode_mapping_id>
+    <tool>ffmpeg</tool>
+    <nice_parameter>videobitrate</nice_parameter>
+    <tool_parameter>-b</tool_parameter>
+    <min_value>128000</min_value>
+    <max_value>800000</max_value>
+    <allowed_value></allowed_value>
+    <default_value>200000</default_value>
+    <required>FALSE</required>
+    <created>2010-04-07 12:39:03</created>
+    <changed>2010-04-07 12:39:03</changed>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_tool_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  // Get transcode parameters.
+  $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_tool_params_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_tool_params',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_tool_menu() {
+  $items = array();
+
+  // Params.
+
+  $items['admin/mediamosa/config/tool_params'] = array(
+    'title' => 'Tool parameters',
+    'description' => 'Tool params are used by the transcoding profiles.',
+    'page callback' => '_mediamosa_tool_params_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLPARAMS),
+  );
+
+  $items['admin/mediamosa/config/tool_params/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/tool_params/add'] = array(
+    'title' => 'Add',
+    'page callback' => 'node_add',
+    'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  $items['admin/mediamosa/config/tool_params/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/mediamosa/config/tool_params/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/tool_params/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/tool_params/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_node_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/tool_params/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  // Mapping.
+
+  $items['admin/mediamosa/config/tool_mapping'] = array(
+    'title' => 'Tool mapping',
+    'description' => 'Specify how the input data from tools are mapped to asset metadata during the analyse fase.',
+    'page callback' => '_mediamosa_tool_mapping_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLMAPPING),
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/add'] = array(
+    'title' => 'Add',
+    'page callback' => 'node_add',
+    'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/mediamosa/config/tool_mapping/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_node_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/tool_mapping/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  return $items;
+}

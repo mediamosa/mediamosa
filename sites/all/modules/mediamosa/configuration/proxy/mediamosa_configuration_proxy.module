@@ -1,0 +1,52 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Proxy module.
+ */
+
+/**
+ * Implements hook_mediamosa_settings_collect().
+ */
+function mediamosa_configuration_proxy_mediamosa_configuration_collect() {
+  $form['settings_proxy'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Proxy settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_proxy']['mediamosa_curlproxy_http'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Proxy Url'),
+    '#description' => t('The proxy url is used when HTTP requests can not be reached directly because of firewalls or other reasons. These requests are f.e. requests to signal upload completion or when a job has been finished. Leave empty if servers can access outside webservers without problems.'),
+    '#required' => FALSE,
+    '#default_value' => variable_get('mediamosa_curlproxy_http', ''),
+  );
+
+  return $form;
+}

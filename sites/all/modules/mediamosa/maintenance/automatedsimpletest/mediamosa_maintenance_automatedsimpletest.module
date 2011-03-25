@@ -1,0 +1,561 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The automated simpletest module.
+  */
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_maintenance_automatedsimpletest_menu() {
+  $items = array();
+
+  // If its off, its off.
+  if (!variable_get('mediamosa_show_simpletest_page', FALSE)) {
+    return $items;
+  }
+
+  // Maintenance / Configuration pages.
+  $items['admin/mediamosa/simpletests'] = array(
+    'title' => 'Tests',
+    'description' => 'Our MediaMosa unit tests listing.',
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -15,
+  );
+
+  // Sub-tabs.
+  $items['admin/mediamosa/simpletests/fast'] = array(
+    'title' => '30 minutes',
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -3,
+  );
+  /*
+  $items['admin/mediamosa/simpletests/normal'] = array(
+    'title' => '3 hours',
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_3_HOURS),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -2,
+  );
+  */
+  $items['admin/mediamosa/simpletests/slow'] = array(
+    'title' => 'daily',
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_DAILY),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -1,
+  );
+
+  $items['admin/mediamosa/simpletests/%/details'] = array(
+    'title' => 'Details of status unit test results.',
+    'description' => 'This page displays details of a run unit test.',
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest_details',
+    'page arguments' => array(3),
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_CALLBACK,
+    'file' => 'simpletest.pages.inc',
+    'file path' => drupal_get_path('module', 'simpletest'),
+  );
+
+  $items['admin/mediamosa/simpletests/%/seed'] = array(
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest_seed',
+    'page arguments' => array(3),
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
+  global $base_url;
+
+  // Separate switch for warning on multi pages.
+  switch ($path) {
+    case 'admin/mediamosa/simpletests':
+    case 'admin/mediamosa/simpletests/normal':
+    case 'admin/mediamosa/simpletests/slow':
+      if (!variable_get('mediamosa_automatedsimpletest_run_tests', FALSE)) {
+        drupal_set_message(t('Warning: update on tests has been turned off, enable on the !page', array('!page' => l('configure page', 'admin/mediamosa/config/global', array('query' => drupal_get_destination())))), 'warning');
+      }
+      break;
+  }
+
+  switch ($path) {
+    case 'admin/mediamosa/simpletests':
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+
+    case 'admin/mediamosa/simpletests/normal':
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+
+    case 'admin/mediamosa/simpletests/slow':
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function mediamosa_maintenance_automatedsimpletest_cron() {
+  // If we are in simpletest, then we don't want to run tests in simpletests.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    $start = time();
+    mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron started.');
+
+    // Trigger unittest run.
+    mediamosa_maintenance_automatedsimpletest::trigger_simpletests();
+
+    // Log it.
+    mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron ended: @secs', array('@sec' => time() - $start));
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_maintenance_automatedsimpletest_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}
+
+function mediamosa_maintenance_automatedsimpletest_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['simpletest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the CRON automated simpletest info',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the information of the CRON automated simpletests run.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'simpletest',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <test>Challenge-reponse authentication</test>
+    <test_description>Challenge-reponse authentication for end user applications.</test_description>
+    <passes>35</passes>
+    <fails>0</fails>
+    <exceptions>0</exceptions>
+    <last_run>2010-04-08 13:11:25</last_run>
+    <ttr>35.18</ttr>
+  </item>
+</items>',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_maintenance_automatedsimpletest_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  $rest_calls['cron/simpletests'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_simpletests',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Execute the current default unit tests.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  $rest_calls['simpletest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_simpletest',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  $rest_calls['simpletest/run'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_simpletest_run',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Execute the given unit test and return its result.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_1,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_collect() {
+  $form = array();
+
+  $form['settings_automatedsimpletest'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Automated Simpletests'),
+    '#description' => t('The automated simpletests page enables you to see results of the simpletests run at fixed intervals.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_show_simpletest_page'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show simpletests tab'),
+    '#description' => t('Shows the simpletests tab. Is for development only.'),
+    '#default_value' => variable_get('mediamosa_show_simpletest_page', FALSE),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_show_simpletest_page_old'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('mediamosa_show_simpletest_page', FALSE),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_timeout_tests'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run'),
+    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 360 seconds. Increase if your server is slow.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_maintenance_automatedsimpletest::timeout_test_run() // Calls the variable_get(),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_fast'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - halve hour'),
+    '#description' => t('The interval in minutes the fast tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST)),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_normal'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - 3 hours'),
+    '#description' => t('The interval in minutes the normal tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL)),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_slow'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - daily'),
+    '#description' => t('The interval in minutes the slow (daily) tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW)),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_run_tests'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Run tests master switch'),
+    '#description' => t('Enable or disable running of tests on the background.'),
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_run_tests', FALSE),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_mediamosa_settings_submit().
+ */
+function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_submit($form, $form_state) {
+
+  // Only when it was changed.
+  if ($form_state['values']['mediamosa_show_simpletest_page'] != $form_state['values']['mediamosa_show_simpletest_page_old']) {
+    // Flush it.
+    drupal_flush_all_caches();
+  }
+}
+
+/**
+ * Generate the automated simpletest page.
+ */
+function _mediamosa_maintenance_automatedsimpletest($show_tests = NULL) {
+
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Simpletests'), 'admin/mediamosa/simpletests');
+  drupal_set_breadcrumb($breadcrumb);
+
+  if (!module_exists('mediamosa_maintenance_automatedsimpletest')) {
+    return t('Status page disabled, enable status module.');
+  }
+
+  // Need the classes of simpletest.
+  drupal_add_css(drupal_get_path('module', 'simpletest') . '/simpletest.css');
+
+  // Get the result.
+  $tests = mediamosa_maintenance_automatedsimpletest::get_test_results();
+  $tests = isset($tests) ? $tests : array();
+
+  // Get all tests.
+  $all_tests = mediamosa_maintenance_automatedsimpletest::get_default_tests();
+
+  // Get the current queue.
+  $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+
+  // Default.
+  if (!in_array($show_tests, array(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES, mediamosa_settings::MEDIAMOSA_RUN_3_HOURS, mediamosa_settings::MEDIAMOSA_RUN_DAILY))) {
+    $show_tests = mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES;
+  }
+
+  $header = array(
+    array('data' => t('Component')),
+    array('data' => t('Test')),
+    array('data' => t('Result')),
+    array('data' => t('TTR (seconds)')),
+    array('data' => t('Last run')),
+  );
+
+  $rows = array();
+
+  if (isset($all_tests[$show_tests])) {
+    foreach ($all_tests[$show_tests] as $name => $test_description) {
+      $class = 'simpletest-pass';
+
+      if (!isset($tests[$show_tests][$name])) {
+        $result = t('Has not run.');
+        $time = 'N/A';
+        $time_started = 'N/A';
+        $class = 'simpletest-fail';
+      }
+      else {
+        // Get the result.
+        $test = $tests[$show_tests][$name];
+
+        if (!isset($test['results']) || empty($test['results'])) {
+          $test['results'] = array(
+            'fail' => 0,
+            'exception' => 0,
+            'pass' => 0,
+            'runphase' => '',
+          );
+
+          $test['ended'] = $test['started'] = 0;
+        }
+
+        if ($test['results']['fail'] > 0 || $test['results']['exception'] > 0 || $test['results']['pass'] == 0) {
+          $class = 'simpletest-fail';
+        }
+
+        // Fix possible notice.
+        if (!isset($test['runphase'])) {
+          $test['runphase'] = '';
+        }
+
+        switch ($test['runphase']) {
+          case mediamosa_maintenance_automatedsimpletest::RUNPHASE_TIMED_OUT:
+            $result = t('Test has timed out.');
+            break;
+          case mediamosa_maintenance_automatedsimpletest::RUNPHASE_FAILED:
+            $result = t('Test has failed to run.');
+            break;
+
+          default:
+            // Set the result.
+            $result = l(t('Passes: (!passes), Failures: (!failures), Exceptions: (!exceptions)',
+              array(
+                '!passes' => $test['results']['pass'],
+                '!failures' => $test['results']['fail'],
+                '!exceptions' => $test['results']['exception'],
+              )),
+              'admin/mediamosa/simpletests/' . $name . '/details'
+            );
+            break;
+        }
+
+        if ($test['runphase'] == mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED) {
+          $result .= '<br /><small>(test is currently running)</small>';
+        }
+
+        $time = round($test['ended'] - $test['started'], 2);
+        $time_started = theme('mediamosa_maintenance_date', array('timestamp' => round($test['started'])));
+      }
+
+      $queued = array_search($name, $queue);
+      if ($queued !== FALSE) {
+        $result .= '<br /><small>' . t('(re-run of test is currently queued, @place place in queue)', array('@place' => mediamosa_lib::ordinal($queued + 1))) . '</small>';
+      }
+      else { // not queued.
+        $result .= ', ' . l('put in queue', 'admin/mediamosa/simpletests/' . $name . '/seed', array('query' => drupal_get_destination()));
+      }
+
+      $rows[] = array(
+        'data' => array(
+          $test_description['group'],
+          $test_description['name'],
+          $result,
+          $time,
+          $time_started,
+        ),
+        'class' => array($class)
+      );
+    }
+  }
+
+  // theme de arrays naar een tabel
+  $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found, please check if cron is working properly.'));
+
+  return $content;
+}
+
+/**
+ * Show details of a status unittest.
+ */
+function _mediamosa_maintenance_automatedsimpletest_details($name) {
+
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Simpletests'), 'admin/mediamosa/simpletests');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Load all classes and include CSS.
+  drupal_add_css(drupal_get_path('module', 'simpletest') . '/simpletest.css');
+
+  // Header
+  $header = array(t('Message'), t('Group'), t('Filename'), t('Line'), t('Function'), array('colspan' => 2, 'data' => t('Status')));
+
+  // Get the result.
+  $tests = mediamosa_maintenance_automatedsimpletest::get_test_results();
+  //$tests = isset($tests['tests']) ? $tests['tests'] : array();
+
+  // Find it.
+  $found_test = NULL;
+  foreach ($tests as $group) {
+    foreach ($group as $name_test => $test) {
+      if ($name_test == $name) {
+        $found_test = $test;
+        break;
+      }
+    }
+
+    if (isset($found_test)) {
+      break;
+    }
+  }
+
+  $rows = array();
+  if (isset($found_test) && isset($found_test['assertions'])) {
+    foreach ($found_test['assertions']['assertion'] as $assertion) {
+      $row = array();
+      $row[] = $assertion['message'];
+      $row[] = $assertion['message_group'];
+      $row[] = basename($assertion['file']);
+      $row[] = $assertion['line'];
+      $row[] = $assertion['function'];
+      $row[] = simpletest_result_status_image($assertion['status']);
+
+      $class = 'simpletest-' . $assertion['status'];
+      if ($assertion['message_group'] == 'Debug') {
+        $class = 'simpletest-debug';
+      }
+      $rows[] = array('data' => $row, 'class' => array($class));
+    }
+  }
+
+  $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found.'));
+
+  return $content;
+}
+
+/**
+ * Reseed the given test in the test queue.
+ * @param string $name
+ */
+function _mediamosa_maintenance_automatedsimpletest_seed($name) {
+  // Get all tests.
+  $all_tests = mediamosa_maintenance_automatedsimpletest::get_default_tests();
+
+  $runs = array(
+    mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    mediamosa_settings::MEDIAMOSA_RUN_3_HOURS,
+    mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+  );
+
+  // Must be valid test.
+  $valid = FALSE;
+  foreach ($runs as $run) {
+    foreach ($all_tests[$run] as $class_name => $info) {
+      if ($name == $class_name) {
+        $valid = TRUE;
+        break;
+      }
+    }
+
+    if ($valid) {
+      break;
+    }
+  }
+
+  // Is Valid?
+  if (!$valid) {
+    drupal_set_message(t('Invalid unit test name!'), 'error');
+  }
+  else {
+    // Add to queue.
+
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+
+    if (!in_array($class_name, $queue)) {
+      drupal_set_message(t('Test add to queue.'));
+      $queue = array_merge(array($class_name), $queue);
+
+      // Set the queue.
+      variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
+    }
+    else {
+      drupal_set_message(t('Test is already queued.'), 'warning');
+    }
+  }
+
+  drupal_goto('admin/mediamosa/simpletests');
+}

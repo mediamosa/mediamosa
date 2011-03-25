@@ -1,0 +1,6 @@
+; $Id: $
+name = "MediaMosa Library"
+description = "The MediaMosa library has been renamed to MediaMosa SDK, please turn off this module as its no longer used and will be removed in next release."
+package = "MediaMosa - Library"
+version = "2.0.0"
+core = 7.x

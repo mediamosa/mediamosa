@@ -1,0 +1,75 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Windows tool module.
+ */
+
+// Constants.
+/**
+ * Tool name.
+ */
+define('MEDIAMOSA_TOOL_WINDOWS_NAME', 'windows');
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_tool_windows_permission() {
+  return array(
+    'access mediamosa tool windows' =>  array(
+      'title' => t('Access MediaMosa Tool module for Windows toolset'),
+      'description' => t('Enables the user to use the Windows toolset.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_tool_iteration().
+ *
+ * @return The name of the tool.
+ */
+function mediamosa_tool_windows_mediamosa_tool_iteration() {
+  return MEDIAMOSA_TOOL_WINDOWS_NAME;
+}
+
+/**
+ * Implements hook_mediamosa_tool_mapping().
+ *
+ * @return The mapping array.
+ */
+function mediamosa_tool_windows_mediamosa_tool_mapping() {
+  return mediamosa_tool_params::get_by_tool(MEDIAMOSA_TOOL_WINDOWS_NAME);
+}
+
+/**
+ * Implements hook_mediamosa_tool_param_checking().
+ *
+ * @return The mapping array.
+ */
+function mediamosa_tool_windows_mediamosa_tool_param_checking($nice_parameter, $value) {
+  mediamosa_tool_params::check_mapping(MEDIAMOSA_TOOL_WINDOWS_NAME, $nice_parameter, $value);
+}

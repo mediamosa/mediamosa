@@ -1,0 +1,26 @@
+; $Id $
+
+name = "Statistics"
+description = "The MediaMosa Statistics."
+package = "MediaMosa - Modules"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
+
+; Used files.
+files[] = mediamosa_statistics.module
+files[] = mediamosa_statistics.inc
+files[] = mediamosa_statistics.rest.inc
+files[] = mediamosa_statistics.test
+files[] = mediamosa_statistics_collection_latest.inc
+files[] = mediamosa_statistics_collection_popular.inc
+files[] = mediamosa_statistics_diskspaceusage.inc
+files[] = mediamosa_statistics_mediafile_latest.inc
+files[] = mediamosa_statistics_mediafile_popular.inc
+files[] = mediamosa_statistics_popularstreams.inc
+files[] = mediamosa_statistics_searchwords.inc
+files[] = mediamosa_statistics_streamrequests.inc
+files[] = mediamosa_statistics.theme.inc

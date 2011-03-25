@@ -1,0 +1,137 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Test on the simple test job sub functions.
+ */
+
+
+class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  static public function getInfo() {
+    return array(
+      'name' => 'SimpleTest - Job server environment.',
+      'description' => 'Testing our parent simple test class for EUA (App) job environment.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST,
+    );
+  }
+
+  // ------------------------------------------------------------------ Test still delete.
+  public function testStillDelete() {
+
+    //
+    // Set up still.
+    //
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+
+    // Check the output
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+
+    // Still list.
+    $a_still_list = $a_stills['stills'];
+
+    // Still id.
+    $still_id = $a_stills['stills']['still_id'];
+
+    //
+    // Check.
+    //
+
+    // Db check.
+    $count = mediamosa_db::db_query('SELECT COUNT(#mediafile_id) FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :still_id AND #is_still = :is_still_true', array(
+      '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+      '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+      ':still_id' => $still_id,
+      '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+      ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+    ))->fetchField();
+    $this->assertTrue(
+      $count != 0,
+      t("database lookup on still_id = @still_id (count = @count).", array('@still_id' => $still_id, '@count' => $count))
+    );
+
+    // File check.
+    $file = mediamosa_configuration_storage::still_filename_get($still_id);
+    $this->assertTrue(
+      mediamosa_io::file_exists($file, TRUE),
+      t("file lookup on @file.", array('@file' => $file))
+    );
+
+    //
+    // Delete still.
+    //
+
+    // Delete still.
+    $response = $this->deleteStill($asset_id);
+
+    //
+    // Check.
+    //
+
+    // Db check.
+    $count = mediamosa_db::db_query('SELECT COUNT(#mediafile_id) FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :still_id AND #is_still = :is_still_true', array(
+      '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+      '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+      ':still_id' => $still_id,
+      '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+      ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+    ))->fetchField();
+    $this->assertTrue(
+      $count == 0,
+      t("database lookup on still_id = @still_id (count = @count).", array('@still_id' => $still_id, '@count' => $count))
+    );
+
+    // File check.
+    $file = mediamosa_configuration_storage::still_filename_get($still_id);
+    /*
+     * Removed for problems with timed san nas deletes.
+    $this->assertFalse(
+      mediamosa_io::file_exists($file, TRUE),
+      t("file lookup on @file.", array('@file' => $file))
+    );
+    */
+  }
+}

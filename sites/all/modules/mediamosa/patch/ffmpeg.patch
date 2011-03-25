@@ -1,0 +1,132 @@
+Index: ffmpeg.c
+===================================================================
+--- ffmpeg.c	(revision 25150)
++++ ffmpeg.c	(working copy)
+@@ -85,6 +85,14 @@
+ const char program_name[] = "FFmpeg";
+ const int program_birth_year = 2000;
+ 
++#define MAX_IMAGE 2000
++const int max_image = MAX_IMAGE;
++static int imp_image[MAX_IMAGE];
++static int imp_pointer = 0;
++static int frame_num = 0;
++static int scene_changes = 0;
++static char *scene_file;
++
+ /* select an input stream for an output stream */
+ typedef struct AVStreamMap {
+     int file_index;
+@@ -1150,15 +1158,16 @@
+     if(video_sync_method){
+         double vdelta = sync_ipts - ost->sync_opts;
+         //FIXME set to 0.5 after we fix some dts/pts bugs like in avidec.c
+-        if (vdelta < -1.1)
++        //fprintf(stderr, "%f, %f, %f, %d\n", vdelta, get_sync_ipts(ost), av_q2d(enc->time_base), ost->sync_opts);
++        if (vdelta < 0.0)
+             nb_frames = 0;
+         else if (video_sync_method == 2 || (video_sync_method<0 && (s->oformat->flags & AVFMT_VARIABLE_FPS))){
+             if(vdelta<=-0.6){
+                 nb_frames=0;
+             }else if(vdelta>0.6)
+             ost->sync_opts= lrintf(sync_ipts);
+-        }else if (vdelta > 1.1)
+-            nb_frames = lrintf(vdelta);
++        }else if (vdelta > 0.0)
++            nb_frames = lrintf(vdelta+1);
+ //fprintf(stderr, "vdelta:%f, ost->sync_opts:%"PRId64", ost->sync_ipts:%f nb_frames:%d\n", vdelta, ost->sync_opts, get_sync_ipts(ost), nb_frames);
+         if (nb_frames == 0){
+             ++nb_frames_drop;
+@@ -1316,11 +1325,18 @@
+ 
+                 if(enc->coded_frame->key_frame)
+                     pkt.flags |= AV_PKT_FLAG_KEY;
+-                write_frame(s, &pkt, ost->st->codec, bitstream_filters[ost->file_index][pkt.stream_index]);
++
++                if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
++                //if (dec->coded_frame->pict_type == 1) {
++                  write_frame(s, &pkt, ost->st->codec, bitstream_filters[ost->file_index][pkt.stream_index]);
++                  imp_pointer++;
++                }
++                frame_num++;
++
+                 *frame_size = ret;
+                 video_size += ret;
+                 //fprintf(stderr,"\nFrame: %3d size: %5d type: %d",
+-                //        enc->frame_number-1, ret, enc->pict_type);
++                //        enc->frame_number-1, ret, dec->coded_frame->pict_type);
+                 /* if two pass, output log */
+                 if (ost->logfile && enc->stats_out) {
+                     fprintf(ost->logfile, "%s", enc->stats_out);
+@@ -3064,6 +3080,13 @@
+     return 0;
+ }
+ 
++static int opt_scene_changes(const char *opt, const char *arg)
++{
++    scene_changes = 1;
++    scene_file = arg;
++    return 0;
++}
++
+ static int opt_recording_timestamp(const char *opt, const char *arg)
+ {
+     recording_timestamp = parse_time_or_die(opt, arg, 0) / 1000000;
+@@ -4166,6 +4189,7 @@
+     { "t", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_time}, "record or transcode \"duration\" seconds of audio/video", "duration" },
+     { "fs", HAS_ARG | OPT_INT64, {(void*)&limit_filesize}, "set the limit file size in bytes", "limit_size" }, //
+     { "ss", OPT_FUNC2 | HAS_ARG, {(void*)opt_start_time}, "set the start time offset", "time_off" },
++    { "scene", OPT_FUNC2 | HAS_ARG, {(void*)opt_scene_changes}, "scene changes file name", "scene_changes" },
+     { "itsoffset", OPT_FUNC2 | HAS_ARG, {(void*)opt_input_ts_offset}, "set the input ts offset", "time_off" },
+     { "itsscale", HAS_ARG, {(void*)opt_input_ts_scale}, "set the input ts scale", "stream:scale" },
+     { "timestamp", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_timestamp}, "set the recording timestamp ('now' to set the current time)", "time" },
+@@ -4312,9 +4336,28 @@
+ 
+     show_banner();
+ 
++    imp_image[0] = -1;
++    scene_file = "";
++
+     /* parse options */
+     parse_options(argc, argv, options, opt_output_file);
+ 
++    if (strcmp(scene_file, "")) {
++      char c[10];
++      FILE *file;
++      int iter;
++      file = fopen(scene_file, "r"); 
++      if(file!=NULL) {
++        iter = 0;
++        while(fgets(c, 10, file)!=NULL && iter < max_image) {
++          imp_image[iter] = atoi(c);
++          iter++;
++        }
++        imp_image[iter] = -1;
++        fclose(file);
++      }
++    }
++
+     if(nb_output_files <= 0 && nb_input_files == 0) {
+         show_usage();
+         fprintf(stderr, "Use -h to get full help or, even better, run 'man ffmpeg'\n");
+Index: libavcodec/mpegvideo_enc.c
+===================================================================
+--- libavcodec/mpegvideo_enc.c	(revision 25150)
++++ libavcodec/mpegvideo_enc.c	(working copy)
+@@ -282,6 +282,7 @@
+     s->width = avctx->width;
+     s->height = avctx->height;
+     if(avctx->gop_size > 600 && avctx->strict_std_compliance>FF_COMPLIANCE_EXPERIMENTAL){
++        //
+         av_log(avctx, AV_LOG_ERROR, "Warning keyframe interval too large! reducing it ...\n");
+         avctx->gop_size=600;
+     }
+@@ -358,7 +359,7 @@
+ 
+     if(!s->fixed_qscale && avctx->bit_rate*av_q2d(avctx->time_base) > avctx->bit_rate_tolerance){
+         av_log(avctx, AV_LOG_ERROR, "bitrate tolerance too small for bitrate\n");
+-        return -1;
++        //return -1;
+     }
+ 
+     if(   s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate

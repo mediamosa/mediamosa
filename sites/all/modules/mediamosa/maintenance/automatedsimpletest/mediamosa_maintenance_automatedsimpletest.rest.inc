@@ -1,0 +1,226 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * REST calls for automated simpletest page.
+  */
+
+/**
+ * URI: /cron/simpletests
+ * Method: GET
+ */
+class mediamosa_rest_call_simpletests extends mediamosa_rest_call {
+
+  // ------------------------------------------------------- Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Fill the queue (if needed).
+    mediamosa_maintenance_automatedsimpletest::fill_queue();
+
+    // Run them.
+    mediamosa_maintenance_automatedsimpletest::run_simple_tests();
+
+    // Set ok.
+    $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /external/simpletest
+ * Method: GET
+ */
+class mediamosa_rest_call_simpletest extends mediamosa_rest_call {
+
+  // ------------------------------------------------------- Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Fill the output.
+    $test_results = mediamosa_maintenance_automatedsimpletest::get_test_results();
+
+    // For now, return the 10 minutes ones.
+    if (isset($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES])) {
+      foreach ($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES] as $name => $test_result) {
+        if (empty($test_result['results'])) {
+          continue;
+        }
+
+        $mediamosa->add_item(array(
+          'test' => $test_result['info']['name'],
+          'test_description' => $test_result['info']['description'],
+          'passes' => $test_result['results']['pass'],
+          'fails' => $test_result['results']['fail'],
+          'exceptions' => $test_result['results']['exception'],
+          'last_run' => format_date(round($test_result['started']), 'custom', 'Y-m-d H:i:s'),
+          'ttr' => round($test_result['ended'] - $test_result['started'], 2),
+        ));
+      }
+    }
+  }
+}
+
+
+/**
+ * URI: /internal/simpletest/run
+ * Method: POST
+ *
+ * Internal only.
+ *
+ */
+class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------- Consts.
+  // Rest vars;
+  const CLASS_NAME = 'class_name';
+
+  // ------------------------------------------------------- Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array(
+      self::VARS => array(
+        self::CLASS_NAME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE,
+          self::VAR_DESCRIPTION => 'The class name of the simpletest.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Get the class name.
+    $class_name = $this->get_param_value(self::CLASS_NAME);
+
+    // Check if I may run.
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
+
+    // may run?
+    if (!empty($run_last) && round(REQUEST_TIME - $run_last['started']) < mediamosa_maintenance_automatedsimpletest::timeout_test_run()) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TEST_RUNNING, array('@test' => $run_last['class']));
+    }
+
+    // ok, set the var.
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', array('started' => REQUEST_TIME, 'class' => $class_name));
+
+    // Add default info.
+    $item = array('runphase' => mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED);
+
+    // So we can access it in exception.
+    $my_simpletest = NULL;
+
+    try {
+      // Now create and add.
+      $test_id = db_insert('simpletest_test_id')
+        ->useDefaults(array('test_id'))
+        ->execute();
+
+      // Create.
+      $my_simpletest = new $class_name($test_id);
+
+      // Add default info.
+      $item = array(
+        'info' => $my_simpletest->getInfo(),
+        'results' => array(),
+        'assertions' => array(),
+        'runphase' => mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED
+      );
+
+      // Run.
+      $start = microtime(TRUE);
+      $my_simpletest->runSafe();
+      $end = microtime(TRUE);
+
+      // Store results.
+      $item['results'] = $my_simpletest->results;
+      $item['started'] = $start;
+      $item['ended'] = $end;
+      $assertions = $my_simpletest->get_assertions();
+
+      // Now add the messages.
+      foreach ($assertions as $num => $assertion) {
+        $item['assertions']['assertion']['#' . serialize(array('id' => $num + 1))] = $assertion;
+      }
+
+      // Fix.
+      $item['results']['pass'] = $item['results']['#pass'];
+      $item['results']['fail'] = $item['results']['#fail'];
+      $item['results']['exception'] = $item['results']['#exception'];
+      $item['results']['debug'] = $item['results']['#debug'];
+
+      // Unset these.
+      unset($item['results']['#pass']);
+      unset($item['results']['#fail']);
+      unset($item['results']['#exception']);
+      unset($item['results']['#debug']);
+
+      // Set to completed.
+      $item['runphase'] = mediamosa_maintenance_automatedsimpletest::RUNPHASE_COMPLETED;
+    }
+    catch (Exception $e) {
+      mediamosa_watchdog::log(
+        'Unittest running failed! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+        array(
+          '@message' => $e->getMessage(),
+          '@line' => $e->getLine(),
+          '@file' => $e->getFile(),
+          '@backtrace' => $e->getTraceAsString(),
+        )
+      );
+
+      // ignore.
+      $item['runphase'] = mediamosa_maintenance_automatedsimpletest::RUNPHASE_FAILED;
+    }
+
+    // Done, reset running.
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
+
+    // Add result.
+    $mediamosa->add_item($item);
+  }
+}

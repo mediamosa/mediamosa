@@ -1,0 +1,136 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Error module for storage errorcodes.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_error_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
+  );
+
+  $a_rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_error_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'List MediaMosa errorcodes.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a list of MediaMosa errorcodes.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/errorcodes?limit=10&amp;offset=2&amp;order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <name>HTTP_NO_CONTENT</name>
+    <code>204</code>
+    <message></message>
+  </item>
+  <item id="2">
+    <name>HTTP_UNAUTHORIZED</name>
+    <code>401</code>
+    <message></message>
+  </item>
+  <item id="3">
+    <name>HTTP_FORBIDDEN</name>
+    <code>403</code>
+    <message></message>
+  </item>
+  <item id="4">
+    <name>HTTP_NOT_FOUND</name>
+    <code>404</code>
+    <message>Page not found</message>
+  </item>
+  <item id="5">
+    <name>ERRORCODE_OKAY</name>
+    <code>601</code>
+    <message></message>
+  </item>
+  <item id="6">
+    <name>ERRORCODE_TIME_RESTRICTION_START</name>
+    <code>602</code>
+    <message>PP - time_restriction_start error: @date (@timestamp)</message>
+  </item>
+  <item id="7">
+    <name>ERRORCODE_TIME_RESTRICTION_END</name>
+    <code>603</code>
+    <message>PP - time_restriction_end error: @date (@timestamp)</message>
+  </item>
+  <item id="8">
+    <name>ERRORCODE_FILE_NOT_FOUND</name>
+    <code>604</code>
+    <message>The file \'@filename\' doesn\'t exist!</message>
+  </item>
+  <item id="9">
+    <name>ERRORCODE_DIR_NOT_FOUND</name>
+    <code>605</code>
+    <message>Directory \'@location\'not found / doesn\'t exists!</message>
+  </item>
+  <item id="10">
+    <name>ERRORCODE_DIR_NOT_WRITABLE</name>
+    <code>606</code>
+    <message>Directory \'@location\' is read-only, need write access.</message>
+  </item>
+</items>'
+  );
+
+  $a_rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'View MediaMosa errorcode.',
+    mediamosa_rest_call::DESCRIPTION => 'View the details of a MediaMosa errorcode.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/errorcodes/601',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <error_id>7</error_id>
+    <name>ERRORCODE_OKAY</name>
+    <code>601</code>
+    <message></message>
+  </item>
+</items>'
+  );
+
+  return $a_rest_calls;
+}

@@ -1,0 +1,63 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The ticket module.
+ */
+
+/*
+ * Implements hook_cron().
+ */
+function mediamosa_ticket_cron() {
+
+  // No need for ticket clean up inside simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    $start = time();
+    mediamosa_debug::log('mediamosa_ticket_cron started.', array(), 'ticket_cron');
+
+    $run_last = variable_get('mediamosa_ticket_cron_last', NULL);
+
+    // may run?
+    if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::TICKET_CRON_INTERVAL) {
+      // For the next time...
+      variable_set('mediamosa_ticket_cron_last', REQUEST_TIME);
+
+      // Play proxy ticket cleanup.
+      mediamosa_ticket::ticket_cleanup();
+    }
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_ticket_cron ended: @secs', array('@sec' => time() - $start), 'ticket_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_ticket_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}

@@ -1,0 +1,300 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * MediaMosa transcode.
+  */
+
+require_once 'profile/mediamosa_transcode_profile.inc';
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_transcode_help($path, $arg) {
+
+  switch ($path) {
+    case 'admin/mediamosa/config/transcode_profile':
+      return '<p>' . t('Transcoding profiles are used by the transcoding software of MediaMosa. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.') . '</p>';
+  }
+}
+
+function mediamosa_transcode_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>1</profile_id>
+    <profile>standaard flash</profile>
+    <default>FALSE</default>
+    <global>TRUE</global>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Get a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <nid>1</nid>
+    <vid>42</vid>
+    <transcode_profile_id>1</transcode_profile_id>
+    <app_id>0</app_id>
+    <version>0</version>
+    <profile>standaard flash</profile>
+    <is_default_profile>FALSE</is_default_profile>
+    <tool>ffmpeg</tool>
+    <file_extension>flv</file_extension>
+    <command>videobitrate:500000;fps:25;size:320x200;videocodec:flv;audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;audiochannels:1;maintain_aspect_ratio:yes;padding:no</command>
+    <created>2010-04-07 13:37:31</created>
+    <changed>2010-04-07 13:37:31</changed>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>1</profile_id>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a transcode profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/create<br />
+command=videobitrate:500000;size:320x200;&file_extension=xid&name=standard_xid&tool=ffmpeg',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>11</profile_id>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_transcode_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  // Get listing profiles.
+  $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Get listing profiles.
+  $a_rest_calls['video/transcode_profiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get listing profiles.
+  $a_rest_calls['transcode/profiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get profile.
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Create profile.
+  $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Update profile.
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Delete profile.
+  $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_transcode_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/transcode_profile'] = array(
+    'title' => 'Transcode profiles',
+    'description' => 'Transcoding profiles are used by the transcoding software. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.',
+    'page callback' => '_mediamosa_transcode_profile_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES),
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/add'] = array(
+    'title' => 'Add',
+    'page callback' => 'node_add',
+    'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/mediamosa/config/transcode_profile/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_node_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'theme callback' => '_node_custom_theme',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_transcode_node_access($node, $op, $account) {
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support our type.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the role we need.
+  $role_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|transcode_profile|' . $op;
+
+  // If we have to role, then we allow the action.
+  return _mediamosa_user_access($role_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}

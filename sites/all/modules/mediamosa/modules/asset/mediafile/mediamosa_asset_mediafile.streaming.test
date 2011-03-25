@@ -1,0 +1,112 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Live Streaming server support
+  */
+
+class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - live streaming support',
+      'description' => 'Live Streaming server support.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testStreaming() { // Ticket #82
+
+    // Create asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile with uri.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'rtsp://domain.ext/file',
+    );
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Must match.
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'rtsp://domain.ext/file', 'Uri saved correctly.');
+    $this->assertTrue(empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]), 'Filename must be empty.');
+
+    // Now try with file, must fail.
+
+    // Create mediafile with file.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'rtsp://domain.ext/file',
+      mediamosa_rest_call_create_mediafile::FILENAME => 'notallowed.mp4',
+    );
+
+    // Create mediafile.
+    $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE), TRUE);
+
+
+    // Update mediafile with uri and filename (must fail).
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'rtsp://domain.ext/other_file',
+      mediamosa_rest_call_create_mediafile::FILENAME => 'notallowed.mp4',
+    );
+
+    // Update mediafile.
+    $this->updateMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE), TRUE);
+
+
+    // Update mediafile with uri (must succeed).
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'rtsp://domain.ext/other_file',
+    );
+
+    // Update mediafile.
+    $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Must match.
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'rtsp://domain.ext/other_file', 'Uri updated correctly.');
+    $this->assertTrue(empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]), 'Filename must be empty.');
+
+    // Update mediafile with uri empty and filename set.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => '',
+      mediamosa_rest_call_create_mediafile::FILENAME => 'notallowed.mp4',
+    );
+
+    // Update mediafile.
+    $this->updateMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE), TRUE);
+  }
+}

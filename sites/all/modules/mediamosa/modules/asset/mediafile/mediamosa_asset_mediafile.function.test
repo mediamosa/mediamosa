@@ -1,0 +1,344 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for mediafile functions.
+  */
+class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - function tests',
+      'description' => 'Testing asset mediafile related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile delete, see: ticket 206.
+  function testMediafileFunction() {
+
+    //
+    // Make a new mediafile.
+    // [post] mediafile/create.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    $this->assertTrue(
+      isset($mediafile_id) && $mediafile_id,
+      t("A new mediafile was created: @mediafile_id", array('@mediafile_id' => $mediafile_id))
+    );
+
+    //
+    // List of mediafiles belonging to the asset.
+    // [get] asset/{assset_id}/mediafile.
+    //
+
+    // Get the mediafiles belonging to an asset.
+    $a_asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $is_all_right = FALSE;
+    foreach ($a_asset_mediafile['items']['item'] as $mf) {
+      if ($mf['mediafile_id'] == $mediafile_id) {
+        $is_all_right = TRUE;
+        break;
+      }
+    }
+    $this->assertTrue(
+      $is_all_right,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Mediafile_id = @mediafile_id", array('@asset_id' => $asset_id, '@mediafile_id' => $mediafile_id))
+    );
+
+    //
+    // Get mediafile details.
+    // [get] mediafile/$mediafile_id.
+    //
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Default value transcode_inherits_acl should be true.
+    $this->assertTrue(
+      $a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == 'TRUE',
+      t("The value transcode_inherits_acl is true.")
+    );
+
+    //
+    // Update a mediafile (transcode_inherits_acl)
+    // [post] mediafile/update
+    //
+
+    // Update mediafile
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::TRANSCODE_INHERITS_ACL => 'FALSE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Default value transcode_inherits_acl should be true.
+    $this->assertTrue(
+      $a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == 'FALSE',
+      t("The value transcode_inherits_acl is false.")
+    );
+
+    // Update mediafile
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::TRANSCODE_INHERITS_ACL => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Default value transcode_inherits_acl should be true.
+    $this->assertTrue(
+      $a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == 'TRUE',
+      t("The value transcode_inherits_acl is true.")
+    );
+
+    //
+    // Update the mediafile (original_filename)
+    // [post] mediafile/update
+    //
+
+    // Update mediafile
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::FILENAME => 'new_filename.ext',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Default value filename should have the good value.
+    $this->assertTrue(
+      $a_mediafile[mediamosa_asset_mediafile_db::FILENAME] == $a_parameters[mediamosa_rest_call_update_mediafile::FILENAME],
+      t("The filename has the good value after change.")
+    );
+
+    // Default value transcode_inherits_acl should be true.
+    $this->assertTrue(
+      $a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == 'TRUE',
+      t("The value transcode_inherits_acl is true.")
+    );
+
+    //
+    // Update mediafile (original_filename).
+    // [post] internal/mediafile/update.
+    //
+
+    // Update mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::FILENAME => 'an_other_filename.ext',
+      mediamosa_rest_call_update_mediafile::TRANSCODE_INHERITS_ACL => 'FALSE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), TRUE);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_mediafile[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    //
+    // Make a new, not original mediafile with parameters.
+    // [post] internal/mediafile/create.
+    //
+
+    // Create a not original mediafile with the source mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
+      mediamosa_rest_call_create_mediafile::FILENAME => 'a_not_existing_name.wmv',
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafile_id,
+    );
+    $mediafile_id_not_original = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), TRUE);
+
+    // Get the mediafile.
+    $a_mediafile_not_original = $this->getMediafile($mediafile_id_not_original);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_mediafile_not_original[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Collect the mediafile_ids
+    $a_mf = array();
+    foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
+      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
+    }
+
+    // Check the result
+    $this->assertTrue(
+      count($a_mf) == 2,
+      t("We have 2 mediafiles")
+    );
+    $this->assertTrue(
+      in_array($mediafile_id, $a_mf),
+      t("Original mediafile_id is exists")
+    );
+    $this->assertTrue(
+      in_array($mediafile_id_not_original, $a_mf),
+      t("Not original mediafile_id is exists")
+    );
+
+    //
+    // Create a second asset with mediafile.
+    //
+
+    // Create an asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Update the asset.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'http://www.streamit.com/test/test.flv',
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+    );
+    $mediafile_id_2 = $this->createMediafile($asset_id_2, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), TRUE);
+
+    // Get the mediafile.
+    $a_mediafile_2 = $this->getMediafile($mediafile_id_2);
+
+    // Check the values.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $a_mediafile_2[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id_2);
+
+    // Collect the mediafile_ids
+    if (!isset($a_asset['mediafiles']['mediafile'][0])) {
+      $tmp = $a_asset['mediafiles']['mediafile'];
+      unset($a_asset['mediafiles']['mediafile']);
+      $a_asset['mediafiles']['mediafile'][0] = $tmp;
+    }
+    $a_mf = array();
+    foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
+      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
+    }
+
+    // Check the result
+    $this->assertTrue(
+      count($a_mf) == 1,
+      t("We have 1 mediafile")
+    );
+    $this->assertTrue(
+      in_array($mediafile_id_2, $a_mf),
+      t("The mediafile_id is exists")
+    );
+    $this->assertTrue(
+      $a_asset[mediamosa_asset_db::IS_EXTERNAL] == 'TRUE',
+      t("Is_external is TRUE")
+    );
+
+    //
+    // show_stills
+    //
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+    $still_mediafile_id = $a_stills['stills']['still_id'];
+
+    // Get still.
+    // show_stills = NULL.
+    $a_mf = $this->getMediafile($mediafile_id);
+    //$this->var_export($a_mf);
+
+    // Check the response.
+    $this->assertTrue(
+      isset($a_mf['still']),
+      t("Is still exists?")
+    );
+
+    // Get still.
+    // show_stills = TRUE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
+    );
+    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+
+    // Check the response.
+    $this->assertTrue(
+      isset($a_mf['still']),
+      t("Is still exists?")
+    );
+
+    // Get still.
+    // show_stills = FALSE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
+    );
+    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_mf['still']),
+      t("Is still not exists?")
+    );
+  }
+}

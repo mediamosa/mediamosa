@@ -1,0 +1,396 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL with acl context test file.
+  */
+class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Asset search with acl context',
+      'description' => 'Testing asset CQL search with vpx:acl context set.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test Asset search with is_private (872).
+  public function testCQLAclContext() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    //
+    // Set up assets, mediafiles and metadata.
+    //
+
+    // Create assets.
+    $this->toEga_3();
+    $asset_id_1 = $this->createAsset();
+    $this->toEga_2();
+    $asset_id_2 = $this->createAsset();
+    $this->toEga_3();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $this->toEga_2();
+    $asset_id_5 = $this->createAsset();
+    $asset_id_6 = $this->createAsset();
+
+    // We test mediafiles
+    $this->toEga_3();
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $this->toEga_2();
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $this->toEga_3();
+    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+    $this->toEga_2();
+    $mediafile_id_5 = $this->createMediafile($asset_id_5);
+    $mediafile_id_6 = $this->createMediafile($asset_id_6);
+
+    // Create asset metadata.
+
+    // Title.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap noot'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('title' => 'aap'));
+    $this->createAssetMetadata($asset_id_4, array('title' => 'dit is een test mies'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('title' => 'aap lord of maar wist the noot rings'));
+    $this->createAssetMetadata($asset_id_6, array('title' => 'aap'));
+
+    // Description.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
+    $this->createAssetMetadata($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
+
+    // Created.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('created' => '2008-06-06 00:15:00'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('created' => '2007-06-06 10:15:00'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('created' => '2006-06-06 20:15:00'));
+    $this->createAssetMetadata($asset_id_4, array('created' => '2008-01-01 15:15:00'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('created' => '2008-04-01 10:15:00'));
+
+    //
+    // CQL test.
+    //
+
+    // Both apps, but only app 3 because 2 isnt slaved.
+    $this->toEga_3();
+    $this->cql_do_search_test_assets_3(sprintf('aut_app == %d OR aut_app == %d', $app_id_2, $app_id_3), array());
+
+    // Only include app 3.
+    $this->toEga_3();
+    $this->cql_do_search_test_assets_3(sprintf('aut_app == %d', $app_id_3), array());
+
+    // App master slave for app_id_2.
+    $this->toEga_2();
+    $this->setMediafileAut($mediafile_id_5, array(mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_3));
+
+    // Both apps, only mf 5 should appear.
+    $this->cql_do_search_test_assets_2(sprintf('aut_app == %d OR aut_app == %d', $app_id_2, $app_id_3), array($asset_id_5 => TRUE));
+
+    // Only include app 3.
+    $this->cql_do_search_test_assets_3(sprintf('aut_app == %d', $app_id_3), array());
+
+    // Set aut_user.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'testuser'));
+
+    // Test if we have 'testuser' in our results.
+    $this->cql_do_search_test_assets_3('aut_user == "^testuser^"', array($asset_id_1 => TRUE));
+
+    // Set aut_group.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP => 'testgroup'));
+
+    // Test if we have 'testgroup' in our results.
+    $this->cql_do_search_test_assets_3('aut_group == "^testgroup^"', array($asset_id_1 => TRUE));
+
+    // This one no more.
+    $this->cql_do_search_test_assets_3('aut_user == "^testuser^"', array());
+
+    // Set aut_group and aut_user.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'testuser',
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP => 'testgroup',
+    ));
+
+    // Test if we have 'testuser' in our results.
+    $this->cql_do_search_test_assets_3('aut_user == "^testuser^"', array($asset_id_1 => TRUE));
+
+    // Test if we have 'testgroup' in our results.
+    $this->cql_do_search_test_assets_3('aut_group == "^testgroup^"', array($asset_id_1 => TRUE));
+
+    // Test if we have 'testuser' or 'testgroup' in our results.
+    $this->cql_do_search_test_assets_3('aut_user == "^testuser^" OR aut_group == "^testgroup^"', array($asset_id_1 => TRUE));
+
+    // Set aut_domain.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'foo.nl',
+    ));
+
+    // Test it.
+    $this->cql_do_search_test_assets_3('aut_domain == "^foo.nl^"', array($asset_id_1 => TRUE));
+
+    // Set aut_realm.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => 'robert@foo.nl',
+    ));
+
+    // Test it.
+    $this->cql_do_search_test_assets_3('aut_realm == "^@foo.nl^"', array($asset_id_1 => TRUE));
+
+    // Test it again.
+    $this->cql_do_search_test_assets_3('aut_realm == "^@foo.nl^" AND aut_realm_prefix == "^robert^"', array($asset_id_1 => TRUE));
+
+    // Test it with 'not'.
+    $this->cql_do_search_test_assets_3('NOT (aut_realm == "^@foo.nl^")', array($asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+
+    // Remove all rights.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->toEga_2();
+    $this->setMediafileAut($mediafile_id_2, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_3, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAut($mediafile_id_4, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->toEga_2();
+    $this->setMediafileAut($mediafile_id_5, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAut($mediafile_id_6, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Set aut_id, slave mediafile 1 from app 3 to 2.
+    $this->toEga_3();
+    $this->setMediafileAut($mediafile_id_1, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    ));
+
+    // We slaved mediafile 1 from our app 3 to 2.
+    $this->cql_do_search_test_assets_3(sprintf('aut_app == %d', $app_id_2), array($asset_id_1 => TRUE));
+
+    // set aut_id, slave mediafile 3 from app 3 to 2.
+    $this->setMediafileAut($mediafile_id_3, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    ));
+
+    // Both apps, but only app 3 because 2 isnt slaved.
+    $this->cql_do_search_test_assets_3(sprintf('aut_app == %d', $app_id_2), array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test Asset/Mediafile search with is_master_slaved
+  public function testCQLAclContext_is_master_slaved() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    //
+    // Set up assets, mediafiles and metadata.
+    //
+
+    // Create assets.
+    $this->toEga_3();
+    $asset_id_1 = $this->createAsset();
+    $this->toEga_2();
+    $asset_id_2 = $this->createAsset();
+    $this->toEga_3();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $this->toEga_2();
+    $asset_id_5 = $this->createAsset();
+    $asset_id_6 = $this->createAsset();
+
+    // We test mediafiles
+    $this->toEga_3();
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $this->toEga_2();
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $this->toEga_3();
+    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+    $this->toEga_2();
+    $mediafile_id_5 = $this->createMediafile($asset_id_5);
+    $mediafile_id_6 = $this->createMediafile($asset_id_6);
+
+    // Create asset metadata.
+
+    // Title.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap noot'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('title' => 'aap'));
+    $this->createAssetMetadata($asset_id_4, array('title' => 'dit is een test mies'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('title' => 'aap lord of maar wist the noot rings'));
+    $this->createAssetMetadata($asset_id_6, array('title' => 'aap'));
+
+    // Description.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
+    $this->createAssetMetadata($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
+    //$this->createAssetMetadata($asset_id_6, array('description' => ''));
+
+    // Created.
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_1, array('created' => '2008-06-06 00:15:00'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_2, array('created' => '2007-06-06 10:15:00'));
+    $this->toEga_3();
+    $this->createAssetMetadata($asset_id_3, array('created' => '2006-06-06 20:15:00'));
+    $this->createAssetMetadata($asset_id_4, array('created' => '2008-01-01 15:15:00'));
+    $this->toEga_2();
+    $this->createAssetMetadata($asset_id_5, array('created' => '2008-04-01 10:15:00'));
+    //$this->createAssetMetadata($asset_id_6, array('created' => ''));
+
+    //
+    // CQL test.
+    //
+/*
+    // Return assets that are master slaved to any.
+    $this->toEga_3();
+    $this->cql_do_search_test_assets_3('is_master_slaved = TRUE', array());
+
+    // Return assets that are not master slaved.
+    $this->toEga_3();
+    $this->cql_do_search_test_assets_3('is_master_slaved = FALSE', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    // Now master slave 3 to 2.
+    $this->setAssetAut($asset_id_3, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    ));
+
+    $this->toEga_3();
+    $this->cql_do_search_test_assets_3('is_master_slaved = TRUE', array($asset_id_3 => TRUE));
+
+    // Return assets that are not master slaved.
+    $this->cql_do_search_test_assets_3('is_master_slaved = FALSE', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+
+    // Return assets that are master slaved.
+    $this->cql_do_search_test_assets_3('is_master_slaved = TRUE', array($asset_id_3 => TRUE));
+
+    // Return assets that are not master slaved.
+    $this->cql_do_search_test_assets_3('is_master_slaved <> TRUE', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+*/
+
+    // Mediafile tests.
+
+    $this->toEga_2();
+    $this->cql_do_search_test_assets_2('is_master_slaved <> FALSE', array());
+
+    // Return assets that are not master slaved.
+    $this->cql_do_search_test_assets_2('is_master_slaved <> TRUE', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Master slave mediafiles.
+    // Now master slave 2 to 3.
+    $this->setMediafileAut($mediafile_id_2, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_3,
+    ));
+
+    $this->cql_do_search_test_assets_2('is_master_slaved = TRUE', array($asset_id_2 => TRUE));
+
+    // Return assets that are not master slaved.
+    $this->cql_do_search_test_assets_2('is_master_slaved = FALSE', array($asset_id_6 => TRUE, $asset_id_5 => TRUE));
+/*
+    $this->setAssetAut($asset_id_5, array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_3,
+    ));
+
+    $this->cql_do_search_test_assets_2('is_master_slaved = TRUE', array($asset_id_2 => TRUE, $asset_id_5 => TRUE));
+
+    // Return assets that are not master slaved.
+    $this->cql_do_search_test_assets_2('is_master_slaved = FALSE', array($asset_id_6 => TRUE));
+*/
+  }
+}

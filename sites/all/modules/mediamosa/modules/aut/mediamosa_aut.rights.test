@@ -1,0 +1,234 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for slave rights functions.
+  */
+class MediaMosaAutSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'AUT - Allow read access on slave asset for getting acl rights.',
+      'description' => 'Testing AUT read access on slave asset related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing allow read access on slave asset for getting acl rights, see: ticket 74.
+  function testAutSlaveRights() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    //
+    // Create test asset and mediafile for app 1.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    //
+    // Create test asset and mediafile for app 2.
+    //
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Create an asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    //
+    // Get the mediafiles.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Getting rights on mediafile.
+    $a_xml = $this->getMediafileAut($mediafile_id, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // To first Ega.
+    $this->toEga_2();
+
+    // Getting rights on mediafile.
+    $a_xml_2 = $this->getMediafileAut($mediafile_id_2, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    //
+    // Now make mediafile (app 1) a slave of app 2.
+    // Allowing app 2 to access mediafile of app 1.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      'aut_app' => $app_id_2,
+    );
+    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    //
+    // Get the mediafiles.
+    //
+
+    // Owner, allowed.
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Getting rights on mediafile.
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    // Somebody else, not allowed.
+
+    // Getting rights on mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_collection_get_rights::USER_ID => 'santaclaus',
+    );
+    $a_xml = $this->getMediafileAut($mediafile_id, $a_parameters, 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Other application, not master/slave, not allowed.
+
+    // To third Ega.
+    $this->toEga_3();
+
+    // Getting rights on mediafile.
+    $a_xml = $this->getMediafileAut($mediafile_id, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Application 2 with master/slave, allowed.
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Getting rights on mediafile.
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    //
+    // Now make mediafile (app 1) a slave of app 3.
+    // Allowing app 3 to access mediafile of app 1.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      'aut_app' => $app_id_3,
+    );
+    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Application 3 with master/slave, allowed.
+
+    // To third Ega.
+    $this->toEga_3();
+
+    // Getting rights on mediafile.
+    $a_xml = $this->getMediafileAut($mediafile_id);
+
+    //
+    // Tear down.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+  }
+
+  // Test if Protected becomes TRUE when adding user_usergroup to the acl rules.
+  function testAutRightsProtectedFlag() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Set mediafile aut.
+    $parameters = array(
+      'aut_domain' => 'ACADEMIA.group',
+      'aut_realm' => '@ACADEMIA.nl',
+    );
+    $xml = $this->setMediafileAut($mediafile_id, $parameters);
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    // Must domain realm.
+    $this->assertTrue($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] == mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM, 'Is set to domain/realm protected');
+
+    // Set mediafile aut. but add the aut_group right.
+    $parameters = array(
+      'aut_group' => 'foofighter',
+      'replace' => 'FALSE',
+    );
+    $xml = $this->setMediafileAut($mediafile_id, $parameters);
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    // Must domain realm.
+    $this->assertTrue($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, 'Is set to TRUE value protected');
+  }
+}

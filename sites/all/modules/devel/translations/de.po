@@ -1,0 +1,1088 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Devel\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2008-01-29 22:00+0800\n"
+"Last-Translator: Axel Kollmorgen <axel AT kollmorgen , net>\n"
+"Language-Team: German\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: GERMANY\n"
+
+#: devel_generate.inc:20
+msgid "Users deleted."
+msgstr "Benutzer gelöscht."
+
+#: devel_generate.inc:30
+msgid "!num_users created."
+msgstr "!num_users erstellt."
+
+#: devel_generate.inc:223
+msgid "Deleted taxonomy."
+msgstr "Taxonomie gelöscht."
+
+#: devel_generate.inc:228
+msgid "Created the following new vocabularies: !vocs"
+msgstr "Die folgenden neuen Vokabulare wurden erstellt: !vocs"
+
+#: devel_generate.inc:233
+msgid "Created the following new terms: !terms"
+msgstr "Die folgenden neuen Begriffe wurden erstellt: !terms"
+
+#: devel_generate.inc:30
+msgid "1 user"
+msgid_plural "@count users"
+msgstr[0] "1 Benutzer"
+msgstr[1] "@count Benutzer"
+
+#: devel_generate.inc:47
+msgid "1 node created."
+msgid_plural "@count nodes created"
+msgstr[0] "1 Beitrag erstellt."
+msgstr[1] "@count Beiträge erstellt."
+
+#: devel.module:24
+msgid "This is a list of defined user functions that generated this current request lifecycle. Click on a function name to view its documention."
+msgstr "Liste von definierten Benutzerfunktionen, die den aktuellen Anfragezyklus erzeugten. Die Verweise führen zur Dokumentation der jeweiligen Funktion."
+
+#: devel.module:26
+msgid "Clicking a module's reinstall button will simulate uninstalling/installing a module. <code>hook_uninstall()</code> and <code>hook_install()</code> will be executed and the schema version number will be set to the most recent update number. You may have to manually clear out any existing tables first if the module doesn't implement <code>hook_uninstall()</code>."
+msgstr "\"Neu installieren\" simuliert das Deinstallieren/Installieren eines Moduls. <code>hook_uninstall()</code> und <code>hook_install()</code> werden ausgeführt und die Schemaversionsnummer auf die letzte update-Nummer gesetzt. Wenn das Modul <code>hook_uninstall()</code> nicht oder nur unvollständig implementiert, müssen existierende Tabellen zuerst manuell bereinigt werden."
+
+#: devel.module:28
+msgid "Here are the contents of your <code>$_SESSION</code> variable."
+msgstr "Hier sind die Inhalte Ihrer <code>$_SESSION</code> Variable."
+
+#: devel.module:31
+msgid "This is a list of the variables and their values currently stored in variables table and the <code>$conf</code> array of your settings.php file. These variables are usually accessed with <a href=\"@variable-get-doc\">variable_get()</a> and <a href=\"@variable-set-doc\">variable_set()</a>. Variables that are too long can slow down your pages."
+msgstr "Liste von Variablen und ihren Werten, wie sie momentan in der <code>variables</code>-Tabelle und dem <code>$conf</code>-Array aus <code>settings.php</code> gespeichert sind. Auf diese Variablen wird gewöhnlich mit <a href=\"@variable-get-doc\">variable_get()</a> und <a href=\"@variable-set-doc\">variable_set()</a> zugegriffen. Zu lange Variablen können die Antwortzeit verlangsamen."
+
+#: devel.module:141
+msgid "block administration"
+msgstr "Blockverwaltung"
+
+#: devel.module:227
+msgid "Invalid file path"
+msgstr "Ungültiger Dateipfad"
+
+#: devel.module:361;424;134
+msgid "Switch user"
+msgstr "Benutzer wechseln"
+
+#: devel.module:362;140
+#: devel.info:0
+msgid "Devel"
+msgstr "Devel"
+
+#: devel.module:363;377
+msgid "Execute PHP"
+msgstr "PHP ausführen"
+
+#: devel.module:388;1481;0
+msgid "devel"
+msgstr "devel"
+
+#: devel.module:390
+msgid "Devel settings"
+msgstr "Devel Einstellungen"
+
+#: devel.module:390
+msgid "Adjust module settings for devel module."
+msgstr "Moduleinstellungen für das Devel-Modul anpassen."
+
+#: devel.module:391;42
+msgid "Empty cache"
+msgstr "Cache leeren"
+
+#: devel.module:391
+msgid "Clear the CSS cache and all database cache tables which store page, node, theme and variable caches."
+msgstr "Den CSS-Cache und alle Datenbank-Cache-Tabellen leeren in denen Seiten, Beiträge und Variablen  gespeichert sind."
+
+#: devel.module:392
+msgid "Run cron"
+msgstr "Cron ausführen"
+
+#: devel.module:392
+msgid "Execute functions scheduled for cron runs."
+msgstr ""
+
+#: devel.module:393;103
+msgid "PHPinfo()"
+msgstr "PHPinfo()"
+
+#: devel.module:393
+msgid "Display information about your PHP installation."
+msgstr "Informationen über die PHP-Installation anzeigen."
+
+#: devel.module:394
+msgid "Disable"
+msgstr "Deaktivieren"
+
+#: devel.module:394
+msgid "Enable"
+msgstr "Aktivieren"
+
+#: devel.module:395
+msgid "Theme Devel: @action"
+msgstr ""
+
+#: devel.module:398
+msgid "@action the Devel Themer module."
+msgstr ""
+
+# Funktion
+#: devel.module:402
+#, fuzzy
+msgid "func"
+msgstr "Funk"
+
+#: devel.module:402
+msgid "View a list of currently defined user functions with documentation links."
+msgstr "Zeige eine Liste der aktuell definierten Benutzerfunktionen mit Dokumentationsverweisen."
+
+#: devel.module:403
+msgid "theme"
+msgstr "Theme"
+
+#: devel.module:403
+msgid "View a list of available theme functions acros the whole site."
+msgstr ""
+
+#: devel.module:404
+msgid "elements"
+msgstr "Elemente"
+
+#: devel.module:404
+msgid "View the active form/render elements for this site."
+msgstr ""
+
+# Session
+#: devel.module:405
+#, fuzzy
+msgid "sess"
+msgstr "Sess"
+
+#: devel.module:405
+msgid "List the contents of $_SESSION."
+msgstr "Die Inhalte von $_SESSION anzeigen."
+
+#: devel.module:408;71
+msgid "Reinstall modules"
+msgstr "Module neu installieren"
+
+#: devel.module:408
+msgid "Re-run hook_install() for a given module."
+msgstr "Hook_install() für ein bestimmtes Modul noch einmal ausführen."
+
+#: devel.module:409
+msgid "Rebuild menus"
+msgstr "Menüs neu aufbauen"
+
+#: devel.module:409
+msgid "Rebuild menu based on hook_menu() and any custom changes all menu items to their default settings."
+msgstr "Alle Menüeinträge auf Basis von hook_menu() und alle individuellen Änderungen der Menüeinträge mit ihren Standardeinstellungen neu aufbauen."
+
+#: devel.module:410;96;121
+msgid "Variable editor"
+msgstr "Editor für Variablen"
+
+#: devel.module:410
+msgid "Edit and delete site variables."
+msgstr "Variablen der Website bearbeiten oder löschen."
+
+#: devel.module:414
+msgid "Node access summary"
+msgstr "Zusammenfassung der Zugriffsberechtigungen auf Beiträge"
+
+#: devel.module:454
+msgid "This user can switch back."
+msgstr "Dieser Benutzer kann zurückschalten."
+
+#: devel.module:461
+#, fuzzy
+msgid "Caution: this user will be unable switch back."
+msgstr "Vorsicht: Dieser Benutzer kann nicht zurückschalten."
+
+#: devel.module:476
+msgid "Enter username"
+msgstr "Benutzername eingeben"
+
+#: devel.module:482
+msgid "Switch"
+msgstr "Umschalten"
+
+#: devel.module:492
+msgid "Enter function name for api lookup"
+msgstr "Funktionsnamen für die API-Suche eingeben"
+
+#: devel.module:499;1046
+msgid "Submit"
+msgstr "Speichern"
+
+#: devel.module:513
+msgid "Username not found"
+msgstr "Benutzername wurde nicht gefunden"
+
+#: devel.module:559
+msgid "<p>The user is being redirected to <a href=\"@destination\">@destination</a>.</p>"
+msgstr "<p>Der Benutzer wird umgeleitet zu <a href=\"@destination\">@destination</a>.</p>"
+
+#: devel.module:751
+msgid "Query log"
+msgstr "Abfageprotokoll"
+
+#: devel.module:753
+msgid "Collect query info"
+msgstr "Abfrageinformation sammeln"
+
+#: devel.module:755
+msgid "Collect query info. If disabled, no query log functionality will work."
+msgstr "Sammelt die Abfrageinformation. Das Funktionalität des Abfrageprotokolls ist nur nach Aktivierung gegeben."
+
+#: devel.module:757
+msgid "Display query log"
+msgstr "Abfrageprotokoll anzeigen"
+
+#: devel.module:759
+#, fuzzy
+msgid "Display a log of the database queries needed to generate the current page, and the execution time for each. Also, queries which are repeated during a single page view are summed in the # column, and printed in red since they are candidates for caching."
+msgstr "Zeigt ein Protokoll der zur Generierung der aktuellen Seite erforderlichen Datenbankabfragen mit deren jeweiligen Ausführungszeit an. Desweiteren werden alle sich auf der Seite wiederholenden Abfragen in der #-Spalte zusammengefasst und rot markiert, da diese Kandidaten zum Cachen sind. "
+
+#: devel.module:761
+msgid "Sort query log"
+msgstr "Abfrageprotokoll sortieren"
+
+#: devel.module:763
+msgid "by source"
+msgstr "nach Quelle"
+
+#: devel.module:763
+msgid "by duration"
+msgstr "nach Dauer"
+
+#: devel.module:764
+msgid "The query table can be sorted in the order that the queries were executed or by descending duration."
+msgstr ""
+
+#: devel.module:767
+msgid "Slow query highlighting"
+msgstr "Langsame Abfragen hervorheben"
+
+#: devel.module:771
+msgid "Enter an integer in milliseconds. Any query which takes longer than this many milliseconds will be highlighted in the query log. This indicates a possibly inefficient query, or a candidate for caching."
+msgstr ""
+
+#: devel.module:774
+msgid "Store executed queries"
+msgstr "Ausgeführte Abfragen speichern"
+
+#: devel.module:776
+msgid "Store statistics about executed queries. See the devel_x tables."
+msgstr ""
+
+#: devel.module:778
+msgid "Sampling interval"
+msgstr "Aufzeichnungsinterval"
+
+#: devel.module:781
+msgid "If storing query statistics, only store every nth page view. 1 means every page view, 2 every second, and so on."
+msgstr "Sollten Abfragestatistiken gespeichert werden, nur jede n-te Seitenansicht speichern. 1 speichert bei jeder Seitenansicht, 2 bei jeder zweiten und so weiter."
+
+#: devel.module:784
+msgid "API Site"
+msgstr "API Website"
+
+#: devel.module:786
+msgid "The base URL for your developer documentation links. You might change this if you run <a href=\"!url\">api.module</a> locally."
+msgstr ""
+
+#: devel.module:788
+msgid "Display page timer"
+msgstr "Seitentimer anzeigen"
+
+#: devel.module:790
+msgid "Display page execution time in the query log box."
+msgstr "Zeigt die Seitenausführungszeit im Abfrageprotokoll-Box an."
+
+#: devel.module:793
+msgid "Display memory usage"
+msgstr "Speicherverwendung anzeigen"
+
+#: devel.module:795
+msgid "Display how much memory is used to generate the current page. This will show memory usage when devel_init() is called and when devel_exit() is called. PHP must have been compiled with the <em>--enable-memory-limit</em> configuration option for this feature to work."
+msgstr "Zeigt den zur aktuell generierten Seite verwendeten Speicherbedarf an. Dies wird den Speicherbedarf beim Aufruf von devel_init() und devel_exit() anzeigen. PHP muss mit der Konfigurationsoption <em>--enable-memory-limit</em> kompiliert worden sein, damit dieses Feature funktioniert."
+
+#: devel.module:798
+msgid "Display redirection page"
+msgstr "Umleitungsseite anzeigen"
+
+#: devel.module:800
+msgid "When a module executes drupal_goto(), the query log and other developer information is lost. Enabling this setting presents an intermediate page to developers so that the log can be examined before continuing to the destination page."
+msgstr ""
+
+#: devel.module:803
+msgid "Display form element keys and weights"
+msgstr "Formularelementschlüssel und -reihenfolgen anzeigen"
+
+#: devel.module:805
+msgid "Form element names are needed for performing themeing or altering a form. Their weights determine the position of the element. Enabling this setting will show these keys and weights beside each form item."
+msgstr ""
+
+#: devel.module:808
+msgid "Error handler"
+msgstr "Fehler-Handler"
+
+#: devel.module:810
+msgid "None"
+msgstr "Keine"
+
+#: devel.module:810
+#, fuzzy
+msgid "Standard drupal"
+msgstr "Standard Drupal"
+
+#: devel.module:810
+msgid "Backtrace"
+msgstr "Ablaufverfolgung"
+
+#: devel.module:811
+msgid "Choose an error handler for your site. <em>Backtrace</em> prints nice debug information when an error is noticed, and you !choose. <strong>Backtrace requires the <a href=\"!krumo\">krumo library</a></strong>. <em>None</em> is a good option when stepping through the site in your debugger."
+msgstr ""
+
+#: devel.module:811
+msgid "choose to show errors on screen"
+msgstr "Auswählen um Fehler auf dem Bildschirm anzuzeigen"
+
+#: devel.module:819
+msgid "Default"
+msgstr "Standard"
+
+#: devel.module:820
+msgid "Log only"
+msgstr "Nur Protokollieren"
+
+#: devel.module:823
+msgid "Other (!library)"
+msgstr "Andere (!library)"
+
+#: devel.module:827
+msgid "SMTP library"
+msgstr "SMTP Libary"
+
+#: devel.module:853
+msgid "PHP code to execute"
+msgstr "PHP Code der ausgeführt werden soll"
+
+#: devel.module:854
+msgid "Enter some code. Do not use <code>&lt;?php ?&gt;</code> tags."
+msgstr "Code eingeben. Die <code>&lt;?php ?&gt;</code> Tags nicht verwenden."
+
+#: devel.module:856
+msgid "Execute"
+msgstr "Ausführen"
+
+#: devel.module:876
+msgid "The menu router has been built."
+msgstr ""
+
+#: devel.module:900
+msgid "Reinstall @name module"
+msgstr "@name Modul neu installieren"
+
+#: devel.module:916
+msgid "Warning - will delete your module tables and variables."
+msgstr "Warnung - dies wird die Modul-Tabellen und Variablen löschen."
+
+#: devel.module:932
+msgid "Uninstalled and reinstalled the %name module."
+msgstr "Das Modul %name wurde deinstalliert und neu installiert."
+
+#: devel.module:954;1010
+msgid "Name"
+msgstr "Name"
+
+#: devel.module:955;1011
+msgid "Value"
+msgstr "Wert"
+
+#: devel.module:956;1012
+msgid "Length"
+msgstr "Länge"
+
+#: devel.module:957;1013
+msgid "Operations"
+msgstr "Operationen"
+
+#: devel.module:985
+msgid "edit"
+msgstr "Bearbeiten"
+
+#: devel.module:990
+msgid "Delete"
+msgstr "Löschen"
+
+#: devel.module:1035
+msgid "Old value"
+msgstr "Alter Wert"
+
+#: devel.module:1041;1053
+msgid "New value"
+msgstr "Neuer Wert"
+
+#: devel.module:1054
+msgid "Sorry, complex variable types may not be edited yet. Use the <em>Execute PHP</em> block and the <a href=\"@variable-set-doc\">variable_set()</a> function."
+msgstr ""
+
+#: devel.module:1063
+msgid "Saved new value for %name."
+msgstr "Der neue Wert für %name wurde gespeichert."
+
+#: devel.module:1169
+msgid "Display of !type !obj"
+msgstr "Anzeigen von !type !obj"
+
+#: devel.module:1233
+msgid "{empty}"
+msgstr "{leer}"
+
+#: devel.module:1247
+msgid "TRUE"
+msgstr "TRUE"
+
+#: devel.module:1247
+msgid "FALSE"
+msgstr "FALSE"
+
+#: devel.module:1501
+msgid "Total (ms)"
+msgstr "Gesamt (ms)"
+
+#: devel.module:1502
+msgid "Average (ms)"
+msgstr "Durchschnitt (ms)"
+
+#: devel.module:1503
+msgid "Std deviation (ms)"
+msgstr "Standardabweichung (ms)"
+
+#: devel.module:1504
+msgid "Count"
+msgstr "Anzahl"
+
+#: devel.module:1505
+msgid "Function"
+msgstr "Funktion"
+
+#: devel.module:1506
+msgid "Query"
+msgstr "Abfrage"
+
+#: devel.module:1529
+msgid "Delete collected query statistics"
+msgstr "Ausgewähle Abfragestatistiken löschen"
+
+#: devel.module:1537
+msgid "Stored query statistics deleted."
+msgstr "Die gespeicherten Abfragestatistiken wurden gelöscht."
+
+#: devel.module:345
+msgid "php"
+msgstr "PHP"
+
+#: devel.module:345
+msgid "%message in %file on line %line."
+msgstr "%message in %file in Zeile %line."
+
+#: devel.module:1481
+#, fuzzy
+msgid "Mail sent:<br />Id: %mail_id<br />To: %to<br />From: %from<br />Language: %lang<br />Subject: %subject<br />Body: %body<br /><br />Additional headers: <br />!header"
+msgstr "e-Mail verschickt:<br />Schlüssel: %mailkey<br />Zu: %to<br />Von: %from<br />Betreff: %subject<br />Textkörper: %body<br /><br />Weitere Kopfzeilen: !header"
+
+#: devel.module:1024
+msgid "One variable deleted."
+msgid_plural "@count variables deleted."
+msgstr[0] "Eine Variable wurde gelöscht."
+msgstr[1] "@count Variablen wurden gelöscht."
+
+#: devel.module:1239
+msgid "1 character"
+msgid_plural "@count characters"
+msgstr[0] "1 Zeichen"
+msgstr[1] "@count Zeichen"
+
+#: devel.module:1244
+msgid "1 element"
+msgid_plural "@count elements"
+msgstr[0] "1 Element"
+msgstr[1] "@count Elemente"
+
+#: devel.module:353
+msgid "access devel information"
+msgstr "Zugriff auf Devel-Information"
+
+#: devel.module:353
+msgid "execute php code"
+msgstr "PHP Code ausführen"
+
+# sync "switch" in all strings
+#: devel.module:353
+msgid "switch users"
+msgstr "Benutzer wechseln"
+
+#: devel.module:353
+msgid "display source code"
+msgstr "Quelltext anzeigen"
+
+#: devel.module:48
+msgid "Rebuild node_comment_statistics table"
+msgstr "Die node_comment_statistics Tabelle neu aufbauen"
+
+#: devel.module:55
+msgid "Database queries"
+msgstr "Datenbankanfragen"
+
+#: devel.module:59
+msgid "Empty database queries"
+msgstr "Datenbankanfragen leeren"
+
+#: devel.module:65
+msgid "function reference"
+msgstr "Funktionsreferenz"
+
+#: devel.module:77
+msgid "Toggle Devel Themer module"
+msgstr ""
+
+#: devel.module:83
+msgid "Display the PHP code of any file in your Drupal installation"
+msgstr ""
+
+#: devel.module:89
+msgid "Reset menus"
+msgstr "Menüs zurücksetzen"
+
+#: devel.module:109
+msgid "Theme registry"
+msgstr "Theme-Registry"
+
+#: devel.module:115
+msgid "hook_elements()"
+msgstr "hook_elements()"
+
+#: devel.module:128
+#, fuzzy
+msgid "Session viewer"
+msgstr "Sessionansicht"
+
+#: devel.module:141
+msgid "Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the !block page."
+msgstr "Hilfsfunktionen, -seiten und -blöcke zur Unterstützung von Drupal-Entwicklern. Die devel-Blöcke können auf der !block-Seite verwaltet werden."
+
+#: devel.module:148
+#, fuzzy
+msgid "Dev load"
+msgstr "Dev laden"
+
+#: devel.module:156;172
+msgid "Dev render"
+msgstr ""
+
+#: devel.module:164
+#, fuzzy
+msgid "Devel load"
+msgstr "Devel laden"
+
+#: devel_generate.module:50
+msgid "How many users would you like to generate?"
+msgstr "Wie viele Benutzer sollen generiert werden?"
+
+#: devel_generate.module:56
+#, fuzzy
+msgid "Delete all users (except user id 1) before generating new users."
+msgstr "Alle Benutzer löschen, außer dem Benutzer 1 bevor neue Benutzer generiert werden."
+
+#: devel_generate.module:61;140;177
+msgid "Do it!"
+msgstr "Mach es!"
+
+#: devel_generate.module:77
+msgid ". <strong>Warning</strong>. This type contains CCK fields which won't be populated. See !url"
+msgstr ""
+
+#: devel_generate.module:77
+msgid "this CCK issue."
+msgstr ""
+
+#: devel_generate.module:92
+msgid "Which node types do you want to create?"
+msgstr ""
+
+#: devel_generate.module:98
+#, fuzzy
+msgid "<strong>Delete all content</strong> in these node types before generating new content."
+msgstr "Vor der Generierung von neuem Inhalt, soll vorhandener Inhalt gelöscht werden."
+
+#: devel_generate.module:103
+msgid "How many nodes would you like to generate?"
+msgstr "Wie viele Beiträge sollen generiert werden?"
+
+#: devel_generate.module:109
+#, fuzzy
+msgid "How many comments per node would you like to generate?"
+msgstr "Wie viele Kommentare sollen generiert werden?"
+
+#: devel_generate.module:110
+msgid "You must also enable comments for the node types you are generating."
+msgstr ""
+
+#: devel_generate.module:117
+msgid "Max word length of titles"
+msgstr "Maximale Wortlänge von Titeln"
+
+#: devel_generate.module:123
+msgid "Add an upload to each generated node"
+msgstr ""
+
+#: devel_generate.module:128
+msgid "Add taxonomy terms to each node."
+msgstr ""
+
+#: devel_generate.module:135
+msgid "Add an url alias for each node."
+msgstr ""
+
+#: devel_generate.module:154
+msgid "How many vocabularies would you like to generate?"
+msgstr "Wie viele Vokabularien sollen generiert werden?"
+
+#: devel_generate.module:160
+msgid "How many terms would you like to generate?"
+msgstr "Wie viele Begriffe sollen generiert werden?"
+
+#: devel_generate.module:166
+msgid "Max word length of term/vocab names"
+msgstr "Maximale Wortlänge von Begriff-/Vobabularnamen"
+
+#: devel_generate.module:172
+msgid "Delete existing terms and vocabularies before generating new content."
+msgstr ""
+
+# ?
+#: devel_generate.module:12
+#, fuzzy
+msgid "Generate items"
+msgstr "Beiträge generieren"
+
+#: devel_generate.module:13
+msgid "Populate your database with dummy items."
+msgstr ""
+
+#: devel_generate.module:21
+msgid "Generate users"
+msgstr "Benutzer generieren"
+
+#: devel_generate.module:22
+msgid "Generate a given number of users. Optionally delete current users."
+msgstr ""
+
+#: devel_generate.module:28
+msgid "Generate content"
+msgstr "Inhalt generieren"
+
+#: devel_generate.module:29
+msgid "Generate a given number of nodes and comments. Optionally delete current items."
+msgstr ""
+
+#: devel_generate.module:36
+msgid "Generate categories"
+msgstr "Kategorien generieren"
+
+#: devel_generate.module:37
+msgid "Generate a given number of vocabularies and terms. Optionally delete current categories."
+msgstr "Eine angegebene Anzahl an Vokabularien und Begriffen generieren. Optional aktuelle Kategorien löschen."
+
+#: devel_generate.module:0
+msgid "devel_generate"
+msgstr "devel_generate"
+
+#: devel_node_access.module:24
+msgid "Development helper for node_access table"
+msgstr ""
+
+#: devel_node_access.module:27
+msgid "This module helps in site development.  Specifically, when an access control module is used to limit access to some or all nodes, this module provides some feedback showing the node_access table in the database."
+msgstr ""
+
+#: devel_node_access.module:28
+msgid "The node_access table is one method Drupal provides to hide content from some users while displaying it to others.  By default, Drupal shows all nodes to all users.  There are a number of optional modules which may be installed to hide content from some users."
+msgstr ""
+
+#: devel_node_access.module:29
+msgid "If you have not installed one of these modules, you really have no need for the devel_node_access module.  This module is intended for use during development, so that developers and admins can confirm that node_access table is working as expected.  You probably do not want this module enabled on a production site."
+msgstr ""
+
+#: devel_node_access.module:30
+msgid "This module provides a !summary_page which shows show general information about your node_access table.  If you have installed the Views module, you may !browse_link.  This module also provides a block showing the rows of the node_access table relevant to whatever node(s) are shown on a given page.  Because the table shown is wide, it is recommended to enable the block in the page footer rather than a sidebar."
+msgstr ""
+
+#: devel_node_access.module:31
+msgid "summary page"
+msgstr "Zusammenfassungsseite"
+
+#: devel_node_access.module:32
+msgid "browse node_access by realm"
+msgstr ""
+
+#: devel_node_access.module:62
+msgid "Access Granted to All Nodes (All Users)"
+msgstr "Zugriff auf alle Beiträge gewährt (alle Benutzer)"
+
+#: devel_node_access.module:63
+msgid "Your node_access table contains entries that may be granting all users access to all nodes.  Depending on which access control module(s) you use, you may want to delete these entries.  If you are not using an access control module, you should probably leave these entries as is."
+msgstr ""
+
+#: devel_node_access.module:64;93;111;129;171
+#, fuzzy
+msgid "realm"
+msgstr "Bereich"
+
+#: devel_node_access.module:71
+msgid "Legacy Nodes"
+msgstr ""
+
+#: devel_node_access.module:73
+msgid "You have !num nodes in your node table which are not represented in your node_access table.  If you have an access control module installed, these nodes may be hidden from all users.  This could be caused by publishing nodes before enabling the access control module.  If this is the case, manually updating each node should add it to the node_access table and fix the problem."
+msgstr ""
+
+#: devel_node_access.module:77
+#, fuzzy
+msgid "All Nodes Represented"
+msgstr "Alle Beiträge neu dargestellt"
+
+#: devel_node_access.module:79
+msgid "All nodes are represented in the node_access table."
+msgstr ""
+
+#: devel_node_access.module:91
+msgid "Access Granted to All Nodes (Some Users)"
+msgstr "Zugriff auf alle Beiträge gewährt (einige Benutzer)"
+
+#: devel_node_access.module:92
+msgid "Your node_access table contains entries that may be granting some users access to all nodes.  This may be perfectly normal, depending on which access control module(s) you use."
+msgstr ""
+
+#: devel_node_access.module:107
+msgid "Access Granted to Some Nodes"
+msgstr "Zugriff auf einige Beiträge gewährt."
+
+#: devel_node_access.module:109
+msgid "The following realms appear to grant all users access to some specific nodes.  This may be perfectly normal, if some of your content is available to the public."
+msgstr ""
+
+#: devel_node_access.module:111
+msgid "public nodes"
+msgstr "Öffentliche Beiträge"
+
+# duplicate exists with different case
+#: devel_node_access.module:112
+#, fuzzy
+msgid "Public Nodes"
+msgstr "Öffentliche Beiträge"
+
+#: devel_node_access.module:125
+msgid "Summary by Realm"
+msgstr "Zusammenfassung nach Bereich"
+
+#: devel_node_access.module:127
+msgid "The following realms grant limited access to some specific nodes."
+msgstr ""
+
+#: devel_node_access.module:129
+#, fuzzy
+msgid "private nodes"
+msgstr "private Beiträge"
+
+#: devel_node_access.module:130
+msgid "Protected Nodes"
+msgstr "Geschützte Beiträge"
+
+#: devel_node_access.module:156
+#: devel_node_access.info:0
+msgid "Devel Node Access"
+msgstr ""
+
+#: devel_node_access.module:171
+msgid "node"
+msgstr "Beitrag"
+
+# GrantID?
+#: devel_node_access.module:171
+msgid "gid"
+msgstr "gid"
+
+#: devel_node_access.module:171
+msgid "view"
+msgstr "Anzeigen"
+
+#: devel_node_access.module:171
+msgid "update"
+msgstr "Aktualisieren"
+
+#: devel_node_access.module:171
+msgid "delete"
+msgstr "Löschen"
+
+#: devel_node_access.module:171
+msgid "explained"
+msgstr "erklärt"
+
+#: devel_node_access.module:184
+msgid "node_access entries for nodes shown on this page"
+msgstr ""
+
+#: devel_node_access.module:207
+msgid "Node Access: realm"
+msgstr "Beitragszugriff: Bereich"
+
+#: devel_node_access.module:213
+msgid "Node Access Realm"
+msgstr ""
+
+# duplicate exists with different case
+#: devel_node_access.module:225
+#, fuzzy
+msgid "Node Access: Realm"
+msgstr "Beitragszugriff: Bereich"
+
+#: devel_node_access.module:44
+msgid "node_access summary"
+msgstr "node_access Zusammenfassung"
+
+#: devel_node_access.module:0
+msgid "devel_node_access"
+msgstr "devel_node_access"
+
+#: devel_themer.module:42
+msgid "Devel Themer module @action"
+msgstr ""
+
+#: devel_themer.module:48
+msgid "Display theme log"
+msgstr "Themeprotokoll anzeigen"
+
+#: devel_themer.module:50
+msgid "Display the list of theme templates and theme functions which could have been be used for a given page. The one that was actually used is bolded. This is the same data as the represented in the popup, but all calls are listed in chronological order and can alternately be sorted by time."
+msgstr ""
+
+#: devel_themer.module:450
+msgid "Themer info"
+msgstr ""
+
+#: devel_themer.module:451
+msgid "loading"
+msgstr "ladend"
+
+#: devel_themer.module:452
+msgid "Parents: "
+msgstr "Übergeordnete Begriffe:"
+
+#: devel_themer.module:453
+msgid "Function called: "
+msgstr "Aufgerufene Funktion:"
+
+#: devel_themer.module:454
+msgid "Template called: "
+msgstr "Aufgerufenes Template: "
+
+#: devel_themer.module:455
+msgid "Candidate template files: "
+msgstr ""
+
+#: devel_themer.module:456
+msgid "Candidate function names: "
+msgstr ""
+
+#: devel_themer.module:457
+msgid "link to Drupal API documentation"
+msgstr ""
+
+#: devel_themer.module:458
+msgid "link to source code"
+msgstr ""
+
+#: devel_themer.module:459
+msgid "Function Arguments"
+msgstr "Funktionsparameter"
+
+#: devel_themer.module:460
+msgid "Template Variables"
+msgstr "Template Variablen"
+
+#: devel_themer.module:461
+msgid "File used: "
+msgstr "Verwendete Datei:"
+
+#: devel_themer.module:462
+msgid "Duration: "
+msgstr "Dauer: "
+
+#: devel_themer.module:469
+msgid "Drupal Themer Information"
+msgstr ""
+
+#: devel_themer.module:470
+msgid "Click on any element to see information about the Drupal theme function or template that created it."
+msgstr ""
+
+#: devel_themer.module:10
+msgid "Devel Themer"
+msgstr ""
+
+#: devel_themer.module:11
+msgid "Display or hide the textual template log"
+msgstr ""
+
+#: devel_themer.module:18
+msgid "Devel Themer Enable"
+msgstr ""
+
+#: devel_themer.module:25
+msgid "Theme Development Enable"
+msgstr ""
+
+#: devel_themer.module:0
+msgid "devel_themer"
+msgstr "devel_themer"
+
+#: macro.module:15
+msgid "Todo: Add help text."
+msgstr ""
+
+#: macro.module:17
+msgid "This output can be saved to the profile`s .macro file, to be automatically played back upon completed install or used on an import on another site."
+msgstr ""
+
+#: macro.module:19
+msgid "Insert recorded macro here to be played into your site. All referenced modules needs to be enabled."
+msgstr ""
+
+#: macro.module:21
+msgid "Configuration settings for the drupal macro engine."
+msgstr "Konfigurationseinstellungen für die Drupal-Makro-Engine."
+
+#: macro.module:154
+msgid "play macro"
+msgstr "Makro abspielen"
+
+#: macro.module:178
+msgid "Macro settings"
+msgstr "Einstellungen für Makros"
+
+#: macro.module:183
+msgid "Enable macro recording"
+msgstr "Makroaufzeichnung aktivieren"
+
+#: macro.module:185
+msgid "Set whether the macro engine will record form submissions."
+msgstr ""
+
+#: macro.module:189
+msgid "Delete recorded macro"
+msgstr "Aufzeichnetes Makro löschen"
+
+#: macro.module:191
+msgid "Set whether to clear previously recorded macro."
+msgstr ""
+
+#: macro.module:217
+msgid "An error has occured with macro #%macro_number , form_id %form_id. Please check the errors displayed for more details."
+msgstr ""
+
+#: macro.module:69
+msgid "administer macro settings"
+msgstr "Makro-Einstellungen verwalten"
+
+#: macro.module:69
+msgid "macro access"
+msgstr "Zugriff auf Makros"
+
+#: macro.module:32
+msgid "Macro engine"
+msgstr "Makro-Engine"
+
+#: macro.module:33
+msgid "Configure the Drupal macro engine. Export recorded macros or import previously recorded macros."
+msgstr ""
+
+#: macro.module:40
+msgid "Export"
+msgstr "Exportieren"
+
+#: macro.module:48
+msgid "Import"
+msgstr "Importieren"
+
+#: macro.module:56
+msgid "Configure"
+msgstr "Konfigurieren"
+
+#: macro.module:0
+msgid "macro"
+msgstr "Makro"
+
+#: devel.install:65
+msgid "Disabled query logging since devel module is disabled."
+msgstr ""
+
+#: devel.info:0
+msgid "Various blocks, pages, and functions for developers."
+msgstr ""
+
+#: devel.info:0
+#: devel_generate.info:0
+#: devel_node_access.info:0
+#: devel_themer.info:0
+#: macro.info:0
+msgid "Development"
+msgstr "Entwicklung"
+
+#: devel_generate.info:0
+msgid "Devel Generate"
+msgstr ""
+
+#: devel_generate.info:0
+msgid "Generate dummy users, nodes, and taxonomy terms."
+msgstr "Dummy Benutzer, Beiträg und Kategoriebegriffe generieren."
+
+#: devel_node_access.info:0
+msgid "Developer block and page illustrating relevant node_access records."
+msgstr ""
+
+#: devel_themer.info:0
+msgid "Theme developer"
+msgstr ""
+
+#: devel_themer.info:0
+msgid "Essential theme API information for theme developers"
+msgstr ""
+
+#: macro.info:0
+msgid "Macro"
+msgstr "Makro"
+
+#: macro.info:0
+msgid "Allows administrators to record and playback form submissions."
+msgstr ""
+
+#: generate/generate-og-users.php:48
+msgid "Assigned %n users to group %t."
+msgstr "%n Benutzer wurden der Gruppe %t zugewiesen."
+
+#: generate/generate-og2list-mail.php:38
+#, fuzzy
+msgid "Y/m/d - G:i"
+msgstr "Y/m/d - G:i"
+

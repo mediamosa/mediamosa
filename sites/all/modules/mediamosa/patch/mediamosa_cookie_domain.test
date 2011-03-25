@@ -1,0 +1,120 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The cookie domain drupal core hack/fix.
+ */
+
+class MediaMosaCookieDomain extends MediaMosaTestCase {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  static public function getInfo() {
+    return array(
+      'name' => 'MediaMosa - Cookie Domain Core Fix.',
+      'description' => 'Fixing the problem with storing the cookie on the main domain, instead of some subdomains.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Test still delete.
+  public function testCookieDomainCoreFix() {
+    global $base_url, $base_path, $base_root;
+
+    // Export the following settings.php variables to the global namespace
+    global $cookie_domain, $conf, $installed_profile, $update_free_access, $is_https, $base_secure_url, $base_insecure_url;
+
+    // save old settings as conf_init() resets them.
+    $this->old_server = $_SERVER;
+    $this->old_session_cookie_domain = ini_get('session.cookie_domain');
+    $this->old_cookie_domain = $cookie_domain;
+    $this->old_base_url = $base_url;
+    $this->old_base_path = $base_path;
+    $this->old_base_root = $base_root;
+    $this->old_conf = $conf;
+    $this->old_installed_profile = $installed_profile;
+    $this->old_update_free_access = $update_free_access;
+    $this->old_is_https = $is_https;
+    $this->old_base_secure_url = $base_secure_url;
+    $this->old_base_insecure_url = $base_insecure_url;
+
+    $cookie_domain_test_cases = array(
+      // Regular domains.
+      'drupal.org'             => '.drupal.org',
+      'www.drupal.org'         => '.drupal.org',
+      'www2.drupal.org'        => '.drupal.org',
+      'www.testing.drupal.org' => '.testing.drupal.org',
+      'app.testing.drupal.org' => '.testing.drupal.org',
+
+      // 2 level top domains.
+      //'drupal.co.uk'           => '.drupal.co.uk', TODO: should work in future
+      'www.drupal.co.uk'       => '.drupal.co.uk',
+      'dev.drupal.co.uk'       => '.drupal.co.uk',
+      'www.dev.drupal.co.uk'   => '.dev.drupal.co.uk',
+      'app.dev.drupal.co.uk'   => '.dev.drupal.co.uk',
+
+      // vpx specific
+      'app.vpcore.nl'                    => '.vpcore.nl',
+      'app.acceptatie.vpcore.nl'         => '.acceptatie.vpcore.nl',
+      'app.vpx.kennisnet.nl'             => '.vpx.kennisnet.nl',
+      'app.acceptatie.vpx.kennisnet.nl'  => '.acceptatie.vpx.kennisnet.nl',
+
+      // Non domain cookies.
+      'localhost'              => '',
+      '127.0.0.1'              => '',
+      '12.34.56.78'            => '',
+      '10.0.0.1'               => '',
+    );
+
+    foreach ($cookie_domain_test_cases as $test_domain => $expected_cookie_domain) {
+      // First cleanup previous results.
+      $cookie_domain = FALSE;
+      ini_set('session.cookie_domain', '');
+
+      // Perform test.
+      $_SERVER['HTTP_HOST'] = $test_domain;
+      drupal_settings_initialize();
+      $result = ini_get('session.cookie_domain');
+
+      $this->assertEqual($result,  $expected_cookie_domain, 'Testing "' . $test_domain . '", got "' . $result . '" expecting "' . $expected_cookie_domain . '"', ' domain');
+    }
+
+    $_SERVER = $this->old_server;
+    ini_set('session.cookie_domain', $this->old_session_cookie_domain);
+
+    $base_secure_url = $this->old_base_secure_url;
+    $base_insecure_url = $this->old_base_insecure_url;
+    $is_https = $this->old_is_https;
+    $cookie_domain = $this->old_cookie_domain;
+    $base_url = $this->old_base_url;
+    $base_path = $this->old_base_path;
+    $base_root = $this->old_base_root;
+    $conf = $this->old_conf;
+    $installed_profile = $this->old_installed_profile;
+    $update_free_access = $this->old_update_free_access;
+  }
+}

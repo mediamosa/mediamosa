@@ -1,0 +1,551 @@
+#!/usr/bin/lua
+-- -*- lua -*-
+
+--
+-- Copyright (c) 2008, 2009 Madcap BV (http://www.madcap.nl)
+-- All rights reserved.
+--
+-- Permission is granted for use, copying, modification, distribution,
+-- and distribution of modified versions of this work as long as the
+-- above copyright notice is included.
+--
+
+-- see http://www.inf.puc-rio.br/~roberto/lpeg.html
+-- and http://en.wikipedia.org/wiki/Parsing_expression_grammar
+-- and http://pdos.csail.mit.edu/%7Ebaford/packrat/popl04/peg-popl04.pdf
+require 'lpeg'
+
+local properties = {}
+local log = {}
+local errors = {}
+
+local space = lpeg.S(" \t\n\r")^0
+
+local COMMA = lpeg.P(",") * space
+local SEMIC = lpeg.P(";") * space
+local COLON = lpeg.P(":") * space
+local SLASH = lpeg.P("/") * space
+local HASH = lpeg.P("#") * space
+local LPAREN = lpeg.P("(") * space
+local RPAREN = lpeg.P(")") * space
+local LHOOK = lpeg.P("[") * space
+local RHOOK = lpeg.P("]") * space
+
+local digits = lpeg.R("09")^1
+local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
+
+local word = lpeg.C(symbol) * space
+local number = lpeg.C(digits) * space
+local any_number = digits * space
+local float = lpeg.C(digits * "." * digits) * space
+local time = lpeg.C(digits * ":" * digits * ":" * digits * "." * digits) * space
+local hex = lpeg.C("0x" * lpeg.R("09", "AF")^1) * space
+local dimension = lpeg.C(digits * "x" * digits) * space
+--local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) * space
+local ratio = digits * COLON * digits * space
+local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
+  (COMMA * lpeg.C("PAR" * space * ratio * "DAR" * space * ratio)) * space
+local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
+local channels = ((number * space)^0 * word + float) * space
+local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
+local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space
+local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
+local is_hinted = lpeg.C(symbol)
+local unit = lpeg.C(lpeg.P("k")^-1) * space
+
+-- Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'in3.avi':
+local ln_input = lpeg.P("Input #") * number * COMMA *
+  lpeg.Ct(containertype * COMMA * (containertype * COMMA)^0) * space
+
+-- Duration: 00:02:06.9, start: 0.000000, bitrate: 4143 kb/s
+-- Duration: 00:02:06.9, start: 0.000000, bitrate: N/A
+-- Duration: 00:53:01.20, start: -1.000000, bitrate: 1749 kb/s
+local ln_duration = space * "Duration" * COLON *
+  time * COMMA *
+  "start" * COLON * lpeg.C(lpeg.P("-")^0 * digits * "." * lpeg.P("-")^0 * digits) * space * COMMA *
+  "bitrate" * COLON * ((number * "kb/s") + lpeg.C("N/A")) * space
+
+-- Stream #0.1: Audio: mp2, 44100 Hz, stereo, 64 kb/s
+-- Stream #0.1: Audio: mp2, 44100 Hz, stereo, s16, 64 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, 254 kb/s
+-- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
+-- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
+-- captures: stream, codecs, frequency, channels, sample_format, bitrate
+local ln_audio = space * "Stream #" * float * language^-1 * COLON *
+  "Audio" * COLON *
+  codec * COMMA *
+  number * "Hz" * COMMA *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
+  ((COMMA * word) + lpeg.Cc("unknown")) *
+  (COMMA * number * "kb/s")^-1
+
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+--
+-- additional formats, introduced in 0.5 for ogg, mkv &c.
+-- Stream #0.0: Video: h264, yuv420p, 640x480, PAR 1:1 DAR 4:3, 25 tbr, 1k tbn, 2k tbc
+-- Stream #0.0: Video: dvvideo, yuv411p, 720x480, 28771 kb/s, PAR 10:11 DAR 15:11, 29.97 tbr, 29.97 tbn, 29.97 tbc
+-- Stream #0.1(und): Video: h264, yuv420p, 480x270 [PAR 1:1 DAR 16:9], 539 kb/s, 23.97 fps, 23.97 tbr, 23971 tbn, 47.94 tbc
+-- the tb{r,n,c} fields can have a 'k' suffix, in which case the value must be multiplied by 1000
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tbr (= fps)
+function convert_units(amount, unit)
+  if(unit == "k") then
+    return 1000 * amount
+  else
+    return amount
+  end
+end
+
+--Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+--Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+local ln_video = space * "Stream #" * float * language * COLON *
+  "Video" * COLON *
+  codec * COMMA *
+  ((word * COMMA) + lpeg.Cc("unknown")) *
+  (dimension + lpeg.Cc("unknown")) *
+  ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
+  (aspectratio + lpeg.Cc("unknown")) *
+  (
+    (COMMA * number * "kb/s")^-1 *
+    (COMMA * "PAR" * space * any_number * ":" * any_number * "DAR" * space * any_number * ":" * any_number)^-1 *
+    ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
+  ) *
+  (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
+
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
+-- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
+local ln_video_best = space * "Stream #" * float * language * COLON *
+  "Video" * COLON *
+  codec * COMMA *
+  ((word * COMMA) + lpeg.Cc("unknown")) *
+  (dimension + lpeg.Cc("unknown")) *
+  (aspectratio + lpeg.Cc("unknown")) * COMMA *
+  ((number * "kb/s" * COMMA) + lpeg.Cc("unknown")) *
+  ((float * "tb(" * lpeg.S("rmc") * ")") + (number * "tbr" * COMMA))
+
+-- Stream #0.1(und): Data: rtp  / 0x20707472
+-- hinted detection
+-- captures: is_hinted must be rtp
+local ln_hinted = space * "Stream #" * float * language * COLON *
+  "Data" * COLON * space * (is_hinted + lpeg.Cc("unknown")) * 
+   space * SLASH * space * hex
+
+function die(msg)
+  print(msg)
+  os.exit(1)
+end
+
+function add_property(key, value)
+  properties[key] = value
+end
+
+function add_error(message)
+  errors[#errors + 1] = message
+end
+
+function read_line_from_command(command)
+  local fd = io.popen(command, 'r')
+  local line = fd:read('*l')
+  fd:close()
+  return line
+end
+
+function mime_type(filename)
+  -- parse
+  -- 'filename: type/subtype'
+  -- 'filename: type/subtype; charset=xyz'
+  -- 'filename: very short file (no magic)'
+  local line = read_line_from_command(string.format("file --mime --dereference \"%s\"", filename))
+
+  local filename, short_file = string.match(line, "(.*): (very short file)")
+  if not short_file then
+    local filename, mimetype, extra = string.match(line, "(.*): ([^;]*)(.*)")
+    if mimetype then
+      local type, subtype = string.match(mimetype, "(.*)/(.*)")
+      if type and subtype then
+        if type == "application" and subtype == "octet-stream" then
+          -- special case for MS video formats and Flash, which sometimes return application/octet-stream.
+          -- The 'file' tool consistently returns 'Microsoft ASF' for those files when not invoked
+          -- with the '--mime' parameter, however - let's use that.
+          local line = read_line_from_command(string.format("file --dereference \"%s\"", filename))
+          local filename, filetype = string.match(line, "(.*): (.*)")
+          if filetype == "Microsoft ASF" then
+            type, subtype = "video", "x-msvideo"
+          elseif filetype == "Macromedia Flash Video" then
+            type, subtype = "video", "x-flv"
+          elseif filetype == "video/mp4" then
+            type, subtype = "video", "mp4"
+          end
+        end
+        return type, subtype
+      end
+    end
+  end
+
+  return "application", "octet-stream"
+end
+
+function log_out(format, ...)
+  -- print(string.format("LOG: " .. format, ...))
+end
+
+function mkpath(path, file)
+  return string.format("%s/%s/%s", path, string.sub(file, 1, 1), file)
+end
+
+function find_best_streams(source_path, hash)
+  local filename = mkpath(source_path, hash)
+  local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
+  -- print(command)
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local video_max_bitrate
+  local video_max_bitrate_stream
+  local video_max_bitrate_size
+  local audio_max_bitrate
+  local audio_max_bitrate_stream
+
+  while line do
+    -- log[#log+1] = line
+
+    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+
+    if streamtype == "Audio" then
+      local stream, codec, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
+      if addition ~= nil then
+        channels = channels.." "..sample_format
+        sample_format = bitrate
+        bitrate = addition
+        addition = ''
+      end
+      --[[
+      print(line)
+      print('stream: '..stream)
+      --print('codecs: '..codecs)
+      print('hertz: '..hertz)
+      print('channels: '..channels)
+      print('sample_format: '..sample_format)
+      print('bitrate: '..bitrate)
+      print('addition: '..addition)
+      ]]
+      log_out("audio: detected stream: %s", stream)
+      if codec == nil then
+        --add_error("The audio input stream uses an unknown codec")
+        codec = {}
+      end
+      if audio_max_bitrate_stream == nil then
+        -- 1) When the bitrate field is missing, the target bitrate will be nil. This is not
+        --    a problem for single stream containers as the default bitrate will be used.
+        -- 2) When all streams lack a bitrate, we cannot choose the best stream. In this case
+        --    the last stream in the container will be transcoded.
+        log_out("audio: initial stream found %s @ %s kbps", stream, bitrate or "*** NIL ***")
+        audio_max_bitrate = tonumber(bitrate)
+        audio_max_bitrate_stream = stream
+      elseif tonumber(bitrate) > audio_max_bitrate then
+        log_out("audio: better stream found %s @ %s kbps", stream, bitrate)
+        audio_max_bitrate = tonumber(bitrate)
+        audio_max_bitrate_stream = stream
+      else
+        log_out("audio: not interested in stream %s @ %s kbps", stream, bitrate)
+      end
+    elseif streamtype == "Video" then
+      --local stream, codecs, colorspace, size, ar, bitrate, fps = lpeg.match(ln_video_best, line)
+      local stream, codec, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
+      log_out("video: detected stream: %s", stream)
+      --[[if codecs == nil then
+        add_error("The video input stream uses an unknown codec")
+        codecs = {}
+      end--]]
+      if video_max_bitrate_stream == nil then
+        log_out("video: initial stream found %s @ %s kbps", stream, bitrate)
+        video_max_bitrate = tonumber(bitrate)
+        video_max_bitrate_stream = stream
+        video_max_bitrate_size = size
+      elseif bitrate ~= "unknown" and video_max_bitrate ~= nil and tonumber(bitrate) > video_max_bitrate then
+        log_out("video: better stream found %s @ %s kbps", stream, bitrate)
+        video_max_bitrate = tonumber(bitrate)
+        video_max_bitrate_stream = stream
+        video_max_bitrate_size = size
+      else
+        log_out("video: not interested in stream %s @ %s kbps", stream, bitrate)
+      end
+    end
+
+    -- enumerate errors and warnings
+    if string.match(line, "could not find codec parameters") then
+      add_error("Could not find codec parameters. " ..
+                "This is most likely a problem with the encoding of the original media.")
+    end
+
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  if audio_max_bitrate_stream == nil then
+    audio_max_bitrate_stream = "none"
+  end
+  if video_max_bitrate_stream == nil then
+    video_max_bitrate_stream = "none"
+  end
+  if video_max_bitrate_size == nil then
+    video_max_bitrate_size = "none"
+  end
+  log_out("Best video: %s, best audio: %s", video_max_bitrate_stream, audio_max_bitrate_stream)
+  return video_max_bitrate_stream, audio_max_bitrate_stream, video_max_bitrate_size
+end
+
+function check_size(filename)
+  local f = io.popen(string.format("ls %s -shL --block-size=1", filename)) -- run command
+  local info = f:read("*a") -- read output of command
+  f:close()
+  i, j = string.find(info, "%d+ ")
+  if i ~= nil and j ~= nil then
+    local k = string.sub(info, i, j-1)
+    return k
+  else
+    return nil
+  end
+end
+
+function analyse(source_path, hash, always_hint_mp4, always_insert_md)
+  local filename = string.format("%s/%s/%s", source_path, string.sub(hash, 1, 1), hash)
+  local is_mpeg4_target = false
+  local is_flv_target = false
+  local max_video_bitrate = -1
+
+  -- detect the best video audio stream
+  local video_stream, audio_stream, video_size = find_best_streams(source_path, hash)
+
+  -- detect MIME type
+  local mime_type, mime_subtype = mime_type(filename)
+  add_property("MIME-type", mime_type .. "/" .. mime_subtype)
+
+  -- leave when an empty file was found
+  if mime_type == "application" and mime_subtype == "x-empty" then
+    return
+  end
+
+  -- asx detection
+  local fd = io.open(filename)
+  if fd == nil then
+    add_error("Mediafile not found: " .. filename)
+    return
+  end
+  local tag = fd:read(4)
+  fd:close()
+  if string.match(string.lower(tag), "<asx") then
+    add_property("File-type", "asx")
+    return
+  end
+
+  -- analyse with ffmpeg
+  local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
+  -- print(command)
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local file_is_hinted = false
+  local flv_is_hinted = false
+
+  while line do
+    log[#log+1] = line
+
+    local iimd = lpeg.match(space * "metadatacreator : Yet Another Metadata Injector for FLV", line)
+    if iimd then
+      add_property("Is-inserted-md", "yes")
+      flv_is_hinted = true
+    end
+
+    -- parse file type properties
+    local input, filetypes = lpeg.match(ln_input, line)
+    if input then
+      add_property("X-Input", input)
+      add_property("File-type", table.concat(filetypes, ";"))
+      for i,v in ipairs(filetypes) do
+        if v == "mp4" then
+          is_mpeg4_target = true
+        end
+        if v == "mpeg" then
+          is_mpeg4_target = true
+        end
+        if v == "flv" then
+          is_flv_target = true
+        end
+      end
+    end
+
+    -- parse file properties
+    local duration, start, bitrate = lpeg.match(ln_duration, line)
+    if duration then
+      add_property("File-duration", duration)
+      add_property("File-bitrate", bitrate)
+    end
+
+    -- parse audio / video stream properties
+    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+
+    if streamtype == "Audio" then
+      local stream, codec, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
+      if stream == audio_stream then
+        if codec == nil then
+          --add_error("The audio input stream uses an unknown codec")
+          codec = {}
+        else
+          add_property("X-Audio-stream", line)
+          add_property("Audio-codec", codec)
+          add_property("Audio-frequency", hertz)
+          add_property("Audio-channels", channels)
+          if bitrate then
+            add_property("Audio-bitrate", bitrate)
+          end
+        end
+      end
+    elseif streamtype == "Video" then
+      local stream, codec, colorspace, size, br1, ar, br2, fps = lpeg.match(ln_video, line)
+      if stream == video_stream then
+        if codec == nil then
+          add_error("The video input stream uses an unknown codec")
+          codec = {}
+        else
+          local bitrate
+          if(br1 ~= "unknown") then
+            bitrate = br1
+          else
+            bitrate = br2
+          end
+          add_property("X-Video-stream", line)
+	  -- print("line " .. line)
+          add_property("Video-codec", codec)
+	  -- print("codecs " .. codecs)
+          add_property("Video-colorspace", colorspace)
+	  -- print("colorsp: " .. colorspace)
+          add_property("Video-size", size)
+	  -- print("size " .. size)
+          add_property("Video-aspectratio", ar)
+          if fps ~= nil then
+            add_property("Video-framespersecond", fps)
+          else
+            add_property("Video-framespersecond", br2)
+          end
+          if bitrate ~= "unknown" then
+            add_property("Video-bitrate", bitrate)
+	    -- print("bitrate " .. bitrate)
+            if tonumber(bitrate) > max_video_bitrate then
+              max_video_bitrate = tonumber(bitrate)
+            end
+          end
+        end
+      end
+    elseif streamtype == "Data" then
+      local stream, is_hinted = lpeg.match(ln_hinted, line);
+      if is_hinted == "rtp" then
+        add_property("Is-hinted", "yes")
+        file_is_hinted = true
+      end
+    end
+
+    -- enumerate errors and warnings
+    if string.match(line, "could not find codec parameters") then
+      add_error("Could not find codec parameters. " ..
+                "This is most likely a problem with the encoding of the original media.")
+    end
+
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  -- if file-bitrate is "N/A" and there are videostreams with specified bitrates,
+  -- use the maximum specified bitrate of those streams as the file and video bitrate.
+  if properties["File-bitrate"] == "N/A" and max_video_bitrate ~= -1 then
+    add_property("File-bitrate", max_video_bitrate)
+    add_property("Video-bitrate", max_video_bitrate)
+  end
+
+  if is_mpeg4_target and always_hint_mp4 and file_is_hinted == false then
+    os.execute(string.format("cd %s", source_path))
+    os.execute(string.format("cp %s %s.mpg", filename, filename))
+    -- we start MP4Box for mp4 hinting; there are two known problems:
+    -- - there is a glibc error on some machines, MALLOC_CHECK_=0 fixes this
+    -- - MP4Box needs to be started in the same directory as the file, 'cd %s &&' fixes this.
+    os.execute(string.format("export MALLOC_CHECK_=0; cd %s && MP4Box -hint %s.mpg >/dev/null", source_path, filename))
+    io.flush()
+    -- test filesizes
+    local file_orig = check_size(filename)
+    local file_hinted = check_size(filename..".mpg")
+    if file_hinted ~= nil and tonumber(file_hinted) > tonumber(file_orig)  then
+      os.execute(string.format("mv %s.mpg %s", filename, filename))
+      os.execute(string.format("chmod 644 %s", filename))
+      add_property("Is-hinted", "yes")
+    else
+      os.execute(string.format("rm %s.mpg", filename))
+    end
+    os.execute("cd ..")
+  end
+
+  if is_flv_target and always_insert_md and flv_is_hinted == false then
+    os.execute(string.format("cd %s", source_path))
+    local ftmp = io.open(string.format("%s.tmp", filename), "r")
+    if ftmp ~= nil then
+      io.close(ftmp)
+      os.execute(string.format("rm %s.tmp", filename))
+    end
+    os.execute(string.format("yamdi -i %s -o %s.tmp &>/dev/null", filename, filename))
+
+    io.flush()
+    -- test filesizes
+    local file_orig = check_size(filename)
+    local file_hinted = check_size(filename..".tmp")
+    if file_hinted ~= nil and tonumber(file_hinted) > tonumber(file_orig)  then
+      os.execute(string.format("mv %s.tmp %s &>/dev/null", filename, filename))
+      add_property("Is-inserted-md", "yes")
+    else
+      os.execute(string.format("rm %s.tmp", filename))
+    end
+  end
+end
+
+
+local source_path = arg[1]
+local hash = arg[2]
+
+if source_path == nil or hash == nil then
+  print("Usage: vpx-analyse BASE_PATH HASH [--always_hint_mp4] [--always_insert_metadata]")
+  os.exit(1)
+end
+
+local always_hint_mp4 = false
+local always_insert_md = false
+if arg[3] == "--always_hint_mp4" or arg[4] == "--always_hint_mp4" then
+  always_hint_mp4 = true
+end
+
+if arg[3] == "--always_insert_metadata" or arg[4] == "--always_insert_metadata" then
+  always_insert_md = true
+end
+
+analyse(source_path, hash, always_hint_mp4, always_insert_md)
+
+-- if ffmpeg cannot analyse, but file gives an asf, make the container also asf
+-- so it is at least playable.
+if properties["File-type"] == nil and properties["MIME-type"] == "video/x-ms-asf" then
+  add_property("File-type", "asf")
+end
+
+add_property("ffmpeg-output", table.concat(log, "}-{"))
+for k,v in pairs(properties) do
+  print(k .. ": " .. v)
+end
+
+if next(errors) ~= nil then
+  for _,v in pairs(errors) do
+    print("Error: " .. v)
+  end
+  print("\n" .. table.concat(log, "\n"))
+  os.exit(1)
+end

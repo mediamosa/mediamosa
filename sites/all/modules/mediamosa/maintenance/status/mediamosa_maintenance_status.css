@@ -1,0 +1,50 @@
+/* $Id */
+
+div.messages {
+  background-color: #dfd;
+  color: #000;
+  margin-bottom: 0.25em;
+  padding: 0.25em 0.5em;
+}
+
+.mediamosa-status-info {
+  /*color: #e55;*/
+}
+div.mediamosa-status-info,
+tr.mediamosa-status-info {
+  background-color: #edf5fa;
+}
+
+.mediamosa-status-error {
+  color: #e55;
+}
+div.mediamosa-status-error,
+tr.mediamosa-status-error {
+  background-color: #fcc;
+}
+
+.mediamosa-status-warning {
+  color: #e09010;
+}
+div.mediamosa-status-warning,
+tr.mediamosa-status-warning {
+  background-color: #fcfca7;
+}
+
+.mediamosa-status-ok {
+  color: #008000;
+}
+div.mediamosa-status-ok,
+tr.mediamosa-status-ok {
+  background-color: #dfd;
+  color: #020;
+}
+
+.mediamosa-status-value {
+  width: 60px;
+  text-align: center;
+}
+
+td.mediamosa-status-part {
+	width: 260px;
+}

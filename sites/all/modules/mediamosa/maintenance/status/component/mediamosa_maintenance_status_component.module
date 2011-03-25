@@ -1,0 +1,237 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The status commponent module.
+ */
+
+/**
+ * Constants.
+ */
+
+/**
+ * Warning level for available in Mb.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
+
+/**
+ * When CRON is considered not being updated on time.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_CRON_TIMEOUT', 180);
+
+/**
+ * When simpletest is taking to much space and needs to be cleared.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING', 1024 * 1024 * 512);
+
+/**
+ * Generate the information of the status page.
+ */
+function mediamosa_maintenance_status_component_generate() {
+  $results = array();
+
+  $mount_point = mediamosa_configuration_storage::mount_point_get();
+
+  // ------------------------------------------------------- SANNAS mount point.
+  $results['mount_set'] = array(
+    'title' => t('SANNAS'),
+    'value' => t('Mount set'),
+    'severity' => _mediamosa_maintenance_status_okerror(!empty($mount_point)),
+  );
+
+  $results['mount_exists'] = array(
+    'title' => t('SANNAS'),
+    'value' => t('Mount exists'),
+    'severity' => _mediamosa_maintenance_status_okerror(mediamosa_io::is_dir($mount_point)),
+  );
+
+  // --------------------------------------------------- SANNAS Structure check.
+  $checks = array(
+    'is_structured' => array(),
+    'is_writeable' => array(),
+  );
+
+  $dirs = array('data', 'data/stills', 'data/transcode', 'links', 'download_links', 'still_links', 'ftp');
+  foreach ($dirs as $dir) {
+    $checks = _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
+  }
+
+  $maps = array(
+    '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  );
+  foreach ($maps as $map) {
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $map, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/stills/' . $map, $checks);
+  }
+
+  $results['mount_structure'] = array(
+    'title' => t('SANNAS stucture'),
+    'value' => empty($checks['is_structured']) ? t('Good') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_structured'])),
+  );
+  if (!empty($checks['is_structured'])) {
+    $results['mount_structure']['description'] = '<pre>' . implode("\n", $checks['is_structured']) . '</pre>';
+  }
+
+  $results['mount_writeable'] = array(
+    'title' => t('SANNAS writable'),
+    'value' => empty($checks['is_structured']) ? t('Writable') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_writeable'])),
+  );
+  if (!empty($checks['is_writeable'])) {
+    $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['is_writeable']) . '</pre>';
+  }
+
+  $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
+  $content = mt_rand(0, 9999);
+  $read_content = '';
+
+  $handle = fopen($filename, 'w');
+  if ($handle) {
+    fwrite($handle, $content);
+    fclose($handle);
+    $handle = fopen($filename, 'rb');
+    if ($handle) {
+      $read_content = fread($handle, filesize($filename));
+      fclose($handle);
+    }
+
+    unlink($filename);
+  }
+
+  // Note; you can not rename the key 'mount_rea_write' (!)
+  $results['mount_rea_write'] = array(
+    'title' => t('SANNAS read and write'),
+    'value' => t('Readable & writable'),
+    'severity' => _mediamosa_maintenance_status_okerror($content == $read_content),
+  );
+
+  $available_bytes = mediamosa_io::disk_free_space($mount_point);
+  $available_mb = floor($available_bytes / (1024 * 1024));
+  $total_bytes = mediamosa_io::disk_total_space($mount_point);
+  $results['mount_disk_free'] = array(
+    'title' => t('SANNAS current diskspace'),
+    'value' => t('@available free of total @total (@used used)', array('@available' => format_size($available_bytes), '@total' => format_size($total_bytes), '@used' => format_size($total_bytes - $available_bytes))),
+    'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
+  );
+
+  if (!empty($mount_point) && is_dir($mount_point)) {
+    $du_simpletest = mediamosa_io::disk_usage_recursive(mediamosa_configuration_storage::mount_point_get(TRUE));
+    $results['du_simpletest'] = array(
+      'title' => t('Simpletest diskusage'),
+      'value' => format_size($du_simpletest),
+      'severity' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
+      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'", array('@simpletest_dir' => mediamosa_configuration_storage::mount_point_get(TRUE))) : '',
+    );
+  }
+
+  return array(
+    'components' => array(
+      'title' => t('Components'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Directory check helper.
+ *
+ * @param $directory string
+ * @param $checks['is_structured'] string
+ * @param $checks['is_writeable'] string
+ */
+function _mediamosa_maintenance_status_component_directory($directory, $checks) {
+  if (!mediamosa_io::is_dir($directory)) {
+    $checks['is_structured'][] = $directory;
+  }
+  if (!is_writable($directory)) {
+    $checks['is_writeable'][] = $directory;
+  }
+
+  return $checks;
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ *
+ * @param boolean $reset
+ *  Reset the data, regenerate.
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_component = array();
+  if (!$reset) {
+    $mediamosa_status_component = variable_get('mediamosa_status_component_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_component)) {
+    $mediamosa_status_component = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_component_generate());
+    variable_set('mediamosa_status_component_' . mediamosa::get_server_id(), $mediamosa_status_component);
+  }
+
+  return $mediamosa_status_component['statuses'];
+}
+
+/**
+ * Implements hook_mediamosa_status_collect_realtime().
+ *
+ * Collect the information always, no caching. Only for front status page.
+ */
+function mediamosa_maintenance_status_component_mediamosa_status_collect_realtime() {
+
+  // --------------------------------------------------------------- CRON check.
+  $cron_last = variable_get('cron_last');
+  if (!is_numeric($cron_last)) {
+    $cron_last = variable_get('install_time', 0);
+  }
+
+  $cron_running = (REQUEST_TIME - $cron_last < 180);
+  $results['cron'] = array(
+    'title' => t('Cron maintenance tasks'),
+    'value' => $cron_running ? t('Last run %last_run ago', array('%last_run' => format_interval(REQUEST_TIME - $cron_last))) : t('Did not run for %run_for', array('%run_for' => format_interval(REQUEST_TIME - $cron_last))),
+    'severity' => _mediamosa_maintenance_status_okerror($cron_running),
+  );
+
+  // Only when failed and we have administer rights.
+  if (!$cron_running && user_access('administer site configuration')) {
+    global $base_url;
+    $description[] = t('You can <a href="@cron">run cron manually</a>.', array('@cron' => url('admin/reports/status/run-cron')));
+    $description[] = t('To run cron from outside the site, go to <a href="!cron">!cron</a>', array('!cron' => url($base_url . '/cron.php', array('external' => TRUE, 'query' => array('cron_key' => variable_get('cron_key', 'drupal'))))));
+    $results['cron']['description'] = implode(' ', $description);
+  }
+
+  return array(
+    'components' => array(
+      'title' => t('Components'),
+      'results' => $results,
+    ),
+  );
+}

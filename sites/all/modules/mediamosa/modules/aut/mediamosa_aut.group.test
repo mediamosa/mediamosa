@@ -1,0 +1,208 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for aut/ACL groups.
+  */
+class MediaMosaAutGroupsTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'AUT - Groups',
+      'description' => 'Testing the AUT module, groups, previously known as ACL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Remake of test #668
+  function testAut_Groups() {
+
+    // Make a new autorization group.
+
+    // Group name.
+    $groupname = '@' . mediamosa_db::uuid(rand(1, 9999)) . '.group';
+
+    // Group type.
+    $group_type = mediamosa_aut::AUT_NAME_TYPE_REALM;
+
+    // Create aut group.
+    $this->createAutGroup($groupname, $group_type);
+
+    // Get the aut group.
+    $a_aut_group = $this->getAutGroup($groupname);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_aut_group[mediamosa_aut_group_db::AUT_GROUP_TYPE] == mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM,
+      t("Aut group type: REALM")
+    );
+    $this->assertTrue(
+      $a_aut_group[mediamosa_aut_group_db::AUT_GROUP_NAME] == $groupname,
+      t("Aut group name has the good value")
+    );
+
+    // Update the aut group with a new name.
+
+    // Group name.
+    $new_groupname = '@' . mediamosa_db::uuid(rand(1, 9999)) . '_new.group';
+
+    // Update the aut group.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_group_update::NEW_GROUPNAME => $new_groupname,
+      mediamosa_rest_call_aut_group_update::GROUP_TYPE => mediamosa_aut::AUT_NAME_TYPE_DOMAIN,
+    );
+    $response = $this->updateAutGroup($groupname, $a_parameters);
+
+    // Get the aut group.
+    $a_aut_group = $this->getAutGroup($new_groupname);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_aut_group[mediamosa_aut_group_db::AUT_GROUP_TYPE] == mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN,
+      t("Aut group type: REALM")
+    );
+    $this->assertTrue(
+      $a_aut_group[mediamosa_aut_group_db::AUT_GROUP_NAME] == $new_groupname,
+      t("Aut group name has the good value")
+    );
+
+    // Check hostname related functions.
+
+    // Change the group name to the new one.
+    $groupname = $new_groupname;
+
+    // Set new hostnames.
+    $hostnames = array(
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+    );
+
+    // Limit and offset.
+    $limit = 5;
+    $offset = 0;
+
+    // Set a single hostname.
+    $single_hostname = $hostnames[0];
+
+    // Create aut hostname.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $single_hostname,
+    );
+    $this->createAutHostname($groupname, array(), $a_parameters);
+
+    // Get the aut hostname.
+    $a_xml = $this->getAutHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['hostname'] == $single_hostname,
+      t("Hostname has the good value: @value", array('@value' => $a_xml['items']['item'][0]['hostname']))
+    );
+
+    // Add multiple hostnames to an aut group.
+
+    // Create aut hostname.
+    $this->createAutHostname($groupname, $hostnames);
+
+    // Get the aut hostname.
+    $a_xml = $this->getAutHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == count($hostnames),
+      t("Hostname has @count values", array('@count' => count($hostnames)))
+    );
+    foreach ($a_xml['items']['item'] as $host) {
+      $this->assertTrue(
+        in_array($host['hostname'], $hostnames),
+        t("Hostname has the good value: @value", array('@value' => $host['hostname']))
+      );
+    }
+
+    // Try to throw a group which is linked to hostnames.
+    // Delete an aut group.
+    $this->deleteAutGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
+
+    // Delete an aut hostname.
+
+    // Delete an aut hostname.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $single_hostname,
+    );
+    $this->deleteAutHostname($groupname, array(), $a_parameters);
+
+    // Get the aut hostname.
+    $a_xml = $this->getAutHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == count($hostnames) - 1,
+      t("Hostname has @count values", array('@count' => count($hostnames) - 1))
+    );
+
+    // Deleta aut hostnames.
+
+    $delete_hostnames = $hostnames;
+    $not_deleted = $delete_hostnames[count($delete_hostnames) - 1];
+    unset($delete_hostnames[count($delete_hostnames) - 1]); // all but one
+
+    // Delete an aut hostname.
+    $this->deleteAutHostname($groupname, $delete_hostnames);
+
+    // Get the aut hostname.
+    $a_xml = $this->getAutHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == 1,
+      t("Hostname has @count values", array('@count' => 1))
+    );
+    foreach ($a_xml['items']['item'] as $host) {
+      $this->assertTrue(
+        $host['hostname'] == $not_deleted,
+        t("Hostname has the good value: @value", array('@value' => $host['hostname']))
+      );
+    }
+
+    // Delete the aut group with delete = cascade.
+
+    // Delete an aut group.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_group_delete::DELETE => 'cascade',
+    );
+    $this->deleteAutGroup($groupname, $a_parameters);
+
+    // Get the aut hostname.
+    $a_xml = $this->getAutHostname($groupname, $limit, $offset, array(), array(mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND));
+  }
+}

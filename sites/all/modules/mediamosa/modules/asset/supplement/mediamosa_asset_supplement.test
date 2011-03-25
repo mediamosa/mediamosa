@@ -1,0 +1,90 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for supplement.
+  */
+class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset supplement - common tests',
+      'description' => 'Testing asset supplement related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset supplement, see: ticket 495.
+  function testQueryingSuplement() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Get content.
+    $supplement = file_get_contents($this->getTestImage_BlobGif());
+
+    // Create supplement.
+    $supplement_id = $this->createAssetSupplement($asset_id);
+
+    // Update the supplement.
+    $this->updateAssetSupplement($asset_id, $supplement_id, $supplement);
+
+    // Create the URL.
+    $uri = strtr('asset/@asset_id/supplement', array('@asset_id' => $asset_id));
+
+    // Get the supplement.
+    $response = $this->restCallGet($uri);
+
+    // Check the response.
+    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
+    $this->assertTrue(
+      base64_encode($supplement) == $a_xml['items']['item'][0]['supplement_base64'],
+      t('Check the Base64 encoded result.')
+    );
+
+
+    // Check multiple entries.
+    $supplement_id_2 = $this->createAssetSupplement($asset_id);
+
+    // Get the supplement.
+    $response = $this->restCallGet($uri);
+
+    // Check the response.
+    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
+    $this->assertTrue(
+      count($a_xml['items']['item']) === 2,
+      t('Get an asset/{asset_id}/supplement list (count = @count).', array('@count' => count($a_xml['items']['item'])))
+    );
+
+  }
+
+}

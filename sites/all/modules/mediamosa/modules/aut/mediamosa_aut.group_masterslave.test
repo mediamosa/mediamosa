@@ -1,0 +1,290 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for aut/ACL/groups/master/slave.
+  */
+class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'AUT - Groups, Master-Slave',
+      'description' => 'Testing the AUT module, groups with master slave, previously known as ACL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Remake of test #16791
+  function testAut_GroupsMasterSlave() {
+
+    //
+    // Set up.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    // Group name.
+    $groupname = mediamosa_db::uuid(rand(1, 9999)) . '.group';
+
+    // Group type.
+    $group_type = mediamosa_aut::AUT_NAME_TYPE_DOMAIN;
+
+    $file = 'mediamosa_aut.group_masterslave.test';
+
+    //
+    // Test.
+    //
+
+    // Make a test video.
+
+    // Create asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Set mediafile rights.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array('foo.nl', 'bar.nl'),
+    );
+    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Make an another test video with file.
+
+    // Create asset and a mediafile with file on SAN/NAS.
+    $asset_media = $this->uploadTestFile();
+    $asset_id = $asset_media['asset_id'];
+    $mediafile_id = $asset_media['mediafile_id'];
+
+    // Make an aut group for Ega 1.
+
+    // Create aut group.
+    $this->createAutGroup($groupname, $group_type);
+
+    // Create aut hostname.
+    $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl', 'foobar.nl');
+    $this->createAutHostname($groupname, $a_hostnames);
+
+    // Make an aut group for Ega 2.
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Create aut group.
+    $this->createAutGroup($groupname, $group_type);
+
+    // Create aut hostname.
+    $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl', 'foobar.nl');
+    $this->createAutHostname($groupname, $a_hostnames);
+
+    // Make a master / slave for asset + domain.
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array($groupname, 'nu.nl'),
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => array('@ACADEMIA.group', '@teleblik.nl'),
+    );
+    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Get_asset tests with granted.
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Get asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_DOMAIN => 'nu.nl',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_asset['granted'] == 'TRUE',
+      t("Autorisation: aut_realm playproxy call by other realm is ok")
+    );
+
+    // Get asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_DOMAIN => 'later.nl',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_asset['granted'] == 'FALSE',
+      t("Autorisation: aut_realm playproxy call by other realm is not granted")
+    );
+
+    // Get asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_DOMAIN => 'bar.nl',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_asset['granted'] == 'TRUE',
+      t("Autorisation: aut_realm playproxy call by other realm is not granted")
+    );
+
+    // Get asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_DOMAIN => 'foo.nl',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_asset['granted'] == 'FALSE',
+      t("Autorisation: aut_realm playproxy call by other realm is not granted")
+    );
+
+    // Get asset.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::AUT_DOMAIN => 'foobar.nl',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_asset['granted'] == 'TRUE',
+      t("Autorisation: aut_realm playproxy call by other realm is not granted")
+    );
+
+    //
+    // Playproxy calls.
+    //
+
+    // Owner may play.
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    );
+    $this->play_proxy($file, 212, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // This is not playable from a wrong domain.
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'john_doe',
+    );
+    $this->play_proxy($file, 224, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Is playable in correct domain.
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'bar.nl',
+    );
+    $this->play_proxy($file, 234, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Is playable in incorrect domain.
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
+    );
+    $this->play_proxy($file, 244, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    //
+    // Clean up group definitions.
+    //
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Delete aut hostnames.
+    $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl');
+    $this->deleteAutHostname($groupname, $a_hostnames);
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Delete aut hostnames.
+    $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl');
+    $this->deleteAutHostname($groupname, $a_hostnames);
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Delete aut group without delete = cascade.
+    $this->deleteAutGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
+
+    // Delete aut group with delete = cascade.
+    $this->deleteAutGroup($groupname, array(mediamosa_rest_call_aut_group_delete::DELETE => 'cascade'));
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Delete aut group with delete = cascade.
+    $this->deleteAutGroup($groupname, array(mediamosa_rest_call_aut_group_delete::DELETE => 'cascade'));
+  }
+}

@@ -1,0 +1,16 @@
+; $Id $
+
+name = "Storage"
+description = "The storage and mount settings."
+package = "MediaMosa - Maintenance - Configuration"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_configuration
+
+; Used files.
+files[] = mediamosa_configuration_storage.module
+files[] = mediamosa_configuration_storage.rest.inc
+files[] = mediamosa_configuration_storage.test
