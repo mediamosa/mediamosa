@@ -2,7 +2,7 @@
 name = "MediaMosa Apache Solr"
 description = "MediaMosa Apache Solr Search Integration."
 package = "MediaMosa - Search"
-version = "2.3.4"
+version = "2.3.5"
 core = 7.x
 
 dependencies[] = mediamosa
@@ -29,6 +29,7 @@ files[] = tests/mediamosa_solr.asset.cql.app.coll.test
 files[] = tests/mediamosa_solr.asset.cql.acl.context.test
 files[] = tests/mediamosa_solr.asset.collection.cql.test
 files[] = tests/mediamosa_solr.aut.ega.test
+files[] = tests/mediamosa_solr.aut.granted.test
 files[] = tests/mediamosa_solr.aut.groups.master.slave.test
 files[] = tests/mediamosa_solr.aut.groups.test
 files[] = tests/mediamosa_solr.aut.master.slave.test

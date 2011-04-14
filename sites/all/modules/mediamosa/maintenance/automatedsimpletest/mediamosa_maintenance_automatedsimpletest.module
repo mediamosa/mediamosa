@@ -358,6 +358,13 @@ function _mediamosa_maintenance_automatedsimpletest($show_tests = NULL) {
     foreach ($all_tests[$show_tests] as $name => $test_description) {
       $class = 'simpletest-pass';
 
+      // Test if the simpletest is enabled.
+      if (method_exists($name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
+        if (!call_user_func_array($name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
+          continue; // skip in listing.
+        }
+      }
+
       if (!isset($tests[$show_tests][$name])) {
         $result = t('Has not run.');
         $time = 'N/A';

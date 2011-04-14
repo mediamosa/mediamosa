@@ -31,6 +31,7 @@
 
 // Default settings.
 require_once 'mediamosa.settings.inc';
+require_once 'mediamosa.permission.class.inc';
 
 // Node types hook include.
 require_once 'core/node/mediamosa_node.inc';

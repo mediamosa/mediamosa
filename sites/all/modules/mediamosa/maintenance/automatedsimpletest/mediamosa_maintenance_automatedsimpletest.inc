@@ -93,14 +93,6 @@ class mediamosa_maintenance_automatedsimpletest {
           continue;
         }
 
-        // Check if there is a function on the class that returns TRUE or FALSE
-        // if its allowed to run or display.
-        if (method_exists($class, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
-          if (!call_user_func_array($class_name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
-            continue;
-          }
-        }
-
         // Not set? Then run it daily.
         if (!isset($test[mediamosa_settings::MEDIAMOSA_RUN])) {
           $simpletests[mediamosa_settings::MEDIAMOSA_RUN_DAILY][$class] = $test;
@@ -172,7 +164,7 @@ class mediamosa_maintenance_automatedsimpletest {
   /**
    * Retrieve the test results.
    */
-  static function get_test_results($name = NULL, array $value = NULL) {
+  static function get_test_results($name = NULL, array $value = NULL, $remove = FALSE) {
     static $test_results = NULL;
 
     if (isset($value)) {
@@ -185,6 +177,20 @@ class mediamosa_maintenance_automatedsimpletest {
           '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
           '#value' => mediamosa_maintenance_automatedsimpletest_db::VALUE,
           ':value' => serialize($value),
+          '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
+          ':name' => $name,
+        )
+      );
+    }
+
+    // If TRUE, we remove it from the results.
+    if ($remove) {
+      unset($test_results[$run][$class_name]);
+
+      // Store value (master-slave safe).
+      mediamosa_db::db_query('DELETE FROM {#mediamosa_maintenance_automatedsimpletest} WHERE #name = :name',
+        array(
+          '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
           '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
           ':name' => $name,
         )
@@ -218,18 +224,10 @@ class mediamosa_maintenance_automatedsimpletest {
   }
 
   /**
-   * Staticly store the results.
-   *
-   * @param array $value
+   * Remove the test results.
    */
-  static function test_results(array $value = NULL) {
-    $test_results = &drupal_static(__FUNCTION__);
-
-    if ($value) {
-      $test_results = $value;
-    }
-
-    return $test_results;
+  static function remove_test_results($run, $class_name) {
+    self::get_test_results($run . '|' . $class_name, NULL, TRUE);
   }
 
   /**
@@ -270,6 +268,22 @@ class mediamosa_maintenance_automatedsimpletest {
 
       // Seed them.
       foreach ($default_tests[$run] as $class_name => $info) {
+        // Check if there is a function on the class that returns TRUE or FALSE
+        // if its allowed to run or display.
+        if (method_exists($class_name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
+          if (!call_user_func_array($class_name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
+
+            // If the test has been disabled by test, we remove it also from
+            // the results.
+            self::remove_test_results($run, $class_name);
+            $key = array_search($class_name, $queue);
+            if ($key !== FALSE) {
+              unset($queue[$key]);
+            }
+            continue;
+          }
+        }
+
         if (!in_array($class_name, $queue)) {
           $queue[] = $class_name;
         }

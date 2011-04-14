@@ -161,7 +161,7 @@ function mediamosa_solr_install() {
  */
 function mediamosa_solr_uninstall() {
   // Drop our table(s).
-  mediamosa::drupal_uninstall_schema('mediamosa_solr');;
+  mediamosa::drupal_uninstall_schema('mediamosa_solr');
 
   // Remove our variables.
   $result = db_select('variable', 'v')
@@ -175,7 +175,7 @@ function mediamosa_solr_uninstall() {
 }
 
 /**
- * Implements hood_disable().
+ * Implements hook_disable().
  */
 function mediamosa_solr_disable() {
   // If our module is selected as search engine, then remove the variable

@@ -158,6 +158,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile_ext['metadata']['width'] = '640';
     $a_mediafile_ext['metadata']['height'] = '400';
     $a_mediafile_ext['metadata']['video_codec'] = '';
+    $a_mediafile_ext['metadata']['mime_type'] = '';
 
     $ticket = mediamosa_db::uuid($this->a_app[mediamosa_app_db::APP_ID]);
 

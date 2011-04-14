@@ -1176,6 +1176,9 @@ function _mediamosa_migration_user() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -1257,6 +1260,9 @@ function _mediamosa_migration_user() {
       '#db_name' => $db_name
     ))
   );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }
 
 /**
@@ -1268,6 +1274,9 @@ function _mediamosa_migration_ticket() {
 
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
   /**
    * Copy from 1.x to 2.x
@@ -1303,6 +1312,9 @@ function _mediamosa_migration_ticket() {
       '#db_name' => $db_name
     ))
   );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }
 
 /**
@@ -1377,15 +1389,15 @@ function _mediamosa_migration_webservice() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_db();
 
-    // Clean the tables.
-    $a_to_truncate = array(
-      'mediamosa_webservice',
-      'mediamosa_webservice_app',
-    );
+  // Clean the tables.
+  $a_to_truncate = array(
+    'mediamosa_webservice',
+    'mediamosa_webservice_app',
+  );
 
-    foreach ($a_to_truncate as $table_name) {
-      db_truncate($table_name)->execute();
-    }
+  foreach ($a_to_truncate as $table_name) {
+    db_truncate($table_name)->execute();
+  }
 
   /**
    * Copy from 1.x to 2.x

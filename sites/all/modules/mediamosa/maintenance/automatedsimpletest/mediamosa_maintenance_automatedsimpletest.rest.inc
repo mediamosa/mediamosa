@@ -63,38 +63,77 @@ class mediamosa_rest_call_simpletests extends mediamosa_rest_call {
  * Method: GET
  */
 class mediamosa_rest_call_simpletest extends mediamosa_rest_call {
+  const SKIP_EMPTY = 'skip_empty';
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array(
+      self::VARS => array(
+        mediamosa_settings::MEDIAMOSA_RUN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Type of simpletest that are returned.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+            mediamosa_settings::MEDIAMOSA_RUN_3_HOURS,
+            mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+            mediamosa_settings::MEDIAMOSA_RUN_ALL,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+        ),
+        self::SKIP_EMPTY => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Skip the tests have failed to run.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+      )
+    );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
 
+    // Get variables.
+    $mediamosa_run = $this->get_param_value(mediamosa_settings::MEDIAMOSA_RUN);
+    $skip_empty = $this->get_param_value(self::SKIP_EMPTY);
+
     // Fill the output.
     $test_results = mediamosa_maintenance_automatedsimpletest::get_test_results();
 
-    // For now, return the 10 minutes ones.
-    if (isset($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES])) {
-      foreach ($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES] as $name => $test_result) {
-        if (empty($test_result['results'])) {
-          continue;
-        }
+    // Go through all kind of tests, eg. 15 min test.
+    foreach ($test_results as $test_type => $test_data) {
+      if ($mediamosa_run == mediamosa_settings::MEDIAMOSA_RUN_ALL || $test_type == $mediamosa_run) {
+        foreach ($test_data as $name => $test_result) {
+          if (empty($test_result['results']) && $skip_empty) {
+            // Skip the test, that have failed to run.
+            continue;
+          }
 
-        $mediamosa->add_item(array(
-          'test' => $test_result['info']['name'],
-          'test_description' => $test_result['info']['description'],
-          'passes' => $test_result['results']['pass'],
-          'fails' => $test_result['results']['fail'],
-          'exceptions' => $test_result['results']['exception'],
-          'last_run' => format_date(round($test_result['started']), 'custom', 'Y-m-d H:i:s'),
-          'ttr' => round($test_result['ended'] - $test_result['started'], 2),
-        ));
+          // Test if the simpletest is enabled.
+          if (method_exists($name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
+            if (!call_user_func_array($name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
+              continue; // skip in listing.
+            }
+          }
+
+          // Skip the currently running test.
+          if (isset($test_result['info']['name'])) {
+            // Add the data.
+            $mediamosa->add_item(array(
+              'test' => $test_result['info']['name'],
+              'test_description' => $test_result['info']['description'],
+              'passes' => (isset($test_result['results']['pass']) ? $test_result['results']['pass'] : ''),
+              'fails' => (isset($test_result['results']['fail']) ? $test_result['results']['fail'] : ''),
+              'exceptions' => (isset($test_result['results']['exception']) ? $test_result['results']['exception'] : ''),
+              'last_run' => format_date(round($test_result['started']), 'custom', 'Y-m-d H:i:s'),
+              'ttr' => round($test_result['ended'] - $test_result['started'], 2),
+            ));
+          }
+        }
       }
     }
   }

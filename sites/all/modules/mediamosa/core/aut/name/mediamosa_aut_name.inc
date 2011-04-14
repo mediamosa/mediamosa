@@ -110,7 +110,7 @@ class mediamosa_aut_name {
         $s_prefix = NULL;
         break;
       case mediamosa_aut::AUT_NAME_TYPE_REALM:
-        if (mediamosa_unicode::substr($s_name, '@') === FALSE) {
+        if (mediamosa_unicode::strpos($s_name, '@') === FALSE) {
           $s_suffix = '@' . $s_name;
           $s_prefix = NULL;
         }

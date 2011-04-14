@@ -81,6 +81,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_server',
       'mediamosa_statistics',
       'mediamosa_ftp_user',
+      'mediamosa_tool_ffmpeg',
     ), $args));
 
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
@@ -502,9 +503,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFile($filename = '') {
-    // Create an asset.
-    $asset_id = $this->createAsset();
+  protected function uploadTestFile($filename = '', $asset_id = NULL) {
+
+    if (empty($asset_id)) {
+      // Create an asset.
+      $asset_id = $this->createAsset();
+    }
 
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);

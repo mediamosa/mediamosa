@@ -193,19 +193,19 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
       ),
       mediamosa_app_db::DOWNLOAD_URL => array(
-        'description' => 'Shown in the asset details rest calls. Available tags: {asset_id}, {mediafile_id} and {mediafile_filename}',
+        'description' => 'Shown in the asset details rest calls. Available tags: asset_id, mediafile_id and mediafile_filename.',
         'type' => 'varchar',
         'length' => mediamosa_app_db::DOWNLOAD_URL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::STREAM_URL => array(
-        'description' => 'Shown in the asset details rest calls. Available tags: {asset_id}, {mediafile_id} and {mediafile_filename}.',
+        'description' => 'Shown in the asset details rest calls. Available tags: asset_id, mediafile_id and mediafile_filename.',
         'type' => 'varchar',
         'length' => mediamosa_app_db::STREAM_URL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::STILL_URL => array(
-        'description' => 'Shown by OAI for still images. Available tags: {asset_id}.',
+        'description' => 'Shown by OAI for still images. Available tags: asset_id.',
         'type' => 'varchar',
         'length' => mediamosa_app_db::STILL_URL_LENGTH,
         'not null' => FALSE,

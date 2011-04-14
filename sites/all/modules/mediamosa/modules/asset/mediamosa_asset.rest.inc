@@ -306,7 +306,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::GRANTED => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Include a flag on each asset to indicate access. When providing with TRUE, the result will include assets where no access is available.',
+          self::VAR_DESCRIPTION => "Include a flag on each asset to indicate access. When providing with TRUE, the result will include assets where no access is available. The 'granted' value in the result, indicates if access was granted for the asset.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::IS_PUBLIC_LIST => array(

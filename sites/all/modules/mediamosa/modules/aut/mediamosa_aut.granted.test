@@ -1,0 +1,132 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Testing some parts we want to cover with granted flag.
+ */
+
+class MediaMosaTestCaseAutGrantedJobTest extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  static public function getInfo() {
+    return array(
+      'name' => 'AUT - Extended tests on granted flag.',
+      'description' => 'Extended test on the granted flag.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+    );
+  }
+
+  // --------------------------------------------------------- Test AUT granted.
+  public function testAutGranted() {
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $this->createAssetMetadata($asset_id,
+      array(
+        'title' => 'aap noot mies',
+        'description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.',
+        'created' => '2008-06-06 00:15:00',
+      )
+    );
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Get the transcoded mediafile_id.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if ($mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break;
+          }
+        }
+      }
+    }
+    $this->assertTrue($mediafile_id_transcoded, 'Found transcoded mediafile');
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $this->setMediafileAut($mediafile_id, array('aut_user' => array('johndoe')));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets('aap', array($asset_id => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), 'johndoe', FALSE, FALSE, FALSE, TRUE);
+
+    $this->deleteMediafileAut($mediafile_id);
+
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $this->setMediafileAut($mediafile_id_transcoded, array('aut_user' => array('johndoe')));
+
+    // Expect Granted TRUE because transcoded is ACL protected and original is not.
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Upload file to existing asset.
+    $upload = $this->uploadTestFile('', $asset_id);
+    $asset_id_2 = $upload['asset_id'];
+    $mediafile_id_2 = $upload['mediafile_id'];
+
+    // Must be the same.
+    $this->assertTrue($asset_id == $asset_id_2);
+
+    // Get Mediafile.
+    $mediafile_2 = $this->getMediafile($mediafile_id_2);
+    $this->var_export($mediafile_2);
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $this->setMediafileAut($mediafile_id, array('aut_user' => array('johndoe')));
+
+    // protected 1st original.
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $this->deleteMediafileAut($mediafile_id);
+
+    // Protected 2nd original.
+    $this->setMediafileAut($mediafile_id_2, array('aut_user' => array('johndoe')));
+
+    // Expect granted = TRUE, 2nd original protected, 1st not.
+    $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
+}

@@ -13,7 +13,3 @@ dependencies[] = mediamosa_server
 dependencies[] = mediamosa_app
 
 ; Used files.
-
-; Tool files.
-files[] = mediamosa_tool_ffmpeg.admin.inc
-files[] = mediamosa_tool_ffmpeg.inc

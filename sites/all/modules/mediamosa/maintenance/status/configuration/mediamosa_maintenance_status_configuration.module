@@ -626,14 +626,16 @@ function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_re
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
 
-  // Get default search engine.
-  $mediamosa_search_engine = mediamosa_search::get_search_engine();
+  if (class_exists('mediamosa_search')) {
+    // Get default search engine.
+    $mediamosa_search_engine = mediamosa_search::get_search_engine();
 
-  $results_drupal['search_engine'] = array(
-    'title' => t('Selected search engine'),
-    'value' => $mediamosa_search_engine['title'],
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
-  );
+    $results_drupal['search_engine'] = array(
+      'title' => t('Selected search engine'),
+      'value' => $mediamosa_search_engine['title'],
+      'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+    );
+  }
 
   return array(
     'configuration' => array(

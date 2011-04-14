@@ -20,3 +20,4 @@ files[] = mediamosa_aut.rights.test
 files[] = mediamosa_aut.group_masterslave.test
 files[] = mediamosa_aut.group.test
 files[] = mediamosa_aut.mediafiles.test
+files[] = mediamosa_aut.granted.test

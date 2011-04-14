@@ -22,14 +22,26 @@ Known issues;
 update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
 update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR) where val_datetime is not null and val_char is not null;
 
-Known bugs (no tickets (yet));
-- STILL_URI in object response during play proxy call is broken.
-
 TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.8 (build 1361)
+MediaMosa 2.3.9 (build 1381)
+----------------------------
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+
+Other changes (not ticket related)
+- Tests that are not allowed to run by unittest class method 
+  mediamosa_run_enabled() will now remove its results from the database, so
+  these can not be viewed and will not show possible failure in listing(s) and
+  simpletest REST calls.
+- Fixed problems during update when upgrading from MediaMosa version 2.2.7.
+- Added extended test for granted flag, to test new situation with 2 or more
+  original mediafiles. Also added for Solr.
+- Added missing mediamosa_tool.inc file to mediamosa_tool_pdf.info file.
+
+MediaMosa 2.3.8 (build 1368)
 ----------------------------
 - Metadata can be set to hidden, which will prevent the metadata to be returned
   in the asset output or other REST calls (See ticket #504).
@@ -56,6 +68,11 @@ Other changes (not ticket related)
 - rebuild the example transcoding profiles; webm, ogg and mobile
   profiles added.
 - Install profile does not install the windows transcoding tool.
+- Fixed problem in unit test where profiles where missing and was needed.
+- Fixed invalid error in perminanent still link unit test.
+- Fixed problem on rewrite xml output where errors in header would stop script.
+- Changed the description in the profile by removing all line feeds and unused
+  spaces.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------

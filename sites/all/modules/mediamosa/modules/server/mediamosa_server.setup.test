@@ -49,12 +49,6 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
   }
 
   /**
-   * Make sure SOLR is on.
-   */
-  public static function mediamosa_run_enabled() {
-    return module_exists('mediamosa_solr') ? TRUE : FALSE;
-  }
-  /**
    * Test job server setup.
    */
   public function testSetup() {
