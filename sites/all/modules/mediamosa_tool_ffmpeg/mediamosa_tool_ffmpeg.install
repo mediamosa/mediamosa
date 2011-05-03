@@ -1,0 +1,136 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * FFmpeg tool installer.
+  */
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_tool_ffmpeg_install() {
+  // Tool params.
+
+  $a_default_params = array(
+    array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
+    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv','wmv','mp4','avi','ogg','webm'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame','wma','pcm_s16le','libfaac','libvorbis'), NULL, 'FALSE', t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000','64000','128000','192000','256000','512000'), '64000', 'FALSE', t('Set the audio bitrate in bit/s@default')),
+    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050','44100'), '44100', 'FALSE', t('Set the audio sampling frequency@default')),
+    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', t('The allowed value is between 0 and 2@default')),
+
+    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo','flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
+    array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array('', 'main', 'baseline', 'ipod320', 'ipod640'), NULL, 'FALSE', NULL),
+    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('','1','2'), NULL, 'FALSE', t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
+    array('ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', t('Set the video bitrate in bit/s@default')),
+    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', t('Set frame rate (Hz value, fraction or abbereviation@default')),
+    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', t('Maximum video quantizer scale (VBR)@default')),
+    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', t('Duration of the video.')),
+    array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
+    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360', '640x390'), '640x390', 'FALSE', t('Set frame size using format WIDTHxHEIGHT@default')),
+    array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', t('Aspect ratio')),
+    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force maintain the original video aspect ratio or not@default')),
+    array('ffmpeg', 'padding', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force padding, if aspect ratio is maintained@default')),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($a_default_params as $a_default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
+
+    $node = node_save($node);
+  }
+
+  // Install some predefined ffmpeg transcoding profiles.
+  // One of the transcode profile must be set TRUE for default.
+  $a_default_profiles = array(
+
+    // Two (less used) flash profiles.
+    array('flash small', 'TRUE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:500000;size:320x200;maintain_aspect_ratio:yes;padding:yes'),
+    array('flash 480x270', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:128000;audiosamplingrate:22050;videocodec:flv;videobitrate:600000;size:480x270;maintain_aspect_ratio:yes;padding:yes'),
+
+    // old 3gp mobile phones format.
+    // ffmpeg -i input_video.mp4 -s 176x144 -vcodec h263 -r 25 -b 12200 -ab 12200 -ac 1 -ar 8000 output_video.3gp
+    array('3gp mobile format', 'FALSE', 'ffmpeg', '3gp', 'audiobitrate:12200;audiosamplingrate:8000;audiochannels:1;videocodec:h263;videobitrate:56000;fps:25;size:176x144'),
+
+    // libx264
+
+    // a slow h264 transcode (2 pass), with no size.
+    array('mp4 h264 (baseline, slow 2 pass)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;2_pass_h264_encoding:2;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
+
+    // iphone libx264 -- not android compatible. 480x320
+    array('mp4 h264 (iphone)', 'FALSE', 'ffmpeg', 'mp4', '
+audiocodec:libfaac;audiobitrate:64000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:ipod320;2_pass_h264_encoding:2;videobitrate:536000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
+
+    // based on android h264 recommendations: http://developer.android.com/guide/appendix/media-formats.html
+    array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
+    array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
+    array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+
+    // mpeg4
+    array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
+
+    // mpeg4 iphone format (untested)
+    array('mpeg4 iphone', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiochannels:2;videocodec:mpeg4;videobitrate:800000;size:240x160'),
+    // webm
+    array('WebM', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx'),
+
+    // ogg
+    array('Theora/Ogg', 'FALSE', 'ffmpeg', 'ogg', 'audiocodec:libvorbis;videocodec:libtheora'),
+
+  );
+
+  foreach ($a_default_profiles as $a_default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $a_default_profile[0]);
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $a_default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $a_default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $a_default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $a_default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $a_default_profile[4];
+
+    $node = node_save($node);
+  }
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_ffmpeg_uninstall() {
+  // Do nothing. We don't delete the existing data.
+}

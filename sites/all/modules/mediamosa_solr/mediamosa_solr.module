@@ -1,0 +1,478 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The MediaMosa Solr extension module.
+ */
+
+// Include my non-hooks.
+module_load_include('inc', 'mediamosa_solr', 'mediamosa_solr');
+module_load_include('batch.inc', 'mediamosa_solr', 'mediamosa_solr');
+
+/**
+ * Implementation of hook_mediamosa_search_engine().
+ */
+function mediamosa_solr_mediamosa_search_engine() {
+
+  // Return the information about the default search engine.
+  return array('mediamosa_solr' => array(
+    'title' => t('MediaMosa Solr search'),
+    'description' => t('The Lucene Solr search allows fast metadata search. This module allows MediaMosa to use Solr.'),
+  ));
+}
+
+/**
+ * Implementation of hook_mediamosa_simpletest_clean_environment().
+ */
+function mediamosa_solr_mediamosa_simpletest_clean_environment() {
+  $count = mediamosa_solr::delete_simpletest_documents();
+
+  drupal_set_message(t('Removed @count testing data from Solr database.', array('@count' => $count)));
+}
+
+/**
+ * Implement hook_menu().
+ */
+function mediamosa_solr_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/solr'] = array(
+    'title' => 'MediaMosa Solr',
+    'description' => 'Lucene Solr allows you to use really fast metadata searching for MediaMosa, a lot faster than the default search used on your database.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_solr_settings'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
+  );
+
+  $items['admin/mediamosa/config/solr/config'] = array(
+    'title' => 'Configuration',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/solr/indexer'] = array(
+    'title' => 'Indexer',
+    'description' => 'Rebuild or reindex the Solr database.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_solr_queueer_form'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_solr_permission() {
+  return array(
+    mediamosa_permission::ACCESS_CONFIG . '|solr' => array(
+      'title' => t('MediaMosa solr configuration administer permissions'),
+      'description' => t('Manage the configuration of MediaMosa Solr module.')
+    ),
+  );
+}
+
+/**
+ * Implement hook_settings().
+ */
+function mediamosa_solr_settings() {
+
+  $form['connection'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Server connection setup for Solr'),
+    '#description' => t('Supply the server URL and other connecting related settings for Solr.'),
+    '#collapsible' => TRUE,
+    '#weight' => -5,
+  );
+  $form['connection']['mediamosa_solr_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL'),
+    '#description' => t('Enter the URL of the Solr server. Example; http://solr.mediamosa.local:8983/mediamosa/ (jetty servlet) or http://solr.mediamosa.local:8080/mediamosa/ (tomcat servlet).  Port and path in the URL are required, if you are using the HTTP port (80) then you must supply it in the url (http://solr.mediamosa.local:80/mediamosa/).'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_solr_apache_solr_service::mediamosaGetUrl(),
+  );
+
+  if (mediamosa_solr_apache_solr_service::mediamosaGetUrl() != '') {
+    $form['connection']['check_connection'] = array(
+      '#type' => 'submit',
+      '#value' => t('Check connection Solr'),
+      '#submit' => array('_mediamosa_solr_ping_submit'),
+      '#weight' => 1,
+    );
+    $form['connection']['mediamosa_solr_check_connection_save'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Save URL when connection test was successful.'),
+      '#default_value' => !isset($_SESSION['mediamosa_solr_check_connection_save']) ? TRUE : $_SESSION['mediamosa_solr_check_connection_save'],
+      '#weight' => 2,
+    );
+  }
+
+  // No longer needed.
+  unset($_SESSION['mediamosa_solr_check_connection_save']);
+
+  $form['#submit'] = array('mediamosa_solr_settings_submit');
+  return system_settings_form($form);
+}
+
+/**
+ * Implement hook_settings_submit().
+ */
+function mediamosa_solr_settings_submit($form, &$form_state) {
+
+  // Call the function we normally call when pressing the 'check connection
+  // Solr' button.
+  _mediamosa_solr_ping_submit($form, $form_state);
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Calculate used diskspace.
+ */
+function mediamosa_solr_cron() {
+
+  // No need to run statistics parsing in simpletest. Will call it directly
+  // inside the test when needed.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    // Start background indexing solr.
+    mediamosa_http::do_internal_call_cron('internal/cron/solr', TRUE);
+  }
+  catch (Exception $e) {
+    mediamosa_solr::log('Catch exception during cron: @function: @msg', array('@function' => __FUNCTION__, '@msg' => $e->getMessage()));
+  }
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param boolean $reset
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_solr_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_server = array();
+  if (!$reset) {
+    $mediamosa_status_server = variable_get('mediamosa_status_server_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_server)) {
+    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_solr_status_generate());
+    variable_set('mediamosa_status_server_' . mediamosa::get_server_id(), $mediamosa_status_server);
+  }
+
+  return $mediamosa_status_server['statuses'];
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param boolean $reset
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_solr_mediamosa_status_collect_realtime($reset = FALSE) {
+  // Make sure this module is enabled.
+  if (!module_exists('mediamosa_maintenance_status')) {
+    return array();
+  }
+
+  $count = mediamosa_solr::queue_get_count();
+  $enabled = variable_get('mediamosa_solr_enable_queue', TRUE);
+  $running = variable_get('mediamosa_solr_queue_cron_last', NULL);
+  $failures = variable_get('mediamosa_solr_queue_failures', NULL);
+  $stats = variable_get('mediamosa_solr_queue_stats', array());
+
+  $average_stats = 0;
+  foreach ($stats as $stat) {
+    $average_stats += $stat;
+  }
+
+  $queue_message[] = $enabled ? t('Enabled') : t('Queue is disabled (!enable_link)', array('!enable_link' => l('enable here', 'admin/mediamosa/config/global')));
+
+  if ($count) {
+    $queue_message[] = !empty($running) ? t('is processing') : t('waiting for next interval');
+  }
+
+  $queue_message[] = $count ? format_plural($count, 'one asset queued for indexing', '@count assets queued for indexing') : t('queue is empty');
+  $queue_message[] = !$running && (!$average_stats || empty($stats)) ? t('no assets indexed for the last @count runs', array('@count' => mediamosa_solr::TAKE_AVERAGE_LAST_X_MIN)) : t('indexing @stats assets per run', array('@stats' => round($average_stats / count($stats), 2)));
+
+  $results['admin'] = array(
+    'title' => t('Lucene Solr queue'),
+    'value' => implode(', ', $queue_message),
+    'severity' => _mediamosa_maintenance_status_okerror($enabled && !$failures),
+    'description' => $failures ? t("Warning: queue generated an unrecoverable error; ") . htmlspecialchars(var_export($failures, TRUE)) : '',
+  );
+
+  return array(
+    'components' => array(
+      'title' => t('Components'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_mediamosa_asset_index_delete().
+ *
+ * @param array $reindex_info
+ */
+function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
+  // Delete the asset.
+  if (mediamosa_solr::is_enabled()) {
+    mediamosa_solr::delete_assets(array($asset_id));
+  }
+  else {
+    // Queue, so they are deleted when indexed.
+    mediamosa_solr::queue_assets(array($asset_id));
+  }
+}
+
+/**
+ * Implementation of hook_mediamosa_asset_reindex().
+ *
+ * @param array $reindex_info
+ *
+ * Keys in array;
+ *  - asset_ids: (array)
+ *    The assets to reindex.
+ */
+function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_type) {
+  // Instant is default TRUE.
+  $instant = TRUE;
+
+  // When off, then insert into queue.
+  if (!mediamosa_solr::is_enabled()) {
+    mediamosa_solr::queue_assets($reindex_info['asset_ids']);
+    return;
+  }
+
+  switch ($search_index_type) {
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE:
+      $instant = mediamosa_solr::settingInstantlyAssetNormalize();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_METADATA:
+      $instant = mediamosa_solr::settingInstantlyMetadata();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_CREATE:
+      $instant = mediamosa_solr::settingInstantlyAssetCreate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE:
+      $instant = mediamosa_solr::settingInstantlyAssetUpdate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_MEDIAFILE_UPDATE:
+      $instant = mediamosa_solr::settingInstantlyMediafileUpdate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER:
+      $instant = mediamosa_solr::settingInstantlyUserFav();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE:
+      $instant = mediamosa_solr::settingInstantlyMasterSlave();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ACL:
+      $instant = mediamosa_solr::settingInstantlyACL();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION:
+      $instant = mediamosa_solr::settingInstantlyAssetCollection();
+      break;
+  }
+
+  if ($instant) {
+    mediamosa_solr::insert_assets($reindex_info['asset_ids']);
+  }
+  else { // queue
+    mediamosa_solr::queue_assets($reindex_info['asset_ids']);
+  }
+}
+
+/**
+ * Implementation of hook_mediamosa_asset_queue().
+ *
+ * @param array $reindex_info
+ *
+ * Keys in array;
+ *  - asset_ids: (array)
+ *    The assets to reindex.
+ */
+function mediamosa_solr_mediamosa_asset_queue($reindex_info) {
+  mediamosa_solr::queue_assets($reindex_info['asset_ids']);
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_solr_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  // Trigger for cron run.
+  $rest_calls['cron/solr'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_solr_process_queue',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_solr',
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Show form for indexer.
+ */
+function _mediamosa_solr_queueer_form() {
+
+  $form['rebuild'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Rebuild '),
+    '#description' => t('Rebuilding the index of Solr will either replace or update the index. This form will only start and fill the re-index queue. The re-index will take time depending on the size of your database and will run in the background. Progress of the re-index can be followed on the !statuspage.', array('!statuspage' => l(t('MediaMosa status home page'), 'admin/mediamosa'))),
+    '#collapsible' => TRUE,
+    '#weight' => -5,
+  );
+
+  $form['rebuild']['rebuild_index'] = array(
+    '#type' => 'submit',
+    '#value' => t('Rebuild index Solr'),
+    '#weight' => 1,
+  );
+
+  $form['rebuild']['purge_index'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Completely rebuild the index by throwing away the current.'),
+    '#default_value' => FALSE,
+    '#description' => t(' With this option enabled, current search calls will not render the correct results until re-index is complete. Best to switch back first to default search engine before proceding. You only need this option when the search is returning assets that no longer exist. Although, MediaMosa will only return existing assets, but will return less assets than might be expected.'),
+    '#weight' => 2,
+  );
+
+  return $form;
+}
+
+/**
+ * Implement hook_form_submit().
+ */
+function _mediamosa_solr_queueer_form_submit($form, &$form_state) {
+
+  switch ($form_state['values']['op']) {
+    case t('Rebuild index Solr'):
+      _mediamosa_solr_batch_reindex_start((int) $form_state['values']['purge_index']);
+      break;
+  }
+}
+
+/**
+ * Implements hook_mediamosa_settings_collect().
+ */
+function mediamosa_solr_mediamosa_configuration_collect() {
+  $form['mediamosa_solr'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Lucene Solr settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['mediamosa_solr']['mediamosa_solr_enable_queue'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable queue processing'),
+    '#description' => t('Turns off indexing of assets to the Solr search engine using the queue.'),
+    '#default_value' => variable_get('mediamosa_solr_enable_queue', TRUE),
+  );
+
+  $form['mediamosa_solr']['queue'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Lucene Solr indexing settings'),
+    '#description' => t('These options allow you specify on type if you want queue the changes to asset or let Solr update its search index instantly. By default all options are enabled, having all changes processed instantly. However, if you feel that Solr is slowing down because it got to much to index, then turn one or more options off to queue changes. Disabling instant indexing will delay the update on your search changes. This delay is depending on the number of asset changes Solr can process and how many update calls are made to Solr. The delay is mostly up to 1 or 2 minutes before its processed by Solr. These settings only effect Solr indexing.'),
+    '#collapsible' => FALSE,
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_metadata_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process metadata changes instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyMetadata(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_asset_create_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset create instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetCreate(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_asset_update_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset updates instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetUpdate(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_assetcollection_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset in/with collection relations instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetCollection(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_mediafile_update_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process mediafiles updates instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyMediafileUpdate(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_user_fav_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process user favorites of assets instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyUserFav(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_master_slave_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process master/slave changes of assets instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyMasterSlave(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_acl_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process access (ACL/AUT) changes of assets instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyACL(),
+  );
+
+  return $form;
+}

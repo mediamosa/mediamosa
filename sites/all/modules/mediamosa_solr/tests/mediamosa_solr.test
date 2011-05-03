@@ -1,0 +1,256 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Default test.
+ */
+
+class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'SOLR - basic tests',
+      'description' => 'Run basic tests if all options are working for the MediaMosa Solr setup.',
+      'group' => 'MediaMosa Solr',
+      'automatic_run_disabled' => module_exists('mediamosa_solr') ? FALSE : TRUE,
+    );
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+
+    // Change app timezones to UTC default.
+    $this->default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL;
+
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_solr',
+    ), $args));
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Turn on Solr as search engine.
+    variable_set('mediamosa_search_engine', 'mediamosa_solr');
+  }
+
+  /**
+   * Implements tearDown().
+   */
+  protected function tearDown() {
+
+    $app_ids = array();
+    if (!empty($this->a_app['app_id'])) {
+      $app_ids[] = $this->a_app['app_id'];
+    }
+    if (!empty($this->a_app_2['app_id'])) {
+      $app_ids[] = $this->a_app_2['app_id'];
+    }
+    if (!empty($this->a_app_3['app_id'])) {
+      $app_ids[] = $this->a_app_3['app_id'];
+    }
+
+    // Remove it.
+    if (!empty($app_ids)) {
+      mediamosa_solr::delete_simpletest_documents($app_ids);
+      $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
+    }
+
+    parent::tearDown();
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testBasic() {
+
+    $this->var_export(mediamosa_search::get_search_engine());
+
+    // Make sure the instanty settings are all on by default.
+    $this->assertTrue(mediamosa_solr::settingInstantlyMetadata(), 'Metadata setting instant');
+    $this->assertTrue(mediamosa_solr::settingInstantlyAssetUpdate(), 'Asset update setting instant');
+
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile($this->getTestVideo_ogg());
+    $upload_3 = $this->uploadTestFile($this->getTestVideo_BlackStill());
+    $upload_4 = $this->uploadTestFile();
+
+    // Create transcode for all.
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Create asset metadata.
+    $this->createAssetMetadata($upload_1['asset_id'],
+      array(
+        'title' => '^bicycle aap^',
+        'description' => '~asset number 1',
+        'issued' => '2010-01-01 00:00:00',
+        'titel' => '2010-01-01 00:00:00',
+        'beschrijving' => 'SURFguest.rocvideo',
+      )
+    );
+    $this->createAssetMetadata($upload_2['asset_id'],
+      array(
+        'title' => '^aap noot mies^',
+        'description' => 'asset~ number 2',
+        'issued' => '2009-01-01 00:00:00',
+        'titel' => '2009-01-01 00:00:00',
+        'beschrijving' => 'sURFguest.rocvideo',
+      )
+    );
+    $this->createAssetMetadata($upload_3['asset_id'],
+      array(
+        'title' => '^car^',
+        'description' => 'asset ~number~ 3',
+        'issued' => '2010-08-01 00:00:00',
+        'titel' => '2010-08-01 00:00:00',
+        'beschrijving' => 'SURFfoo.rocvideo',
+      )
+    );
+
+    //$this->cql_do_search_test_assets_1('title = aap', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+    $this->cql_do_search_test_assets_1('title = aap', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    $search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array(), $search_params);
+
+    // Find all 3.
+    $this->cql_do_search_test_assets_1('is_unappropriate <> "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('NOT is_unappropriate == "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // Find all 3.
+    $this->cql_do_search_test_assets_1('NOT is_unappropriate <> "TRUE"', array(), $search_params);
+
+    // Test sorting.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // ASC.
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    // Test sorting.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // DESC.
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+
+    // Test sorting dates.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby issued/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // ASC.
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    // Test sorting dates.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby issued/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // DESC.
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+
+    // Test sorting dates, but then stored in text.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // ASC.
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    // Test sorting dates.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // DESC.
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2010"', array($upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2009"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued >= "2010"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued >= "2009"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued <= "2010"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued <= "2009"', array($upload_2['asset_id'] => TRUE), $search_params);
+
+    // Lowercase check.
+    $this->cql_do_search_test_assets_1('beschrijving = "SURFguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Lowercase check.
+    $this->cql_do_search_test_assets_1('beschrijving = "surfguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFfoo"', array($upload_3['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest.rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "SURFguest.rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+  }
+}

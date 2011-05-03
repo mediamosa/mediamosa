@@ -1,0 +1,19 @@
+; $Id$
+
+name = "OpenAPI"
+description = "The OpenAPI module enables different open applications in MediaMosa. Eg. RSS feed, ATOM, JSON."
+package = "MediaMosa - Modules"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_openapi.rest.class.inc
+files[] = mediamosa_openapi.output.test
+files[] = mediamosa_openapi.test
+files[] = mediamosa_openapi.upload.test
+
+; Response object.
+files[] = response/mediamosa_openapi_response.class.inc

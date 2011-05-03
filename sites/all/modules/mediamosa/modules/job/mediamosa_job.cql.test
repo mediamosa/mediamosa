@@ -1,0 +1,239 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL test file.
+  */
+class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Job search',
+      'description' => 'Testing job CQL related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // MM Ticket 267: Joblist search.
+  public function testCQL_Joblist() {
+
+    // Create data.
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // Owners.
+    $owner_1 = mediamosa_db::uuid(rand(1, 1000));
+    $owner_2 = mediamosa_db::uuid(rand(1, 1000));
+
+    // Create assets.
+    $asset_id_1 = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => $owner_1));
+    $asset_id_2 = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => $owner_1));
+    $this->toEga_2();
+    $asset_id_3 = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => $owner_2));
+    $this->toEga_1();
+
+    // Mediafiles.
+    $mediafile_id_1_1 = $this->createMediafile($asset_id_1, array(mediamosa_rest_call_asset_create::USER_ID => $owner_1));
+    $mediafile_id_1_2 = $this->createMediafile($asset_id_1, array(mediamosa_rest_call_asset_create::USER_ID => $owner_1));
+    $mediafile_id_2_1 = $this->createMediafile($asset_id_2, array(mediamosa_rest_call_asset_create::USER_ID => $owner_1));
+    $this->toEga_2();
+    $mediafile_id_3_1 = $this->createMediafile($asset_id_3, array(mediamosa_rest_call_asset_create::USER_ID => $owner_2));
+    $this->toEga_1();
+
+    // Create various jobs.
+
+    // Asset 1, Mediafile 1_1.
+    $a_fields_1_1_1 = array(
+      mediamosa_job_db::APP_ID => $app_id_1,
+      mediamosa_job_db::ASSET_ID => $asset_id_1,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_1_1,
+      mediamosa_job_db::OWNER_ID => $owner_1,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
+      mediamosa_job_db::PROGRESS => '0.000',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
+    );
+    $job_id_1_1_1 = $this->createJob($a_fields_1_1_1);
+
+    // For date test.
+    sleep(1);
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
+
+    // Asset 1, Mediafile 1_1.
+    $a_fields_1_1_2 = array(
+      mediamosa_job_db::APP_ID => $app_id_1,
+      mediamosa_job_db::ASSET_ID => $asset_id_1,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_1_1,
+      mediamosa_job_db::OWNER_ID => $owner_1,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_FINISHED,
+      mediamosa_job_db::PROGRESS => '1.000',
+      mediamosa_job_db::PRIORITY => -1,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_TRUE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_FALSE,
+    );
+    $job_id_1_1_2 = $this->createJob($a_fields_1_1_2);
+
+    // For date test.
+    sleep(1);
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
+
+    // Asset 1, Mediafile 1_2.
+    $a_fields_1_2_1 = array(
+      mediamosa_job_db::APP_ID => $app_id_1,
+      mediamosa_job_db::ASSET_ID => $asset_id_1,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_1_2,
+      mediamosa_job_db::OWNER_ID => $owner_1,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
+      mediamosa_job_db::PROGRESS => '0.000',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
+    );
+    $job_id_1_2_1 = $this->createJob($a_fields_1_2_1);
+
+    // For date test.
+    sleep(1);
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
+
+    // Asset 1, Mediafile 1_2.
+    $a_fields_1_2_2 = array(
+      mediamosa_job_db::APP_ID => $app_id_1,
+      mediamosa_job_db::ASSET_ID => $asset_id_1,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_1_2,
+      mediamosa_job_db::OWNER_ID => $owner_1,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_FAILED,
+      mediamosa_job_db::PROGRESS => '0.500',
+      mediamosa_job_db::PRIORITY => 1,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
+    );
+    $job_id_1_2_2 = $this->createJob($a_fields_1_2_2);
+
+    // Asset 2, Mediafile 2_1.
+    $a_fields_2_1_1 = array(
+      mediamosa_job_db::APP_ID => $app_id_1,
+      mediamosa_job_db::ASSET_ID => $asset_id_2,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_2_1,
+      mediamosa_job_db::OWNER_ID => $owner_1,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
+      mediamosa_job_db::PROGRESS => '0.000',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+    );
+    $job_id_2_1_1 = $this->createJob($a_fields_2_1_1);
+
+    // Asset 3, Mediafile 3_1.
+    $a_fields_3_1_1 = array(
+      mediamosa_job_db::APP_ID => $app_id_2,
+      mediamosa_job_db::ASSET_ID => $asset_id_3,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id_3_1,
+      mediamosa_job_db::OWNER_ID => $owner_2,
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
+      mediamosa_job_db::PROGRESS => '0.000',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+    );
+    $job_id_3_1_1 = $this->createJob($a_fields_3_1_1);
+
+    // CQL searches.
+
+    // Owner.
+    $a_search_params = array(mediamosa_rest_call_job_asset_search::USER_ID => $owner_1);
+
+    // TODO: remove.
+    //$this->var_export($job_id_1_1_1);
+
+    // Asset 1.
+    $this->cql_do_search_test_jobs($asset_id_1, '', array($job_id_1_1_1, $job_id_1_1_2, $job_id_1_2_1, $job_id_1_2_2), $a_search_params);
+
+    // Asset 2.
+    $this->cql_do_search_test_jobs($asset_id_2, '', array($job_id_2_1_1), $a_search_params);
+
+    // Asset 1, mediafile_id = $mediafile_id_1_1.
+    $this->cql_do_search_test_jobs($asset_id_1, sprintf('mediafile_id == "^%s^"', $mediafile_id_1_1), array($job_id_1_1_1, $job_id_1_1_2), $a_search_params);
+
+    // Asset 1, job_status = FAILED.
+    $this->cql_do_search_test_jobs($asset_id_1, 'status == "^FAILED^"', array($job_id_1_2_2), $a_search_params);
+
+    // Asset 1, progress > 0.500.
+    $this->cql_do_search_test_jobs($asset_id_1, 'progress > "0.500" OR progress == "0.000"', array($job_id_1_1_1, $job_id_1_1_2, $job_id_1_2_1), $a_search_params);
+
+    // Asset 1, priority >= 0.
+    $this->cql_do_search_test_jobs($asset_id_1, 'priority >= "0"', array($job_id_1_1_1, $job_id_1_2_1, $job_id_1_2_2), $a_search_params);
+
+    // Asset 1, job_type = mediamosa_job_db::JOB_TYPE_UPLOAD.
+    $this->cql_do_search_test_jobs($asset_id_1, 'job_type == "^UPLOAD^"', array($job_id_1_1_1, $job_id_1_2_1), $a_search_params);
+
+    // Asset 1, finished.
+    $app_time_1 = mediamosa_datetime::utc_date2app_date($a_fields_1_1_2[mediamosa_job_db::FINISHED], $this->a_app[mediamosa_app_db::TIMEZONE]);
+    $app_time_2 = mediamosa_datetime::utc_date2app_date($a_fields_1_2_2[mediamosa_job_db::FINISHED], $this->a_app[mediamosa_app_db::TIMEZONE]);
+    $this->cql_do_search_test_jobs($asset_id_1, sprintf('finished >= "%s" AND finished < "%s"', $app_time_1, $app_time_2), array($job_id_1_1_2, $job_id_1_2_1), $a_search_params);
+
+    // Asset 1, create_still = TRUE.
+    $this->cql_do_search_test_jobs($asset_id_1, 'create_still == "TRUE"', array($job_id_1_1_2), $a_search_params);
+
+    // Asset 1, hint = TRUE.
+    $this->cql_do_search_test_jobs($asset_id_1, 'hint == "TRUE"', array($job_id_1_1_1, $job_id_1_2_1, $job_id_1_2_2), $a_search_params);
+
+    $a_search_params[mediamosa_rest_call::LIMIT] = '2';
+    $a_search_params[mediamosa_rest_call::OFFSET] = '1';
+
+    // Asset 1 with limit and offset.
+    $this->cql_do_search_test_jobs($asset_id_1, 'sortby job_id/ascending', array($job_id_1_1_2, $job_id_1_2_1), $a_search_params);
+
+  }
+}

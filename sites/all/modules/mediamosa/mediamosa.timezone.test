@@ -1,0 +1,418 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Timezone unittest effects all parts of MediaMosa.
+  */
+class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa - Timezone UTC dates',
+      'description' => 'Test if our REST calls correctly convert to UTC and to App timezones.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Create and setup the CORE module.
+    $args = array_unique(
+      array_merge(
+        array(
+          'mediamosa_job',
+          'mediamosa_ftp_batch',
+          'mediamosa_batch_jobs',
+          'mediamosa_error',
+          'mediamosa_transcode',
+          'mediamosa_user',
+        ),
+        $args
+      )
+    );
+
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+  }
+
+  /**
+   * Helper for checking dates.
+   *
+   * @param array $mixed_item
+   * @param array $found_dates
+   */
+  private function helper_check_for_dates($mixed_item, &$found_dates, $cet_timestamp, $name = 'item') {
+    return $this->helper_check_for_dates_2($mixed_item, $found_dates, mediamosa_datetime::date2unix($cet_timestamp), $name = 'item', $cet_timestamp);
+  }
+
+  private function helper_check_for_dates_2($mixed_item, &$found_dates, $cet_unixtime, $name = 'item', $cet_timestamp = '') {
+    if (is_string($mixed_item)) {
+      try {
+        mediamosa_datetime::date8601_to_timestamp($mixed_item, $name, mediamosa_sdk::TYPE_DATETIME);
+      }
+      catch (Exception $e) {
+        return FALSE; // Not date.
+      }
+
+      return TRUE; // Date.
+    }
+
+    // Do not expect anything less.
+    assert(is_array($mixed_item));
+
+    foreach ($mixed_item as $key => $item) {
+      if ($key == 'max_value') {
+        return FALSE;
+      }
+
+
+      if ($this->helper_check_for_dates_2($item, $found_dates, $cet_unixtime, $key, $cet_timestamp)) {
+        $found_dates['found']++;
+
+        // into seconds.
+        $item_unixtime = mediamosa_datetime::date2unix($item);
+
+        // If diffs more than 600 seconds, then im sure its not in this timezone.
+        // The second difference is because the REST calls are made during this
+        // test that will have lag difference between creation and checking.
+        if (abs($item_unixtime - $cet_unixtime) < 600) {
+          $found_dates['ok']++;
+        }
+        else {
+          $this->fail('Date ' . $item . ' (field: ' . $key . ') (XML) does not match with expected date; ' . $cet_timestamp);
+        }
+      }
+    }
+
+    return FALSE;
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  /**
+   * Call all known REST calls, and see if it has the correct timezone settings
+   * in their output.
+   */
+  public function testVerifyOutput() {
+    // Call the REST call hook to get the registered REST calls.
+    $all_rest_calls = module_invoke_all('mediamosa_register_rest_call');
+    $all_rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
+    $all_rest_calls = array_merge_recursive($all_rest_calls, $all_rest_calls_doc);
+
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    $this->toEga_1();
+
+    // Lets have some jobs.
+    $upload = $this->uploadTestFile();
+
+    // Create some assets.
+    $asset_id_1 = $upload['asset_id'];
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+
+    // Create some mediafiles.
+    $mediafile_id_1 = $upload['mediafile_id'];
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+
+    // Some metadata.
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap noot'));
+    $this->createAssetMetadata($asset_id_3, array('title' => 'noot'));
+
+    $this->createAssetMetadataAppend($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
+    $this->createAssetMetadataAppend($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
+    $this->createAssetMetadataAppend($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
+
+    // Create some supplements.
+    $asset_supplement_id_1 = $this->createAssetSupplement($asset_id_1);
+    $asset_supplement_id_2 = $this->createAssetSupplement($asset_id_2);
+    $asset_supplement_id_3 = $this->createAssetSupplement($asset_id_3);
+
+    // Add sub.
+    $this->updateAssetSupplement($asset_id_1, $asset_supplement_id_1, 'taaatuuuutaaaatuuu');
+    $this->updateAssetSupplement($asset_id_2, $asset_supplement_id_2, 'toeeetoeeeeetttttt');
+    $this->updateAssetSupplement($asset_id_3, $asset_supplement_id_3, 'weeeeeommmgpffffff');
+
+    // Created is time, so lets create in default timezone time.
+    $utc_timestamp = mediamosa_datetime::utc_current_timestamp_now();
+
+    // Applications are created with CET (Europe/Paris) by default.
+    $cet_timestamp = mediamosa_datetime::utc_date2app_date($utc_timestamp, $this->a_app[mediamosa_app_db::TIMEZONE]);
+
+    // Remove the T so we can do direct compare.
+    $cet_timestamp[10] = ' ';
+
+    $this->pass('UTC timezone time; ' . $utc_timestamp);
+    $this->pass('To Application timezone (' . $this->a_app['timezone'] . '); ' . $cet_timestamp);
+
+    $this->createAssetMetadataAppend($asset_id_1, array('created' => $cet_timestamp));
+    $this->createAssetMetadataAppend($asset_id_2, array('created' => $cet_timestamp));
+    $this->createAssetMetadataAppend($asset_id_3, array('created' => $cet_timestamp));
+
+    // Create collection.
+    $coll_id_1 = $this->createCollection();
+
+    // Put asset(s) in collection.
+    $this->createCollectionAssetRelation($coll_id_1, array($asset_id_1));
+    // Some rigths
+    $this->setMediafileAcl($mediafile_id_1, array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => '@foo.nl',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => 'foo.nl',
+    ));
+
+    $this->setAssetAcl($asset_id_1, array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => '@foo.nl',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => 'foo.nl',
+    ));
+
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
+    );
+
+    // Set rights.
+    $a_response = $this->setCollectionAcl($coll_id_1, $a_parameters);
+
+    // Create aut group.
+    $this->createAclGroup('fooocom.group', mediamosa_acl::ACL_NAME_TYPE_DOMAIN);
+
+    // ID values we use inside the URI.
+    $ids = array(
+      '$uri_id' => 1,
+      '$asset_id' => $asset_id_1,
+      '$mediafile_id' => $mediafile_id_1,
+      '$coll_id' => $coll_id_1,
+      '$groupname' => 'fooocom.group',
+      '$code' => 601,
+      '$user_id' => self::SIMPLETEST_USER_ID,
+      '$job_id' => 1,
+      '$group_id' => self::SIMPLETEST_GROUP_ID,
+      '$profile_id' => 1,
+    );
+
+    // Some are not needed to check.
+    $skip_uri = array(
+      'login',
+      'mediafile/count',
+      'asset/$asset_id/collection/count',
+      'asset/$asset_id/collections/count',
+      'asset/$asset_id/count_collections',
+      'tagcount',
+      'download/$ticket_id/$filename',
+      'still/$still_id',
+      'still/$still_id/style/$style',
+      'still/ticket/$ticket_id',
+      'still/ticket/$ticket_id/style/$style',
+      'mediafile/uploadprogress',
+      'acl/get_foreign_apps',
+      'acl/app',
+      'collection/count',
+      'collection/$coll_id/favorites/count',
+      'collection/$coll_id/count_favorites',
+      'ftp_batch', // checked manually.
+      'ftp_batch/$batch_id', // checked manually.
+      'ftp_batch/$batch_id/assets', // checked manually.
+      'ftp/$user',
+      'ftp/list',
+      'ftp',
+      'autorisation_group/$groupname/hostname', // has no dates.
+      'video/transcode/$job_id/status',
+      'mediafile/transcode/$job_id/status',
+      'statistics/popularmediafiles',// checked manually.
+      'statistics/popularcollections',// checked manually.
+      'statistics/dataupload',// checked manually.
+      'statistics/playedstreams',// checked manually.
+      'statistics/streams',// checked manually.
+      'statistics/mostsearchedwords',// checked manually.
+      'statistics/searchedwords',// checked manually.
+      'statistics/searchrequest',// checked manually.
+      'statistics/datausagevideo', // checked manually.
+      'user/$fav_user_id/favorites', // checked manually.
+      'version', // no dates.
+      'openapi/oauth/request_token',// No need to check.
+      'openapi/oauth/access_token',// No need to check.
+    );
+
+    $uri_fixed_params = array(
+      'mediafile/$mediafile_id/still' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'mediafile/$mediafile_id/acl' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'collection/$coll_id/acl' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'asset/$asset_id/still' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'assets' => array(
+        'asset_id' => array($asset_id_1, $asset_id_2, $asset_id_3),
+      ),
+      'asset/$asset_id/acl' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'asset/$asset_id/play' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+        'mediafile_id' => $mediafile_id_1,
+      ),
+      'asset/$asset_id/joblist' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'mediafile/$mediafile_id/joblist' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+      'job/$job_id/status' => array(
+        'user_id' => self::SIMPLETEST_USER_ID,
+      ),
+    );
+
+    foreach ($all_rest_calls as $uri => $rest_calls) {
+
+      if (empty($rest_calls[mediamosa_rest_call::METHOD_GET]) || in_array($uri, $skip_uri)) {
+        continue;
+      }
+
+      // Get the REST call.
+      $rest_call = $rest_calls[mediamosa_rest_call::METHOD_GET];
+
+      // If method is not GET or has no doc output set, then skip.
+      if (empty($rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE])) {
+        $this->verbose(t("Skipped REST call '@uri [@method]'", array('@uri' => $uri, '@method' => mediamosa_rest_call::METHOD_GET)));
+        continue;
+      }
+
+      // Get parameters.
+      $uri_split = explode('/', $uri);
+      $params = array();
+      foreach ($uri_split as $part) {
+        if ($part[0] == '$') {
+          $params[$part] = $part;
+        }
+      }
+
+      // Found parameters in URI?
+      if (!empty($params)) {
+        $this->pass(format_plural(count($params), 'Found 1 URI variable; @params', 'Found @count URI variables; @params', array('@params' => implode(',', $params))));
+      }
+
+      // Replace the uri params with our ids.
+      $uri_call = strtr($uri, $ids);
+
+      // Check for unset parameters values.
+      $this->assertTrue(strpos($uri_call, '$') === FALSE, t('Still unused parameters in uri; @uri_call.', array('@uri_call' => $uri_call)));
+
+      // Get the output.
+      $output = $this->restCall($uri_call, mediamosa_rest_call::METHOD_GET, empty($uri_fixed_params[$uri]) ? array() : $uri_fixed_params[$uri]);
+      $output = mediamosa_lib::responsexml2array($output['xml']);
+
+      $message = array(t("Found test with uri '@uri', called with '@uri_call'", array('@uri' => $uri, '@uri_call' => $uri_call)));
+
+      // Test if we have output as in items.
+      if (empty($output['items']['item'])) {
+        $message[] = t("skipped, has empty items array!");
+        $this->fail(implode(', ', $message));
+        continue;
+      }
+
+      // Our test data.
+      $found_dates = array(
+        'ok' => 0,
+        'found' => 0,
+      );
+
+      // Reset the time for every REST call because REST calls will have a new datetime.
+      $utc_timestamp = mediamosa_datetime::utc_current_timestamp_now(TRUE);
+
+      // Applications are created with CET (Europe/Paris) by default.
+      $cet_timestamp = mediamosa_datetime::utc_date2app_date($utc_timestamp, $this->a_app[mediamosa_app_db::TIMEZONE]);
+
+      // Now go through the items array and find possible dates.
+      foreach ($output['items']['item'] as $item) {
+        $this->helper_check_for_dates($item, $found_dates, $cet_timestamp);
+      }
+
+      // No dates found?
+      if ($found_dates['found'] == 0) {
+        // ok lets know.
+        $message[] = t("@items item(s) total, but has no dates.", array('@uri' => $uri, '@items' => count($output['items']['item'])));
+        $this->pass(implode(', ', $message));
+      }
+      elseif ($found_dates['ok'] == $found_dates['found']) { // All good?
+        // ok lets know.
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all OK.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found']));
+        $this->pass(implode(', ', $message));
+      }
+      elseif (!$found_dates['ok']) { // All bad?
+        // ok lets know.
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all failed.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found']));
+        $this->fail(implode(', ', $message));
+      }
+      else { // Some bad, some good.
+        // ok lets know.
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), @bad_dates bad dates, @good_dates good dates.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found'], '@bad_dates' => $found_dates['found'] - $found_dates['ok'], '@good_dates' => $found_dates['ok']));
+        $this->fail(implode(', ', $message));
+      }
+    }
+  }
+}

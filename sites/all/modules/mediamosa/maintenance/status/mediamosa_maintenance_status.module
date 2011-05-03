@@ -1,0 +1,759 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+// Include my files.
+module_load_include('theme.inc', 'mediamosa_maintenance_status', 'mediamosa_maintenance_status');
+
+/**
+ * Constants.
+ */
+
+/**
+ * Result severity -- Informational message only.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO', -1);
+
+/**
+ * Result severity -- Result successfully met.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK', 0);
+
+/**
+ * Result severity -- Warning condition; proceed but flag warning.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING', 1);
+
+/**
+ * Result severity -- Error condition; abort.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR', 2);
+
+/**
+ * @file
+ * The status module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_maintenance_status_menu() {
+  $items = array();
+
+  // Sub tabs.
+  $items['admin/mediamosa/status/status'] = array(
+    'title' => 'Status',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_status',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS_MEDIAMOSA,
+    'weight' => 0,
+  );
+  $items['admin/mediamosa/status/server'] = array(
+    'title' => 'Server',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_server',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_SERVERS),
+    'weight' => 10,
+  );
+  $items['admin/mediamosa/status/job'] = array(
+    'title' => 'Job',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_job',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
+    'weight' => 20,
+  );
+  $items['admin/mediamosa/status/job/list'] = array(
+    'title' => 'Job',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_maintenance_status_job_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_maintenance_status_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  $rest_calls['status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_status',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_maintenance_status_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the current status of MediaMosa',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the current status of MediaMosa.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'status',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items></items>',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_maintenance_status_theme() {
+  return array(
+    'mediamosa_maintenance_status_report' => array(
+      'arguments' => array('table_name' => NULL, 'results' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements hook_cron().
+ */
+function mediamosa_maintenance_status_cron() {
+  // If we are in simpletest, no need to pull info on our servers.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    // Update the status page contents.
+    // Normally we won't allow cron stuff that might take precious time from
+    // the cron. But its only every 10 minutes, and only a few seconds.
+    _mediamosa_maintenance_status_update();
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_maintenance_status_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}
+
+/**
+ * Do the update (only when needed).
+ */
+function _mediamosa_maintenance_status_update() {
+  $last_time = variable_get('mediamosa_status_last_time', 0);
+  if ($last_time < REQUEST_TIME - (mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME - 2)) {
+    // We are running.
+    variable_set('mediamosa_status_last_time_is_running', TRUE);
+
+    // Check run-time requirements and status information.
+    module_invoke_all('mediamosa_status_collect', TRUE);
+
+    // Set for next time.
+    variable_set('mediamosa_status_last_time', REQUEST_TIME);
+
+    // Remove that we are running.
+    variable_del('mediamosa_status_last_time_is_running');
+  }
+}
+
+/**
+ * Menu callback: displays the MediaMosa status report.
+ */
+function _mediamosa_maintenance_status_status() {
+  global $user;
+
+  $output = array();
+
+  // For the available codecs fieldset.
+  drupal_add_js('misc/form.js');
+  drupal_add_js('misc/collapse.js');
+
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  drupal_set_breadcrumb($breadcrumb);
+
+  $output[] = t('Hello <strong>!username</strong>.', array('!username' => l(format_username($user), 'user')));
+
+  if (_mediamosa_user_access(mediamosa_permission::ACCESS_STATUS_COMMON)) {
+    // Just in case we are in the first update that isn't finished.
+    $mediamosa_status_last_time_is_running = variable_set('mediamosa_status_last_time_is_running', FALSE);
+
+    // Get the last time it was updated. 0 = never.
+    $mediamosa_status_last_time = variable_get('mediamosa_status_last_time', 0);
+
+    // Get real time info.
+    $statuses_realtime = module_invoke_all('mediamosa_status_collect_realtime');
+
+    // Add realtime.
+    foreach ($statuses_realtime as $key => $status) {
+      $statuses_realtime[$key]['title'] = (is_array($statuses_realtime[$key]['title']) ? reset($statuses_realtime[$key]['title']) : $statuses_realtime[$key]['title']);
+      $statuses_realtime[$key . '_realtime'] = $statuses_realtime[$key];
+      unset($statuses_realtime[$key]);
+    }
+
+    // Check run-time requirements and status information.
+    // False means the data should come from variable.
+    $statuses = module_invoke_all('mediamosa_status_collect', !$mediamosa_status_last_time && !$mediamosa_status_last_time_is_running ? TRUE : FALSE);
+
+    // So we don't run it again when we visit status page.
+    if (!variable_get('mediamosa_status_last_time', 0) && !$mediamosa_status_last_time && !$mediamosa_status_last_time_is_running) {
+      variable_set('mediamosa_status_last_time', REQUEST_TIME);
+    }
+
+    // At this point, its always been run at least once.
+    $mediamosa_status_last_time = variable_get('mediamosa_status_last_time', REQUEST_TIME);
+
+    // Add cached.
+    foreach ($statuses as $key => $status) {
+      $statuses[$key]['title'] = (is_array($statuses[$key]['title']) ? reset($statuses[$key]['title']) : $statuses[$key]['title']) . ' <small>(' . t('cached information') . ')</small>';
+      $statuses[$key . '_cached'] = $statuses[$key];
+      unset($statuses[$key]);
+    }
+
+    $statuses = array_merge_recursive($statuses_realtime, $statuses);
+
+    $planned = $mediamosa_status_last_time ? $mediamosa_status_last_time + mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME : time();
+
+    $last_update = array();
+    $last_update[] = t('The cached information on this page was last updated %last_run ago', array('%last_run' => format_interval(REQUEST_TIME -$mediamosa_status_last_time)));
+    $warning = FALSE;
+
+    if ($mediamosa_status_last_time + mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME + 180 > time()) {
+      if ($mediamosa_status_last_time_is_running) {
+        $last_update[] = t('being updated');
+      }
+      elseif ($planned - REQUEST_TIME <= 0) {
+        $last_update[] = t('next update imminent');
+      }
+      else {
+        $last_update[] = t('next update in %planned (estimate)', array('%planned' => format_interval($planned - REQUEST_TIME)));
+      }
+    }
+    else {
+      $warning = '<p><b>' .t(
+        'Warning: status page is not longer being automaticly updated, check !cron_settings, it should run every minute.',
+        array(
+          '!cron_settings' => l('Cron maintenance tasks', 'admin/reports/status')
+        )
+      ) . '</b></p>';
+    }
+
+    if ($warning) {
+      $output[] = $warning;
+    }
+
+    foreach ($statuses as $status) {
+      $output[] = theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? reset($status['title']) : $status['title']), 'results' => $status['results']));
+    }
+
+    $output[] = '<div align="center">' . implode(', ', $last_update) . '.</div><p>';
+  }
+
+  return implode('', $output);
+}
+
+/**
+ * Menu callback: displays the MediaMosa server status report.
+ */
+function _mediamosa_maintenance_status_server() {
+  $output = '';
+
+  // For the available codecs fieldset.
+  drupal_add_js('misc/form.js');
+  drupal_add_js('misc/collapse.js');
+
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = t('Servers');
+  drupal_set_breadcrumb($breadcrumb);
+
+  $result = mediamosa_server::get_status_enabled(array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+    mediamosa_server_db::SERVER_TYPE_STILL,
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
+    mediamosa_server_db::SERVER_TYPE_UPLOAD,
+  ));
+
+  foreach ($result as $response) {
+    $output .= '<h1>' . mediamosa_unicode::strtoupper($response['enabled_server']['description']) . '</h1>';
+    if (!empty($response['status']['server_status'])) {
+      foreach ($response['status']['server_status'] as $status) {
+        $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
+      }
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Menu callback: displays the MediaMosa job status report.
+ */
+function _mediamosa_maintenance_status_job() {
+  $output = '';
+
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
+
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = t('Job');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Jobhandler.
+
+  $results = array(
+    array(
+      'title' => l(t('Recently finished jobs'), 'admin/mediamosa/status/job/list/finished'),
+      array('data' => '', 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => l(t('All waiting jobs'), 'admin/mediamosa/status/job/list/waiting'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Analyse waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Transcoding waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Still waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Upload waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD), 'class' => 'mediamosa-status-value'),
+    ),
+  );
+
+  $output .= theme('mediamosa_maintenance_table', array('rows' => $results, 'title' => t('Jobhandler')));
+
+  // Get all the job server.
+
+  // Types to check.
+  $types = array(
+    mediamosa_job_server_db::JOB_TYPE_ANALYSE,
+    mediamosa_job_server_db::JOB_TYPE_TRANSCODE,
+    mediamosa_job_server_db::JOB_TYPE_STILL,
+  );
+
+  // Build the server query.
+  $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms');
+  $query->fields('ms', array(mediamosa_server_db::NID, mediamosa_server_db::DESCRIPTION));
+  $query->condition('ms.' . mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR);
+  $result = $query->execute();
+
+  foreach ($result as $row) {
+    // Build the job query.
+    $result_job = mediamosa_db::db_query('
+      SELECT j.job_type, COUNT(*)
+      FROM #mediamosa_server_job AS s
+      INNER JOIN #mediamosa_job_server AS j USING (#job_id)
+      WHERE s.#server_id = :server_id AND j.#job_type IN (:job_type)
+      GROUP BY j.#job_type
+      ORDER BY j.#job_type
+    ', array(
+      '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
+      '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
+      '#job_id' => mediamosa_server_job_db::JOB_ID,
+      '#server_id' => mediamosa_server_job_db::SERVER_ID,
+      '#job_type' => mediamosa_job_server_db::JOB_TYPE,
+      ':server_id' => $row[mediamosa_server_db::NID],
+      ':job_type' => $types,
+    ))->fetchAllKeyed();
+
+    // Collect the result for the theme_table.
+    $result_job_array = array();
+    foreach ($types as $key) {
+      $result_job_array[] = array(
+        'title' => mediamosa_unicode::strtolower($key),
+        array('data' => (isset($result_job[$key]) ? $result_job[$key] : '0'), 'class' => 'mediamosa-status-value'),
+      );
+    }
+
+    // Create table.
+    $output .= theme('mediamosa_maintenance_table', array('rows' => $result_job_array, 'title' => $row[mediamosa_server_db::DESCRIPTION]));
+  }
+
+  return $output;
+}
+
+/**
+ * Job list. Menu callback.
+ */
+function _mediamosa_maintenance_status_job_list() {
+  $output = array();
+
+  // Path is eg. admin/mediamosa/status/job/list/finished. Then the $type is 'finished'.
+  $type = mediamosa_unicode::strtoupper(arg(5));
+
+  switch ($type) {
+    case mediamosa_job_db::JOB_STATUS_FINISHED:
+      $filter = _mediamosa_maintenance_status_build_filter_query();
+      $output['job_header'] = array('#markup' => t('Recently finished jobs'));
+      $output['job_filter_form'] = drupal_get_form('_mediamosa_maintenance_status_filter_form');
+      break;
+
+    case mediamosa_job_db::JOB_STATUS_WAITING:
+      $output['job_header'] = array('#markup' => t('All waiting jobs'));
+      break;
+
+    default:
+      $output['job_header'] = array('#markup' => t('Unknown job'));
+      return $output;
+      break;
+  }
+
+  $rows = array();
+
+  $header = array(
+    array('data' => t('Finished'), 'field' => 'j.' . mediamosa_job_db::FINISHED, 'sort' => 'desc'),
+    array('data' => t('Job id'), 'field' => 'j.' . mediamosa_job_db::ID),
+    array('data' => t('App id'), 'field' => 'j.' . mediamosa_job_db::APP_ID),
+    array('data' => t('Asset id'), 'field' => 'j.' . mediamosa_job_db::ASSET_ID),
+    array('data' => t('Mediafile id'), 'field' => 'j.' . mediamosa_job_db::MEDIAFILE_ID),
+    array('data' => t('Owner'), 'field' => 'j.' . mediamosa_job_db::OWNER_ID),
+    array('data' => t('Status'), 'field' => 'j.' . mediamosa_job_db::JOB_STATUS),
+    array('data' => t('Progress'), 'field' => 'j.' . mediamosa_job_db::PROGRESS),
+    array('data' => t('Priority'), 'field' => 'j.' . mediamosa_job_db::PRIORITY),
+    array('data' => t('Job type'), 'field' => 'j.' . mediamosa_job_db::JOB_TYPE),
+    array('data' => t('Started'), 'field' => 'j.' . mediamosa_job_db::STARTED),
+    array('data' => t('Create still'), 'field' => 'j.' . mediamosa_job_db::CREATE_STILL),
+    array('data' => t('Hint'), 'field' => 'j.' . mediamosa_job_db::HINT),
+    array('data' => t('Still parameters'), 'field' => 'j.' . mediamosa_job_db::STILL_PARAMETERS),
+    array('data' => t('Error desc.'), 'field' => 'j.' . mediamosa_job_db::ERROR_DESCRIPTION),
+    array('data' => t('Created'), 'field' => 'j.' . mediamosa_job_db::CREATED),
+    array('data' => t('Changed'), 'field' => 'j.' . mediamosa_job_db::CHANGED),
+    array('data' => t('Trans. profile id'), 'field' => 't.' . mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID),
+    array('data' => t('Tool'), 'field' => 't.' . mediamosa_job_transcode_db::TOOL),
+    array('data' => t('Command'), 'field' => 't.' . mediamosa_job_transcode_db::COMMAND),
+  );
+
+  $query = db_select(mediamosa_job_db::TABLE_NAME, 'j')->extend('PagerDefault')->extend('TableSort');
+  $query->leftJoin(mediamosa_job_transcode_db::TABLE_NAME, 't', 'j.' . mediamosa_job_db::ID . ' = t.' . mediamosa_job_transcode_db::JOB_ID);
+  $query
+    ->fields('j', array(
+      mediamosa_job_db::FINISHED,
+      mediamosa_job_db::ID,
+      mediamosa_job_db::APP_ID,
+      mediamosa_job_db::ASSET_ID,
+      mediamosa_job_db::MEDIAFILE_ID,
+      mediamosa_job_db::OWNER_ID,
+      mediamosa_job_db::JOB_STATUS,
+      mediamosa_job_db::PROGRESS,
+      mediamosa_job_db::PRIORITY,
+      mediamosa_job_db::JOB_TYPE,
+      mediamosa_job_db::STARTED,
+      mediamosa_job_db::CREATE_STILL,
+      mediamosa_job_db::HINT,
+      mediamosa_job_db::STILL_PARAMETERS,
+      mediamosa_job_db::ERROR_DESCRIPTION,
+      mediamosa_job_db::CREATED,
+      mediamosa_job_db::CHANGED,
+    ))
+    ->fields('t', array(
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID,
+      mediamosa_job_transcode_db::TOOL,
+      mediamosa_job_transcode_db::COMMAND,
+    ))
+  ;
+
+  if (!empty($filter['where'])) {
+    $query->where($filter['where'], $filter['args']);
+  }
+
+  $result = $query
+    ->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING,
+      ($type == mediamosa_job_db::JOB_STATUS_WAITING ? '=' : '<>')
+    )
+    ->limit(50)
+    ->orderByHeader($header)
+    ->execute();
+
+  foreach ($result as $job) {
+    $rows[] = array('data' =>
+      array(
+        $job->{mediamosa_job_db::FINISHED},
+        $job->{mediamosa_job_db::ID},
+        $job->{mediamosa_job_db::APP_ID},
+        l($job->{mediamosa_job_db::ASSET_ID}, 'admin/mediamosa/browse/asset/' . $job->{mediamosa_job_db::ASSET_ID}),
+        $job->{mediamosa_job_db::MEDIAFILE_ID},
+        $job->{mediamosa_job_db::OWNER_ID},
+        $job->{mediamosa_job_db::JOB_STATUS},
+        $job->{mediamosa_job_db::PROGRESS},
+        $job->{mediamosa_job_db::PRIORITY},
+        $job->{mediamosa_job_db::JOB_TYPE},
+        $job->{mediamosa_job_db::STARTED},
+        $job->{mediamosa_job_db::CREATE_STILL},
+        $job->{mediamosa_job_db::HINT},
+        $job->{mediamosa_job_db::STILL_PARAMETERS},
+        $job->{mediamosa_job_db::ERROR_DESCRIPTION},
+        $job->{mediamosa_job_db::CREATED},
+        $job->{mediamosa_job_db::CHANGED},
+        $job->{mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID},
+        $job->{mediamosa_job_transcode_db::TOOL},
+        (
+          $job->{mediamosa_job_db::JOB_TYPE} == mediamosa_job_db::JOB_TYPE_TRANSCODE ?
+          $job->{mediamosa_job_transcode_db::COMMAND} :
+          t('*** Not a transcode job ***')
+        ),
+      ),
+    );
+  }
+
+  $output['job_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('id' => 'admin-joblog'),
+    '#empty' => t('No jobs available.'),
+  );
+  $output['job_pager'] = array('#theme' => 'pager');
+
+  return $output;
+}
+
+
+/**
+ * Job filter form.
+ *
+ * @ingroup forms
+ * @see _mediamosa_maintenance_status_filter_form_submit()
+ * @see _mediamosa_maintenance_status_filter_form_validate()
+ */
+function _mediamosa_maintenance_status_filter_form($form) {
+  $filters = _mediamosa_maintenance_status_filters();
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter jobs'),
+    '#collapsible' => TRUE,
+    '#collapsed' => empty($_SESSION['mm_status_job_filter']),
+  );
+  foreach ($filters as $key => $filter) {
+    $form['filters']['status'][$key] = array(
+      '#title' => $filter['title'],
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#size' => 8,
+      '#options' => $filter['options'],
+    );
+
+    if (!empty($_SESSION['mm_status_job_filter'][$key])) {
+      $form['filters']['status'][$key]['#default_value'] = $_SESSION['mm_status_job_filter'][$key];
+    }
+  }
+
+  $form['filters']['actions'] = array(
+    '#type' => 'actions',
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  $form['filters']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
+
+  if (!empty($_SESSION['mm_status_job_filter'])) {
+    $form['filters']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset')
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Validate result from job administration filter form.
+ */
+function _mediamosa_maintenance_status_filter_form_validate($form, &$form_state) {
+  if ($form_state['values']['op'] == t('Filter') && empty($form_state['values']['type']) && empty($form_state['values']['severity'])) {
+    form_set_error('type', t('You must select something to filter by.'));
+  }
+}
+
+/**
+ * Process result from job administration filter form.
+ */
+function _mediamosa_maintenance_status_filter_form_submit($form, &$form_state) {
+  $op = $form_state['values']['op'];
+  $filters = _mediamosa_maintenance_status_filters();
+  switch ($op) {
+    case t('Filter'):
+      foreach ($filters as $name => $filter) {
+        if (isset($form_state['values'][$name])) {
+          $_SESSION['mm_status_job_filter'][$name] = $form_state['values'][$name];
+        }
+      }
+      break;
+
+    case t('Reset'):
+      $_SESSION['mm_status_job_filter'] = array();
+      break;
+  }
+  //return 'admin/mediamosa/status/job/list/' . $type;
+}
+
+
+/**
+ * Build query for job administration filters based on session.
+ */
+function _mediamosa_maintenance_status_build_filter_query() {
+  if (empty($_SESSION['mm_status_job_filter'])) {
+    return;
+  }
+
+  $filters = _mediamosa_maintenance_status_filters();
+
+  // Build query
+  $where = $args = array();
+  foreach ($_SESSION['mm_status_job_filter'] as $key => $filter) {
+    $filter_where = array();
+    foreach ($filter as $value) {
+      $filter_where[] = $filters[$key]['where'] . $filters[$key]['placeholder'];
+      $args[$filters[$key]['placeholder']] = $value;
+    }
+    if (!empty($filter_where)) {
+      $where[] = '(' . implode(' OR ', $filter_where) . ')';
+    }
+  }
+  $where = !empty($where) ? implode(' AND ', $where) : '';
+
+  return array(
+    'where' => $where,
+    'args' => $args,
+  );
+}
+
+/**
+ * List dblog administration filters that can be applied.
+ */
+function _mediamosa_maintenance_status_filters() {
+  $filters = array();
+
+  $statuses = array(
+    mediamosa_job_db::JOB_STATUS_CANCELLED,
+    mediamosa_job_db::JOB_STATUS_CANCELLING,
+    mediamosa_job_db::JOB_STATUS_FAILED,
+    mediamosa_job_db::JOB_STATUS_FINISHED,
+    mediamosa_job_db::JOB_STATUS_INPROGRESS,
+    //mediamosa_job_db::JOB_STATUS_WAITING,
+  );
+
+  foreach ($statuses as $type) {
+    $types[$type] = $type;
+  }
+
+  if (!empty($types)) {
+    $filters['type'] = array(
+      'title' => t('Type'),
+      'where' => "j." . mediamosa_job_db::JOB_STATUS . " = ",
+      'placeholder' => ':filter_status',
+      'options' => $types,
+    );
+  }
+
+  return $filters;
+}
+
+/**
+ * Get the waiting jobs.
+ *
+ * @param $type
+ *   Type of the waiting job.
+ */
+function _mediamosa_maintenance_status_waiting_job($type = NULL) {
+  $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
+  $query->fields('j');
+  $query->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING);
+  if (!is_null($type)) {
+    $query->condition('j.' . mediamosa_job_db::JOB_TYPE, $type);
+  }
+  $count = $query->countQuery()->execute()->fetchField();
+
+  return $count;
+}
+
+/**
+ * Give back result ok or warning.
+ *
+ * @param $test boolean
+ *   'FALSE' means OK
+ */
+function _mediamosa_maintenance_status_okwarning($test) {
+  // Make sure we provide 0 or 1.
+  assert(is_int($test) || is_bool($test));
+  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING;
+}
+
+/**
+ * Give back result ok or error.
+ *
+ * @param $test boolean
+ *   'FALSE' means OK
+ */
+function _mediamosa_maintenance_status_okerror($test) {
+  // Make sure we provide 0 or 1.
+  assert(is_int($test) || is_bool($test));
+  return $test ?  MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR;
+}
+
+/**
+ * Search a string in the values of an array with strpos(). Case insensitive.
+ *
+ * @param string $text
+ * @param array $container
+ *
+ * @return
+ *   string, the array value where the text exists, or an empty string
+ */
+function _mediamosa_maintenance_status_search_in_array($text, array $container) {
+  if (is_array($container)) {
+    foreach ($container as $container_value) {
+      if (stripos($container_value, $text) !== FALSE) {
+        return $container_value;
+      }
+    }
+  }
+
+  return '';
+}

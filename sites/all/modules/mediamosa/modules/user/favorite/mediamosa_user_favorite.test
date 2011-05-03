@@ -1,0 +1,212 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * MediaMosa User favorites tests.
+ *
+ * Based on tickets mediamosa:
+ * ticket_671
+ * ticket_672
+ * ticket_673
+ *
+ */
+class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'User/Group - favorites',
+      'description' => 'Test user favorites rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER,
+    );
+  }
+
+  /**
+   * Test User Asset favorites basic working (#671).
+   */
+  function _testUserFavoritesAssetManagement() {
+
+    // Create an asset and user.
+    $asset_id = $this->createAsset();
+    $user_id = 'testuser';
+    $this->createUser($user_id);
+
+    // Add the asset to the user favorites.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
+    );
+
+    // Do POST /user/{user_id}/favorites/add call.
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
+
+    // Get the favorites of the user.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+    );
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters);
+
+    $result_asset_id = $response['xml']->items->item[0]->asset_id;
+    $this->assertTrue(
+      $result_asset_id == $asset_id,
+      t("Call /user/{user_id}/favorites [GET]")
+    );
+
+    // Delete the favorite.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
+    );
+
+    // Do POST /user/{user_id}/favorites/delete call.
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+
+    // Get the favorites again.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+    );
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(
+      $response['xml']->header->item_count == 0,
+      t("Call /user/{user_id}/favorites [GET]")
+    );
+  }
+
+  /**
+   * Test User Collection favorites basic working (#672).
+   */
+  function _testUserFavoritesCollectionManagement() {
+
+    // Create a collection and user.
+    $coll_id = $this->createCollection();
+    $user_id = 'testuser';
+    $this->createUser($user_id);
+
+    // Add the collection to the user favorites.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
+    );
+
+    // Do POST /user/{user_id}/favorites/add call.
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
+
+    // Get the favorites of the user.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+    );
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters);
+
+    $result_asset_id = $response['xml']->items->item[0]->coll_id;
+    $this->assertTrue(
+      $result_asset_id == $coll_id,
+      t("Call /user/{user_id}/favorites [GET]")
+    );
+
+    // Delete the favorite.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
+    );
+
+    // Do POST /user/{user_id}/favorites/delete call.
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+
+    // Get the favorites again.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+    );
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(
+      $response['xml']->header->item_count == 0,
+      t("Call /user/{user_id}/favorites [GET]")
+    );
+  }
+
+  /**
+   * Test User favorites counting (#673).
+   */
+  function testUserFavoritesCounts() {
+
+    // Create an asset, collection and user.
+    $asset_id = $this->createAsset();
+    $coll_id = $this->createCollection();
+    $user_id = 'testuser';
+    $this->createUser($user_id);
+
+    // Add the asset to the user favorites.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
+    );
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
+
+    // Count it, we should find 1 asset.
+    $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
+    $this->assertTrue(
+      (int) $response['xml']->header->item_count_total == 1,
+      t("Call /asset/{asset_id}/favorites/count [GET]")
+    );
+
+    // Add the collection to the user favorites.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
+    );
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
+
+    // Count it, we should find 1 collection and 1 asset.
+    $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
+    $this->assertTrue(
+      (int) $response['xml']->header->item_count_total == 1,
+      t("Call /collection/{coll_id}/favorites/count [GET]")
+    );
+
+    // Delete the Collection, and find 0.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
+    );
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
+    $this->assertTrue(
+      (int) $response['xml']->header->item_count_total == 0,
+      t("Call /collection/{coll_id}/favorites/count [GET]")
+    );
+
+    // Delete the Asset, and find 0.
+    $a_parameters = array(
+      mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
+      mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
+    );
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
+    $this->assertTrue(
+      (int) $response['xml']->header->item_count_total == 0,
+      t("Call /asset/{asset_id}/favorites/count [GET]")
+    );
+  }
+}

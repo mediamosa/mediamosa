@@ -1,0 +1,96 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Upload test of files (videos).
+  */
+
+/**
+  * @file
+  * Unittests for upload.
+  */
+class MediaMosaOpenAPIUploadTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ----------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'OpenAPI upload test',
+      'description' => 'Test uploading of files (videos).',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testUpload() {
+    // Enable OpenAPI module.
+    module_enable(array('mediamosa_openapi'), TRUE);
+
+    // Set the app id for the OpenAPI.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+
+    $user_id = 'upload_user';
+
+    // Create an album.
+    $parameters = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id = $this->createAsset($parameters);
+
+    // Upload a file.
+    $response = $this->uploadTestFileOpenAPI($album_id, $user_id, self::getTestVideo(), 'video/x-ms-wmv');
+    $mediaitem_id = $response['mediaitem_id'];
+
+    $this->assertTrue($mediaitem_id, 'MediaItem exists.');
+
+    // Get the mediafile / mediaitem.
+    $mediafile = $this->getMediafile($mediaitem_id);
+
+    // Upload the attributes.
+    $attributes = array(
+      'title' => mediamosa_db::uuid(0),
+    );
+    $response2 = $this->uploadTestFileOpenAPI($album_id, $user_id, NULL, NULL, $mediaitem_id, $attributes);
+    $mediaitem_id2 = $response2['mediaitem_id'];
+
+    // Get the mediafile / mediaitem.
+    $mediafile2 = $this->getMediafile($mediaitem_id2);
+
+    $this->assert($mediaitem_id == $mediaitem_id2, strtr('Get the same mediaitem id (@mediaitem_id == @mediaitem_id2).', array(
+      '@mediaitem_id' => $mediaitem_id,
+      '@mediaitem_id2' => $mediaitem_id2,
+    )));
+    $this->assert($response2['feed']['entry']['content']['mediaItem']['title'] == $attributes['title'], strtr('Get the good title (@title == @title2).', array(
+      '@title' => $response2['feed']['entry']['content']['mediaItem']['title'],
+      '@title2' => $attributes['title'],
+    )));
+  }
+}

@@ -1,0 +1,22 @@
+; $Id$
+
+name = "ACL"
+description = "The Access Control Layer module handles access to assets, media and other objects."
+package = "MediaMosa - Modules"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_acl.rest.class.inc
+files[] = mediamosa_acl.test
+files[] = mediamosa_acl.masterslave.test
+files[] = mediamosa_acl.ega.test
+files[] = mediamosa_acl.owner.test
+files[] = mediamosa_acl.rights.test
+files[] = mediamosa_acl.group_masterslave.test
+files[] = mediamosa_acl.group.test
+files[] = mediamosa_acl.mediafiles.test
+files[] = mediamosa_acl.granted.test

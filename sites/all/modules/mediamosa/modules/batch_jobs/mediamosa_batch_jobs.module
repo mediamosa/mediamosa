@@ -1,0 +1,136 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+// Include default.
+module_load_include('inc', 'mediamosa_batch_jobs', 'mediamosa_batch_jobs.helpers');
+
+/**
+ * Implements hook_perm().
+ */
+function mediamosa_batch_jobs_perm() {
+  return array(
+    'view batch job administration' =>  array(
+      'title' => t('View batch job administration'),
+      'description' => t('Perform administration tasks for batch job.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_batch_jobs_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/browse/ftp_batch'] = array(
+    'title' => 'Batch jobs',
+    'description' => 'Batch jobs.',
+    'page callback' => 'mediamosa_batch_jobs_current',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_NORMAL_ITEM
+  );
+  $items['admin/mediamosa/browse/ftp_batch/current'] = array(
+    'title' => 'Current ftp batch job',
+    'description' => 'Display the current job.',
+    'page callback' => 'mediamosa_batch_jobs_current',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1
+  );
+  $items['admin/mediamosa/browse/ftp_batch/queue'] = array(
+    'title' => 'Queue',
+    'description' => 'Display the job queue.',
+    'page callback' => 'mediamosa_batch_jobs_queue',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2
+  );
+  $items['admin/mediamosa/browse/ftp_batch/queue/delete'] = array(
+    'title' => 'Remove from queue',
+    'description' => 'Remove an item from the queue.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_batch_jobs_delete_confirm', 1),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_CALLBACK,
+    'weight' => 3
+  );
+  $items['admin/mediamosa/browse/ftp_batch/history'] = array(
+    'title' => 'History',
+    'description' => 'Display the job history.',
+    'page callback' => 'mediamosa_batch_jobs_history',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4
+  );
+  $items['admin/mediamosa/browse/ftp_batch/log'] = array(
+    'title' => 'Log',
+    'description' => 'Display the job log.',
+    'page callback' => 'mediamosa_batch_jobs_log',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'file' => 'mediamosa_batch_jobs.callbacks.inc',
+    'type' => MENU_CALLBACK,
+    'weight' => 5
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_batch_jobs_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#vpx_batch':
+      return '<p>' . t('Overview of batch jobs history/current/queued.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_node_info().
+ */
+function mediamosa_batch_jobs_node_info() {
+  return array(
+    'mediamosa_batch' => array(
+      'name' => t('Batch jobs'),
+      'module' => 'mediamosa_batch_jobs',
+      'description' => t('Display the FTP batch jobs.'),
+      'has_title' => TRUE,
+      'title_label' => t('Subject'),
+      'has_body' => FALSE
+    )
+  );
+}

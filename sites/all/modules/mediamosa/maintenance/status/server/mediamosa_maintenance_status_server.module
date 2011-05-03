@@ -1,0 +1,75 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The status server module.
+ */
+
+/**
+ * Generate the information for the status page.
+ */
+function _mediamosa_maintenance_status_server_generate() {
+  global $conf;
+
+  $results = array();
+
+  $results['something'] = array(
+    'title' => t('Something'),
+    'value' => t('OK'),
+    //'description' => t('Some description...'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
+  );
+
+  return array(
+    'server' => array(
+      'title' => t('Server monitoring'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param boolean $reset
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_server = array();
+  if (!$reset) {
+    $mediamosa_status_server = variable_get('mediamosa_status_solr_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_server)) {
+    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_maintenance_status_server_generate());
+    variable_set('mediamosa_status_solr_' . mediamosa::get_server_id(), $mediamosa_status_server);
+  }
+
+  return $mediamosa_status_server['statuses'];
+}

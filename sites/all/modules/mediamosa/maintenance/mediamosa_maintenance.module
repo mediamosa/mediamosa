@@ -1,0 +1,217 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The main maintenance module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_maintenance_menu() {
+  $items = array();
+
+  // Maintenance / Configuration pages.
+  $items['admin/mediamosa'] = array(
+    'title' => 'MediaMosa',
+    'description' => 'MediaMosa is open source software to build a Full Featured, Webservice Oriented Media Management and Distribution platform.',
+    'page callback' => '_mediamosa_maintenance_status_status',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS_MEDIAMOSA,
+    'weight' => -20,
+    'position' => ''
+  );
+  // Tabs.
+  $items['admin/mediamosa/status'] = array(
+    'title' => 'Status',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
+  );
+
+  $items['admin/mediamosa/browse'] = array(
+    'title' => 'Browse',
+    'description' => 'Browse through assets, mediafiles or even our REST call documentation.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/browse'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE),
+    'position' => 'left',
+    'weight' => -10,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/browse/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+
+  $items['admin/mediamosa/config'] = array(
+    'title' => 'Configuration',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG),
+    'page callback' => '_mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/config'),
+    'file' => 'mediamosa_maintenance.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/config/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+
+  $items['admin/mediamosa/asset/%/mediafile/%/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_maintenance_mediafile_delete', 3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
+    'page callback' => '_mediamosa_maintenance_mediafile_analyse',
+    'page arguments' => array(3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/retranscode'] = array(
+    'page callback' => 'mediamosa_maintenance_mediafile_retranscode',
+    'page arguments' => array(3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/download'] = array(
+    'page callback' => '_mediamosa_maintenance_mediafile_download',
+    'page arguments' => array(3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/job/%/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_maintenance_job_delete', 3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_maintenance_theme() {
+  return array(
+    'mediamosa_maintenance_date' => array(
+      'variables' => array(
+        'datetime' => NULL,
+        'timestamp' => NULL,
+        'type' => 'short',
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    'mediamosa_maintenance_table' => array(
+      'variables' => array(
+        // Table
+        'header' => NULL,
+        'rows' => NULL,
+        'attributes' => array(),
+        'caption' => NULL,
+        'colgroups' => array(),
+        'sticky' => TRUE,
+        'empty' => '',
+        // Pager (optional)
+        'page' => 0,
+        'item_count_total' => 0,
+        'item_limit' => mediamosa_settings::maintenance_items_per_page(),
+        'element' => 0,
+        'quantity' => 10,
+        // Note (small font, bottom right).
+        'note' => NULL,
+        // caption bottom, right.
+        'caption_bottom' => NULL,
+        // Title, description (top).
+        'title' => NULL,
+        'description' => NULL,
+        // Summary.
+        'summary' => NULL,
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    'mediamosa_maintenance_pager' => array(
+      'variables' => array(
+        'page' => 0,
+        'item_count_total' => 0,
+        'item_limit' => mediamosa_settings::maintenance_items_per_page(),
+        'element' => 0,
+        'quantity' => 10,
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    // Create a link to a collection.
+    'l_mediamosa_collection' => array(
+      'variables' => array(
+        'id' => 0,
+        'title' => t('<collection has no title>'),
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    // Create a link to a collection.
+    'l_mediamosa_asset' => array(
+      'variables' => array(
+        'id' => 0,
+        'title' => t('<asset has no title>'),
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_enable().
+ */
+function mediamosa_maintenance_enable() {
+
+  // FIXME: need to throw away the admin menu so we can rebuild our menu when
+  //        other child menu modules where enabled earlier than ours. This might
+  //        be fixed in later version of drupal 7.
+
+  // Remove us so we are rebuild properly.
+  db_delete('menu_links')
+    ->condition('link_path', 'admin/mediamosa%', 'LIKE')
+    ->execute();
+
+  // Rebuild.
+  menu_rebuild();
+}

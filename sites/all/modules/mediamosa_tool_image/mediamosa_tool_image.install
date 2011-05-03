@@ -1,0 +1,89 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Image tool installer.
+  */
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_tool_image_install() {
+  // Transcode profile.
+
+  $default_profiles = array(
+    array('convert image', 'FALSE', 'image', 'jpg', ''),
+  );
+
+  foreach ($default_profiles as $default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
+
+    $node = node_save($node);
+  }
+
+  // Tool mapping.
+
+  // dc = 1, qdc = 2.
+  $dc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('dublin_core');
+  $mapping_array = array(
+    array('copyright'        , 'rights', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('exif comment'     , 'description', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($mapping_array as $mapping) {
+    if ($mapping[1] && $mapping[2] && is_numeric($mapping[2]) && $mapping[2] > 0) {
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name($mapping[1], $mapping[2]);
+      if ($prop) {
+        $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+
+        $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
+
+        $node->{mediamosa_tool_mapping_db::TOOL} = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+        $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
+        $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
+
+        $node = node_save($node);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_image_uninstall() {
+  // Do nothing. We don't delete the existing data.
+}

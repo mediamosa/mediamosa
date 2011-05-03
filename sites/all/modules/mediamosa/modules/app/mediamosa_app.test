@@ -1,0 +1,144 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Application unit tests.
+  */
+
+/**
+  * @file
+  * Unit test for User / Group.
+  * Coversion of;
+  * trac_tickets_28
+  */
+
+class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'APP - common tests',
+      'description' => 'The application related unit tests.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testMasterSlaveSwitch() {
+    // Create asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    // Do EGA login 2.
+    $this->doEgaLogin_2();
+
+    // Set to other app.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id_2
+      )
+    );
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+
+    // Other should not work either.
+    $this->toEga_2();
+
+    // Create asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id
+      )
+    );
+    $this->setMediafileAcl($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+
+    $this->toEga_1();
+
+    // Change the master setting.
+    $this->enableMasterSlave($app_id_2);
+
+    // Set to other app.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id_2
+      )
+    );
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile');
+
+    // Other still should not work either.
+    $this->toEga_2();
+
+    // Create asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id
+      )
+    );
+    $this->setMediafileAcl($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+
+    $this->toEga_1();
+
+    // Change back the master setting.
+    $this->disableMasterSlave($app_id_2);
+
+    // Set to other app.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id_2
+      )
+    );
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+  }
+
+  // Simple check that result of '/transcode/profile/default' is the same as deprecated call 'preview_profile_id'.
+  public function testDefaultProfileId() {
+    $result_old_call = $this->restCallGet('preview_profile_id');
+    $result_call = $this->restCallGet('transcode/profile/default');
+
+    $this->assertTrue(
+            (int)$result_old_call['xml']->items->item[0]->preview_profile_id ==
+            (int)$result_call['xml']->items->item[0]->preview_profile_id,
+            'Comparing result of default transcode profile calls: preview_profile_id and transcode/profile/default.');
+  }
+
+}

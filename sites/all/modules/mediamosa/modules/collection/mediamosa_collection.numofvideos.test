@@ -1,0 +1,386 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Unittests for collection modules.
+ */
+class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Collection - ACL/Master slave',
+      'description' => 'Testing the correct number of videos count in each collections and its master slave/ACL rights/access.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION,
+    );
+  }
+
+  /**
+   * Testing number of videos inside collection.
+   */
+  function testCollectionNumberOfVideos() {
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // Upload a 5 mediafiles.
+    $this->toEga_1();
+
+    // Create collection.
+    $coll_id_1 = $this->createCollection(); // App 1.
+    $upload_1 = $this->uploadTestFile(); // App 1
+    $upload_2 = $this->uploadTestFile(); // App 1
+    $this->createCollectionAssetRelation($coll_id_1, array($upload_1['asset_id'], $upload_2['asset_id']));
+
+    $this->toEga_2();
+    $coll_id_2 = $this->createCollection(); // App 2.
+    $upload_3 = $this->uploadTestFile(); // App 2
+    $upload_4 = $this->uploadTestFile(); // App 2
+    $this->createCollectionAssetRelation($coll_id_2, array($upload_3['asset_id'], $upload_4['asset_id']));
+
+    $this->toEga_3();
+    $coll_id_3 = $this->createCollection(); // App 3.
+    $upload_5 = $this->uploadTestFile(); // App 3
+    $this->createCollectionAssetRelation($coll_id_3, array($upload_5['asset_id']));
+
+    // Back to 1.
+    $this->toEga_1();
+
+    // Create collection.
+    $coll_id_4 = $this->createCollection(); // App 1.
+    $upload_6 = $this->uploadTestFile(); // App 1
+    $upload_7 = $this->uploadTestFile(); // App 1
+    //$this->createCollectionAssetRelation($coll_id_1, array($upload_1['asset_id'], $upload_2['asset_id']));
+
+    //
+    // Check number of videos in each collection.
+
+    // Do this 2 times.
+    $done = 2;
+
+    while (--$done) {
+      // Now search collection app 1, numofvideos should be 2.
+      $result = $this->searchCollections();
+
+      // Must be one.
+      $collections = $result['items']['item'];
+      $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+      // Get collection.
+      $collection = reset($collections);
+
+      if ($collection['coll_id'] == $coll_id_4) {
+        $collection = next($collections);
+      }
+
+      // Found the right collection.
+      $this->assertTrue($collection['coll_id'] == $coll_id_1, 'Found collection');
+
+      // Must be 2.
+      $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+      // Now get the collection again.
+      $collection = $this->getCollection($coll_id_1);
+
+      // Must be 2.
+      $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+      // Now get the collection again.
+      $collection = $this->getCollection($coll_id_4);
+
+      // Must be 0.
+      $this->assertTrue($collection['numofvideos'] == 0, 'Found no videos in collection');
+
+      // Share
+      $this->setMediafileAcl($upload_1['mediafile_id'],  array('acl_app' => array($app_id_2)));
+    }
+
+    // Search using app_2.
+
+    // Back to 2.
+    $this->toEga_2();
+
+    // Now search collection app 1, numofvideos should be 2.
+    $result = $this->searchCollections();
+
+    // Must be one.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 1, 'Found one collections');
+
+    // Back to 2.
+    $this->toEga_1();
+    $this->setCollectionAcl($coll_id_4, array('acl_app' => array($app_id_2)));
+
+    // Back to 2.
+    $this->toEga_2();
+
+    // Now search collection app 1, numofvideos should be 2.
+    $result = $this->searchCollections();
+
+    // Must be one.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+    $collection_1 = reset($collections);
+    $collection_2 = next($collections);
+
+    if ($collection_1['coll_id'] == $coll_id_4) {
+      list($collection_1, $collection_2) = array($collection_2, $collection_1);
+    }
+
+    // Check num of videos.
+
+    // Must be 2.
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+    $this->assertTrue($collection_2['numofvideos'] == 0, 'Found no videos in collection');
+
+    // Show them.
+    $this->var_export($collections);
+
+    // Back to 1.
+    $this->toEga_1();
+
+    // Remove it again.
+    $this->deleteMediafileAcl($upload_1['mediafile_id']);
+
+    // Delete collection 4
+    $this->deleteCollection($coll_id_4);
+
+    // Back to 2.
+    $this->toEga_2();
+
+    // Now search collection app 2, numofvideos should be 2.
+    $result = $this->searchCollections();
+
+    // Must be one.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 1, 'Found one collection');
+
+    // Get collection.
+    $collection = reset($collections);
+
+    // Must be 2.
+    $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+
+    // Back to 3.
+    $this->toEga_3();
+
+    // Now search collection app 3, numofvideos should be 1.
+    $result = $this->searchCollections();
+
+    // Must be one.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 1, 'Found 1 collection');
+
+    // Get collection.
+    $collection = reset($collections);
+
+    // Must be 2.
+    $this->assertTrue($collection['numofvideos'] == 1, 'Found 1 video in collection');
+
+    // Now with normal get collection.
+    $collection = $this->getCollection($collection['coll_id']);
+    $this->assertTrue($collection['numofvideos'] == 1, 'Found 1 video in collection');
+
+    // Now direct count.
+    $numofvideos = $this->getCollectionAssetCount($collection['coll_id']);
+    $this->assertTrue($numofvideos == 1, 'Found 1 video in collection');
+
+
+    // Now master slave collection 2 to app 1.
+    $this->toEga_2();
+    $this->addCollectionAcl($coll_id_2, array('acl_app' => array($app_id_1)));
+
+    // Back to 1.
+    $this->toEga_1();
+
+    // Now search collection app 1, numofvideos should be 2.
+    $result = $this->searchCollections();
+
+    // Must be 2 collections.
+    $collections = $result['items']['item'];
+
+    $this->assertTrue(count($collections) == 1, 'Found 1 collection');
+
+    // Get collection.
+    $collection_1 = reset($collections);
+
+    // Must be 2.
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Now with normal get collection.
+    $collection_1 = $this->getCollection($collection_1['coll_id']);
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Now direct count.
+    $numofvideos = $this->getCollectionAssetCount($collection_1['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in collection');
+
+
+    // Now master-slave mediafile from asset_3 to app_1
+    $this->toEga_2();
+    $this->setMediafileAcl($upload_3['mediafile_id'],  array('acl_app' => array($app_id_1)));
+    $this->toEga_1();
+
+    // Now search collection app 1, numofvideos should be 1.
+    $result = $this->searchCollections();
+
+    // Must be 2 collections.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+    // Get collection.
+    $collection_1 = reset($collections);
+    $collection_2 = next($collections);
+
+    // Make sure $collection_1 is from app 1 and $collection_2 is from app 2.
+    if ($collection_1['app_id'] == $app_id_2) {
+      // Swap $collection_1 with $collection_2.
+      list($collection_1, $collection_2) = array($collection_2, $collection_1);
+    }
+
+    // Must be 2.
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Must be 1.
+    $this->assertTrue($collection_2['numofvideos'] == 1, 'Found 1 video in master-slaved collection');
+
+    // Now with normal get collection.
+    $collection_1 = $this->getCollection($collection_1['coll_id']);
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+    $collection_2 = $this->getCollection($collection_2['coll_id']);
+    $this->assertTrue($collection_2['numofvideos'] == 1, 'Found 1 video in master-slaved collection');
+
+    // Now direct count.
+    $numofvideos = $this->getCollectionAssetCount($collection_1['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in collection');
+    $numofvideos = $this->getCollectionAssetCount($collection_2['coll_id']);
+    $this->assertTrue($numofvideos == 1, 'Found 1 video in master-slaved collection');
+
+    // Now master-slave mediafile from asset_4 to app_1.
+    $this->toEga_2();
+    $this->setMediafileAcl($upload_4['mediafile_id'],  array('acl_app' => array($app_id_1)));
+    $this->toEga_1();
+
+    // Now search collection app 1, numofvideos should be 1.
+    $result = $this->searchCollections();
+
+    // Must be 2 collections.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+    // Get collection.
+    $collection_1 = reset($collections);
+    $collection_2 = next($collections);
+
+    // Make sure $collection_1 is from app 1 and $collection_2 is from app 2.
+    if ($collection_1['app_id'] == $app_id_2) {
+      // Swap $collection_1 with $collection_2.
+      list($collection_1, $collection_2) = array($collection_2, $collection_1);
+    }
+
+    // Must be 2.
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Must be 2.
+    $this->assertTrue($collection_2['numofvideos'] == 2, 'Found 2 videos in master-slaved collection');
+
+    // Now with normal get collection.
+    $collection_1 = $this->getCollection($collection_1['coll_id']);
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+    $collection_2 = $this->getCollection($collection_2['coll_id']);
+    $this->assertTrue($collection_2['numofvideos'] == 2, 'Found 2 videos in master-slaved collection');
+
+    // Now direct count.
+    $numofvideos = $this->getCollectionAssetCount($collection_1['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in collection');
+    $numofvideos = $this->getCollectionAssetCount($collection_2['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in master-slaved collection');
+
+    // Now master-slave mediafile from asset_4 to app_1.
+    // Put domain protection on it. The asset should still end up as counted.
+    $this->toEga_2();
+    $this->setMediafileAcl($upload_4['mediafile_id'],  array('acl_app' => array($app_id_1), 'acl_realm' => array('foo@fooland.com'), 'acl_domain' => array('fooland.boo'), 'acl_user' => array('john doe'), 'acl_group' => array('john doe')));
+    $this->toEga_1();
+
+    // Now search collection app 1, numofvideos should be 1.
+    $result = $this->searchCollections();
+
+    // Must be 2 collections.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+    // Get collection.
+    $collection_1 = reset($collections);
+    $collection_2 = next($collections);
+
+    // Make sure $collection_1 is from app 1 and $collection_2 is from app 2.
+    if ($collection_1['app_id'] == $app_id_2) {
+      // Swap $collection_1 with $collection_2.
+      list($collection_1, $collection_2) = array($collection_2, $collection_1);
+    }
+
+    // Must be 2.
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Must be 2.
+    $this->assertTrue($collection_2['numofvideos'] == 2, 'Found 2 videos in master-slaved collection');
+
+    // Now with normal get collection.
+    $collection_1 = $this->getCollection($collection_1['coll_id']);
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+    $collection_2 = $this->getCollection($collection_2['coll_id']);
+    $this->assertTrue($collection_2['numofvideos'] == 2, 'Found 2 videos in master-slaved collection');
+
+    // Now direct count.
+    $numofvideos = $this->getCollectionAssetCount($collection_1['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in collection');
+    $numofvideos = $this->getCollectionAssetCount($collection_2['coll_id']);
+    $this->assertTrue($numofvideos == 2, 'Found 2 videos in master-slaved collection');
+  }
+}

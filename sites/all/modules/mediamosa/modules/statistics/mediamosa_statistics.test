@@ -1,0 +1,74 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for statistics functions.
+  */
+class MediaMosaStatisticsTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Statistics - common tests',
+      'description' => 'Testing statistics related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing statistics.
+  function testStatisticsFunction() {
+
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap'));
+
+    // All with 'aap' in title
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now seach on date.
+    $this->cql_do_search_test_assets_1('videotimestamp >= "' . date('Y') . '"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now check if we stored 'aap' as keyword and not the date.
+    $xml = $this->stats_get();
+
+    $this->var_export($xml, 'Stats');
+
+    $this->assertTrue($xml['header']['item_count_total'] == 1, 'Found stats');
+  }
+}

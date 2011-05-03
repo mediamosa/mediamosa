@@ -1,0 +1,124 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for transferring ownership.
+  */
+class MediaMosaTransferringOwnershipTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Transferring ownership',
+      'description' => 'Testing transferring ownership related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Transferring ownership, see: ticket 210.
+  function testTransferringOwnership() {
+
+    //
+    // Set up Egas.
+    //
+
+    // User and group id for app_id = 2
+    $user_id_2 = 'John Doe';
+    $group_id_2 = 'Group 2';
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    //
+    // Transferring ownership
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a collection.
+    $coll_id =  $this->createCollection();
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Change ownership.
+    $a_parameters = array(
+      mediamosa_rest_call_change_ownership::OLD_APP_ID => $app_id_1,
+      mediamosa_rest_call_change_ownership::NEW_APP_ID => $app_id_2,
+      mediamosa_rest_call_change_ownership::OLD_OWNER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_change_ownership::NEW_OWNER_ID => $user_id_2,
+      mediamosa_rest_call_change_ownership::OLD_GROUP_ID => self::SIMPLETEST_GROUP_ID,
+      mediamosa_rest_call_change_ownership::NEW_GROUP_ID => $group_id_2,
+    );
+    $result = $this->changeOwnership($a_parameters);
+
+    //
+    // Check the result.
+    //
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // ----------------------------------------------------------------------------
+    //Because its to dangerous, new_app_id/old_app_id has been turned off (#774).
+    // See mediamosa_asset.rest.inc mediamosa_rest_call_change_ownership class
+    // ----------------------------------------------------------------------------
+    // Check app_id
+    //$this->assertTrue(
+    //  $a_asset['app_id'] == $app_id_2,
+    //  t("Application ID has the good value")
+    //);
+
+    // Check owner_id
+    $this->assertTrue(
+      $a_asset['owner_id'] == $user_id_2,
+      t("Owner ID has the good value")
+    );
+
+    // Check group_id
+    $this->assertTrue(
+      $a_asset['group_id'] == $group_id_2,
+      t("Group ID has the good value")
+    );
+
+    //
+    // Change the ownership again.
+    //
+
+    // Change ownership.
+    $a_parameters = array(
+      mediamosa_rest_call_change_ownership::OLD_APP_ID => $app_id_1,
+    );
+    $result = $this->changeOwnership($a_parameters, array(mediamosa_error::ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS));
+  }
+}

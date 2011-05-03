@@ -1,0 +1,25 @@
+/* $Id: $ */
+
+.mmappid {
+  width: 60px;
+  text-align: center;
+}
+
+.mmdate {
+  width: 180px;
+  text-align: center;
+}
+
+.mmoperation {
+  width: 120px;
+  text-align: center;
+}
+
+.mm-table-summary {
+  font-weight: bold;
+}
+
+.mm-table-summary-right {
+  font-weight: bold;
+  text-align: right;
+}

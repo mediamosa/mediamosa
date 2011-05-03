@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response version="3.0" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:czp="http://standaarden.wiki.kennisnet.nl/Content-zoekprofiel" xmlns:dc="http://dublincore.org/specifications/" xmlns:qdc="http://dublincore.org/documents/usageguide/qualifiers.shtml">
+  <header>
+    <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+    <opensearch:totalResults>1</opensearch:totalResults>
+    <opensearch:startIndex>0</opensearch:startIndex>
+    <request>
+      <resultId>601</resultId>
+      <result>success</result>
+      <description/>
+      <method>GET</method>
+      <uri>asset/X2bfgNRJqeNtaRNCanLxlhW8?show_stills=true&amp;show_collections=false&amp;is_oai=false&amp;view_hidden_metadata=false</uri>
+      <time>0.3932</time>
+    </request>
+    <debug>
+      <class>mediamosa_rest_call_asset_get</class>
+      <matched>
+        <method>GET</method>
+        <uri>/asset/$asset_id</uri>
+      </matched>
+      <errors />
+    </debug>
+    <version>3.0.0.1700</version>
+  </header>
+  <items>
+    <asset id="X2bfgNRJqeNtaRNCanLxlhW8">
+      <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+      <app_id>14</app_id>
+      <provider_id/>
+      <owner_id>admin</owner_id>
+      <group_id/>
+      <videotimestamp type="date">2011-01-13T13:15:19Z</videotimestamp>
+      <videotimestampmodified type="date">2011-01-13T13:22:52Z</videotimestampmodified>
+      <play_restriction_start/>
+      <play_restriction_end/>
+      <reference_id/>
+      <isprivate type="bool">false</isprivate>
+      <mediafile_duration>00:20:16.44</mediafile_duration>
+      <mediafile_container_type>mov;mp4;m4a;3gp;3g2;mj2</mediafile_container_type>
+      <is_unappropriate type="bool">false</is_unappropriate>
+      <is_unappropiate type="bool">false</is_unappropiate>
+      <is_external type="bool">false</is_external>
+      <is_empty_asset type="bool">false</is_empty_asset>
+      <viewed>23</viewed>
+      <played>16</played>
+      <is_protected type="bool">false</is_protected>
+      <asset_property_is_hidden type="bool">false</asset_property_is_hidden>
+      <is_favorite type="bool">false</is_favorite>
+      <granted type="bool">true</granted>
+      <granted_metadata type="bool">true</granted_metadata>
+      <granted_still type="bool">true</granted_still>
+      <url_thumbnail_oai></url_thumbnail_oai>
+      <url_thumbnail>http://app.vpcore/still/RFURBWNKOZluhUeNPtCInbM4</url_thumbnail>
+      <has_streamable_mediafiles type="bool">true</has_streamable_mediafiles>
+      <metadata>
+        <czp:aggregatieniveau>niveau 2</czp:aggregatieniveau>
+        <czp:auteursrechten>Ja</czp:auteursrechten>
+        <czp:beoogde_eindgebruiker/>
+        <czp:beoogde_leeftijdsgroep/>
+        <czp:beschrijving/>
+        <czp:classificatie/>
+        <czp:context/>
+        <czp:identificatiecode>http://wle_vpcore/asset/X2bfgNRJqeNtaRNCanLxlhW8</czp:identificatiecode>
+        <czp:kosten>nee</czp:kosten>
+        <czp:omschrijving_rechten/>
+        <czp:schemanaam>http://wle_vpcore/</czp:schemanaam>
+        <czp:sleutelwoord/>
+        <czp:soort_leermateriaal/>
+        <czp:status>final</czp:status>
+        <czp:taal/>
+        <czp:titel/>
+        <czp:versie/>
+        <dc:contributor/>
+        <dc:coverage_spatial/>
+        <dc:coverage_temporal/>
+        <dc:creator/>
+        <dc:date type="date"/>
+        <dc:description>...</dc:description>
+        <dc:format/>
+        <dc:identifier/>
+        <dc:language>nl</dc:language>
+        <dc:publisher/>
+        <dc:relation/>
+        <dc:rights/>
+        <dc:source/>
+        <dc:subject/>
+        <dc:title>0 Channel</dc:title>
+        <dc:type/>
+        <qdc:created type="date"/>
+        <qdc:description_abstract/>
+        <qdc:format_extent/>
+        <qdc:format_medium/>
+        <qdc:hasformat/>
+        <qdc:isformatof/>
+        <qdc:isreferencedby/>
+        <qdc:issued/>
+        <qdc:license/>
+        <qdc:rightsholder/>
+        <qdc:title_alternative/>
+      </metadata>
+      <mediafiles>
+        <mediafile type="media" id="w2ecc6TBaTUJ8S64qNMtcW30">
+          <mediafile_id>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id>
+          <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+          <mediafile_id_source/>
+          <tag/>
+          <app_id>14</app_id>
+          <owner_id>admin</owner_id>
+          <group_id/>
+          <is_original_file type="bool">true</is_original_file>
+          <is_downloadable type="bool">false</is_downloadable>
+          <is_streamable type="bool">false</is_streamable>
+          <is_still type="bool">false</is_still>
+          <filename>aac_0_channels.mov</filename>
+          <uri/>
+          <transcode_profile_id/>
+          <tool/>
+          <command/>
+          <file_extension/>
+          <is_protected type="bool">false</is_protected>
+          <created type="date">2011-01-13T13:22:38Z</created>
+          <changed type="date">2011-01-13T13:22:52Z</changed>
+          <transcode_inherits_acl type="bool">false</transcode_inherits_acl>
+          <mediafiles>
+            <mediafile type="media" id="FMrPWoOQjEbThuinPt3GxYyZ">
+              <mediafile_id>FMrPWoOQjEbThuinPt3GxYyZ</mediafile_id>
+              <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+              <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
+              <tag/>
+              <app_id>14</app_id>
+              <owner_id>admin</owner_id>
+              <group_id/>
+              <is_original_file type="bool">false</is_original_file>
+              <is_downloadable type="bool">false</is_downloadable>
+              <is_streamable type="bool">false</is_streamable>
+              <is_still type="bool">false</is_still>
+              <filename>aac_0_channels.mp4</filename>
+              <uri/>
+              <transcode_profile_id>6</transcode_profile_id>
+              <tool>ffmpeg</tool>
+              <command>videobitrate:400000;size:640x380;audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;maintain_aspect_ratio:no;videocodec:libx264;videopreset:slow;padding:no</command>
+              <file_extension>mp4</file_extension>
+              <is_protected type="bool">false</is_protected>
+              <created type="date">2011-01-13T13:53:15Z</created>
+              <changed type="date">2011-01-13T13:53:15Z</changed>
+              <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
+              <metadata>
+                <video_codec>h264</video_codec>
+                <colorspace>yuv420p</colorspace>
+                <width>640</width>
+                <height>380</height>
+                <fps>30</fps>
+                <audio_codec>aac</audio_codec>
+                <sample_rate>44100</sample_rate>
+                <channels>stereo</channels>
+                <file_duration>00:20:16.40</file_duration>
+                <container_type>mov;mp4;m4a;3gp;3g2;mj2</container_type>
+                <bitrate>505</bitrate>
+                <bpp>0.07</bpp>
+                <filesize>81484038</filesize>
+                <mime_type>video/mp4</mime_type>
+                <is_hinted type="bool">true</is_hinted>
+                <is_inserted_md type="bool">false</is_inserted_md>
+              </metadata>
+              <url_download/>
+              <url_stream/>
+              <url_play/>
+              <response_object_available type="bool">true</response_object_available>
+              <response_plain_available type="bool">true</response_plain_available>
+              <response_metafile_available type="bool">true</response_metafile_available>
+            </mediafile>
+            <mediafile type="media" id="d1PJZjkGMJSiNVffJJistMOA">
+              <mediafile_id>d1PJZjkGMJSiNVffJJistMOA</mediafile_id>
+              <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+              <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
+              <tag/>
+              <app_id>14</app_id>
+              <owner_id>admin</owner_id>
+              <group_id/>
+              <is_original_file type="bool">false</is_original_file>
+              <is_downloadable type="bool">false</is_downloadable>
+              <is_streamable type="bool">false</is_streamable>
+              <is_still type="bool">false</is_still>
+              <filename>aac_0_channels.mp4</filename>
+              <uri/>
+              <transcode_profile_id>7</transcode_profile_id>
+              <tool>ffmpeg</tool>
+              <command>videobitrate:400000;fps:25;size:640x380;audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;maintain_aspect_ratio:no;2_pass_h264_encoding:2;videocodec:libx264;videopreset:slow;padding:no</command>
+              <file_extension>mp4</file_extension>
+              <is_protected type="bool">false</is_protected>
+              <created type="date">2011-01-13T14:20:09Z</created>
+              <changed type="date">2011-01-13T14:20:09Z</changed>
+              <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
+              <metadata>
+                <video_codec>h264</video_codec>
+                <colorspace>yuv420p</colorspace>
+                <width>640</width>
+                <height>380</height>
+                <fps>25</fps>
+                <audio_codec>aac</audio_codec>
+                <sample_rate>44100</sample_rate>
+                <channels>stereo</channels>
+                <file_duration>00:20:16.40</file_duration>
+                <container_type>mov;mp4;m4a;3gp;3g2;mj2</container_type>
+                <bitrate>500</bitrate>
+                <bpp>0.08</bpp>
+                <filesize>80598169</filesize>
+                <mime_type>video/mp4</mime_type>
+                <is_hinted type="bool">true</is_hinted>
+                <is_inserted_md type="bool">false</is_inserted_md>
+              </metadata>
+              <url_download/>
+              <url_stream/>
+              <url_play/>
+              <response_object_available type="bool">true</response_object_available>
+              <response_plain_available type="bool">true</response_plain_available>
+              <response_metafile_available type="bool">true</response_metafile_available>
+            </mediafile>
+            <mediafile type="still" id="RFURBWNKOZluhUeNPtCInbM4">
+              <mediafile_id>RFURBWNKOZluhUeNPtCInbM4</mediafile_id>
+              <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+              <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
+              <tag/>
+              <app_id>14</app_id>
+              <owner_id>admin</owner_id>
+              <group_id/>
+              <is_original_file type="bool">false</is_original_file>
+              <is_downloadable type="bool">false</is_downloadable>
+              <is_streamable type="bool">false</is_streamable>
+              <is_still type="bool">true</is_still>
+              <filename/>
+              <uri/>
+              <transcode_profile_id/>
+              <tool/>
+              <command/>
+              <file_extension>jpeg</file_extension>
+              <is_protected type="bool">false</is_protected>
+              <created type="date">2011-01-13T12:25:08Z</created>
+              <changed type="date">2011-01-13T12:25:08Z</changed>
+              <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
+              <still_ticket>http://app.vpcore/still/RFURBWNKOZluhUeNPtCInbM4</still_ticket>
+              <width>176</width>
+              <height>144</height>
+              <filesize>3870</filesize>
+              <mime_type>image/jpeg</mime_type>
+              <still_time_code>303</still_time_code>
+              <still_order>0</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">true</still_default>
+            </mediafile>
+            <mediafile type="still" id="NWCOXFPZhUNDRbIMVRDafzVN">
+              <mediafile_id>NWCOXFPZhUNDRbIMVRDafzVN</mediafile_id>
+              <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+              <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
+              <tag/>
+              <app_id>14</app_id>
+              <owner_id>admin</owner_id>
+              <group_id/>
+              <is_original_file type="bool">false</is_original_file>
+              <is_downloadable type="bool">false</is_downloadable>
+              <is_streamable type="bool">false</is_streamable>
+              <is_still type="bool">true</is_still>
+              <filename/>
+              <uri/>
+              <transcode_profile_id/>
+              <tool/>
+              <command/>
+              <file_extension>jpeg</file_extension>
+              <is_protected type="bool">false</is_protected>
+              <created type="date">2011-01-13T12:25:08Z</created>
+              <changed type="date">2011-01-13T12:25:08Z</changed>
+              <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
+              <still_ticket>http://app.vpcore/still/NWCOXFPZhUNDRbIMVRDafzVN</still_ticket>
+              <width>176</width>
+              <height>144</height>
+              <filesize>4724</filesize>
+              <mime_type>image/jpeg</mime_type>
+              <still_time_code>607</still_time_code>
+              <still_order>1</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">false</still_default>
+            </mediafile>
+            <mediafile type="still" id="HJtXKHNAvhNZOn7dUxJj5BcI">
+              <mediafile_id>HJtXKHNAvhNZOn7dUxJj5BcI</mediafile_id>
+              <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
+              <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
+              <tag/>
+              <app_id>14</app_id>
+              <owner_id>admin</owner_id>
+              <group_id/>
+              <is_original_file type="bool">false</is_original_file>
+              <is_downloadable type="bool">false</is_downloadable>
+              <is_streamable type="bool">false</is_streamable>
+              <is_still type="bool">true</is_still>
+              <filename/>
+              <uri/>
+              <transcode_profile_id/>
+              <tool/>
+              <command/>
+              <file_extension>jpeg</file_extension>
+              <is_protected type="bool">false</is_protected>
+              <created type="date">2011-01-13T12:25:08Z</created>
+              <changed type="date">2011-01-13T12:25:08Z</changed>
+              <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
+              <still_ticket>http://app.vpcore/still/HJtXKHNAvhNZOn7dUxJj5BcI</still_ticket>
+              <width>176</width>
+              <height>144</height>
+              <filesize>4672</filesize>
+              <mime_type>image/jpeg</mime_type>
+              <still_time_code>911</still_time_code>
+              <still_order>2</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">false</still_default>
+            </mediafile>
+          </mediafiles>
+          <metadata>
+            <video_codec>h264</video_codec>
+            <colorspace>yuv420p</colorspace>
+            <width>640</width>
+            <height>480</height>
+            <fps>27.49</fps>
+            <audio_codec/>
+            <sample_rate>0</sample_rate>
+            <channels/>
+            <file_duration>00:20:16.44</file_duration>
+            <container_type>mov;mp4;m4a;3gp;3g2;mj2</container_type>
+            <bitrate>369</bitrate>
+            <bpp>0.04</bpp>
+            <filesize>56212107</filesize>
+            <mime_type>video/quicktime</mime_type>
+            <is_hinted type="bool">true</is_hinted>
+            <is_inserted_md type="bool">false</is_inserted_md>
+          </metadata>
+          <url_download/>
+          <url_stream/>
+          <url_play/>
+          <response_object_available type="bool">true</response_object_available>
+          <response_plain_available type="bool">true</response_plain_available>
+          <response_metafile_available type="bool">true</response_metafile_available>
+        </mediafile>
+      </mediafiles>
+    </asset>
+  </items>
+</response>

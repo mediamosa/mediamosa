@@ -1,0 +1,85 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The oEmbed module.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_oembed_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  // oEmbed.
+  $rest_calls['services/oembed'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'oEmbed get.',
+    mediamosa_rest_call::DESCRIPTION => 'oEmbed is a format for allowing an embedded representation of a URL on third party sites.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'services/oembed?mediafile_id=6334&format=json',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '{
+  "version": "1.0",
+  "type": "video",
+  "width": 240,
+  "height": 160,
+  "title": "Big house",
+  "author_name": "BigR",
+  "author_url": "http://bigr.mediamosa.org/",
+  "provider_name": "MediaMosa",
+  "provider_url": "http://mediamosa.org/",
+  "html": "<object width=\"320\" height=\"240\" data=\"http://drebbel.mediamosa.org/flowplayer/flowplayer-3.1.5.swf\" type=\"application/x-shockwave-flash\">
+  <param name=\"movie\" value=\"http://drebbel.mediamosa.org/flowplayer/flowplayer-3.1.5.swf\" />
+  <param name=\"allowfullscreen\" value=\"true\" />
+  <param name=\"allowscriptaccess\" value=\"always\" />
+  <param name=\"flashvars\" value=\'config={\"plugins\":{\"pseudo\":{\"url\":\"flowplayer.pseudostreaming-3.1.3.swf\"},\"controls\":{\"backgroundColor\":\"#000000\",\"backgroundGradient\":\"low\"}},\"clip\":{\"provider\":\"pseudo\",\"url\":\"http://mediamosa.local/ticket/14/nbSFPcFPVsbYEaEK755FwfLn.flv\", \"autoPlay\":false},\"playlist\":[{\"provider\":\"pseudo\",\"url\":\"http://mediamosa.local/ticket/14/nbSFPcFPVsbYEaEK755FwfLn.flv\"}]}\' />
+</object>",
+}',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_oembed_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Open API search.
+  $rest_calls['services/oembed'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_oembed_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_oembed',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_XML_OEMBED,
+    //mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    //mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    //mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
+  );
+
+  return $rest_calls;
+}

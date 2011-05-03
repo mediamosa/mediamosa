@@ -1,0 +1,108 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Unittests for authentication module.
+  */
+class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'APP - Challenge-reponse',
+      'description' => 'Challenge-reponse authentication for end user applications.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  function setUp() {
+    parent::setUp('mediamosa_app_dbus');
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
+    $this->drupalLogin($rest_user);
+  }
+
+  function testAppAuthentication() {
+    // Create all stuff needed for this test.
+    $a_app = $this->createApp();
+    $app_name = $a_app[mediamosa_app_db::APP_NAME];
+    $shared_key = $a_app[mediamosa_app_db::SHARED_KEY];
+
+
+    // Step 1: start auth and capture cookie
+    $response = $this->restCall('login', 'POST', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 ' . $app_name));
+    $this->var_export($response['xml']->get());
+    $dbus_data = explode(' ', $response['xml']->items->item->dbus);
+
+    $this->assertTrue(drupal_substr($response['xml']->items->item->dbus, 0, 5) == 'DATA ', 'Login fase 1 success');
+
+    list($cookie) = explode(';', $response['headers']['Set-Cookie']);
+    $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: ' . $cookie);
+
+    // Step 2: send the credentials
+    $challenge = $dbus_data[3];
+    $random = mediamosa_unicode::substr(md5(microtime(TRUE)), 0, 10);
+    $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
+    $response = $this->restCall('login', 'POST', $post_data);
+
+    $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::get_server_guid(), 'Login fase 2 success');
+    $this->pass(check_plain(var_export($response['xml'], TRUE)));
+
+
+    // Now test with suppling wrong password.
+
+    // Remove cookie from unittest.
+    $this->curlHandle = NULL;
+    $this->cookieFile = NULL; // in current simpletest, this doesnt do much.
+
+    // Step 1: start auth and capture cookie
+    $response = $this->restCall('login', 'POST', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 ' . $app_name));
+    $this->pass(check_plain(var_export($response['xml'], TRUE)));
+    $dbus_data = explode(' ', $response['xml']->items->item->dbus);
+
+    $this->assertTrue(drupal_substr($response['xml']->items->item->dbus, 0, 5) == 'DATA ', 'Login fase 1 success');
+
+    list($cookie) = explode(';', $response['headers']['Set-Cookie']);
+    $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: ' . $cookie);
+
+
+    // Step 2: send the credentials
+    $challenge = $dbus_data[3];
+    $random = mediamosa_unicode::substr(md5(microtime(TRUE)), 0, 10);
+    $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key . 'boo')));
+    $response = $this->restCall('login', 'POST', $post_data, array(), array(mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR));
+
+    $this->assertTrue($response['xml']->items->item->dbus == 'REJECTED', 'Login must fail.');
+
+    $this->pass(check_plain(var_export($challenge, TRUE)));
+    $this->pass(check_plain(var_export($dbus_data, TRUE)));
+    $this->pass(check_plain(var_export($post_data, TRUE)));
+
+    $this->pass(check_plain(var_export($response['xml'], TRUE)));
+  }
+}

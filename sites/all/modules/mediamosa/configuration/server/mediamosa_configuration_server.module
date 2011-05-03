@@ -1,0 +1,80 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ *
+ * Hook iterates the configuration form for global settings that are shared
+ * on multiple modules into one form; the configuration form.
+ */
+function mediamosa_configuration_server_mediamosa_configuration_collect() {
+
+  // Get servers.
+  $servers = mediamosa_server::get_enabled_job_processor();
+  $options = array();
+
+  foreach ($servers as $server) {
+    if (empty($server[mediamosa_server_db::SERVER_NAME])) {
+      $server[mediamosa_server_db::SERVER_NAME] = mediamosa_server::get_server_url($server);
+    }
+
+    $options[mediamosa_server::get_server_url($server)] = $server[mediamosa_server_db::SERVER_NAME];
+  }
+
+  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', '');
+  if (empty($mediamosa_jobscheduler_uri)) {
+    $mediamosa_jobscheduler_uri = ''; // Make sure its not FALSE, but ''.
+    $options[$mediamosa_jobscheduler_uri] = t('No server selected, select one!');
+  }
+  elseif (!isset($options[$mediamosa_jobscheduler_uri])) {
+    $options[$mediamosa_jobscheduler_uri] = t('Current server (not enabled)');
+  }
+
+  $form['settings_server'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Server settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  if (count($options)) {
+    //ksort($options);
+    $form['settings_server']['mediamosa_jobscheduler_uri'] = array(
+      '#type' => 'select',
+      '#title' => t('Jobscheduler server'),
+      '#description' => t('Select from one of the (enabled) job process servers the server that handles the main job scheduler CRON.'),
+      '#required' => TRUE,
+      '#options' => $options,
+      '#default_value' => $mediamosa_jobscheduler_uri,
+    );
+  }
+  else {
+    $form['settings_server']['mediamosa_jobscheduler_markup'] = array(
+      '#markup' => t('No enabled jobscheduler transcoding servers found')
+    );
+  }
+  return $form;
+}

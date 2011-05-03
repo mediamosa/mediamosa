@@ -1,0 +1,234 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * sites/all/modules/mediamosa/core/app/authentication/3rdparty/OAuth.php:
+ *
+ * The MIT License
+ *
+ * Copyright (c) 2007 Andy Smith
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+ /**
+  * @file
+  * Unittests for authentication with oAuth.
+  */
+class MediaMosaAppAuthenticationOAuthTestCase extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'APP - oAuth',
+      'description' => 'oAuth authentication for end user applications.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  function setUp() {
+    parent::setUp('mediamosa_app_oauth');
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA, 'oauth login'));
+    $this->drupalLogin($rest_user);
+  }
+
+  function testAppAuthentication() {
+    // Create all stuff needed for this test.
+    $app = $this->a_app;
+
+    $app_name = $app[mediamosa_app_db::APP_NAME];
+    $shared_key = $app[mediamosa_app_db::SHARED_KEY];
+
+    // Set the app id for the OpenAPI.
+    $app_id = $app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+    $nid = $app[mediamosa_app_db::NID];
+
+    $app = mediamosa_app::get_by_nid($nid);
+    $consumer_key = $app[mediamosa_app_db::OAUTH_CONSUMER_KEY];
+    $consumer_secret = $app[mediamosa_app_db::OAUTH_CONSUMER_SECRET];
+    $this->assertTrue($consumer_key && $consumer_secret, 'Consumer key and secret is in DB');
+
+    // ---------------------------------------------------------------------------
+    // Starting oAuth.
+    // ---------------------------------------------------------------------------
+
+    $callback_url = url('admin/oauth_test_phase2', array('absolute' => TRUE));
+
+    $oauth_request_token = url('openapi/oauth/request_token', array('absolute' => TRUE));
+    $oauth_authorize = url('openapi/oauth/authorize', array('absolute' => TRUE));
+    $oauth_access_token = url('openapi/oauth/access_token', array('absolute' => TRUE));
+
+    $sig_method = new OAuthSignatureMethod_HMAC_SHA1();
+    $test_consumer = new OAuthConsumer($consumer_key, $consumer_secret, $callback_url);
+
+
+    // Request token.
+
+    $parameters = array();
+    if ($callback_url) {
+      $parameters['oauth_callback'] = $callback_url;
+    }
+    $req_req = OAuthRequest::from_consumer_and_token($test_consumer, NULL, 'GET', $oauth_request_token, $parameters);
+    $req_req->sign_request($sig_method, $test_consumer, NULL);
+
+
+    // Request parameters.
+    $url = $req_req->to_url();
+
+    $response = $this->drupal_http_request($url);
+    $this->assertTrue(!empty($response->data), 'Request token has data');
+    parse_str($response->data, $reqOAuthData);
+    $this->var_export($reqOAuthData);
+
+    // User authorization.
+
+    $req_token = new OAuthConsumer($reqOAuthData['oauth_token'], $reqOAuthData['oauth_token_secret']);
+
+    $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $req_token, "GET", $oauth_authorize);
+    $acc_req->sign_request($sig_method, $test_consumer, $req_token);
+
+    //$_SESSION['oauth_token'] = $reqOAuthData['oauth_token'];
+    //$_SESSION['oauth_token_secret'] = $reqOAuthData['oauth_token_secret'];
+    //$_SESSION['nid'] = $nid;
+
+    $this->var_export($acc_req);
+    //header("Location: $acc_req");
+
+    // ---------------------------------------------------------------------------
+    // User authentication.
+    // ---------------------------------------------------------------------------
+
+    $this->drupalGet($acc_req);
+    $this->assertRaw(t('Name of your client application'), t('"Name" is exists on the oAuth user authentication page.'));
+    $this->assertRaw(t('Shared key of your client application'), t('"Shared key" is exists on the oAuth user authentication page.'));
+    $this->assertRaw(t('Authenticate'), t('"Authenticate" is exists on the oAuth user authentication page.'));
+    $this->assertRaw('client_app_name', t('"client_app_name" is exists on the oAuth user authentication page.'));
+    $this->assertRaw('client_app_shared_key', t('"client_app_shared_key" is exists on the oAuth user authentication page.'));
+    $this->assertRaw('allow', t('"allow" is exists on the oAuth user authentication page.'));
+    $this->assertRaw('submit', t('"submit" is exists on the oAuth user authentication page.'));
+
+    $edit = array();
+    $this->drupalPost($acc_req, $edit, t('Authenticate'));
+    $this->assertText(t('Name of your client application field is required.'));
+
+    $edit = array();
+    $edit['client_app_name'] = mt_rand(1000, 9999);
+    $edit['client_app_shared_key'] = mt_rand(1000, 9999);
+    $this->drupalPost($acc_req, $edit, t('Authenticate'));
+    $this->assertText(t('Application name of shared key is not valid.'));
+    $this->assertText(t('If you want to allow, that an other application have full access to your client application, then you must check the checkbox at the bottom of page.'));
+
+    // TODO: Additional tests with submitting data.
+    $edit = array();
+    $edit['client_app_name'] = $app_name;
+    $edit['client_app_shared_key'] = $shared_key;
+    $edit['allow'] = 1;
+    // We can't use it, because of the redirections.
+    //$this->drupalPost($acc_req, $edit, t('Authenticate'));
+    // We simulate the submit process now.
+    mediamosa_app_oauth::update_token($reqOAuthData['oauth_token'], array(
+      mediamosa_app_oauth_token_db::APP_ID => $app_id,
+      mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_YES,
+    ));
+
+    // ---------------------------------------------------------------------------
+    // After callback.
+    // ---------------------------------------------------------------------------
+
+    // Access token.
+
+    $acc_token = new OAuthConsumer($reqOAuthData['oauth_token'], $reqOAuthData['oauth_token_secret']);
+
+    $parameters = array(
+      'oauth_verifier' => mt_rand(100000, 999999),
+    );
+    $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $acc_token, "GET", $oauth_access_token, $parameters);
+    $acc_req->sign_request($sig_method, $test_consumer, $acc_token);
+
+    // Request parameters.
+    $url = $acc_req->to_url();
+
+    $response = $this->drupal_http_request($url);
+    $this->assertTrue(!empty($response->data), 'Access token has data');
+    parse_str($response->data, $accOAuthData);
+    $this->var_export($accOAuthData);
+
+    //$_SESSION['final_oauth_token'] = $accOAuthData['oauth_token'];
+    //$_SESSION['final_oauth_token_secret'] = $accOAuthData['oauth_token_secret'];
+
+    // Use REST call with authorization.
+
+    // Create asset.
+    $asset_id = $this->createAsset();
+
+    $rest_uri = 'asset';
+    $rest_url = url($rest_uri, array('absolute' => TRUE));
+
+    $acc_token = new OAuthConsumer($accOAuthData['oauth_token'], $accOAuthData['oauth_token_secret']);
+
+    $parameters = array(
+      'limit' => 1,
+    );
+    $rest_req = OAuthRequest::from_consumer_and_token($test_consumer, $acc_token, "GET", $rest_url, $parameters);
+    $rest_req->sign_request($sig_method, $test_consumer, $acc_token);
+
+    // Request parameters.
+    $url = $rest_req->to_url();
+
+    $response = $this->drupal_http_request($url, array(), TRUE);
+    $this->assertTrue(!empty($response->data), 'REST call with authentication');
+    $this->assertTrue((int) $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY, t('Access given (@access)', array('@access' => (int) $response->xml->header->request_result_id,)));
+
+    // Use REST call without authorization.
+
+    // Request parameters.
+    $url = $rest_url;
+
+    $response = $this->drupal_http_request($url, array(), TRUE);
+    $this->assertTrue(!empty($response->data), 'REST call without authentication');
+    $this->assertTrue((int) $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_ACCESS_DENIED, t('Access denied (@access)', array('@access' => (int) $response->xml->header->request_result_id,)));
+  }
+}

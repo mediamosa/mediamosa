@@ -1,0 +1,140 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Image tool module.
+ */
+
+/**
+ * Implements hook_mediamosa_tool_can_analyse().
+ */
+function mediamosa_tool_image_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_image::is_supported($mime_type);
+}
+
+/**
+ * Implements hook_mediamosa_tool_analyse().
+ *
+ * @param array $job_ext
+ */
+function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
+  $command_type = 'mediamosa_tool_image';
+  $tool_id = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+  $execution_command = 'exiv2 @mediafile_location';
+  $separator = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR;
+  mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
+}
+
+/**
+ * Implements hook_mediamosa_tool_options().
+ */
+function mediamosa_tool_image_mediamosa_tool_options() {
+  return array(
+    'name' => t('Image'),
+    'description' => t('Image files like JPG, PNG, TIFF.'),
+    'tool' => mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID,
+  );
+}
+
+/**
+ * Get module id.
+ * Implements hook_mediamosa_tool_iteration().
+ */
+function mediamosa_tool_image_mediamosa_tool_iteration() {
+  return mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+}
+
+/**
+ * Generate information for the status page.
+ */
+function _mediamosa_tool_image_status_generate() {
+  // For several topics we provide a link to webpages with configuration hints.
+  $helper_links = array(
+    'imagemagic' => l('here', 'http://mediamosa.org/trac/wiki/ImageMagic'),
+    'exiv2' => l('here', 'http://mediamosa.org/trac/wiki/exiv2'),
+  );
+
+  $results = array();
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('convert -version', $exec_output);
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('Version', $exec_output) : t('ImageMagic not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('Version: ImageMagic ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_imagemagic'] = array(
+    'title' => t('Image tool: ImageMagic'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_image::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING),
+    'description' => $found ? '' : t('Install ImageMagic. You can find more information how to install ImageMagic !here', array('!here' => $helper_links['imagemagic'])),
+  );
+
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('exiv2 -h', $exec_output);
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('Manipulate', $exec_output) : t('Exiv2 not found');
+
+  $results['app_exiv2'] = array(
+    'title' => t('Image tool: Exiv2'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found),
+    'description' => $found ? '' : t('Install Exiv2. You can find more information how to install ImageMagic !here', array('!here' => $helper_links['exiv2'])),
+  );
+
+  // Making the report.
+  return array(
+    'configuration' => array(
+      'title' => t('Image tool'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_tool_image_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_collect = array();
+  if (!$reset) {
+    $mediamosa_status_collect = variable_get('mediamosa_status_image_collect_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_collect)) {
+    $mediamosa_status_collect = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_tool_image_status_generate());
+    variable_set('mediamosa_status_image_collect_' . mediamosa::get_server_id(), $mediamosa_status_collect);
+  }
+
+  return $mediamosa_status_collect['statuses'];
+}

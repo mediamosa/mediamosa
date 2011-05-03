@@ -1,0 +1,19 @@
+#!/usr/bin/lua
+-- -*- lua -*-
+
+--
+-- Copyright (c) 2008, 2009 Madcap BV (http://www.madcap.nl)
+-- All rights reserved.
+--
+-- Permission is granted for use, copying, modification, distribution,
+-- and distribution of modified versions of this work as long as the
+-- above copyright notice is included.
+--
+
+-- see http://www.inf.puc-rio.br/~roberto/lpeg.html
+-- and http://en.wikipedia.org/wiki/Parsing_expression_grammar
+-- and http://pdos.csail.mit.edu/%7Ebaford/packrat/popl04/peg-popl04.pdf
+require 'lpeg'
+
+print("lua works")
+os.exit(0)

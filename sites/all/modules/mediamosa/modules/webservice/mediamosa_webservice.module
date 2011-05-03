@@ -1,0 +1,193 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * MediaMosa Webservice.
+  */
+
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_webservice_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/config/webservice':
+      return '<p>' . t('List of all webservices and global availibity of services. Disabled webservices are unavailable for all client applications. Note: see client application settings for availability of a webservice for the specific client application.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_webservice_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/webservice'] = array(
+    'title' => 'Webservice management',
+    'description' => 'List of all webservices and global availibity of services',
+    'page callback' => '_mediamosa_webservice_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_WEBSERVICES),
+  );
+
+  $items['admin/mediamosa/config/webservice/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/webservice/%/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_webservice_form', 4),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_WEBSERVICES),
+    'type' => MENU_CALLBACK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  return $items;
+}
+
+/**
+ * List of all webservices.
+ */
+function _mediamosa_webservice_list() {
+
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
+  $header = array(
+    array('data' => t('ID'), 'field' => 'w.' . mediamosa_webservice_db::ID, 'sort' => 'asc'),
+    array('data' => t('Handle'), 'field' => 'w.' . mediamosa_webservice_db::HANDLE, 'sort' => 'asc'),
+    array('data' => t('Description'), 'field' => 'w.' . mediamosa_webservice_db::DESCRIPTION, 'sort' => 'asc'),
+    array('data' => t('Status'), 'field' => 'w.' . mediamosa_webservice_db::STATUS, 'sort' => 'asc'),
+    t('Operations'),
+  );
+
+  $query = db_select(mediamosa_webservice_db::TABLE_NAME, 'w')->extend('PagerDefault')->extend('TableSort');
+  $query->fields('w');
+  $query->orderByHeader($header);
+  $query->limit(mediamosa_settings::maintenance_items_per_page());
+  $result = $query->execute();
+
+  // Get destination.
+  $l_options = array('query' => drupal_get_destination());
+
+  $actions = array();
+  if (_mediamosa_user_access(mediamosa_permission::UPDATE_CONFIG_WEBSERVICES)) {
+    $actions[] = l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options);
+  }
+
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array(
+      $row->{mediamosa_webservice_db::ID},
+      $row->{mediamosa_webservice_db::HANDLE},
+      $row->{mediamosa_webservice_db::DESCRIPTION},
+      $row->{mediamosa_webservice_db::STATUS} == mediamosa_webservice_db::STATUS_TRUE ? t('On') : t('<b>Off</b>'),
+      empty($actions) ? '-' : implode(' | ', $actions),
+    );
+  }
+
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("There are no webservices available; any missing webservice will set to 'On' by default.")));
+  $output .= theme('pager');
+
+  return $output;
+}
+
+/**
+ * Webservice form.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function mediamosa_webservice_form($form, $form_state) {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Webservice listing'), 'admin/mediamosa/config/webservice');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Get the id.
+  $webservice_id = $form_state['build_info']['args'][0];
+
+  // Get the webservice row.
+  $mediamosa_webservice = mediamosa_webservice::get($webservice_id);
+
+  drupal_set_title(t('Editing  @webservice_hand', array('@webservice_hand' => $mediamosa_webservice[mediamosa_webservice_db::HANDLE])));
+
+  // The form
+  $form = array();
+  $form[mediamosa_webservice_db::ID] = array(
+    '#type' => 'hidden',
+    '#value' => $webservice_id,
+  );
+  $form['general'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Webservice @webservice_handle', array('@webservice_handle' => $mediamosa_webservice[mediamosa_webservice_db::HANDLE])),
+    '#description' => $mediamosa_webservice[mediamosa_webservice_db::DESCRIPTION],
+  );
+  $form['general'][mediamosa_webservice_db::STATUS] = array(
+    '#type' => 'radios',
+    '#title' => t('Status'),
+    '#description' => t('Availibity of web service for all client applications. Note: see client application settings for availability of a webservice for the specific client application.'),
+    '#default_value' => $mediamosa_webservice[mediamosa_webservice_db::STATUS],
+    '#options' => array(mediamosa_webservice_db::STATUS_FALSE => t('Off'), mediamosa_webservice_db::STATUS_TRUE => t('On')),
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+
+  return $form;
+}
+
+/**
+ * Submit the form.
+ *
+ * @param array $form_state
+ * @param array $form
+ */
+function mediamosa_webservice_form_submit($form, &$form_state) {
+
+  mediamosa_db::db_update(mediamosa_webservice_db::TABLE_NAME)
+    ->fields(array(mediamosa_webservice_db::STATUS => $form_state['values'][mediamosa_webservice_db::STATUS]))
+    ->condition(mediamosa_webservice_db::ID, $form_state['values'][mediamosa_webservice_db::ID])
+    ->execute();
+
+  drupal_set_message(t("Webservice was updated succesfully."));
+  drupal_goto('admin/mediamosa/config/webservice');
+}

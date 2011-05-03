@@ -1,0 +1,557 @@
+#!/usr/bin/lua
+-- -*- lua -*-
+
+--
+-- Copyright (c) 2008, 2009, 2010, 2011 Madcap BV (http://www.madcap.nl)
+-- All rights reserved.
+--
+-- Permission is granted for use, copying, modification, distribution,
+-- and distribution of modified versions of this work as long as the
+-- above copyright notice is included.
+--
+
+-- needs a patch on ffmpeg/ffmpeg.c:
+-- --- ffmpeg.c    (revision 11006)
+-- +++ ffmpeg.c    (working copy)
+-- @@ -999,7 +999,7 @@
+--                    nb_frames_dup, nb_frames_drop);
+--
+--          if (verbose >= 0)
+-- -            fprintf(stderr, "%s    \r", buf);
+-- +            fprintf(stderr, "%s    \n", buf);
+--
+--          fflush(stderr);
+--      }
+
+require 'lpeg'
+
+local space = lpeg.S(" \t\n\r")^0
+
+local COMMA = lpeg.P(",") * space
+local SEMIC = lpeg.P(";") * space
+local COLON = lpeg.P(":") * space
+local SLASH = lpeg.P("/") * space
+local HASH = lpeg.P("#") * space
+local LPAREN = lpeg.P("(") * space
+local RPAREN = lpeg.P(")") * space
+local LHOOK = lpeg.P("[") * space
+local RHOOK = lpeg.P("]") * space
+
+local digits = lpeg.R("09")^1
+local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
+
+local word = lpeg.C(symbol) * space
+local number = lpeg.C(digits) * space
+local any_number = digits * space
+local float = lpeg.C(digits * "." * digits) * space
+local time = lpeg.C(digits * ":" * digits * ":" * digits * "." * digits) * space
+local hex = lpeg.C("0x" * lpeg.R("09", "AF")^1) * space
+local dimension = lpeg.C(digits * "x" * digits) * space
+--local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) * space
+local ratio = digits * COLON * digits * space
+local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
+  (COMMA * lpeg.C("PAR" * space * ratio * "DAR" * space * ratio)) * space
+local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
+local channels = ((number * space)^0 * word + float) * space
+local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
+local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space
+local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
+local is_hinted = lpeg.C(symbol)
+local unit = lpeg.C(lpeg.P("k")^-1) * space
+
+-- Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'in3.avi':
+local ln_input = lpeg.P("Input #") * number * COMMA *
+  lpeg.Ct(containertype * COMMA * (containertype * COMMA)^0) * space
+
+-- Duration: 00:02:06.9, start: 0.000000, bitrate: 4143 kb/s
+-- Duration: 00:02:06.9, start: 0.000000, bitrate: N/A
+-- Duration: 00:53:01.20, start: -1.000000, bitrate: 1749 kb/s
+local ln_duration = space * "Duration" * COLON *
+  time * COMMA *
+  "start" * COLON * lpeg.C(lpeg.P("-")^0 * digits * "." * lpeg.P("-")^0 * digits) * space * COMMA *
+  "bitrate" * COLON * ((number * "kb/s") + lpeg.C("N/A")) * space
+
+-- Stream #0.1: Audio: mp2, 44100 Hz, stereo, 64 kb/s
+-- Stream #0.1: Audio: mp2, 44100 Hz, stereo, s16, 64 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, 254 kb/s
+-- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
+-- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
+-- captures: stream, codecs, frequency, channels, sample_format, bitrate
+local ln_audio = space * "Stream #" * float * language^-1 * COLON *
+  "Audio" * COLON *
+  codec * COMMA *
+  (number * "Hz" * COMMA)^-1 *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
+  ((COMMA * word) + lpeg.Cc("unknown")) *
+  (COMMA * number * "kb/s")^-1
+
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1], 29.97 tbr, 90k tbn, 29.97 tbc
+--
+-- additional formats, introduced in 0.5 for ogg, mkv &c.
+-- Stream #0.0: Video: h264, yuv420p, 640x480, PAR 1:1 DAR 4:3, 25 tbr, 1k tbn, 2k tbc
+-- Stream #0.0: Video: dvvideo, yuv411p, 720x480, 28771 kb/s, PAR 10:11 DAR 15:11, 29.97 tbr, 29.97 tbn, 29.97 tbc
+-- Stream #0.1(und): Video: h264, yuv420p, 480x270 [PAR 1:1 DAR 16:9], 539 kb/s, 23.97 fps, 23.97 tbr, 23971 tbn, 47.94 tbc
+-- the tb{r,n,c} fields can have a 'k' suffix, in which case the value must be multiplied by 1000
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tbr (= fps)
+function convert_units(amount, unit)
+  if(unit == "k") then
+    return 1000 * amount
+  else
+    return amount
+  end
+end
+
+-- Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.1(eng): Video: vc1, yuv420p, 384x288 [PAR 1:1 DAR 4:3], 776 kb/s, 25 fps, 25 tbr, 1k tbn, 25 tbc
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
+-- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- Stream #0.0(und): Video: h264 (High), yuv420p, 1280x720 [PAR 1:1 DAR 16:9], 744 kb/s, 29.94 fps, 29.92 tbr, 1k tbn, 59.83 tbc
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
+
+local ln_video = space * "Stream #" * float * language * COLON *
+  "Video" * COLON *
+  codec * COMMA *
+  ((word * COMMA) + lpeg.Cc("unknown")) *
+  (dimension + lpeg.Cc("unknown")) *
+  ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
+  (aspectratio + lpeg.Cc("unknown")) *
+  (
+    (COMMA * number * "kb/s")^-1 *
+    (COMMA * "PAR" * space * any_number * ":" * any_number * "DAR" * space * any_number * ":" * any_number)^-1 *
+    ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
+  ) *
+  (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
+
+local status_file
+local status_tmp
+local errors = {}
+
+local error_markers = {
+  "^(Error.*)$",
+  "^(%[.*%]Error.*)$",
+  "^(Unknown encoder.*)$",
+  "(.*unrecognized option.*)",
+  "(.*no such file or directory.*)",
+  "(.*Unknown format.*)",
+  "(.*Could not find codec parameters.*)",
+  "(.*Assertion.*failed.*)",
+  "(.*Segmentation fault.*)",
+  "(.*Frame size must be a multiple of 2.*)"
+}
+
+function add_error(message)
+  errors[#errors + 1] = message
+end
+
+function write_status_file(status)
+  local fd = io.open(status_tmp, "w")
+  for k,v in pairs(status) do
+    if k ~= "body" then
+      fd:write(k .. ": " .. v .. "\n")
+    end
+  end
+  if status.body then
+    fd:write("\n" .. status.body .. "\n")
+  end
+  fd:close()
+  os.execute("mv " .. status_tmp .. " " .. status_file)
+end
+
+function log_out(format, ...)
+  -- print(string.format("LOG: " .. format, ...))
+end
+
+function mkpath(path, file)
+  return string.format("%s/%s/%s", path, string.sub(file, 1, 1), file)
+end
+
+function has_video_stream(source_path, hash)
+  local filename = mkpath(source_path, hash)
+  local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
+  -- print(command)
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local has_video = false
+
+  while line do
+    -- log[#log+1] = line
+
+    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+
+    if streamtype == "Video" then
+      has_video = true
+    end
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  return has_video
+end
+
+function find_best_streams(source_path, hash)
+  local filename = mkpath(source_path, hash)
+  local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
+  -- print(command)
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local video_max_bitrate
+  local video_max_bitrate_stream
+  local video_max_bitrate_size
+  local audio_max_bitrate
+  local audio_max_bitrate_stream
+  local audio_codecs
+  local audio_channels
+
+  while line do
+    -- log[#log+1] = line
+
+    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+
+    if streamtype == "Audio" then
+      local stream, codecs, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
+      if channels == "channels" then
+        channels = hertz
+        hertz = nil
+      end
+      if addition ~= nil then
+        channels = channels.." "..sample_format
+        sample_format = bitrate
+        bitrate = addition
+        addition = ''
+      end
+      log_out("audio: detected stream: %s", stream)
+      if codecs == nil then
+        add_error("The audio input stream uses an unknown codec")
+        codecs = {}
+      end
+      if audio_max_bitrate_stream == nil then
+        -- 1) When the bitrate field is missing, the target bitrate will be nil. This is not
+        --    a problem for single stream containers as the default bitrate will be used.
+        -- 2) When all streams lack a bitrate, we cannot choose the best stream. In this case
+        --    the last stream in the container will be transcoded.
+        log_out("audio: initial stream found %s @ %s kbps", stream, bitrate or "*** NIL ***")
+        audio_max_bitrate = tonumber(bitrate)
+        audio_max_bitrate_stream = stream
+      elseif tonumber(bitrate) > audio_max_bitrate then
+        log_out("audio: better stream found %s @ %s kbps", stream, bitrate)
+        audio_max_bitrate = tonumber(bitrate)
+        audio_max_bitrate_stream = stream
+      else
+        log_out("audio: not interested in stream %s @ %s kbps", stream, bitrate)
+      end
+      audio_codecs = codecs
+      audio_channels = channels
+    elseif streamtype == "Video" then
+      local stream, codecs, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
+      if bitrate == nil or bitrate == 'unknown' then
+        bitrate = br2
+      end
+      log_out("video: detected stream: %s", stream)
+      if video_max_bitrate_stream == nil then
+        log_out("video: initial stream found %s @ %s kbps", stream, bitrate)
+        video_max_bitrate = tonumber(bitrate)
+        video_max_bitrate_stream = stream
+        video_max_bitrate_size = size
+      elseif bitrate ~= nil and tonumber(bitrate) > video_max_bitrate then
+        log_out("video: better stream found %s @ %s kbps", stream, bitrate)
+        video_max_bitrate = tonumber(bitrate)
+        video_max_bitrate_stream = stream
+        video_max_bitrate_size = size
+      else
+        log_out("video: not interested in stream %s @ %s kbps", stream, bitrate)
+      end
+    end
+
+    -- enumerate errors and warnings
+    if string.match(line, "could not find codec parameters") then
+      add_error("Could not find codec parameters. " ..
+                "This is most likely a problem with the encoding of the original media.")
+    end
+
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  if audio_max_bitrate_stream == nil then
+    audio_max_bitrate_stream = "none"
+  end
+  if video_max_bitrate_stream == nil then
+    video_max_bitrate_stream = "none"
+  end
+  if video_max_bitrate_size == nil then
+    video_max_bitrate_size = "none"
+  end
+  log_out("Best video: %s, best audio: %s", video_max_bitrate_stream, audio_max_bitrate_stream)
+  return video_max_bitrate_stream, audio_max_bitrate_stream, video_max_bitrate_size, audio_codecs, audio_channels
+end
+
+function transcode(source_path, destination_path, hash, dst_ext, params, pass, tmp_dir)
+
+  local audio_ext = "audio"
+  local cd_command = ""
+  local audio_aac_zero = false
+
+  -- detect the best video audio stream
+  local video_stream, audio_stream, video_size, audio_codecs, audio_channels = find_best_streams(source_path, hash)
+
+  -- Fix aac problems.
+  if dst_ext ~= "jpeg" and audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
+    if audio_channels == '0' then
+      -- Fix aac / 0 channel problem.
+
+      audio_aac_zero = true
+
+      local command =
+        string.format(cd_command ..
+                      "faad -o %s/%s.%s %s/%s/%s 2>&1 || " ..
+                      "echo 'Error: faad returned a non-zero exit code:' $? &",
+                      destination_path, hash, audio_ext,
+                      source_path, string.sub(hash, 1, 1), hash)
+      local fd = io.popen(command, "r")
+      local line = fd:read("*l")
+      while line do
+        print(line)
+        line = fd:read("*l")
+      end
+      fd:close()
+      print(command)
+
+    elseif audio_channels == '5.1' then
+      -- Fix aac / 5.1 channel problem.
+      local new_params = ""
+      -- Trim params
+      params = (string.gsub(params, "^%s*(.-)%s*$", "%1"))
+      for token in string.gmatch(params, "[^-]+") do
+        if string.sub(token, 0, 3) ~= 'ac ' and string.sub(token, 0, 3) ~= 'ar ' then
+          new_params = new_params .. "-" .. token
+        end
+      end
+      params = new_params
+    end
+  end
+
+  -- When we use 2 pass encoding, and we are in the 1st phase, we don't use audio stream.
+  if pass == 1 then
+    audio_stream = "none"
+  end
+
+  local duration = 0
+
+  local second_input = ""
+  local precommand = ""
+  local jpghelper = ""
+  if dst_ext == "jpeg" then
+    jpghelper = "-%03d"
+    if video_stream ~= "none" then
+      precommand = string.format("-map %s", video_stream)
+    end
+  else
+    if video_stream ~= "none" and audio_stream ~= "none" then
+      if audio_aac_zero then
+        second_input = string.format("-i %s", destination_path .. "/" .. hash .. "." .. audio_ext)
+        precommand = string.format("-map %s -map 1.0", video_stream)
+      else
+        precommand = string.format("-map %s -map %s", video_stream, audio_stream)
+      end
+    elseif video_stream ~= "none" then
+      precommand = string.format("-map %s -an", video_stream)
+    elseif audio_stream ~= "none" then
+      if audio_aac_zero then
+        second_input = string.format("-i %s", destination_path .. "/" .. hash .. "." .. audio_ext)
+        precommand = "-vn -map 1.0"
+      else
+        precommand = string.format("-map %s -vn", audio_stream)
+      end
+    end
+  end
+
+  -- Go to the temporary directory and run the ffmpeg.
+  if pass ~= 0 then
+    cd_command = "cd " .. destination_path .. "/" .. tmp_dir .. "; "
+  end
+  local command =
+    string.format(cd_command ..
+                  "ffmpeg -i %s/%s/%s %s %s %s -y %s/%s.%s 2>&1 || " ..
+                  "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
+                  source_path, string.sub(hash, 1, 1), hash,
+                  second_input, params, precommand,
+                  destination_path, hash..jpghelper, dst_ext)
+  -- -%03d see sites/all/modules/vpx_shared/vpx_shared_defines.php VPX_STILL_EXTENSION constant too,
+  -- if you want to change this, you have to do it on both place
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local log = {}
+  local output_seen = false
+  print(command)
+
+  while line do
+    log[#log+1] = line
+
+    if string.match(line, "^Output #0") then
+      output_seen = true
+    end
+
+    local patt = string.match(line, "Duration: (.-),")
+    if patt then
+      local match_h, match_m, match_s = string.match(patt, "(%d+):(%d+):(.*)")
+      local h, m, s = tonumber(match_h), tonumber(match_m), tonumber(match_s)
+      if h and m and s then
+        duration = h * 3600 + m * 60 + s
+      else
+        duration = 1
+      end
+    end
+
+    local frame = string.match(line, "^frame=.-time=(.-) bitrate")
+    if frame and duration then
+      local progress = frame / duration
+      if pass >= 1 then
+        progress = progress / 2
+        -- Check the value.
+        if progress > 0.5 then
+          progress = 0.5
+        end
+      end
+      if pass >= 2 then
+        progress = progress + 0.5
+      end
+      -- Check the value.
+      if progress > 1 then
+        progress = 1
+      end
+      write_status_file({ Status = "transcoding",
+                          Progress = string.format("%.3f", progress)
+                        })
+    end
+
+    for _,marker in pairs(error_markers) do
+      local error = string.match(line, marker)
+      if error then
+        table.insert(errors, error)
+      end
+    end
+
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  -- Remove temporary audio file
+  if audio_aac_zero then
+    command = "rm " .. destination_path .. "/" .. hash .. "." .. audio_ext
+    local fd = io.popen(command, "r")
+    fd:close()
+    print(command)
+  end
+
+
+  if next(errors) ~= nil then
+    fd = io.open(status_file, "w")
+    fd:write("Status: error\n")
+    for _,e in pairs(errors) do
+      fd:write("Errors: " .. e .. "\n")
+    end
+    fd:write("\n" .. table.concat(log, "\n") .. "\n")
+    fd:close()
+  else
+    local progress = 1
+    if pass == 1 then
+      progress = 0.5
+      write_status_file({ Status = "transcoding",
+                          Progress = string.format("%.3f", progress)
+                        })
+    else
+      write_status_file({ Status = "done",
+                          Progress = string.format("%.3f", progress),
+                          Errors = "none",
+                          Warnings = "none",
+                          body = table.concat(log, "\n") })
+    end
+  end
+end
+
+-- Run a command with shell.
+function command(command)
+  local fd = io.popen(command, "r")
+  fd:close()
+end
+
+local source_path = arg[1]
+local hash = arg[2]
+local dst_ext = arg[3] or "avi"
+local params = arg[4] or ""
+
+if source_path == nil or hash == nil then
+  print("Usage: vpx-transcode BASE_PATH HASH [extension] [\"ffmpeg parameters\"]")
+  os.exit(1)
+end
+
+local destination_path = source_path .. "/transcode"
+
+-- Temporary directory for 2 pass encoding.
+local tmp_dir = hash .. "_dir"
+
+status_file = destination_path .. "/" .. hash .. ".status"
+status_tmp = destination_path .. "/" .. hash .. ".status.tmp"
+
+-- Example for normal encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
+
+-- Example for 2 pass encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data jNAZadDlRdTbpnSPFhKlH5AP mp4 '-b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -vpre baseline -s 640x480 -vf 'pad=640 480 0 0 black' '
+
+local pass_start, pass_end = string.find(params, "-pass 2")
+local vcodec = "-vcodec libx264"
+local vcodec_start, vcodec_end = string.find(params, vcodec)
+
+-- Is it a 2 pass encoding with video stream?
+if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end ~= nil and has_video_stream(source_path, hash) then
+  local fd
+
+  -- 2 pass h264 encoding.
+
+  -- Prepare the transcoding parameters.
+  local params_start = string.sub(params, 1, pass_start - 1)
+  local params_end = string.sub(params, pass_end + 1, string.len(params))
+
+  local params_pass1 = params_start .. "-an -pass 1 -passlogfile " .. hash .. params_end .. " -threads 0 "
+  local params_pass2 = params_start .. "-pass 2 -passlogfile " .. hash .. params_end .. " -threads 0 "
+
+  vpre_start, vpre_end = string.find(params_pass1, "-vpre ")
+  if vpre_start ~= nil and vpre_end ~= nil then
+    vpre_start, vpre_end = string.find(params_pass1, " ", vpre_end + 1)
+    params_start = string.sub(params_pass1, 1, vpre_end - 1)
+    params_end = string.sub(params_pass1, vpre_end, string.len(params_pass1))
+    params_pass1 = params_start .. "_firstpass" .. params_end
+  else
+    params_pass1 = params_pass1 .. " -vpre slower_firstpass"
+    params_pass2 = params_pass2 .. " -vpre slower"
+  end
+
+  -- Temporary directory for dealing with the temporary files.
+  command("cd " .. destination_path .. "; mkdir " .. tmp_dir)
+
+  -- Example: ffmpeg -i /srv/mediamosa2/data/j/jNAZadDlRdTbpnSPFhKlH5AP  -b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower_firstpass -an -pass 1 -passlogfile jNAZadDlRdTbpnSPFhKlH5AP -vpre baseline -s 640x480 -vf pad=640 -threads 0  -map 0.1 -an -y /srv/mediamosa2/data/transcode/jNAZadDlRdTbpnSPFhKlH5AP.mp4
+
+  -- 1st phase.
+  transcode(source_path, destination_path, hash, dst_ext, params_pass1, 1, tmp_dir)
+
+  -- Example: ffmpeg -i /srv/mediamosa2/data/j/jNAZadDlRdTbpnSPFhKlH5AP  -b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -passlogfile jNAZadDlRdTbpnSPFhKlH5AP -vpre baseline -s 640x480 -vf pad=640 -threads 0  -map 0.1 -map 0.0 -y /srv/mediamosa2/data/transcode/jNAZadDlRdTbpnSPFhKlH5AP.mp4
+
+  -- Second phase.
+  transcode(source_path, destination_path, hash, dst_ext, params_pass2, 2, tmp_dir)
+
+  -- Remove tmp files.
+  -- ffmpeg2pass-0.log OR hash-N.log
+  -- x264_2pass.log
+  -- x264_2pass.log.mbtree
+  command("cd " .. destination_path .. "; rm " .. tmp_dir .. " -R")
+else
+  -- Normal (1 pass) encoding.
+  transcode(source_path, destination_path, hash, dst_ext, params, 0, tmp_dir)
+end

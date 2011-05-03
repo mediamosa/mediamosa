@@ -1,0 +1,12 @@
+; $Id$
+
+name = "Configuration status view page"
+description = "If you enable this module then the MediaMosa status page will be extended with configuration settings."
+package = "MediaMosa - Maintenance"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance_status

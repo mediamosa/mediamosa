@@ -1,0 +1,140 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for metadata property.
+  */
+class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - metadata property tests',
+      'description' => 'Testing asset metadata property related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset metadata property, see: ticket 669.
+  function testMetadataPropery() {
+
+    //
+    // Create a new asset property definition.
+    //
+
+    // Property.
+    $definition = mediamosa_db::uuid(mt_rand(1, 9999));
+    $definition = "testtag_" . drupal_substr($definition, 0, 10); // May not start with a number.
+
+    // Type.
+    $type = 'char';
+
+    // Create the metadata definition.
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $a_xml = mediamosa_lib::responsexml2array($response);
+
+    // Check if the mediamosa_asset_metadata_property has the good values.
+    // Name.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['prop_name'] == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => $a_xml['items']['item'][0]['prop_name']))
+    );
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['type'] == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => $a_xml['items']['item'][0]['type']))
+    );
+
+    //
+    // Create a new asset property.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Value.
+    $value = mediamosa_db::uuid(mt_rand(1, 9999));
+
+    // Create asset metadata.
+    $a_parameters = array(
+      $definition => $value,
+    );
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+    $a_xml = mediamosa_lib::responsexml2array($response);
+
+    // Check the asset property values.
+    $this->assertTrue(
+      $a_xml['items']['item'][0][$definition] == $value,
+      t('Sent and get property has the same value (@sent = @get).', array('@sent' => $value, '@get' => $a_xml['items']['item'][0][$definition]))
+    );
+
+    //
+    // Delete asset property definition without delete=cascade.
+    //
+
+    // Delete the asset property without delete=cascade
+    $this->deleteAssetMetadataDefinition($definition, NULL, array(), array(mediamosa_error::ERRORCODE_METADATA_DEFINITION_NOT_EMPTY));
+
+    // Check if the asset property still in the database
+    $a_parameters = array(
+      'name' => $definition,
+    );
+    $response = $this->getMetadataDefinitions($a_parameters);
+
+    // Check the asset property values.
+    $this->assertTrue(
+      $response['name'] == $definition,
+      t('Sent and get property has the same value (@sent = @get).', array('@sent' => $definition, '@get' => $response['name']))
+    );
+
+    //
+    // Delete asset property definition with delete=cascade.
+    //
+
+    // Delete the asset property with delete=cascade
+    $this->deleteAssetMetadataDefinition($definition, 'cascade');
+
+    // Check if the asset property still in the database
+    $a_parameters = array(
+      'name' => $definition,
+    );
+    $response = $this->getMetadataDefinitions($a_parameters, array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Check the asset property values.
+    $this->assertFalse(
+      isset($response['name']),
+      t("After we deleted the asset property we don't have 'name'.")
+    );
+
+  }
+
+}

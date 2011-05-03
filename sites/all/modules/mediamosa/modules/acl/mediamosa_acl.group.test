@@ -1,0 +1,218 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for ACL groups.
+  */
+class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Groups',
+      'description' => 'Testing the ACL module, groups.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Remake of test #668
+  function testAcl_Groups() {
+
+    // Make a new autorization group.
+
+    // Group name.
+    $groupname = '@' . mediamosa_db::uuid(rand(1, 9999)) . '.group';
+
+    // Group type.
+    $group_type = mediamosa_acl::ACL_NAME_TYPE_REALM;
+
+    // Create acl group.
+    $this->createAclGroup($groupname, $group_type);
+
+    // Get the acl group.
+    $a_acl_group = $this->getAclGroup($groupname);
+
+    // Output in 3.0 is different.
+    if (mediamosa::variable_get('mediamosa_version_aut', FALSE)) {
+      $group_type = 'aut_group_type';
+      $group_name = 'aut_group_name';
+    }
+    else {
+      $group_type = mediamosa_acl_group_db::ACL_GROUP_TYPE;
+      $group_name = mediamosa_acl_group_db::ACL_GROUP_NAME;
+    }
+
+    // Check the result.
+    $this->assertTrue(
+      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM,
+      t('Acl group type: REALM')
+    );
+    $this->assertTrue(
+      $a_acl_group[$group_name] == $groupname,
+      t('Acl group name has the good value')
+    );
+
+    // Update the acl group with a new name.
+
+    // Group name.
+    $new_groupname = '@' . mediamosa_db::uuid(rand(1, 9999)) . '_new.group';
+
+    // Update the acl group.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_group_update::NEW_GROUPNAME => $new_groupname,
+      mediamosa_rest_call_acl_group_update::GROUP_TYPE => mediamosa_acl::ACL_NAME_TYPE_DOMAIN,
+    );
+    $response = $this->updateAutGroup($groupname, $a_parameters);
+
+    // Get the acl group.
+    $a_acl_group = $this->getAclGroup($new_groupname);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN,
+      t("Aut group type: REALM")
+    );
+    $this->assertTrue(
+      $a_acl_group[$group_name] == $new_groupname,
+      t("Aut group name has the good value")
+    );
+
+    // Check hostname related functions.
+
+    // Change the group name to the new one.
+    $groupname = $new_groupname;
+
+    // Set new hostnames.
+    $hostnames = array(
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+      mediamosa_db::uuid(rand(1, 9999)),
+    );
+
+    // Limit and offset.
+    $limit = 5;
+    $offset = 0;
+
+    // Set a single hostname.
+    $single_hostname = $hostnames[0];
+
+    // Create acl hostname.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $single_hostname,
+    );
+    $this->createAclHostname($groupname, array(), $a_parameters);
+
+    // Get the acl hostname.
+    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['hostname'] == $single_hostname,
+      t("Hostname has the good value: @value", array('@value' => $a_xml['items']['item'][0]['hostname']))
+    );
+
+    // Add multiple hostnames to an acl group.
+
+    // Create acl hostname.
+    $this->createAclHostname($groupname, $hostnames);
+
+    // Get the acl hostname.
+    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == count($hostnames),
+      t("Hostname has @count values", array('@count' => count($hostnames)))
+    );
+    foreach ($a_xml['items']['item'] as $host) {
+      $this->assertTrue(
+        in_array($host['hostname'], $hostnames),
+        t("Hostname has the good value: @value", array('@value' => $host['hostname']))
+      );
+    }
+
+    // Try to throw a group which is linked to hostnames.
+    // Delete an acl group.
+    $this->deleteAclGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
+
+    // Delete an acl hostname.
+
+    // Delete an acl hostname.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $single_hostname,
+    );
+    $this->deleteAclHostname($groupname, array(), $a_parameters);
+
+    // Get the acl hostname.
+    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == count($hostnames) - 1,
+      t("Hostname has @count values", array('@count' => count($hostnames) - 1))
+    );
+
+    // Deleta acl hostnames.
+
+    $delete_hostnames = $hostnames;
+    $not_deleted = $delete_hostnames[count($delete_hostnames) - 1];
+    unset($delete_hostnames[count($delete_hostnames) - 1]); // all but one
+
+    // Delete an acl hostname.
+    $this->deleteAclHostname($groupname, $delete_hostnames);
+
+    // Get the acl hostname.
+    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+
+    // Check the result.
+    $this->assertTrue(
+      count($a_xml['items']['item']) == 1,
+      t("Hostname has @count values", array('@count' => 1))
+    );
+    foreach ($a_xml['items']['item'] as $host) {
+      $this->assertTrue(
+        $host['hostname'] == $not_deleted,
+        t("Hostname has the good value: @value", array('@value' => $host['hostname']))
+      );
+    }
+
+    // Delete the acl group with delete = cascade.
+
+    // Delete an acl group.
+    $a_parameters = array(
+      mediamosa_rest_call_acl_group_delete::DELETE => 'cascade',
+    );
+    $this->deleteAclGroup($groupname, $a_parameters);
+
+    // Get the acl hostname.
+    $a_xml = $this->getAclHostname($groupname, $limit, $offset, array(), array(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND));
+  }
+}

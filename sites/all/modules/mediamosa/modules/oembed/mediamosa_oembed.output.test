@@ -1,0 +1,68 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for oEmbed output formats.
+  */
+class MediaMosaOEmbedOutputTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ----------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'oEmbed output test',
+      'description' => 'Test oEmbed output formats.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OEMBED,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testOEmbedOutput() {
+    // Enable oEmbed module.
+    module_enable(array('mediamosa_oembed'), TRUE);
+
+    // Upload test file.
+    $upload = $this->uploadTestFile();
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Get the mediafile with /services/oembed [GET] call.
+    $parameters = array(
+      mediamosa_rest_call_oembed_get::FORMAT => mediamosa_rest_call_oembed_get::FORMAT_XML,
+    );
+    $oembed = $this->getOEmbed($mediafile_id, $parameters);
+
+    // Check response.
+    // Dump the response.
+    $this->verbose(print_r($oembed, TRUE));
+    // Check.
+    $this->assertTrue(isset($oembed['type']), 'oEmbed has the "type" element.');
+
+    // TODO: Test with empty mediafile.
+    // TODO: Test with protected mediafile.
+  }
+}

@@ -1,0 +1,284 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for mediafile metadata property.
+  */
+class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - metadata property tests',
+      'description' => 'Testing asset mediafile metadata property related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  /**
+   * Property test.
+   * @param prop_type
+   *  The type of the property
+   * @param prop_id_allowed
+   *  A number
+   * @param allowed_properties
+   *  An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
+   * @param allowed_values
+   *  Array with the allowed properties
+   */
+  private function propertyTest($prop_type, &$allowed_properties) {
+    $prop_name = mediamosa_db::uuid(rand(1, 1000));
+    $prop_id = $this->createMediafileMetadataProperty($prop_name, $prop_type, $allowed_properties);
+
+    return array('prop_name' => $prop_name, 'type' => $prop_type, 'prop_id' => $prop_id);
+  }
+
+  /**
+   * Metadata test.
+   * @param mediafile_id
+   * @param value
+   *  Value of the metadata
+   * @param prop
+   *  An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
+   * @param allowed_values
+   *  Array with the allowed values
+   */
+  private function metadataTest($mediafile_id, $value, $prop, &$allowed_values) {
+    $this->createMediafileMetadata($mediafile_id, $value, $prop['prop_name'], $prop['type']);
+
+    // Check the metadatas for this mediafile.
+    $allowed_values[$prop['prop_id']] = array(
+      'value' => $value,
+      'name' => $prop['prop_name'],
+      'type' => $prop['type'],
+    );
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id, $allowed_values),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values, TRUE)))
+    );
+  }
+
+  // Testing asset mediafile delete, see: ticket 290.
+  function testMediafileMetadataProperty() {
+
+    $prop_type_datetime = mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME;
+    $prop_type_int = mediamosa_asset_mediafile_metadata_property_db::TYPE_INT;
+    $prop_type_char = mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR;
+
+    //
+    // Mediafile technical metadata property tests.
+    //
+
+    $allowed_properties = array();
+
+    // Create / get the (first) property: integer.
+    $prop_1 = $this->propertyTest($prop_type_int, $allowed_properties);
+
+    // Create a second property: string.
+    $prop_2 = $this->propertyTest($prop_type_char, $allowed_properties);
+
+    // Create a third property: datetime.
+    $prop_3 = $this->propertyTest($prop_type_datetime, $allowed_properties);
+
+    // Create a fourth property: string.
+    $prop_4 = $this->propertyTest($prop_type_char, $allowed_properties);
+
+    //
+    // Mediafile technical metadata tests.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_create_mediafile::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+    );
+    $mediafile_id_1 = $this->createMediafile($asset_id, $a_parameters);
+
+    // Create an another mediafile.
+    $mediafile_id_2 = $this->createMediafile($asset_id, $a_parameters);
+
+
+    $allowed_values_1 = array();
+    $allowed_values_2 = array();
+
+    // Create a string metadata for the first mediafile.
+    $value_1_1 = mediamosa_db::uuid(rand(1, 1000));
+    $this->metadataTest($mediafile_id_1, $value_1_1, $prop_2, $allowed_values_1);
+
+    // Create an integer metadata for the first mediafile.
+    $value_1_2 = rand(1, 1000);
+    $this->metadataTest($mediafile_id_1, $value_1_2, $prop_1, $allowed_values_1);
+
+    // Create a datetime metadata for the first mediafile.
+    $value_1_3 = date('Y-m-d H:i:s');
+    $this->metadataTest($mediafile_id_1, $value_1_3, $prop_3, $allowed_values_1);
+
+    // Create a string metadata for the second mediafile.
+    $value_2_1 = mediamosa_db::uuid(rand(1, 1000));
+    $this->metadataTest($mediafile_id_2, $value_2_1, $prop_2, $allowed_values_2);
+
+    // Check the metadatas for the first mediafile.
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+
+    // Create an another string metadata for the first mediafile with the fourth property.
+    $value_1_4 = mediamosa_db::uuid(rand(1, 1000));
+    $this->metadataTest($mediafile_id_1, $value_1_4, $prop_4, $allowed_values_1);
+
+    // Update the integer metadata for the first mediafile.
+    $value_1_2 = rand(1, 1000);
+    $this->metadataTest($mediafile_id_1, $value_1_2, $prop_1, $allowed_values_1);
+
+
+    // Delete the first string metadata.
+    $this->deleteMediafileMetadata($mediafile_id_1, $prop_2['prop_name'], $prop_2['type']);
+    unset($allowed_values_1[$prop_2['prop_id']]);
+
+    // Check the metadatas for this mediafile.
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+
+    // Delete the integer metadata.
+    $this->deleteMediafileMetadata($mediafile_id_1, $prop_1['prop_name'], $prop_1['type']);
+    unset($allowed_values_1[$prop_1['prop_id']]);
+
+    // Check the metadatas for this mediafile.
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+
+    // Delete all of the metadatas for the first mediafile.
+    $this->deleteAllMediafileMetadata($mediafile_id_1);
+    $allowed_values_1 = array();
+
+    // Check the metadatas for this mediafile.
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+
+    // Check the metadatas for the second mediafile.
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_2, $allowed_values_2),
+      t("Metadata 2 table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_2, TRUE)))
+    );
+
+
+    // Create multiple metadata for the first mediafile.
+    $value_1_1 = mediamosa_db::uuid(rand(1, 1000));
+    $value_1_2 = rand(1, 1000);
+    $metadatas = array(
+      array(
+        'value' => $value_1_1,
+        'prop_name' => $prop_2['prop_name'],
+        'type' => $prop_2['type'],
+      ),
+      array(
+        'value' => $value_1_2,
+        'prop_name' => $prop_1['prop_name'],
+        'type' => $prop_1['type'],
+      ),
+    );
+    $this-> createMediafileMultipleMetadata($mediafile_id_1, $metadatas);
+
+    // Check the metadatas for this mediafile.
+    $allowed_values_1[$prop_2['prop_id']] = array(
+      'value' => $value_1_1,
+      'name' => $prop_2['prop_name'],
+      'type' => $prop_2['type'],
+    );
+    $allowed_values_1[$prop_1['prop_id']] = array(
+      'value' => $value_1_2,
+      'name' => $prop_1['prop_name'],
+      'type' => $prop_1['type'],
+    );
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values after multiple creation (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+    // Check with an invalid metadata.
+    // This create the new metadata property, insted of fails.
+    //$this->createMediafileMetadata($mediafile_id_1, mediamosa_db::uuid(rand(1, 1000)), mediamosa_db::uuid(rand(1, 1000)), mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+    // Check with an invalid mediafile.
+    // This drops an exception. This is the good behaviour.
+    try {
+      $this->createMediafileMetadata(mediamosa_db::uuid(rand(1, 1000)), mediamosa_db::uuid(rand(1, 1000)), $prop_2['prop_name'], $prop_2['type']);
+    }
+    catch (mediamosa_exception_error $e) {
+    }
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values after creating metadta for invalid mediafile (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+    // Check with an invalid value (int type with char value, converted to 0).
+    $this->createMediafileMetadata($mediafile_id_1, 'this_is_char_not_int', $prop_1['prop_name'], $prop_1['type']);
+    $allowed_values_1[$prop_1['prop_id']] = array(
+      'value' => 0,
+      'name' => $prop_1['prop_name'],
+      'type' => $prop_1['type'],
+    );
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values after creating integer with char value (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+
+    // Check with an invalid type.
+    // This drops an exception. This is the good behaviour.
+    try {
+      $this->createMediafileMetadata($mediafile_id_1, mediamosa_db::uuid(rand(1, 1000)), mediamosa_db::uuid(rand(1, 1000)), 'not_existing_type');
+    }
+    catch (mediamosa_exception_program_error $e) {
+    }
+    $this->assertTrue(
+      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
+      t("Metadata table has the good values after creating property with invalid type (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+    );
+  }
+}

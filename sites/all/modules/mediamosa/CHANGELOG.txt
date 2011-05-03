@@ -1,0 +1,1083 @@
+// $Id: 
+
+START CHANGELOG:
+
+Known issues;
+- Servers (processor, download, upload etc) that are installed on a subdir are
+  not correctly retrieved on the server status page. (See ticket #367).
+- TODO: Tool params should validate the values, when the user save the node:
+  * Nice parameter is unique.
+  * Tool parameter is unique.
+  * Allowed value is a ";" separated string.
+  * Default value is exists in the allowed values.
+
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
+
+TODO: (v3.0)
+- OAI delete support (for solr).
+
+- Hotfix for .asx and .smil files (apache);
+<IfModule mod_alias.c>
+  AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
+</IfModule>
+
+
+MediaMosa 3.0 (build 1698)
+--------------------------
+- oAuth development (See ticket #10).
+- Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Watermarking stills (See ticket #82).
+- Users can now be in more than one (quota) group (See ticket #223).
+- oEmbed provider functionality (See ticket #413).
+  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
+- oAuth can now be used to indentify your client application (See tickets #462,
+  #463, #464).
+- Retranscode option in admin (See ticket #467).
+- Granted flag not correct with non-original master slaved mediafiles fix. 
+  (See ticket #432).  
+- Play request with "tag" development (See ticket #216).
+- Parameter name "acl_group_id/aut_group_id" added in /asset/{asset_id}/play, 
+  and "group_id" is marked as depricated (See ticket #238).
+- Variable for custom control bar height in objectcode (See ticket #326).
+- Asset, assets and asset/$asset_id GET REST call show the collection data
+  in better format (See ticket #332).
+- REST call preview_profile_id is now depricated, use 
+  /transcode/profile/default REST call instead (See ticket #337).
+- Using is_app_admin to view other client apps jobs is no longer possible (See
+  ticket #357).
+- Optimized /assets REST call (See ticket #360).
+- Added REST call 'app/quota' for retrieving quota information of the client
+  app (See ticket #366).
+- Server URI is separated to URI and path (See ticket #367).
+- Image style development using the response object. (See ticket #371).
+- Supplements will no longer trim input without warning. Also the limit of the
+  supplement can be increased on the configuration page (See ticket #377).
+- Fixed divided by zero fatal (See ticket #379).
+- Re-analyse and re-transcode added to admin asset/mediafile page (See ticket 
+  #391).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
+- Video without bitrate fix (See ticket #394).
+- ACL problem when using replace fix (See ticket #503).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+
+Other changes (not ticket related).
+- Favicon.ico was added to rubik theme.
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
+- Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+  Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+- SDK code was syncronized with the SDK repository (6 and 7).
+- Streaming ticket table clean up development (See ticket #103).
+- Simpletest REST call development.
+- Work around for still_type = scene, if there isn't video duration.
+- Add install hook for mediamosa_app_dbus to migrate to new DBUS 
+  module.
+- Better text for FRAMETIME parameter.
+- FFMpeg 2 pass encoding fix.
+- Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
+- Fixed problem in unit test where profiles where missing and was needed.
+- Fixed invalid error in perminanent still link unit test.
+- Fixed problem on rewrite xml output where errors in header would stop script.
+- Changed the description in the profile by removing all line feeds and unused
+  spaces.
+- Errors on the Drupal status page will now give error on MediaMosa status page.
+- All files that contain class(es) are now renamed to include '.class.inc'.
+- Filenames or directories with 'still' usage, are renamed to 'still'.
+- AUT modules and files are now renamed to ACL.
+- Some settings in configure have been merged into the section 'Miscellaneous'.
+- To view and edit the Internal password you now need to have the role 
+  'Administer MediaMosa'.
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
+- Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+  Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- SDK code was syncronized with the SDK repository (6 and 7).
+- Streaming ticket table clean up development (See ticket #103).
+- Work around for still_type = scene, if there isn't video duration.
+- Added install hook for mediamosa_app_dbus to migrate to new DBUS module.
+- Better text for FRAMETIME parameter.
+- FFMpeg 2 pass encoding fix.
+- Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
+- Added the 'mediamosa_version' variable to force the output to return in the
+  provide the output in given version. Overrides all other settings, including
+  the client application setting.
+- MediaMosa developer has been extended to include the version in which the REST
+  call needs to return its format in. By selecting 2.3.0, the REST call will
+  return its output in 2.3.0 mode.
+- The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
+- The REST call documentation now shows alias usage for variables. Is mainly
+  for the new acl_* renames from aut_*.
+- All aut_* input variables are now depricated and replaced by acl_* versions.
+  The aut_* input variables will still work though.
+- Added lower level of debugging to include the <debug> array in the 3.0 output.
+- Added global setting to force REST call output always to output in that
+  version of MediaMosa.
+- Rewrote the output using domdocument into own code. Needed because domdocument
+  will throw exceptions when it can't verify the namespace uri used in the
+  output.
+
+MediaMosa 2.3.9 (build 1379)
+----------------------------
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+
+Other changes (not ticket related)
+- Tests that are not allowed to run by unittest class method 
+  mediamosa_run_enabled() will now remove its results from the database, so
+  these can not be viewed and will not show possible failure in listing(s) and
+  simpletest REST calls.
+- Fixed problems during update when upgrading from MediaMosa version 2.2.7.
+- Added extended test for granted flag, to test new situation with 2 or more
+  original mediafiles. Also added for Solr.
+
+
+MediaMosa 2.3.8 (build 1361)
+----------------------------
+- Metadata can be set to hidden, which will prevent the metadata to be returned
+  in the asset output or other REST calls (See ticket #504).
+- Added support for play and upload of PDF files (See ticket #505).
+
+Other changes (not ticket related)
+- Work around for still_type = scene, if there isn't video duration.
+- Fixed bug where asset would be queued when sorl was not enabled as module and
+  would try and fail to queue the asset.
+- Added support for nginx/lighttpd webserver uploadprogress.
+- Frametime for still upload development. 
+- Lua script fix for the new ffmpeg version.
+- Fixed speed bug in asset call when metadata size was bigger than 64k.
+- Tool parameters in transcode profiles can now be either 'Select' or 
+  'Checkbox'.
+- Fixed integrity check to match case sensitive with types.
+- Fixed PHP 5.3 bug when calling play proxy REST call.
+- Fixed integrity check to match the ENUM upper case names.
+- Updated MediaMosa connector to latest.
+- Fixed Job CQL test bug where dates where not converted to APP timezone.
+- Fixed Solr unit test to be excluded during automatic test runs when Solr 
+  module is not enabled.
+- Fixed login and password recovery for 'simple apache install'.
+- rebuild the example transcoding profiles; webm, ogg and mobile
+  profiles added.
+- Install profile does not install the windows transcoding tool.
+
+
+MediaMosa 2.3.7 (build 1301)
+----------------------------
+- FFMpeg 2 pass encoding fix  (See ticket #502).
+- Doesn't do 2 pass encoding on audio file (See ticket #501).
+- ACL did not correctly set its protected flags when using parameter 'replace'
+  with value 'FALSE' (See ticket #503).
+- CQL will now correctly search with dates, by allowing the dates to be in the
+  timezone of the client (See ticket #236).
+
+Other changes (not ticket related)
+
+MediaMosa 2.3.6 (build 1285)
+----------------------------
+- Streaming ticket table clean up development (See ticket #103).
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend (See vpcore ticket #129).
+  
+Other changes (not ticket related)
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend.
+
+MediaMosa 2.3.5 (build 1277)
+----------------------------
+- Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
+  the default url to the still in asset call. (See ticket #456).
+- Fixed bug where invalid char would cause malformed XML (See ticket #446).
+- Fixed LUA for video with 0 audio channels (See vpcore ticket #227).
+
+Other changes (not ticket related).
+- Fixed asset Solr delete, it didn't delete the Solr index correctly. 
+- The /version REST call will now include <build> and <info> tags with data from
+  the current MediaMosa version.
+- Fixed STILL_URI in object code with play proxy call. 
+- Added link to transcode profile in asset viewer under asset browser.
+- Added reference_id to asset/update REST call.
+- Changed robots.txt that it will disallow all crawling.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+
+  
+MediaMosa 2.3.4 (build 1246)
+----------------------------
+- Fixed downloading of files when filename contained URL encoded chars. (See
+  vpcore ticket #219).
+
+Other changes (not ticket related).
+- Fixed some camelcase mistakes in menu items.
+- Fixed log page with Drupal 7 Final.
+- Upgraded to Drupal 7 Final.
+- Cleaned-up unused errorcodes:
+  - ERRORCODE_RETRIEVING_SERVER_JOBLIST (1302)
+  - ERRORCODE_JOB_CANCEL_NOT_ALLOWED (1131)
+  - ERRORCODE_JOB_CREATE_NOT_ALLOWED (1132)
+  - ERRORCODE_RETRIEVING_SERVERLIST (1201)
+  - ERRORCODE_RETRIEVING_AVAILABLE_SERVERLIST (1202)
+  - ERRORCODE_STUB_SERVER_RETRIEVING_JOB_FOR_EXECUTION (1401)
+  - ERRORCODE_FTP_ERROR (1700)
+  - ERRORCODE_ACL_ERROR_AUTHORIZED (1801)
+- Error code description texts have been reviewed and corrected where needed.
+  Installed systems are not updated, only new installs.
+- Solr search on fulltext is now case-insensitive (like MySQL).
+- All other searches, beside database IDs are now case-insensitive (like MySQL).
+- Added auto-queuing when index fails on Solr, so asset will be indexed as soon
+  when Solr is back up.
+- Fixed bug in asset browser where some asset would not show page due to image
+  theme changes in Drupal 7 final.
+- Download filenames are no longer raw-encoded in HTTP header (tested on IE8,
+  FF3.6 and Chrome 6.
+- When Solr is enabled and goes down, MediaMosa will automaticlly switch back to
+  MySQL until Solr is up again.
+- Failed indexes and deletes from Solr index are now queued for later indexing
+  and/or deletion.
+- When during Solr index the asset is not found, any existing index will be
+  removed.
+
+MediaMosa 2.3.3 (build 1216)
+----------------------------
+- Fixed permanent still link (See ticket #291).
+  * Stills that are protected by ACL:
+    - Will now generate a ticket link when access is granted.
+    - Will not generate a link at all when access is denied.
+    - Will now generate a ticket link when access was denied, but is_app_admin
+      was TRUE (allowing access).
+  * Still without ACL will always generate a permanent link which will always
+    be the same (based on the still ID).
+  * Ticket URL has been changed to /still/ticket/[ticket_id] and will be
+    returned when still URL is generated.
+  * /still/[still_id] will always be a permanent still link. But is only allowed
+    when no ACL is set.
+
+Other changes (not ticket related).
+- Downgraded number of exceptions, so those will only end up in watchdog when 
+  debug is set on normal or high.
+- Fixed problem with WLE browsing with Solr enabled; Solr API does not support
+  queries that are longer than 1024 bytes, making the WLE browse with 200 assets
+  to cause problems. Fixed by using POST instead of GET for Solr queries.
+  Solr API needs fixing to use fopen calls instead of file_contents calls. 
+  Maybe time for Drupal 7 version of the API instead of the Google code 
+  version with some good unittesting on the code?
+  Although I'm not sure its the API or Solr thats has the problem with GET 
+  queries.
+
+
+MediaMosa 2.3.2 (build 1210)
+----------------------------
+(no ticket related issues).
+
+Other changes (not ticket related).
+- Fixed output of REST using the correct CSS class, making the REST call result
+  better to read. 
+- Finished version of ACL in Solr.
+- Fixed UTF8 problem during indexing of Solr.
+- Added switch for debugging and logging REST calls.
+- Rewrote update hook for summer/winter time fix.
+- Fixed watchdog problem printing %message instead of message in watchdog. Fix
+  is in current dev. trunk of Drupal 7, but not in current version.
+- Fixed escape bug in CQL, causing havoc on Sorl's queries. SQL didn't have a 
+  problem with it. The bug created escaped values for usage in SQL/Solr. It now
+  correctly returns unescaped value's.
+- Fixed range queries for dates in Solr.
+
+
+MediaMosa 2.3.1 (build 1198)
+----------------------------
+- Streaming server statistics improvements (See ticket #103).
+- Black still generation (See VPCore ticket #212).
+- Installation profile and status page development (See GTD ticket #32).
+- Still creation size is not adjustable fix (See VPCore ticket #214).
+- Modifications installation profile: requirements checking corrected,
+  sample Apache configurations corrected (See ticket #32).
+- Added check for client application presence to the Drupal status page
+  admin/reports/status (See ticket #20).
+- Added transcode link to profile when using asset browser in maintenance (See
+  ticket #33).
+- Analyse mediafiles with hint parameter development (See ticket VPCore #207, 
+  MediaMosa #425).
+- Retranscode mediafiles development (See ticket VPCore 129).
+- UTC / CET date summer-winter time fix (See ticket VPCore 211).
+
+Other changes (not ticket related).
+- Fixed bug in /collection/$coll_id where owner was not changed of collection.
+- Added 'X-MediaMosa-Version' to http header output to indicate call was 
+  processed by MediaMosa.
+- Renamed mediamosa_library to mediamosa_sdk
+- Fixed profile to support beta3 of Drupal 7.
+- Migrated from Drupal alpha6 to beta3.
+- Status page cron bug fix.
+- Scene still orders fix.
+- Still REST call fixes (still_id without mediafile_id).
+- Install profile development: db and user creation just for local.
+- Transcode profile and transcode tool parameters were updated.
+- Removed text about creating client app in installation profile.
+- Moved and splitted up the statistics classes streaming_ticket and file_helper
+  into own files.
+- MediaMosa profile: only administrators can create new accounts. 
+- Removed text about foreign keys on status page and added explain about schema 
+  vs database installation.
+- Fixed bug in /collection/$coll_id where owner was not changed of collection.
+- Rewrote hook_install_tasks_alter to be more compatible with future changes of
+  Drupal.
+- Standard profile made hidden during install. 
+- Enabled mediamosa_tool_ffmpeg and mediamosa_tool_windows in MediaMosa profile.
+- Fixed notice on app form when no tool modules are enabled.
+- Fixed missing login block when logged off (caused by BETA 3 migration).
+- Moved requirements hook from profile to module.
+- Fixed /rest call, limit did not work at all. Provide call with limit = 0 to
+  retrieve all REST calls. Offset parameter worked fine.
+- Pulled mediamosa_developer from core into SDK.
+- Fixed table creation wrapper, add flag not to remove schema descriptions. This
+  fixed the notices on the status page which was caused by the latest Drupal
+  version upgrade.
+- Added install hook to fix changes made on database schema's related to
+  comments.
+- Fixed ticket mec. unit test, was disabled.
+- Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.
+- Fixed minor bug in transcode list REST call where sometimes old item data 
+  would end up in next items.
+- Fixed problem with unittests not running under PHP5.3.
+- Fixed problem when searching on collections and empty collections did not end
+  up in result.
+- Optimized code on /collection calls.
+- Added disable notices in mediamosa profile.
+- Fixed collection unit test to accept empty collections in search result.
+- Fixed scene timestamp where timestamp was stored as string and ended up as 0.
+  String is now cast to integer before storage. Bug and fix reported by J0ris.
+- Fixed play_proxy call; when supplying profile_id with original mediafile ID
+  a play ticket was created to the first original mediafile found instead of
+  the transcoded mediafile of the original that was transcoded with the given 
+  transcode profile ID. Created unit test to reproduce and fix bug. Bug reported
+  by J0ris/MediaMosa.org. (See ticket #442).
+- Renamed 'memo' user to 'mediamosa' user in install profile.
+- Added tiny mediamosa logo to mediamosa version block.
+- Moved mediamosa_requirements() hook to installer file from module file.
+- Fixed minor design problems in mediamosa_requirements().
+- Replaced all 'Mediamosa' texts in texts, comments and code with correct 
+  camelcase usage of 'MediaMosa'. 
+- Added extra logging when internal REST calls are called without matching 
+  password.
+- Fixed default value of the master switch for running automated simpletests.
+  In case where a fresh install and the configuration was still untouched, then
+  the master switch was 'on' instead of default 'off'.
+- Fixed internal calls during Simpletest; internal REST calls where not made
+  inside the scope of the simpletest, resulting the REST call inside the
+  simpletest ending up on the normal database, outside the simpletest. Although
+  it had no serious effect (internal password would never match), but a warning
+  would have been produced in the watchdog on the normal database about internal
+  REST call having an invalid internal password. 
+- Removed the usage of 'mediamosa_status_generate' and replaced it with normal
+  functions with _ as prefix. Was not used as hooks anyway.
+- Rewrote most logic used in the component and configuration page. Will now
+  show more info when failure was found. Detection on installation of commands
+  improved.
+- Added Solr status page test.
+- Added Solr configuration.
+- Fixed some minor warnings we got from coder module.
+- Removed mediamosa_asset_metadata::search_get_part_where() was no longer used.
+- Added ignore_user_abort(TRUE) once REST call was successfully matched to 
+  ensure the REST call will be executed even when the connection is lost to the 
+  client. Always applies to POST/DELETE rest calls, internal CRON GET calls. 
+- Updated profile to only show the selected setup instead of both during
+  selection.
+- In profile; Removed all TEXT boxes with settings and replaced them with 
+  <pre></pre> making all settings show during profile to be the same format.
+- Fixed: Added code that will restore the Drupal error handler when REST call 
+  was not matched.
+- Status page extended with real time information.
+- Added check for CRON being trigger on status page. Will turn red when CRON 
+  hasn't been triggered for 3 minutes.
+- Added information about the drupal settings file on status page.
+- Settings sections on the configuration page are now in alphabetic order.
+- Settings sections on the configuration page are always collapsed by default.
+- Job type was added in mediamosa_statistics_job table.
+- Fixed range search for Solr.
+
+MediaMosa 2.3.0 Build (1032)
+----------------------------
+- Default still size and still padding are adjustable in management interface
+  (See ticket #215).
+- Instant analyse after transcoding (See ticket #258).
+- No still job on audio files (See ticket #219).
+- Extended the search in watchdog to search on asset ID, mediafile ID and on
+  description. (See ticket #330).
+- First phase for better workflow on toolset definition (See ticket #265).
+- Fixed numofvideos in REST call /collection search to show correct number of 
+  videos in master-slaved collection. (See ticket #206).
+- Fixed numofvideos in REST call /collection/coll_id to show correct number of 
+  videos in master-slaved collection. (See ticket #206).
+- Fixed numofvideos in REST call /collection/coll_id/asset/count to return 
+  correct number of videos in master-slaved collection. (See ticket #206).
+- Permanent Still URLs when asset is not protected (See ticket #291).
+
+Other changes (not ticket related).
+- Fixed: /mediafile/uploadprogress will now work without /external in front of
+  uri.
+- Added 'changed' for CQL for searching on changed date on asset.
+- Added 'app_id_search' for CQL for asset search.
+- Added module enable for mediamosa_library on profile.
+- Added unit test for black still generation.
+- Enabled black still generation (still_validate()) (bugged, not working, fixing 
+  later).
+- Removed unused class 'mediamosa_rest_call_asset_collection_delete'.
+- Removed coll_id from REST call 
+  /internal/asset/$asset_id/collection_relation/delete.
+- Bug fix in play proxy: "orig.#is_original_file = #is_original_file_true"
+  (reported by J0ris/MediaMosa.org).
+- CQL empty string search fix.
+- Job started and finished UTC value fixed, did not properly set the dates of
+  transcode jobs.
+- Transcode job statistics development.
+- Fixed: Home page was very slow sometimes because it generated the status
+  information. Will no only be first time on home page slow, cron should handle
+  the status generation updates from that point on.
+- Extended still and media download unittests with extra checks for download
+  size vs actualy file size.
+- Still tickets are no longer removed once the image was served. Still tickets
+  will be removed after # of minutes depending on the setting 
+  TICKET_EXPIRATION_STILL in mediamosa.settings.class.inc.
+- Added try/catch around crons.
+- Added 'X-MediaMosa-Version' to http header output to indicate call was 
+  processed by MediaMosa.
+- Status page cron bug fix.
+- Scene still orders fix.
+- Still REST call fiexes (still_id without mediafile_id).
+- Install profile development: db and user creation just for local.
+- Transcode profile and transcode tool parameters were updated.
+- End frame is not exists bug fix.
+- Still default query parameter bug fix.
+
+MediaMosa 2.2.5.3 (Build 956)
+---------------------------
+- Moved code from 2.3 instant analyse to 2.2.5.x release for fixing metadata 
+  utf-8 unicode problems with ffmpeg result.
+
+MediaMosa 2.2.5.2 (Build 952)
+---------------------------
+- disabled Black Still prevention generation (Hotfix for ticket vpcore #199).
+
+MediaMosa 2.2.5.1 (Build 944)
+-----------------------------
+- Fixed: group_id input in /playproxy where group_id was not an array but single
+  value. (See surfmedia ticket #24).
+
+MediaMosa 2.2.5 (Build 939) (Release candidate 2)
+-------------------------------------------------
+- Fixed: Escape problems with CQL search (See vpcore ticket #192).
+- Fixed: Files bigger than 256mb would get cut off at 250mb because of memory 
+  limit. (See ticket #183).
+
+Other changes (not ticket related).
+- Fixed: Play proxy did not correctly checked asset.
+- Apache version check failure on status page is no longer fatal.
+- Added timestamp to /status REST call.
+
+MediaMosa 2.2.4 (Build 935)
+---------------------------
+- Fixed: Escape problems with CQL search (See vpcore ticket #192).
+
+Other changes (not ticket related).
+- Fixed: Play proxy did not correctly checked asset.
+- Apache version check failure on status page is no longer fatal.
+- Added timestamp to /status page.
+
+MediaMosa 2.2.4 (Build 930)
+---------------------------
+- Added [/external]/status REST call for server monitoring. (See vpcore ticket 
+  #190).
+
+Other changes (not ticket related).
+- Update hook to fix non-NULL values for parent_id in mediamosa_asset table.
+- Some notice fixes on status page.
+
+MediaMosa 2.2.3 (Build 924)
+---------------------------
+- Reverted fix on /user/$user_id, will now throw 1902 
+  (ERRORCODE_USERMAN_INVALID_USER) again when user was not found (has no quota).
+  (See ticket #364).
+- Added mime-type detection for webm (See ticket #295).
+
+Other changes (not ticket related).
+
+- Hotfix: Server status will now correctly check the servers using the URI. This
+          however is a hotfix; servers that are installed on subdirs will not
+          work (rare situation). Is now known bug (See ticket #367 for future 
+          fix).
+
+MediaMosa 2.2.2 (Build 922)
+---------------------------
+- Fixed: Diskspace used in statisics stopped working. (See vpcore ticket #185).
+- Fixed: /collection/$coll_id/asset/count (See ticket #204).
+- Extended/Fixed /collection/$coll_id with hide_empty_asset parameter (See 
+  ticket #204).
+- /asset response still parameters 'file_duration' and 'sannas_mount_point'
+  removed from still response (See ticket #198).
+
+Other changes (not ticket related).
+
+- Fixed bug where 404 would trigger when two forward slashes (//) where used in 
+  the REST uri.
+- Fixed job setup unit test when server was defined with path.
+- Fixed bug when creation of the default setup with command strings of transcode
+  profiles where created empty.
+- Fixed bug when enabling job table migration.
+- Added DB index on mediamosa_asset for videotimestamp.
+- Turned off asset <-> masterslave table join for is_master_slaved, was terrible
+  slow.
+- Removed migration of the transcode_mapping table (1.x) to 
+  mediamosa_transcode_mapping table (2.x). Is always behind on 2.x version.
+- Fixed bug in simpletest queue; if test timed-out, tehn the whole queue 
+  stopped.
+- Moved modules mediamosa_connector and mediamosa_development to the new 
+  mediamosa_library module.
+- Fixed storage of run simpletests in automatedsimpletest module, stored the
+  whole result of all simpletests when test timed out.
+- Increased the transcode expire time to 3 hours.
+- Fixed problem with server setup unittest.
+- Fixed bug where in 1 out of 500 unittests would fail because the app_id was
+  not random enough. 
+- Added to migration script the new is_empty_asset value in asset-collection
+  relation.
+- Added update hook for migration of existing values is_empty_asset from asset
+  table to asset_collection relation table.
+  
+
+MediaMosa 2.2.1 (build 894)
+---------------------------
+- Added is_empty_asset flag on the mediamosa_asset_collection table. (See ticket
+  #338).
+- Fixed problem with restricted time where date was converted to UTC while that
+  was not allowed for that parameter. (See tickets #355, #354)
+  
+Other changes (not ticket related).
+- Fixed problems during install hook mediamosa_update_7011().
+- Added missing includes in mediamosa.install file.
+- Added empty REST call 'status' for future usage. Was renamed to 'simpletest'
+  from 'status' and was supposed to be re-used by status page code.
+- Removed default minimal Drupal profile.
+- Coder module has completely checked the MediaMosa core and all warnings where
+  resolved.
+- Removed function autoload_class() from mediamosa class. No longer used.
+- Fixed ajax problem in collection browse page.
+- Completely rewritten the installation profile.
+- Fixed ffmpeg detection in status page.
+- Removed & on $form_state hooks of hook_mediamosa_configuration_validate() for
+  PHP 5.3 warnings.
+- Added missing wmv related lua files to lib/lua dir. 
+- Removed check for /0 directory in SANNAS.
+- Cleaned up default install trans-coding profiles. 
+
+MediaMosa 2.2.0 (build 847)
+---------------------------
+- Fixed container type for asf if ffmpeg cannot analyse it, but magic can (#70)
+- Added webm codec to the list of allowed transcoding parameters (#295)
+- Fixed saving webservice with client application in admin. (See ticket #315).
+- Fixed unit test Still download/playproxy when using apache alias on /still
+  (See ticket #313). 
+- Fixed /mediafile/$asset_id/analyse call to return created job ID. (See ticket
+  #320).
+- Fixed missing mediafiles in asset view in admin. (See ticket #322).
+- Added job_ids to several log messages (See ticket #214).
+- Added pager to all stats pages and decreased items per page to 50 instead of 
+  150 (See ticket (#225).
+- Windows transcoding fix & first character fix (See vpcore Ticket 159).
+- Extended asset/$asset_id/joblist with CQL search and now has limit and offset
+  parameters. Limit is set to maximum of 200 jobs in result. Extended the
+  admin documentation for this call for usage of the CQL call, see your
+  MediaMosa admin on uri 
+  /admin/mediamosa/browse/restcall/asset-%24asset_id-joblist/GET  
+  (See ticket #267).
+- Job created in job table for still analyse (See ticket #239).
+- Introduction /collection/{id}/asset/count, and implements numofvideos in 
+  /collection/{id} response (See ticket #204).
+- Converted mediamosa_asset_mediafile_metadata to new setup where the values are
+  stored as name -> value pairs allowing more flexible metadata on mediafiles
+  (See ticket #290).
+- Job search: item total count fix (See ticket #267).
+- PA: Adding domains and realms produce failures fix (See VPCore ticket #172).
+- Integrity check produces error fix (See VPCore ticket #177).
+- Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
+- Support for 2 pass h264 encoding development (See MediaMosa ticket #264).
+- Remove asset_id_root field from mediamosa_asset_mediafile table (See MediaMosa
+  ticket #317).
+- Added first fase 1 version of the mediamosa/server status page. (See MediaMosa
+  ticket #314).
+- Added job server status page (See MediaMosa ticker #284).
+- UTC to application timezone support added; (See MediaMosa ticker #272).
+  - All dates from REST POST calls are now converted from application timezone 
+    to UTC.
+  - All dates in GET REST calls are now converted to dates in the client 
+    applications timezone.
+  - All dates currently in database are converted to UTC by update script.
+  - All dates in migration 1.7->2.x module convert dates to UTC during 
+    migration.
+  - Ticket has been finished and no longer requires a fase 2 as originally
+    intended.
+  - All existing client applications have default timezone set to 
+    Europe/Amsterdam.
+  - Client application form now has the timezone option and is required.
+  - If the REST call has no application during the REST call (f.e. 
+    external/internal calls), then these will have Europe/Amsterdam timezone.
+  - Unittest added; unit test will walk through all GET rest calls and execute
+    known REST calls that have dates in their output. During the GET call all 
+    dates are checked against timezone expected dates.
+
+Other changes (not ticket related).
+- Fixed updating Transcode profile page, parameters were not saved correctly.
+- Fixed padding test for new ffmpeg version.
+- During ticket #255, adding pager to stats, bug was found on the stats keyword
+  saver. It also stored search on dates, which are not words. Bug fixed, stats
+  now only stores words. Added stats unit test to make sure stats saving on
+  search words works as intended.
+- Fixed input errors in statistics dates (search words and other stats).
+- Put some logging of still generation to debug level instead of normal.
+- Still generation that is busy for black check now logs right text about 
+  status.
+- Logging message about ending still job while job in progress will now log
+  message that its still running instead wrong ending message.
+- DBUS REJECTED message will now return error 1600 in /login rest call instead
+  of 601 OK message.
+- ftp/create REST call will now also create the FTP home directory for the new
+  user.
+- Added extra tests for search on metadata dates.
+- /user/user_id will now return quota even if user_id has no quota information.
+  Old behavior would return invalid user ID error when no quota was available.
+  But then you can never get quota information when you haven't uploaded
+  anything yet.
+- Fixed maxlength on title for collection creation, was unlimited.
+- Max length is now shown correctly in REST calls browser.
+- Fixed bug in mediamosa.profile where output of error messages was not 
+  complete.
+- Changed default mount point for windows in profile to \\ instead of //.
+- Fixed weird bug where the stats cron job failed during a query because of
+  linefeed char. Fixed by using mediamosa_db::db_query instead of db_query. 
+- Fixed bug in admin where new collections where created with empty app_id.
+- Added check to /assets on the asset_id array, will give notices when array
+  in array was supplied.
+- Fixed number of notices when tests where not completed (because of restarts).
+- Made the tag rest parameter in /asset/asset_id/mediafile and 
+  /mediafile/mediafile_id max. length 32 chars.
+- Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
+  type instead of varchar(10).
+- PHP function getimagesize() is now wrapped with mediamosa_gd::getimagesize().
+- Fixed documentation asset_id[] to asset_id in /asset REST call.
+- Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
+  asset_created.
+- acl/get_foreign_apps is now depricated and replaced by /acl/app
+- Added /acl/app REST call. Returns listing of apps on which the current app has
+  master-slave rights on.
+- Upgraded drupal 7 core from alpha 4 to alpha 6.
+- Fixed problem migration when asset_id_root was empty in the source code.
+- Fixed settings page, alpha 6 of drupal 7 no longer sets up your settings page
+  default values.
+- Fixed mediamosa profile to work on alpha 6.
+- Added title with version number during profile.
+- Migrated alpha4 to alpha6 of drupal 7 core.
+- Fixed form for mediamosa_connector, didn't work with alpha6.
+- Alpha 6 introduced node->uri for default uri link for nodes, conflicted with
+  uri setting of server nodes. Renamed uri to server_uri in database and code.
+- Renamed module mediamosa_maintenance_status to 
+  mediamosa_maintenance_simpletest.
+- Created mediamosa_maintenance_status for new status page module.
+- All simpletests urls, functions are moved to /admin/mediamosa/simpletests.
+- Fixed problem with own http_request function now $db_prefix is removed from
+  drupal.
+- Fixed default profile to refect mediamosa.local as default domain.
+- Number of typo and text changes in MediaMosa profile.
+- Fixed bug in REST call /collection/$coll_id/delete where missing classname
+  resulted in failure.
+- Removed the 3 hour tab on simpletests page, is empty anyway.
+- Added automatedsimpletest module to installation profile. 
+- Fixed /acl/app to return only apps where you are allowed master/slave on.
+- Fixed /acl/app in is_oai mode SQL error.
+- Added force index on metadata search join.
+- User quota test fails in 32 bits systems bug fix.
+- MySQL query speed improvement: Add mediafile_id_source index to the 
+  mediamosa_asset_mediafile table.
+- Rewrote unit test for mediafile metadata test.
+- Fixed notices in asset/$asset_id/acl POST call when no ACL rules were 
+  provided.
+- Drupal 7 header items are now lower-case, fixed Set-Cookie and Content-Type to
+  lower case in code.
+- Added 'is_master_slaved' to CQL search. Returns all assets that are either 
+  masterslaved on the asset or has one or more mediafiles that are masterslaved.
+  Can be used to find assets that are not masterslaved.
+- Extended browse view of asset in admin to show asset AUT rights (was only
+  showing them on mediafiles).
+- Completion URL for transcoding will now correctly trigger with HTTPS when 
+  SSL certificate is not valid.
+- Fixed PHP notice when transcode failed.
+- Fixed unnessary exception logging when testing non-failure db object 
+  existance.
+- User quota test fails in 32 bits systems bug fix.
+- Parameter 'still_type' on all REST calls that use it now required fixed input;
+  'NONE, 'SCENE', 'NORMAL', 'PICTURE', 'SECOND' or ''. Defaults to ''.
+- Re-factored some STILL code to better readable code.
+- Fixed 'is_downloadable' option when creating mediafile. Bug ignored the
+  provided setting and was always 'FALSE'.
+- REST call /mediamosa/create [POST] and /asset/$asset_id/mediafile/create 
+  [POST] will now accept a 'tag' parameter. Was only on update calls. 
+- Fixed: Uploading of mediafile would overwrite TAG on Mediafile when TAG was 
+  not supplied.
+- Fixed: The combination URL and URI in mediafile check when IS_DOWNLOADABLE was
+  set to any value in mediafile/create resulted in unnessary exception.
+- Added transactions into metadata save and deletion of asset. Although we need
+  a more extended transaction support on REST calls; rolling back everything
+  during the REST call. This is very tricky; What do we do with any output
+  already generated? Watchdog entries will be rolled back too. Need some more
+  thinking for the global transaction support.
+- The still parameters end_frame and start_frame are now depricated and 
+  REST documentation has been adjusted to promote usage of end_time and 
+  start_time. Also documentation does now explanes parameters as seconds.
+- Fixed reset button on asset browse page.
+- Fixed CQL entry box on asset browse page to get empty when entering an empty 
+  string to clear your CQL.
+- Still parameter 'size' is now default '352x288' in all related REST calls.
+- Fixed: CQL search on 'batch_id' used STRING type instead of INT, resulted into
+  wrong search results.
+- Still parameters 'width' and 'height' are now deprecated, use still instead.
+- Fixed: start_frame and end_frame still parameters where not copied to 
+  start_time and end_time when *_time parameters where not used.
+- Moved logging of missing status file on transcode/analyse to debug status, 
+  will no longer end up in normal mode of debug level.  
+- Fixed testing page in MediaMosa admin; will correctly re-run tests when
+  selected.
+- Rewrote all split() functions to preg_split to support PHP 5.3.
+- Rewrote all string offset code that uses {} to [] for support of PHP 5.3.
+- Added lib/mediamosa_datetime.inc for date related functions.
+- Changed migration script for 1.7 to 2.x to convert dates into UTC from import.
+ 
+MediaMosa 2.1.5 (build 675)
+---------------------------
+- Put some logging of still generation to debug level instead of normal.
+
+MediaMosa 2.1.5 (build 664)
+---------------------------
+- Default still image size is now 352x288, with no maintain aspect ratio (no 
+  padding).
+- Job/id/status: start time is now stored as UTC date, so unixtimestamp is
+  not out of sync (See ticket #321).
+- fixed several Windows transcoding related issues.
+- <content_type> on a playrequest for flash is now also 'application/smil'.
+  (see ticket #323).
+
+Other changes (not ticket related)
+- drupal_valid_test_ua() will now always return true; windows servers seem to
+  have problem even though the settings files are the same.
+- /ftp/user/create will now try to make the homedir of the user itself. 
+  Previously it relied on proftpd (CreateHome), which did not always used the 
+  correct uid/gid (dependend on the Proftpd version).
+- Fix: orderby descending did not work when not using CQL.
+- Transcoding support for underscore in parameters allowed (some windows encoder
+  software use this)
+- Image generation bug fixed, in some cases ffmpeg generated too many stills
+  due to a changed parameter behaviour (vpadding).
+  
+
+MediaMosa 2.1.4 (build 628)
+---------------------------
+- Batchjobs history causes notice bug fix (Some batch job doesn't have 
+  referenceId, just assetid) (See ticket #305).
+- Content type application/smil now. (See ticket #262).
+- Collection search with boolean value bug fix. (See ticket #304).
+- .asx file is not downloadable with timing parameter - fix (See ticket #306).
+
+Other changes (not ticket related)
+- Changed unlink of tickets in simpletest into a test if ticket is gone.
+- Added new REST call /assets for retrieving multiple assets.
+- All filesize and file_exists checks now use clearcachestats to make sure the
+  IO cache is up to date (SAN/NAS problems).
+- Added slave option for search asset query to run on slave.
+- Fixed saving of empty values in drop down select boxes in transcode profile
+  admin.
+- Fixed problem saving transcode profile without revision saving.
+- Drupal 7 does not allow case-sensitive schema creation, this caused problems
+  migrating database with IDs. Fixed by adding varbinary type to schema creation
+  code of mediamosa. All IDs that are varchar and have the 32 character length
+  are now varbinary type.
+- Fixed problem migrating acl_object table when it contained double rows.
+- Fixed notice in admin when view asset with no mediafiles.
+- Job status REST call now returns correct started time for jobs as server time
+  and not +0400.
+- Fixed access to MediaMosa pages and related roles.
+
+MediaMosa 2.1.3 (build 578)
+---------------------------
+- Transcoding progress fix (See ticket #297).
+- Play response=metafile support for Wowza-server (See ticket 262).
+- Order direction fix for collection. (See ticket #300).
+- Fixed bulk upload format not allowed for video::action=delete (See ticket 
+  #301).
+
+Other changes (not ticket related)
+- Made fix on simpletest to run on own database (when configured) so it 
+  generate less binlog on mysql (about 25mb per test to 30k per test).
+- Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
+  servers because of filedate and fileinode tests on local file. 
+- Transcode profile ID is now visible in admin view and edit pages.
+
+
+MediaMosa 2.1.2
+---------------
+- Renamed dummy titles of transcode profiles to their correct names. (See 
+  mediamosa ticket #282).
+- Added transcode profile_id in the admin interface. (See ticket #293). 
+- Added explanation to the interface (client applications edit page) (See ticket
+  #28).
+- Changes of a transcode profile also updates the changed field. (See ticket 
+  #276).
+- added documentation for un-documented variables in the object code. (See 
+  ticket #279).
+- Log entries: page not found gives the the requested page. (See ticket #296)
+- Removed the '< 7' check for asset search and updated documentation for it. 
+  (See ticket #288) .
+- New REST call for set ACL right for multiple mediafiles at once 
+  (mediafile/acl) (See ticket #289).
+- Upload with parameter still=normal was broken in v2. (See ticket #294).
+- /asset/{id}/mediafile now only shows the slaved mediafiles (in case of an 
+  slaved asset) (See ticket #232).
+- fixed an error in /ftp in v.2. (See ticket #247).
+- Transcode without padding. Added a new parameter to the transcode profile to 
+  use in combination with maintain aspect ratio: (padding: yes, no) (See ticket
+  #194).
+- Added another mp4 (f4v, flash video) analyze fix. (See ticket #122).
+- OAI: updated to Drupal 7 latests. (See ticket #299).
+
+
+Other changes (not ticket related)
+- Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
+
+MediaMosa 2.1.1
+---------------
+- Fixed asx not written or created (see MediaMosa ticket #188).
+- Fixed asset search not to calculate item_count_total when limit is set to 6
+  or lower (like in 1.7.x). Added 'calculate_total_count' flag to enable/disable
+  calculation of 'item_count_total'. Default of this flag is 'false' when limit 
+  is set to 6 or lower, 'true' when limit is higher than 6. (see MediaMosa 
+  ticket #288).
+- ACL master/slave fix. (see MediaMosa ticket #281).
+- Fixed error message quota limit reached (see MediaMosa ticket #207).
+
+
+Other changes (not ticket related)
+- Fixed problem with quota test, didn't throw exception when it was reached.
+- Added documentation information in the /rest restcall.
+- Changed type of order_by from ALPHANUM to ALPHANUM_UNDERSCORE
+- Added REST call /internal/acl/get_foreign_apps.
+- Removed secret password from acl/get_foreign_apps function (its protected by
+  internal password).
+- Mutli typo fixed in comments (depricated to deprecated).
+- Fixed migration; transcode profiles where not migrated.
+- Changed the MediaMosa internal REST calls text on configure page to reflect
+  that these settings are only used for REST calls during the CRON like status
+  trigger and running the tests.
+- Rewrote the status page unittest running. Now runs in a queue system and runs
+  each test per minute (unless a test is still running).
+- Status page now show which test is currently being tested (if any).
+- Can now show the test data on each test that was run on the status page.
+- Tests are now devided into 3 groups; 30 minutes, 180 minutes and 1440 minutes.
+  The 180 minutes test group is empty atm.
+- You can now re-run any test on the status page by putting it into the test 
+  queue.
+- Config page now includes settings for the status page. Including the interval
+  lengths of the 3 tests groups.
+
+MediaMosa 2.1.0
+---------------
+- Master-slave enhancements; Client applications can now select which other 
+  client application may create master slave records to the other asset and
+  mediafiles. (See MediaMosa ticket #28).
+- Fixed download problem with filenames having invalid chars. (See MediaMosa 
+  ticket #60).
+- Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
+- Updated transcode package to fix analyse/transcode problems (See MediaMosa 
+  ticket #122).
+- <is_empty_asset> = true, while there is a valid, usable mediafile (See
+  MediaMosa ticket #165 and #167).
+- Added support CQL for is_empty_asset (See MediaMosa ticket #180).
+- is_streamable improvements; returns extra information about response in
+  mediafile output;
+  response_object_available <true / false>
+  response_plain_available <true / false>
+  response_metafile_available <true / false>
+  and in asset output:
+  has_streamable_mediafiles <true / false>
+  (See MediaMosa ticket #187).
+- Transcoding without padding fixed. (See MediaMosa ticket #194).
+- Transcoding error (depends on system) (See MediaMosa ticket #209). 
+- Fixed problem with deleting asset with jobs (See MediaMosa ticket #220).
+- Banner text was updated (See MediaMosa ticket #222).
+- Improved filehandling and file analyzer (See MediaMosa ticket #224).
+- Fixed lame mp3 ffmpeg crash (See MediaMosa ticket #230).
+- Fixed visible mediafiles in asset master/slave (See MediaMosa ticket #232).
+- Fixed sort on mediafile_duration gives strange result. (See MediaMosa ticket 
+  #233).
+- Rebuild transcoding package (See MediaMosa ticket #235).
+- bulk-ftp: licence -> license (See MediaMosa ticket #236).
+- Added coll_id search to CQL. (See MediaMosa ticket #241).
+- Added app_id search to CQL. (See MediaMosa ticket #241).
+- Error message in /asset/{id}/collection. (See MediaMosa ticket #243).
+- Error message in /collection/{id} (See MediaMosa ticket #244).
+- /collection/{id}/asset doesn't exist (See MediaMosa ticket #245).
+- Version does not exists. (See MediaMosa ticket #246).
+- /asset/{id}/collection/count is broken (See MediaMosa ticket #249).
+- 'acl_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
+- /autorisation_group?limit=10 broken (See MediaMosa ticket #253).
+- Assets of other apps visible (See MediaMosa ticket #254).
+- /asset owner_id does not work (See 
+  MediaMosa ticket #255).
+- /asset/{id} post call now requires an 'owner_id'. (See MediaMosa ticket #257).
+- Fixed is_empty_asset flag bug when asset no longer has mediafiles. (See 
+  MediaMosa ticket #166).
+
+Other changes (not ticket related)
+- Play proxy call will now return the ticket id in result.
+- Fixed number of query bugs in AUT / ACL code.
+- Fixed job server where 2 rows where inserted while only one was allowed.
+- Added unique index on mediamosa_job_server table to prevent multiple rows on
+  same parent job.
+- Added foreign key on mediamosa_job_server to mediamosa_job - job_id.
+- Prevented possible divided by zero problems in job server. 
+- asset_id_root in mediamosa_asset_mediafile table is now deprecated, will be 
+  removed in later versions.
+- parent_id in mediamosa_asset table is now deprecated, will be removed in later
+  versions.
+- is_original_file boolean in mediamosa_asset_mediafile table is deprecated, is
+  replaced by mediafile_id_source.
+- mediafile_id_source is now either NULL or points to its original mediafile.
+- Fixed still generation call /mediafile/$mediafile/still. 
+- Fixed play_restriction code. Typo with 'time_restriction_' prevented working
+  of this code in the play proxy code. Seems to be old bug dating back from 1.0.
+- Added /version REST call.
+- Empty metadata values is no longer allowed. This made the search query a bit
+  faster.
+- Statistics in 1.x falsely created new statistics based on what some unittest
+  was testing. F.e. the CQL unit test would generate new stats based on the
+  searches during test and store them as normal stats. This no longer is
+  a bug because of the sandbox environment of 2.x unittests.
+- Some ffmpeg versions give value 'N/A' for bitrate. This caused database errors
+  when trying to insert. Fixed by converting all required numeric values to 
+  integers.
+- Conversion of some queries where NULL was inserted into NON-NULL allowed 
+  values is creating problems in DP7 database. This is because the old D6 code
+  unintentially forced NULL values to be empty strings. This behavor can not be
+  replicated in D7. Decided to put those columns in the database to allow NULL
+  values instead. Statistics as example had owner_id and group_id as non-null.
+- Fixed /collection which had asset_id as required, which is only when the call
+  was made as /asset/{asset_id}/collection.
+- Removed field 'locked' from asset and asset output(s). Field was not 
+  documented or used.
+- Header fields item_count_total and item_offset are always present in the 
+  header while in 1.x these only where found for multi item results. In case of
+  single item results, then item_count_total will always be 1 and item_offset 0.
+- mediafile output will include new mediafile_id_source which can hold the ID of
+  the original mediafile. When empty, then the mediafile is a original.
+- /asset/$asset_id/joblist [GET] will now return 705 (empty result) when no jobs
+  where found, instead of result ID 601 (OK).
+- /asset/$asset_id/metadata [POST] will now return 705 (empty result) when no
+  metadata was added.
+- /asset/$asset_id/still/create [POST] will now return the job_id in the
+  items response when success. 1.x only returned a 601 success result ID.
+- The 'limit' REST parameter, where used in REST calls, is no longer required in
+  any REST call, its default is 200.
+- Date types uses ISO8601 norm; 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DDTHH:MM:SS'.
+  Timezone specification in ISO8601 however is ignored for now. Its now allowed
+  to enter '2007' or '2007-10' without triggering errors.
+- Server IP/URL settings are now prepared/compliant for IPv7.
+- MediaMosa is now UTF8 Compliant.
+- asset/delete REST call now returns failures per failed asset and their cause.
+- Fixed problems editing the transcode profile.
+- Fixed migration problem on transcode profiles.
+- REST call mediafile/$mediafile_id/uploadticket/create now also returns the
+  ticket_id as separate value.
+- Removed notices and warnings when mediafile's file on disk does not exists.
+- Added new unit test listing under Browse tab.
+- Added new development tool/module for testing REST calls.
+
+
+MediaMosa.2.0
+---------------
+- Admin: Added mediamosa server browser.
+- Admin: Added mediamosa REST call browser.
+- Added MediaMosa Connector.
+- Fixed asset / collection browser to use MediaMosa Connector.
+- Was missing in 2.0.0 notes: vpx_version in XML response has been renamed to 
+  version.
+
+
+MediaMosa.0.0 (released as read-only)
+---------------
+- Port to drupal 7.
+- VPX name use in code has been replaced with MediaMosa.
+- Complete redesign and renaming of v1.x source code. All code has been moved 
+  into (static) classes to support auto loading of classes in Drupal 7.
+- New REST interface, class based.
+- All medimosa code now support throw and catching of exceptions at high level, 
+  enabling better error handling.
+- Rewrite of all 1361 SQL queries into new PDO class support of Drupal 7. 
+  MediaMosa now has own new DB layer between Drupal and MediaMosa code for 
+  future expansion.
+- REST calls are now moved from core code into drupal modules, also REST calls 
+  no longer contain core code and only call core functions, seprating core code 
+  from REST interface.
+- MediaMosa 1 multiple database design combined and migrated to new single 
+  Drupal database called mediamosa2. No longer required to switch databases in 
+  code and has been removed.
+- Jobserver database(s) design moved into single main mediamosa2 database. No 
+  more multiple database required for multiple jobserver installations.
+- Internal REST calls IP white listing removed, replaced with internal 
+  authentication. Removed settings for old white listing from maintenance.
+- New REST calls for browsing in the REST calls and retrieving specific 
+  information about a single REST parameters and documentation. URL; /rest and 
+  rest/[rest_id].
+- Usage of new Drupal 7 Simpletest library; unittests are now sandboxed from 
+  normal database.
+- Internal calls now have access to all apps when app_id was not provided.
+- GET / POST / URI variables now share the same scope.
+- Redesign of the SAN/NAS globals/paths into static class 'storage'.
+- Removed /internal/check_existence (function media_management_check_existence).
+- parent_id of asset has been made deprecated. Will remove code supporting 
+  parent_id from code in the future.
+- is_original_file in mediafile has been made deprecated. Will still support 
+  this flag in output in future versions, but will be removed in database in 
+  future version.
+- Introducing mediafile_id_source as replacement of is_original_file. This field
+  is either NULL (is original) or points to the mediafile of which is its 
+  original mediafile. 
+- 1.7.3 migration to 2.0.0 database will now move child assets mediafiles to its
+  root asset. This will make the database more reliable, faster and easier to
+  maintain.
+- Mediafile db field asset_id_root is now deprecated and will be removed in 
+  future releases.

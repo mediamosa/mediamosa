@@ -1,0 +1,403 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for mediafile metadata.
+  */
+class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - metadata tests',
+      'description' => 'Testing asset mediafile metadata related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing asset mediafile delete, see: ticket 23.
+  function testMediafileMetadata() {
+
+    //
+    // Make a test asset with metadatas.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Get the metadata definitions.
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties(array('dublin_core', 'qualified_dublin_core'));
+
+    // Collect metadatas.
+    $a_parameters = array();
+    foreach ($a_metadata_definitions_full as $key => $value) {
+      // Type.
+      switch ($value['propdef_type']) {
+        case "DATETIME":
+          $a_parameters[$key] = "2010-01-01 23:59:59";
+          break;
+        default:
+          $a_parameters[$key] = mediamosa_db::uuid(mt_rand(1, 9999));
+      }
+      // Key.
+      switch ($key) {
+        case "language":
+          $a_parameters[$key] = "nl";
+          break;
+      }
+      // Collect the values for later usage.
+      //$a_metadata_definitions_ids[$value['propdef_id']] = $key;
+    }
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    // Check the metadatas.
+    // From sent.
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $value == $metadata[$key],
+        t("Database metadata lookup on '@key'. ('@sent'=='@get')", array('@key' => $key, '@sent' => $value, '@get' => $metadata[$key]))
+      );
+    }
+    // From get.
+    foreach ($metadata as $key => $value) {
+      $this->assertTrue(
+        $value == $a_parameters[$key],
+        t("Database metadata lookup on '@key'. ('@sent'=='@get')", array('@key' => $key, '@sent' => $a_parameters[$key], '@get' => $value))
+      );
+    }
+
+    //
+    // Add 2 properties to the same asset.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Collect metadatas.
+    $a_parameters = array(
+      'subject' => array(
+        mediamosa_db::uuid(mt_rand(1, 9999)),
+        mediamosa_db::uuid(mt_rand(1, 9999))
+      )
+    );
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    // Check the metadatas.
+    foreach ($a_parameters as $key => $value) {
+      foreach ($value as $val) {
+        $this->assertTrue(
+          ($i_found = array_search($val, $metadata[$key])) !== FALSE,
+          t("Database metadata lookup on '@key'. ('@sent'=='@get')", array('@key' => $key, '@sent' => $val, '@get' => $metadata[$key][$i_found]))
+        );
+      }
+    }
+
+    //
+    // Set a long property.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create a long string.
+    $string = '';
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\n ';
+    for ($i = 0; $i < 4000; $i++) {
+      $string .= $chars[mt_rand(0, mediamosa_unicode::strlen($chars) - 1)];
+    }
+
+    // Collect metadatas.
+    $a_parameters = array(
+      'description' => $string
+    );
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    foreach ($a_parameters as $key => $value) {
+      $this->assertTrue(
+        $value == $metadata[$key],
+        t("Database metadata lookup on '@key'. (strlen('@sent')==strlen('@get'))", array('@key' => $key, '@sent' => mediamosa_unicode::strlen($value), '@get' => mediamosa_unicode::strlen($metadata[$key])))
+      );
+    }
+
+    //
+    // Test use of action='' (also in combination of replace=TRUE/FALSE)
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // first action='replace'
+
+    // Collect metadatas.
+    $a_parameters = array(
+      'description' => 'original',
+      mediamosa_rest_call_asset_metadata_create::ACTION => mediamosa_rest_call_asset_metadata_create::ACTION_REPLACE,
+    );
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    $key = 'description';
+    $this->assertTrue(
+      $a_parameters[$key] == $metadata[$key],
+      t("Database metadata lookup on '@key', action = replace. ('@sent'=='@get')", array('@key' => $key, '@sent' => $a_parameters[$key], '@get' => $metadata[$key]))
+    );
+
+    //again with action = replace
+
+    // Collect metadatas.
+    $a_parameters = array(
+      'description' => 'more original',
+      mediamosa_rest_call_asset_metadata_create::ACTION => mediamosa_rest_call_asset_metadata_create::ACTION_REPLACE,
+    );
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    $key = 'description';
+    $this->assertTrue(
+      $a_parameters[$key] == $metadata[$key],
+      t("Database metadata lookup on '@key', action = replace. ('@sent'=='@get')", array('@key' => $key, '@sent' => $a_parameters[$key], '@get' => $metadata[$key]))
+    );
+
+    // Now with action = append
+
+    // Collect metadatas.
+    $a_parameters_append = array(
+      'description' => 'most original',
+      'action' => 'append',
+    );
+
+    // Create metadatas.
+    $response = $this->createAssetMetadata($asset_id, $a_parameters_append);
+
+    // Get the asset metadatas.
+    $a_asset = $this->getAsset($asset_id);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+
+    $key = 'description';
+    $this->assertTrue(
+      $a_parameters[$key] == $metadata[$key][0],
+      t("Database metadata lookup on '@key', action = append. ('@sent'=='@get')", array('@key' => $key, '@sent' => $a_parameters[$key], '@get' => $metadata[$key][0]))
+    );
+    $this->assertTrue(
+      $a_parameters_append[$key] == $metadata[$key][1],
+      t("Database metadata lookup on '@key', action = append. ('@sent'=='@get')", array('@key' => $key, '@sent' => $a_parameters_append[$key], '@get' => $metadata[$key][1]))
+    );
+
+    //
+    //Extension; allow other apps to add to own app def. on assets of other apps
+    //
+
+    // App ids
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+
+    // Go to app 1
+    $this->toEga_1();
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create an mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_create_mediafile::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+
+    // Make a new asset property definition.
+    $definition = mediamosa_db::uuid(mt_rand(1, 9999));
+    $definition = 'A' . mediamosa_unicode::substr($definition, 1);
+    $type = 'char';
+    $response = $this->createAssetMetadataDefinition($definition, $type, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $a_xml = mediamosa_lib::responsexml2array($response);
+
+    // Check the asset property definition
+    // Name.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['prop_name'] == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => $a_xml['items']['item'][0]['prop_name']))
+    );
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['type'] == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => $a_xml['items']['item'][0]['type']))
+    );
+
+    // Go to app 2
+    $this->toEga_2();
+
+    // Value.
+    $value = mediamosa_db::uuid(mt_rand(1, 9999));
+
+    // Create asset metadata.
+    $a_parameters = array(
+      $definition => $value,
+      mediamosa_rest_call_asset_metadata_create::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+    $response = $this->createAssetMetadata($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Go to app 1
+    $this->toEga_1();
+
+    // Now set master slave so we can add metadata
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // App master slave for SIMPLETEST_APP_ID2
+    $a_parameters = array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
+        $app_id_2,
+      ),
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => array(
+        self::SIMPLETEST_USER_ID,
+      ),
+    );
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+
+    // Go to app 2
+    $this->toEga_2();
+
+    // Create asset metadata.
+    $a_parameters = array(
+      $definition => $value,
+      mediamosa_rest_call_asset_metadata_create::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+    $response = $this->createAssetMetadata($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Go to app 1
+    $this->toEga_1();
+
+    //
+    // test strange syntaxes van is_(i,u)napprop(r)iate.
+    //
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // First, is_unappropriate
+
+    // Update asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE', // we must be app admin to change unapp.
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Get asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::ASSET_ID => $asset_id,
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result
+    $this->assertTrue(
+      $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE,
+      t('is_unappropriate is TRUE')
+    );
+
+    // Then, is_unappropriate
+
+    // Update asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'FALSE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE', // we must be app admin to change unapp.
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Get asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::ASSET_ID => $asset_id,
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result
+    $this->assertTrue(
+      $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE,
+      t('is_unappropriate is FALSE')
+    );
+
+    // Last, is_inappropriate
+
+    // Update asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE', // we must be app admin to change unapp.
+    );
+    $response = $this->updateAsset($asset_id, $a_parameters);
+
+    // Get asset
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::ASSET_ID => $asset_id,
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result
+    $this->assertTrue(
+      $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE,
+      t('is_unappropriate is TRUE')
+    );
+  }
+}

@@ -1,0 +1,146 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * MediaMosa Storage / SAN/NAS unittests.
+ *
+ * Based on tickets mediamosa 1:
+ *
+ * ticket_616
+ *
+ *
+ */
+
+/**
+  * @file
+  * Unittests for Conf. storage module.
+  */
+class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - download test',
+      'description' => 'Test downloading of files with tickets.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  function setUp() {
+    // Get the current mediamosa server content.
+    $a_servers = mediamosa_server::search();
+
+    parent::setUp('mediamosa_asset');
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
+    $this->drupalLogin($rest_user);
+
+    // Truncate current and insert new.
+    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+
+    // Copy the current servers to sandbox.
+    foreach ($a_servers as $a_server) {
+      db_insert(mediamosa_server_db::TABLE_NAME)
+        ->fields($a_server)
+        ->execute();
+    }
+  }
+
+  function testTicket616() {
+
+    $a_app = $this->createApp();
+    $app_id = $a_app[mediamosa_app_db::APP_ID];
+    $ticket_id = mediamosa_db::uuid(1);
+    $uuid = mediamosa_db::uuid(1);
+    $filename = "plus'q %20uote";
+
+    $a_mediafile_ext = array(
+      mediamosa_asset_mediafile_db::ID => $uuid,
+      mediamosa_asset_mediafile_db::FILENAME => $filename,
+    );
+
+    $test_video = $this->getTestVideo();
+    $target = mediamosa_configuration_storage::mediafile_id_filename_get($uuid);
+
+    // Create the directory.
+    $this->mkdir(dirname($target));
+
+    // Copy the test video
+    $this->copy($test_video, $target);
+
+    // Create ticket.
+    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
+
+    // For cleanup.
+    $ticket_symlink = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id . DIRECTORY_SEPARATOR . $filename;
+
+    $this->assertTrue(mediamosa_io::is_link($ticket_symlink), 'Is symlink: ' . $ticket_symlink);
+    $this->assertTrue(mediamosa_io::file_exists($ticket_symlink, TRUE), 'Symlink found: ' . $ticket_symlink);
+
+    $download_servers = mediamosa_server::get_enabled_download();
+    $this->assertTrue(!empty($download_servers), t('@num enabled download server(s) found.', array('@num' => $download_servers->rowCount())));
+
+    foreach ($download_servers as $downloadserver) {
+      $url = str_replace('{TICKET}', $ticket_id . '/' . urlencode($filename), mediamosa_server::get_server_url($downloadserver));
+
+      $this->pass('URL: ' . $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test video from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // print header.
+      $this->var_export($result->headers);
+
+      $this->var_export(mediamosa_io::filesize($test_video), 'File original size');
+      $this->var_export(strlen($result->data), 'File download size');
+
+      if ($result->data < mediamosa_io::filesize($test_video)) {
+        $this->var_export_fail($result->data);
+      }
+
+      // what we got downloaded, must be the same in size.
+      $this->assertTrue(mediamosa_io::filesize($test_video) == strlen($result->data), 'Download size matches the original media size.');
+    }
+
+    // Remove link ($ticket).
+    /*
+    $this->assertTrue(
+      self::file_exists($ticket_symlink) == FALSE,
+      t("Unlink: File '@target' is removed.", array('@target' => $ticket_symlink))
+    );
+    */
+
+    // Remove the test file.
+    $this->unlink($target);
+  }
+}

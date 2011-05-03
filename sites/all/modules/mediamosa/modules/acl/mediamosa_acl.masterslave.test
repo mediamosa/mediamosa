@@ -1,0 +1,398 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for ACL.
+  */
+class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Master-Slave',
+      'description' => 'Testing the AUT module, master slave, previously known as ACL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Remake of test #856
+  function testAcl_MasterSlave() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    // Create assets for app 1 (VIP) (SIMPLETEST_APP_ID3).
+    $this->toEga_1();
+    $asset_id_1 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+
+    // Create Mediafiles for app 1 (VIP)
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+
+    // Create asset metadata for app 1 (VIP) (SIMPLETEST_APP_ID2).
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'aap noot mies',
+        'description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.',
+        'created' => '2008-06-06 00:15:00',
+      )
+    );
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'aap',
+        'description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.',
+        'created' => '2006-06-06 20:15:00',
+      )
+    );
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'dit is een test mies',
+        'description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly',
+        'created' => '2008-01-01 15:15:00',
+      )
+    );
+
+    // Create assets for app 2 (NIBG).
+    $this->toEga_2();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_5 = $this->createAsset();
+    $asset_id_6 = $this->createAsset();
+
+    // Create Mediafiles for app 2 (VIP)
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $mediafile_id_5 = $this->createMediafile($asset_id_5);
+    $mediafile_id_6 = $this->createMediafile($asset_id_6);
+
+    // Create asset metadata for app 2 (VIP)
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'aap noot',
+        'description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.',
+        'created' => '2007-06-06 10:15:00',
+      )
+    );
+    $this->createAssetMetadata($asset_id_5,
+      array(
+        'title' => 'aap lord of maar wist the noot rings',
+        'description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?',
+        'created' => '2008-04-01 10:15:00',
+      )
+    );
+    $this->createAssetMetadata($asset_id_6,
+      array(
+        'title' => 'aap'
+      )
+    );
+
+    // Test 1, search using CQL no access rights set.
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+
+    // Same but different app
+    $this->cql_do_search_test_assets_3('aap', array());
+
+    // Same but now app 2
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Test 2, same test, but now with access set for johndoe and owner.
+    // Once rights are set, only users with access can see the asset.
+
+    // Set rights for 'johndoe'
+    $this->toEga_1();
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user' => array('johndoe')));
+
+    // All with 'aap' in title with owner
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // All with 'aap' in title with 'johndoe
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
+
+    // All with 'aap' in title with other
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_3 => TRUE), array(), 'other');
+
+    // All with 'aap' in title with 'johndoe' on other app mediafile
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Now only for domain @surfnet.nl and user johndoe
+    $this->toEga_1();
+    $this->addMediafileAcl($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'surfnet.nl');
+
+    // All with 'aap' in title with 'notjohndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_3 => TRUE), array(), 'notjohndoe');
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'notjohndoe', FALSE, 'surfnet.nl');
+
+    // App master slave for SIMPLETEST_APP_ID2 and remove existing.
+    $this->setMediafileAcl($mediafile_id_1, array('acl_app' => $app_id_2));
+
+    // All with 'aap' in title master
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // All with 'aap' in title slave
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Test 2, same test, but now with access set for johndoe and owner.
+    // Once rights are set, only users with access can see the asset.
+
+    // Set rights for 'johndoe'
+    $this->toEga_1();
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user' => 'johndoe'));
+
+    // All with 'aap' in title with owner
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // All with 'aap' in title with 'johndoe
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
+
+    // All with 'aap' in title with other
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_3 => TRUE), array(), 'other');
+
+    // All with 'aap' in title with 'johndoe' on other app mediafile
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Now only for domain @surfnet.nl and user johndoe
+    $this->toEga_1();
+    $this->addMediafileAcl($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'surfnet.nl');
+
+    // All with 'aap' in title with 'notjohndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_3 => TRUE), array(), 'notjohndoe');
+
+    // All with 'aap' in title with 'johndoe'
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'notjohndoe', FALSE, 'surfnet.nl');
+
+    // App master slave for app 2
+    $this->toEga_1();
+    $this->setMediafileAcl($mediafile_id_1, array('acl_app' => $app_id_2));
+
+    // All with 'aap' in title master
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // All with 'aap' in title slave
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Remove all rights.
+    $this->toEga_1();
+    $this->deleteMediafileAcl($mediafile_id_1);
+    $this->deleteMediafileAcl($mediafile_id_3);
+    $this->deleteMediafileAcl($mediafile_id_4);
+
+    $this->toEga_2();
+    $this->deleteMediafileAcl($mediafile_id_2);
+    $this->deleteMediafileAcl($mediafile_id_5);
+    $this->deleteMediafileAcl($mediafile_id_6);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), 'johndoe', FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_2('lord OR noot', array($asset_id_2 => TRUE, $asset_id_5 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+
+    // Granted = TRUE (return, even when not access to).
+    // domain surfnet.nl.
+
+    // App master slave for SIMPLETEST_APP_ID2 (9998) slave of SIMPLETEST_APP_ID3 (9997) so mediafile 2 is accessable through 3 (9997)
+    $this->toEga_2();
+    $this->setMediafileAcl($mediafile_id_2, array('acl_domain' => array('surfnet.nl'), 'acl_app' => array($app_id_1)));
+
+    // Granted = TRUE (return, even when not access to).
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => FALSE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, 'groennet.nl', FALSE, TRUE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => FALSE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE, TRUE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'surfnet.nl', FALSE, TRUE);
+
+    // Same as above but without the granted flag.
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, 'groennet.nl', FALSE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE);
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe', FALSE, 'surfnet.nl', FALSE);
+
+    // Granted = TRUE again but with extra share on not protected mediafile.
+
+    // App master slave for SIMPLETEST_APP_ID2
+    $this->toEga_2();
+    $this->setMediafileAcl($mediafile_id_5, array('acl_app' => array($app_id_1)));
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_5 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE, TRUE);
+
+    // Same as above but without the granted flag.
+
+    // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE);
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test if not original is masterslaved.
+  /*
+  function testAcl_MasterSlave_Non_Original() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    $this->toEga_1();
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    $mediafile_id_not_org = FALSE;
+
+    // Add mediafile clean up.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          if ($mediafile_child[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE) {
+            $mediafile_id_not_org = $mediafile_child['mediafile_id'];
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
+    }
+
+    // Non original?
+    $this->assert($mediafile_id_not_org !== FALSE, 'Found non-original');
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id,
+      array(
+        'title' => 'aap noot',
+        'description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.',
+        'created' => '2007-06-06 10:15:00',
+      )
+    );
+
+    // With GRANTED = FALSE
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE));
+
+    // All with 'aap' in title for app 2, no assets must not be found.
+    $this->cql_do_search_test_assets_2('aap', array());
+
+    // App master slave for app 2
+    $this->toEga_1();
+    $this->setMediafileAcl($mediafile_id_not_org, array('acl_app' => $app_id_2));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_2('aap', array($asset_id => TRUE));
+
+    // Remove all rights.
+    $this->toEga_1();
+    $this->deleteMediafileAcl($mediafile_id_not_org);
+
+    // With GRANTED = TRUE
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title for app 2, no assets must not be found.
+    $this->cql_do_search_test_assets_2('aap', array(), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // App master slave for app 2
+    $this->toEga_1();
+    $this->setMediafileAcl($mediafile_id_not_org, array('acl_app' => $app_id_2));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_2('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
+  */
+}

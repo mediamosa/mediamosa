@@ -1,0 +1,137 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * PDF tool installer.
+  */
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_tool_pdf_install() {
+  // Tool params.
+
+  $default_params = array(
+    array('pdf', 'def_viewer', '-b', NULL, NULL, NULL, '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine'), 'CHECKBOX'),
+    array('pdf', 'fonts', '-f', NULL, NULL, NULL, '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters)."), 'CHECKBOX'),
+    array('pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.'), 'SELECT'),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($default_params as $default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
+    $node->{mediamosa_tool_params_db::TYPE_PARAMETER} = $default_param[9];
+
+    $node = node_save($node);
+  }
+
+  // Transcode profile.
+
+  $default_profiles = array(
+    array('pdf to swf', 'FALSE', 'pdf', 'swf', strtr('def_viewer:@switch;fonts:@switch;flash_version:9', array(
+      '@switch' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+    ))),
+  );
+
+  foreach ($default_profiles as $default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
+
+    $node = node_save($node);
+  }
+
+  // Tool mapping.
+
+  // dc = 1, qdc = 2.
+  $dc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('dublin_core');
+  $qdc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('qualified_dublin_core');
+  $mapping_array = array(
+    array('title',                      'title', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('subject',                    'subject', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('keywords',                   '', 0),
+    array('author',                     '', 0),
+    array('creator',                    'creator', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('producer',                   'publisher', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('creationdate',               'created', $qdc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('creation date',              'created', $qdc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('moddate',                    '', 0),
+    array('modificationdate',           '', 0),
+    array('modification date',          '', 0),
+    array('tagged',                     '', 0),
+    array('pages',                      '', 0),
+    array('encrypted',                  '', 0),
+    array('print and copy permissions', 'rights', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('page size',                  '', 0),
+    array('file size',                  '', 0),
+    array('optimized',                  '', 0),
+    array('linearized',                 '', 0),
+    array('pdf version',                '', 0),
+    array('metadata',                   '', 0),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($mapping_array as $mapping) {
+    if ($mapping[1] && $mapping[2] && is_numeric($mapping[2]) && $mapping[2] > 0) {
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name($mapping[1], $mapping[2]);
+      if ($prop) {
+        $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+
+        $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
+
+        $node->{mediamosa_tool_mapping_db::TOOL} = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
+        $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
+        $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
+
+        $node = node_save($node);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_pdf_uninstall() {
+  // Do nothing. We don't delete the existing data.
+}

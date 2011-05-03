@@ -1,0 +1,3115 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Main core installer.
+ */
+
+// Node types.
+require_once 'core/node/mediamosa_node.class.inc';
+
+// Include the class we need. During install nothing can be autoloaded (yet).
+require_once 'mediamosa.class.inc';
+require_once 'mediamosa.settings.class.inc';
+require_once 'lib/mediamosa_db.class.inc';
+require_once 'lib/mediamosa_datetime.class.inc';
+require_once 'lib/mediamosa_unicode.class.inc';
+
+// Our children install files.
+require_once 'core/error/mediamosa_error.install.inc';
+require_once 'core/app/mediamosa_app.install.inc';
+require_once 'core/acl/mediamosa_acl.install.inc';
+require_once 'core/app/mediamosa_app.install.inc';
+require_once 'core/asset/mediamosa_asset.install.inc';
+require_once 'core/watchdog/mediamosa_watchdog.install.inc';
+require_once 'core/collection/mediamosa_collection.install.inc';
+require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
+require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
+require_once 'core/job/mediamosa_job.install.inc';
+require_once 'core/node/mediamosa_node.install.inc';
+require_once 'core/server/mediamosa_server.install.inc';
+require_once 'core/statistics/mediamosa_statistics.install.inc';
+require_once 'core/ticket/mediamosa_ticket.install.inc';
+require_once 'core/tool/mediamosa_tool.install.inc';
+require_once 'core/transcode/mediamosa_transcode.install.inc';
+require_once 'core/user/mediamosa_user.install.inc';
+require_once 'core/webservice/mediamosa_webservice.install.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_install() {
+
+   // Install the error db.
+  _mediamosa_error_install();
+
+  // Install watchdog extend table.
+  _mediamosa_watchdog_install();
+
+  // Install our node db.
+  _mediamosa_node_install();
+
+  // Install the app db.
+  _mediamosa_app_install();
+
+  // Install webservice db.
+  _mediamosa_webservice_install();
+
+  // Install the collection db.
+  _mediamosa_collection_install();
+
+  // Install the asset db.
+  _mediamosa_asset_install();
+
+  // Install the acl dbs.
+  _mediamosa_acl_install();
+
+  // Install the user dbs.
+  _mediamosa_user_install();
+
+  // Call installer ticket.
+  _mediamosa_ticket_install();
+
+  // Call installer ftp_batch.
+  _mediamosa_ftp_batch_install();
+
+  // Call installer Transcode.
+  _mediamosa_tool_install();
+
+  // Call installer Transcode.
+  _mediamosa_transcode_install();
+
+  // Call installer Job.
+  _mediamosa_job_install(); // jobs before server.
+
+  // Install the server db.
+  _mediamosa_server_install();
+
+  // Install the statistics db.
+  _mediamosa_statistics_install();
+
+  // Install the ftp_user table.
+  _mediamosa_ftp_user_install();
+
+  // Add index to watchdog table.
+  db_add_index('watchdog', 'idx_link', array('link'));
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_uninstall() {
+  // Remove index to watchdog table.
+  db_drop_index('watchdog', 'idx_link');
+
+  // Remove the ftp_user table.
+  _mediamosa_ftp_user_uninstall();
+
+  // Remove the statistics db.
+  _mediamosa_statistics_uninstall();
+
+  // Remove the node db.
+  _mediamosa_node_uninstall();
+
+  // Remove the server db.
+  _mediamosa_server_uninstall();
+
+  // Remove Job.
+  _mediamosa_job_uninstall();
+
+  // Remove Transcode Profile.
+  _mediamosa_transcode_uninstall();
+
+  // Remove installer Transcode.
+  _mediamosa_tool_uninstall();
+
+  // Remove ftp_batch.
+  _mediamosa_ftp_batch_uninstall();
+
+  // Call uninstaller ticket.
+  _mediamosa_ticket_uninstall();
+
+  // Uninstall the user dbs.
+  _mediamosa_user_uninstall();
+
+  // Install the acl dbs.
+  _mediamosa_acl_uninstall();
+
+  // Remove the app db.
+  _mediamosa_asset_uninstall();
+
+  // Remove the collection db.
+  _mediamosa_collection_uninstall();
+
+  // Remove the webservice db.
+  _mediamosa_webservice_uninstall();
+
+  // Remove the app db.
+  _mediamosa_app_uninstall();
+
+  // Remove the watchdog extend table.
+  _mediamosa_watchdog_uninstall();
+
+  // Remove the error db.
+  _mediamosa_error_uninstall();
+}
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_requirements($phase) {
+
+  $requirements = array();
+
+  if ($phase != 'runtime') {
+    return $requirements;
+  }
+
+  // The t() function is save during runtime phase.
+
+  // Runtime phase, all others are ignored at this point.
+
+  // We require PHP 5 or higher. Although Drupal 7 required 5.2.4 or higher,
+  // in the future we might need even higher version of PHP than Drupal.
+  if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
+    $requirements['mediamosa_php'] = array(
+      'title' => t('PHP'),
+      'value' => phpversion(),
+      'description' => t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
+      'severity' => REQUIREMENT_ERROR
+    );
+  }
+
+  // Make sure the mediamosa_server_id is set and not to long.
+  // @TODO should be made as REST call to other servers.
+  $mediamosa_installation_id = mediamosa::get_server_id();
+
+  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+    $requirements['mediamosa_installation_id'] = array(
+      'title' => t('MediaMosa installation ID'),
+      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : t('Not defined'),
+      'description' => t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  // In case there are no warnings and errors - remind about detailed mediamosa report.
+  if (empty($requirements)) {
+    $requirements['mediamosa_encourage_check_status'] = array(
+      'title' => t('MediaMosa'),
+      'value' => t('Installed'),
+      'description' => t('Detailed description of the MediaMosa component status can be found !here.', array('!here' => l(t('here'), 'admin/mediamosa'))),
+    'severity' => REQUIREMENT_OK,
+    );
+  }
+
+  // Check for Client Application presence. Warnings do not count for correct install message (above).
+  if (!mediamosa_app::get_number_of_apps()) {
+    $requirements['mediamosa_no_apps_defined'] = array(
+      'title' => t('MediaMosa client application'),
+      'value' => t('None found'),
+      'description' => t('A MediaMosa client is required for any front end application (website or other entity) to connect to MediaMosa. You can add one !here.', array('!here' => l(t('here'), 'admin/mediamosa/config/app/add'))),
+      'severity' => REQUIREMENT_WARNING,
+    );
+  }
+
+  return $requirements;
+}
+
+/**
+ * Change mediafile metadata STILL_TYPE ENUM value 'SECONDS' to 'SECOND'.
+ */
+function mediamosa_update_7000() {
+  // Add 'SECOND' first
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
+  );
+
+  // Then replace 'SECONDS' with 'SECOND'.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET still_type = 'SECOND' WHERE still_type = 'SECONDS'");
+
+  // Now remove 'SECONDS'
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
+  );
+}
+
+/**
+ * Create new errorcode in database.
+ */
+function mediamosa_update_7001() {
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_TEST_RUNNING',
+      mediamosa_error_db::MESSAGE => 'Timeout: test "@test" is currently running.',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_TEST_RUNNING,
+    ))
+  ->execute();
+}
+
+/**
+ * Create "padding" transcode mapping.
+ */
+function mediamosa_update_7002() {
+  $a_default_mappings = array(
+    array('ffmpeg', 'padding', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($a_default_mappings as $a_default_mapping) {
+    $a_fields = array(
+      'tool' => $a_default_mapping[0],
+      'nice_parameter' => $a_default_mapping[1],
+      'tool_parameter' => $a_default_mapping[2],
+      'min_value' => $a_default_mapping[3],
+      'max_value' => $a_default_mapping[4],
+      'allowed_value' => $a_default_mapping[5],
+      'default_value' => $a_default_mapping[6],
+      'required' => $a_default_mapping[7],
+    );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    db_insert('mediamosa_transcode_mapping')
+      ->fields($a_fields)
+      ->execute();
+  }
+}
+
+/**
+ * Change HTTP_NOT_FOUND errorcode in database.
+ */
+function mediamosa_update_7003() {
+  db_update(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::MESSAGE => 'Page not found: @uri (method: @method, parameters: @params)',
+    ))
+    ->condition(mediamosa_error_db::NAME, 'HTTP_NOT_FOUND')
+    ->execute();
+}
+
+/**
+ * Remove wrong foreign key.
+ */
+function mediamosa_update_7004() {
+
+  try {
+    db_query('ALTER TABLE {mediamosa_job_server_transcode} DROP FOREIGN KEY fk_mediamosa_job_server_transcode_jobserver_job_id');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  try {
+    db_query('ALTER TABLE {mediamosa_job_server_transcode} ADD CONSTRAINT `fk_mediamosa_job_server_transcode_jobserver_job_id` FOREIGN KEY (`jobserver_job_id`) REFERENCES `mediamosa_job_server` (`jobserver_job_id`)');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+}
+
+/**
+ * New error: ERRORCODE_STILL_NOT_IMAGE.
+ */
+function mediamosa_update_7005() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_STILL_NOT_IMAGE',
+    ':code' => mediamosa_error::ERRORCODE_STILL_NOT_IMAGE,
+    ':message' => 'MM - still is not an image for asset_id=@asset_id.',
+  ));
+}
+
+/**
+ * New error: ERRORCODE_UNKNOWN_JOB_STATUS and ERRORCODE_UNKNOWN_JOB_PROGRESS.
+ */
+function mediamosa_update_7006() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_UNKNOWN_JOB_STATUS',
+    ':code' => mediamosa_error::ERRORCODE_UNKNOWN_JOB_STATUS,
+    ':message' => 'MediaMosa - unknown job status',
+  ));
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_UNKNOWN_JOB_PROGRESS',
+    ':code' => mediamosa_error::ERRORCODE_UNKNOWN_JOB_PROGRESS,
+    ':message' => 'MediaMosa - unknown job progress',
+  ));
+}
+
+/**
+ * Make varchar(10) for transcode ID into INT in mediamosa_asset_mediafile
+ * table. (Conversion can take some time).
+ */
+function mediamosa_update_7007() {
+  // Change it.
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
+}
+
+/**
+ * Clear all caches.
+ */
+function mediamosa_update_7008() {
+  drupal_flush_all_caches();
+}
+
+/**
+ * Rename uri field in mediamosa_server table to server_uri.
+ */
+function mediamosa_update_7009() {
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN uri `server_uri` varchar(255) DEFAULT NULL COMMENT 'The optional URI of the server.'");
+  drupal_flush_all_caches();
+}
+
+/**
+ * Rename old mediamosa_asset_mediafile_metadata table.
+ * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foreign key.
+ * Create new mediamosa_asset_mediafile_metadata table.
+ * Create new mediamosa_asset_mediafile_metadata_property table.
+ */
+function mediamosa_update_7010() {
+  // Drop the foreign key from the old metadata table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+
+  // Rename the old metadata table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
+
+  // Create property table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME);
+
+  // Install the new metadata table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+}
+
+/**
+ * Migrate mediamosa_asset_mediafile_metadata table.
+ * Drop old mediamosa_asset_mediafile_metadata table.
+ */
+function mediamosa_update_7011() {
+  //
+  // Migration.
+  //
+
+  cache_clear_all();
+
+  // Existing fields.
+  $fields = array();
+  $columns = mediamosa_db::db_get_columns_with_type('mediamosa_asset_mediafile_metadata_old');
+  foreach ($columns as $row) {
+    // Collect only real properties.
+    if (
+      $row->column_name != 'metadata_id' &&
+      $row->column_name != 'mediafile_id' &&
+      $row->column_name != 'created' &&
+      $row->column_name != 'changed'
+    ) {
+      // Type is eg. "varchar(32)" or "int(10) unsigned" or "enum('FALSE','TRUE')"
+      $type = drupal_strtolower($row->data_type);
+
+      // Type formatting.
+      if (strpos($type, 'int') !== FALSE) {
+        $type = 'INT';
+      }
+      elseif (strpos($type, 'char') !== FALSE || strpos($type, 'binary') !== FALSE || $type == 'blob' || $type == 'text' || $type == 'enum') {
+        $type = 'CHAR';
+      }
+      else {
+        $type = 'DATETIME';
+      }
+
+      // Insert.
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type);
+      $fields[$row->column_name] = array(
+        'prop_id' => $prop_id,
+        'type' => $type,
+      );
+    }
+  }
+
+  // Migrating data.
+  foreach ($fields as $field => $property) {
+    switch ($property['type']) {
+      case 'CHAR':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_char
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_char
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_char IS NOT NULL && #val_char != '' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_char' => $field,
+          ))
+        );
+        break;
+
+      case 'DATETIME':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_date
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_date
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_date IS NOT NULL && #val_date != '0000-00-00 00:00:00' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_date' => $field,
+          ))
+        );
+        break;
+
+      case 'INT':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_int
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_int
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_int IS NOT NULL GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_int' => $field,
+          ))
+        );
+        break;
+    }
+  }
+
+  // Drop old metadata table.
+  db_query('DROP TABLE {mediamosa_asset_mediafile_metadata_old}');
+}
+
+/**
+ * Rearrange indexes on mediamosa_asset for performance.
+ */
+function mediamosa_update_7012() {
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // drop some not used indexes:
+  db_drop_index('mediamosa_asset', 'idx_app_parent_priv_unapp_emptyasset_owner');
+
+  // parent_id is deprecated.
+  db_query('ALTER TABLE mediamosa_asset drop foreign key fk_mediamosa_asset_parent_id');
+  db_drop_index('mediamosa_asset', 'idx_parent_id');
+
+  // only add the main search query.
+  db_add_index(
+    'mediamosa_asset',
+    'idx_app_priv_unapp_emptyasset',
+    array(
+      mediamosa_asset_db::APP_ID,
+      mediamosa_asset_db::ISPRIVATE,
+      mediamosa_asset_db::IS_UNAPPROPRIATE,
+      mediamosa_asset_db::IS_EMPTY_ASSET,
+    )
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * 2 pass h264 encoding.
+ */
+function mediamosa_update_7013() {
+  db_query("
+    INSERT INTO {mediamosa_transcode_mapping}
+    (tool, nice_parameter, tool_parameter, min_value, max_value, allowed_value, default_value, required, created, changed) VALUES
+    (:tool, :nice_parameter, :tool_parameter, :min_value, :max_value, :allowed_value, :default_value, :required, :created, :changed)
+  ", array(
+    ':tool' => 'ffmpeg',
+    ':nice_parameter' => '2_pass_h264_encoding',
+    ':tool_parameter' => '-pass',
+    ':min_value' => NULL,
+    ':max_value' => NULL,
+    ':allowed_value' => ';1;2',
+    ':default_value' => NULL,
+    ':required' => 'FALSE',
+    ':created' => mediamosa_datetime::utc_current_timestamp_now(),
+    ':changed' => mediamosa_datetime::utc_current_timestamp_now(),
+  ));
+}
+
+/**
+ * Remove asset_id_root field from the mediamosa_asset_mediafile table.
+ * See MediaMosa ticket #317.
+ */
+function mediamosa_update_7014() {
+  // Drop indexes with asset_id_root.
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_appid_original_protected');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_mediafileid_appid_original_protected');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assertidroot_filename');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_protected');
+
+  // Drop asset_id_root field.
+  db_query('ALTER TABLE mediamosa_asset_mediafile drop asset_id_root');
+
+  // Create indexes.
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_appid_original_protected',
+    array(
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_mediafileid_appid_original_protected',
+    array(
+      mediamosa_asset_mediafile_db::ID,
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_filename',
+    array(
+      mediamosa_asset_mediafile_db::FILENAME,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_protected',
+    array(
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+}
+
+/**
+ * Add mediafile_id_source index to the mediamosa_asset_mediafile table.
+ */
+function mediamosa_update_7015() {
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_mediafileidsource',
+    array(
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+    )
+  );
+}
+
+/**
+ * Add timezone setting to mediamosa applications.
+ */
+function mediamosa_update_7016() {
+
+  db_add_field('mediamosa_app', mediamosa_app_db::TIMEZONE, array(
+    'description' => t('The application timezone.'),
+    'type' => 'varchar',
+    'length' => mediamosa_app_db::TIMEZONE_LENGTH,
+    'not null' => FALSE,
+    'default' => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE,
+  ));
+}
+
+/**
+ * Remove the created and changed dates from mediafile metadata table.
+ */
+function mediamosa_update_7017() {
+  db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'created');
+  db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'changed');
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset table.
+ */
+function mediamosa_update_7018() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset} SET videotimestamp = DATE_SUB(videotimestamp, INTERVAL 2 HOUR), videotimestampmodified = DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_collection table.
+ */
+function mediamosa_update_7019() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_collection} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_delete table.
+ */
+function mediamosa_update_7020() {
+  db_query("UPDATE {mediamosa_asset_delete} SET videotimestampmodified = DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile table.
+ */
+function mediamosa_update_7021() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile_metadata table.
+ */
+function mediamosa_update_7022() {
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile_metadata_property table.
+ */
+function mediamosa_update_7023() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata table.
+ */
+function mediamosa_update_7024() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata} SET val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata_property table.
+ */
+function mediamosa_update_7025() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata_property_group table.
+ */
+function mediamosa_update_7026() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_supplement table.
+ */
+function mediamosa_update_7027() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_supplement} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_collection table.
+ */
+function mediamosa_update_7028() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_collection} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_collection} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ftp_batch table.
+ */
+function mediamosa_update_7029() {
+  db_query("UPDATE {mediamosa_ftp_batch} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ftp_user table.
+ */
+function mediamosa_update_7030() {
+  db_query("UPDATE {mediamosa_ftp_user} SET accessed = DATE_SUB(accessed, INTERVAL 2 HOUR), modified = DATE_SUB(modified, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job table.
+ */
+function mediamosa_update_7031() {
+  db_query("UPDATE {mediamosa_job} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server table.
+ */
+function mediamosa_update_7032() {
+  db_query("UPDATE {mediamosa_job_server} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_analyse table.
+ */
+function mediamosa_update_7033() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_still table.
+ */
+function mediamosa_update_7034() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_still} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_transcode table.
+ */
+function mediamosa_update_7035() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_still table.
+ */
+function mediamosa_update_7036() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_still} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_still} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_transcode table.
+ */
+function mediamosa_update_7037() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_transcode} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_upload table.
+ */
+function mediamosa_update_7038() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_upload} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_upload} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_upload} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_upload} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_integrity_check table.
+ */
+function mediamosa_update_7039() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_server_job table.
+ */
+function mediamosa_update_7040() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_server_job} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_server_job} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_server_job} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_server_job} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_diskspace_used table.
+ */
+function mediamosa_update_7041() {
+  db_query("UPDATE {mediamosa_statistics_diskspace_used} SET timestamp = DATE_SUB(timestamp, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_file_upload table.
+ */
+function mediamosa_update_7042() {
+  db_query("UPDATE {mediamosa_statistics_file_upload} SET timestamp = DATE_SUB(timestamp, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_search_request table.
+ */
+function mediamosa_update_7043() {
+  db_query("UPDATE {mediamosa_statistics_search_request} SET searched = DATE_SUB(searched, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_stream_request table.
+ */
+function mediamosa_update_7044() {
+  db_query("UPDATE {mediamosa_statistics_stream_request} SET played = DATE_SUB(played, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ticket table.
+ */
+function mediamosa_update_7045() {
+  db_query("UPDATE {mediamosa_ticket} SET issued = DATE_SUB(issued, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_transcode_mapping table.
+ */
+function mediamosa_update_7046() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_transcode_profile table.
+ */
+function mediamosa_update_7047() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_transcode_profile} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_user table.
+ */
+function mediamosa_update_7048() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_user} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_user} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_user} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_user} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_user_group table.
+ */
+function mediamosa_update_7049() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_user_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_user_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_user_group} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_user_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+
+  // Set the time of update.
+  variable_set('mediamosa_utc_update_time', date('Y-m-d H:i:s'));
+}
+
+/**
+ * Add webm transcoding parameters.
+ */
+function mediamosa_update_7050() {
+  db_query("UPDATE {mediamosa_transcode_mapping} SET allowed_value=:allowed_value WHERE tool=:tool AND tool_parameter=:tool_parameter",
+    array(
+      ':allowed_value' => 'flv;wmv;mpeg4;libx264;rawvideo;libtheora;webm',
+      ':tool' => 'ffmpeg',
+      ':tool_parameter' => '-vcodec')
+  );
+}
+
+/**
+ * Refresh the module listing.
+ */
+function mediamosa_update_7051() {
+  // Refresh.
+  module_list(TRUE);
+}
+
+/**
+ * Add is_empty_asset to asset-colletion relation table.
+ */
+function mediamosa_update_7052() {
+  db_add_field(
+    mediamosa_asset_collection_db::TABLE_NAME,
+    mediamosa_asset_collection_db::IS_EMPTY_ASSET,
+    array(
+      'description' => t('True if the asset in this collection has media.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+      'default' => mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE,
+    )
+  );
+
+  // Add new key.
+  db_add_index(mediamosa_asset_collection_db::TABLE_NAME, 'idx_coll_isempty', array(mediamosa_asset_collection_db::COLL_ID, mediamosa_asset_collection_db::IS_EMPTY_ASSET));
+}
+
+/**
+ * Add index on mediamosa_asset table for videotimestamp sort.
+ */
+function mediamosa_update_7053() {
+  try {
+    db_add_index(mediamosa_asset_db::TABLE_NAME, 'idx_videotimestamp', array(mediamosa_asset_db::VIDEOTIMESTAMP));
+  }
+  catch (PDOException $e) {
+    // Ignore, already present?
+  }
+}
+
+/**
+ * Disable and enable mediamosa_connector, we moved it.
+ */
+function mediamosa_update_7054() {
+
+  // If enabled, the disable, and enable again.
+  if (module_exists('mediamosa_connector')) {
+
+    $mediamosa_development = module_exists('mediamosa_development');
+    if ($mediamosa_development) {
+      module_disable(array('mediamosa_development'));
+    }
+
+    module_disable(array('mediamosa_connector'));
+    module_enable(array('mediamosa_connector'));
+  }
+
+  if ($mediamosa_development) {
+    module_enable(array('mediamosa_development'));
+  }
+}
+
+/**
+ * Enable the mediamosa_library module.
+ */
+function mediamosa_update_7055() {
+  // New module enable.
+  module_enable(array('mediamosa_sdk'));
+}
+
+/**
+ * Migrate is_empty_asset value to the asset_collection relation.
+ */
+function mediamosa_update_7056() {
+  db_query('UPDATE {mediamosa_asset_collection} AS ac JOIN {mediamosa_asset} AS a ON (a.asset_id = ac.asset_id) SET ac.is_empty_asset = a.is_empty_asset');
+}
+
+/**
+ * Fix problem with deprecated parent_id not being NULL.
+ */
+function mediamosa_update_7057() {
+  // Make sure parent_id is now always NULL.
+  db_query('UPDATE {mediamosa_asset} SET parent_id = NULL');
+}
+
+/**
+ * Update has been moved to 7059.
+ */
+function mediamosa_update_7058() {
+}
+/**
+ * Default still size is adjustable now.
+ * Padding and maintain aspect ratio is adjustable now too.
+ */
+function mediamosa_update_7059() {
+
+  try {
+    if (!db_field_exists('mediamosa_app', 'still_default_size')) {
+      // Create still default size field.
+      db_add_field('mediamosa_app', 'still_default_size', array(
+        'description' => t('The default size of the still image.'),
+        'type' => 'varchar',
+        'length' => 25,
+        'not null' => FALSE,
+        'default' => '176x144',
+      ));
+    }
+    if (!db_field_exists('mediamosa_app', 'still_padding')) {
+      // Create still padding field.
+      db_add_field('mediamosa_app', 'still_padding', array(
+        'description' => t('Force padding, if aspect ratio is maintaned.'),
+        'type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
+        'default' => 'YES',
+      ));
+    }
+    if (!db_field_exists('mediamosa_app', 'still_maintain_aspect_ratio')) {
+      // Create still maintain aspect ratio field.
+      db_add_field('mediamosa_app', 'still_maintain_aspect_ratio', array(
+        'description' => t('Force maintain the original video aspect ratio or not.'),
+        'type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
+        'default' => 'YES',
+      ));
+    }
+  }
+  catch (PDOException $e) {
+    return $e->getMessage();
+  }
+}
+
+/**
+ * Install mediamosa_watchdog table.
+ */
+function mediamosa_update_7060() {
+
+  // Create our table(s).
+  mediamosa::drupal_install_schema('mediamosa_watchdog');
+}
+
+/**
+ * Add index to watchdog table.
+ */
+function mediamosa_update_7061() {
+  db_add_index('watchdog', 'idx_link', array('link'));
+}
+
+/**
+ * Clear the cache, rebuild registry, change class name, just to be sure.
+ */
+function mediamosa_update_7062() {
+  // Moved to 7063.
+}
+
+/*
+ * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the old version installed.
+ */
+function mediamosa_update_7063() {
+  try {
+    // Rename the old metadata table.
+    db_query('ALTER TABLE {mediamosa_dblog} RENAME {mediamosa_watchdog}');
+  }
+  catch (Exception $e) {
+    // ignore...
+  }
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * This update was moved to 7069.
+ */
+function mediamosa_update_7064() {
+}
+
+/**
+ * This update was moved to 7069.
+ */
+function mediamosa_update_7065() {
+}
+
+/**
+ * This update was moved to 7069.
+ */
+function mediamosa_update_7066() {
+}
+
+/**
+ * This update has been removed.
+ */
+function mediamosa_update_7067() {
+}
+
+/**
+ * Turn on mediamosa_tool module.
+ */
+function mediamosa_update_7068() {
+  $module_list = array(
+    'mediamosa_tool',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
+/**
+ * Install mediamosa_tool_params table.
+ * Create the tool params node type.
+ * Turn on tool modules.
+ * Uninstall nodes from tool params.
+ * Migrate data from transcode mapping table.
+ * Uninstall mediamosa_transcode_mapping table.
+ */
+function mediamosa_update_7069() {
+  // Install mediamosa_tool_params table.
+  mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
+
+  // Create the tool params node type.
+  $tool_params_node_type = array(
+    'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+    'name' => st('MediaMosa tool params'),
+    'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+    'description' => st('The tool params contains information about the tool (eg. ffmpeg, windows) parameters.'),
+    'custom' => 1,
+    'modified' => 1,
+    'locked' => 0,
+    'has_body' => 0,
+  );
+  $tool_params_node_type = node_type_set_defaults($tool_params_node_type);
+  node_type_save($tool_params_node_type);
+
+  // FFmpeg and Windows tools.
+  $module_list = array(
+    'mediamosa_tool_ffmpeg',
+    'mediamosa_tool_windows',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+
+  // Uninstall nodes from tool params.
+  $result = db_query('SELECT nid FROM {mediamosa_tool_params}');
+  foreach ($result as $record) {
+    node_delete($record->nid);
+  }
+
+  // Migrate data from transcode mapping table.
+  $result = db_query('SELECT * FROM {mediamosa_transcode_mapping}');
+  foreach ($result as $record) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $record->nice_parameter);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $record->tool;
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $record->nice_parameter;
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $record->tool_parameter;
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $record->min_value;
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $record->max_value;
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $record->allowed_value;
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $record->default_value;
+    $node->{mediamosa_tool_params_db::REQUIRED} = $record->required;
+
+    $node = node_save($node);
+  }
+
+  // Uninstall mediamosa_transcode_mapping table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_transcode_mapping');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_transcode_mapping')) {
+    db_drop_table('mediamosa_transcode_mapping');
+  }
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * Install mediamosa_statistics_job table.
+ */
+function mediamosa_update_7070() {
+  // Install mediamosa_statistics_job table.
+  mediamosa::drupal_install_schema(mediamosa_statistics_job_db::TABLE_NAME);
+}
+
+/**
+ * Removing error: ERRORCODE_INVALID_STILL_PERMANENT
+ */
+function mediamosa_update_7071() {
+  db_query('DELETE FROM {mediamosa_error} WHERE name = :name', array(
+    ':name' => 'ERRORCODE_INVALID_STILL_PERMANENT',
+  ));
+}
+
+/**
+ * Uninstall tables:
+ *  - mediamosa_statistics_stream_request
+ *  - mediamosa_statistics_stream_request_collection
+ * Install tables:
+ *  - mediamosa_statistics_file_helper
+ *  - mediamosa_streaming_ticket
+ *  - mediamosa_statistics_stream_request
+ */
+function mediamosa_update_7072() {
+  // Uninstall mediamosa_statistics_stream_request table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_statistics_stream_request');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_statistics_stream_request')) {
+    db_drop_table('mediamosa_statistics_stream_request');
+  }
+
+  // Uninstall mediamosa_statistics_stream_request_collection table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_statistics_stream_request_collection');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_statistics_stream_request_collection')) {
+    db_drop_table('mediamosa_statistics_stream_request_collection');
+  }
+
+  // Install tables.
+  mediamosa::drupal_install_schema('mediamosa_statistics_file_helper');
+  mediamosa::drupal_install_schema('mediamosa_streaming_ticket');
+  mediamosa::drupal_install_schema('mediamosa_statistics_stream_request');
+}
+
+/**
+ * Disable renamed mediamosa_library and enable new mediamosa_sdk module.
+ */
+function mediamosa_update_7073() {
+  // Turn library off.
+  if (module_exists('mediamosa_library')) {
+    module_disable(array('mediamosa_library'));
+  }
+
+  // Enable SDK.
+  module_enable(array('mediamosa_sdk'));
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+
+  return t('The MediaMosa Library has been renamed to MediaMosa SDK. The old module MediaMosa Library is now a dummy and has been disabled. Keep it disabled as its removed in next release.');
+}
+
+/**
+ * Enable missing login block when not logged in.
+ */
+function mediamosa_update_7074() {
+
+  // Set the content to correct region.
+  db_query("UPDATE {block} SET region = 'content', status = 1 WHERE module = 'user' AND delta = 'login' AND theme = 'seven'");
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+
+  return t('Login form should now be available again.');
+}
+
+/**
+ * Fix changes in database table and column comments.
+ */
+function mediamosa_update_7075() {
+
+  // Our fixes.
+  $fixes = array(
+    mediamosa_statistics_stream_request_db::TABLE_NAME => array(
+      mediamosa_statistics_stream_request_db::ID,
+      mediamosa_statistics_stream_request_db::TID,
+      mediamosa_statistics_stream_request_db::TIME,
+      mediamosa_statistics_stream_request_db::APP_ID,
+      mediamosa_statistics_stream_request_db::MEDIAFILE_ID,
+      mediamosa_statistics_stream_request_db::DURATION,
+      mediamosa_statistics_stream_request_db::BYTES,
+    ),
+
+    mediamosa_statistics_file_helper_db::TABLE_NAME => array(
+      mediamosa_statistics_file_helper_db::FILE,
+    ),
+
+    mediamosa_statistics_diskspace_used_db::TABLE_NAME => array(
+      mediamosa_statistics_diskspace_used_db::TYPE,
+    ),
+
+    'mediamosa_server' => array(
+      mediamosa_server_db::SERVER_TYPE,
+    ),
+
+    'mediamosa_app' => array(
+      mediamosa_app_db::ALWAYS_INSERT_MD,
+    ),
+  );
+
+  foreach ($fixes as $table_name => $columns) {
+    // Get the schema so we can reuse the schema creation.
+    $schema = drupal_get_schema_unprocessed($table_name);
+    _drupal_schema_initialize($schema, $table_name, FALSE);
+
+    // Changes we might want in MediaMosa.
+    $schema = mediamosa_db::db_install_schema_preprocess($table_name, $schema);
+
+    foreach ($columns as $column) {
+      $spec = $schema[$table_name]['fields'][$column];
+      assert(!empty($spec));
+
+      if (!db_table_exists($table_name)) {
+        continue;
+      }
+
+      if (!db_field_exists($table_name, $column)) {
+        db_add_field($table_name, $column, $spec);
+      }
+      else {
+        db_change_field($table_name, $column, $column, $spec);
+      }
+    }
+  }
+}
+
+/**
+ * Fix changes in database table and column comments.
+ */
+function mediamosa_update_7076() {
+
+  // Include required files.
+  module_load_install('filter');
+  module_load_install('user');
+
+  // Our fixes.
+  $fixes = array(
+    'filter_format' => array(
+      'real_schema_name' => 'filter',
+      'status',
+    ),
+    'filter' => array(
+      'status',
+    ),
+    'user' => array(
+      'signature_format',
+      'init',
+    ),
+  );
+
+  foreach ($fixes as $table_name => $columns) {
+    // Get the schema so we can reuse the schema creation.
+    $schema_name = isset($columns['real_schema_name']) ? $columns['real_schema_name'] : $table_name;
+
+    $schema = drupal_get_schema_unprocessed($schema_name);
+    _drupal_schema_initialize($schema, $schema_name, FALSE);
+    foreach ($columns as $key => $column) {
+      if (is_string($key) && $key == 'real_schema_name') {
+        continue;
+      }
+
+      if ($table_name == 'user') {
+        $table_name = 'users';
+      }
+
+      $spec = $schema[$table_name]['fields'][$column];
+      assert(!empty($spec));
+      if (!db_field_exists($table_name, $column)) {
+        db_add_field($table_name, $column, $spec);
+      }
+      else {
+        db_change_field($table_name, $column, $column, $spec);
+      }
+    }
+  }
+}
+
+/**
+ * Rename table mediamosa_log_integrity_check to mediamosa_integrity_check.
+ */
+function mediamosa_update_7077() {
+
+  // Rename table.
+  if (db_table_exists('mediamosa_log_integrity_check') && !db_table_exists('mediamosa_integrity_check')) {
+    db_rename_table('mediamosa_log_integrity_check', 'mediamosa_integrity_check');
+  }
+
+  if (db_table_exists('mediamosa_log_integrity_check')) {
+    db_drop_table('mediamosa_log_integrity_check');
+  }
+}
+
+/**
+ * Fix changes in database table, column comments and indexes.
+ */
+function mediamosa_update_7078() {
+
+  // Rename table
+
+  module_load_include('install', 'mediamosa_integrity_check');
+
+  // Our fixes.
+  $fixes = array(
+    mediamosa_integrity_check_db::TABLE_NAME => array(
+      mediamosa_integrity_check_db::TYPE,
+    ),
+  );
+
+  foreach ($fixes as $table_name => $columns) {
+    if (!db_table_exists($table_name)) {
+      continue;
+    }
+
+      // Get the schema so we can reuse the schema creation.
+    $schema = drupal_get_schema_unprocessed($table_name);
+    _drupal_schema_initialize($schema, $table_name, FALSE);
+
+    // Changes we might want in MediaMosa.
+    $schema = mediamosa_db::db_install_schema_preprocess($table_name, $schema);
+
+    foreach ($columns as $column) {
+      $spec = $schema[$table_name]['fields'][$column];
+      assert(!empty($spec));
+      if (!db_field_exists($table_name, $column)) {
+        db_add_field($table_name, $column, $spec);
+      }
+      else {
+        db_change_field($table_name, $column, $column, $spec);
+      }
+    }
+  }
+
+  // Change the key on url_alias.
+  db_drop_unique_key('url_alias', 'alias_language');
+
+  if (!db_index_exists('url_alias', 'alias_language_pid')) {
+    // Other.
+    db_add_index('url_alias', 'alias_language_pid', array('alias','language','pid'));
+  }
+}
+
+/**
+ * Introduction retranscode job.
+ */
+function mediamosa_update_7079() {
+  // Mediafile destination id.
+  db_query("ALTER TABLE {mediamosa_job} ADD mediafile_dest VARBINARY(32) DEFAULT NULL COMMENT 'The mediafile destination ID in case of retranscode.' AFTER mediafile_id");
+}
+
+/**
+ * Change the mediamosa_job table no_hint column to hint: null is available then (See ticket VPCore 211).
+ */
+function mediamosa_update_7080() {
+  db_change_field(
+    mediamosa_job_db::TABLE_NAME,
+    mediamosa_job_db::NO_HINT,
+    mediamosa_job_db::HINT,
+    array(
+        'description' => 'Hinting.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+    )
+  );
+}
+
+/**
+ * Change the mediamosa_job table no_hint values to hint.
+ */
+function mediamosa_update_7081() {
+  // Change the values.
+  db_query("UPDATE {mediamosa_job} SET hint = IF(hint = 'FALSE', NULL, 'FALSE')");
+}
+
+/**
+ * UTC / CET date summer-winter time fix.
+ */
+function mediamosa_update_7082() {
+  $result = db_query("
+    SELECT
+      DATE_ADD(videotimestamp, INTERVAL 2 HOUR) AS videotimestamp_cet,
+      videotimestamp AS videotimestamp_wrong,
+      DATE_ADD(videotimestampmodified, INTERVAL 2 HOUR) AS videotimestampmodified_cet,
+      videotimestampmodified AS videotimestampmodified_wrong,
+      asset_id,
+      created
+     FROM {mediamosa_asset}
+     WHERE
+      created < '2010-05-01 00:00:01'
+  ");
+
+  foreach ($result as $record) {
+    // Skip the NULL values.
+    if ($record->videotimestamp_cet) {
+      $videotimestamp_utc = mediamosa_datetime::app_date2utc_date($record->videotimestamp_cet, 'Europe/Amsterdam');
+      if ($record->videotimestamp_wrong != $videotimestamp_utc) {
+        db_query('UPDATE {mediamosa_asset} SET videotimestamp = :videotimestamp_utc WHERE asset_id = :asset_id', array(
+          ':videotimestamp_utc' => $videotimestamp_utc,
+          ':asset_id' => $record->asset_id,
+        ));
+      }
+    }
+    if ($record->videotimestampmodified_cet) {
+      $videotimestampmodified_utc = mediamosa_datetime::app_date2utc_date($record->videotimestampmodified_cet, 'Europe/Amsterdam');
+      if ($record->videotimestampmodified_wrong != $videotimestampmodified_utc) {
+        db_query('UPDATE {mediamosa_asset} SET videotimestampmodified = :videotimestampmodified_utc WHERE asset_id = :asset_id', array(
+          ':videotimestampmodified_utc' => $videotimestampmodified_utc,
+          ':asset_id' => $record->asset_id,
+        ));
+      }
+    }
+  }
+}
+
+/**
+ * UTC / CET date summer-winter time fix.
+ */
+function mediamosa_update_7083() {
+  $result = db_query("
+    SELECT
+      DATE_ADD(val_datetime, INTERVAL 2 HOUR) AS val_datetime_cet,
+      val_datetime AS val_datetime_wrong,
+      metadata_id,
+      created
+    FROM {mediamosa_asset_metadata}
+    WHERE
+      val_datetime IS NOT NULL
+      AND
+      created < '2010-05-01 00:00:01'
+  ");
+
+  foreach ($result as $record) {
+    $val_datetime_utc = mediamosa_datetime::app_date2utc_date($record->val_datetime_cet, 'Europe/Amsterdam');
+    // Fix problems with '1923-11-11 22:00:00' -> '1923-11-11 21:40:28'
+    $val_datetime_utc = substr($val_datetime_utc, 0, 14) . substr($record->val_datetime_cet, 14, 5);
+
+    if ($record->val_datetime_wrong != $val_datetime_utc) {
+      db_query('UPDATE {mediamosa_asset_metadata} SET val_datetime = :val_datetime_utc WHERE metadata_id = :metadata_id', array(
+        ':val_datetime_utc' => $val_datetime_utc,
+        ':metadata_id' => $record->metadata_id,
+      ));
+    }
+  }
+}
+
+/**
+ * Add the job_type field to mediamosa_statistics_job table.
+ */
+function mediamosa_update_7084() {
+  if (!db_field_exists(mediamosa_statistics_job_db::TABLE_NAME, mediamosa_statistics_job_db::JOB_TYPE)) {
+    db_add_field(
+      mediamosa_statistics_job_db::TABLE_NAME,
+      mediamosa_statistics_job_db::JOB_TYPE,
+      array(
+        'description' => 'The type of the job.',
+        'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+      )
+    );
+  }
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7085() {
+  registry_rebuild();
+}
+
+/**
+ * Change the job_type field in mediamosa_job table.
+ */
+function mediamosa_update_7086() {
+  db_change_field(
+    mediamosa_job_db::TABLE_NAME,
+    mediamosa_job_db::JOB_TYPE,
+    mediamosa_job_db::JOB_TYPE,
+    array(
+      'description' => 'The type of the job.',
+      'type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'default' => mediamosa_job_db::JOB_TYPE_UPLOAD,
+    )
+  );
+}
+
+/**
+ * Create new errorcode in database.
+ * Clearing cache and rebuild registry.
+ */
+function mediamosa_update_7087() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID',
+      mediamosa_error_db::MESSAGE => 'Open client application ID is missing for OpenAPI',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID,
+    ))
+  ->execute();
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * Create new 'missing extension' errorcode in database.
+ * Change mediamosa_streaming_ticket table.
+ * Add new field: time.
+ * Add new indexes: ticket_id, time.
+ */
+function mediamosa_update_7088() {
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_MISSING_EXTENSION',
+      mediamosa_error_db::MESSAGE => "Unable to complete request, missing/requires '@extension'",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_MISSING_EXTENSION,
+    ))
+  ->execute();
+}
+
+/**
+ * Update moved to higher.
+ */
+function mediamosa_update_7089() {
+  if (!db_field_exists('mediamosa_streaming_ticket', 'timeout')) {
+    // Add time field.
+    db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
+  }
+
+  // Add value to time fields.
+  db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
+    ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, 720),
+  ));
+
+  if (!db_index_exists('mediamosa_streaming_ticket', 'idx_ticket_id')) {
+    // Ticket id.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_ticket_id',
+      array(
+        'ticket_id',
+      )
+    );
+  }
+
+  if (!db_index_exists('mediamosa_streaming_ticket', 'idx_timeout')) {
+    // Time.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_timeout',
+      array(
+        'timeout',
+      )
+    );
+  }
+}
+
+/**
+ */
+function mediamosa_update_7090() {
+}
+/**
+ * Add new fields to mediamosa_server table to support new upload progress.
+ */
+function mediamosa_update_7091() {
+  if (!db_field_exists('mediamosa_server', 'uri_upload_progress_server')) {
+    $spec = array(
+      'description' => 'The optional uri of the upload progress server side.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+    );
+
+    db_add_field('mediamosa_server', 'uri_upload_progress_server', $spec);
+  }
+
+  if (!db_field_exists('mediamosa_server', 'uri_upload_progress_server_type')) {
+    $server_upload_progress_type = array(
+      'APC',
+      'PROXY',
+    );
+
+    $spec = array(
+      'description' => 'The server type for upload progress server side.',
+      'type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
+      'mysql_type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
+      'not null' => TRUE,
+      'default' => 'APC',
+    );
+
+    db_add_field('mediamosa_server', 'uri_upload_progress_server_type', $spec);
+  }
+}
+
+/**
+ * Create new 'missing extension' errorcode in database.
+ * Change mediamosa_streaming_ticket table.
+ * Add new field: time.
+ * Add new indexes: ticket_id, time.
+ */
+function mediamosa_update_7092() {
+
+  // Make sure we don't cause problems with 2.3.6 release.
+  if (!db_field_exists('mediamosa_streaming_ticket', 'timeout')) {
+    // Add time field.
+    db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
+
+    // Add value to time fields.
+    db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
+      ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, 720),
+    ));
+
+    // Index for Ticket id.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_ticket_id',
+      array(
+        'ticket_id',
+      )
+    );
+
+    // Index for time.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_timeout',
+      array(
+        'timeout',
+      )
+    );
+  }
+
+  if (!db_field_exists('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE)) {
+    $spec = array(
+      'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'default' => NULL,
+    );
+
+    db_add_field('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE, $spec);
+  }
+}
+
+function mediamosa_update_7093() {
+}
+
+/**
+ * Add new fields to mediamosa_tool_params table: description.
+ */
+function mediamosa_update_7094() {
+  if (!db_field_exists('mediamosa_tool_params', 'description')) {
+    $spec = array(
+      'description' => 'Description of the parameter.',
+      'type' => 'text',
+    );
+
+    db_add_field('mediamosa_tool_params', 'description', $spec);
+  }
+}
+
+/**
+ * Fill the description field of mediamosa_tool_params table.
+ */
+function mediamosa_update_7095() {
+  $comments = array(
+    'videocodec' => t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default'),
+    'videobitrate' => t('Set the video bitrate in bit/s@default'),
+    'duration' => t('Duration of the video.'),
+    'size' => t('Set frame size using format WIDTHxHEIGHT@default'),
+    'qmax' => t('Maximum video quantizer scale (VBR)@default'),
+    'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
+    'audiosamplingrate' => t('Set the audio sampling frequency@default'),
+    'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
+    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
+    'padding' => t('Force padding, if aspect ratio is maintained@default'),
+    'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
+    'audiochannels' => t('The allowed value is between 0 and 2@default'),
+    '2_pass_h264_encoding' => t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding'),
+  );
+
+  foreach ($comments as $nice_parameter => $description) {
+    db_query("UPDATE {mediamosa_tool_params} SET description = :description WHERE nice_parameter = :nice_parameter", array(
+      ':description' => $description,
+      ':nice_parameter' => $nice_parameter,
+    ));
+  }
+}
+
+/**
+ * Fill the latest node revision with the mediamosa_tool_params table description field.
+ */
+function mediamosa_update_7096() {
+  $result = db_select('mediamosa_tool_params', 'tp')
+    ->fields('tp', array('vid', 'description'))
+    ->execute();
+
+  foreach ($result as $record) {
+    $revision_data = db_select('mediamosa_node_revision', 'nr')
+      ->condition('nr.vid', $record->vid)
+      ->fields('nr', array('revision_data'))
+      ->execute()
+      ->fetchField();
+
+    $revision_data = unserialize($revision_data);
+    $revision_data['description'] = $record->description;
+    $revision_data = serialize($revision_data);
+
+    db_query("UPDATE {mediamosa_node_revision} SET revision_data = :revision_data WHERE vid = :vid", array(
+      ':revision_data' => $revision_data,
+      ':vid' => $record->vid,
+    ));
+  }
+}
+
+/**
+ * Change the FTP user uid default value in table.
+ */
+function mediamosa_update_7097() {
+
+  if (db_field_exists('mediamosa_ftp_user', 'id')) {
+    db_change_field(
+      'mediamosa_ftp_user',
+      'uid',
+      'uid',
+      array(
+          'type' => 'int',
+          'size' => 'small',
+          'not null' => TRUE,
+          'description' => 'The linux user ID of the FTP user.',
+          'default' => '200',
+      )
+    );
+  }
+}
+
+/**
+ * Add new fields to mediamosa_tool_params table: switch.
+ */
+function mediamosa_update_7098() {
+  if (!db_field_exists('mediamosa_tool_params', 'type_parameter')) {
+    $spec = array(
+      'description' => 'It is a switch parameter or not.',
+      'type' => "enum('" . implode("','", array('SELECT', 'TYPE_PARAMETER_CHECKBOX')) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array('SELECT', 'TYPE_PARAMETER_CHECKBOX')) . "')",
+      'default' => 'SELECT',
+    );
+
+    db_add_field('mediamosa_tool_params', 'type_parameter', $spec);
+  }
+}
+
+/**
+ * Change mediamosa_server table.
+ * Add new field: mime_type.
+ * Add possible missing columns in mediamosa_app table.
+ */
+function mediamosa_update_7099() {
+  // Add mime_type field.
+  if (!db_field_exists('mediamosa_server', 'mime_type')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD mime_type TEXT COMMENT 'The optional mime type names this server can serve.' AFTER containers");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'still_default_size')) {
+    db_query("ALTER TABLE {mediamosa_app} ADD still_default_size varchar(25) DEFAULT '176x144' COMMENT 'The default size of the still image.' AFTER timezone");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'still_padding')) {
+    db_query("ALTER TABLE {mediamosa_app} ADD still_padding enum('NO','YES') NOT NULL DEFAULT 'YES' COMMENT 'Force padding, if aspect ratio is maintaned.' AFTER still_default_size");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'still_maintain_aspect_ratio')) {
+    db_query("ALTER TABLE {mediamosa_app} ADD still_maintain_aspect_ratio enum('NO','YES') NOT NULL DEFAULT 'YES' COMMENT 'Force maintain the original video aspect ratio or not.' AFTER still_padding");
+  }
+}
+
+/**
+ * Change mediamosa_asset_metadata_property table.
+ * Add new field: is_hidden.
+ * Add new index: is_hidden.
+ * Fix missing comments on database.
+ */
+function mediamosa_update_7100() {
+
+  if (!db_field_exists('mediamosa_asset_metadata_property', mediamosa_asset_metadata_property_db::IS_HIDDEN)) {
+    // Add is_hidden field.
+    db_add_field(
+      mediamosa_asset_metadata_property_db::TABLE_NAME,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN,
+      array(
+        'description' => t('True if the property is hidden.'),
+        'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      )
+    );
+
+    // Is_hidden.
+    db_add_index(
+      'mediamosa_asset_metadata_property',
+      'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
+      array(
+        mediamosa_asset_metadata_property_db::IS_HIDDEN
+      )
+    );
+  }
+}
+/**
+ * Update the mediamosa_app table schema with oAuth fields.
+ */
+function mediamosa_update_7101() {
+}
+
+/**
+ * Install the oAuth no-once .
+ */
+function mediamosa_update_7102() {
+  if (!db_table_exists(mediamosa_app_oauth_nonce_db::TABLE_NAME)) {
+    // Create nonce table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
+  }
+}
+
+/**
+ * Add field to MediaMosa app table.
+ */
+function mediamosa_update_7103() {
+  if (!db_field_exists(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE)) {
+    $spec = array(
+      'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'default' => NULL,
+    );
+
+    db_add_field('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE, $spec);
+  }
+}
+
+/**
+ * Install the mediamosa_app_oauth_token table.
+ */
+function mediamosa_update_7104() {
+  if (!db_table_exists('mediamosa_app_oauth_token')) {
+    // Create token table.
+    mediamosa::drupal_install_schema('mediamosa_app_oauth_token');
+  }
+}
+
+/**
+ * Add new fields to mediamosa_app table to determine which tools will put
+ * analyse data to asset metadata.
+ */
+function mediamosa_update_7105() {
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_key')) {
+    // oAuth consumer key.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+  }
+  else {
+    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_key oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
+    // oAuth consumer secret.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+  }
+  else {
+    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_secret oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+  }
+
+  if (!db_index_exists('mediamosa_app', 'idx_oauth_consumer_key')) {
+    // only add the main search query.
+    db_add_index(
+      'mediamosa_app',
+      'idx_oauth_consumer_key',
+      array(
+        mediamosa_app_db::OAUTH_CONSUMER_KEY,
+      )
+    );
+  }
+}
+
+/**
+ * Install mediamosa_tool_mapping table.
+ * Create the tool mapping node type.
+ */
+function mediamosa_update_7106() {
+
+  if (!db_table_exists('mediamosa_tool_mapping')) {
+    // Install mediamosa_tool_mapping table.
+    mediamosa::drupal_install_schema('mediamosa_tool_mapping');
+
+    // Create the tool params node type.
+    $tool_mapping_node_type = array(
+      'type' => 'mediamosa_tool_mapping',
+      'name' => st('MediaMosa tool mapping'),
+      'base' => 'mediamosa_tool_mapping',
+      'description' => st('The tool mapping contains information about how to map the tool (eg. pdf, tiff) analyse data to asset metadata.'),
+      'custom' => 1,
+      'modified' => 1,
+      'locked' => 0,
+      'has_body' => 0,
+    );
+    $tool_mapping_node_type = node_type_set_defaults($tool_mapping_node_type);
+    node_type_save($tool_mapping_node_type);
+  }
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+}
+
+/**
+ * Create new 'No mediafile found for the given asset and tag' errorcode in database.
+ */
+function mediamosa_update_7107() {
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert(mediamosa_error_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_error_db::NAME => 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG',
+        mediamosa_error_db::MESSAGE => "No mediafile found for the given asset and tag",
+        mediamosa_error_db::CODE => 620, // mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG.
+      ))
+    ->execute();
+  }
+}
+
+/**
+ * Create new 'The mediafile (@mediafile_id) is not original' errorcode in database.
+ * Create new 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)' errorcode in database.
+ */
+function mediamosa_update_7108() {
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL',
+        'message' => "The mediafile (@mediafile_id) is not original",
+        'code' => 723, //mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL,
+      ))
+    ->execute();
+  }
+
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_INVALID_MEDIAFILE_RELATION')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_INVALID_MEDIAFILE_RELATION',
+        'message' => "The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)",
+        'code' => 724, //mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION,
+      ))
+    ->execute();
+  }
+}
+
+/**
+ * Add server path field to mediamosa_server table.
+ */
+function mediamosa_update_7109() {
+  if (!db_field_exists('mediamosa_server', 'server_path')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD server_path VARCHAR(255) COMMENT 'The path of the server.' AFTER server_uri");
+  }
+}
+
+/**
+ * Split the server_uri to two parts, and fill the server_uri and server_path in mediamosa_server table and mediamosa_node_revision table.
+ */
+function mediamosa_update_7110() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+
+  $query = db_select('mediamosa_server', 's');
+  $query->fields('s', array('vid', 'server_uri'));
+  $result = $query->execute();
+  foreach ($result as $record) {
+    $vid = $record->vid;
+
+    $parsed_uri = $parsed_path = parse_url($record->server_uri);
+    if (empty($parsed_uri)) {
+      continue;
+    }
+
+    unset($parsed_uri['path']);
+    unset($parsed_uri['query']);
+    unset($parsed_uri['fragment']);
+    $server_uri = mediamosa_http::glue_url($parsed_uri);
+
+    unset($parsed_path['scheme']);
+    unset($parsed_path['host']);
+    unset($parsed_path['user']);
+    unset($parsed_path['pass']);
+    unset($parsed_path['port']);
+    $server_path = '{base_uri}' . mediamosa_http::glue_url($parsed_path);
+
+    // Update mediamosa_server table.
+    db_update('mediamosa_server')
+      ->fields(array(
+        'server_uri' => $server_uri,
+        'server_path' => $server_path,
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+
+    // Update mediamosa_node_revision table.
+
+    // Get the data.
+    $query_nr = db_select('mediamosa_node_revision', 'nr');
+    $query_nr
+      ->condition('nr.vid', $vid)
+      ->fields('nr', array('revision_data'))
+      ->range(0, 1);
+    $result_nr = $query_nr->execute();
+    $revision_data = $result_nr->fetchCol();
+    $revision_data = unserialize($revision_data[0]);
+
+    // Change the data.
+    unset($revision_data['uri']);
+    $revision_data['server_uri'] = $server_uri;
+    $revision_data['server_path'] = $server_path;
+
+    // Save the data.
+    db_update('mediamosa_node_revision')
+      ->fields(array(
+        'revision_data' => serialize($revision_data),
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+  }
+
+  return t('Your server configurations were changed. Please, check them: !here', array('!here' => l('admin/mediamosa/config/server', 'admin/mediamosa/config/server')));
+}
+
+/**
+ * Change server URI field to mediamosa_server table.
+ */
+function mediamosa_update_7111() {
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN server_uri server_uri VARCHAR(255) COMMENT 'The URI of the server.' AFTER server_type");
+}
+
+/**
+ * Change the size of the supplement.
+ */
+function mediamosa_update_7112() {
+  $spec = array(
+    'type' => 'blob',
+    'size' => 'big',
+    'description' => 'Contents of the supplement.',
+  );
+
+  db_change_field(
+    'mediamosa_asset_supplement',
+    'supplement',
+    'supplement',
+    $spec
+  );
+}
+
+/**
+ * Update the MediaMosa user.
+ */
+function mediamosa_update_7113() {
+
+  if (!db_field_exists('mediamosa_user', 'group_id')) {
+    return 'Update 7113 already run?';
+  }
+
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => FALSE,
+    'not null' => TRUE,
+    'description' => 'The disk quota in MB.',
+  );
+
+  // Just fix incorrect comments first.
+  db_change_field(
+    'mediamosa_user',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  db_change_field(
+    'mediamosa_user_group',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  // Primary key is downgraded to unique now.
+  db_drop_primary_key('mediamosa_user');
+  db_add_unique_key('mediamosa_user', 'uni_id_name_and_app', array(mediamosa_user_db::NAME, mediamosa_user_db::APP_ID));
+
+  // Add brand new 'serial' primary.
+  $spec = array(
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'description' => 'Primary Key: Unique ID.',
+  );
+
+  // Please note last parameter - array with primary key definition.
+  db_add_field('mediamosa_user', 'user_key', $spec, array('primary key' => array('user_key')));
+
+  // Primary key is downgraded to unique now.
+  db_drop_primary_key('mediamosa_user_group');
+  db_add_unique_key('mediamosa_user_group', 'uni_id_group_and_app', array('group_id', 'app_id'));
+
+  $spec = array(
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'description' => 'Primary Key: Unique ID.',
+  );
+
+  // Please note last parameter - array with primary key definition.
+  db_add_field('mediamosa_user_group', 'group_key', $spec, array('primary key' => array('group_key')));
+
+  // Our new user_in_group table.
+  $schema = array(
+  'description' => 'The user/group relation table.',
+    'fields' => array(
+      'relation_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
+      'user_key' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'User ID.',
+      ),
+      'group_key' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Group ID.',
+      ),
+    ),
+    'primary key' => array('relation_id'),
+    'unique keys' => array(
+      'uni_relation' => array('user_key', 'group_key'),
+    ),
+    'foreign keys' => array(
+      'user_key' => array('mediamosa_user' => 'user_key'),
+      'group_key' => array('mediamosa_user_group' => 'group_key'),
+    ),
+  );
+
+  // Create our new table.
+  db_create_table('mediamosa_user_in_group', $schema);
+
+  // Manually add foreign key.
+  // Sooner or later Drupal 7 will add foreign key support, so we will just
+  // silently catch exceptions.
+  $fk_template = "ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)";
+  $query_fk1 = strtr($fk_template,
+    array(
+      '#table_name' => 'mediamosa_user_in_group',
+      '#column' => 'user_key',
+      '#foreign_table_name' => 'mediamosa_user',
+      '#foreign_column' => 'user_key',
+    )
+  );
+  $query_fk2 = strtr($fk_template,
+    array(
+      '#table_name' => 'mediamosa_user_in_group',
+      '#column' => 'group_key',
+      '#foreign_table_name' => 'mediamosa_user_group',
+      '#foreign_column' => 'group_key',
+    )
+  );
+
+  try {
+    db_query($query_fk1);
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  try {
+    db_query($query_fk2);
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Migration goes here.
+  $query = mediamosa_db::db_select('mediamosa_user', 'u');
+  $query->fields('u', array('user_key'));
+  $query->join('mediamosa_user_group', 'g', 'u.group_id = g.group_id AND u.app_id = g.app_id');
+  $query->addField('g', 'group_key');
+  $users_in_group = $query->execute()->fetchAll();
+
+  $counter = 0;
+  foreach ($users_in_group as $item) {
+    mediamosa_db::db_query(
+      strtr("INSERT INTO {mediamosa_user_in_group} (#field_user_key, #field_group_key) VALUES (#user_key, #group_key)",
+        array(
+          '#table_name' => 'mediamosa_user_in_group',
+          '#field_user_key' => 'user_key',
+          '#field_group_key' => 'group_key',
+          '#user_key' => $item['user_key'],
+          '#group_key' => $item['group_key'],
+        )
+      ));
+    $counter++;
+  }
+
+  mediamosa_watchdog::log('Update: #number users belongs to groups. Group information migrated, multiple group membership enabled.',
+    array('#number' => $counter)
+  );
+
+  // Now we can get rid of the own old field.
+  db_drop_field('mediamosa_user', 'group_id');
+}
+
+/**
+ * Turn off MediaMosa App Authentication and turn on DBUS and oAuth modules.
+ */
+function mediamosa_update_7114() {
+
+  module_disable(array('mediamosa_app_dbus'), FALSE);
+
+  module_enable(array('mediamosa_app_dbus'));
+  module_enable(array('mediamosa_app_oauth'));
+
+  return t('The MediaMosa authentication module has been disabled, its been renamed to MediaMosa DBUS authentication and this new module has been enabled. Keep the MediaMosa authentication module turned off, it will be removed in next release.');
+}
+
+/**
+ * Activate new 3.0 look.
+ */
+function mediamosa_update_7115() {
+  // Clear.
+  cache_clear_all();
+
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
+
+  $default_theme = 'rubik';
+  variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
+  theme_disable(array('bartik', 'garland'));
+
+  // Disable toolbar.
+  module_disable(array('toolbar', 'dashboard'));
+
+  // And again.
+  drupal_flush_all_caches();
+
+  // Reset the update for status page, else the frontpage will be screwed.
+  variable_del('mediamosa_status_last_time');
+
+  return 'New 3.0 theme is enabled. The status page (home page) might be corrupt, this will automaticly fix itself within 10 minutes.';
+}
+
+/**
+ * Turn on image module.
+ */
+function mediamosa_update_7116() {
+  $module_list = array(
+    'image',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
+/**
+ * Create new "Unable creating derivative from image with style: @style, path:
+ * @path" errorcode in database.
+ */
+function mediamosa_update_7117() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_CREATING_DERIVATIVE')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_CREATING_DERIVATIVE',
+        'message' => "Unable creating derivative from image with style: @style, path: @path",
+        'code' => 1157, // mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+      ))
+    ->execute();
+  }
+}
+
+/**
+ * Fix missing comments on database.
+ */
+function mediamosa_update_7118() {
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN nid nid int(10) unsigned NOT NULL COMMENT 'The Drupal node id.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN vid vid int(10) unsigned NOT NULL COMMENT 'The Drupal node revision id.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN app_name app_name varchar(30) NOT NULL COMMENT 'The name of the client.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN app_id app_id int(11) NOT NULL COMMENT 'The unique application ID.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN transcoding_position_from transcoding_position_from tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Starting range of allowed transcoding.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN transcoding_position_to transcoding_position_to tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Ending range of allowed transcoding.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN quota quota int(11) NOT NULL DEFAULT '0' COMMENT 'The total allowed quota in gigabytes.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN quota_used quota_used bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'The current usage in gigabytes.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN shared_key shared_key varchar(100) DEFAULT NULL COMMENT 'The key to identify the client.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN active active enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The client can be enabled or disabled.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN active_version active_version varchar(25) NOT NULL DEFAULT '0' COMMENT 'Use as global versions for REST calls. When specified, use this version or lower of called REST calls.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN description description varchar(255) DEFAULT NULL COMMENT 'The description of the client.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN owner owner varchar(50) DEFAULT NULL COMMENT 'De owner of the used drupal rol.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN technical_name technical_name varchar(100) DEFAULT NULL COMMENT 'Technical name of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN technical_phone technical_phone varchar(40) DEFAULT NULL COMMENT 'Technical phone of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN technical_email technical_email varchar(50) DEFAULT NULL COMMENT 'Technical email address of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN administrative_name administrative_name varchar(100) DEFAULT NULL COMMENT 'Administrative name of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN administrative_phone administrative_phone varchar(40) DEFAULT NULL COMMENT 'Administrative phone of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN administrative_email administrative_email varchar(50) DEFAULT NULL COMMENT 'Administrative email of the client contact person.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN play_proxy_url play_proxy_url varchar(255) DEFAULT NULL COMMENT 'The URL to use for playing mediafiles.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN view_asset_url view_asset_url varchar(255) DEFAULT NULL COMMENT 'The URL to view the mediafiles.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN preview_profile_id preview_profile_id int(11) DEFAULT NULL COMMENT 'Transcoding profile used for previewing.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN download_url download_url varchar(255) DEFAULT NULL COMMENT 'Shown in the asset details rest calls. Available tags: asset_id, mediafile_id and mediafile_filename.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN stream_url stream_url varchar(255) DEFAULT NULL COMMENT 'Shown in the asset details rest calls. Available tags: asset_id, mediafile_id and mediafile_filename.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN still_url still_url varchar(255) DEFAULT NULL COMMENT 'Shown by OAI for still images. Available tags: asset_id.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN always_hint_mp4 always_hint_mp4 enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'Always hint (make streamable) mp4 files.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN is_metadata_public is_metadata_public enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'Is metadata of this client application public visible in OAI?'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN show_external_assets show_external_assets enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'Show external references in OAI (in field referenceId)?'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN transcoding_max_slots transcoding_max_slots int(11) NOT NULL DEFAULT '5' COMMENT 'Set the maximum number of transcoding jobs allowed for this application.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN allow_masterslave_apps allow_masterslave_apps text COMMENT 'An array of application IDs as PHP serialized which are allowed to add master/slave.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN timezone timezone varchar(32) DEFAULT 'Europe/Amsterdam' COMMENT 'The application timezone.'");
+
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN parent_id parent_id varbinary(32) DEFAULT NULL COMMENT 'The parent asset ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN provider_id provider_id varchar(255) DEFAULT NULL COMMENT 'The provider ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN videotimestamp videotimestamp datetime DEFAULT NULL COMMENT 'The time and date of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN videotimestampmodified videotimestampmodified datetime DEFAULT NULL COMMENT 'The modified time and date of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN play_restriction_start play_restriction_start datetime DEFAULT NULL COMMENT 'The start time in an range of time to restrict.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN play_restriction_end play_restriction_end datetime DEFAULT NULL COMMENT 'The end time in an range of time to restrict.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN reference_id reference_id varchar(255) DEFAULT NULL COMMENT 'The reference ID.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN isprivate isprivate enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The asset is private.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN mediafile_duration mediafile_duration varchar(11) DEFAULT NULL COMMENT 'The mediafile duration length.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN mediafile_container_type mediafile_container_type varchar(50) DEFAULT NULL COMMENT 'The container type length.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset was created.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset was changed last.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN is_unappropriate is_unappropriate enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'If the asset has unappropieate contents.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN is_external is_external enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'If the asset has external contents.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN is_empty_asset is_empty_asset enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'True if the asset has media.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN viewed viewed int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Number of times the asset was viewed.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN played played int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Number of times the asset was played.'");
+  db_query("ALTER TABLE {mediamosa_asset} CHANGE COLUMN is_protected is_protected enum('FALSE','USER_USERGROUP','DOMAIN_REALM','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Set kind of protection on the asset.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_collection} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Link to asset table.'");
+  db_query("ALTER TABLE {mediamosa_asset_collection} CHANGE COLUMN coll_id coll_id varbinary(32) NOT NULL COMMENT 'Link to collection table.'");
+  db_query("ALTER TABLE {mediamosa_asset_collection} CHANGE COLUMN is_empty_asset is_empty_asset enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'True if the asset in this collection has media.'");
+  db_query("ALTER TABLE {mediamosa_asset_collection} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset collection link was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_collection} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset collection link was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_delete} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Link to asset table.'");
+  db_query("ALTER TABLE {mediamosa_asset_delete} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset_delete} CHANGE COLUMN videotimestampmodified videotimestampmodified datetime DEFAULT NULL COMMENT 'The modified time and date of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset_delete} CHANGE COLUMN coll_id coll_id varbinary(32) DEFAULT NULL COMMENT 'Link to collection table.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN mediafile_id mediafile_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'The parent asset ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN mediafile_id_source mediafile_id_source varbinary(32) DEFAULT NULL COMMENT 'The source or original ID of the media from which this media was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN tag tag varbinary(32) DEFAULT NULL COMMENT 'Can contain user defined tag.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN is_original_file is_original_file enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'This is the original media.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN is_downloadable is_downloadable enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The media can be downloaded.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN is_streamable is_streamable enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The media can be streamed.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN is_still is_still enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The media is an still.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN filename filename varchar(255) DEFAULT NULL COMMENT 'The optional filename.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN uri uri text COMMENT 'The optional URI location.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN sannas_mount_point sannas_mount_point text COMMENT 'The san-nas mount location of the file.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcoding profile ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN tool tool varchar(10) DEFAULT NULL COMMENT 'The tool used when creating file.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN command command text COMMENT 'The command used to create the file.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN file_extension file_extension varchar(5) DEFAULT NULL COMMENT 'The file extension.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN is_protected is_protected enum('FALSE','USER_USERGROUP','DOMAIN_REALM','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Set kind of protection on the media.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when media was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when media was changed last.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN transcode_inherits_acl transcode_inherits_acl enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The asset can be locked or unlocked.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN metadata_id metadata_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN mediafile_id mediafile_id varbinary(32) NOT NULL COMMENT 'The asset mediafile ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN prop_id prop_id int(10) unsigned NOT NULL COMMENT 'The property ID of the metadata.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN val_char val_char text COMMENT 'The value of the property stored as a string.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN val_datetime val_datetime datetime DEFAULT NULL COMMENT 'The date and time of the property value.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} CHANGE COLUMN val_int val_int bigint(20) DEFAULT NULL COMMENT 'The numeric value of the property.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata_property} CHANGE COLUMN prop_id prop_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata_property} CHANGE COLUMN prop_name prop_name varchar(32) NOT NULL COMMENT 'The name of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata_property} CHANGE COLUMN type type enum('DATETIME','INT','CHAR') NOT NULL DEFAULT 'CHAR' COMMENT 'The type of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata_property} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset mediafile metadata property was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata_property} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset mediafile metadata property was changed.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN metadata_id metadata_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'The asset ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN prop_id prop_id int(10) unsigned NOT NULL COMMENT 'The property ID of the metadata.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN val_char val_char longtext COMMENT 'The value of the property stored as an string.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN val_char_lft val_char_lft varchar(50) DEFAULT NULL COMMENT 'The first 50 string characters of the property value.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN val_char_rght val_char_rght varchar(50) DEFAULT NULL COMMENT 'The last 50 string characters of the property value in reverse order.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN val_datetime val_datetime datetime DEFAULT NULL COMMENT 'The date and time of the property value.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN val_int val_int int(11) NOT NULL DEFAULT '0' COMMENT 'The numeric value of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset metadata was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset metadata was changed.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN prop_id prop_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The property group ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN propgroup_id propgroup_id int(11) NOT NULL COMMENT 'The property group ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN prop_name prop_name varchar(32) NOT NULL COMMENT 'The name of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN type type enum('DATETIME','INT','CHAR') NOT NULL DEFAULT 'CHAR' COMMENT 'The type of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN min_occurences min_occurences int(11) NOT NULL DEFAULT '0' COMMENT 'The minimal occurence of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN max_occurences max_occurences int(11) NOT NULL DEFAULT '0' COMMENT 'The maximum occurence of the property.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset metadata property was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset metadata property was changed.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property_group} CHANGE COLUMN propgroup_id propgroup_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property_group} CHANGE COLUMN propgroup_name propgroup_name varchar(50) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property_group} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset metadata property was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_metadata_property_group} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset metadata property was changed.'");
+
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement_id supplement_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement supplement longblob COMMENT 'Contents of the supplement.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN tag tag varchar(255) DEFAULT NULL COMMENT 'Tag for fast search and lookup.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_prefix oai_prefix varchar(25) DEFAULT NULL COMMENT 'OAI Prefix.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_namespaceuri oai_namespaceuri varchar(255) DEFAULT NULL COMMENT 'OAI namespace URI.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_schemalocation oai_schemalocation varchar(255) DEFAULT NULL COMMENT 'OAI Schema location.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when supplement was created.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when supplement was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN aut_object_id aut_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN aut_object_type aut_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN app_id_slave app_id_slave int(10) unsigned NOT NULL COMMENT 'The slave application ID.'");
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN app_id_master app_id_master int(10) unsigned NOT NULL COMMENT 'The master application ID.'");
+
+  db_query("ALTER TABLE {mediamosa_aut_group} CHANGE COLUMN aut_group_id aut_group_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_aut_group} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_aut_group} CHANGE COLUMN aut_group_name aut_group_name varchar(128) NOT NULL DEFAULT '' COMMENT 'The group name.'");
+  db_query("ALTER TABLE {mediamosa_aut_group} CHANGE COLUMN aut_group_type aut_group_type enum('REALM','DOMAIN') NOT NULL DEFAULT 'REALM' COMMENT 'The type of group.'");
+
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN aut_name_id aut_name_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN aut_group_id aut_group_id int(10) unsigned DEFAULT NULL COMMENT 'The optional group ID if name is part of group.'");
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN aut_name aut_name varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the entity.'");
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN aut_prefix aut_prefix varchar(128) DEFAULT NULL COMMENT 'The optional prefix of the entity, only used with REALM type.'");
+  db_query("ALTER TABLE {mediamosa_aut_name} CHANGE COLUMN aut_type aut_type enum('DOMAIN','REALM','USER','USER_GROUP') NOT NULL DEFAULT 'DOMAIN' COMMENT 'The type of name entity.'");
+
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN aut_object_id aut_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN aut_object_type aut_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN aut_id aut_id int(10) unsigned NOT NULL COMMENT 'The entity ID, links to aut_name or aut_group.'");
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN aut_type aut_type enum('NAME','GROUP') DEFAULT NULL COMMENT 'The type of entity, links to aut_name or aut_group.'");
+
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN coll_id coll_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN title title varchar(255) DEFAULT NULL COMMENT 'The collection title.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN description description varchar(1000) DEFAULT NULL COMMENT 'The collection description.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group ID.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN isprivate isprivate enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The collection is private.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN private private enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The collection is private.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN public public enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The collection is public.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN category category enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The collection’s category.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when asset was created.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when asset was changed last.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN is_unappropriate is_unappropriate enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'If the collection has unappropieate contents.'");
+  db_query("ALTER TABLE {mediamosa_collection} CHANGE COLUMN public_assign public_assign enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'If the collection public assigned.'");
+
+  db_query("ALTER TABLE {mediamosa_error} CHANGE COLUMN error_id error_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_error} CHANGE COLUMN name name varchar(100) NOT NULL DEFAULT '' COMMENT 'The ID in capitals of the error code.'");
+  db_query("ALTER TABLE {mediamosa_error} CHANGE COLUMN code code int(10) unsigned NOT NULL COMMENT 'The error code number.'");
+  db_query("ALTER TABLE {mediamosa_error} CHANGE COLUMN message message text NOT NULL COMMENT 'The message to display.'");
+
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN batch_id batch_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner of the batch.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group owner of the batch.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN vuf vuf varchar(1024) NOT NULL COMMENT 'The VUF file location.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN started started datetime DEFAULT NULL COMMENT 'The started datatime of batch.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN finished finished datetime DEFAULT NULL COMMENT 'The finished datatime of batch.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN email_address email_address varchar(1024) DEFAULT NULL COMMENT 'The email address of creator.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch} CHANGE COLUMN email_contents email_contents text COMMENT 'The email address of creator.'");
+
+  db_query("ALTER TABLE {mediamosa_ftp_batch_asset} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'The asset ID that links to mediamosa_asset table.'");
+  db_query("ALTER TABLE {mediamosa_ftp_batch_asset} CHANGE COLUMN batch_id batch_id int(10) unsigned NOT NULL COMMENT 'The batch ID that links to mediamosa_ftp_batch table.'");
+
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN id id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the FTP user.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN userid userid varbinary(32) NOT NULL COMMENT 'The User ID.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN passwd passwd varbinary(255) NOT NULL COMMENT 'The Password.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN gid gid smallint(6) NOT NULL DEFAULT '200' COMMENT 'The linux group ID of the FTP user.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN homedir homedir varchar(255) NOT NULL COMMENT 'The home directory path.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN shell shell varchar(16) NOT NULL DEFAULT '/bin/false' COMMENT 'The home directory path.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN active active tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Active setting.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN count count int(11) NOT NULL DEFAULT '0' COMMENT 'The login count.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN accessed accessed datetime DEFAULT NULL COMMENT 'The access time.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN modified modified datetime DEFAULT NULL COMMENT 'The modified time.'");
+
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'The asset ID.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN mediafile_id mediafile_id varbinary(32) DEFAULT NULL COMMENT 'The mediafile ID.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN owner owner varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN status status enum('WAITING','INPROGRESS','FINISHED','FAILED','CANCELLED') NOT NULL DEFAULT 'WAITING' COMMENT 'The status of the job.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN progress progress varchar(5) NOT NULL DEFAULT '0.000' COMMENT 'The progress of the job from 0.000 to 1.000.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN priority priority tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Priority switch.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN started started datetime DEFAULT NULL COMMENT 'The date and time when job was started.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN finished finished datetime DEFAULT NULL COMMENT 'The date and time when job was finished.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN create_still create_still enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The status of the job.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN still_parameters still_parameters text COMMENT 'Parameters when creating still.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN error_description error_description text COMMENT 'Possible error description log.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when job was created.'");
+  db_query("ALTER TABLE {mediamosa_job} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN jobserver_job_id jobserver_job_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN install_id install_id varchar(16) NOT NULL DEFAULT 'default' COMMENT 'The installion ID for multiple installments of jobserver.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN status status enum('WAITING','INPROGRESS','FINISHED','FAILED','CANCELLED') NOT NULL DEFAULT 'WAITING' COMMENT 'The status of the job.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN progress progress varchar(5) NOT NULL DEFAULT '0.000' COMMENT 'The progress of the job from 0.000 to 1.000.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN job_type job_type enum('TRANSCODE','STILL','UPLOAD','ANALYSE','DELETE_MEDIAFILE') NOT NULL DEFAULT 'UPLOAD' COMMENT 'The status of the job.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN progress_id progress_id int(10) unsigned DEFAULT NULL COMMENT 'Unused.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN mediafile_src mediafile_src varbinary(32) DEFAULT NULL COMMENT 'The mediafile ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN mediafile_dest mediafile_dest text COMMENT 'The mediafile.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN started started datetime DEFAULT NULL COMMENT 'The date and time when job was started.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN finished finished datetime DEFAULT NULL COMMENT 'The date and time when job was finished.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN error_description error_description text COMMENT 'Possible error description log.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_server} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_server_analyse} CHANGE COLUMN jobserver_job_id jobserver_job_id int(10) unsigned NOT NULL COMMENT 'The server job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server_analyse} CHANGE COLUMN analyse_result analyse_result text COMMENT 'The analyse result.'");
+  db_query("ALTER TABLE {mediamosa_job_server_analyse} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when job analyse was created.'");
+  db_query("ALTER TABLE {mediamosa_job_server_analyse} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when job analyse was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN jobserver_job_id jobserver_job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN size size varchar(10) DEFAULT NULL COMMENT 'The size for still.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN frametime frametime int(11) DEFAULT NULL COMMENT 'The still frametime.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN h_padding h_padding int(10) unsigned DEFAULT NULL COMMENT 'The horizontal padding.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN v_padding v_padding int(10) unsigned DEFAULT NULL COMMENT 'The vertical padding.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN blackstill_check blackstill_check enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Enable to prevent dark empty stills.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN still_parameters still_parameters text COMMENT 'Still parameters.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when still job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_server_still} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when still job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN jobserver_job_id jobserver_job_id int(10) unsigned NOT NULL COMMENT 'The job server ID.'");
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN tool tool varchar(10) DEFAULT NULL COMMENT 'The tool used.'");
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN command command text COMMENT 'The command.'");
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN file_extension file_extension char(5) DEFAULT NULL COMMENT 'The file extension.'");
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when transcode job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_server_transcode} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when transcode job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN still_job_id still_job_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN size size varchar(10) DEFAULT NULL COMMENT 'The size for still.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN frametime frametime int(11) DEFAULT NULL COMMENT 'The still frametime.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN h_padding h_padding int(10) unsigned DEFAULT NULL COMMENT 'The horizontal padding.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN v_padding v_padding int(10) unsigned DEFAULT NULL COMMENT 'The vertical padding.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN blackstill_check blackstill_check enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Enable to prevent dark empty stills.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN still_parameters still_parameters text COMMENT 'Still parameters.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when still job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_still} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when still job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN transcode_job_id transcode_job_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN tool tool varchar(10) DEFAULT NULL COMMENT 'The tool used.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN command command text COMMENT 'The command.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN completed_transcoding_url completed_transcoding_url text COMMENT 'The transcoding URL.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN file_extension file_extension char(5) DEFAULT NULL COMMENT 'The file extension.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when transcode job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_transcode} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when transcode job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN upload_job_id upload_job_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN file_size file_size int(10) unsigned DEFAULT '0' COMMENT 'The file size.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN uploaded_file_size uploaded_file_size int(10) unsigned DEFAULT '0' COMMENT 'The uploaded file size.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN retranscode retranscode enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Enable to prevent dark empty stills.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN create_still create_still enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Enable to prevent dark empty stills.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when upload job was created.'");
+  db_query("ALTER TABLE {mediamosa_job_upload} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when upload job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_node_revision} CHANGE COLUMN nid nid int(10) unsigned NOT NULL COMMENT 'The Drupal node id.'");
+  db_query("ALTER TABLE {mediamosa_node_revision} CHANGE COLUMN vid vid int(10) unsigned NOT NULL COMMENT 'The Drupal node revision id.'");
+  db_query("ALTER TABLE {mediamosa_node_revision} CHANGE COLUMN revision_data revision_data text NOT NULL COMMENT 'The data of the revision, stored as an serialized array.'");
+
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN nid nid int(10) unsigned NOT NULL COMMENT 'The Drupal node id.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN vid vid int(10) unsigned NOT NULL COMMENT 'The Drupal node revision id.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN version version int(10) unsigned DEFAULT NULL COMMENT 'The version number.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN server_status server_status enum('OFF','ON','CLOSE') NOT NULL COMMENT 'The server status.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN server_uri server_uri varchar(255) DEFAULT NULL COMMENT 'The optional URI of the server.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN description description varchar(255) DEFAULT '' COMMENT 'The description of the server.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN containers containers text COMMENT 'The optional container names this server can serve.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN object_code object_code text COMMENT 'The optional container names the server can serve.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN server_name server_name varchar(255) DEFAULT NULL COMMENT 'The optional name of the server.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN slots slots int(11) DEFAULT NULL COMMENT 'The maximum number of concurrent transcodes.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN tools tools text COMMENT 'The optional tools this server serves.'");
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN uri_upload_progress uri_upload_progress varchar(255) DEFAULT NULL COMMENT 'The optional uri of the upload progress.'");
+
+  db_query("ALTER TABLE {mediamosa_server_job} CHANGE COLUMN server_id server_id int(10) unsigned NOT NULL COMMENT 'The server ID points to mediamosa_server nid field.'");
+  db_query("ALTER TABLE {mediamosa_server_job} CHANGE COLUMN job_id job_id int(10) unsigned NOT NULL COMMENT 'The job ID.'");
+  db_query("ALTER TABLE {mediamosa_server_job} CHANGE COLUMN progress progress tinyint(3) unsigned DEFAULT '0' COMMENT 'The progress.'");
+  db_query("ALTER TABLE {mediamosa_server_job} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when server job was created.'");
+  db_query("ALTER TABLE {mediamosa_server_job} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when server job was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_server_streaming_container} CHANGE COLUMN streaming_server_container_id streaming_server_container_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
+  db_query("ALTER TABLE {mediamosa_server_streaming_container} CHANGE COLUMN nid nid int(11) NOT NULL COMMENT 'The parent server node ID.'");
+  db_query("ALTER TABLE {mediamosa_server_streaming_container} CHANGE COLUMN container container varchar(255) NOT NULL COMMENT 'The container.'");
+
+  db_query("ALTER TABLE {mediamosa_server_tool} CHANGE COLUMN server_tool_id server_tool_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
+  db_query("ALTER TABLE {mediamosa_server_tool} CHANGE COLUMN nid nid int(11) NOT NULL COMMENT 'The parent server node ID.'");
+  db_query("ALTER TABLE {mediamosa_server_tool} CHANGE COLUMN tool tool varchar(255) NOT NULL COMMENT 'The tool used for job process.'");
+
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN keyword keyword varchar(100) NOT NULL COMMENT 'The keyword.'");
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN container_type container_type varchar(50) NOT NULL COMMENT 'The keyword.'");
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN diskspace diskspace int(11) NOT NULL COMMENT 'Diskspace.'");
+  db_query("ALTER TABLE {mediamosa_statistics_diskspace_used} CHANGE COLUMN timestamp timestamp datetime NOT NULL COMMENT 'The time and date.'");
+
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN file_size file_size bigint(20) NOT NULL COMMENT 'The file size of the upload.'");
+  db_query("ALTER TABLE {mediamosa_statistics_file_upload} CHANGE COLUMN timestamp timestamp datetime NOT NULL COMMENT 'The time and date of the upload.'");
+
+  db_query("ALTER TABLE {mediamosa_statistics_rest_log} CHANGE COLUMN id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_rest_log} CHANGE COLUMN request request text NOT NULL COMMENT 'The request URI.'");
+  db_query("ALTER TABLE {mediamosa_statistics_rest_log} CHANGE COLUMN process_time process_time float NOT NULL COMMENT 'The process time.'");
+  db_query("ALTER TABLE {mediamosa_statistics_rest_log} CHANGE COLUMN query_count query_count int(11) NOT NULL COMMENT 'The query count.'");
+
+  db_query("ALTER TABLE {mediamosa_statistics_search_request} CHANGE COLUMN id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_search_request} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_statistics_search_request} CHANGE COLUMN keyword keyword varchar(1000) NOT NULL COMMENT 'The searched string.'");
+  db_query("ALTER TABLE {mediamosa_statistics_search_request} CHANGE COLUMN searched searched datetime NOT NULL COMMENT 'The time and date of the search.'");
+
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN ticket_id ticket_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN ticket_type ticket_type enum('PLAY','DOWNLOAD','STILL','UPLOAD') NOT NULL DEFAULT 'PLAY' COMMENT 'The ticket type.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN issued issued datetime NOT NULL COMMENT 'The date and time when media was issued.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN owner_id owner_id varchar(255) DEFAULT NULL COMMENT 'The owner ID.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN group_id group_id varchar(255) DEFAULT NULL COMMENT 'The group ID.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN mediafile_id mediafile_id varbinary(32) NOT NULL COMMENT 'The mediafile ID.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when media was created.'");
+  db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when media was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN nid nid int(10) unsigned NOT NULL COMMENT 'The Drupal node id.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN vid vid int(10) unsigned NOT NULL COMMENT 'The Drupal node revision id.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN version version int(10) unsigned DEFAULT NULL COMMENT 'Version profile.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN profile profile varchar(100) DEFAULT NULL COMMENT 'Profile data.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN is_default_profile is_default_profile enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'The asset is private.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN tool tool varchar(10) DEFAULT NULL COMMENT 'Tool used.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN file_extension file_extension char(4) DEFAULT NULL COMMENT 'file extension.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN command command text COMMENT 'Command.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when transcode profile was created.'");
+  db_query("ALTER TABLE {mediamosa_transcode_profile} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when transcode profile was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN name name varchar(255) NOT NULL COMMENT 'The name of user.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_user_favorite} CHANGE COLUMN name name varchar(255) NOT NULL COMMENT 'The name of user.'");
+  db_query("ALTER TABLE {mediamosa_user_favorite} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
+  db_query("ALTER TABLE {mediamosa_user_favorite} CHANGE COLUMN fav_type fav_type enum('ASSET','COLLECTION') NOT NULL COMMENT 'If the collection has unappropieate contents.'");
+  db_query("ALTER TABLE {mediamosa_user_favorite} CHANGE COLUMN fav_id fav_id varbinary(32) NOT NULL COMMENT 'The ID to the favorite object.'");
+
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN group_id group_id varchar(255) NOT NULL COMMENT 'The name of group.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
+
+  db_query("ALTER TABLE {mediamosa_webservice} CHANGE COLUMN webservice_id webservice_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'The webservice ID.'");
+  db_query("ALTER TABLE {mediamosa_webservice} CHANGE COLUMN version version int(10) unsigned NOT NULL COMMENT 'The version of the webservice.'");
+  db_query("ALTER TABLE {mediamosa_webservice} CHANGE COLUMN handle handle varchar(50) NOT NULL COMMENT 'The handle of the webservice.'");
+  db_query("ALTER TABLE {mediamosa_webservice} CHANGE COLUMN description description varchar(255) NOT NULL COMMENT 'The handle of the webservice.'");
+  db_query("ALTER TABLE {mediamosa_webservice} CHANGE COLUMN status status enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The webservice main switch.'");
+
+  db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN webservice_app_id webservice_app_id int(11) NOT NULL AUTO_INCREMENT COMMENT 'The webservice app ID.'");
+  db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN webservice_handle webservice_handle varchar(50) NOT NULL COMMENT 'The handle of the webservice.'");
+  db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The APP ID.'");
+  db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN status status enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The webservice application switch.'");
+}
+
+/**
+ * Remove AUT registration in Drupal. Module is renamed to ACL.
+ */
+function mediamosa_update_7119() {
+  // Remove from system.
+  db_query("DELETE FROM {system} WHERE name = 'mediamosa_aut'");
+
+  // From registry.
+  db_query("DELETE FROM {registry} WHERE name LIKE 'mediamosa\\_aut%'");
+
+  // Rename the tables.
+  if (db_table_exists('mediamosa_aut_app_master_slave')) {
+    db_rename_table('mediamosa_aut_app_master_slave', 'mediamosa_acl_app_master_slave');
+  }
+  if (db_table_exists('mediamosa_aut_group')) {
+    db_rename_table('mediamosa_aut_group', 'mediamosa_acl_group');
+  }
+  if (db_table_exists('mediamosa_aut_name')) {
+    db_rename_table('mediamosa_aut_name', 'mediamosa_acl_name');
+  }
+  if (db_table_exists('mediamosa_aut_object')) {
+    db_rename_table('mediamosa_aut_object', 'mediamosa_acl_object');
+  }
+
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_name acl_group_name varchar(128) NOT NULL DEFAULT '' COMMENT 'The group name.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_type acl_group_type enum('REALM','DOMAIN') NOT NULL DEFAULT 'REALM' COMMENT 'The type of group.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name_id acl_name_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned DEFAULT NULL COMMENT 'The optional group ID if name is part of group.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name acl_name varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the entity.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_prefix acl_prefix varchar(128) DEFAULT NULL COMMENT 'The optional prefix of the entity, only used with REALM type.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_type acl_type enum('DOMAIN','REALM','USER','USER_GROUP') NOT NULL DEFAULT 'DOMAIN' COMMENT 'The type of name entity.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_id acl_id int(10) unsigned NOT NULL COMMENT 'The entity ID, links to acl_name or acl_group.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_type acl_type enum('NAME','GROUP') DEFAULT NULL COMMENT 'The type of entity, links to acl_name or acl_group.'");
+
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_ALREADY_EXISTS' WHERE name = 'ERRORCODE_AUT_GROUP_ALREADY_EXISTS'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_GROUP_NOT_FOUND'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_NAME_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_NAME_NOT_FOUND'");
+
+  // Enable the new ACL module.
+  module_enable(array('mediamosa_acl'));
+
+  return 'The AUT module has been removed in 3.0 and is now called ACL. Old module has been removed successfully.';
+}
+
+/**
+ * Change comment on field in mediamosa_tool_params.
+ */
+function mediamosa_update_7120() {
+  db_query("ALTER TABLE {mediamosa_tool_params} CHANGE COLUMN type_parameter type_parameter enum('SELECT','CHECKBOX') NOT NULL DEFAULT 'SELECT' COMMENT 'The type of the parameter.'");
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7121() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+}

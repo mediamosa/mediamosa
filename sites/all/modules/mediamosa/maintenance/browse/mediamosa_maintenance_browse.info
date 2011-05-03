@@ -1,0 +1,18 @@
+; $Id$
+
+name = "Contents browser"
+description = "Use this module to be able to browse through assets, collections, and REST calls definitions."
+package = "MediaMosa - Maintenance"
+version = "3.0.0"
+core = 7.x
+
+; Used files.
+
+; Dependencies
+dependencies[] = mediamosa
+dependencies[] = mediamosa_app
+dependencies[] = mediamosa_asset
+dependencies[] = mediamosa_collection
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance
+dependencies[] = simpletest

@@ -1,0 +1,59 @@
+; $Id:  $
+name = "MediaMosa"
+distribution_name = "MediaMosa"
+description = "<p>MediaMosa is a full featured, webservice oriented media management and distribution platform. MediaMosa is implemented as a modular extension to the open source Drupal system. You'll find the MediaMosa specific modules in sites/all/modules, the remainder of the tree is the standard Drupal core.</p><p>Before proceeding, please visit our <a href=\"http://mediamosa.org/trac/wiki/Quick%20install\">quick_install</a>.</p><p>Please visit mediamosa.org for more information, announcements, documentation, community forums, and new releases.</p><p>References:<ul><li><a href=\"http://www.mediamosa.org\">mediamosa.org</a></li><li><a href=\"http://www.drupal.org\">www.drupal.org</a></li></ul></p>"
+
+version = 2.2
+core = 7.x
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = color
+dependencies[] = help
+dependencies[] = menu
+dependencies[] = dblog
+dependencies[] = image
+dependencies[] = simpletest
+dependencies[] = mediamosa_sdk
+
+dependencies[] = mediamosa
+dependencies[] = mediamosa_app
+dependencies[] = mediamosa_app_dbus
+dependencies[] = mediamosa_app_oauth
+dependencies[] = mediamosa_asset
+dependencies[] = mediamosa_acl
+dependencies[] = mediamosa_batch_jobs
+dependencies[] = mediamosa_collection
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_configuration_debug
+dependencies[] = mediamosa_configuration_proxy
+dependencies[] = mediamosa_configuration_server
+dependencies[] = mediamosa_configuration_storage
+dependencies[] = mediamosa_connector
+dependencies[] = mediamosa_development
+dependencies[] = mediamosa_error
+dependencies[] = mediamosa_ftp_batch
+dependencies[] = mediamosa_ftp_user
+dependencies[] = mediamosa_integrity_check
+dependencies[] = mediamosa_job
+dependencies[] = mediamosa_sdk
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance_automatedsimpletest
+dependencies[] = mediamosa_maintenance_browse
+dependencies[] = mediamosa_maintenance_status
+dependencies[] = mediamosa_maintenance_status_component
+dependencies[] = mediamosa_maintenance_status_configuration
+//dependencies[] = mediamosa_maintenance_status_server, Not done yet.
+dependencies[] = mediamosa_migration
+dependencies[] = mediamosa_profile
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_statistics
+dependencies[] = mediamosa_ticket
+//dependencies[] = mediamosa_tool_windows
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_user
+dependencies[] = mediamosa_webservice
+dependencies[] = mediamosa_tool
+dependencies[] = mediamosa_tool_ffmpeg
+
+; Using _profile extension to prevent name collisions with core module.
+files[] = mediamosa_profile.profile

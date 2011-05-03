@@ -1,0 +1,112 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL sort on 'mediafile_duration' file.
+  */
+class MediaMosaAssetCQLMediafileDurationTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - sort on "mediafile_duration"',
+      'description' => 'Testing CQL sort on "mediafile_duration" related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test sort on 'mediafile_duration' (233).
+  public function testCQLSortMediafileDuration() {
+
+    // Limit.
+    $limit = 10;
+
+    // Upload files.
+    $response_1 = $this->uploadTestFile();
+    $response_2 = $this->uploadTestFile();
+    $response_3 = $this->uploadTestFile();
+
+    // Update mediafile_duration.
+    $num_updated = db_update(mediamosa_asset_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_asset_db::MEDIAFILE_DURATION => '00:00:12.38',
+      ))
+      ->condition(mediamosa_asset_db::ID, $response_1['asset_id'])
+      ->execute();
+    $num_updated = db_update(mediamosa_asset_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_asset_db::MEDIAFILE_DURATION => '00:00:29.92',
+      ))
+      ->condition(mediamosa_asset_db::ID, $response_3['asset_id'])
+      ->execute();
+
+    // Search with CQL.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => strtr('(owner_id=="^@owner_id^")', array('@owner_id' => addslashes(self::SIMPLETEST_USER_ID))),
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with CQL, sortby title.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => strtr('(owner_id=="^@owner_id^") sortby title', array('@owner_id' => addslashes(self::SIMPLETEST_USER_ID))),
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with CQL, sortby mediafile_duration.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => strtr('(owner_id=="^@owner_id^") sortby mediafile_duration', array('@owner_id' => addslashes(self::SIMPLETEST_USER_ID))),
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+  }
+}

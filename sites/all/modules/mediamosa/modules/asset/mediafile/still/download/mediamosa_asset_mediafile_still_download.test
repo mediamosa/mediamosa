@@ -1,0 +1,151 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * MediaMosa Storage / SAN/NAS unittests.
+ *
+ * Based on tickets mediamosa 1:
+ *
+ * ticket_616
+ */
+
+/**
+  * @file
+  * Unittests for Conf. storage module.
+  */
+class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJob {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Still - Download test',
+      'description' => 'Test downloading of stills with tickets.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+    );
+  }
+
+  function testStillDownload() {
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+
+    $upload = $this->uploadTestFile($this->getTestVideo_ogg());
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset, so we have the still.
+    $asset = $this->getAsset($asset_id);
+
+    $still_servers = mediamosa_server::get_enabled_still();
+    $this->assertTrue(!empty($still_servers), t('@num enabled still server(s) found.', array('@num' => $still_servers->rowCount())));
+
+    // Get the stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $stills = reset($stills);
+
+    // Output still.
+    $this->var_export($stills);
+
+    // Some tests.
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
+
+    $still_id = $stills['stills']['still_id'];
+
+    foreach ($still_servers as $still_server) {
+      $url = str_replace('{TICKET}', $still_id, mediamosa_server::get_server_url($still_server));
+
+      // Test the output, do output call.
+      $url = str_replace('/still/', '/simpletest/still/', $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // Dump header.
+      $this->var_export($result->headers);
+
+      // Get filepath to still.
+      $still_link = mediamosa_configuration_storage::still_filename_get($still_id);
+
+      $this->var_export($still_link, 'still path');
+
+      // Does it exists?
+      $this->assertTrue(mediamosa_io::file_exists($still_link, TRUE), 'Found still file.');
+
+      // Get the still filesize.
+      $still_size = mediamosa_io::filesize($still_link);
+
+      $this->var_export($still_size, 'still size');
+      $this->var_export(strlen($result->data), 'download size');
+
+      // Filesize of the file must be same as ours.
+      $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Dump header.
+      // Normally we would test if X-MediaMosa-Version is the new call of the
+      // REST call, so we know Apache redirect worked. But we can't rely on it
+      // in our test, because it depends how the server was setup. So we just
+      // loop at the var dump of the headers.
+      $this->var_export($result->headers);
+
+      // /still/x/xxxxxx test.
+      $url = str_replace('{TICKET}', $still_id[0] . '/' . $still_id, mediamosa_server::get_server_url($still_server));
+
+      // Test the output, do output call.
+      $url = str_replace('/still/', '/simpletest/still/', $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // Dump header.
+      $this->var_export($result->headers);
+    }
+  }
+}

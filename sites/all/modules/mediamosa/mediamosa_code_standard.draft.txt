@@ -1,0 +1,85 @@
+
+
+Draft for starting code standard for MediaMosa 2.x and higher.
+
+- Misc;
+  * Use mediamosa_io for IO related functions like mkdir, unlink, etc.
+  * All non-drupal hook functions must be inside static classes so they 
+    are autoloaded.
+  * All class function should have their array's hint typed;
+    function foo(array $foo) {
+     ...
+    }
+  * End variable name of array's with s when it contains more than one entity;
+    function foo(array $clients) {
+      foreach ($clients as $client) {
+        ...
+      }
+    }
+  * There is no reason for 99% of the functions to return TRUE / FALSE. We 
+    consider functions, when they return all was OK. Anything that goes wrong 
+    will cause an exception to be thrown. Exceptions for TRUE / FALSE returns 
+    are functions that are not fatal when returning FALSE, f.e. testing exists
+    on file.
+  * Do not create core functions that enrich a response object, prefer returning
+    array and let the REST call function enrich the response with the returned 
+    array. Enriching response objects makes the function useless for re-usage
+    for code that don't use response objects. In current code there are still 
+    some of the code that uses response objects, these will be re-written.
+
+- Database;
+  * Always use $result as variable name;
+    $result = mediamosa_db::db_query('...');
+  * Use the mediamosa_db, do not use drupal db_* functions. These are wrapped in
+    our mediamosa_db class.
+  * Favor use ON instead of USING() in your JOINs, drupal 7 layer doesn't
+    support this in its db_select class,
+  * Favor usage of db_query for complex selects instead of db_select.
+  * Build aliases of tables with the first letter of each word (skipping 
+    mediamosa);
+    mediamosa_asset AS a
+    mediamosa_asset_mediafile AS amf
+    mediamosa_asset_metadata AS amd
+    mediamosa_asset_mediafile_metadata AS amfmd
+    mediamosa_collection AS c
+    mediamosa_collection_asset AS ca
+    etc.
+  * Stop using db_set_active(), all is in drupal database. Better use an 
+    installation in a installation (prefix).
+  * All tables must start with 'mediamosa_'
+  * Think about indexes on your tables, do not over do it. To many indexes will 
+    kill performance.
+  * Stop using object() instead of assoc() related functions, prefer arrays over 
+    objects. Remember that the mediamosa_db will always return array. This 
+    choice is based on 1.x code base. This does not mean there are no objects in 
+    mediamosa. 
+
+- Set up folders MediaMosa map;
+  * Core modules are not drupal modules and are not considered as drupal 
+    modules.
+  * Core is one drupal module and should not have dependencies (exception is 
+    simpletest and MediaMosa SDK).
+  * The folder 'modules' in the mediamosa folder contains all modules that are 
+    part of the mediamosa and on top of the core. These are drupal modules and 
+    may not contain any core logic.
+  * The folder 'core' in the mediamosa folder contains all core code divided by 
+    folders per section. Each section can have sub sections, like mediafile has 
+    parent asset and does not exist without it. Same for metadata of assets.
+    Folders here are setup like database hierarchy dependencies. F.e. mediafile 
+    must have a asset, but an asset does not require a collection. That is why 
+    collection is on same level as assets.
+  * (strongly) Suggested files in core; [subpart/]mediamosa_(part)[_subparts]
+    (.class.inc/.inc/.install.inc/_db.class.inc);
+    mediamosa_asset_db.class.inc (DB definitions)
+    mediamosa_asset.class.inc (asset code (class))
+    mediamosa_asset.install.inc (install code)
+    mediafile/mediamosa_asset_mediafile_db.class.inc (DB definitions)
+    mediafile/mediamosa_asset_mediafile.class.inc (asset code)
+    mediafile/mediamosa_asset_mediafile.install.inc (install code)
+  * Suggested files in modules; mediamosa_(part)[_subparts]
+    (.info/.module/.rest.inc/.test);
+    mediamosa_asset.module (Drupal module file)
+    mediamosa_asset.rest.class.inc (REST functions)
+    mediamosa_asset.info (Drupal module info file)
+  
+  

@@ -1,0 +1,16 @@
+; $Id: $
+name = "Mediamosa Tool PDF"
+description = "Mediamosa Tool module for PDF"
+package = "MediaMosa - Tool"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_app
+
+; Used files.
+files[] = mediamosa_tool_pdf.class.inc

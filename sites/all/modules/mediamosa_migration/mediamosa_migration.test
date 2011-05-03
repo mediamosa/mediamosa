@@ -1,0 +1,115 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION', 'MediaMosa Migration');
+
+/**
+ * @file
+ * Unittests the migration from 1.x to 3.x
+ */
+class MediaMosaMigrationTestCase extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Migrated REST calls ping',
+      'description' => 'Check if all 1.7.x REST calls are present in 3.x.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION,
+    );
+  }
+
+  public function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge(array('mediamosa_job', 'mediamosa_transcode', 'mediamosa_user', 'mediamosa_error', 'mediamosa_ftp_user', 'mediamosa_ftp_batch', 'mediamosa_maintenance_status'), $args));
+
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+  }
+
+  public function testPingRestcalls() {
+    $app = $this->createApp();
+
+    $uri_replace = array(
+      '$asset_id' => 1,
+      '$mediafile_id' => 1,
+      '$supplement_id' => 1,
+      '$batch_id' => 1,
+      '$still_id' => 1,
+      '$coll_id' => 1,
+      '$job_id' => 1,
+      '$group_id' => 1,
+      '$fav_user_id' => 1,
+      '$profile_id' => 1,
+      '$user' => $this->randomName(),
+      '$groupname' => $this->randomName(),
+    );
+
+    $ignore = array(
+      'acl/get_foreign_apps',
+      'asset/1/watermark/delete',
+      'asset/1/watermark/upload',
+      'statistics/created',
+      'external/mediafile/uploadprogress', // output not xml.
+      'group/1/set_quotum', // post now, not get.
+    );
+
+    $result = db_query("SELECT * FROM memo.{madrest} AS m WHERE NOT URI LIKE 'internal/%' ORDER BY m.uri");
+    foreach ($result as $restcall) {
+      $uri = str_replace(array_keys($uri_replace), array_values($uri_replace), $restcall->uri);
+
+      if (in_array($uri, $ignore)) {
+        continue;
+      }
+
+      $response = $this->restCall($uri, $restcall->method, array(), array(), array(
+        mediamosa_error::ERRORCODE_OKAY,
+        mediamosa_error::ERRORCODE_EMPTY_RESULT,
+        mediamosa_error::ERRORCODE_ASSET_NOT_FOUND,
+        mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND,
+        mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER,
+        mediamosa_error::ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS,
+        mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND,
+        mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND,
+        mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION,
+        mediamosa_error::ERRORCODE_NO_CHANGES,
+        mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE,
+        mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER,
+        mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND,
+        mediamosa_error::ERRORCODE_USERMAN_INVALID_GROUP,
+        mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND,
+        mediamosa_error::ERRORCODE_INVALID_USER_ID,
+        mediamosa_error::ERRORCODE_USERMAN_INVALID_USER,
+      ));
+    }
+  }
+}

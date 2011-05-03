@@ -1,0 +1,215 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL test file: support app_id / coll_id seach in CQL
+  */
+class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - support app_id / coll_id seach in CQL',
+      'description' => 'Testing asset CQL related functions and rest calls for support app_id / coll_id seach in CQL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test support app_id seach in CQL (241).
+  public function testCQL_App() {
+
+    // Limit.
+    $limit = 10;
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Change Ega.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    // Create assets.
+    $a_asset_id = array();
+    $a_asset_id[1] = $this->createAsset();
+    $a_asset_id[2] = $this->createAsset();
+    $a_asset_id[3] = $this->createAsset();
+    $a_asset_id[4] = $this->createAsset();
+    $a_asset_id[5] = $this->createAsset();
+
+    // Create mediafiles.
+    $a_mediafile_id = array();
+    $a_mediafile_id[1][1] = $this->createMediafile($a_asset_id[1]);
+    $a_mediafile_id[2][1] = $this->createMediafile($a_asset_id[2]);
+    $a_mediafile_id[3][1] = $this->createMediafile($a_asset_id[3]);
+    $a_mediafile_id[5][1] = $this->createMediafile($a_asset_id[5]);
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      'acl_app' => $app_id_2,
+    );
+    $a_xml = $this->setMediafileAcl($a_mediafile_id[1][1], $a_parameters);
+    $a_xml = $this->setMediafileAcl($a_mediafile_id[3][1], $a_parameters);
+
+    // Change Ega.
+    $this->toEga_2();
+
+    // Create assets.
+    $a_asset_id[21] = $this->createAsset();
+    $a_asset_id[22] = $this->createAsset();
+    $a_asset_id[23] = $this->createAsset();
+
+    // Create mediafiles.
+    $a_mediafile_id = array();
+    $a_mediafile_id[21][1] = $this->createMediafile($a_asset_id[21]);
+    $a_mediafile_id[22][1] = $this->createMediafile($a_asset_id[22]);
+    $a_mediafile_id[23][1] = $this->createMediafile($a_asset_id[23]);
+
+    // Search without CQL.
+
+    // Search assets.
+    $a_assets = $this->searchAsset($limit);
+    //$this->var_export($a_assets);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 5,
+      t("There are all the assets (5 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with app_id.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => "(app_id==$app_id_2)",
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with app_id.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => "(app_id==$app_id_1)",
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 2,
+      t("There are all the assets (2 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+  }
+
+  // Test support coll_id seach in CQL (241).
+  public function testCQL_Coll() {
+
+    // Limit.
+    $limit = 10;
+
+    // Create collections.
+    $coll_id_1 = $this->createCollection();
+    $coll_id_2 = $this->createCollection();
+
+    // Create assets.
+    $a_asset_id = array();
+    $a_asset_id[1] = $this->createAsset();
+    $a_asset_id[2] = $this->createAsset();
+    $a_asset_id[3] = $this->createAsset();
+    $a_asset_id[4] = $this->createAsset();
+    $a_asset_id[5] = $this->createAsset();
+    $a_asset_id[6] = $this->createAsset();
+
+    // Create collection asset relation.
+    $this->createCollectionAssetRelation($coll_id_1, array($a_asset_id[2]));
+    $this->createCollectionAssetRelation($coll_id_1, array($a_asset_id[3]));
+    $this->createCollectionAssetRelation($coll_id_1, array($a_asset_id[5]));
+    $this->createCollectionAssetRelation($coll_id_2, array($a_asset_id[3], $a_asset_id[6]));
+
+    // Search without CQL.
+
+    // Search assets.
+    $a_assets = $this->searchAsset($limit);
+    //$this->var_export($a_assets);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 6,
+      t("There are all the assets (6 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with coll_id.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => "(coll_id==$coll_id_1)",
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with coll_id.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => "(coll_id==$coll_id_2)",
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 2,
+      t("There are all the assets (2 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+  }
+}

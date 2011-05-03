@@ -1,0 +1,13 @@
+; $Id$
+
+name = "File integrity check"
+description = "This module checks the integrity of the mediafiles."
+package = "MediaMosa - Modules"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_integrity_check_db.class.inc

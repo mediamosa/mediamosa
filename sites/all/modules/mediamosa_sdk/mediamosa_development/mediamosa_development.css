@@ -1,0 +1,16 @@
+/* $Id: $ */
+
+#edit-output, .edit-output {
+  font-family: Fixed, monospace;
+  height: 340px;
+}
+
+#edit-output-mm17 {
+  font-family: Fixed, monospace;
+  height: 340px;
+}
+
+#edit-output-compare {
+  font-family: Fixed, monospace;
+  height: 200px;
+}

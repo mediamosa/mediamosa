@@ -1,0 +1,14 @@
+; $Id$
+
+name = "oEmbed"
+description = "oEmbed is a format for allowing an embedded representation of a URL on third party sites."
+package = "MediaMosa - Modules"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_oembed.output.test
+files[] = mediamosa_oembed.rest.class.inc

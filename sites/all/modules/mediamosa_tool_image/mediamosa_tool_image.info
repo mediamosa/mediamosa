@@ -1,0 +1,18 @@
+; $Id: $
+name = "Mediamosa Tool Image"
+description = "Mediamosa Tool module for images (eg. tiff)"
+package = "MediaMosa - Tool"
+version = "2.3.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_app
+
+; Used files.
+
+; Tool files.
+files[] = mediamosa_tool_image.class.inc

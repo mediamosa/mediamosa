@@ -1,0 +1,591 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * sites/all/modules/mediamosa/core/app/authentication/3rdparty/OAuth.php:
+ *
+ * The MIT License
+ *
+ * Copyright (c) 2007 Andy Smith
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+/**
+ * @file
+ * The APP authentication module.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function mediamosa_app_oauth_menu() {
+  $items = array();
+
+  /*
+  // This is for later development.
+  // See: mediamosa_app_form() of sites/all/modules/mediamosa/core/node/mediamosa_node_mediamosa_app.class.inc
+  $items['admin/oauth_test'] = array(
+    'title' => 'oAuth test',
+    'page callback' => '_mediamosa_oauth_test',
+    'access arguments' => array('oauth login'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/oauth_test_phase2'] = array(
+    'title' => 'oAuth test - page 2',
+    'page callback' => '_mediamosa_oauth_test_phase2',
+    'access arguments' => array('oauth login'),
+    'type' => MENU_CALLBACK,
+  );
+   */
+
+  $items['openapi/oauth/authorize'] = array(
+    'title' => 'oAuth authorization',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_oauth_authorize'),
+    'access arguments' => array('oauth login'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_mediamosa_allowed_path().
+ */
+function mediamosa_app_oauth_mediamosa_allowed_path() {
+  global $conf;
+
+  if (mediamosa::in_simpletest_sandbox()) {
+    // Simpletest mode, special case.
+    return mediamosa::in_simpletest_sandbox_enable_app();
+  }
+
+  // Just for openapi/oauth/authorize.
+  return (isset($conf['mediamosa_app_openapi']) && $conf['mediamosa_app_openapi'] && arg(0) == 'openapi' && arg(1) == 'oauth' && arg(2) == 'authorize');
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function mediamosa_app_oauth_permission() {
+  return array(
+    'oauth login' => array(
+      'title' => t('Log in with oAuth'),
+      'description' => t('Allow the user to log in a certain client application with oAuth.'),
+    ),
+  );
+}
+
+/**
+ * Implements MODULE_preprocess_HOOK().
+ */
+function mediamosa_app_oauth_preprocess_page(&$variables) {
+  if (arg(0) != 'openapi' || arg(1) != 'oauth' || arg(2) != 'authorize') {
+    return;
+  }
+
+  unset($variables['page']['content']['user_login']);
+  unset($variables['page']['content']['mediamosa_mediamosa-version']);
+}
+
+/**
+ * Client authorization.
+ * Menu callback function.
+ */
+function _mediamosa_oauth_authorize() {
+  $form = array();
+
+  drupal_set_breadcrumb(array());
+  drupal_set_title('');
+
+  $req = OAuthRequest::from_request();
+
+  $token_key = $req->get_parameter('oauth_token');
+  $callback = $req->get_parameter('oauth_callback');
+  $token = mediamosa_app_oauth::get_token($token_key);
+
+  if (!$token || $token[mediamosa_app_oauth_token_db::TYPE] != mediamosa_app_oauth_token_db::TYPE_REQUEST) {
+    drupal_set_message(t('Please include a valid OAuth token in your request.'), 'error');
+
+    $form['error'] = array(
+      '#type' => 'item',
+      '#title' => t('Error! Please include a valid OAuth token in your request.'),
+    );
+
+    return $form;
+  }
+
+  $app = mediamosa_app::get_by_oauth_consumer_key($token[mediamosa_app_oauth_token_db::CONSUMER_KEY]);
+
+
+  $form['oauth_parameters'] = array(
+    '#type'   => 'value',
+    '#value'  => serialize($req->get_parameters()),
+  );
+
+  $form['client_application'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('This is the user authentication page for oAuth'),
+    '#description' => t('If you want to enable, that other applications and / or pages access the data of your client application, you should log in now. Otherwise please, ignore this page and leave it.')
+  );
+
+  $form['client_application']['client_app_name'] = array( // app_name.
+    '#type' => 'textfield',
+    '#title' => t('Name of your client application'),
+    '#description' => t('Full name for client application.'),
+    '#required' => TRUE,
+    '#default_value' => '',
+    '#maxlength' => mediamosa_app_db::APP_NAME_LENGTH,
+  );
+
+  $form['client_application']['client_app_shared_key'] = array(
+    '#type' => 'password',
+    '#title' => t('Shared key of your client application'),
+    '#required' => TRUE,
+    '#prefix' => '<div id="replace_shared_key_div">',
+    '#suffix' => '</div>',
+    '#default_value' => '',
+    '#maxlength' => mediamosa_app_db::SHARED_KEY_LENGTH,
+    '#description' => t('The shared key is the password that the application must use during the application verification.'),
+  );
+
+  $form['client_application']['warning'] = array(
+    '#type' => 'item',
+    '#title' => t('An application wants to access "@sitename" on your behalf, check the permissions that you would like the application to have.', array(
+      '@sitename' => variable_get('site_name', ''),
+    )),
+  );
+
+  $form['client_application']['warning_deny'] = array(
+    '#type' => 'item',
+    '#title' => t('If you do not know what it is, or do not want to give it access to your content, just !click_here and we will take you away from this page without granting any access to "@sitename".', array(
+      '@sitename' => variable_get('site_name', ''),
+      '!click_here' => l(t('click here'), 'http://mediamosa.org/'),
+    )),
+  );
+
+  $form['client_application']['allow'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Yes, I would like to allow, that one application can use my client application without any further restriction.'),
+    //'#required' => TRUE,
+  );
+
+  $form['client_application']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Authenticate'),
+  );
+
+  return $form;
+}
+
+function _mediamosa_oauth_authorize_validate($form, &$form_state) {
+  $values = $form_state['values'];
+
+  if (!isset($values['allow'])) {
+    form_set_error('error', t('Error! Use this !link to leave this page.', array('!link' => l(t('link'), 'http://mediamosa.org'))));
+    return;
+  }
+
+  if (!$values['allow']) {
+    form_set_error('allow', t('If you want to allow, that an other application have full access to your client application, then you must check the checkbox at the bottom of page.'));
+  }
+
+  $app = mediamosa_app::get_by_name($values['client_app_name']);
+
+  if (!$app || $app[mediamosa_app_db::SHARED_KEY] != $values['client_app_shared_key']) {
+    form_set_error('client_app_name', t('Application name of shared key is not valid.'));
+  }
+
+  // Unserialize the stored oauth parameters
+  $parameters = unserialize($values['oauth_parameters']);
+
+  $token = mediamosa_app_oauth::get_token($parameters['oauth_token']);
+
+  if (!$token || $token[mediamosa_app_oauth_token_db::CONSUMER_KEY] != $app[mediamosa_app_db::OAUTH_CONSUMER_KEY]) {
+    form_set_error('client_app_name', t('The client application is not valid for this authentication.'));
+  }
+}
+
+function _mediamosa_oauth_authorize_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  if (empty($values['allow'])) {
+    return;
+  }
+
+  $app = mediamosa_app::get_by_name($values['client_app_name']);
+
+  // Unserialize the stored oauth parameters
+  $parameters = unserialize($values['oauth_parameters']);
+
+  mediamosa_app_oauth::update_token($parameters['oauth_token'], array(
+    mediamosa_app_oauth_token_db::APP_ID => $app[mediamosa_app_db::APP_ID],
+    mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_YES,
+  ));
+
+  $token = mediamosa_app_oauth::get_token($parameters['oauth_token']);
+
+  $oauth_token = new OAuthToken($token['token_key'], $token['secret']);
+
+  // Get the callback url, and add there the token parameter.
+  $callback = mediamosa_http::parse_url($token[mediamosa_app_oauth_token_db::CALLBACK_URL]);
+
+  $query = array();
+  parse_str($callback['query'], $query);
+  // Add key.
+  $query['oauth_token'] = $oauth_token->key;
+  // TODO oauth_verifier. What is it exacly? Just mimic now.
+  // The original doc said it is "The verification code".
+  // http://tools.ietf.org/html/rfc5849
+  // Maybe we can implement a better verification later using this.
+  // Although the verification seems ok without this "oauth_token".
+  $query['oauth_verifier'] = mt_rand(100000, 999999);
+  $callback['query'] = http_build_query($query, 'idx_', '&');
+
+  $callback_url = mediamosa_http::build_url($callback);
+
+  // Go to the callback url.
+  header('Location: ' . $callback_url, TRUE, 302);
+  exit;
+}
+
+/**
+ * Helper function for testing oAuth.
+ * This is for later development.
+ * See: hook_menu().
+ */
+/*
+function _mediamosa_oauth_test() {
+  $nid = arg(2);
+
+  $output = '';
+  $output .= 'Start...<br />' . PHP_EOL;
+
+  if (!$nid) {
+    return $output;
+  }
+
+  // Clean up.
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
+  mediamosa_lib::purge_session('oauth_token');
+  mediamosa_lib::purge_session('oauth_token_secret');
+  mediamosa_lib::purge_session('nid');
+
+
+  // oAuth base parameters.
+
+  $callback_url = url('admin/oauth_test_phase2', array('absolute' => TRUE));
+
+  $app = mediamosa_app::get_by_nid($nid);
+  $consumer_key = $app['oauth_consumer_key'];
+  $consumer_secret = $app['oauth_consumer_secret'];
+  if (!$consumer_key || !$consumer_secret) {
+    return t('Consumer key or secret is missing.');
+  }
+
+  // TODO: Fix it!
+  $oauth_request_token = 'http://openapi.mediamosa.local/openapi/oauth/request_token';
+  $oauth_authorize = 'http://openapi.mediamosa.local/openapi/oauth/authorize';
+  $oauth_access_token = 'http://openapi.mediamosa.local/openapi/oauth/access_token';
+
+  $sig_method = new OAuthSignatureMethod_HMAC_SHA1();
+  $test_consumer = new OAuthConsumer($consumer_key, $consumer_secret, $callback_url);
+
+
+  // Request token.
+
+  $parameters = array();
+  if ($callback_url) {
+    $parameters['oauth_callback'] = $callback_url;
+  }
+  $req_req = OAuthRequest::from_consumer_and_token($test_consumer, NULL, 'GET', $oauth_request_token, $parameters);
+  $req_req->sign_request($sig_method, $test_consumer, NULL);
+
+
+  // Request parameters.
+  $url = $req_req->to_url();
+  $response = drupal_http_request($url);
+
+  $output .= '<pre>Request token: ' . print_r($response->data, TRUE) . '</pre><br />' . PHP_EOL;
+  parse_str($response->data, $reqOAuthData);
+  $output .= '<pre>Request token: ' . print_r($reqOAuthData, TRUE) . '</pre><br />' . PHP_EOL;
+
+
+  // User authorization.
+
+  $req_token = new OAuthConsumer($reqOAuthData['oauth_token'], $reqOAuthData['oauth_token_secret']);
+
+  $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $req_token, "GET", $oauth_authorize);
+  $acc_req->sign_request($sig_method, $test_consumer, $req_token);
+
+  $_SESSION['oauth_token'] = $reqOAuthData['oauth_token'];
+  $_SESSION['oauth_token_secret'] = $reqOAuthData['oauth_token_secret'];
+  $_SESSION['nid'] = $nid;
+
+  header("Location: $acc_req");
+
+
+  $output .= '... end.<br />' . PHP_EOL;
+  return $output;
+}
+ */
+
+/**
+ * Helper function for testing oAuth - page 2.
+ * This is for later development.
+ * See: hook_menu().
+ */
+/*
+function _mediamosa_oauth_test_phase2() {
+  $output = '';
+  $output .= 'Start...<br />' . PHP_EOL;
+
+  // Clean up.
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
+
+  // oAuth base parameters.
+
+  if (empty($_SESSION['oauth_token']) && !empty($_SESSION['nid']) && is_numeric($_SESSION['nid'])) {
+    $output .= l(t('Start again'), 'admin/oauth_test/' . $_SESSION['nid']);
+    return $output;
+    //drupal_goto('admin/oauth_test/' . $_SESSION['nid']);
+  }
+  if (empty($_SESSION['nid'])) {
+    $output .= l(t('Start again'), 'admin/oauth_test/19');
+    return $output;
+  }
+
+  $nid = $_SESSION['nid'];
+
+  $app = mediamosa_app::get_by_nid($nid);
+  $consumer_key = $app['oauth_consumer_key'];
+  $consumer_secret = $app['oauth_consumer_secret'];
+  if (!$consumer_key || !$consumer_secret) {
+    return t('Consumer key or secret is missing.');
+  }
+
+  // TODO: Fix it!
+  $oauth_request_token = 'http://openapi.mediamosa.local/openapi/oauth/request_token';
+  $oauth_authorize = 'http://openapi.mediamosa.local/openapi/oauth/authorize';
+  $oauth_access_token = 'http://openapi.mediamosa.local/openapi/oauth/access_token';
+
+  $sig_method = new OAuthSignatureMethod_HMAC_SHA1();
+  $test_consumer = new OAuthConsumer($consumer_key, $consumer_secret);
+
+
+  // Access token.
+
+  $acc_token = new OAuthConsumer($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+
+  $parameters = array();
+  if ($_GET['oauth_verifier']) {
+    $parameters['oauth_verifier'] = $_GET['oauth_verifier'];
+  }
+  $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $acc_token, "GET", $oauth_access_token, $parameters);
+  $acc_req->sign_request($sig_method, $test_consumer, $acc_token);
+
+  // Request parameters.
+  $url = $acc_req->to_url();
+  $response = drupal_http_request($url);
+
+  $output .= '<pre>Access token: ' . print_r($response->data, TRUE) . '</pre><br />' . PHP_EOL;
+  parse_str($response->data, $accOAuthData);
+  $output .= '<pre>Access token: ' . print_r($accOAuthData, TRUE) . '</pre><br />' . PHP_EOL;
+
+  // Clean up.
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
+  mediamosa_lib::purge_session('oauth_token');
+  mediamosa_lib::purge_session('oauth_token_secret');
+  //mediamosa_lib::purge_session('nid');
+
+  if (!empty($accOAuthData['oauth_token']) && !empty($accOAuthData['oauth_token_secret'])) {
+    $_SESSION['final_oauth_token'] = $accOAuthData['oauth_token'];
+    $_SESSION['final_oauth_token_secret'] = $accOAuthData['oauth_token_secret'];
+  }
+
+  // Use REST call with authorization.
+
+  $rest_url = 'http://app1.mediamosa.local/asset?limit=1';
+
+  $acc_token = new OAuthConsumer($_SESSION['final_oauth_token'], $_SESSION['final_oauth_token_secret']);
+
+  $parameters = array(
+    'limit' => 1,
+  );
+  $rest_req = OAuthRequest::from_consumer_and_token($test_consumer, $acc_token, "GET", $rest_url, $parameters);
+  $rest_req->sign_request($sig_method, $test_consumer, $acc_token);
+
+  // Request parameters.
+  $url = $rest_req->to_url();
+  $response = drupal_http_request($url);
+
+  $output .= '<pre>REST call with authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
+
+  // Use REST call without authorization.
+
+  // Request parameters.
+  $url = $rest_url;
+  $response = drupal_http_request($url);
+
+  $output .= '<pre>REST call without authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
+
+  // Etc.
+
+  $output .= l(t('New test'), 'admin/oauth_test/' . $nid) . '<br />' . PHP_EOL;
+
+  $output .= '... end.<br />' . PHP_EOL;
+  return $output;
+}
+ */
+
+/**
+ * Implementation of hook_cron().
+ */
+function mediamosa_app_oauth_cron() {
+  mediamosa_app_oauth::clean_up();
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_app_oauth_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  $rest_calls['openapi/oauth/request_token'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_oauth_request_token',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_oauth',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_PLAIN,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
+  );
+
+  $rest_calls['openapi/oauth/access_token'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_oauth_access_token',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_oauth',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_PLAIN,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_app_oauth_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['openapi/oauth/request_token'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'oAuth request token.',
+    mediamosa_rest_call::DESCRIPTION => 'The Consumer obtains an unauthorized Request Token.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'services/oauth/request_token?oauth_consumer_key=key&oauth_nonce=631253d79fc6ecd42f9f30f7badee7ce&oauth_signature=71EqRGJuDHBjQDoCL2V9Y798BwU%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1296481425&oauth_version=1.0',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'oauth_token=requestkey&oauth_token_secret=requestsecret',
+  );
+
+  $rest_calls['openapi/oauth/access_token'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'oAuth access token.',
+    mediamosa_rest_call::DESCRIPTION => 'The Consumer exchanges the Request Token for an Access Token.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'services/oauth/access_token?oauth_consumer_key=key&oauth_nonce=22eb39fb5bc9ce96caeaa84320675522&oauth_signature=sjMuLMcBKHCUMo56Im7qJ4Yr%2BGo%3D&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1296482023&oauth_token=requestkey&oauth_version=1.0',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'oauth_token=accesskey&oauth_token_secret=accesssecret',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_app_authorized().
+ */
+function mediamosa_app_oauth_mediamosa_app_authorized() {
+  try {
+    $req = OAuthRequest::from_request();
+
+    // Validate the input.
+    $consumer_key = $req->get_parameter('oauth_consumer_key');
+    $token_key = $req->get_parameter('oauth_token');
+    $signature = $req->get_parameter('oauth_signature');
+    $signature_methode = $req->get_parameter('oauth_signature_method');
+    $timestamp = $req->get_parameter('oauth_timestamp');
+    $nonce = $req->get_parameter('oauth_nonce');
+
+    if (!empty($consumer_key) && !empty($token_key) && !empty($signature) && !empty($signature_methode) && !empty($timestamp) && !empty($nonce)) {
+      // Is there app with that consumer key?
+      $app = mediamosa_app::get_by_oauth_consumer_key($consumer_key);
+      if ($app) {
+        // Is there an apropriate token?
+        $token_stored = mediamosa_app_oauth::get_token($token_key);
+        if ($token_stored && $token_stored[mediamosa_app_oauth_token_db::TYPE] == mediamosa_app_oauth_token_db::TYPE_ACCESS) {
+          $oauth_server = mediamosa_app_oauth::create_server();
+
+          list($consumer, $token) = $oauth_server->verify_request($req);
+          // Is it match?
+          if ($consumer->key == $consumer_key && $token->key == $token_key) {
+            // Grant access.
+            $_GET['app_id'] = $token_stored[mediamosa_app_oauth_token_db::APP_ID];
+            return TRUE;
+          }
+        }
+      }
+    }
+  }
+  catch (OAuthException $e) {
+    print($e->getMessage() . "\n<hr />\n");
+    //print_r($req);
+    die();
+  }
+
+  return FALSE;
+}

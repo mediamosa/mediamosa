@@ -1,0 +1,10 @@
+; $Id$
+
+name = "Servers"
+description = "The mediamosa server settings."
+package = "MediaMosa - Maintenance - Configuration"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa

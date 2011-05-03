@@ -1,0 +1,157 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for asset functions.
+  */
+class MediaMosaAclEgaTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - asset and mediafile information from other EGA',
+      'description' => 'Testing ACL asset and mediafile request from other application related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing ACL asset and mediafile information from other EGA, see: ticket 854.
+  function testAclEga() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    //
+    // Get asset from Ega.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the asset from other Ega.
+    $a_parameters = array();
+    $a_asset = $this->getAsset($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    //
+    // Get mediafile from Ega.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Create a mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the mediafile from other Ega.
+    $a_parameters = array();
+    $a_mediafile = $this->getMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the mediafile from other Ega.
+    $a_parameters = array();
+    $a_mediafile = $this->getMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    //
+    // Get mediafile from Ega with master/slave.
+    //
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Set mediafile acl.
+    $a_parameters = array(
+      'acl_app' => $app_id_2,
+    );
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Get the mediafile.
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // To third Ega.
+    $this->toEga_3();
+
+    // Get the mediafile from the third Ega.
+    $a_parameters = array();
+    $a_mediafile = $this->getMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+}

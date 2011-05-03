@@ -1,0 +1,277 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for openAPI.
+  */
+class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ----------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'OpenAPI basic test',
+      'description' => 'Test openAPI related functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testOpenAPI() {
+    // Enable OpenAPI module.
+    module_enable(array('mediamosa_openapi'), TRUE);
+
+    // Set the app id for the OpenAPI.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+
+    $user_id = 'upload_user';
+
+    // Create an album.
+    $parameters_album = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id = $this->createAsset($parameters_album);
+
+    // Create mediafile with /openapi/mediaItem [POST] call.
+    $item_user_id = $user_id;
+    $group_id = '@self';
+    $parameters = array(
+      'created' => '2003-12-13T18:30:02Z',
+      'description' => mediamosa_db::uuid(0),
+      'duration' => mt_rand(10, 100),
+      'file_size' => mt_rand(10, 100),
+      'id' => mediamosa_db::uuid(0),
+      'language' => mt_rand(0, 1) ? 'nld' : 'eng',
+      'last_updated' => '2004-10-11T13:24:10Z',
+      'location' => mediamosa_db::uuid(0),
+      'mime_type' => mediamosa_db::uuid(0),
+      'num_comments' => mt_rand(0, 100),
+      'num_views' => mt_rand(0, 100),
+      'num_votes' => mt_rand(0, 100),
+      'rating' => mt_rand(0, 10),
+      'start_time' => '2007-04-13T07:49:09Z',
+      'tagged_people' => array(
+        mediamosa_db::uuid(0),
+        mediamosa_db::uuid(0),
+      ),
+      'tags' => array(
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+      ),
+      'still_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      'title' => mediamosa_db::uuid(0),
+      'type' => 'video',
+      'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
+    );
+    $asset = $this->createMediaItem($item_user_id, $group_id, $album_id, $parameters);
+    $asset_id = $asset['entry']['extension']['asset_id'];
+    $mediafile_id = $asset['entry']['extension']['mediafile_id'];
+
+
+    // Get the mediafile with /openapi/mediaItems [GET] call.
+    $search_parameters = array(
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
+    );
+    $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $search_parameters);
+
+
+    // Check response.
+    // Dump the response.
+    $this->assertTrue(TRUE, print_r($assets, TRUE));
+    // Check.
+    $mediaitem = $assets['entry']['content']['mediaItem'];
+
+    $field = 'id';
+    $this->assertTrue(
+      $mediaitem[$field] == $mediafile_id,
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $mediafile_id,
+        '@get' => $mediaitem[$field],
+      ))
+    );
+
+    $field = 'description';
+    $this->assertTrue(
+      $mediaitem[$field] == $parameters[$field],
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $parameters[$field],
+        '@get' => $mediaitem[$field],
+      ))
+    );
+
+    $field = 'title';
+    $this->assertTrue(
+      $mediaitem[$field] == $parameters[$field],
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $parameters[$field],
+        '@get' => $mediaitem[$field],
+      ))
+    );
+
+
+
+    // Create an album.
+    $parameters_album2 = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id2 = $this->createAsset($parameters_album2);
+
+    // Create other mediafile with /openapi/mediaItem [POST] call.
+    $item_user_id2 = $user_id;
+    $group_id2 = '@self';
+    $parameters2 = array(
+      'created' => '2003-11-13T18:30:02Z',
+      'description' => $parameters['description'], // Same field.
+      'duration' => mt_rand(10, 100),
+      'file_size' => mt_rand(10, 100),
+      'id' => mediamosa_db::uuid(0),
+      'language' => mt_rand(0, 1) ? 'nld' : 'eng',
+      'last_updated' => '2004-09-11T13:24:10Z',
+      'location' => mediamosa_db::uuid(0),
+      'mime_type' => mediamosa_db::uuid(0),
+      'num_comments' => mt_rand(0, 100),
+      'num_views' => mt_rand(0, 100),
+      'num_votes' => mt_rand(0, 100),
+      'rating' => mt_rand(0, 10),
+      'start_time' => '2007-03-13T07:49:09Z',
+      'tagged_people' => array(
+        mediamosa_db::uuid(0),
+        mediamosa_db::uuid(0),
+      ),
+      'tags' => array(
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+      ),
+      'still_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      'title' => mediamosa_db::uuid(0),
+      'type' => 'video',
+      'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
+    );
+    $asset2 = $this->createMediaItem($item_user_id2, $group_id2, $album_id2, $parameters2);
+    $asset_id2 = $asset2['entry']['extension']['asset_id'];
+    $mediafile_id2 = $asset2['entry']['extension']['mediafile_id'];
+
+
+    // Search mediafiles with /openapi/search [GET] call.
+    $query = $parameters2['title'];
+    $search_parameters = array(
+      'qLimit' => NULL,
+      'qOffset' => NULL,
+      'qOrder' => NULL,
+      'qDirection' => NULL,
+      'Subject' => NULL,
+      'Language' => NULL,
+      'Location' => NULL,
+      'Since' => NULL,
+      'Until' => NULL,
+      'Author' => NULL,
+      'Contributor' => NULL,
+      'Publisher' => NULL,
+      'Category' => NULL,
+      'Format' => NULL,
+      'Duration' => NULL,
+    );
+    $assets2 = $this->searchOpenAPI($query, $search_parameters);
+
+
+    // Check response.
+    // Dump the response.
+    $this->assertTrue(TRUE, print_r($assets2, TRUE));
+    // Check.
+    $mediaitem2 = $assets2['entry']['content']['mediaItem'];
+
+    $field = 'id';
+    $this->assertTrue(
+      $mediaitem2[$field] == $mediafile_id2,
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $mediafile_id2,
+        '@get' => $mediaitem2[$field],
+      ))
+    );
+
+    $field = 'description';
+    $this->assertTrue(
+      $mediaitem2[$field] == $parameters2[$field],
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $parameters2[$field],
+        '@get' => $mediaitem2[$field],
+      ))
+    );
+
+    $field = 'title';
+    $this->assertTrue(
+      $mediaitem2[$field] == $parameters2[$field],
+      strtr('Field "@field" has the good value (@sent == @get).', array(
+        '@field' => $field,
+        '@sent' => $parameters2[$field],
+        '@get' => $mediaitem2[$field],
+      ))
+    );
+
+
+    // Search mediafiles with /openapi/search [GET] call.
+    $query = $parameters['description']; // Common parameter.
+    $search_parameters = array(
+      'qLimit' => NULL,
+      'qOffset' => NULL,
+      'qOrder' => NULL,
+      'qDirection' => NULL,
+      'Subject' => NULL,
+      'Language' => NULL,
+      'Location' => NULL,
+      'Since' => NULL,
+      'Until' => NULL,
+      'Author' => NULL,
+      'Contributor' => NULL,
+      'Publisher' => NULL,
+      'Category' => NULL,
+      'Format' => NULL,
+      'Duration' => NULL,
+    );
+    $assets_search = $this->searchOpenAPI($query, $search_parameters);
+
+
+    // Check response.
+    // Dump the response.
+    $this->assertTrue(TRUE, print_r($assets_search, TRUE));
+    // Check.
+    $count = count($assets_search['entry']);
+    $this->assertTrue($count == 2, strtr('We get the correct number of results (2 == @count).', array('@count' => $count,)));
+  }
+}

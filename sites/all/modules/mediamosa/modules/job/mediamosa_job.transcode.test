@@ -1,0 +1,242 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Job tests for transcode jobs.
+  */
+
+/**
+  * @file
+  * Unittests for job deleting asset with running jobs.
+  */
+class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - transcode test',
+      'description' => 'Testing the transcoding jobs.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // (see ticket 194)
+  function testJobTranscode() {
+
+    // Make a transcode job.
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Add mediafile clean up.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
+    }
+
+    // Make a retranscode job.
+
+    // Get the transcoded mediafile_id.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if ($mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break;
+          }
+        }
+      }
+    }
+    if ($mediafile_id_transcoded) {
+      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_transcoded);
+      // Delete the transcoded file.
+      mediamosa_io::unlink($filename);
+
+      // Create transcode job.
+      $job_id = $this->createMediafileRetranscode($mediafile_id_transcoded);
+
+      // Parse the queue.
+      $this->doQueueCycleAll();
+
+      $this->assertTrue(
+        mediamosa_io::is_file($filename),
+        strtr("The mediafile was successfuly retranscoded: @filename", array('@filename' => $filename))
+      );
+    }
+  }
+
+  // (see ticket 228)
+  function testJobTranscode_calc_aspect_ratio() {
+
+    // Basic tests.
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1024, 576, "640x480");
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x360;-padtop:60;-padbottom:60" : "-s:640x360;-vf:'pad=640:480:0:60:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(640, 480, "200x200");
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x152;-padtop:24;-padbottom:24" : "-s:200x152;-vf:'pad=200:200:0:24:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, "200x300");
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x200;-padtop:50;-padbottom:50" : "-s:200x200;-vf:'pad=200:300:0:50:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, "300x200");
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x200;-padleft:50;-padright:50" : "-s:200x200;-vf:'pad=300:200:50:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1920, 1080, "352x288");
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x198;-padtop:44;-padbottom:44" : "-s:352x198;-vf:'pad=352:286:0:44:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // With "padding = yes | no".
+
+    // padding = yes.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "320x240", TRUE, NULL, NULL, TRUE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:320x176;-padtop:32;-padbottom:32" : "-s:320x176;-vf:'pad=320:240:0:32:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = no.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "320x240", TRUE, NULL, NULL, FALSE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:320x176;-padtop:0;-padbottom:0" : "-s:320x176;-vf:'pad=320:176:0:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = yes.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "640x480", TRUE, NULL, NULL, TRUE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x352;-padtop:64;-padbottom:64" : "-s:640x352;-vf:'pad=640:480:0:64:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = no.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "640x480", TRUE, NULL, NULL, FALSE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x352;-padtop:0;-padbottom:0" : "-s:640x352;-vf:'pad=640:352:0:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = yes.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, "352x288", TRUE, NULL, NULL, TRUE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x200;-padtop:44;-padbottom:44" : "-s:352x200;-vf:'pad=352:288:0:44:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = no.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, "352x288", TRUE, NULL, NULL, FALSE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x200;-padtop:0;-padbottom:0" : "-s:352x200;-vf:'pad=352:200:0:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = yes.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "1280x720", TRUE, NULL, NULL, TRUE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:1080x720;-padleft:100;-padright:100" : "-s:1080x720;-vf:'pad=1280:720:100:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // padding = no.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "1280x720", TRUE, NULL, NULL, FALSE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:1080x720;-padleft:0;-padright:0" : "-s:1080x720;-vf:'pad=1080:720:0:0:black'");
+    $this->assertTrue(
+      $result == $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+
+    // TODO: Check, develop, and test this:
+    /*
+    Transcode without padding
+
+    In the past the option 'keep aspect ratio' was introduced in the transcoding parameters which can be filled in from the management portal.
+    When set to yes, in combination with a fixed size, at that moment it generated a video which size was within the bounding box of {size}, and maintained the aspect ratio.
+    This behaviour has changed recently (I missed the trac issue in which is was changed), and now black padding is added so that the size of the video is exactly {size}. While I can see the need for this behaviour, I also want the opportunity to have the previous situation, so that no padding is added.
+    I suggest the 'Maintain aspect ratio' drop down get 3 possible states:
+    * no: the video is rescaled to fit {size}, possibly deforming
+    * yes, add padding: the video is rescaled, aspect ratio maintained. Padding is added to create a video exactly of {size}
+    * yes, no padding: the video is rescaled, aspect ratio maintained. No padding is added. Resulting size of the video fits in the bounding box {size}, but it's absolutely not necessary that we get an exact fit.
+    Example.
+    Original material is 1024 x 600 pixels
+    Target size is 320 x 240
+    No: resulting video is 320 x 240 and 'highly deformed'
+    yes, padding: the video is scaled to 320 x 188, and 26pixels black padding is added on top and below to create a 320 x 240 video.
+    Yes, no padding: the video is scaled to 320 x 188.
+     */
+  }
+}

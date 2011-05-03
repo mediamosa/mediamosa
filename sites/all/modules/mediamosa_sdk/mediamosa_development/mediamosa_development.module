@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Development module for MediaMosa REST calls.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_development_permission() {
+  return array(
+    'mediamosa|access|config|development' => array(
+      'title' => t('Access MediaMosa development module'),
+      'description' => t('Enables the user to access the development module. Should only be used for development and testing purposes.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_development_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/development':
+      return '<p>' . t('Enables developers to test and execute REST calls. For development purposes only.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_development_menu() {
+  $items = array();
+
+  $items['admin/config/development/mediamosa/development'] = array(
+    'title' => 'MediaMosa REST call developer.',
+    'description' => 'With this form you can execute REST calls directly.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_development_rest_form'),
+    'access callback' => '_mediamosa_development_user_access',
+    'access arguments' => array('mediamosa|access|config|development'),
+    'file' => 'mediamosa_development.admin.inc',
+  );
+  $items['admin/config/development/mediamosa/development/list'] = array(
+    'title' => 'REST tester',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/development/mediamosa/development/js/restcall'] = array(
+    'page callback' => '_ajax_execute_rest_call',
+    'delivery callback' => 'ajax_deliver',
+    'access callback' => '_mediamosa_development_user_access',
+    'access arguments' => array('mediamosa|access|config|development'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_development.admin.inc',
+  );
+
+  $items['admin/config/development/mediamosa/development/set_rest_call/%/%'] = array(
+    'page callback' => '_mediamosa_development_set_rest_call',
+    'page arguments' => array(5, 6),
+    'access callback' => '_mediamosa_development_user_access',
+    'access arguments' => array('mediamosa|access|config|development'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_development.admin.inc',
+  );
+
+  // Include in the mediamosa menus too.
+  if (class_exists('mediamosa_permission')) {
+    $items['admin/mediamosa/config/development']['access arguments'] = 'mediamosa|access|config|development';
+    $items['admin/mediamosa/config/development']['access callback'] = '_mediamosa_development_user_access';
+
+    $items['admin/mediamosa/config/development'] = $items['admin/config/development/mediamosa/development'];
+    $items['admin/mediamosa/config/development/list'] = $items['admin/config/development/mediamosa/development/list'];
+  }
+
+  return $items;
+}
+
+/**
+ * Check access menu item.
+ *
+ * @param sting/array $perms
+ *  array containing permissions, right on one of them is access.
+ * @param boolean $one_part_test
+ *  Set to TRUE if you want to see if any permission is set for MediaMosa.
+ *  @see _mediamosa_user_access_mediamosa()
+ */
+function _mediamosa_development_user_access($perms, $one_part_test = FALSE) {
+
+  if (function_exists('_mediamosa_user_access')) {
+    return _mediamosa_user_access($perms);
+  }
+
+  if (is_array($perms)) {
+    foreach ($perms as $perm) {
+      if (_mediamosa_development_user_access($perm)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  return user_access($perms);
+}

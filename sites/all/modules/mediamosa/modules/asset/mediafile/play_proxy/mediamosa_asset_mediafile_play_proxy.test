@@ -1,0 +1,488 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Play proxy unittests.
+ *
+ * Based on tickets mediamosa 1:
+ * ticket_2
+ * ticket_71
+ * ticket_72
+ */
+
+class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Play proxy - Common',
+      'description' => 'Testing the play proxy call, functions, output and clean up code.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testPlayProxy() {
+
+    // Create a upload test file with asset and mediafile.
+    $a_upload = $this->uploadTestFile();
+
+    // First test on the uploaded mediafile if play_proxy works.
+
+    // Set the parameters.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $a_upload['mediafile_id']
+    );
+
+    // Set the Uri.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $a_upload['asset_id']));
+
+    // Do basic play proxy call.
+    $response = $this->restCallGet($uri, $a_parameters);
+    $ticket_id = $response['xml']->items->item[0]->ticket_id;
+
+    // Test if the link to file exists.
+    $link_to_file = mediamosa_configuration_storage::ticket_play_location_get($this->a_app[mediamosa_app_db::APP_ID]) . DIRECTORY_SEPARATOR . $ticket_id;
+
+    // Check if link exists.
+    $this->assertTrue(file_exists($link_to_file), 'Ticket link to file exists');
+
+    // Now test again, except on a asset that does not exists.
+    // Set the parameters.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $a_upload['mediafile_id']
+    );
+
+    // Set the Uri.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $a_upload['asset_id'] . 'test'));
+
+    // Now again, but with invalid mediafile_id. Should fail.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+
+    // Now test again, except on a mediafile that does not exists.
+    // Set the parameters.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $a_upload['mediafile_id'] . 'test'
+    );
+
+    // Set the Uri.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $a_upload['asset_id']));
+
+    // Now again, but with invalid mediafile_id. Should fail.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND));
+  }
+
+  public function testPlayProxyCleanup() {
+
+    // @FIXME Unable to test files that are no longer valid by create date. Its
+    //        impossible to change the create date of an file. So there is noway
+    //        to test the cleanup code based on creation date.
+
+    // Our App ID.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // Base path.
+    $ticket_path = mediamosa_configuration_storage::ticket_play_location_get($app_id) . DIRECTORY_SEPARATOR;
+
+    // Test first if ticket get removed when its not in the database.
+
+    // Get ticket.
+    $ticket_id = mediamosa_db::uuid($app_id);
+
+    // Create fake ticket.
+    $this->mkdir($ticket_path);
+    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '" . $ticket_id . "'.");
+    $this->symlink($ticket_path . $ticket_id . '_real', $ticket_path . $ticket_id);
+
+    // Clean up.
+    mediamosa_ticket::ticket_cleanup();
+
+    // Check if it got removed (must still be here).
+    $this->file_exists($ticket_path . $ticket_id, "Check if the ticket not got cleaned up by 'play_proxy_ticket_cleanup()'.");
+
+    // Create ticket in database.
+    $mediafile_id = mediamosa_db::uuid($app_id);
+    $ticket_id = mediamosa_ticket::create($app_id, mediamosa_ticket_db::TICKET_TYPE_PLAY, self::SIMPLETEST_USER_ID, $mediafile_id);
+
+    // Check if created.
+    $this->assertTrue(mediamosa_ticket::get_valid($ticket_id, mediamosa_ticket_db::TICKET_TYPE_PLAY) !== FALSE, 'Is ticket created in database');
+
+    // Create fake ticket.
+    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '" . $ticket_id . "'.");
+    $this->symlink($ticket_path . $ticket_id . '_real', $ticket_path . $ticket_id);
+    $this->file_exists($ticket_path . $ticket_id, "Check if the ticket link exists.");
+
+    // Clean up.
+    mediamosa_ticket::ticket_cleanup();
+
+    // Must not be cleaned up.
+    $this->file_exists($ticket_path . $ticket_id, "Check if the ticket did NOT get cleaned up by 'play_proxy_ticket_cleanup()'.");
+  }
+
+  // 1.x ticket #71.
+  public function testPlayProxyXMLResponse() {
+    $asset_id = $this->createAsset();
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['width'] = '640';
+    $a_mediafile_ext['metadata']['height'] = '400';
+    $a_mediafile_ext['metadata']['video_codec'] = '';
+    $a_mediafile_ext['metadata']['mime_type'] = '';
+
+    $ticket = mediamosa_db::uuid($this->a_app[mediamosa_app_db::APP_ID]);
+
+    $a_asset_metadata = $a_asset_info = array();
+
+    $a_container_types = array(
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV,
+    );
+
+    $a_response_types = array(
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_URI,
+    );
+
+    $a_parameters = array();
+
+    foreach ($a_response_types as $a_parameters['response']['value']) {
+      foreach ($a_container_types as $a_mediafile_ext['metadata']['container_type']) {
+
+        // FLV does not have metafile.
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE &&
+            $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV) {
+          continue;
+        }
+
+        $a_mediafile_ext['filename'] = 'filename.wmv';
+        $a_parameters['start']['value'] = 6000;
+        $a_parameters['duration']['value'] = 4000;
+
+        try {
+          $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+            $asset_id,
+            $a_parameters,
+            $a_asset_info,
+            $a_mediafile_ext,
+            $a_asset_metadata,
+            $ticket,
+            $this->a_app[mediamosa_app_db::APP_ID]
+          );
+        }
+        catch (mediamosa_exception_error $e) {
+          // If streaming profile isnt setup, we cant test it either, we ignore it.
+          $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
+
+          if (!in_array($e->getCode(), $a_allowed_errors)) {
+            throw $e;
+          }
+
+          // Next!
+          continue;
+        }
+
+        // Check the asx output
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+          $tofind = "<asx version=\"3.0\">";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if asx starttag.');
+
+          $tofind = "<starttime value=\"00:00:06.0\" />";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if starttime asx tag is added.');
+
+          $tofind = "<duration value=\"00:00:04.0\" />";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if duration asx tag is added.');
+        }
+
+        // Check if ASX file was created (we also will remove the file again)
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+          $filename = mediamosa_configuration_storage::asx_file_location($ticket);
+          if (file_exists($filename)) {
+            mediamosa_io::unlink($filename);
+          }
+        }
+
+        if (!($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
+          $this->assertTrue(
+            isset($a_response['output']) && strpos($a_response['output'], $ticket) !== FALSE,
+            "Check if '" . $a_parameters['response']['value'] . "/" . $a_mediafile_ext['metadata']['container_type'] . "/_play_proxy_create_response()' contains the ticket: " . $ticket);
+        }
+      }
+    }
+
+    $a_container_types = array(
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4,
+      mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV,
+    );
+
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT;
+
+    foreach ($a_container_types as $a_mediafile_ext['metadata']['container_type']) {
+      $a_mediafile_ext['filename'] = 'filename.wmv';
+      $a_parameters['autostart']['value'] = 'true';
+
+      try {
+        $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+          $asset_id,
+          $a_parameters,
+          $a_asset_info,
+          $a_mediafile_ext,
+          $a_asset_metadata,
+          $ticket,
+          $this->a_app[mediamosa_app_db::APP_ID]
+        );
+      }
+      catch (mediamosa_exception_error $e) {
+        // If streaming profile isnt setup, we cant test it either, we ignore it.
+        $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
+
+        if (!in_array($e->getCode(), $a_allowed_errors)) {
+          throw $e;
+        }
+
+        // Next!
+        continue;
+      }
+
+      switch ($a_mediafile_ext['metadata']['container_type']) {
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
+          // Not supported, need to find out if we can add autoStart= to the flv url
+          break;
+
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
+          $tofind =  ".mp3";
+          break;
+
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
+          $tofind = "name='autoplay' value='true'";
+          // depends on which player is used.
+          //$this->assertTrue(
+          //  stripos($a_response['output'], $tofind) !== FALSE,
+          //  "Check if autoplay is on"
+          //);
+          break;
+
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV:
+          $tofind = "name='autostart' value='true'";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if autoplay is on');
+          break;
+      }
+
+      $a_parameters['autostart']['value'] = 'false';
+
+      try {
+        $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+          $asset_id,
+          $a_parameters,
+          $a_asset_info,
+          $a_mediafile_ext,
+          $a_asset_metadata,
+          $ticket,
+          $this->a_app[mediamosa_app_db::APP_ID]
+        );
+      }
+      catch (mediamosa_exception_error $e) {
+        // If streaming profile isnt setup, we cant test it either, we ignore it.
+        $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
+
+        if (!in_array($e->getCode(), $a_allowed_errors)) {
+          throw $e;
+        }
+
+        // Next!
+        continue;
+      }
+
+      switch ($a_mediafile_ext['metadata']['container_type']) {
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
+          // Not supported, need to find out if we can add autoStart= to the flv url
+          break;
+
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
+          $tofind =  "name='autoplay' value='false'";
+          // depends very much on player;
+          // $this->assertTrue(
+          //   stripos($a_response['output'], $tofind) !== FALSE,
+          //   "Check if autoplay is off"
+          // );
+          break;
+
+        case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV:
+          $tofind = "name='autostart' value='false'";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if autoplay is off');
+          break;
+      }
+    }
+
+    // Test _play_proxy_calc_video_size().
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 100, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 200),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 100, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 264),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(0, 0, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 200),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, 0, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 400),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, 0, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 464),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 0, 400, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 400),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 0, 400, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 464),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, NULL, NULL, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      //($size['width'] == PP_FLASH_OBJECT_WIDTH && $size['height'] == PP_FLASH_OBJECT_HEIGHT),
+      ($size['width'] == 100 && $size['height'] == 200),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, NULL, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
+    $this->assertTrue(
+      ($size['width'] == 200 && $size['height'] == 400),
+      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+    );
+
+    // Streaming server.
+    mediamosa_db::db_query(
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
+       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec')", array(
+      ':base_uri' => '{base_uri}',
+    ));
+
+    mediamosa_db::db_query(
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
+       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container')", array(
+      ':base_uri' => '{base_uri}',
+    ));
+
+    mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
+      array(':nid' => 998, ':container' => 'test_container:h264')
+    );
+
+    mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
+      array(':nid' => 999, ':container' => 'test_container')
+    );
+
+    // Specific codec
+    $a_mediafile_ext = $a_parameters = array();
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['container_type'] = 'test_container';
+    $a_mediafile_ext['metadata']['video_codec'] = 'h264';
+    $a_mediafile_ext['filename'] = 'filename.wmv';
+    $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
+      $a_parameters,
+      array(),
+      $a_mediafile_ext,
+      array(),
+      $ticket,
+      $this->a_app[mediamosa_app_db::APP_ID]
+    );
+
+    $this->assertTrue($a_response['output'] == 'url://unittest.h264/', 'Test container with specific codec that is defined.');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
+
+    // General container
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['container_type'] = 'test_container';
+    $a_mediafile_ext['metadata']['video_codec'] = NULL;
+    $a_mediafile_ext['filename'] = 'filename.wmv';
+    $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
+      $a_parameters,
+      array(),
+      $a_mediafile_ext,
+      array(),
+      $ticket,
+      $this->a_app[mediamosa_app_db::APP_ID]
+    );
+
+    $this->assertTrue($a_response['output'] == 'url://unittest.general/', 'Test container with specific codec that is defined.');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
+
+    // Codec that is not defined (should get defaukt container)
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['container_type'] = 'test_container';
+    $a_mediafile_ext['metadata']['video_codec'] = 'undef';
+    $a_mediafile_ext['filename'] = 'filename.wmv';
+    $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
+      $a_parameters,
+      array(),
+      $a_mediafile_ext,
+      array(),
+      $ticket,
+      $this->a_app[mediamosa_app_db::APP_ID]
+    );
+
+    $this->assertTrue($a_response['output'] == 'url://unittest.general/', 'Test container with undefined codec (plays general container).');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
+  }
+}

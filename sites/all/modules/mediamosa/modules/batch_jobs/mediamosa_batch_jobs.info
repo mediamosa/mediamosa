@@ -1,0 +1,15 @@
+; $Id$
+
+name = "Batch jobs"
+description = "Display the batch jobs."
+package = "MediaMosa - Modules"
+version = "3.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
+
+; Used files.
+files[] = mediamosa_batch_jobs.callbacks.inc
+files[] = mediamosa_batch_jobs.helpers.inc

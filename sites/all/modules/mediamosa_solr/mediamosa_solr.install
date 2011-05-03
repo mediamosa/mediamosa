@@ -1,0 +1,226 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ *
+ */
+
+/*
+ * Requirement; need at least revision 22 of the SolrPhpClient lib.
+ */
+define('MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT', 22);
+
+
+module_load_include('inc', 'mediamossa');
+require_once 'mediamosa_solr_queue_db.inc';
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_solr_requirements($phase) {
+
+  $requirements = array();
+
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  // We need the SolrPhpClient class, so lets make sure we have it installed
+  // or available.
+  $solr_php_client_found = FALSE;
+
+  // When found, this will tell if we have the right revision. For now we will
+  // accept revision 22 or higher.
+  $revision_ok = FALSE;
+
+  // First if its already found then we don't have to enable it.
+  $solr_php_client_found = class_exists('Apache_Solr_Service');
+
+  // Ok not already enabled somewhere else.
+  if (!$solr_php_client_found) {
+    // Now its not found, lets include where we expect it.
+    include_once '3rdparty/SolrPhpClient/Apache/Solr/Service.php';
+
+    // Ok, found it?
+    $solr_php_client_found = class_exists('Apache_Solr_Service');
+  }
+
+  // If found, check the revision.
+  if ($solr_php_client_found) {
+    // Ok found, so check revision.
+    $matches = array();
+    preg_match('/\$Revision:\s?(\d+)\s?\$/', Apache_Solr_Service::SVN_REVISION, $matches);
+
+
+    if (count($matches) == 2) {
+      // Check revision.
+      $matched_revision = reset($matches);
+      $revision = next($matches);
+
+      // Check it.
+      $revision_ok = (int) $revision >= MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT;
+    }
+  }
+
+  switch ($phase) {
+
+    // Already installed?
+    case 'runtime':
+      if ($solr_php_client_found && $revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('MediaMosa Solr PHP Client'),
+          'value' => $t('Found (revision !revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'severity' => REQUIREMENT_OK,
+        );
+      }
+      elseif ($solr_php_client_found && !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('MediaMosa Solr PHP Client'),
+          'value' => $t('Found, but wrong revision (!revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'description' => $t("The MediaMosa Solr PHP Client requires the SolrPhpClient library. This library is already been found/installed. However MediaMosa Solr requires revision !revision or higher. You need to replace the current installation of library 'SolrPhpClient'. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT,
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      else {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('MediaMosa Solr PHP Client'),
+          'value' => $t('Not found'),
+          'description' => $t("To properly use the Solr extension for MediaMosa, add the 3rd party library 'SolrPhpClient' under this module under the map 3rdparty. The installation should look like mediamosa_solr/3rdparty/SolrPhpClient/. This library is found at: !here. If you are not using the MediaMosa Solr extension, then disable the MediaMosa Solr module !here_module. Disabling the MediaMosa Solr module will remove this error.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!here_module' => l($t('here'), 'admin/modules'),
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+
+    // During install time.
+    case 'install':
+      if ($solr_php_client_found && !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('MediaMosa Solr PHP Client'),
+          'value' => $t('Found, but wrong revision (!revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'description' => $t("The MediaMosa Solr PHP Client requires the SolrPhpClient library. This library is already been found/installed. However MediaMosa Solr requires revision !revision or higher. You need to replace the current installation of library 'SolrPhpClient'. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT,
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      elseif (!$solr_php_client_found || !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('MediaMosa Solr PHP Client'),
+          'value' => $t('Not found'),
+          'description' => $t("To properly use the Solr extension for MediaMosa, add the 3rd party library 'SolrPhpClient' under this module under the map 3rdparty. The installation should look like mediamosa_solr/3rdparty/SolrPhpClient/. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      break;
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_solr_install() {
+  // Create our table(s).
+  mediamosa::drupal_install_schema('mediamosa_solr');
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_solr_uninstall() {
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema('mediamosa_solr');
+
+  // Remove our variables.
+  $result = db_select('variable', 'v')
+    ->fields('v', array('name'))
+    ->condition('name', db_like('mediamosa_solr_') . '%', 'LIKE')
+    ->execute();
+
+  foreach ($result as $row) {
+    variable_del($row->name);
+  }
+}
+
+/**
+ * Implements hook_disable().
+ */
+function mediamosa_solr_disable() {
+  // If our module is selected as search engine, then remove the variable
+  // so we fail back to default.
+  if (variable_get('mediamosa_search_engine', 'mediamosa_search') == 'mediamosa_solr') {
+    variable_del('mediamosa_search_engine');
+  }
+}
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_solr_schema() {
+
+  $schema[mediamosa_solr_queue_db::TABLE_NAME] = array(
+  'description' => 'The (re)index table.',
+    'fields' => array(
+      mediamosa_solr_queue_db::ID => array(
+        'type' => 'varbinary',
+        'mysql_type' => 'varbinary(32)',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => 'The ID to index, for now asset_id by default.',
+      ),
+      mediamosa_solr_queue_db::CREATED => array(
+        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE,
+        'description' => 'The date and time when the row was created.',
+      ),
+    ),
+    'primary key' => array(mediamosa_solr_queue_db::ID),
+    'indexes' => array(
+      'idx_created' => array(mediamosa_solr_queue_db::CREATED)
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Files renamed, rebuild Drupal registry.
+ */
+function mediamosa_solr_update_7000() {
+// Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+}

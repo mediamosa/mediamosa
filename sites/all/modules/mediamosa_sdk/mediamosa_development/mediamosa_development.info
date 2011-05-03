@@ -1,0 +1,14 @@
+; $Id: $
+name = "MediaMosa - development"
+description = "Enables to test and execute REST calls. For development purposes only."
+package = "MediaMosa - SDK" 
+version = "2.0.1"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa_sdk
+dependencies[] = mediamosa_connector
+
+; Used files.
+files[] = mediamosa_development.module
+files[] = mediamosa_development.admin.inc

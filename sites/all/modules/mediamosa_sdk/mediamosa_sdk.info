@@ -1,0 +1,9 @@
+; $Id: $
+name = "MediaMosa SDK"
+description = "The MediaMosa software development kit contains a collection of modules and classes used for creating Drupal websites supporting MediaMosa."
+package = "MediaMosa - SDK"
+version = "3.0.0"
+core = 7.x
+
+; Used files.
+files[] = mediamosa_sdk.class.inc

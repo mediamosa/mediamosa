@@ -1,0 +1,184 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The configuration module is one single form that uses a hook system to
+  * enrich the form.
+  */
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_configuration_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/config':
+      return '<p>' . t('The configuration page is a collection of the MediaMosa settings you can view and edit.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_configuration_menu() {
+  $items = array();
+
+  // Configuration.
+  $items['admin/mediamosa/config/global'] = array(
+    'title' => 'Configure MediaMosa global settings',
+    'description' => 'The configuration of global MediaMosa settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_configuration_form'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_GLOBAL),
+    'file' => 'mediamosa_configuration.inc',
+  );
+
+  $items['admin/mediamosa/config/global/list'] = array(
+    'title' => 'Configure',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/global/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview_globalconfig',
+    'access callback' => '_mediamosa_node_revision_access_globalconfig',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  return $items;
+}
+
+/**
+ * Block code copied from drupal system.inc.
+ *
+ * @return
+ *   The output HTML.
+ */
+function mediamosa_configuration_menu_block_page() {
+  $item = menu_get_item();
+  $content = system_admin_menu_block($item);
+
+  if ($content) {
+    $output = theme('admin_block_content', $content);
+  }
+  else {
+    $output = t('You do not have any administrative items.');
+  }
+
+  return $output;
+}
+
+/**
+ * Our Maintenance settings form.
+ *
+ * @return array
+ */
+function _mediamosa_configuration_form() {
+
+  // Build the settings form and enrich it with our settings collect hook.
+  $form = system_settings_form(module_invoke_all('mediamosa_configuration_collect'));
+
+  // Sort the form on its fieldsets.
+  $titles = array();
+
+  // Collect the titles.
+  foreach ($form as $name => $item) {
+    if (empty($item['#type']) || $item['#type'] != 'fieldset') {
+      continue;
+    }
+
+    // Make sure the fieldset is collapsed.
+    $form[$name]['#collapsed'] = TRUE;
+
+    // Get the title for sorting.
+    $titles[$item['#title']] = $name;
+  }
+
+  // Now sort on key.
+  ksort($titles, SORT_STRING);
+
+  // Now add weights.
+  $weight = -count($titles);
+  foreach ($titles as $title => $name) {
+    $form[$name]['#weight'] = $weight++;
+  }
+
+  // Add our submit hook.
+  $form['#submit'][] = '_mediamosa_configuration_form_submit';
+
+  return $form;
+}
+
+/**
+ * Validate the form.
+ */
+function mediamosa_configuration_validate($form, &$form_state) {
+
+  // Now call our (optional) validation hooks, remember that variables are
+  // saved automaticly.
+  module_invoke_all('mediamosa_configuration_validate', $form, $form_state);
+}
+
+/**
+ * Submit the form.
+ */
+function _mediamosa_configuration_form_submit($form, $form_state) {
+
+  // Now call our (optional) submit hooks, remember that variables are saved
+  // automaticly.
+  module_invoke_all('mediamosa_configuration_submit', $form, $form_state);
+
+  // Save new revision.
+
+  // Get the current settings node.
+  $fields = mediamosa_node_mediamosa_settings::get_fields();
+
+  // Get the current node for settings (is only one node).
+  $node = mediamosa_node_mediamosa_settings::get_node_settings();
+
+  foreach ($fields as $field) {
+    if (isset($form_state['values'][$field])) {
+      $node->{$field} = $form_state['values'][$field];
+    }
+  }
+
+  // New revision force.
+  $node->revision = 1;
+  $node->sticky = 0;
+  $node->comment = 0;
+  $node->promote = 0;
+  $node->status = 1; // published.
+
+  // Save the node.
+  node_save($node);
+}

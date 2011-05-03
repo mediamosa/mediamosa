@@ -1,0 +1,252 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Test on the simple test sub functions.
+ */
+
+class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  static public function getInfo() {
+    return array(
+      'name' => 'SimpleTest - environment',
+      'description' => 'Testing our parent simple test class for EUA (App) functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST,
+    );
+  }
+
+  /**
+   * Check if update was succesful.
+   *
+   * @param array $a_result
+   * @param array $a_parameters
+   */
+  private function compare_update(array $a_result, array $a_parameters) {
+    foreach ($a_parameters as $param => $value) {
+      $this->assertEqual($a_result[$param], $value, strtr('comparing updated values, param: @param, value: @value', array('@param' => $param, '@value' => $value)));
+    }
+  }
+
+  // ------------------------------------------------------------------ Test multi app logins.
+  public function testApps() {
+    // Be default, we always create 3 apps, but only first is logged in.
+
+    // Now login on other 2.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // Now do REST call on app 1.
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app[mediamosa_app_db::APP_ID], 'App 1 match');
+
+    // Now do REST call on app 2.
+    $result = $this->restCallGet_2('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_2[mediamosa_app_db::APP_ID], 'App 2 match');
+
+    // Now do REST call on app 3.
+    $result = $this->restCallGet_3('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_3[mediamosa_app_db::APP_ID], 'App 3 match');
+
+    // Switch to EGA 2.
+    $this->toEga_2();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_2[mediamosa_app_db::APP_ID], 'App 2 match');
+
+    // Switch to EGA 3.
+    $this->toEga_3();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_3[mediamosa_app_db::APP_ID], 'App 3 match');
+
+    // Switch to EGA 1.
+    $this->toEga_1();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app[mediamosa_app_db::APP_ID], 'App 1 match');
+  }
+
+  // ------------------------------------------------------------------ Test asset.
+  public function testAsset() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Get the asset.
+    $a_asset_1 = $this->getAsset($asset_id);
+
+    // Update asset:
+    // Play_restriction tests - normal
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
+    );
+
+    // Update asset.
+    $this->updateAsset($asset_id, $a_parameters, 'update asset play_restriction');
+
+    // Get the asset.
+    $a_asset_2 = $this->getAsset($asset_id);
+
+    // Compare the update with result.
+    $this->compare_update($a_asset_2, $a_parameters);
+
+    // Update asset:
+    // Make sure we cant update with other user.
+    // Play_restriction tests - different user ID
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '2009-01-01 01:01:01',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '2009-02-02 02:02:02',
+      mediamosa_rest_call_asset_update::USER_ID => 'foo',
+    );
+
+    // Update asset.
+    $this->updateAsset($asset_id, $a_parameters, 'update asset: wrong user_id', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Delete asset.
+    $this->deleteAsset($asset_id);
+
+    // Now must be empty result;
+    $this->getAsset($asset_id, array(), array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+  }
+
+  // ------------------------------------------------------------------ Test mediafile.
+  public function testMediafile() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create an mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Get the mediafile.
+    $a_mediafile_1 = $this->getMediafile($mediafile_id);
+
+    // Update mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::FILENAME => 'foo.txt',
+    );
+
+    // Update.
+    $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Get to compare;
+    $a_mediafile = $this->getMediafile($mediafile_id);
+
+    // Compare the update with result.
+    $this->compare_update($a_mediafile, $a_parameters);
+
+    // tests - other user ID.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::FILENAME => 'foo2.txt',
+      mediamosa_rest_call_asset_supplement_create::USER_ID => 'foo',
+    );
+
+    // Update.
+    $this->updateMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+
+  // ------------------------------------------------------------------ Test asset supplement.
+  public function testAssetSupplement() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create asset supplement:
+    // tests - normal
+    $supplement_id = $this->createAssetSupplement($asset_id);
+
+    // Create asset supplement:
+    // tests - other user ID.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_supplement_create::USER_ID => 'foo',
+    );
+
+    // Try to create.
+    $this->createAssetSupplement($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Delete asset supplement:
+    // tests - other user ID.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_supplement_create::USER_ID => 'foo',
+    );
+
+    // Try to delete.
+    $this->deleteAssetSupplement($asset_id, $supplement_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Delete asset supplement:
+    // tests - normal
+    $this->deleteAssetSupplement($asset_id, $supplement_id);
+  }
+
+  // ------------------------------------------------------------------ Test asset metadata.
+  public function testAssetMetadata() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Get metadata def.
+    $a_metadata_definitions_full = $this->getMetadataDefinitions();
+
+    // Metadata def.
+    $this->assertTrue(count($a_metadata_definitions_full), 'Must have metadata definitions');
+
+    $a_parameters = array();
+    foreach ($a_metadata_definitions_full as $a_metadata_definition) {
+      $name = $a_metadata_definition['name'];
+      $type = $a_metadata_definition['type'];
+
+      switch ($type) {
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          $a_parameters[$name] = '2008-01-01 23:59:59';
+          break;
+
+        default:
+          $this->fail(strtr('unknown type @type', array('@type' => $type)));
+
+        case mediamosa_asset_metadata_property_db::TYPE_INT:
+        case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+          $a_parameters[$name] = mediamosa_db::uuid(rand(1, 1000));
+          break;
+      }
+
+      switch ($name) {
+        case 'language':
+          $a_parameters[$name] = 'nl';
+          break;
+      }
+    }
+
+    // Make sure we have something...
+    $this->assertTrue(count($a_parameters), 'must have more than 1 metadata');
+
+    // Create it.
+    $this->createAssetMetadata($asset_id, $a_parameters);
+
+    // Now change user.
+    $a_parameters[mediamosa_rest_call_asset_supplement_create::USER_ID] = 'foo';
+
+    // Create it (should fail).
+    $this->createAssetMetadata($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+}

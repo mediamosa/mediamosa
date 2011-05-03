@@ -1,0 +1,105 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Solr version of MediaMosaAclSlaveRightsTestCaseEga
+ */
+
+class MediaMosaSolrAclSlaveRightsTestCaseEga extends MediaMosaAclSlaveRightsTestCaseEga {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+
+    $info = parent::getInfo();
+    $info['name'] = 'SOLR - ' . $info['name'];
+    $info['group'] = 'MediaMosa Solr';
+    $info['automatic_run_disabled'] = module_exists('mediamosa_solr') ? FALSE : TRUE;
+
+    return $info;
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+
+  /**
+   * Implements setUp().
+   *
+   * Any changes; see other classes(!)
+   */
+  protected function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_solr',
+    ), $args));
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Turn on Solr as search engine.
+    variable_set('mediamosa_search_engine', 'mediamosa_solr');
+  }
+
+  /**
+   * Implements tearDown().
+   *
+   * Any changes; see other classes(!)
+   */
+  protected function tearDown() {
+
+    $app_ids = array();
+    if (!empty($this->a_app['app_id'])) {
+      $app_ids[] = $this->a_app['app_id'];
+    }
+    if (!empty($this->a_app_2['app_id'])) {
+      $app_ids[] = $this->a_app_2['app_id'];
+    }
+    if (!empty($this->a_app_3['app_id'])) {
+      $app_ids[] = $this->a_app_3['app_id'];
+    }
+
+    // Remove it.
+    if (!empty($app_ids)) {
+      mediamosa_solr::delete_simpletest_documents($app_ids);
+      $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
+    }
+
+    parent::tearDown();
+  }
+}

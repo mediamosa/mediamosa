@@ -1,0 +1,183 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for Master/Slave: mediafiles are visible functions.
+  */
+class MediaMosaAclMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Master/Slave: mediafiles are visible',
+      'description' => 'Testing AUT master/Slave: mediafiles are visible functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing AUT Master/Slave: mediafiles are visible, see: ticket 232 (MediaMosa track).
+  function testAclMasterSlaveMediafileVisible() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // Enable master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    //$this->enableMasterSlave($app_id_3);
+
+    //
+    // Set asset and mediafiles.
+    //
+
+    $asset_id = array();
+    $mediafile_id = array();
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Create an asset.
+    $asset_id[1][1] = $this->createAsset();
+
+    // Create a mediafiles.
+    $mediafile_id[1][1][1] = $this->createMediafile($asset_id[1][1]);
+    $mediafile_id[1][1][2] = $this->createMediafile($asset_id[1][1]);
+    $mediafile_id[1][1][3] = $this->createMediafile($asset_id[1][1]);
+    $mediafile_id[1][1][4] = $this->createMediafile($asset_id[1][1]);
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id[1][1]);
+    //$this->var_export($a_asset);
+
+    // Check the result.
+    $cnt = count($a_asset['mediafiles']['mediafile']);
+    $this->assertTrue(
+      $cnt == 4,
+      t('Got all the mediafiles (count = @count)', array('@count' => $cnt))
+    );
+    foreach ($a_asset['mediafiles']['mediafile'] as $mf_id) {
+      $this->assertTrue(
+        in_array($mf_id['mediafile_id'], $mediafile_id[1][1]),
+        t('Got the good mediafile id')
+      );
+    }
+
+    //
+    // Set mediafile acl.
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Set mediafile acl.
+    $a_parameters = array(
+      'acl_app' => $app_id_2,
+    );
+    $a_xml = $this->setMediafileAcl($mediafile_id[1][1][2], $a_parameters);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id[1][1]);
+    //$this->var_export($a_asset);
+
+    // Convert single mediafile to array.
+    if (isset($a_asset['mediafiles']['mediafile']['mediafile_id'])) {
+      $mf = $a_asset['mediafiles']['mediafile'];
+      unset($a_asset['mediafiles']['mediafile']);
+      $a_asset['mediafiles']['mediafile'][0] = $mf;
+    }
+
+    // Check the result.
+    $cnt = count($a_asset['mediafiles']['mediafile']);
+    $this->assertTrue(
+      $cnt == 1,
+      t('Got 1 mediafile (count = @count)', array('@count' => $cnt))
+    );
+    $this->assertTrue(
+      $a_asset['mediafiles']['mediafile'][0]['mediafile_id'] == $mediafile_id[1][1][2],
+      t('Got the good mediafile id')
+    );
+
+    //
+    // Set mediafile acl. on an another mediafile
+    //
+
+    // To first Ega.
+    $this->toEga_1();
+
+    // Set mediafile acl.
+    $a_parameters = array(
+      'acl_app' => $app_id_2,
+    );
+    $a_xml = $this->setMediafileAcl($mediafile_id[1][1][1], $a_parameters);
+
+    // To second Ega.
+    $this->toEga_2();
+
+    // Get the asset.
+    $a_asset = $this->getAsset($asset_id[1][1]);
+    //$this->var_export($a_asset);
+
+    // Check the result.
+    $cnt = count($a_asset['mediafiles']['mediafile']);
+    $this->assertTrue(
+      $cnt == 2,
+      t('Got 2 mediafiles (count = @count)', array('@count' => $cnt))
+    );
+    $this->assertTrue(
+      (
+        $a_asset['mediafiles']['mediafile'][0]['mediafile_id'] == $mediafile_id[1][1][1] &&
+        $a_asset['mediafiles']['mediafile'][1]['mediafile_id'] == $mediafile_id[1][1][2]
+      ) ||
+      (
+        $a_asset['mediafiles']['mediafile'][0]['mediafile_id'] == $mediafile_id[1][1][2] &&
+        $a_asset['mediafiles']['mediafile'][1]['mediafile_id'] == $mediafile_id[1][1][1]
+      ),
+      t('Got the good mediafile id')
+    );
+  }
+}

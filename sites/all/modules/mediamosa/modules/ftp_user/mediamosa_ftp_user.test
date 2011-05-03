@@ -1,0 +1,111 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for ftp user functions.
+  */
+class MediaMosaFtpUserTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'FTP User - common tests',
+      'description' => 'Testing FTP user related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing statistics, see: ticket 775.
+  function testFtpUserFunction() {
+
+    // Setup.
+
+    // App id.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // User name, password.
+    $user = mediamosa_db::uuid(rand(1, 9999));
+    $password = mediamosa_db::uuid(rand(1, 9999));
+
+    // Get the FTP user.
+    $a_xml = $this->getFtpUser($user, array(), 'Get FTP User', array(), array(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER));
+
+    // Create FTP user.
+    $this->createFtpUser($user, $password);
+
+    // Get the FTP user.
+    $a_xml = $this->getFtpUser($user);
+
+    // Disable account.
+
+    // Update the user.
+    $a_parameters = array(
+      mediamosa_rest_call_ftp_user_update::ACTIVE => 'false',
+    );
+    $response = $this->updateFtpUser($user, $a_parameters);
+
+    // Get the FTP user.
+    $a_xml = $this->getFtpUser($user);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['active'] == 'false',
+      t("FTP: Disable account of user.")
+    );
+
+    // Activate account.
+
+    // Update the user.
+    $a_parameters = array(
+      mediamosa_rest_call_ftp_user_update::ACTIVE => 'true',
+    );
+    $response = $this->updateFtpUser($user, $a_parameters);
+
+    // Get the FTP user.
+    $a_xml = $this->getFtpUser($user);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['active'] == 'true',
+      t("FTP: Enable account of user.")
+    );
+
+    // Delete user.
+
+    // Delete the user.
+    // Same as: $this->deleteFtpUser($user);
+    $this->deleteFtpUser($user . sprintf("%03d", $app_id_1));
+
+    // Get the FTP user.
+    // FIXME: need study.
+    //$a_xml = $this->getFtpUser($user, array(), 'Get FTP User', array(), array(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER));
+  }
+}

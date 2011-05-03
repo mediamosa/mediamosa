@@ -1,0 +1,334 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  *
+  */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_collection_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  // Count number of collections based on owner/app/group (1.x: media_management_collection_count)
+  $rest_calls['collection/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_collection',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Search for collections.
+  $rest_calls['collection'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Search for collections.
+  $rest_calls['asset/$asset_id/collection'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_search_asset',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Return the number of favorites in given collection.
+  $rest_calls['collection/$coll_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Return the number of favorites in given collection.
+  $rest_calls['collection/$coll_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get Collection.
+  $rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get count of assets in a Collection.
+  $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_count_relation',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_2_0,
+  );
+
+  // Create Collection.
+  $rest_calls['collection/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update Collection.
+  $rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete Collection.
+  $rest_calls['collection/$coll_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete Collection/asset relation.
+  $rest_calls['collection/$coll_id/asset_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_delete_relation',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_collection_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['collection/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Count collections',
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections that match a group or an owner. If no parameter is given, the total number of collections is returned. The item_count_total is part of the header response output.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/count?owner_id=foo [GET]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item_count_total' => 'The total number of collections found.',
+      'item_count' => 'The total number of items returned is with this call always 0, since we only return the total number. Use the call /collection [GET] to also obtain the details of the found collections.',
+      'items' => 'always empty.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<header>
+  <item_count>0</item_count>
+  <item_count_total>1</item_count_total>
+  <item_offset>0</item_offset>
+</header>
+',
+  );
+
+  $rest_calls['collection'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search in the collections of assets.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a list of collections based on search patterns or CQL. Will return master/slaved collections, when access allowed. The number of videos field in each collection (numofvideos) reflects the number of videos in the collection. However, for master-slaved collections, this number will only hold the number of assets that are also master-slaved to your client application. If a master-slaved collection has no accessable assets, the collection is omitted from the results.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection?is_public_list=false&calculate_total_count=true&operator=and&limit=10&order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>1</coll_id>
+    <title>News</title>
+    <description>News related assets.</description>
+    <app_id>3</app_id>
+    <owner_id>testuser</owner_id>
+    <group_id>videoandimages</group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>TRUE</category>
+    <created>2009-11-06 17:50:36</created>
+    <changed>2009-05-27 21:47:34</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>TRUE</public_assign>
+    <numofvideos>14</numofvideos>
+  </item>
+  <item id="2">
+  ....
+  </item>
+</item>',
+  );
+
+  $rest_calls['asset/$asset_id/collection'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search in the collections of specified asset ID.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z/collection',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>EjDv4oI50sjPu01WXdXH5Eva</coll_id>
+    <title>CDE Collectieup</title>
+    <description>Collectie CDE</description>
+    <app_id>5</app_id>
+    <owner_id>SURFgroepen.smibuildings</owner_id>
+    <group_id>default</group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>FALSE</category>
+    <created>2009-05-27 10:37:43</created>
+    <changed>2009-09-18 12:04:31</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>FALSE</public_assign>
+    <numofvideos>1</numofvideos>
+  </item>
+</items>',
+  );
+
+  $rest_calls['collection/$coll_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = // deprecated.
+  $rest_calls['collection/$coll_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the number of favorites in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'This call returns the number of assets which are added to the favorits of a user within the collection. The result is given in the header: item_count.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/b1Tb9eoIgOeSLZ9cGO04rPej/favorites/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item_count>0</item_count>');
+
+  $rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the details of a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. An asset can belong to several
+collections. This call gives all the collection details.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/A2VIXJhHiplJWliYVTVeD8Ee?user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'coll_id' => 'Unique collection id.',
+      'title' => 'Title of the collection.',
+      'description' => 'Description of the collection.',
+      'app_id' => 'The Application id where this collection belongs to.',
+      'owner_id' => 'The owner (user) of this collection.',
+      'group_id' => 'The group owner of this collection.',
+      'isprivate' => '',
+      'private' => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
+      'public' => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
+      'category' => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
+      'created' => 'date/time when the collection was created.',
+      'changed' => 'date/time when the collection was last modified.',
+      'is_unappropriate' => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
+      'public_assign' => '',
+      'numofvideos' => 'Number of assets in the collection.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>A2VIXJhHiplJWliYVTVeD8Ee</coll_id>
+    <title>test collection</title>
+    <description></description>
+    <app_id>1</app_id>
+    <owner_id>foo</owner_id>
+    <group_id></group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>FALSE</category>
+    <created>2010-03-10 11:00:59</created>
+    <changed>2010-03-10 11:00:59</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>FALSE</public_assign>
+    <numofvideos>3</numofvideos>
+  </item>
+</items>
+',
+  );
+
+  $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the assets in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. A asset can belong to one or more collections. This call counts all the assets in a collection. If the collection is master-slaved to your client application, then only the master-slaved assets to your client application are counted.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/A2VIXJhHiplJWliYVTVeD8Ee/asset/count?user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'numofvideos' => 'Number of assets in the collection.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <numofvideos>3</numofvideos>
+  </item>
+</items>
+',
+  );
+
+  $rest_calls['collection/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a new collection, with some metadata. The title and description must be set with an extra /collection/{coll_id} [POST] call.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/create [POST]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>3</coll_id>
+  </item>
+</items>',
+  );
+
+  $rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Update the fields of a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/b1Tb9eoIgOeSLZ9cGO04rPej [POST] user_id=foo&title=bar&description=baz',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
+<request_result_description></request_result_description>
+<request_result_id>601</request_result_id>',
+  );
+
+  $rest_calls['collection/$coll_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete the given collection. Only the owner is allowed to delete the collection.
+
+Collections can only be removed when there are no assets linked to it, or if the parameter delete=cascade is given.
+
+When you use the \'delete = cascade\' parameter, then all of the linked assets, mediafiles, stills and metadata will be deleted too, even if the assets are also used in other collections. Each asset is verified that the user_id is also the owner of the asset, otherwise the call fails.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/o1n8DMqafOMP7MgcWsnTUmvf/delete [POST] user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
+<request_result_id>601</request_result_id> ',
+  );
+
+  $rest_calls['collection/$coll_id/asset_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete the relations between collection and assets.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete all given assets from a collection. This call only removes the links, not the objects itself. Returns an item list of relations deleted.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation/delete [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id[]=x1AjaVW8gVjZjsKmQRWsF9uM&user_id=foo',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>X2OJSIuWKPUZUsdSNlsE8Tcx</asset_id>
+    <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+  </item>
+  <item id="2">
+    <asset_id>x1AjaVW8gVjZjsKmQRWsF9uM</asset_id>
+    <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+  </item>
+</items>',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'asset_id' => 'the asset_id unlinked from the collection.',
+      'coll_id' => 'the collection id of which the asset_is unlinked from.'
+    ),
+  );
+
+  /*
+collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id=x1AjaVW8gVjZjsKmQRWsF9uM
+  */
+  return $rest_calls;
+}

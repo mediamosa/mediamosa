@@ -1,0 +1,26 @@
+Returns a listing of all the jobs belonging to the asset.
+
+CQL usage examples:
+  * mediafile_id == "^1234^"
+    It searches the jobs of mediafile_id = 1234.
+
+  * status == "^FAILED^"
+    It searches the jobs where the status = FAILED.
+
+  * progress > "0.500" OR progress == "0.000"
+    It searches the jobs where the progress bigger than 0.5 or equal to 0.
+
+  * priority >= "0"
+    It searches the jobs where the priority is bigger than zero.
+
+  * job_type == "^UPLOAD^"
+    It searches the jobs where the type = UPLOAD.
+
+  * finished >= "2010-07-21 12:44:45" AND finished < "2010-07-22 15:32:43"
+    It searches the jobs where the finished parameter is between this to date.
+
+  * create_still == "TRUE"
+    It searches the jobs where the create_still parameter is TRUE.
+
+  * hint == "TRUE"
+    It searches the jobs where the hint parameter is TRUE.

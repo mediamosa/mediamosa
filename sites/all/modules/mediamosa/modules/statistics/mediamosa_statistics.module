@@ -1,0 +1,585 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * Implements hook_cron().
+ *
+ * Calculate used diskspace.
+ */
+function mediamosa_statistics_cron() {
+
+  // No need to run statistics parsing in simpletest. Will call it directly
+  // inside the test when needed.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    $last_run = variable_get('mediamosa_statistics_cron_last_run', 0);
+
+    $now = time();
+    $hour24 = date("G", $now);    // 24-hour format of an hour without leading zeros (0 through 23).
+    $month = date("n", $now);      // Numeric representation of a month, without leading zeros (1 through 12).
+    $year = date("Y", $now);       // A full numeric representation of a year, 4 digits.
+
+    // Only between 01:00 and 06:00 and more than 12 hours ago.
+    if (($hour24 >= 1 && $hour24 < 6) && ($last_run < ($now - (12 * 3600)))) {
+
+      // Set last run variable to immediately lock out successive
+      // attempts (including those due to this run taking longer
+      // than the cron interval).
+      variable_set('mediamosa_statistics_cron_last_run', $now);
+      mediamosa_statistics::calculate_used_diskspace($year, $month);
+
+      // Clean up mediamosa_streaming_ticket table.
+      mediamosa_statistics::delete_streaming_ticket();
+    }
+
+    // Do the statistics cron REST call for streaming statistics.
+    mediamosa_http::do_internal_call_cron('internal/cron/statistics', TRUE);
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: @function: @msg', array('@function' => __FUNCTION__, '@msg' => $e->getMessage()));
+  }
+}
+
+function mediamosa_statistics_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the uploaded mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the uploaded mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/dataupload?month=1&year=2010&limit=150',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <file_size>993480</file_size>
+    <timestamp>2010-01-22 16:22:54</timestamp>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the search.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular words.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/mostsearchedwords?begindate=2009&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <word>Best</word>
+    <count>863</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/searchedwords'][mediamosa_rest_call::METHOD_GET] = $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET];
+
+  $a_rest_calls['statistics/datausagevideo'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the used diskspace.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the used diskspace.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/datausagevideo?month=1&year=2010&type=user&limit=150&order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <container_type>asf</container_type>
+    <user_id>admin</user_id>
+    <type>user</type>
+    <app_id>14</app_id>
+    <diskspace_mb>105</diskspace_mb>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/newestcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the latest collections.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the latest collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/newestcollections?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>vTSPjPOSJ7pIeNQVTX0BGv6z</coll_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <title>Best</title>
+    <description></description>
+    <created>2010-04-08 14:58:27</created>
+    <changed>2010-04-08 14:58:27</changed>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/newestmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the latest mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the 50 latest uploaded mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/newestmediafiles?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>IwHgMjfuMdbSdxdOPWEQJHdk</asset_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <mediafile_id>e2NbmiUoaRJAXVZPPJW4T9BW</mediafile_id>
+    <filename>Best.wmv</filename>
+    <created>2010-04-07 15:21:12</created>
+    <container_type>asf</container_type>
+    <filesize>993480</filesize>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/playedstreams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the played requests.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the played requests.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/playedstreams?month=1&year=2010&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>97</id>
+    <tid>e2NbmiUoaRJAXVZPPJW4T9BW</tid>
+    <time>2010-01-27 14:00:00</time>
+    <app_id>14</app_id>
+    <duration>121</duration>
+    <bytes>6752</bytes>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the collections.',
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/popularcollections?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>vTSPjPOSJ7pIeNQVTX0BGv6z</coll_id>
+    <title>Best</title>
+    <description></description>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <created>2010-04-08 14:58:27</created>
+    <count>97</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/popularmediafiles?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <container_type>flv</container_type>
+    <filesize>1282548</filesize>
+    <count>100</count>
+    <filename>Best.flv</filename>
+    <created>2010-01-22 16:23:41</created>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/searchrequest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the search.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most used search.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/searchrequest?month=1&year=2010&limit=150',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <word>best</word>
+    <count>878</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the streams.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular stream requests.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/streams?begindate=2009&enddate=2011&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <filename>Best.flv</filename>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <requested>100</requested>
+    <app_id>14</app_id>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_statistics_mediamosa_register_rest_call() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['statistics/newestmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/newestcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Register a upload for statistics.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/datausagevideo'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_used_diskspace',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/playedstreams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_requested_streams',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['cron/statistics'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_statistics',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Start a cron for statistics.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_streams',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_words',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Alias.
+  $a_rest_calls['statistics/searchedwords'][mediamosa_rest_call::METHOD_GET] = $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET];
+
+  $a_rest_calls['statistics/searchrequest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_searchrequest',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_statistics_theme() {
+  return array(
+    'mediamosa_statistics_filters' => array(
+      'render element' => 'form',
+      'file' => 'mediamosa_statistics.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_statistics_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/statistics':
+      return '<p>' . t('Browse through collected statistics of MediaMosa.') . '</p>';
+    case 'admin/mediamosa/statistics/latestmediafiles':
+      return '<p>' . t('This page displays a list of the 150 latest uploaded mediafiles.') . '</p>';
+    case 'admin/mediamosa/statistics/popularmediafiles':
+      return '<p>' . t('This page displays a list of the 150 popular uploaded mediafiles.') . '</p>';
+    case 'admin/mediamosa/statistics/latestcollections':
+      return '<p>' . t('This page displays a list of the 150 latest created collections.') . '</p>';
+    case 'admin/mediamosa/statistics/popularcollections':
+      return '<p>' . t('This page displays a list of the 150 popular collections.') . '</p>';
+    case 'admin/mediamosa/statistics/diskspaceusage':
+      return '<p>' . t('This page displays a list of the disk usage per container.') . '</p>';
+    case 'admin/mediamosa/statistics/streamrequests':
+      return '<p>' . t('This page displays a list of requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.') . '</p>';
+    case 'admin/mediamosa/statistics/popularstreams':
+      return '<p>' . t('This page displays a list of the most popular requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.') . '</p>';
+    case 'admin/mediamosa/statistics/searchwords':
+      return '<p>' . t('This page displays a list of the 150 most searched words for a period.') . '</p>';
+
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_statistics_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/statistics'] = array(
+    'title' => 'Statistics',
+    'description' => 'Browse through collected statistics of MediaMosa.',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS),
+    'page callback' => '_mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/statistics'),
+    'file' => 'mediamosa_maintenance.admin.inc',
+    'file path' => drupal_get_path('module', 'mediamosa_maintenance'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -5,
+  );
+  $items['admin/mediamosa/statistics/list'] = array(
+    'title' => 'Browse through collected statistics of MediaMosa.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/statistics/latestmediafiles'] = array(
+    'title' => 'Overview of latest mediafiles',
+    'description' => 'This page displays a list of the 150 latest uploaded mediafiles.',
+    'page callback' => 'mediamosa_statistics_mediafile_latest_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS_LATEST_MEDIAFILES),
+    'file' => 'mediamosa_statistics_mediafile_latest.inc',
+  );
+  $items['admin/mediamosa/statistics/latestmediafiles/list'] = array(
+    'title' => 'Overview of latest mediafiles',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  /*
+  $items['admin/mediamosa/statistics/popularmediafiles'] = array(
+    'title' => 'Overview of popular mediafiles',
+    'description' => 'This page displays a list of the 150 popular uploaded mediafiles.',
+    'page callback' => 'mediamosa_statistics_mediafile_popular_form',
+    'access arguments' => array('access mediamosa statistics'),
+    'file' => 'mediamosa_statistics_mediafile_popular.inc',
+  );
+  $items['admin/mediamosa/statistics/popularmediafiles/list'] = array(
+    'title' => 'Overview of popular mediafiles',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+   */
+
+  $items['admin/mediamosa/statistics/latestcollections'] = array(
+    'title' => 'Overview of latest collections',
+    'description' => 'This page displays a list of the 150 latest created collections.',
+    'page callback' => 'mediamosa_statistics_collection_latest_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS_LATEST_COLLECTIONS),
+    'file' => 'mediamosa_statistics_collection_latest.inc',
+  );
+  $items['admin/mediamosa/statistics/latestcollections/list'] = array(
+    'title' => 'Overview of latest mediafiles',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  /*
+  $items['admin/mediamosa/statistics/popularcollections'] = array(
+    'title' => 'Overview of popular collections',
+    'description' => 'This page displays a list of the 150 popular collections.',
+    'page callback' => 'mediamosa_statistics_collection_popular_form',
+    'access arguments' => array('access mediamosa statistics'),
+    'file' => 'mediamosa_statistics_collection_popular.inc',
+  );
+  $items['admin/mediamosa/statistics/popularcollections/list'] = array(
+    'title' => 'Overview of popular collections',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+   */
+
+  $items['admin/mediamosa/statistics/diskspaceusage'] = array(
+    'title' => 'Overview of diskspace used',
+    'description' => 'This page displays a list of the disk usage per container.',
+    'page callback' => 'mediamosa_statistics_diskspaceused_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS_DISKSPACE_USED),
+    'file' => 'mediamosa_statistics_diskspaceusage.inc',
+  );
+  $items['admin/mediamosa/statistics/diskspaceusage/list'] = array(
+    'title' => 'Overview of diskspace used',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/statistics/streamrequests'] = array(
+    'title' => 'Overview stream request',
+    'description' => 'This page displays a list of requested streams.',
+    'page callback' => 'mediamosa_statistics_streamrequests_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS_STREAM_REQUEST),
+    'file' => 'mediamosa_statistics_streamrequests.inc',
+  );
+  $items['admin/mediamosa/statistics/streamrequests/list'] = array(
+    'title' => 'Overview stream request',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  /*
+  $items['admin/mediamosa/statistics/popularstreams'] = array(
+    'title' => 'Overview of popular streams per period',
+    'description' => 'This page displays a list of the most popular requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.',
+    'page callback' => 'mediamosa_statistics_popularstreams_form',
+    'access arguments' => array('access mediamosa statistics'),
+    'file' => 'mediamosa_statistics_popularstreams.inc',
+  );
+  $items['admin/mediamosa/statistics/popularstreams/list'] = array(
+    'title' => 'Overview of popular streams per period',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+   */
+
+  $items['admin/mediamosa/statistics/searchwords'] = array(
+    'title' => 'Overview of search words per period',
+    'description' => 'This page displays a list of the 150 most searched words for a period.',
+    'page callback' => 'mediamosa_statistics_searchwords_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATS_SEARCH_WORDS),
+    'file' => 'mediamosa_statistics_searchwords.inc',
+  );
+  $items['admin/mediamosa/statistics/searchwords/list'] = array(
+    'title' => 'Overview of search words per period',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_collect()
+ */
+function mediamosa_statistics_mediamosa_configuration_collect() {
+  $form = array();
+
+    // Use drupal to get the timezones.
+  $timezones = system_time_zones();
+
+  $form['settings_statistics'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Statistics'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Path of the streaming log file'),
+    '#description' => t("Eg. '/mnt/naspcd1/vp-prod/01/vpx-prod/log' or '/mnt/naspcd1/vpx-acc/log'. Leave it empty, if you don't have streaming log files."),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_path', ''),
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_timezone'] = array(
+    '#type' => 'select',
+    '#title' => t('Default time zone'),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_timezone', 'Europe/Amsterdam'),
+    '#options' => $timezones,
+    '#required' => TRUE,
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_ticket'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Ticket path in the streaming log files'),
+    '#description' => t("It may be 'ticket' or 'vpx', but you can leave it empty too.
+      If your log files have this value '//vpx/14/yYFnHmmK8nTScYIXi6bS3vSk.flv' in the 'x-ctx' (Wowza) or 'cs-uri-stem' (Windows Media) field, then you should write 'vpx' here.
+      This is a global value to all of your log files."),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_ticket', mediamosa_statistics::LOG_TICKET),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_validate()
+ */
+function mediamosa_statistics_mediamosa_configuration_validate($form, &$form_state) {
+  $path = $form_state['values']['mediamosa_statistics_streaming_log_path'];
+  $timezone = $form_state['values']['mediamosa_statistics_streaming_log_timezone'];
+  $ticket = $form_state['values']['mediamosa_statistics_streaming_log_ticket'];
+  if ($path) {
+    if (!is_dir($path) || !is_readable($path)) {
+      form_set_error('mediamosa_statistics_streaming_log_path', t('The streaming log path is not valid.'));
+    }
+    if (!$timezone) {
+      form_set_error('mediamosa_statistics_streaming_log_timezone', t('The time zone is not valid.'));
+    }
+  }
+  if (!preg_match('#^[/0-9a-zA-Z]*$#', $ticket)) {
+    form_set_error('mediamosa_statistics_streaming_log_ticket', t('The ticket path has invalid characters.'));
+  }
+}

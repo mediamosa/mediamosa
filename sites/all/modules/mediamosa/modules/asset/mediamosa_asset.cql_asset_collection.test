@@ -1,0 +1,299 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL on asset and collection test file.
+  */
+class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Asset and collection search and properties',
+      'description' => 'Testing asset and collection CQL related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  public static function _escape_for_printf($str) {
+    return str_replace('%', '%%', $str);
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test asset and collection search and properties (809).
+  public function testCQLAssetCollection() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // enable change master/slave.
+
+    // Switch Ega.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    // Switch Ega.
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    // Switch Ega.
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    //
+    // Set up assets.
+    //
+
+    // Switch Ega.
+    $this->toEga_3();
+
+    // Create assets.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $asset_id_5 = $this->createAsset();
+    $asset_id_6 = $this->createAsset();
+    $asset_id_7 = $this->createAsset();
+
+    //
+    // Set up metadatas.
+    //
+
+    // Create asset metadatas.
+
+    // Title.
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap noot'));
+    $this->createAssetMetadata($asset_id_3, array('title' => 'noot'));
+    $this->createAssetMetadata($asset_id_4, array('title' => 'dit is een test mies'));
+    $this->createAssetMetadata($asset_id_5, array('title' => 'lord of maar wist the noot rings'));
+    $this->createAssetMetadata($asset_id_6, array('title' => 'blaat en foo'));
+    $this->createAssetMetadata($asset_id_7, array('title' => 'blaat en foo'));
+
+    // Description.
+    $this->createAssetMetadataAppend($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
+    $this->createAssetMetadataAppend($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
+    $this->createAssetMetadataAppend($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
+    $this->createAssetMetadataAppend($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
+    $this->createAssetMetadataAppend($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
+    $this->createAssetMetadataAppend($asset_id_6, array('description' => 'we are still obama\'s test'));
+    $this->createAssetMetadataAppend($asset_id_7, array('description' => 'we are still obama\"s test'));
+
+    // Created.
+    $this->createAssetMetadataAppend($asset_id_1, array('created' => '2008-06-06 00:15:00'));
+    $this->createAssetMetadataAppend($asset_id_2, array('created' => '2007-06-06 10:15:00'));
+    $this->createAssetMetadataAppend($asset_id_3, array('created' => '2006-06-06 20:15:00'));
+    $this->createAssetMetadataAppend($asset_id_4, array('created' => '2008-01-01 15:15:00'));
+    $this->createAssetMetadataAppend($asset_id_5, array('created' => '2008-04-01 10:15:00'));
+    $this->createAssetMetadataAppend($asset_id_6, array('created' => '2008-08-01 10:15:00'));
+
+    //
+    // Check escape.
+    //
+
+
+    // Escapes.
+    $a_escape = array(
+      '*' => '%',
+      '\**' => '*%',
+      '*\**' => '%*%',
+      '\"test\"' => '\"test\"',
+      '"test"' => '\"test\"',
+      "\\'test\\'" => "''test''", // \'test\' => ''test''
+      //"\\\'test\\\'" => "''test''", // \\'test\\' => ''test''
+      '*noot' => '%noot',
+      '*noot?' => '%noot_',
+      "obama's" => "obama''s",
+      'obama\\"s' => 'obama\"s',
+      );
+
+    $cql = new mediamosa_asset_cql_context($app_id_3);
+    foreach ($a_escape as $from => $to) {
+      $result = $cql->mediamosa_cql_context_sql_escape_like($from);
+      $this->assertTrue(
+        $result == $to,
+        t("Testing escape function, from: '@from' to '@to', got '@got'.", array(
+          '@from' => self::_escape_for_printf($from),
+          '@to' => self::_escape_for_printf($to),
+          '@got' => self::_escape_for_printf($result),
+        ))
+      );
+    }
+
+    // Qoute test
+// FIXME: Solr and SQL both handle search on quotes differently.
+    //$this->cql_do_search_test_assets_3('vpx:dc.description = "obama\"s"', array());
+    // FIXME: searching for text with \" does not work.
+    // $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\\\"s"', array($asset_id_7 => TRUE));
+    //$this->cql_do_search_test_assets_3('vpx:dc.description = "obama\'s"', array($asset_id_6 => TRUE));
+
+    //
+    // CQL search.
+    //
+
+    // Text.
+
+    // Gives all, that ending with 'mies' or 'noot'.
+    $this->cql_do_search_test_assets_3('"mies^ noot^"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    // Gives all with 'app' in title.
+    $this->cql_do_search_test_assets_3('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Gives all with 'cannot find' in description.
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "cannot find"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // Gives all with 'cannot find' 'quoted' in description.
+    if ($this->engine_fulltext_can_find_with_quotes()) {
+      $this->cql_do_search_test_assets_3('vpx:dc.description == "\"cannot find\""', array($asset_id_3 => TRUE));
+    }
+
+    // Gives all, that begin with 'app' in title or title contains 'noot'.
+    $this->cql_do_search_test_assets_3('"^aap noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
+
+    // Gives all, that ending with 'mies' in title or title contains 'noot'.
+    $this->cql_do_search_test_assets_3('"mies^ noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+
+    // Gives all, that ending with 'mies' or 'noot'.
+    $this->cql_do_search_test_assets_3('"mies^ noot^"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    // Gives all, that has 'mi?s' in title (where ? is a random char).
+    $this->cql_do_search_test_assets_3('title="mi?s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+
+    // Gives all, that has 'mi*s' in title (where * is any random char).
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_3('title="m*s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_3('title="m*s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+    }
+
+    // Gives all, where there are 'aap' and 'noot'.
+    $this->cql_do_search_test_assets_3('title="aap" AND title = "noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Gives all, where there are ('aap' and 'noot') or 'lord'.
+    $this->cql_do_search_test_assets_3('(title="aap" AND title = "noot") OR title = "lord"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE));
+
+    // Gives all, where 'aap noot' in title or 'definitions section' in description sorted by title ascending.
+    $this->cql_do_search_test_assets_3('vpx:dc.title=="aap noot" OR description = "definitions section" sortBy title/sort.ascending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+
+    // Gives all, where 'we are still' is somewhere in description sorted by title ascending.
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "we are still" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE, $asset_id_7 => TRUE));
+
+    // Gives all, where 'we are still' is somewhere in description sorted by title ascending.
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "*we are still*" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE, $asset_id_7 => TRUE));
+
+    // Gives all, where 'we are still' is exactly in description sorted by title ascending.
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "^we are still obama\'s test^" sortBy title/sort.ascending', array($asset_id_6 => TRUE));
+
+    // Date.
+
+    // Gives all, where date is between 2007-2008.
+    $this->cql_do_search_test_assets_3('created within "2007-01-01 2008"', array($asset_id_2 => TRUE));
+
+    // Gives all, where date is between 2007-01-01 00:00:00 - 2009-01-01 00:00:00.
+    $this->cql_do_search_test_assets_3('created within "2007-01-01 2009"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Gives all, where date is between 2007-2008.
+    $this->cql_do_search_test_assets_3('created >= "2007-01-01" AND created <= "2008"', array($asset_id_2 => TRUE));
+
+    // Gives all, where date is between 2007-01-01 00:00:00 - 2009-01-01 00:00:00.
+    $this->cql_do_search_test_assets_3('created >= "2007-01-01" AND created <= "2009"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Gives all, where date is beyond 2008.
+    $this->cql_do_search_test_assets_3('created >= "2008-01-01"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Check for UTF8, just to check if this CQL is accepted.
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "pÃ¥Ã?É?q:" sortBy title/sort.ascending', array());
+
+    //
+    // Set up collections.
+    //
+
+    $coll_id_1 = $this->createCollection();
+    $coll_id_2 = $this->createCollection();
+    $coll_id_3 = $this->createCollection();
+
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::TITLE => 'PHP is cool',
+      mediamosa_rest_call_collection_update::DESCRIPTION => 'I have a hierarchy of classes with both styles of constructors but where one in the middle was missing the __construct() function (it just had the old-style one that called',
+    );
+    $response = $this->updateCollection($coll_id_1, $a_parameters);
+
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::TITLE => 'dit is een test collection',
+      mediamosa_rest_call_collection_update::DESCRIPTION => 'An added benefit here is that you can repeat the placeholders without adding more arguments in the code. For example',
+    );
+    $response = $this->updateCollection($coll_id_2, $a_parameters);
+
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::TITLE => 'Russen breken barricades op in Georgië',
+      mediamosa_rest_call_collection_update::DESCRIPTION => 'Rusland heeft toegezegd dat zijn militairen zich voor maandag uit vijf posten in dat gebied zouden terugtrekken.',
+    );
+    $response = $this->updateCollection($coll_id_3, $a_parameters);
+
+    //
+    // CQL search.
+    //
+
+    // Collection.
+
+    // Gives all with 'PHP' in title.
+    $this->cql_do_search_test_collections_3('PHP', array($coll_id_1 => TRUE));
+
+    // Gives all with 'PHP' or 'and' in title.
+    $this->cql_do_search_test_collections_3('PHP OR "and"', array($coll_id_1 => TRUE));
+
+    // Gives all with 'rusland' in description or 'PHP is cool' in title.
+    $this->cql_do_search_test_collections_3('description = "rusland" OR vpx:collection.title == "PHP is cool"', array($coll_id_1 => TRUE, $coll_id_3 => TRUE));
+
+    // Gives all with 'rusland' in description (case insensitive).
+    $this->cql_do_search_test_collections_3('description =/ignorecase "RUSLAND"', array($coll_id_3 => TRUE));
+
+    // Gives all with 'Rusland' in description (case sensitive).
+    $this->cql_do_search_test_collections_3('description =/respectcase "Rusland"', array($coll_id_3 => TRUE));
+
+    // Gives all with 'rusland' in description (case sensitive).
+    $this->cql_do_search_test_collections_3('description =/respectcase "rusland"', array());
+  }
+}

@@ -1,0 +1,118 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Migration of 1.x to 2.x.
+ */
+
+// Include default.
+module_load_include('inc', 'mediamosa_migration', 'mediamosa_migration.admin');
+module_load_include('inc', 'mediamosa_migration', 'mediamosa_migration');
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_migration_permission() {
+  return array(
+    mediamosa_permission::ACCESS_CONFIG . '|migration' =>  array(
+      'title' => t('Access MediaMosa migration module'),
+      'description' => t('Enables the user to convert mediamosa 1.7.x database to 3.x database.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_migration_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/migration'] = array(
+    'title' => 'MediaMosa 1.7.x migration tool',
+    'description' => 'This migration tool enables you to convert your 1.7.x database to 3.x database.',
+    'page callback' => 'mediamosa_migration_page_form',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|migration'),
+    'file' => 'mediamosa_migration.admin.inc',
+  );
+  $items['admin/mediamosa/config/migration/list'] = array(
+    'title' => 'Migrate',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/migration/settings'] = array(
+    'title' => 'Settings',
+    'description' => 'Setup the migration settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_migration_settings'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|migration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_settings().
+ */
+function mediamosa_migration_settings() {
+
+  $form = array();
+
+  $form['migration'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Database Migration settings'),
+    '#collapsible' => TRUE,
+    '#weight' => -5,
+  );
+  $form['migration']['mediamosa_db_mig_memo'] = array(
+    '#type' => 'textfield',
+    '#title' => t('VPX / MediaMosa drupal database'),
+    '#description' => t("Enter the drupal database name of your 1.7 mysql database as defined in your sites/default/settings.php"),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_db_mig_memo', 'mig_memo'),
+  );
+  $form['migration']['mediamosa_db_mig_memo_data'] = array(
+    '#type' => 'textfield',
+    '#title' => t('VPX / MediaMosa data database'),
+    '#description' => t("Enter the data database name of your 1.7 mysql database as defined in your sites/default/settings.php'."),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_db_mig_memo_data', 'mig_memo_data'),
+  );
+  $form['migration']['mediamosa_db_mig_vpx_ftp'] = array(
+    '#type' => 'textfield',
+    '#title' => t('VPX / MediaMosa VPX FTP'),
+    '#description' => t("Enter the FTP database name of your 1.7 mysql database as defined in your sites/default/settings.php."),
+    '#required' => FALSE,
+    '#default_value' => variable_get('mediamosa_db_mig_vpx_ftp', 'mig_vpx_ftp'),
+  );
+
+  $form = system_settings_form($form);
+
+  return $form;
+}

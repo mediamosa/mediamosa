@@ -1,0 +1,119 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL with is_private test file.
+  */
+class MediaMosaAssetCQLIsPrivateTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Asset search with is_private',
+      'description' => 'Testing asset CQL search with is_private = TRUE/FALSE.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test Asset search with is_private (867).
+  public function testCQLIsPrivate() {
+
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // We need mediafiles because ACL can only put rights on mediafiles atm
+
+    // Create mediafile.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap'));
+
+    // App admin.
+    $a_search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
+
+    // All with 'aap' in title
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now put isprivate flag on asset 1
+    $response = $this->set_isprivate($asset_id_1, TRUE);
+
+    // All with 'aap' in title - still all
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now only non-private
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_2 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Now put isprivate flag on asset 2
+    $response = $this->set_isprivate($asset_id_2, TRUE);
+
+    // All with 'aap' in title - still all
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now only non-private
+    $this->cql_do_search_test_assets_1('aap', array(), array(), FALSE, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Only non-privately non-private, even owner may not see it
+    $this->cql_do_search_test_assets_1('aap', array(), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Now remove isprivate flag on asset 1
+    $response = $this->set_isprivate($asset_id_1, FALSE);
+
+    // All with 'aap' in title - still all
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now only non-private
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Now remove isprivate flag on asset 2
+    $response = $this->set_isprivate($asset_id_2, FALSE);
+
+    // Unappropiate asset 1
+    $response = $this->set_unappropiate($asset_id_1, TRUE, $a_search_params);
+
+    // Asset 1 may not be included
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_2 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // now owner can see 1 even if unapp.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // skip both now
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_2 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Now set isprivate flag on asset 2
+    $response = $this->set_isprivate($asset_id_1, TRUE);
+
+    // now owner can no longer see 1 when unapp.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_2 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
+}
