@@ -43,6 +43,6 @@ Each settings.php re-uses the default settings.
 Good practice is to study the example settings.php files.
 Enabling app/job and admin on the same URL/server will create conflicts with 
 /user uri of Drupal and REST calls that use /user in their URI. In most cases
-its smart to have one admin type and no other types on it. In 2.x its no longer
+its smart to have one admin and no other types on it. In 2.x its no longer
 required to have multiple admins for each server type, all installations use
 the same database and is no longer split up on job servers like it was in 1.x. 
