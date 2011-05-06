@@ -521,16 +521,6 @@ $conf['mediamosa_app_download'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST OpenAPI interface. The OpenAPI setting allows REST call
- * relating to OpenAPI (eg. OpenSocial), it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface
- * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
- * 'mediamosa_app_openapi' to TRUE.
- */
-$conf['mediamosa_app_openapi'] = FALSE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
  * CMS admin interface. You can turn on the admin with app interface
  * but remember that some url like /user conflicts with the drupal
  * /user and the /user mediamosa.
