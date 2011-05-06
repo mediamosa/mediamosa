@@ -242,6 +242,14 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $still_id = $this->get_param_value(self::STILL_ID);
     $tag = $this->get_param_value(self::TAG);
 
+
+    // get metadata i.e. bitrates
+//    foreach(mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), array('exclude_stills' => TRUE))
+//                  as $mediafile_id => $media_file_data) {
+//      if ($media_file_data['is_original_file']) continue;
+//      $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+//    }
+
     // Group id is deprecated.
     if (!$acl_group_id && $group_id) {
       $acl_group_id = $group_id;
@@ -282,16 +290,21 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         );
       }
 
-      // Get mediafile.
-      $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
+      // if the request wasn't for a metafile just provide one mediafile_ext
+      if ($response_type != self::RESPONSE_METAFILE)  {
+        // Get mediafile.
+        $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
+              // Make sure asset_id matches.
+        if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
+        }
 
-      // Make sure asset_id matches.
-      if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
-      }
+        // Get the metadata.
+        $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
-      // Get the metadata.
-      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+      } else {  // collect all the mediafiles
+        $mediafile_ext = mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), array('exclude_stills' => TRUE,
+                                                                                              'get_originals_only' => 'exclude_originals'));        OMleid($mediafile_id);
 
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
