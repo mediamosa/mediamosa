@@ -350,7 +350,8 @@ class mediamosa_asset_mediafile_play_proxy {
     if ($response_type == self::RESPONSE_METAFILE) {
       $tickets = $ticket;
       $mediafile_exts = $mediafile_ext;
-      $streaming_server_uri = self::get_media_server($response_type, reset($mediafile_exts));
+      $mediafile_ext = reset($mediafile_exts);
+      $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
     } else {
       if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
         $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
