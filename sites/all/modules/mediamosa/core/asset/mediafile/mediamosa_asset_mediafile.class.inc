@@ -84,8 +84,10 @@ class mediamosa_asset_mediafile {
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
 
     // Need only originals?
-    if ($options['get_originals_only']) {
+    if ($options['get_originals_only'] != TRUE) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+    } else {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE);
     }
 
     // Skip stills?

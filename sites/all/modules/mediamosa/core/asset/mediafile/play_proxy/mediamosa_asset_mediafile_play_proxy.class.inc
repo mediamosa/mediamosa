@@ -346,18 +346,19 @@ class mediamosa_asset_mediafile_play_proxy {
     assert(!is_array($app_id));
 
     $content_type = '';
-    if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
-      $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
-    }
-    else {
-      $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
-    }
 
     if ($response_type == self::RESPONSE_METAFILE) {
       $tickets = $ticket;
       $mediafile_exts = $mediafile_ext;
-      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $tickets['0']));
+      $streaming_server_uri = self::get_media_server($response_type, reset($mediafile_exts));
     } else {
+      if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
+        $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
+      }
+      else {
+        $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
+      }
+
       $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket));
 
       // Replace {TICKET} with app_id / ticket.
@@ -388,11 +389,13 @@ class mediamosa_asset_mediafile_play_proxy {
               // rtmp://wowstreaming.snkn.nl/simplevideostreaming&file=vpx/{TICKET}
               // Separate the URL into two parts:
               // "rtmp://wowstreaming.test.snkn.nl/vod" and "vpx-acc/{TICKET}"
-              $exploded_uri = explode('&file=', $streaming_server_ticket_uri);
+
+              $exploded_uri = explode('&file=', $streaming_server_uri);
               if (isset($exploded_uri[1])) {
                 $uri_base = $exploded_uri[0];
                 $uri_src = $exploded_uri[1];
               }
+
               else {
                 // Apache server.
                 // http://mediamosa2/ticket/LRQKJp4RRHdiOQjZJAiV2rOP.flv
@@ -407,9 +410,21 @@ class mediamosa_asset_mediafile_play_proxy {
               $output .= '  <head>' . "\n";
               $output .= '    <meta base="' . $uri_base . '" />' . "\n";
               $output .= '  </head>' . "\n";
-              $output .= '  <body>' . "\n";
-              $output .= '    <video src="' . $uri_src . '" />' . "\n";
-              $output .= '  </body>' . "\n";
+              $output .= '    <body>' . "\n";
+              $output .= '      <switch/>' . "\n";
+              $i = 0;
+              foreach($tickets as $ticket)  {
+                $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
+                $exploded_uri = explode('&file=', $streaming_server_ticket_uri);
+                  if (isset($exploded_uri[1])) {
+                  $uri_base = $exploded_uri[0];
+                  $uri_src = $exploded_uri[1];
+                }
+                $output .= '      <video src="' . $uri_src . '" '. 'system-bitrate="' . $mediafile_exts[$i]['metadata']['bitrate'] . '" ' . 'width="' . $mediafile_ext[$i]['metadata']['width'] . '"/>' . "\n";
+                $i++;
+              }
+              $output .= '      </switch>' . "\n";
+              $output .= '   </body>' . "\n";
               $output .= '</smil>';
               // Content type.
               $content_type = 'application/smil';

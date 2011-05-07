@@ -16,7 +16,9 @@
   <component name="ChangeListManager">
     <list default="true" id="7c79bbbb-7877-45d9-add5-b9ff2ea5fccb" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mediamosa.iws" afterPath="$PROJECT_DIR$/mediamosa.iws" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc" afterPath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" afterPath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" afterPath="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" />
     </list>
     <ignored path="mediamosa.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -93,15 +95,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="mediamosa_asset_mediafile_metadata.install.inc" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.install.inc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="mediamosa_asset.class.inc" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediamosa_asset.class.inc">
           <provider selected="true" editor-type-id="text-editor">
@@ -111,19 +104,93 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.class.inc" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.class.inc" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="357" column="50" selection-start="11995" selection-end="11995" vertical-scroll-proportion="-0.6270903">
+            <state line="345" column="0" selection-start="11490" selection-end="11490" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.rest.class.inc" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="mediamosa_response.class.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/response/mediamosa_response.class.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="216" column="0" selection-start="7146" selection-end="7146" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mediamosa.module" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/mediamosa.module">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="290" column="0" selection-start="11149" selection-end="11149" vertical-scroll-proportion="0.0">
+              <folding>
+                <marker date="1304655857000" expanded="true" signature="16228:16693" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="16244:16684" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="16403:16457" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17094:18114" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17110:18105" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17493:18095" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17511:17659" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17674:17886" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="17907:18083" placeholder="..." />
+                <marker date="1304655857000" expanded="true" signature="18504:18610" placeholder="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="module.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/includes/module.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="816" column="0" selection-start="29208" selection-end="29208" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="common.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/includes/common.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="4936" column="0" selection-start="188540" selection-end="188540" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.rest.class.inc" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="459" column="57" selection-start="20495" selection-end="20495" vertical-scroll-proportion="0.0">
+            <state line="212" column="0" selection-start="9689" selection-end="9689" vertical-scroll-proportion="-1.8826816">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mediamosa_rest_call.class.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest_call.class.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="512" column="0" selection-start="20604" selection-end="20604" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bootstrap.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/includes/bootstrap.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2750" column="0" selection-start="94249" selection-end="94249" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mediamosa_asset_mediafile.class.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="97" column="0" selection-start="3603" selection-end="3603" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -154,8 +221,8 @@
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc" />
         <option value="$PROJECT_DIR$/README.upgrade.to.MediaMosa3.txt" />
-        <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" />
+        <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" />
       </list>
     </option>
@@ -205,290 +272,7 @@
       <pane id="PackagesPane" />
       <pane id="Scope" />
       <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="asset" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="asset" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediafile" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="asset" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediafile" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="play_proxy" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sites" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="all" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediamosa" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="asset" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mediafile" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="metadata" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
+        <subPane />
       </pane>
     </panes>
   </component>
@@ -682,24 +466,24 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="819" height="1028" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="22" width="1638" height="1028" extended-state="0" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.27312776" sideWeight="0.0" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.34030837" sideWeight="0.0" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Kahlua" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28311688" sideWeight="0.6795154" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20893644" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Digger" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.35368156" sideWeight="0.72687227" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Digger" active="false" anchor="left" auto_hide="true" internal_type="DOCKED" type="FLOATING" visible="false" weight="0.20893644" sideWeight="0.49118942" order="2" side_tool="false" content_ui="tabs" x="653" y="313" width="325" height="237" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33794838" sideWeight="0.71365637" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -775,13 +559,13 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="php">
-          <url>file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc</url>
-          <line>212</line>
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="php">
           <condition>$response_type == 'metafile'</condition>
           <url>file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc</url>
           <line>345</line>
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc</url>
+          <line>212</line>
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -795,26 +579,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="677" column="25" selection-start="25948" selection-end="25948" vertical-scroll-proportion="0.15826087" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/oembed/mediamosa_oembed.rest.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="175" column="0" selection-start="6093" selection-end="6093" vertical-scroll-proportion="-2.3076923" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/ticket/mediamosa_ticket.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="170" column="25" selection-start="5642" selection-end="5642" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/metadata/property/mediamosa_asset_metadata_property.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest.class.inc">
       <provider selected="true" editor-type-id="text-editor">
         <state line="93" column="0" selection-start="2988" selection-end="2988" vertical-scroll-proportion="-1.0330435" />
@@ -832,42 +596,9 @@
         <state line="605" column="18" selection-start="18573" selection-end="18573" vertical-scroll-proportion="0.016166281" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/mediamosa.module">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="59" column="110" selection-start="2282" selection-end="2282" vertical-scroll-proportion="0.0">
-          <folding>
-            <marker date="1304655857000" expanded="true" signature="16228:16693" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="16244:16684" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="16403:16457" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17094:18114" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17110:18105" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17493:18095" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17511:17659" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17674:17886" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="17907:18083" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="18504:18610" placeholder="..." />
-            <marker date="1304655857000" expanded="true" signature="18520:18601" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/includes/bootstrap.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2805" column="0" selection-start="96078" selection-end="96078" vertical-scroll-proportion="0.016548464">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/server/mediamosa_server.class.inc">
       <provider selected="true" editor-type-id="text-editor">
         <state line="539" column="25" selection-start="18341" selection-end="18341" vertical-scroll-proportion="0.8383372">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="74" column="25" selection-start="2777" selection-end="2795" vertical-scroll-proportion="0.016166281">
           <folding />
         </state>
       </provider>
@@ -893,16 +624,76 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
+    <entry file="file://$PROJECT_DIR$/includes/bootstrap.inc">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="459" column="57" selection-start="20495" selection-end="20495" vertical-scroll-proportion="0.0">
+        <state line="2750" column="0" selection-start="94249" selection-end="94249" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="97" column="0" selection-start="3603" selection-end="3603" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest_call.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="512" column="0" selection-start="20604" selection-end="20604" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/mediamosa.module">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="290" column="0" selection-start="11149" selection-end="11149" vertical-scroll-proportion="0.0">
+          <folding>
+            <marker date="1304655857000" expanded="true" signature="16228:16693" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="16244:16684" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="16403:16457" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17094:18114" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17110:18105" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17493:18095" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17511:17659" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17674:17886" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="17907:18083" placeholder="..." />
+            <marker date="1304655857000" expanded="true" signature="18504:18610" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/includes/module.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="816" column="0" selection-start="29208" selection-end="29208" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/includes/common.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="4936" column="0" selection-start="188540" selection-end="188540" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/response/mediamosa_response.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="216" column="0" selection-start="7146" selection-end="7146" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="357" column="50" selection-start="11995" selection-end="11995" vertical-scroll-proportion="-0.6270903">
+        <state line="345" column="0" selection-start="11490" selection-end="11490" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="212" column="0" selection-start="9689" selection-end="9689" vertical-scroll-proportion="-1.8826816">
           <folding />
         </state>
       </provider>

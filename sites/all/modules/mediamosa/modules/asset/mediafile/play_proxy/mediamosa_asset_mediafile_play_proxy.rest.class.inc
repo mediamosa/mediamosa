@@ -268,7 +268,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_sdk::TYPE_MEDIAFILE_ID));
     }
 
-    $mediafile_ext = array();
+    $mediafile_ext = $mediafile_exts =  array();
 
     // Get the asset.
     $asset = mediamosa_asset::must_exists($asset_id);
@@ -282,16 +282,26 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         );
       }
 
-      // Get mediafile.
-      $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
+      if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE)  {
+        // Get mediafile.
+        $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
-      // Make sure asset_id matches.
-      if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
+        // Make sure asset_id matches.
+        if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
+        }
+
+        // Get the metadata.
+        $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+
+      } else {
+        $mediafile_exts = mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), array('get_originals_only' => 'exclude_originals', 'exclude_stills' => TRUE));
+
+        // Get the metadata.
+        foreach($mediafile_exts as $mediafile_ext)  {
+          $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+        }
       }
-
-      // Get the metadata.
-      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
@@ -317,10 +327,18 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // Create ticket ID.
-    $ticket = mediamosa_db::uuid($app_id);
+    $ticket = null;
+    $tickets = null;
 
-    if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
-      $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE)  {
+      $ticket = mediamosa_db::uuid($app_id);
+      if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
+        $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      }
+    } else {
+      foreach($mediafile_exts as $mediafile_ext)  {
+        $tickets[] = mediamosa_ticket::create_play_proxy(mediamosa_db::uuid($app_id), $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      }
     }
 
     // If response type is still, we get all information of all stills with all details.
@@ -457,21 +475,39 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
 
     // Create the response.
-    $response = mediamosa_asset_mediafile_play_proxy::create_response(
-      $response_type,
-      $app_id,
-      $ticket,
-      $asset_id,
-      $this->get_param_value(self::AUTOSTART),
-      $this->get_param_value(self::WIDTH),
-      $this->get_param_value(self::HEIGHT),
-      $this->get_param_value(self::START),
-      $this->get_param_value(self::DURATION),
-      $this->get_param_value(self::IS_APP_ADMIN),
-      $asset_metadata,
-      $mediafile_ext,
-      $a_stills
-    );
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE)  {
+      $response = mediamosa_asset_mediafile_play_proxy::create_response(
+        $response_type,
+        $app_id,
+        $ticket,
+        $asset_id,
+        $this->get_param_value(self::AUTOSTART),
+        $this->get_param_value(self::WIDTH),
+        $this->get_param_value(self::HEIGHT),
+        $this->get_param_value(self::START),
+        $this->get_param_value(self::DURATION),
+        $this->get_param_value(self::IS_APP_ADMIN),
+        $asset_metadata,
+        $mediafile_ext,
+        $a_stills
+      );
+    } else {
+      $response = mediamosa_asset_mediafile_play_proxy::create_response(
+        $response_type,
+        $app_id,
+        $tickets,
+        $asset_id,
+        $this->get_param_value(self::AUTOSTART),
+        $this->get_param_value(self::WIDTH),
+        $this->get_param_value(self::HEIGHT),
+        $this->get_param_value(self::START),
+        $this->get_param_value(self::DURATION),
+        $this->get_param_value(self::IS_APP_ADMIN),
+        $asset_metadata,
+        $mediafile_exts,
+        $a_stills
+      );
+    }
 
     // All ok, now set played + 1
     mediamosa_asset::asset_played($asset_id);
