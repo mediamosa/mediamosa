@@ -353,18 +353,23 @@ class mediamosa_asset_mediafile_play_proxy {
       $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
     }
 
-    // Replace {TICKET} with app_id / ticket.
-    if ($response_type != self::RESPONSE_STILL) {
-      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
-    }
+    if ($response_type == self::RESPONSE_METAFILE) {
+      $tickets = $ticket;
+      $mediafile_exts = $mediafile_ext;
+      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $tickets['0']));
+    } else {
+      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket));
 
-    // Uri for non-tickets (still, download etc).
-    foreach ($stills as $key => $value) {
-      $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $stills[$key]['ticket']));
-    }
+      // Replace {TICKET} with app_id / ticket.
+      if ($response_type != self::RESPONSE_STILL) {
+        $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
+      }
 
-    // Replace ticket param in URI.
-    $streaming_server_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket));
+      // Uri for non-tickets (still, download etc).
+      foreach ($stills as $key => $value) {
+        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $stills[$key]['ticket']));
+      }
+    }
 
     // So it exists.
     $variables = array();
