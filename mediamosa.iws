@@ -15,8 +15,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c79bbbb-7877-45d9-add5-b9ff2ea5fccb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mediamosa.iws" afterPath="$PROJECT_DIR$/mediamosa.iws" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" afterPath="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" afterPath="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" />
     </list>
     <ignored path="mediamosa.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -96,7 +96,7 @@
       <file leaf-file-name="mediamosa_asset.class.inc" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediamosa_asset.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1272" column="31" selection-start="50641" selection-end="50641" vertical-scroll-proportion="0.0">
+            <state line="1131" column="50" selection-start="45565" selection-end="45565" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -105,7 +105,7 @@
       <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.class.inc" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="352" column="68" selection-start="11713" selection-end="11713" vertical-scroll-proportion="0.5109091">
+            <state line="428" column="35" selection-start="15387" selection-end="15387" vertical-scroll-proportion="0.41856393">
               <folding />
             </state>
           </provider>
@@ -114,7 +114,7 @@
       <file leaf-file-name="mediamosa_response.class.inc" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/response/mediamosa_response.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="249" column="0" selection-start="8811" selection-end="8811" vertical-scroll-proportion="0.0">
+            <state line="215" column="0" selection-start="7097" selection-end="7097" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -149,19 +149,19 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="common.inc" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/includes/common.inc">
+      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.rest.class.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="4936" column="0" selection-start="188540" selection-end="188540" vertical-scroll-proportion="0.0">
+            <state line="332" column="0" selection-start="14483" selection-end="14483" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mediamosa_asset_mediafile_play_proxy.rest.class.inc" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
+      <file leaf-file-name="mediamosa_ticket.class.inc" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/ticket/mediamosa_ticket.class.inc">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="494" column="60" selection-start="21992" selection-end="21992" vertical-scroll-proportion="0.0">
+            <state line="170" column="25" selection-start="5642" selection-end="5642" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -176,20 +176,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bootstrap.inc" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/includes/bootstrap.inc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="2750" column="0" selection-start="94249" selection-end="94249" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="mediamosa_asset_mediafile.class.inc" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc">
           <provider selected="true" editor-type-id="text-editor">
             <state line="89" column="134" selection-start="3411" selection-end="3411" vertical-scroll-proportion="0.0">
-              <folding />
+              <folding>
+                <marker date="1304810827000" expanded="true" signature="3408:3416" placeholder="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -219,8 +212,8 @@
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc" />
         <option value="$PROJECT_DIR$/README.upgrade.to.MediaMosa3.txt" />
-        <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc" />
+        <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc" />
         <option value="$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc" />
       </list>
     </option>
@@ -470,7 +463,7 @@
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.34030837" sideWeight="0.0" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3171806" sideWeight="0.0" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Kahlua" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -561,8 +554,12 @@
           <line>216</line>
         </line-breakpoint>
         <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc</url>
+          <line>332</line>
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
           <url>file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc</url>
-          <line>347</line>
+          <line>349</line>
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -576,18 +573,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/rest/mediamosa_rest.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="93" column="0" selection-start="2988" selection-end="2988" vertical-scroll-proportion="-1.0330435" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile_db.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="8" selection-start="1728" selection-end="1728" vertical-scroll-proportion="0.37883958">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/lib/mediamosa_db.class.inc">
       <provider selected="true" editor-type-id="text-editor">
         <state line="605" column="18" selection-start="18573" selection-end="18573" vertical-scroll-proportion="0.016166281" />
@@ -621,31 +606,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/includes/module.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="816" column="0" selection-start="29208" selection-end="29208" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/includes/common.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4936" column="0" selection-start="188540" selection-end="188540" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediamosa_asset.class.inc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1272" column="31" selection-start="50641" selection-end="50641" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/mediamosa_asset_mediafile.class.inc">
       <provider selected="true" editor-type-id="text-editor">
         <state line="89" column="134" selection-start="3411" selection-end="3411" vertical-scroll-proportion="0.0">
-          <folding />
+          <folding>
+            <marker date="1304810827000" expanded="true" signature="3408:3416" placeholder="..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -674,23 +640,58 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
+    <entry file="jar://$APPLICATION_HOME_DIR$/plugins/php/lib/php.jar!/com/jetbrains/php/lang/psi/stubs/data/standard_9.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="494" column="60" selection-start="21992" selection-end="21992" vertical-scroll-proportion="0.0">
+        <state line="73" column="9" selection-start="2338" selection-end="2338" vertical-scroll-proportion="0.33333334">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/includes/common.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="4936" column="0" selection-start="188540" selection-end="188540" vertical-scroll-proportion="0.22312704">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/includes/module.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="816" column="0" selection-start="29208" selection-end="29208" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/response/mediamosa_response.class.inc">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="249" column="0" selection-start="8811" selection-end="8811" vertical-scroll-proportion="0.0">
+        <state line="215" column="0" selection-start="7097" selection-end="7097" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/ticket/mediamosa_ticket.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="170" column="25" selection-start="5642" selection-end="5642" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/modules/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="332" column="0" selection-start="14483" selection-end="14483" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediamosa_asset.class.inc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1131" column="50" selection-start="45565" selection-end="45565" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sites/all/modules/mediamosa/core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="352" column="68" selection-start="11713" selection-end="11713" vertical-scroll-proportion="0.5109091">
+        <state line="428" column="35" selection-start="15387" selection-end="15387" vertical-scroll-proportion="0.41856393">
           <folding />
         </state>
       </provider>

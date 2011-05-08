@@ -295,11 +295,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       } else {
-        $mediafile_exts = mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), array('get_originals_only' => 'exclude_originals', 'exclude_stills' => TRUE));
+        $mediafile_exts = array_values(mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), array('get_originals_only' => 'exclude_originals', 'exclude_stills' => TRUE)));
 
         // Get the metadata.
-        foreach($mediafile_exts as $mediafile_ext)  {
-          $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+        foreach($mediafile_exts as &$mediafile_ext)  {
+          $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_ext['mediafile_id']);
         }
       }
 
@@ -336,8 +336,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
       }
     } else {
-      foreach($mediafile_exts as $mediafile_ext)  {
-        $tickets[] = mediamosa_ticket::create_play_proxy(mediamosa_db::uuid($app_id), $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      foreach($mediafile_exts as $temp_mediafile_ext)  {
+        $tickets[] = mediamosa_ticket::create_play_proxy(mediamosa_db::uuid($app_id), $temp_mediafile_ext, $response_type, $app_id, $user_id, $still_id);
       }
     }
 

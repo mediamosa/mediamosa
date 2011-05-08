@@ -421,7 +421,7 @@ class mediamosa_asset_mediafile_play_proxy {
                   $uri_base = $exploded_uri[0];
                   $uri_src = $exploded_uri[1];
                 }
-                $output .= '      <video src="' . $uri_src . '" '. 'system-bitrate="' . $mediafile_exts[$i]['metadata']['bitrate'] . '" ' . 'width="' . $mediafile_ext[$i]['metadata']['width'] . '"/>' . "\n";
+                $output .= '        <video src="' . $uri_src . '" '. 'system-bitrate="' . $mediafile_exts[$i]['metadata']['bitrate'] . '" ' . 'width="' . $mediafile_exts[$i]['metadata']['width'] . '"/>' . "\n";
                 $i++;
               }
               $output .= '      </switch>' . "\n";
