@@ -475,7 +475,7 @@ function mediamosa_server_form($node, &$form_state) {
     $form['mediamosa_server'][mediamosa_server_db::OBJECT_CODE] = array(
       '#type' => 'textarea',
       '#title' => t('Object code'),
-      '#description' => t('{WIDTH}, {HEIGHT}, {HEIGHT_PLUS_number}, {MEDIAFILE_ID}, {TICKET_URI}, {STILL_URI}, {AUTOPLAY} (true or false), {AUTOPLAY_NUM} (1 or 0), {AUTOPLAY_TEXT} (autostart), {IF_START}, {/IF_START}, {IF_EXTERNAL}, {/IF_EXTERNAL}, {IF_DURATION}, {/IF_DURATION} are available for use in this field.'),
+      '#description' => t('{WIDTH}, {HEIGHT}, {HEIGHT_PLUS_number}, {MEDIAFILE_ID}, {TICKET_URI}, {STILL_URI}, {AUTOPLAY} (true or false), {AUTOPLAY_NUM} (1 or 0), {AUTOPLAY_TEXT} (autostart), {IF_START}, {/IF_START}, {IF_EXTERNAL}, {/IF_EXTERNAL}, {IF_DURATION}, {/IF_DURATION}, {SERVER_URI}, {SERVER_PATH} are available for use in this field.'),
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::OBJECT_CODE, $node),
     );
   }
