@@ -26,6 +26,12 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 2.3.10 (build 1383)
+-----------------------------
+
+Other changes (not ticket related)
+- Added still check to integrity check (code commited by flyapen on Github).
+
 MediaMosa 2.3.9 (build 1381)
 ----------------------------
 - Fixed problem with migration script when quota_user created timestamps

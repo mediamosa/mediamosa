@@ -60,10 +60,10 @@ error_reporting(E_ALL);
 
 // Check media record.
 function check_media_records() {
-  $result = mediamosa_db::db_query("
+  $result = mediamosa_db::db_query('
     SELECT #mediafile_id, #created, #changed, #app_id, #owner_id
     FROM {#mediafile}
-    WHERE #is_still = :is_still_false", array(
+    WHERE #is_still = :is_still_false', array(
     '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
     '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
     '#created' => mediamosa_asset_mediafile_db::CREATED,
@@ -81,10 +81,10 @@ function check_media_records() {
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-      mediamosa_db::db_query("
+      mediamosa_db::db_query('
         INSERT INTO {#mediamosa_integrity_check}
           (#type, #object_id, #app_id, #owner_id, #created, #changed, #details) VALUES
-          (:missing_mediafile, :object_id, :app_id, :owner_id, :created, :changed, :details)", array(
+          (:missing_mediafile, :object_id, :app_id, :owner_id, :created, :changed, :details)', array(
           '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
           '#type' => mediamosa_integrity_check_db::TYPE,
           '#object_id' => mediamosa_integrity_check_db::OBJECT_ID,
@@ -115,7 +115,7 @@ function check_media_files() {
   $missing_db_mediafiles = array();
 
   while (($folder = readdir($dh)) !== FALSE) {
-    // Is it "." or ".."?
+    // Is it '.' or '..'?
     if (!is_dir($dir . DIRECTORY_SEPARATOR . $folder) || strpos($folder, '..') === 0 || strpos($folder, '.') === 0 || drupal_strlen($folder) > 1) {
       continue;
     }
@@ -124,16 +124,16 @@ function check_media_files() {
     $fh = opendir($dir . DIRECTORY_SEPARATOR . $folder);
     while (($file = readdir($fh)) !== FALSE) {
 
-      // Is it "." or ".."?
+      // Is it '.' or '..'?
       if (strpos($file, '.') === 0 || strpos($file, '..') === 0) {
         continue;
       }
 
       // Check the file in the db.
-      $result = mediamosa_db::db_query("
+      $result = mediamosa_db::db_query('
         SELECT COUNT(*)
         FROM {#mediafile}
-        where #mediafile_id = :mediafile_id", array(
+        where #mediafile_id = :mediafile_id', array(
         '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         ':mediafile_id' => $file,
@@ -145,10 +145,10 @@ function check_media_files() {
         $finfo = stat($file_path);
         $more_info = exec('ls -sla ' . $file_path);
         // Make error message.
-        mediamosa_db::db_query("
+        mediamosa_db::db_query('
           INSERT INTO {#mediamosa_integrity_check}
             (#type, #object_id, #size, #mtime, #ctime, #details, #created) VALUES
-            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, UTC_TIMESTAMP())", array(
+            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, UTC_TIMESTAMP())', array(
             '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
             '#type' => mediamosa_integrity_check_db::TYPE,
             '#object_id' => mediamosa_integrity_check_db::OBJECT_ID,
@@ -174,7 +174,6 @@ function check_media_files() {
 }
 
 function check_still_records() {
-  
   $result = mediamosa_db::db_query("
     SELECT #mediafile_id, #created, #changed, #app_id, #owner_id
     FROM {#mediafile}
@@ -188,7 +187,7 @@ function check_still_records() {
     '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
     ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
   ));
-  
+
   foreach ($result as $still) {
     // Check if file exists.
 
@@ -197,10 +196,10 @@ function check_still_records() {
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-      mediamosa_db::db_query("
+      mediamosa_db::db_query('
         INSERT INTO {#mediamosa_integrity_check}
           (#type, #object_id, #app_id, #owner_id, #created, #changed, #details) VALUES
-          (:missing_mediafile, :object_id, :app_id, :owner_id, :created, :changed, :details)", array(
+          (:missing_mediafile, :object_id, :app_id, :owner_id, :created, :changed, :details)', array(
           '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
           '#type' => mediamosa_integrity_check_db::TYPE,
           '#object_id' => mediamosa_integrity_check_db::OBJECT_ID,
@@ -229,7 +228,7 @@ function check_still_files() {
   $dh = opendir($dir);
 
   while (($folder = readdir($dh)) !== FALSE) {
-    // Is it "." or ".."?
+    // Is it '.' or '..'?
     if (!is_dir($dir . DIRECTORY_SEPARATOR . $folder) || strpos($folder, '..') === 0 || strpos($folder, '.') === 0 || drupal_strlen($folder) > 1) {
       continue;
     }
@@ -238,16 +237,16 @@ function check_still_files() {
     $fh = opendir($dir . DIRECTORY_SEPARATOR . $folder);
     while (($file = readdir($fh)) !== FALSE) {
 
-      // Is it "." or ".."?
+      // Is it '.' or '..'?
       if (strpos($file, '.') === 0 || strpos($file, '..') === 0) {
         continue;
       }
 
       // Check the file in the db.
-      $result = mediamosa_db::db_query("
+      $result = mediamosa_db::db_query('
         SELECT COUNT(*)
         FROM {#mediafile}
-        where #mediafile_id = :mediafile_id", array(
+        where #mediafile_id = :mediafile_id', array(
         '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         ':mediafile_id' => $file,
@@ -259,10 +258,10 @@ function check_still_files() {
         $finfo = stat($file_path);
         $more_info = exec('ls -sla ' . $file_path);
         // Make error message.
-        mediamosa_db::db_query("
+        mediamosa_db::db_query('
           INSERT INTO {#mediamosa_integrity_check}
             (#type, #object_id, #size, #mtime, #ctime, #details, #created) VALUES
-            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, UTC_TIMESTAMP())", array(
+            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, UTC_TIMESTAMP())', array(
             '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
             '#type' => mediamosa_integrity_check_db::TYPE,
             '#object_id' => mediamosa_integrity_check_db::OBJECT_ID,
@@ -292,7 +291,7 @@ watchdog('integrity_check', 'running...');
 variable_set('mediamosa_integrity_run_date_start', date('c'));
 
 // Empty log table.
-db_query('TRUNCATE TABLE {mediamosa_integrity_check}');
+db_truncate('mediamosa_integrity_check');
 
 // Run checks.
 check_media_records();
