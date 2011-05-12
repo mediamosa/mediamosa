@@ -4,8 +4,8 @@ Release Checklist (mediamosa.org release):
  2. Create clean directory (mediamosa-3.x[-RCx])
  3. Do hg -clone or hg init with hg pull -u of the release.
  4. Throw away /debian
- 5. Throw away /.hg
- 6. Throw away /.hgtags
+ 5. Throw away /.git
+ 6. Throw away /.gitignore
  7. Throw away /sites/all/modules/mediamosa/RELEASE_CHECKLIST.txt
  8. Throw away /sites/all/modules/coder
  9. Throw away /sites/all/modules/devel
