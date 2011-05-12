@@ -38,25 +38,25 @@ class mediamosa_maintenance_automatedsimpletest {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
-   * Log for mediamosa_aclomatedsimpletest.
+   * Log for mediamosa_automatedsimpletest.
    *
    * @param string $message
    * @param array $variables
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_aclomatedsimpletest');
+    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_automatedsimpletest');
   }
 
   /**
-   * Debug log for mediamosa_aclomatedsimpletest.
+   * Debug log for mediamosa_automatedsimpletest.
    *
    * @param string $message
    * @param array $variables
    * @param string $severity
    */
   static public function log_debug($message, array $variables = array()) {
-    mediamosa_debug::log($message, $variables, 'mediamosa_aclomatedsimpletest');
+    mediamosa_debug::log($message, $variables, 'mediamosa_automatedsimpletest');
   }
 
   /**
@@ -65,7 +65,7 @@ class mediamosa_maintenance_automatedsimpletest {
    */
   static public function timeout_test_run() {
     // Default is 3 minutes before we consider test timed-out.
-    return variable_get('mediamosa_aclomatedsimpletest_timeout_tests', 360);
+    return variable_get('mediamosa_automatedsimpletest_timeout_tests', 360);
   }
 
   /**
@@ -111,7 +111,7 @@ class mediamosa_maintenance_automatedsimpletest {
    */
   static public function may_run() {
     // Variable is set by the REST call that is running the test.
-    $run_last = variable_get('mediamosa_aclomatedsimpletest_timeout_tests_running', NULL);
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // may run?
     if (round(REQUEST_TIME - $run_last['started']) < (self::timeout_test_run() + 60)) { // extra 60 seconds.
@@ -119,23 +119,14 @@ class mediamosa_maintenance_automatedsimpletest {
     }
 
     // Master switch.
-    if (!variable_get('mediamosa_aclomatedsimpletest_run_tests', FALSE)) {
+    if (!variable_get('mediamosa_automatedsimpletest_run_tests', FALSE)) {
       return FALSE;
     }
 
     // Before we start, we count the number of tables. If simpletest fails,
     // it doesn't clean up. We stop running the tests if we have to many tables.
     // Also we'll try to clean up if we detect to many tables.
-//    $simpleDb = variable_get('mediamosa_simpletest_database', '');
-//    if (!empty($simpleDb)) {
-//      $oldDb = db_set_active($simpleDb);
-//    }
-
     $count_tables = mediamosa_db::db_count_tables();
-
-//    if (!empty($oldDb)) {
-//      db_set_active($oldDb);
-//    }
 
     // Check if we have to many tables, else clean up.
     if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
@@ -143,13 +134,7 @@ class mediamosa_maintenance_automatedsimpletest {
 
       MediaMosaTestCase::clean();
 
-//      if (!empty($simpleDb)) {
-//        $oldDb = db_set_active($simpleDb);
-//      }
       $count_tables = mediamosa_db::db_count_tables();
-//      if (!empty($oldDb)) {
-//        db_set_active($oldDb);
-//      }
 
       if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
         // Clean failed.
@@ -170,53 +155,56 @@ class mediamosa_maintenance_automatedsimpletest {
     if (!empty($name)) {
       // Split the name.
       list($run, $class_name) = explode('|', $name, 2);
+    }
 
-      // Value provided, then insert/update database.
-      if (isset($value)) {
-        $test_results[$run][$class_name] = $value;
+    // Value provided, then insert/update database.
+    if (isset($value) && !empty($name)) {
+      $test_results[$run][$class_name] = $value;
 
-        // Store value (master-slave safe).
-        mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_automatedsimpletest} (#value, #name) VALUES (:value, :name) ON DUPLICATE KEY UPDATE #value = :value',
-          array(
-            '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
-            '#value' => mediamosa_maintenance_automatedsimpletest_db::VALUE,
-            ':value' => serialize($value),
-            '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
-            ':name' => $name,
-          )
-        );
+      // Store value (master-slave safe).
+      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_automatedsimpletest} (#value, #name) VALUES (:value, :name) ON DUPLICATE KEY UPDATE #value = :value',
+        array(
+          '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
+          '#value' => mediamosa_maintenance_automatedsimpletest_db::VALUE,
+          ':value' => serialize($value),
+          '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
+          ':name' => $name,
+        )
+      );
+    }
+
+    // If TRUE, we remove it from the results.
+    if ($remove) {
+      if (!empty($run) && !empty($class_name)) {
+        unset($test_results[$run][$class_name]);
       }
 
-      // If TRUE, we remove it from the results.
-      if ($remove) {
-        if (!empty($run) && !empty($class_name)) {
-          unset($test_results[$run][$class_name]);
+      // Can't be empty.
+      assert(!empty($name));
+
+      // Store value (master-slave safe).
+      mediamosa_db::db_query('DELETE FROM {#mediamosa_maintenance_automatedsimpletest} WHERE #name = :name',
+        array(
+          '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
+          '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
+          ':name' => $name,
+        )
+      );
+    }
+
+    if (empty($test_results)) {
+      $result = mediamosa_db::db_select(mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME, 'mms')
+        ->fields('mms')
+        ->execute();
+
+      $test_results = NULL;
+      foreach ($result as $row) {
+        if (strpos($row[mediamosa_maintenance_automatedsimpletest_db::NAME], '|') === FALSE) {
+          continue;
         }
 
-        // Store value (master-slave safe).
-        mediamosa_db::db_query('DELETE FROM {#mediamosa_maintenance_automatedsimpletest} WHERE #name = :name',
-          array(
-            '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
-            '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
-            ':name' => $name,
-          )
-        );
-      }
-
-      if (empty($test_results) && !empty($run) && !empty($class_name)) {
-        $result = mediamosa_db::db_select(mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME, 'mms')
-          ->fields('mms')
-          ->execute();
-
-        $test_results = NULL;
-        foreach ($result as $row) {
-          if (strpos($row[mediamosa_maintenance_automatedsimpletest_db::NAME], '|') === FALSE) {
-            continue;
-          }
-
-          list($run, $class_name) = explode('|', $row[mediamosa_maintenance_automatedsimpletest_db::NAME], 2);
-          $test_results[$run][$class_name] = unserialize($row[mediamosa_maintenance_automatedsimpletest_db::VALUE]);
-        }
+        list($run, $class_name) = explode('|', $row[mediamosa_maintenance_automatedsimpletest_db::NAME], 2);
+        $test_results[$run][$class_name] = unserialize($row[mediamosa_maintenance_automatedsimpletest_db::VALUE]);
       }
     }
 
@@ -246,9 +234,9 @@ class mediamosa_maintenance_automatedsimpletest {
     $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
 
     $runs = array(
-      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
-      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
-      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
     );
 
     // Get the tests.

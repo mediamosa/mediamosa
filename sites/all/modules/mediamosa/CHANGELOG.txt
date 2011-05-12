@@ -26,6 +26,15 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
+MediaMosa 3.0.1 (build 1702)
+--------------------------
+- Fixed: Automated simpletest didn't show its results on the test page.
+- Naming of the automated simpletest Drupal var was wrongly renamed during 3.x
+  development, reverted back to mediamosa_automatedsimpletest_*
+- Added update hook to MediaMosa SDK, class mediamosa_sdk.inc was renamed to
+  mediamosa_sdk.class.inc and requires registry rebuild.
+- Added .gitignore to ignore some custom drupal directories and any .* files.
+- Updated integrity_check with version of MediaMosa 2.3.10.
 
 MediaMosa 3.0 (build 1698)
 --------------------------
