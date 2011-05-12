@@ -618,11 +618,42 @@ class mediamosa_response extends mediamosa {
     // Sort the header.
     ksort($this->response['header']);
 
+    $this->response = $this->render_array($this->response);
+
     // Log the rest call.
     $this->log_event_restcall();
 
     // This return response, which is a array.
     return $this->response;
+  }
+
+   /**
+   * Render array to the old format.
+   */
+  public function render_array($array) {
+    if (!is_array($array)) {
+      return $array;
+    }
+
+    $new_array = array();
+
+    foreach ($array as $key => $value) {
+      if ($key{0} != '#') {
+        $new_array[$key] = $this->render_array($value);
+      }
+      elseif (is_array($value)) {
+        foreach ($value as $key2 => $value2) {
+          if (is_array($value2)) {
+            $new_array[$key2] = $this->render_array($value2);
+          }
+          else {
+            $new_array[$key2] = $value2;
+          }
+        }
+      }
+    }
+
+    return $new_array;
   }
 
   /**

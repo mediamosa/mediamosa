@@ -26,6 +26,9 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
+MediaMosa 3.x (build X)
+-----------------------
+- Generate array response fix.
 
 MediaMosa 3.0 (build 1698)
 --------------------------
