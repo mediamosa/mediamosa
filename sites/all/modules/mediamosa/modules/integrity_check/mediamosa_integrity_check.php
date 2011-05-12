@@ -190,8 +190,7 @@ function check_still_records() {
 
   foreach ($result as $still) {
     // Check if file exists.
-
-  	if (!file_exists(mediamosa_configuration_storage::still_filename_get($still['mediafile_id']))) {
+    if (!file_exists(mediamosa_configuration_storage::still_filename_get($still['mediafile_id']))) {
       $mediafile_id = $still['mediafile_id'];
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
