@@ -245,6 +245,13 @@ class mediamosa_configuration_storage {
   }
 
   /**
+   * Get the still location path.
+   */
+  static public function get_still_location() {
+  	return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get();
+  }
+
+  /**
    * Get the Mediafile still path.
    * @param string $mediafile_id
    *  The mediafile ID.
