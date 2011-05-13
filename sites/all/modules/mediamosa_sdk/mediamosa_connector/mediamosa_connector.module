@@ -184,8 +184,6 @@ function mediamosa_connector_settings() {
 }
 
 /**
-<<<<<<< local
-=======
  * Implementation of hook_theme()
  */
 function mediamosa_connector_theme() {

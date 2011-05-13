@@ -110,7 +110,7 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
     case 'admin/mediamosa/simpletests':
     case 'admin/mediamosa/simpletests/normal':
     case 'admin/mediamosa/simpletests/slow':
-      if (!variable_get('mediamosa_aclomatedsimpletest_run_tests', FALSE)) {
+      if (!variable_get('mediamosa_automatedsimpletest_run_tests', FALSE)) {
         drupal_set_message(t('Warning: update on tests has been turned off, enable on the !page', array('!page' => l('configure page', 'admin/mediamosa/config/global', array('query' => drupal_get_destination())))), 'warning');
       }
       break;
@@ -118,7 +118,7 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa/simpletests':
-      $interval = variable_get('mediamosa_aclomatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
       if ($interval < 1) {
         return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
       }
@@ -126,7 +126,7 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
       return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
 
     case 'admin/mediamosa/simpletests/normal':
-      $interval = variable_get('mediamosa_aclomatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
       if ($interval < 1) {
         return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
       }
@@ -134,7 +134,7 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
       return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
 
     case 'admin/mediamosa/simpletests/slow':
-      $interval = variable_get('mediamosa_aclomatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
+      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
       if ($interval < 1) {
         return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
       }
@@ -255,7 +255,7 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_colle
     '#value' => variable_get('mediamosa_show_simpletest_page', FALSE),
   );
 
-  $form['settings_automatedsimpletest']['mediamosa_aclomatedsimpletest_timeout_tests'] = array(
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_timeout_tests'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run'),
     '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 360 seconds. Increase if your server is slow.'),
@@ -263,35 +263,35 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_colle
     '#default_value' => mediamosa_maintenance_automatedsimpletest::timeout_test_run() // Calls the variable_get(),
   );
 
-  $form['settings_automatedsimpletest']['mediamosa_aclomatedsimpletest_minutes_tests_fast'] = array(
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_fast'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run - halve hour'),
     '#description' => t('The interval in minutes the fast tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST)),
     '#required' => TRUE,
-    '#default_value' => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
   );
 
-  $form['settings_automatedsimpletest']['mediamosa_aclomatedsimpletest_minutes_tests_normal'] = array(
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_normal'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run - 3 hours'),
     '#description' => t('The interval in minutes the normal tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL)),
     '#required' => TRUE,
-    '#default_value' => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
   );
 
-  $form['settings_automatedsimpletest']['mediamosa_aclomatedsimpletest_minutes_tests_slow'] = array(
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_minutes_tests_slow'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run - daily'),
     '#description' => t('The interval in minutes the slow (daily) tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW)),
     '#required' => TRUE,
-    '#default_value' => variable_get('mediamosa_aclomatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
   );
 
-  $form['settings_automatedsimpletest']['mediamosa_aclomatedsimpletest_run_tests'] = array(
+  $form['settings_automatedsimpletest']['mediamosa_automatedsimpletest_run_tests'] = array(
     '#type' => 'checkbox',
     '#title' => t('Run tests master switch'),
     '#description' => t('Enable or disable running of tests on the background.'),
-    '#default_value' => variable_get('mediamosa_aclomatedsimpletest_run_tests', FALSE),
+    '#default_value' => variable_get('mediamosa_automatedsimpletest_run_tests', FALSE),
   );
 
   return $form;

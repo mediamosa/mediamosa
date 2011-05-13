@@ -177,7 +177,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
     $class_name = $this->get_param_value(self::CLASS_NAME);
 
     // Check if I may run.
-    $run_last = variable_get('mediamosa_aclomatedsimpletest_timeout_tests_running', NULL);
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // may run?
     if (!empty($run_last) && round(REQUEST_TIME - $run_last['started']) < mediamosa_maintenance_automatedsimpletest::timeout_test_run()) {
@@ -185,7 +185,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
     }
 
     // ok, set the var.
-    variable_set('mediamosa_aclomatedsimpletest_timeout_tests_running', array('started' => REQUEST_TIME, 'class' => $class_name));
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', array('started' => REQUEST_TIME, 'class' => $class_name));
 
     // Add default info.
     $item = array('runphase' => mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED);
@@ -257,7 +257,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
     }
 
     // Done, reset running.
-    variable_set('mediamosa_aclomatedsimpletest_timeout_tests_running', NULL);
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // Add result.
     $mediamosa->add_item($item);
