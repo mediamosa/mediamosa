@@ -36,7 +36,7 @@ class mediamosa_ftp_user_db {
   const ID = 'id';
   const APP_ID = 'app_id'; // 1.x eua_id
   const USERID = 'userid';
-  const USERID_LENGTH = 32;
+  const USERID_LENGTH = 255;
   const PASSWD = 'passwd';
   const PASSWD_LENGTH = 255;
   const UID = 'uid';
