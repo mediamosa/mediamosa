@@ -3113,3 +3113,10 @@ function mediamosa_update_7121() {
   db_query('DELETE FROM {registry_file}'); // Clear it too.
   drupal_flush_all_caches();
 }
+
+/**
+ * Increase the allowed number of characters of ftp users.
+ */
+function mediamosa_update_7122() {
+  db_query("ALTER TABLE {mediamosa_ftp_user} MODIFY `userid` varbinary(255) NOT NULL COMMENT 'The User ID.'");
+}
