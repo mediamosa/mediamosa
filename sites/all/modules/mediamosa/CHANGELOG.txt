@@ -26,7 +26,6 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
-<<<<<<< HEAD
 MediaMosa 3.0.1 (build 1706)
 --------------------------
 - Fixed: Automated simpletest didn't show its results on the test page.
