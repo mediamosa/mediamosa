@@ -26,7 +26,7 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
-MediaMosa 3.0.1 (build 1702)
+MediaMosa 3.0.1 (build 1704)
 --------------------------
 - Fixed: Automated simpletest didn't show its results on the test page.
 - Naming of the automated simpletest Drupal var was wrongly renamed during 3.x
@@ -35,6 +35,9 @@ MediaMosa 3.0.1 (build 1702)
   mediamosa_sdk.class.inc and requires registry rebuild.
 - Added .gitignore to ignore some custom drupal directories and any .* files.
 - Updated integrity_check with version of MediaMosa 2.3.10.
+- Extended the mediamosa_ftp_user user_id field width from 32 characters to 255
+  characters.
+
 
 MediaMosa 3.0 (build 1698)
 --------------------------
