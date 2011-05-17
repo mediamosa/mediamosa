@@ -379,6 +379,7 @@ class mediamosa_ticket {
     );
 
     // Clean up the still ticket styles.
+    mediamosa_io::mkdir($ticket_still_location . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR);
     mediamosa_io::exec(
       strtr(
         'find @ticket_still_location -maxdepth 2 -mindepth 2 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
@@ -391,9 +392,10 @@ class mediamosa_ticket {
     );
 
     // Clean up the stills.
+    mediamosa_io::mkdir($ticket_still_location . self::TICKET_PATH);
     mediamosa_io::exec(
       strtr(
-        'find @ticket_still_location/@ticket_path. -maxdepth 1 -mindepth 1 ! -name "*.asx" -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
+        'find @ticket_still_location@ticket_path. -maxdepth 1 -mindepth 1 ! -name "*.asx" -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
         array(
           '@ticket_path' => self::TICKET_PATH,
           '@ticket_still_location' => $ticket_still_location,

@@ -29,6 +29,7 @@ TODO: (v3.0)
 MediaMosa 3.x (build X)
 -----------------------
 - Generate array response fix.
+- "No such file or directory" in cron find command fix.
 
 MediaMosa 3.0.1 (build 1702)
 --------------------------
