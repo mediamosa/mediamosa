@@ -43,7 +43,6 @@ class MediaMosaFtpUserTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing statistics, see: ticket 775.
   function testFtpUserFunction() {
 
     // Setup.
@@ -96,6 +95,41 @@ class MediaMosaFtpUserTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue(
       $a_xml['items']['item'][0]['active'] == 'true',
       t("FTP: Enable account of user.")
+    );
+
+    // Delete user.
+
+    // Delete the user.
+    // Same as: $this->deleteFtpUser($user);
+    $this->deleteFtpUser($user . sprintf("%03d", $app_id_1));
+
+    // Get the FTP user.
+    // FIXME: need study.
+    //$a_xml = $this->getFtpUser($user, array(), 'Get FTP User', array(), array(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER));
+  }
+
+  // Test the limit of the ftp username to be more than 32.
+  function testFtpUserLongNames() {
+
+    // Setup.
+
+    // App id.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // User name, password.
+    $user = "Test_this_user_name_with_more_than_32_chars_plus_::_characters";
+    $password = mediamosa_db::uuid(rand(1, 9999));
+
+    // Create FTP user.
+    $this->createFtpUser($user, $password);
+
+    // Get the FTP user.
+    $a_xml = $this->getFtpUser($user);
+
+    // Check the result.
+    $this->assertTrue(
+      $a_xml['items']['item'][0]['userid'] == $user . sprintf("%03d", $app_id_1),
+      t("FTP: Usernames of more than 32 characters.")
     );
 
     // Delete user.
