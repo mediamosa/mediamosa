@@ -35,7 +35,6 @@ dependencies[] = mediamosa_ftp_batch
 dependencies[] = mediamosa_ftp_user
 dependencies[] = mediamosa_integrity_check
 dependencies[] = mediamosa_job
-dependencies[] = mediamosa_sdk
 dependencies[] = mediamosa_maintenance
 dependencies[] = mediamosa_maintenance_automatedsimpletest
 dependencies[] = mediamosa_maintenance_browse
