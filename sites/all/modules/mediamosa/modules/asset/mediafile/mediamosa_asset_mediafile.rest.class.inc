@@ -142,7 +142,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 
     // Add to response.
     foreach ($items as $item) {
-      $mediamosa->add_item(array($item));
+      $mediamosa->add_item($item);
     }
 
     // Done.
