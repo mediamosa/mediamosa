@@ -390,11 +390,12 @@ class mediamosa_job {
    * @param bool $is_app_admin
    * @param string $mediafile_id
    * @param array $still_parameters
+   * @param integer $priority
    */
-  static public function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array()) {
+  static public function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array(), $priority = NULL) {
     if (self::is_still_creatable($mediafile_id)) {
       // Create job.
-      $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters);
+      $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
 
       // Create sub still job.
       mediamosa_job_still::create($job_id, $still_parameters);
@@ -417,14 +418,16 @@ class mediamosa_job {
    * @param integer $file_size
    * @param bool $retranscode
    * @param bool $create_still
+   * @param array $still_parameters
+   * @param integer $priority
    */
-  static public function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode = FALSE, $create_still = FALSE, $still_parameters = array()) {
+  static public function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode = FALSE, $create_still = FALSE, $still_parameters = array(), $priority = NULL) {
 
     // Enough quota?
     mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
 
     // Create sub upload job.
     mediamosa_job_upload::create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode, $create_still);

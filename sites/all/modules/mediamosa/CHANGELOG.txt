@@ -40,6 +40,7 @@ MediaMosa 3.0.1 (build 1706)
 - Generate array response fix.
 - "No such file or directory" in cron find command fix.
 - Transcoderen van mp3 naar mp4 geeft een error (See ticket #241).
+- Priority development (See ticket #242).
 
 
 MediaMosa 3.0 (build 1698)
