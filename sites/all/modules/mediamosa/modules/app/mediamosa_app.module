@@ -217,19 +217,13 @@ function mediamosa_app_menu() {
  */
 function _mediamosa_app_list() {
 
-  global $user;
-  $role_permissions = user_role_permissions($user->roles);
-
-  // Collect all the app_ids.
-  foreach ($role_permissions as $rid => $roles) {
-    foreach ($roles as $role => $switch) {
-      if (empty($switch) || (drupal_substr($role, 0, 14) != 'mediamosa|app|')) {
-        continue;
-      }
-      $access_app_ids[] = drupal_substr($role, 14);
-    }
+  // Get all allowed apps.
+  $app_allowed = mediamosa_app::collect_allowed_apps();
+  $access_app_ids = array();
+  foreach ($app_allowed as $app_id => $app_name) {
+    $access_app_ids[] = $app_id;
   }
-
+  
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
@@ -257,6 +251,9 @@ function _mediamosa_app_list() {
 
   if (!empty($access_app_ids)) {
     $query->condition(mediamosa_app_db::APP_ID, $access_app_ids, 'IN');
+  }
+  elseif ($user->uid != 1) { // if not admin and no rights show nothing.
+    $query->condition('0', '1');
   }
 
   $apps = $query->execute()->fetchAll();

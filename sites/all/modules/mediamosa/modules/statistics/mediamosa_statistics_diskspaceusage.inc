@@ -57,15 +57,15 @@ function mediamosa_statistics_diskspaceused_list_form() {
   // Get session.
   $session = isset($_SESSION['mediamosa_statistics_filter'][MEDIAMOSA_STATISTICS_FILTER_TYPE_DISKSPACE]) ? $_SESSION['mediamosa_statistics_filter'][MEDIAMOSA_STATISTICS_FILTER_TYPE_DISKSPACE] : array();
 
-  // Get app owners.
-  $app_owners = mediamosa_app::collect_app_owners();
-
+  // Get all allowed apps.
+  $app_allowed = mediamosa_app::collect_allowed_apps();
+ 
   $app_ids = array();
   if (!empty($session['app_id'])) {
     $app_ids[] = $session['app_id'];
   }
-  if (!empty($session['app_owner']) && isset($app_owners[$session['app_owner']])) {
-    $app_ids += $app_owners[$session['app_owner']];
+  if (!empty($session['app_owner']) && isset($app_allowed[$session['app_owner']])) {
+    $app_ids += $app_allowed[$session['app_owner']];
   }
   $year = empty($session['year']) ? date('Y') : $session['year'];
   $month = empty($session['month']) ? date('n') : $session['month'];

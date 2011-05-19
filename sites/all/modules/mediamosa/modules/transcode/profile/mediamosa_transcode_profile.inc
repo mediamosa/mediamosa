@@ -30,25 +30,6 @@
   */
 
 /**
- * Collect the client apps as app_id => title.
- */
-function _mediamosa_get_apps() {
-  // Get the apps for the drop down listing.
-  $apps = array(0 => t('Global profile (no owner)'));
-
-  // Gather all apps
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
-    if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA) && !_mediamosa_user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID])) {
-      continue;
-    }
-
-    $apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
-  }
-
-  return $apps;
-}
-
-/**
  * Show the listing of the current transcode profiles.
  */
 function _mediamosa_transcode_profile_list() {
@@ -61,17 +42,14 @@ function _mediamosa_transcode_profile_list() {
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   drupal_set_breadcrumb($breadcrumb);
 
-  // Get the apps.
-  $apps = _mediamosa_get_apps();
-
-  $app_ids = array();
+  // Get the apps for the drop down listing.
+  $apps = array(0 => t('Global profile (no owner)'));
+  $apps = array_merge($apps, mediamosa_app::collect_allowed_apps());
 
   // Only allow either all apps (admin) or limited to global and owned.
-  if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
-    $app_ids[] = 0; // Global profiles (allowed to read).
-    foreach ($apps as $app_id => $app) {
-      $app_ids[] = $app_id;
-    }
+  $app_ids = array();
+  foreach ($apps as $app_id => $app) {
+    $app_ids[] = $app_id;
   }
 
   $header = array(
@@ -79,7 +57,7 @@ function _mediamosa_transcode_profile_list() {
     array('data' => t('Transcode profile id'), 'field' => 'tp.' . mediamosa_transcode_profile_db::ID),
     array('data' => t('Is Default'), 'field' => 'tp.' . mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_transcode_profile_db::TOOL),
-    array('data' => t('Owner'), 'field' => 'tp.' . mediamosa_transcode_profile_db::APP_ID),
+    array('data' => t('App owner'), 'field' => 'tp.' . mediamosa_transcode_profile_db::APP_ID),
     t('Operations')
   );
 
@@ -117,8 +95,7 @@ function _mediamosa_transcode_profile_list() {
       $actions[] = l(t('Delete'), 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID] . '/delete', $l_options);
     }
 
-    $owner = isset($apps[$transcode_profile[mediamosa_transcode_profile_db::APP_ID]]) ? $apps[$transcode_profile[mediamosa_transcode_profile_db::APP_ID]] : t('Unknown owner');
-    $rows[] = array(
+    $owner = ($transcode_profile[mediamosa_transcode_profile_db::APP_ID] == 0) ? 'global profile' : $transcode_profile[mediamosa_transcode_profile_db::APP_ID];    $rows[] = array(
       'title' => array('data' => l($transcode_profile[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID]), 'field' => $transcode_profile[mediamosa_transcode_profile_db::PROFILE]),
       'transcode_profile_id' => $transcode_profile[mediamosa_transcode_profile_db::ID],
       'description' => $transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE],
