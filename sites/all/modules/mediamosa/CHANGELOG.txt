@@ -28,8 +28,8 @@ TODO: (v2.4)
 
 MediaMosa 2.3.10 (build 1383)
 -----------------------------
-
 Other changes (not ticket related)
+- Transcoding from mp3 to mp4 generates error. 
 - Added still check to integrity check (code commited by flyapen on Github).
 
 MediaMosa 2.3.9 (build 1381)
