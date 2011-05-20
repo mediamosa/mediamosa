@@ -52,7 +52,7 @@ function mediamosa_integrity_check_menu() {
     'description' => 'Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.',
     'page callback' => 'mediamosa_integrity_check_page',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_FILE_INTEGRITY),
   );
 
   return $items;
@@ -442,18 +442,17 @@ function mediamosa_integrity_check_start_validate($form, &$form_state) {
 function mediamosa_integrity_check_start_submit($form, &$form_state) {
   // Rights check.
   if (!user_access(mediamosa_permission::ACCESS_START_FILE_INTEGRITY_START)) {
-    drupal_set_message(t('You have no rights to start the integrity check.'), 'error');
+    drupal_set_message(t('You have to be admin to use the integrity check.'), 'error');
     return;
   }
 
   $op = $form_state['input']['op'];
   $selected_ids = isset($form_state['input']['selected_ids']) ? $form_state['input']['selected_ids'] : array();
   $type = arg(4);
-  //drupal_set_message('I was here: '. $op . print_r($selected_ids, TRUE) . $type);
 
   if ($op == t('Start integrity check')) {
     // Call the script.                                                                                                                                            </dev/null >/dev/null 2>/dev/null &
-    mediamosa_io::exec('nice -n20 /usr/bin/php -f ' . DRUPAL_ROOT . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php > /dev/null 2>&1 &');// 1>/dev/null/ 2>&1 &
+    mediamosa_io::exec('nice -n 19 /usr/bin/php -f ' . DRUPAL_ROOT . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php > /dev/null 2>&1 &');// 1>/dev/null/ 2>&1 &
 
     // Set message and goto.
     drupal_set_message(t('Integrity check started'));

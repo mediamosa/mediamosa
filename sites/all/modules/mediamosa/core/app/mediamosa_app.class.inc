@@ -194,6 +194,21 @@ class mediamosa_app {
   }
 
   /**
+   * Collect the client apps as app_id => title where the current user has
+   * access to.
+   */
+  static public function collect_allowed_apps() {
+    $apps = array();
+    foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+      if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA) && !_mediamosa_user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID])) {
+        continue;
+      }
+      $apps[$app[mediamosa_app_db::APP_ID]] = "({$app[mediamosa_app_db::APP_ID]}) " . $app[mediamosa_app_db::APP_NAME];
+    }
+    return $apps;
+  }
+  
+  /**
    * return an array of all apps that are allowed to master/slave this app.
    *
    * @param integer $app_id
