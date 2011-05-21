@@ -46,7 +46,8 @@ Other changes (not ticket related).
 - Updated several rights related issues in admin interface to support
   sub-administrators (who can view al lot of settings, and maintain there own
   applications in the backend).
-
+- Fixed bug in profile which incorrectly set the default job scheduler server,
+  resulting in an error on the status page.
 
 MediaMosa 3.0 (build 1698)
 --------------------------
