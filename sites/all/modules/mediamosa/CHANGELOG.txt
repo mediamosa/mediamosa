@@ -26,7 +26,7 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
-MediaMosa 3.0.1 (build 1710)
+MediaMosa 3.0.1 (build 1712)
 ----------------------------
 - Transcoding from mp3 to mp4 geeft een error (See ticket #241)
 - Job priority development (See ticket #242).
