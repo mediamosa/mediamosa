@@ -65,43 +65,9 @@ function mediamosa_statistics_filter_form($form, $form_state) {
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_COLLECTION_POPULAR:
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_DISKSPACE:
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_POPULARSTREAMS:
-      $app_owners = mediamosa_app::collect_app_owners();
-      $owners = array();
-      foreach ($app_owners as $owner => $app_owner) {
-        $owners[$owner] = $owner;
-      }
-
-      // Get all apps.
-      $result = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
-
-      $apps = array();
-      foreach ($result as $row) {
-        $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] . ')';
-      }
-
-      $form['filters']['status']['app_owner'] = array(
-        '#type' => 'select',
-        '#options' => array('' => '') + $owners,
-        '#title' => 'Owner',
-        '#default_value' => !empty($session['app_owner']) ? $session['app_owner'] : '',
-      );
-
-      $form['filters']['status']['app_id'] = array(
-        '#type' => 'select',
-        '#options' => array('' => '') + $apps,
-        '#title' => 'Application',
-        '#default_value' => !empty($session['app_id']) ? $session['app_id'] : '',
-      );
-      break;
-
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS:
-      // Get all apps.
-      $result = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
-
-      $apps = array();
-      foreach ($result as $row) {
-        $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] . ')';
-      }
+      // Get all allowed apps.
+      $apps = mediamosa_app::collect_allowed_apps();
 
       $form['filters']['status']['app_id'] = array(
         '#type' => 'select',

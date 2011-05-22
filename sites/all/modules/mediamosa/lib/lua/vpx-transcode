@@ -299,6 +299,10 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local cd_command = ""
   local audio_aac_zero = false
 
+  -- MP3 ffmpeg bug workaround (see MM ticket 241).
+  -- See later too.
+  local mp3_error_skip_lines = false
+
   -- detect the best video audio stream
   local video_stream, audio_stream, video_size, audio_codecs, audio_channels = find_best_streams(source_path, hash)
 
@@ -432,12 +436,68 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
                         })
     end
 
+
+    --
+    -- MP3 ffmpeg bug workaround (see MM ticket 241).
+    --
+    -- This is really ffmpeg bug, but we try to fix it here.
+    -- The problem: ffmpeg gives error when transcoding some valid mp3 files.
+    --
+    -- The transcoded file is good, but ffmpeg produces this kind of errors:
+    -- [mp3 @ 0x26f3ec0] Header missing
+    -- Error while decoding stream #0.0
+    -- Error while decoding stream #0.0
+    -- ...
+    --
+    -- Solution: We skip the errors after "Header missing" lines.
+    --
+
+    -- See earlier:
+    -- local mp3_error_skip_lines = false
+    -- If this variable true, then we skip the error lines.
+
+    -- We check whether there were "Error while decoding stream ..." error or not.
+    local mp3_error_was_error = false
+
     for _,marker in pairs(error_markers) do
       local error = string.match(line, marker)
       if error then
-        table.insert(errors, error)
+
+        -- Old code:
+        -- table.insert(errors, error)
+
+        -- Check the line with "Error while decoding stream" error.
+        local mp3_error_while_decoding_stream = string.match(line, "^(Error while decoding stream #.*)$")
+        if mp3_error_while_decoding_stream then
+          -- Find the error. Don't turn back "mp3_error_skip_lines" variable to false later.
+          mp3_error_was_error = true
+        end
+        -- Insert the error, if this is not an "Error while decoding stream" error
+        -- or we don't have to skip the error lines.
+        if not mp3_error_while_decoding_stream or not mp3_error_skip_lines then
+          table.insert(errors, error)
+        end
+
       end
     end
+
+    -- If we don't have "Error while decoding stream ..." error, then we don't want to skip error lines.
+    if not mp3_error_was_error then
+      -- Turn back, except if the line is:
+      -- size=   11471kB time=1468.45 bitrate=  64.0kbits/s
+      -- Sometimes this line is between two "Error while decoding stream ..." errors.
+      if not string.match(line, "^(size=   .*)$") then
+        -- We don't have "Error while decoding stream ..." error and this is not "size= ..." line.
+        -- Let's turn back the "mp3_error_skip_lines" variable to false.
+        mp3_error_skip_lines = false
+      end
+    end
+
+    -- If we are not in the skip lines state, then check the current line.
+    if not mp3_error_skip_lines or mp3_error_skip_lines == nil then
+      mp3_error_skip_lines = string.match(line, "^(%[mp3 @ .*%] Header missing)$")
+    end
+
 
     line = fd:read("*l")
   end

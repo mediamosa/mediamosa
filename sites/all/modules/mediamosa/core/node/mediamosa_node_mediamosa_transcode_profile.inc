@@ -172,7 +172,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   drupal_set_breadcrumb($breadcrumb);
 
   // Get the apps.
-  $apps = _mediamosa_get_apps();
+  $apps = mediamosa_app::collect_allowed_apps();
 
   // Default parameters.
   $rows = array(
@@ -207,9 +207,11 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
  * Implements hook_form().
  */
 function mediamosa_transcode_profile_form($node, $form_state) {
-  // Get the apps for the drop down listing.
-  $apps = _mediamosa_get_apps();
-
+  // Get the apps.
+  //$apps = array('0' => '');
+  $apps = mediamosa_app::collect_allowed_apps();
+  $apps[0] = '[global profile]';
+  
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
