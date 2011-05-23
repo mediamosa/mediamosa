@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -44,8 +44,8 @@ function mediamosa_app_dbus_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
 
+  // Allow also GET as POST for login.
   $rest_calls['login'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login'][mediamosa_rest_call::METHOD_POST];
-
 
   $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_check_cookie',
@@ -55,10 +55,6 @@ function mediamosa_app_dbus_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
-
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_1_1_0;
 
   return $rest_calls;
 }
@@ -83,7 +79,6 @@ function mediamosa_app_dbus_mediamosa_register_rest_call_doc() {
 
   $rest_calls['login'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login'][mediamosa_rest_call::METHOD_POST];
 
-
   $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Shows the contents of your cookie',
     mediamosa_rest_call::DESCRIPTION => 'Shows the contents of your cookie, for debugging purposes.',
@@ -95,8 +90,6 @@ function mediamosa_app_dbus_mediamosa_register_rest_call_doc() {
   </item>
 </items>',
   );
-
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET];
 
   return $rest_calls;
 }

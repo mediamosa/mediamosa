@@ -28,8 +28,8 @@ TODO: (v3.0)
 
 MediaMosa 3.0.1 (build 1712)
 ----------------------------
-- Transcoding from mp3 to mp4 geeft een error (See ticket #241)
-- Job priority development (See ticket #242).
+- Transcoding from mp3 to mp4 generates an error (See vpcore ticket #241)
+- Job priority development (See vpcore ticket #242).
 
 Other changes (not ticket related).
 - Fixed: Automated simpletest didn't show its results on the test page.
@@ -48,6 +48,12 @@ Other changes (not ticket related).
   applications in the backend).
 - Fixed bug in profile which incorrectly set the default job scheduler server,
   resulting in an error on the status page.
+- Deprecated REST call 'check_cookie' removed, use 'login/cookie' instead.
+- Rewrote mediamosa_db::db_exists() to be a bit faster.
+- mediamosa_asset_metadata_property::property_create(), 
+  mediamosa_asset_metadata_property::property_delete() will now only accept one
+  app_id and no longer an array of app_ids (first one was always used anyway).
+- Moved installation of Metadata groups DC, QDC, CZP to their own modules.
 
 MediaMosa 3.0 (build 1698)
 --------------------------

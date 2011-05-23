@@ -269,6 +269,25 @@ function _mediamosa_profile_php_modules() {
   return array('errors' => $errors, 'requirements' => $requirements);
 }
 
+function _command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
+  $exec_output = array();
+  $ret_val = 0;
+  exec($command . ' 2>/dev/null', $exec_output, $ret_val);
+
+  // If ret_val is ok, then check if $exec_output is empty.
+  if (in_array($ret_val, $allowed_ret_values)) {
+    if (empty($exec_output)) {
+      // Maybe stderr gave something back.
+      exec($command . ' 2>&1', $exec_output);
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+
 /**
  * Checking the installed programs.
  */
@@ -279,22 +298,23 @@ function _mediamosa_profile_installed_programs() {
 
   // FFmpeg.
   $exec_output = array();
-  exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
+  $ffmpeg_installed = _command_installed('ffmpeg -command', $exec_output);
+
   $requirements['ffmpeg'] = array(
     'title' => st('<b>Program FFmpeg:</b>'),
-    'value' => !$ret_val ? 'Installed' : 'FFmpeg is not installed.' ,
-    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => !$ret_val ? '' : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
+    'value' => $ffmpeg_installed ? 'Installed' : 'FFmpeg is not installed or inaccessable for PHP.' ,
+    'severity' => $ffmpeg_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    'description' => $ffmpeg_installed ? '' : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
   );
 
   // Lua.
   $exec_output = array();
-  exec('lua 2>&1', $exec_output, $ret_val);
+  $lua_installed = _command_installed('lua', $exec_output);
   $requirements['lua'] = array(
     'title' => st('<b>Program LUA 5.1:</b>'),
-    'value' => !$ret_val ? 'Installed' : 'LUA is not installed.' ,
-    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => !$ret_val ? '' : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
+    'value' => $lua_installed ? 'Installed' : 'LUA is not installed.' ,
+    'severity' => $lua_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    'description' => $lua_installed ? '' : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
   );
 
   // Lpeg.

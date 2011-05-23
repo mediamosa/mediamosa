@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -83,16 +83,6 @@ class mediamosa {
     }
   }
 
-  // Check if we will log rest calls to log().
-  public function is_log_rest() {
-    return variable_get('mediamosa_watchdog_rest', FALSE);
-  }
-
-  // Drupal usage for getting the current URI.
-  public function get_request_uri() {
-    return trim(implode('/', arg()), '/');
-  }
-
   // ------------------------------------------------------ Protected Functions.
   /**
    * Set up environment based on the input app_id(s).
@@ -143,6 +133,16 @@ class mediamosa {
   }
 
   // --------------------------------------------------------- Static Functions.
+  // Check if we will log rest calls to log().
+  static public function is_log_rest() {
+    return variable_get('mediamosa_watchdog_rest', FALSE);
+  }
+
+  // Drupal usage for getting the current URI.
+  static public function get_request_uri() {
+    return trim(implode('/', arg()), '/');
+  }
+
   // Return the request_uri var, which can be /rest/?foo=foo
   static public function request_uri() {
     return request_uri(); // To Drupal mapped.

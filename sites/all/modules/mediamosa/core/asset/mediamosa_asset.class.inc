@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -550,7 +550,8 @@ class mediamosa_asset {
         $row['still_id']
       );
 
-      // 2.x changes to database need to be aliased to 1.x name giving (for now).
+      // 2.x changes to database need to be aliased to 1.x name giving (for
+      // now).
       $aliases = array(
         mediamosa_asset_db::IS_UNAPPROPRIATE => 'is_unappropiate',
       );

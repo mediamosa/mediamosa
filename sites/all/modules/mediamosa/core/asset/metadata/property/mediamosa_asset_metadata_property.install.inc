@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -43,69 +43,6 @@ function _mediamosa_asset_metadata_property_install() {
 
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_metadata_property_db::TABLE_NAME);
-
-  // Create our default definitions.
-  $properties = array(
-    array(1, 'type', 'CHAR'),
-    array(1, 'format', 'CHAR'),
-    array(1, 'language', 'CHAR'),
-    array(1, 'title', 'CHAR'),
-    array(1, 'creator', 'CHAR'),
-    array(1, 'publisher', 'CHAR'),
-    array(1, 'subject', 'CHAR'),
-    array(1, 'description', 'CHAR'),
-    array(1, 'contributor', 'CHAR'),
-    array(1, 'date', 'DATETIME'),
-    array(1, 'identifier', 'CHAR'),
-    array(1, 'source', 'CHAR'),
-    array(1, 'relation', 'CHAR'),
-    array(1, 'coverage_temporal', 'CHAR'),
-    array(1, 'coverage_spatial', 'CHAR'),
-    array(1, 'rights', 'CHAR'),
-    array(2, 'title_alternative', 'CHAR'),
-    array(2, 'description_abstract', 'CHAR'),
-    array(2, 'created', 'DATETIME'),
-    array(2, 'issued', 'DATETIME'),
-    array(2, 'hasformat', 'CHAR'),
-    array(2, 'isformatof', 'CHAR'),
-    array(2, 'format_medium', 'CHAR'),
-    array(2, 'format_extent', 'CHAR'),
-    array(2, 'license', 'CHAR'),
-    array(2, 'rightsholder', 'CHAR'),
-    array(2, 'isreferencedby', 'CHAR'),
-    array(3, 'schemanaam', 'CHAR'),
-    array(3, 'identificatiecode', 'CHAR'),
-    array(3, 'titel', 'CHAR'),
-    array(3, 'taal', 'CHAR'),
-    array(3, 'beschrijving', 'CHAR'),
-    array(3, 'sleutelwoord', 'CHAR'),
-    array(3, 'aggregatieniveau', 'CHAR'),
-    array(3, 'versie', 'CHAR'),
-    array(3, 'status', 'CHAR'),
-    array(3, 'soort_leermateriaal', 'CHAR'),
-    array(3, 'beoogde_eindgebruiker', 'CHAR'),
-    array(3, 'context', 'CHAR'),
-    array(3, 'beoogde_leeftijdsgroep', 'CHAR'),
-    array(3, 'kosten', 'CHAR'),
-    array(3, 'auteursrechten', 'CHAR'),
-    array(3, 'omschrijving_rechten', 'CHAR'),
-    array(3, 'classificatie', 'CHAR'),
-  );
-
-  foreach ($properties as $property) {
-    $a_fields = array(
-      mediamosa_asset_metadata_property_db::PROPGROUP_ID => $property[0],
-      mediamosa_asset_metadata_property_db::NAME => $property[1],
-      mediamosa_asset_metadata_property_db::TYPE => $property[2],
-      mediamosa_asset_metadata_property_db::APP_ID => 0,
-    );
-
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
-
-    db_insert(mediamosa_asset_metadata_property_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->execute();
-  }
 }
 
 /**

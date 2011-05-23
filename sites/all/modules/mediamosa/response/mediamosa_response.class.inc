@@ -6,7 +6,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -135,7 +135,7 @@ class mediamosa_response extends mediamosa {
       // Set the response handler.
       $previous_handler = set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
 
-      // Create the REST interface class.
+      // Create the REST interface object.
       $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
@@ -572,7 +572,7 @@ class mediamosa_response extends mediamosa {
    *
    */
   public function log_event_restcall() {
-    if ($this->is_log_rest()) {
+    if (self::is_log_rest()) {
       mediamosa_statistics::log_event_restcall(
         '[' . $this->request_method . '] ' . $this->request_uri,
         $this->get_processed_time(),
