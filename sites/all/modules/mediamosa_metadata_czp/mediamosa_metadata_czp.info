@@ -1,6 +1,6 @@
 ; $Id: $
 name = Content Zoek Profiel
-description = MediaMosa support for the metadata (Dutch) format content zoek profiel (Content Search Profile). <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
+description = MediaMosa support for the metadata (Dutch) format Content Zoek Profiel (Content Search Profile). <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
 package = MediaMosa - Metadata
 version = 3.0.0
 core = 7.x

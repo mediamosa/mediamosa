@@ -62,6 +62,10 @@ function mediamosa_profile_install_tasks() {
   drupal_set_title(_mediamosa_profile_get_title());
 
   $tasks = array(
+    'mediamosa_profile_metadata_support_form' => array(
+      'display_name' => st('Metadata support'),
+      'type' => 'form',
+    ),
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
       'type' => 'form',
@@ -118,6 +122,61 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
 
   // Copy rebuild.
   $tasks = $tasks_rebuild;
+}
+
+/**
+ * Get the mount point.
+ * Task callback.
+ */
+function mediamosa_profile_metadata_support_form() {
+  $form = array();
+
+  $options = array(
+    'dublin_core' => st('Dublin Core'),
+    'qualified_dublin_core' => st('Qualified Dublin Core'),
+    'czp' => st('Content Zoek Profiel (Content Search Profile)'),
+  );
+
+  $form['description'] = array(
+    '#markup' => '<p><b>' . st('Select the types of Metadata you want to support in your MediaMosa installation. Any of these metadata libraries can be enabled or disabled later by enabling or disabling the metadata module of its type.') . '</b></p>',
+  );
+
+  $form['metadata_support'] = array(
+    '#type' => 'checkboxes',
+    '#title' => st('Select the metadata libraries you want to use.'),
+    '#description' => st('For more information about Dublin Core !link_dc. For more information about Qualified Dublin Core !link_qdc. For more information about Content Zoek Profiel !link_czp (Dutch)', array('!link_dc' => l('click here', 'http://dublincore.org', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))), '!link_qdc' => l('click here', 'http://dublincore.org/documents/usageguide/qualifiers.shtml', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))), '!link_czp' => l('click here', 'http://www.edustandaard.nl/afspraken/001', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))))),
+    '#options' => $options,
+    '#required' => TRUE,
+    '#default_value' => array('dublin_core', 'qualified_dublin_core'),
+  );
+
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => st('Continue'),
+  );
+
+  return $form;
+}
+
+function mediamosa_profile_metadata_support_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+}
+
+function mediamosa_profile_metadata_support_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  $to_enable = array(
+    'dublin_core' => 'mediamosa_metadata_dc',
+    'qualified_dublin_core' => 'mediamosa_metadata_qdc',
+    'czp' => 'mediamosa_metadata_czp',
+  );
+
+  // Enable the metadata module that where selected.
+  foreach ($to_enable as $type => $module) {
+    if (!empty($values['metadata_support'][$type]) && $values['metadata_support'][$type] == $type) {
+      module_enable(array($module));
+    }
+  }
 }
 
 function system_form_install_settings_form_alter(&$form, $form_state, $form_id) {
@@ -232,7 +291,6 @@ function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
  * Submit the intro form.
  */
 function mediamosa_profile_php_settings_form_submit($form, &$form_state) {
-
 }
 
 /**
