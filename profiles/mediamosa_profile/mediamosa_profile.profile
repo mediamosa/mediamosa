@@ -287,7 +287,6 @@ function _command_installed($command, &$exec_output, $allowed_ret_values = array
   return FALSE;
 }
 
-
 /**
  * Checking the installed programs.
  */
@@ -298,23 +297,24 @@ function _mediamosa_profile_installed_programs() {
 
   // FFmpeg.
   $exec_output = array();
-  $ffmpeg_installed = _command_installed('ffmpeg -command', $exec_output);
+  $ffmpeg_installed = _command_installed('ffmpeg -version', $exec_output);
 
   $requirements['ffmpeg'] = array(
     'title' => st('<b>Program FFmpeg:</b>'),
     'value' => $ffmpeg_installed ? 'Installed' : 'FFmpeg is not installed or inaccessable for PHP.' ,
     'severity' => $ffmpeg_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => $ffmpeg_installed ? '' : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
+    'description' => $ffmpeg_installed ? 'Found ' . reset($exec_output) : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
   );
 
   // Lua.
   $exec_output = array();
-  $lua_installed = _command_installed('lua', $exec_output);
+  $lua_installed = _command_installed('lua -v', $exec_output);
+
   $requirements['lua'] = array(
     'title' => st('<b>Program LUA 5.1:</b>'),
     'value' => $lua_installed ? 'Installed' : 'LUA is not installed.' ,
     'severity' => $lua_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => $lua_installed ? '' : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
+    'description' => $lua_installed ? 'Found ' . reset($exec_output) : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
   );
 
   // Lpeg.
