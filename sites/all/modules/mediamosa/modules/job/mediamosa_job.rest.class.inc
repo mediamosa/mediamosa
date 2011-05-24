@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -202,6 +202,9 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const HINT = 'hint';
   const NO_HINT = 'no_hint';
+  const PRIORITY = 'priority';
+  const PRIORITY_RANGE_START = -100;
+  const PRIORITY_RANGE_END = 100;
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -229,6 +232,12 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'When true and "hint" parameter is not defined then, regardless of the ega setting, do not add hinting to the mediafile. Deprecated.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::PRIORITY => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Priority of the job.',
+          self::VAR_RANGE_START => self::PRIORITY_RANGE_START,
+          self::VAR_RANGE_END => self::PRIORITY_RANGE_END,
+        ),
       )
     );
 
@@ -247,6 +256,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     // Get params.
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
+    $priority = $this->get_param_value(self::PRIORITY);
 
     $hint = $this->get_param_value(self::HINT);
     $no_hint = $this->get_param_value(self::NO_HINT);
@@ -256,7 +266,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     }
 
     // Create it.
-    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $hint);
+    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), $priority, $hint);
 
     // Add job_id.
     $mediamosa->add_item(array('job_id' => $job_id));
@@ -366,6 +376,8 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const FILE_EXTENSION = 'file_extension';
   const COMMAND = 'command';
   const PRIORITY = 'priority';
+  const PRIORITY_RANGE_START = -100;
+  const PRIORITY_RANGE_END = 100;
   const FILE_SIZE = 'file_size';
   const RETRANSCODE = 'retranscode';
   // ------------------------------------------------------------ Get Var Setup.
@@ -519,9 +531,9 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::PRIORITY => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Priority of the job, used with transcode job.',
-          self::VAR_RANGE_START => -100,
-          self::VAR_RANGE_END => 100,
+          self::VAR_DESCRIPTION => 'Priority of the job.',
+          self::VAR_RANGE_START => self::PRIORITY_RANGE_START,
+          self::VAR_RANGE_END => self::PRIORITY_RANGE_END,
         ),
         self::FILE_SIZE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -624,7 +636,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_STILL:
-        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $still_parameters);
+        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $still_parameters, $priority);
         break;
 
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
@@ -636,11 +648,11 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         break;
 
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
-        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
+        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters, $priority);
         break;
 
       default:
-        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters);
+        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
         break;
     }
 

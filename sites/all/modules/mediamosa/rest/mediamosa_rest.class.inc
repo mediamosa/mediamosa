@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -203,7 +203,7 @@ class mediamosa_rest {
   static public function set_default_rest_call(array $rest_call) {
     // Make sure all are valid values.
     assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
-    assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
+    assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::STATUS_DISABLED)));
     assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]));
     assert(isset($rest_call[mediamosa_rest_call::MODULE_NAME]));
     assert(isset($rest_call[mediamosa_rest_call::VERSION]));

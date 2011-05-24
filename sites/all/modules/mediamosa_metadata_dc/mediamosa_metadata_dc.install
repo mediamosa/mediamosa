@@ -1,0 +1,81 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Installer for Metadata type Dublin Core.
+ */
+
+// Include the Metadata class.
+require_once 'mediamosa_metadata_dc.class.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_metadata_dc_install() {
+
+  // Check if the property group already exists. If so, we have a pre-3.0
+  // install where MediaMosa created this group by core code.
+  if (mediamosa_metadata_dc::property_group_installed(mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME)) {
+    return; // Already installed, pre 3.0 install.
+  }
+
+  // Create the property group.
+  $property_group_id = mediamosa_metadata_dc::property_group_create(mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME);
+
+  // The properties to create.
+  $properties = array(
+    array('type', 'CHAR'),
+    array('format', 'CHAR'),
+    array('language', 'CHAR'),
+    array('title', 'CHAR'),
+    array('creator', 'CHAR'),
+    array('publisher', 'CHAR'),
+    array('subject', 'CHAR'),
+    array('description', 'CHAR'),
+    array('contributor', 'CHAR'),
+    array('date', 'DATETIME'),
+    array('identifier', 'CHAR'),
+    array('source', 'CHAR'),
+    array('relation', 'CHAR'),
+    array('coverage_temporal', 'CHAR'),
+    array('coverage_spatial', 'CHAR'),
+    array('rights', 'CHAR'),
+  );
+
+  // Create the properties.
+  foreach ($properties as $property) {
+    mediamosa_metadata_dc::property_create($property_group_id, $property[0], $property[1]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_metadata_dc_uninstall() {
+  // Remove it and delete all properties.
+  mediamosa_metadata_dc::property_group_delete(mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME);
+}

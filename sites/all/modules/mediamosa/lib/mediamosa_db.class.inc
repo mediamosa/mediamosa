@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -548,15 +548,15 @@ class mediamosa_db {
    *
    * @param string $table_name
    *  The table name.
-   * @param array $a_columns_and
+   * @param array $columns_and
    *  column => value.
    * @return integer
    *    returns number of rows.
    */
-  static public function db_count_rows($table_name, array $a_columns_and = array()) {
+  static public function db_count_rows($table_name, array $columns_and = array()) {
     // Create select object.
     $query = self::db_select($table_name, 'c');
-    foreach ($a_columns_and as $column => $value) {
+    foreach ($columns_and as $column => $value) {
       if (is_null($value)) {
         $query->isNull($column);
       }
@@ -573,16 +573,16 @@ class mediamosa_db {
    *
    * @param string $table_name
    *  The table name.
-   * @param array $a_columns_and
+   * @param array $columns_and
    *  column => value.
    * @return integer
    *    returns number of rows.
    */
-  static public function db_get_assoc($table_name, array $a_columns_and = array()) {
+  static public function db_get_assoc($table_name, array $columns_and = array()) {
     // Create select object.
     $query = self::db_select($table_name, 'row');
     $query->fields('row');
-    foreach ($a_columns_and as $column => $value) {
+    foreach ($columns_and as $column => $value) {
       if (is_null($value)) {
         $query->isNull($column);
       }
@@ -599,47 +599,52 @@ class mediamosa_db {
    *
    * @param string $table_name
    *  The table name.
-   * @param array $a_columns_and
+   * @param array $columns_and
    *  column => value.
-   *
+   * @param $errorcode
+   *  Optional error code to throw when error.
+   * @param array $errorcode_args
+   *  Optional arguments for the generated error.
+   * @param boolean $log_error
+   *  Optional TRUE/FALSE to log the error, default is TRUE.
    */
-  static function db_must_exists($table_name, array $a_columns_and = array(), $errorcode = NULL, array $a_errorcode_args = array(), $log_error = TRUE) {
+  static function db_must_exists($table_name, array $columns_and = array(), $errorcode = NULL, array $errorcode_args = array(), $log_error = TRUE) {
 
-    $a_row = self::db_get_assoc($table_name, $a_columns_and);
-    if ($a_row) {
-      return $a_row; // exists
+    $row = self::db_get_assoc($table_name, $columns_and);
+    if ($row) {
+      return $row; // exists
     }
 
     // Custom error supplied?
     if ($errorcode) {
-      throw new mediamosa_exception_error($errorcode, $a_errorcode_args);
+      throw new mediamosa_exception_error($errorcode, $errorcode_args);
     }
 
     switch ($table_name) {
       case mediamosa_asset_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $a_columns_and[mediamosa_asset_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $columns_and[mediamosa_asset_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_mediafile_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $a_columns_and[mediamosa_asset_mediafile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $columns_and[mediamosa_asset_mediafile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_acl_group_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND, array('@group' => $a_columns_and[mediamosa_acl_group_db::ACL_GROUP_NAME]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND, array('@group' => $columns_and[mediamosa_acl_group_db::ACL_GROUP_NAME]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_ftp_batch_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND, array('@batch_id' => $a_columns_and['batch_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND, array('@batch_id' => $columns_and['batch_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_collection_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $a_columns_and['coll_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $columns_and['coll_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_collection_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND, array('@coll_id' => $a_columns_and[mediamosa_asset_collection_db::COLL_ID], '@asset_id' => $a_columns_and[mediamosa_asset_collection_db::ASSET_ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND, array('@coll_id' => $columns_and[mediamosa_asset_collection_db::COLL_ID], '@asset_id' => $columns_and[mediamosa_asset_collection_db::ASSET_ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_supplement_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND, array('@supplement_id' => $a_columns_and[mediamosa_asset_supplement_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND, array('@supplement_id' => $columns_and[mediamosa_asset_supplement_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_ftp_user_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_user_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $a_columns_and['name']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $columns_and['name']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_user_group_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_GROUP, array('@group_id' => $a_columns_and['group_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_GROUP, array('@group_id' => $columns_and['group_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_job_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $a_columns_and['job_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $columns_and['job_id']), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_transcode_profile_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $a_columns_and[mediamosa_transcode_profile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $columns_and[mediamosa_transcode_profile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_metadata_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_metadata_property_db::TABLE_NAME:
@@ -653,25 +658,30 @@ class mediamosa_db {
   }
 
   /**
-   * Will throw exception if no rows where found.
+   * Returns TRUE/FALSE if rows where found.
    *
    * @param string $table_name
    *  The table name.
-   * @param array $a_columns_and
+   * @param array $columns_and
    *  column => value.
+   *
    * @return boolean
-   *  Return true or false on exists one or more row match.
+   *  Returns TRUE if one or more rows where found.
    */
-  static function db_exists($table_name, array $a_columns_and = array()) {
-    try {
-      self::db_must_exists($table_name, $a_columns_and, NULL, array(), FALSE);
-    }
-    catch (mediamosa_exception $e) {
-      assert($e);
-      return FALSE;
+  static function db_exists($table_name, array $columns_and = array()) {
+
+    // Create select object.
+    $query = self::db_select($table_name, 'row');
+    foreach ($columns_and as $column => $value) {
+      if (is_null($value)) {
+        $query->isNull($column);
+      }
+      else {
+        $query->condition($column, $value);
+      }
     }
 
-    return TRUE;
+    return $query->countQuery()->execute()->fetchField() > 0;
   }
 
   /**
@@ -704,8 +714,8 @@ class mediamosa_db {
    * Returns the number of tables in the current database.
    */
   static public function db_count_tables() {
-    $a_tables = db_find_tables('%');
-    return count($a_tables);
+    $tables = db_find_tables('%');
+    return count($tables);
   }
 
 
@@ -720,7 +730,7 @@ class mediamosa_db {
     global $databases;
     $schema = ($schema ? $schema : $databases['default']['default']['database']);
 
-    // Use db_query directly here, not mediamosa_db version.
+    // Use db_query directly here, not the mediamosa_db version.
     return db_query('SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table AND TABLE_SCHEMA = :schema', array(
       ':table' => $table_name,
       ':schema' => $schema,
@@ -729,7 +739,8 @@ class mediamosa_db {
 
   /**
    * Return the column names, data types and column types from an table.
-   * NOTE: might not work on all databases, mysql only for now.
+   *
+   * FIXME: might not work on all databases, mysql only for now.
    *
    * @return array
    *  Array containing columns.
@@ -836,9 +847,9 @@ class mediamosa_db {
    * Create a table according to the schema.
    *
    * @param string name
-   *   Name of the table.
+   *  Name of the table.
    * @param array table
-   *   Schema definition.
+   *  Schema definition.
    */
   static public function db_create_table($name, array $table) {
     return db_create_table($name, $table);

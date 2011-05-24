@@ -1,0 +1,76 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Installer for Metadata type Qualified Dublin Core.
+ */
+
+// Include the Metadata class.
+require_once 'mediamosa_metadata_qdc.class.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_metadata_qdc_install() {
+
+  // Check if the property group already exists. If so, we have a pre-3.0
+  // install where MediaMosa created this group by core code.
+  if (mediamosa_metadata_dc::property_group_installed(mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME)) {
+    return; // Already installed, pre 3.0 install.
+  }
+
+  // Create the property group.
+  $property_group_id = mediamosa_metadata_dc::property_group_create(mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME);
+
+  // The properties to create.
+  $properties = array(
+    array('title_alternative', 'CHAR'),
+    array('description_abstract', 'CHAR'),
+    array('created', 'DATETIME'),
+    array('issued', 'DATETIME'),
+    array('hasformat', 'CHAR'),
+    array('isformatof', 'CHAR'),
+    array('format_medium', 'CHAR'),
+    array('format_extent', 'CHAR'),
+    array('license', 'CHAR'),
+    array('rightsholder', 'CHAR'),
+    array('isreferencedby', 'CHAR'),
+  );
+
+  // Create the properties.
+  foreach ($properties as $property) {
+    mediamosa_metadata_qdc::property_create($property_group_id, $property[0], $property[1]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_metadata_qdc_uninstall() {
+  // Remove it and delete all properties.
+  mediamosa_metadata_qdc::property_group_delete(mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME);
+}

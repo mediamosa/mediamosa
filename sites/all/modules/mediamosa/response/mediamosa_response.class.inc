@@ -6,7 +6,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -135,7 +135,7 @@ class mediamosa_response extends mediamosa {
       // Set the response handler.
       $previous_handler = set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
 
-      // Create the REST interface class.
+      // Create the REST interface object.
       $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
@@ -572,7 +572,7 @@ class mediamosa_response extends mediamosa {
    *
    */
   public function log_event_restcall() {
-    if ($this->is_log_rest()) {
+    if (self::is_log_rest()) {
       mediamosa_statistics::log_event_restcall(
         '[' . $this->request_method . '] ' . $this->request_uri,
         $this->get_processed_time(),
@@ -618,11 +618,42 @@ class mediamosa_response extends mediamosa {
     // Sort the header.
     ksort($this->response['header']);
 
+    $this->response = $this->render_array($this->response);
+
     // Log the rest call.
     $this->log_event_restcall();
 
     // This return response, which is a array.
     return $this->response;
+  }
+
+   /**
+   * Render array to the old format.
+   */
+  public function render_array($array) {
+    if (!is_array($array)) {
+      return $array;
+    }
+
+    $new_array = array();
+
+    foreach ($array as $key => $value) {
+      if ($key{0} != '#') {
+        $new_array[$key] = $this->render_array($value);
+      }
+      elseif (is_array($value)) {
+        foreach ($value as $key2 => $value2) {
+          if (is_array($value2)) {
+            $new_array[$key2] = $this->render_array($value2);
+          }
+          else {
+            $new_array[$key2] = $value2;
+          }
+        }
+      }
+    }
+
+    return $new_array;
   }
 
   /**
