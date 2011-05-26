@@ -55,6 +55,9 @@ Other changes (not ticket related).
   app_id and no longer an array of app_ids (first one was always used anyway).
 - Moved installation of Metadata groups DC, QDC, CZP to their own modules.
 - Extended MediaMosa profile for selection for enabled metadata libraries.
+- Fixed problem in statistics where to many keywords generated a PDO exception.
+- Internal searches using CQL will no longer store statistics about searches.
+  Only searches from user input will be stored.
 
 MediaMosa 3.0 (build 1698)
 --------------------------

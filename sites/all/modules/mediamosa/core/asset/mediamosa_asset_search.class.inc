@@ -50,6 +50,9 @@ class mediamosa_asset_search {
    *  Application IDs.
    * @param string $cql
    *  The CQL search string.
+   * @param boolean $cql_store_stats
+   *  Process the CQL into keywords and store it for statistics. Should be TRUE
+   *  only when CQL has been provided by user input (not for internal searches).
    * @param string $acl_user_id
    *  The authentication user.
    * @param array $acl_group_ids
@@ -86,6 +89,7 @@ class mediamosa_asset_search {
   static public function asset_search(
     array $a_app_ids,
     $cql = NULL,
+    $cql_store_stats = FALSE,
 
     $acl_user_id = NULL,
     array $acl_group_ids = array(),

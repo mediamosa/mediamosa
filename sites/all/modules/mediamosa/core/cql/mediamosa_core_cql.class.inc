@@ -225,19 +225,19 @@ class mediamosa_core_cql {
   /**
    * Add search parameters to var setup based on old param conf.
 
-   * @param array $a_var_setup
-   * @param array $a_search
+   * @param array $var_setup
+   * @param array $search
    */
-  static public function get_var_setup_search(array $a_var_setup, array $a_search) {
+  static public function get_var_setup_search(array $var_setup, array $search) {
 
-    foreach ($a_search as $param => $type) {
-      $a_var_setup[mediamosa_rest_call::VARS][$param] = array(
+    foreach ($search as $param => $type) {
+      $var_setup[mediamosa_rest_call::VARS][$param] = array(
         mediamosa_rest_call::VAR_TYPE => $type,
         mediamosa_rest_call::VAR_DESCRIPTION => 'Search parameter, try to use CQL instead.',
         mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       );
 
-      $a_var_setup[mediamosa_rest_call::VARS][$param . '_match'] = array(
+      $var_setup[mediamosa_rest_call::VARS][$param . '_match'] = array(
         mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_SEARCH_MATCH,
         mediamosa_rest_call::VAR_DESCRIPTION => 'Type matching for search parameter, try to use CQL instead.',
         mediamosa_rest_call::VAR_DEFAULT_VALUE => 'contains',
@@ -245,7 +245,7 @@ class mediamosa_core_cql {
       );
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
@@ -304,6 +304,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
   protected $app_ids;
   public static $search_keywords;
+  protected $cql_store_stats = FALSE;
 
   /**
    * Constructor
@@ -314,7 +315,10 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $this->search_keywords = array();
   }
 
-  public function mediamosa_core_parse_cql($str_cql) {
+  public function mediamosa_core_parse_cql($str_cql, $cql_store_stats = FALSE) {
+
+    // TRUE to call statistics for storage about this search.
+    $this->cql_store_stats = $cql_store_stats;
 
     if ($this->mediamosa_cql_parse($str_cql) === FALSE) {
       $cql_exception = $this->mediamosa_cql_last_exception_get();
@@ -453,7 +457,10 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @param array $keywords
    */
   private function mediamosa_save_search(array $keywords) {
-    mediamosa_statistics::log_event_search_query($keywords, $this->app_ids);
+    // Only when needed.
+    if ($this->cql_store_stats) {
+      mediamosa_statistics::log_event_search_query($keywords, $this->app_ids);
+    }
   }
 
   /**

@@ -75,6 +75,7 @@ class mediamosa_search {
     // Fill up default.
     $parameters += array(
       'cql' => NULL,
+      'cql_store_stats' => FALSE, // Do not store stats about the search by default.
       'acl_user_id' => NULL,
       'acl_group_ids' => array(),
       'acl_domain' => NULL,
@@ -163,6 +164,7 @@ class mediamosa_search {
     return mediamosa_asset_search::asset_search(
       $parameters['app_ids'],
       $parameters['cql'],
+      $parameters['cql_store_stats'],
       $parameters['acl_user_id'],
       $parameters['acl_group_ids'],
       $parameters['acl_domain'],
