@@ -166,7 +166,7 @@ class mediamosa_asset_search {
 
     if ($cql) {
       // Create the seach CQL.
-      $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $a_app_ids);
+      $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $cql_store_stats, $a_app_ids);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != '') {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] = $a_result_cql2sql['str_where'];

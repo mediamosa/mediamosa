@@ -131,13 +131,14 @@ class mediamosa_core_cql {
    * Start parsing the CQL for asset search.
    *
    * @param string $str_cql
+   * @param boolean $cql_store_stats
    * @param array $app_ids
    */
-  static public function parse_asset($str_cql, array $app_ids) {
+  static public function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
-    return $mediamosa_cql->mediamosa_core_parse_cql($str_cql);
+    return $mediamosa_cql->mediamosa_core_parse_cql($str_cql, $cql_store_stats);
   }
 
   /**

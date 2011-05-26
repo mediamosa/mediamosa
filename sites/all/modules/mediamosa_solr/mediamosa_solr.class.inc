@@ -112,7 +112,7 @@ class mediamosa_solr {
     }
 
     if (!empty($parameters['cql'])) {
-      $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['app_ids']);
+      $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['cql_store_stats'], $parameters['app_ids']);
 
       // When searching with ACL search rule set, we need special case.
       if (!empty($result['is_acl_search'])) {
