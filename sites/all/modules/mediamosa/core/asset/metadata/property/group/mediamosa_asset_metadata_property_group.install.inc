@@ -38,25 +38,6 @@ require_once 'mediamosa_asset_metadata_property_group_db.class.inc';
 function _mediamosa_asset_metadata_property_group_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_metadata_property_group_db::TABLE_NAME);
-
-  // Create the groups.
-  $a_property_groups = array(
-    'dublin_core',
-    'qualified_dublin_core',
-    'czp',
-  );
-
-  foreach ($a_property_groups as $property_group) {
-    $a_fields = array(
-      mediamosa_asset_metadata_property_group_db::NAME => $property_group,
-    );
-
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
-
-    db_insert(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->execute();
-  }
 }
 
 /**

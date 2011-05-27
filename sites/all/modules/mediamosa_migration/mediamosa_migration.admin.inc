@@ -161,7 +161,7 @@ function _mediamosa_migration_batch_finished($success, $results, $operations) {
     $message = count($results) . ' processed.';
 
     if (module_exists('mediamosa_solr')) {
-      $message .= t('You now need to re-index the Solr database, you can do that !here.', array('!here' => l('here', '')));
+      $message .= t('You now need to re-index the Solr database, you can do that !here.', array('!here' => l('here', 'admin/mediamosa/config/solr/indexer')));
     }
 
     // Mark that migration was successful.

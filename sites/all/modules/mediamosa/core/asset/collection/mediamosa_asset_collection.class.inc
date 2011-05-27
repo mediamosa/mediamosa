@@ -46,7 +46,7 @@ class mediamosa_asset_collection {
   static public function delete($asset_id = FALSE, $coll_id = FALSE) {
 
     if (!$asset_id && !$coll_id) {
-      // if none is provided, none will be deleted.
+      // When no values are provided, none will be deleted.
       return FALSE;
     }
 

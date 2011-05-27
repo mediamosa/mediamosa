@@ -47,9 +47,9 @@ function mediamosa_tool_help($path, $arg) {
 }
 
 function mediamosa_tool_mediamosa_register_rest_call_doc() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get transcode parameters.',
     mediamosa_rest_call::DESCRIPTION => 'Get transcode parameters.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/parameter',
@@ -71,24 +71,24 @@ function mediamosa_tool_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_tool_mediamosa_register_rest_call() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
   // Get transcode parameters.
-  $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_tool_params_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_tool_params',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**

@@ -24,15 +24,16 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The database class of the asset module.
-  */
+/**
+ * @file
+ * The asset collection DB contains the relation links between the assets and
+ * collections.
+ */
 
 class mediamosa_asset_collection_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_collection'; // 1.x name asset_collection.
+  const TABLE_NAME = 'mediamosa_asset_collection';
 
   // Database fields;
   const ASSET_ID = 'asset_id';

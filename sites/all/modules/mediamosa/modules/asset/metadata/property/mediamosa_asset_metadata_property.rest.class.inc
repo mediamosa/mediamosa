@@ -190,7 +190,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     $is_hidden = $this->get_param_value(self::IS_HIDDEN);
 
     // Create the property. Any problems will throw exception.
-    $property_id = mediamosa_asset_metadata_property::property_create($app_ids, $name, $type, 0, 0, $is_hidden);
+    $property_id = mediamosa_asset_metadata_property::property_create($app_id, $name, $type, 0, 0, $is_hidden);
 
     // Get the property.
     $property = mediamosa_asset_metadata_property::property_get_row($property_id);
@@ -252,7 +252,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     $delete = $this->get_param_value(self::DELETE);
 
     // Create the property. Any problems will throw exception.
-    mediamosa_asset_metadata_property::property_delete($app_ids, $name, $delete);
+    mediamosa_asset_metadata_property::property_delete($app_id, $name, $delete);
 
     // If we get here, it was successful. We have no output, but we are ok.
     $mediamosa->set_result_okay();

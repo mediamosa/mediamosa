@@ -38,16 +38,16 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Get a property group.
    *
-   * @param integer $propgroup_id (unique)
+   * @param integer $property_group_id (unique)
    * @return array
    */
-  static public function property_group_row_get($propgroup_id) {
+  static public function property_group_row_get($property_group_id) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_id = :propgroup_id',
       array(
         '#table_name' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
         '#propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
-        ':propgroup_id' => $propgroup_id,
+        ':propgroup_id' => $property_group_id,
       )
     )->fetchAssoc();
   }
@@ -55,16 +55,16 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Get a property group by name.
    *
-   * @param string $propgroup_name
+   * @param string $property_group_name
    * @return array
    */
-  static public function property_group_row_get_with_name($propgroup_name) {
+  static public function property_group_row_get_with_name($property_group_name) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_name = :propgroup_name',
       array(
         '#table_name' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
         '#propgroup_name' => mediamosa_asset_metadata_property_group_db::NAME,
-        ':propgroup_name' => $propgroup_name,
+        ':propgroup_name' => $property_group_name,
       )
     )->fetchAssoc();
   }
@@ -95,28 +95,128 @@ class mediamosa_asset_metadata_property_group {
    *  The new ID of the object.
    */
   static public function property_group_create($name) {
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_metadata_property_group_db::NAME => $name,
     );
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     return mediamosa_db::db_insert(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 
   /**
-   * Create a property group.
+   * Create a property group for application.
    *
    * @param integer $app_id
    *  The name of the property group.
+   *
    * @return integer
    *  The new ID of the object.
    */
   static public function property_group_create_with_appid($app_id) {
     return mediamosa_asset_metadata_property_group::property_group_create(self::APP_PREFIX . (int) $app_id);
+  }
+
+  /**
+   * Returns of property group already exists.
+   *
+   * @param string $property_group_name
+   *
+   * @return boolean
+   *  TRUE / FALSE
+   */
+  static public function property_group_installed($property_group_name) {
+    return mediamosa_db::db_exists(
+      mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+      array(mediamosa_asset_metadata_property_group_db::NAME => $property_group_name)
+    );
+  }
+
+  /**
+   * Create global property.
+   *
+   * @param integer $property_group_id
+   * @param string $property_name
+   * @param string $type
+   * @param array $options
+   *  An array of options;
+   *   - min_occurences: minimum of occurences as data (reserved).
+   *   - max_occurences: maximum of occurences as data (reserved).
+   *   - is_hidden: hide metadata when generating output.
+   *
+   */
+  static public function property_create($property_group_id, $property_name, $type, array $options = array()) {
+    // Default options.
+    $options += array(
+      'min_occurences' => 0,
+      'max_occurences' => 0,
+      'is_hidden' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      'app_id' => 0,
+    );
+
+    $fields = array(
+      mediamosa_asset_metadata_property_db::NAME => $property_name,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_unicode::strtoupper($type),
+      mediamosa_asset_metadata_property_db::PROPGROUP_ID => $property_group_id,
+      mediamosa_asset_metadata_property_db::APP_ID => $options['app_id'],
+      mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $options['max_occurences'],
+      mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $options['min_occurences'],
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => $options['is_hidden'],
+    );
+
+    // Add created value.
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_asset_metadata_property_db::TABLE_NAME)
+      ->fields($fields)
+      ->execute();
+  }
+
+  /**
+   * Delete the metadata group.
+   *
+   * Warning; will delete all metadata of the group.
+   *
+   * @param string $property_name
+   */
+  static public function property_group_delete($property_name) {
+
+    // Get the group.
+    $property_group = self::property_group_row_get_with_name($property_name);
+    if (empty($property_group)) {
+      return;
+    }
+
+    // Get the group id.
+    $property_group_id = $property_group[mediamosa_asset_metadata_property_group_db::ID];
+    assert($property_group_id);
+
+    // Get all prop_ids.
+    $prop_ids = mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
+      ->fields('amp', array(mediamosa_asset_metadata_property_db::PROPGROUP_ID))
+      ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $property_group_id)
+      ->execute()->fetchCol();
+
+    if (!empty($prop_ids)) {
+      // Delete all metadata of this property group.
+      mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME)
+        ->condition(mediamosa_asset_metadata_db::PROP_ID, $prop_ids, 'IN')
+        ->execute();
+    }
+
+    // Delete all properties.
+    mediamosa_db::db_delete(mediamosa_asset_metadata_property_db::TABLE_NAME)
+      ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $property_group_id)
+      ->execute();
+
+    // Delete the property group.
+    mediamosa_db::db_delete(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
+      ->condition(mediamosa_asset_metadata_property_group_db::ID, $property_group_id)
+      ->execute();
   }
 }

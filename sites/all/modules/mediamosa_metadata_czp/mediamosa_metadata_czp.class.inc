@@ -24,20 +24,16 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The database class of the asset metadata property group module.
-  */
+/**
+ * @file
+ * MediaMosa support for Metadata type Content Zoek Profiel (Content Search
+ * Profile).
+ */
 
-class mediamosa_asset_metadata_property_group_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_asset_metadata_property_group';
+/**
+ * Extend on the metadata property group for future.
+ */
+class mediamosa_metadata_czp extends mediamosa_asset_metadata_property_group {
 
-  // Database fields;
-  const ID = 'propgroup_id';
-  const NAME = 'propgroup_name';
-  const NAME_LENGTH = 50;
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+  const METADATA_PROPERTY_GROUP_NAME = 'czp';
 }
