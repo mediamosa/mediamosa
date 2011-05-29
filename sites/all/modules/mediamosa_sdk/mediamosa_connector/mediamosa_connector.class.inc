@@ -317,9 +317,22 @@ class mediamosa_connector {
       return FALSE;
     }
 
-    // Parse the response.
-    // FIXME: We only store the 1st cookie here(!).
-    list($this->cookie) = explode(';', $response->headers['set-cookie']);
+    $cookies = explode(';', $response->headers['set-cookie']);
+    $found_cookie = '';
+
+    // grab the first cookie containing SESS
+    foreach($cookies as $cookie)  {
+      $pos = strpos($cookie, 'SESS');
+      if($pos === false) {
+      } else {
+        $found_cookie = substr($cookie, $pos);
+        break;
+      }
+    }
+
+    if ($found_cookie)  {
+      $this->cookie = $found_cookie;
+    }
 
     // Store the cookie for later usage.
     $cookies = variable_get('mediamosa_connector_cookies', array());
