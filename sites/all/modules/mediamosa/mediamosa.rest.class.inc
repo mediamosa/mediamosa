@@ -36,10 +36,10 @@
 class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
 
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   public function do_call() {

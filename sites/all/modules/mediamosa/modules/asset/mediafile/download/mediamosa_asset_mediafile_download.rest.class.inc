@@ -76,6 +76,7 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     $path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id;
     $file = $path . DIRECTORY_SEPARATOR . $filename;
 
+    // Make sure the file exists we want to download.
     if (!is_dir($path) || !file_exists($file)) {
       throw new mediamosa_exception(0, 'Invalid download ticket');
     }

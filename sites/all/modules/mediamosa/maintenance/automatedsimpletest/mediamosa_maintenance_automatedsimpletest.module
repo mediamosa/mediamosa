@@ -119,27 +119,48 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
   switch ($path) {
     case 'admin/mediamosa/simpletests':
       $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
-      if ($interval < 1) {
-        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
-      }
-
-      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+      break;
 
     case 'admin/mediamosa/simpletests/normal':
       $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
-      if ($interval < 1) {
-        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
-      }
-
-      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+      break;
 
     case 'admin/mediamosa/simpletests/slow':
       $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
-      if ($interval < 1) {
-        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      break;
+  }
+
+  if (isset($interval)) {
+    $content = array();
+
+    if ($interval < 1) {
+      $content[] = '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+    }
+    else {
+      $content[] = '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+    }
+
+    // Get the possible current running test.
+    $test_running = variable_get('mediamosa_automatedsimpletest_timeout_tests_running');
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+    if (!empty($test_running)) {
+      $class_name = $test_running['class'];
+      $started = $test_running['started'];
+
+      $info = call_user_func(array($class_name, 'getInfo'));
+      if (!empty($info)) {
+        $content[] = '<p>' . t("Queued @queued test(s). Running test <b>'@name'</b>.", array('@name' => $info['name'], '@queued' => count($queue))) . '</p>';
+      }
+      else {
+        $content[] = '<p>' . t("Queued @queued test(s). Unknown test running!", array('@queued' => count($queue))) . '</p>';
       }
 
-      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+    }
+    else {
+      $content[] = '<p>' . t("Queued @queued test(s). No test running.", array('@queued' => count($queue))) . '</p>';
+    }
+
+    return implode('', $content);
   }
 }
 
@@ -400,7 +421,7 @@ function _mediamosa_maintenance_automatedsimpletest($show_tests = NULL) {
             $result = t('Test has timed out.');
             break;
           case mediamosa_maintenance_automatedsimpletest::RUNPHASE_FAILED:
-            $result = t('Test has failed to run.');
+            $result = t('Test has failed to run or stopped unexpectedly.');
             break;
 
           default:

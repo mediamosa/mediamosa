@@ -7,6 +7,7 @@ version = "3.0.0"
 core = 7.x
 
 ; Dependencies (module names)
+; Any dep. on mediamosa will make unittests end in error (missing class).
 ; dependencies[] = mediamosa
 
 ; Used files.

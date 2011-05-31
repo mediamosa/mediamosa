@@ -58,6 +58,14 @@ Other changes (not ticket related).
 - Fixed problem in statistics where to many keywords generated a PDO exception.
 - Internal searches using CQL will no longer store statistics about searches.
   Only searches from user input will be stored.
+- Fixed: Using .ogg testfile instead of .wmv for download test. It fails when
+  using the .wmv version because lack of memory with 128mb PHP setting.
+- Made mediamosa_app depended on mediamosa module.
+- Made mediamosa_acl depended on mediamosa_metadata_dc and _qdc modules.
+- Added message about running background test (if any), size of test queue on 
+  the automated simpletest testing page (developers only).
+- Fixed problem with download test where PHP memory ran out.
+- Fixed download problem when file contains spaces.
 
 MediaMosa 3.0 (build 1698)
 --------------------------
@@ -468,10 +476,6 @@ MediaMosa 2.3.0 Build (1032)
 - First phase for better workflow on toolset definition (See ticket #265).
 - Fixed numofvideos in REST call /collection search to show correct number of 
   videos in master-slaved collection. (See ticket #206).
-- Fixed numofvideos in REST call /collection/coll_id to show correct number of 
-  videos in master-slaved collection. (See ticket #206).
-- Fixed numofvideos in REST call /collection/coll_id/asset/count to return 
-  correct number of videos in master-slaved collection. (See ticket #206).
 - Permanent Still URLs when asset is not protected (See ticket #291).
 
 Other changes (not ticket related).
