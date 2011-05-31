@@ -33,32 +33,32 @@
  * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_error_mediamosa_register_rest_call() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
   );
 
-  $a_rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call_doc().
  */
 function mediamosa_error_mediamosa_register_rest_call_doc() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'List MediaMosa errorcodes.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve a list of MediaMosa errorcodes.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/errorcodes?limit=10&amp;offset=2&amp;order_direction=asc',
@@ -117,7 +117,7 @@ function mediamosa_error_mediamosa_register_rest_call_doc() {
 </items>'
   );
 
-  $a_rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['errorcodes/$code'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'View MediaMosa errorcode.',
     mediamosa_rest_call::DESCRIPTION => 'View the details of a MediaMosa errorcode.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/errorcodes/601',
@@ -132,5 +132,5 @@ function mediamosa_error_mediamosa_register_rest_call_doc() {
 </items>'
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }

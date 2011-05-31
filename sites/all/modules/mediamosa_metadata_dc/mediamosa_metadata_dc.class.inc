@@ -26,34 +26,13 @@
 
 /**
  * @file
- * Contains the global MediaMosa Rest calls.
+ * MediaMosa support for Metadata type Dublin Core.
  */
 
 /**
- * URI: /version
- * Get the current version number.
+ * Extend on the metadata property group for future.
  */
-class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
+class mediamosa_metadata_dc extends mediamosa_asset_metadata_property_group {
 
-  public function get_var_setup() {
-    $var_setup = array();
-
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($var_setup, FALSE);
-  }
-
-  public function do_call() {
-    $mediamosa = mediamosa::get();
-
-    // Get version array.
-    $version = mediamosa_version::get_current_version(TRUE);
-
-    $mediamosa->add_item(
-      array(
-        'version' => mediamosa_version::get_current_version_str(FALSE),
-        'build' => $version[mediamosa_version::BUILD],
-        'info' => $version[mediamosa_version::INFO],
-      )
-    );
-  }
+  const METADATA_PROPERTY_GROUP_NAME = 'dublin_core';
 }

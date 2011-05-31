@@ -145,7 +145,7 @@ class mediamosa_statistics {
     mediamosa_db::db_insert(mediamosa_statistics_search_request_db::TABLE_NAME)
       ->fields(array(
         mediamosa_statistics_search_request_db::APP_ID => $app_id,
-        mediamosa_statistics_search_request_db::KEYWORD => $keywords,
+        mediamosa_statistics_search_request_db::KEYWORD => mediamosa_unicode::substr($keywords, 0, mediamosa_statistics_search_request_db::KEYWORD_LENGTH),
         mediamosa_statistics_search_request_db::SEARCHED => mediamosa_datetime::utc_current_timestamp_now(),
       ))
       ->execute();

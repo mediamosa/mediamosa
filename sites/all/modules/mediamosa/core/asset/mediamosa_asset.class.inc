@@ -550,7 +550,8 @@ class mediamosa_asset {
         $row['still_id']
       );
 
-      // 2.x changes to database need to be aliased to 1.x name giving (for now).
+      // 2.x changes to database need to be aliased to 1.x name giving (for
+      // now).
       $aliases = array(
         mediamosa_asset_db::IS_UNAPPROPRIATE => 'is_unappropiate',
       );

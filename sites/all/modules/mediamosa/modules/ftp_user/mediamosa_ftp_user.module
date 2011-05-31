@@ -34,79 +34,79 @@
  */
 function mediamosa_ftp_user_mediamosa_register_rest_call() {
 
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['ftp'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/list'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp/list'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user/delete'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user/update'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/update'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp/$user/change_password'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/change_password'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_update_password',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-    $a_rest_calls['ftp/$user/change_status'][mediamosa_rest_call::METHOD_POST] = array(
+    $rest_calls['ftp/$user/change_status'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_user_update_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_user',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
@@ -114,10 +114,10 @@ function mediamosa_ftp_user_mediamosa_register_rest_call() {
  */
 function mediamosa_ftp_user_mediamosa_register_rest_call_doc() {
 
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['ftp/list'][mediamosa_rest_call::METHOD_GET] = // deprecated
-  $a_rest_calls['ftp'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp/list'][mediamosa_rest_call::METHOD_GET] = // deprecated
+  $rest_calls['ftp'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the listing of the FTP users.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp ',
     mediamosa_rest_call::DESCRIPTION => 'mediamosa supports upload files through ftp. There are a number of rest calls available to the ega builder to maintain a set of ftp users. The features needs a configured ftp server, with mod_sql. Ask on the forum for more information if needed.
@@ -133,8 +133,8 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array('userid' => 'ftp loginname'),
   );
 
-  $a_rest_calls['ftp/$user/create'][mediamosa_rest_call::METHOD_POST] = // deprecated
-  $a_rest_calls['ftp/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/create'][mediamosa_rest_call::METHOD_POST] = // deprecated
+  $rest_calls['ftp/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/create [POST] username=foofoo&password=foofoofoo ',
     mediamosa_rest_call::DESCRIPTION => 'Create a FTP user. A 3-digit text is added to the ftp username, to ensure unique ftpusers. The password must be at least 8 characters.',
@@ -142,7 +142,7 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp/$user/delete'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo/delete ',
     mediamosa_rest_call::DESCRIPTION => 'Deletes a ftp-user. The home directory is not cleaned.',
@@ -150,8 +150,8 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp/$user/update'][mediamosa_rest_call::METHOD_POST] = // deprecated
-  $a_rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/update'][mediamosa_rest_call::METHOD_POST] = // deprecated
+  $rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo [POST] active=false&password=barbar',
     mediamosa_rest_call::DESCRIPTION => 'Updates the ftp-user. A user can be disabled (with active), and the password can be changed.',
@@ -159,7 +159,7 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp/$user'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo [GET] ',
     mediamosa_rest_call::DESCRIPTION => 'Get all the available details of a ftp-user.',
@@ -173,7 +173,7 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp/$user/change_password'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/change_password'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'This REST call is deprecated, use ftp/$user [POST] instead.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::DESCRIPTION => '',
@@ -181,7 +181,7 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp/$user/change_status'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp/$user/change_status'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'This REST call is deprecated, use ftp/$user [POST] instead..',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::DESCRIPTION => '',
@@ -189,5 +189,5 @@ The /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }

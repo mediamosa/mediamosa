@@ -36,7 +36,7 @@ class mediamosa_asset_metadata_property_group_db {
 
   // Database fields;
   const ID = 'propgroup_id';
-  const NAME = 'propgroup_name'; // 1.x nane: name.
+  const NAME = 'propgroup_name';
   const NAME_LENGTH = 50;
   const CREATED = 'created';
   const CHANGED = 'changed';

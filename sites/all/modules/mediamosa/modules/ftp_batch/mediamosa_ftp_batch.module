@@ -34,23 +34,23 @@
  */
 function mediamosa_ftp_batch_mediamosa_register_rest_call() {
 
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_assets_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
@@ -58,7 +58,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
   );
 
   // internals
-  $a_rest_calls['ftp_batch/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp_batch/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
@@ -66,7 +66,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
   );
 
-  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
@@ -74,7 +74,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
   );
 
-  $a_rest_calls['ftp_batch/$batch_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp_batch/$batch_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
@@ -82,7 +82,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
   );
 
-  $a_rest_calls['ftp_batch/$batch_id/assets/add'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['ftp_batch/$batch_id/assets/add'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_ftp_batch_assets_add',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_ftp_batch',
@@ -90,7 +90,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
@@ -98,9 +98,9 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call() {
  */
 function mediamosa_ftp_batch_mediamosa_register_rest_call_doc() {
 
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve the listing of the FTP batches.',
     mediamosa_rest_call::DESCRIPTION => '',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch [GET]',
@@ -199,7 +199,7 @@ function mediamosa_ftp_batch_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch/$batch_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve a FTP Batch.',
     mediamosa_rest_call::DESCRIPTION => 'Gets detailed information about a batch.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch/23 [GET] ',
@@ -223,7 +223,7 @@ New mediafile ID: S7YrGbmIeZ4M36eTuLF03RfQ
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  $a_rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['ftp_batch/$batch_id/assets'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the assets linked to the batch.',
     mediamosa_rest_call::DESCRIPTION => 'Get a list of all assets touched by the given batch id. This means newly created asset_id\'s and modified asset_id\'s.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp_batch/23/assets ',
@@ -262,5 +262,5 @@ New mediafile ID: S7YrGbmIeZ4M36eTuLF03RfQ
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }

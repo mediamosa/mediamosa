@@ -111,7 +111,7 @@ class mediamosa_maintenance_automatedsimpletest {
    */
   static public function may_run() {
     // Variable is set by the REST call that is running the test.
-    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running');
 
     // may run?
     if (round(REQUEST_TIME - $run_last['started']) < (self::timeout_test_run() + 60)) { // extra 60 seconds.

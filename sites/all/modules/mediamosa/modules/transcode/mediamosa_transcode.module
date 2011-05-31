@@ -43,9 +43,9 @@ function mediamosa_transcode_help($path, $arg) {
 }
 
 function mediamosa_transcode_mediamosa_register_rest_call_doc() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the profile.',
     mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile',
@@ -60,7 +60,7 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Get a profile.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
@@ -83,7 +83,7 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
@@ -95,7 +95,7 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Delete a profile.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1/delete',
@@ -103,7 +103,7 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
-  $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode profile.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/create<br />
@@ -116,17 +116,17 @@ command=videobitrate:500000;size:320x200;&file_extension=xid&name=standard_xid&t
 </items>',
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_transcode_mediamosa_register_rest_call() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
   // Get listing profiles.
-  $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
@@ -134,7 +134,7 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Get listing profiles.
-  $a_rest_calls['video/transcode_profiles'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['video/transcode_profiles'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
@@ -143,7 +143,7 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Get listing profiles.
-  $a_rest_calls['transcode/profiles'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profiles'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
@@ -152,7 +152,7 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Get profile.
-  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
@@ -160,7 +160,7 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Create profile.
-  $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
@@ -168,7 +168,7 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Update profile.
-  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
@@ -177,14 +177,14 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   );
 
   // Delete profile.
-  $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**

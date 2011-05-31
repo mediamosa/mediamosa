@@ -24,10 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The database class of the asset module.
-  */
+/**
+ * @file
+ * The database class of the asset module.
+ */
 
 class mediamosa_asset_metadata_property_db {
   // ------------------------------------------------------------------ Consts.

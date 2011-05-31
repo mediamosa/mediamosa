@@ -134,9 +134,9 @@ function mediamosa_server_menu() {
  */
 function mediamosa_server_mediamosa_register_rest_call() {
 
-  $a_rest_calls = array();
+  $rest_calls = array();
 
-  $a_rest_calls['server/status'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['server/status'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Retrieve information about the (process) server.',
@@ -145,7 +145,7 @@ function mediamosa_server_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**

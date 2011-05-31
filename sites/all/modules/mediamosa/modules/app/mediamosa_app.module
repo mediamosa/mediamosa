@@ -124,7 +124,7 @@ function mediamosa_app_menu() {
 
   $items['admin/mediamosa/config/app'] = array(
     'title' => 'Client applications',
-    'description' => 'List all MediaMosa End User Applications.',
+    'description' => 'List all MediaMosa Client Applications.',
     'page callback' => '_mediamosa_app_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_APPS),
@@ -217,13 +217,15 @@ function mediamosa_app_menu() {
  */
 function _mediamosa_app_list() {
 
+  global $user;
+
   // Get all allowed apps.
   $app_allowed = mediamosa_app::collect_allowed_apps();
   $access_app_ids = array();
   foreach ($app_allowed as $app_id => $app_name) {
     $access_app_ids[] = $app_id;
   }
-  
+
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);

@@ -150,7 +150,9 @@ class mediamosa_rest {
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
           $regex_array[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
-          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
+
+          // Replace + for space, seems arg() does urldecode the %## values into chars, but not the + into spaces.
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = str_replace('+', ' ', ($request_uris[$pos]));
         }
         else {
           $regex_array[] = $uri_part;
@@ -203,7 +205,7 @@ class mediamosa_rest {
   static public function set_default_rest_call(array $rest_call) {
     // Make sure all are valid values.
     assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
-    assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
+    assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::STATUS_DISABLED)));
     assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]));
     assert(isset($rest_call[mediamosa_rest_call::MODULE_NAME]));
     assert(isset($rest_call[mediamosa_rest_call::VERSION]));

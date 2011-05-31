@@ -34,7 +34,7 @@
  * MEDIAMOSA_TEST_GROUP_
  */
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE', 'MediaMosa');
-define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP', 'MediaMosa End User Applications');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP', 'MediaMosa Client Applications');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET', 'MediaMosa Assets');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL', 'MediaMosa Assets Search / CQL');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE', 'MediaMosa Asset Mediafiles');
@@ -140,7 +140,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_sdk', 'simpletest', 'mediamosa', 'mediamosa_app'), $args));
+    $args = array_unique(array_merge(array('mediamosa_sdk', 'simpletest', 'mediamosa', 'mediamosa_app', 'mediamosa_metadata_dc', 'mediamosa_metadata_qdc'), $args));
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }

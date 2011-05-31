@@ -78,12 +78,12 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $uuid = mediamosa_db::uuid(1);
     $filename = "plus'q %20uote";
 
-    $a_mediafile_ext = array(
+    $mediafile_ext = array(
       mediamosa_asset_mediafile_db::ID => $uuid,
       mediamosa_asset_mediafile_db::FILENAME => $filename,
     );
 
-    $test_video = $this->getTestVideo();
+    $test_video = $this->getTestVideo_ogg();
     $target = mediamosa_configuration_storage::mediafile_id_filename_get($uuid);
 
     // Create the directory.
@@ -93,7 +93,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $this->copy($test_video, $target);
 
     // Create ticket.
-    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
+    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
 
     // For cleanup.
     $ticket_symlink = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id . DIRECTORY_SEPARATOR . $filename;
@@ -104,8 +104,8 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $download_servers = mediamosa_server::get_enabled_download();
     $this->assertTrue(!empty($download_servers), t('@num enabled download server(s) found.', array('@num' => $download_servers->rowCount())));
 
-    foreach ($download_servers as $downloadserver) {
-      $url = str_replace('{TICKET}', $ticket_id . '/' . urlencode($filename), mediamosa_server::get_server_url($downloadserver));
+    foreach ($download_servers as $download_server) {
+      $url = str_replace('{TICKET}', $ticket_id . '/' . urlencode($filename), mediamosa_server::get_server_url($download_server));
 
       $this->pass('URL: ' . $url);
 
@@ -124,21 +124,15 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
       $this->var_export(mediamosa_io::filesize($test_video), 'File original size');
       $this->var_export(strlen($result->data), 'File download size');
 
-      if ($result->data < mediamosa_io::filesize($test_video)) {
+      if (strlen($result->data) < mediamosa_io::filesize($test_video)) {
         $this->var_export_fail($result->data);
       }
 
-      // what we got downloaded, must be the same in size.
+      // What we got downloaded, must be the same in size.
       $this->assertTrue(mediamosa_io::filesize($test_video) == strlen($result->data), 'Download size matches the original media size.');
-    }
 
-    // Remove link ($ticket).
-    /*
-    $this->assertTrue(
-      self::file_exists($ticket_symlink) == FALSE,
-      t("Unlink: File '@target' is removed.", array('@target' => $ticket_symlink))
-    );
-    */
+      unset($result);
+    }
 
     // Remove the test file.
     $this->unlink($target);
