@@ -530,6 +530,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $asset_ids = mediamosa_search::asset(array(
       'app_ids' => $app_ids,
       'cql' => $cql,
+      'cql_store_stats' => TRUE,
       'acl_user_id' => $this->get_param_value(self::ACL_USER_ID),
       'acl_group_ids' => $this->get_param_value(self::ACL_GROUP_ID),
       'acl_domain' => $this->get_param_value(self::ACL_DOMAIN),
@@ -1053,6 +1054,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $asset_ids = mediamosa_search::asset(array(
       'app_ids' => $app_ids,
       'cql' => $cql,
+      'cql_store_stats' => FALSE,
       'acl_user_id' => $acl_user_id,
       'acl_group_ids' => $acl_group_id,
       'acl_domain' => $acl_domain,

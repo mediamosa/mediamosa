@@ -244,6 +244,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
       $asset_ids = mediamosa_search::asset(array(
         'app_ids' => $app_ids,
         'cql' => $cql,
+        'cql_store_stats' => TRUE,
         'limit' => $limit,
         'offset' => $offset,
         'show_deleted' => FALSE,
