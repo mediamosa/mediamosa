@@ -274,7 +274,24 @@ function mediamosa_node_mediamosa_app_image_style_validate($form, &$form_state) 
     $app_id = drupal_substr($app_id, 0, $pos);
   }
 
-  $form_state['values']['name'] = $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR . $form_state['values']['name'];
+  $form_state['values']['name'] = $form_state['input']['name'];
+  $new_name = explode(mediamosa_settings::IMAGE_STYLE_SEPARATOR, $form_state['values']['name']);
+  if (count($new_name) != 2 || $new_name[0] != $app_id || empty($new_name[1])) {
+    form_set_error($form_state['values']['name'], t('The image style name %name is not valid. It should be %app_id%separator{name}', array(
+      '%name' => $form_state['values']['name'],
+      '%app_id' => $app_id,
+      '%separator' => mediamosa_settings::IMAGE_STYLE_SEPARATOR,
+    )));
+  }
+}
+
+/**
+ * Form submit for image style.
+ */
+function mediamosa_node_mediamosa_app_image_style_submit($form, &$form_state) {
+  $args = arg();
+  $args[5] = $form_state['input']['name'];
+  drupal_goto(implode('/', $args));
 }
 
 /**
