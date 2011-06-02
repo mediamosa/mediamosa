@@ -673,6 +673,12 @@ abstract class mediamosa_rest_call {
   static public function get_param_value_global($param) {
     // Is mediamosa_params is set, we take priority on those.
     if (isset($GLOBALS['mediamosa_params'])) {
+      // If for any reason mediamosa_params is in _REQUEST, then it was supplied
+      // externally.
+      if (isset($_REQUEST['mediamosa_params'])) {
+        throw new mediamosa_exception_error_403();
+      }
+
       return isset($GLOBALS['mediamosa_params'][$param]) ? $GLOBALS['mediamosa_params'][$param] : NULL;
     }
 
@@ -740,6 +746,12 @@ abstract class mediamosa_rest_call {
      * simpletest) inside a page.
      */
     if (isset($GLOBALS['mediamosa_params'])) {
+      // If for any reason mediamosa_params is in _REQUEST, then it was supplied
+      // externally.
+      if (isset($_REQUEST['mediamosa_params'])) {
+        throw new mediamosa_exception_error_403();
+      }
+
       // Fill the $rest_args array with rest input.
       foreach ($GLOBALS['mediamosa_params'] as $key_params => $value_params) {
         if ($key_params == 'q') {
@@ -825,7 +837,7 @@ abstract class mediamosa_rest_call {
     }
 
     // All args are now known. Now walk through the setup and set the defaults.
-    foreach ($var_setup[self::VARS] as $param => &$a_var) {
+    foreach ($var_setup[self::VARS] as $param => &$var) {
 
       // Set by default off.
       $this->rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
@@ -836,8 +848,8 @@ abstract class mediamosa_rest_call {
         $this->rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
 
         // Defaults.
-        if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
-          $this->rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
+        if (isset($var[self::VAR_DEFAULT_VALUE])) {
+          $this->rest_args[$param][self::PARAM_VALUE] = $var[self::VAR_DEFAULT_VALUE];
           $this->rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default.
         }
       }
@@ -850,17 +862,17 @@ abstract class mediamosa_rest_call {
 
       // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
       // If REST has tried set then we throw exception.
-      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES && !$this->is_internal()) {
+      if (isset($var[self::VAR_IS_INTERNAL_ONLY]) && $var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES && !$this->is_internal()) {
         if ($this->isset_given_param($param) && !self::is_internal()) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $a_var[self::PARAM_TYPE]));
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $var[self::PARAM_TYPE]));
         }
 
-        $this->rest_args[$param][self::PARAM_VALUE] = isset($a_var[self::VAR_DEFAULT_VALUE]) ? $a_var[self::VAR_DEFAULT_VALUE] : NULL;
+        $this->rest_args[$param][self::PARAM_VALUE] = isset($var[self::VAR_DEFAULT_VALUE]) ? $var[self::VAR_DEFAULT_VALUE] : NULL;
       }
 
       // array check.
       if (isset($this->rest_args[$param][self::PARAM_VALUE])) {
-        if (!isset($a_var[self::VAR_IS_ARRAY]) || $a_var[self::VAR_IS_ARRAY] == self::VAR_IS_ARRAY_NO) {
+        if (!isset($var[self::VAR_IS_ARRAY]) || $var[self::VAR_IS_ARRAY] == self::VAR_IS_ARRAY_NO) {
           if (is_array($this->rest_args[$param][self::PARAM_VALUE])) {
             $this->rest_args[$param][self::PARAM_VALUE] = reset($this->rest_args[$param][self::PARAM_VALUE]);
           }
@@ -871,42 +883,42 @@ abstract class mediamosa_rest_call {
       }
 
       // Check if we need to trim it.
-      if (isset($a_var[self::VAR_TRIM_VALUE]) && $a_var[self::VAR_TRIM_VALUE] == self::VAR_TRIM_VALUE_YES) {
+      if (isset($var[self::VAR_TRIM_VALUE]) && $var[self::VAR_TRIM_VALUE] == self::VAR_TRIM_VALUE_YES) {
         $this->rest_args[$param][self::PARAM_VALUE] = trim($this->rest_args[$param][self::PARAM_VALUE]);
       }
 
       // Set default value for is_required.
-      if (!isset($a_var[self::VAR_IS_REQUIRED])) {
-        $a_var[self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+      if (!isset($var[self::VAR_IS_REQUIRED])) {
+        $var[self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
       }
 
       // Set read only to no, if not set.
-      if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
-        $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_NO;
+      if (!isset($var[self::VAR_IS_READ_ONLY])) {
+        $var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_NO;
       }
 
       // If override is set, override the GET/POST/URI input.
-      if (isset($a_var[self::VAR_OVERRIDE_VALUE])) {
-        $this->rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_OVERRIDE_VALUE];
+      if (isset($var[self::VAR_OVERRIDE_VALUE])) {
+        $this->rest_args[$param][self::PARAM_VALUE] = $var[self::VAR_OVERRIDE_VALUE];
         $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // lets simulate input from GET/POST/URI.
       }
 
       // Copy Read only status.
-      $this->rest_args[$param][self::PARAM_IS_READ_ONLY] = $a_var[self::VAR_IS_READ_ONLY];
+      $this->rest_args[$param][self::PARAM_IS_READ_ONLY] = $var[self::VAR_IS_READ_ONLY];
 
       // Is required.
-      $this->rest_args[$param][self::PARAM_IS_REQUIRED] = $a_var[self::VAR_IS_REQUIRED];
+      $this->rest_args[$param][self::PARAM_IS_REQUIRED] = $var[self::VAR_IS_REQUIRED];
 
       // if param is specified with range and the param is provided during rest
       // call or had defaulft value, then check range.
-      $this->rest_args[$param][self::PARAM_RANGE_START] = isset($a_var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_START] : NULL;
-      $this->rest_args[$param][self::PARAM_RANGE_END] = isset($a_var[self::VAR_RANGE_END]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_END] : NULL;
+      $this->rest_args[$param][self::PARAM_RANGE_START] = isset($var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $var[self::VAR_RANGE_START] : NULL;
+      $this->rest_args[$param][self::PARAM_RANGE_END] = isset($var[self::VAR_RANGE_END]) && $this->isset_param($param) ? $var[self::VAR_RANGE_END] : NULL;
 
       // Type.
-      $this->rest_args[$param][self::PARAM_TYPE] = $a_var[self::VAR_TYPE];
+      $this->rest_args[$param][self::PARAM_TYPE] = $var[self::VAR_TYPE];
 
       // Allowed values;
-      $this->rest_args[$param][self::PARAM_ALLOWED_VALUES] = isset($a_var[self::VAR_ALLOWED_VALUES]) ? $a_var[self::VAR_ALLOWED_VALUES] : array();
+      $this->rest_args[$param][self::PARAM_ALLOWED_VALUES] = isset($var[self::VAR_ALLOWED_VALUES]) ? $var[self::VAR_ALLOWED_VALUES] : array();
     }
 
     return $var_setup;
@@ -918,6 +930,7 @@ abstract class mediamosa_rest_call {
    * @param array $var_setup
    */
   protected function validate_rest_args(array $var_setup) {
+
     foreach ($this->rest_args as $name => $param) {
       if (empty($param[self::PARAM_TYPE])) {
         unset($this->rest_args[$name]); // set but not in var_set_up, unset.

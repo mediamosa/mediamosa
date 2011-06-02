@@ -24,11 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Authorization layer for assets, media functions.
-  */
-
+/**
+ * @file
+ * Authorization layer for assets, media functions.
+ */
 class mediamosa_acl {
 
   // ------------------------------------------------------------------ Consts.

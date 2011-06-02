@@ -44,9 +44,9 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -57,15 +57,15 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Asset ID.
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -74,7 +74,7 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // FIXME: No APP check, can get any supplement, just by suppling an asset id...
 
@@ -90,7 +90,7 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
       $supplement[mediamosa_asset_supplement_db::CHANGED] = mediamosa::utcdate2appdate($supplement[mediamosa_asset_supplement_db::CHANGED]);
       $supplement[mediamosa_asset_supplement_db::CREATED] = mediamosa::utcdate2appdate($supplement[mediamosa_asset_supplement_db::CREATED]);
 
-      $o_mediamosa->add_item($supplement);
+      $mediamosa->add_item($supplement);
     }
   }
 }
@@ -111,9 +111,9 @@ class mediamosa_rest_call_asset_supplement_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
 public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -129,27 +129,27 @@ public function get_var_setup() {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Create the supplement.
     $supplement_id = mediamosa_asset_supplement::create($app_id, $asset_id, $user_id);
 
     // Add id to response.
-    $o_mediamosa->add_item(array('supplement_id' => $supplement_id));
+    $mediamosa->add_item(array('supplement_id' => $supplement_id));
   }
 }
 
@@ -164,7 +164,7 @@ public function get_var_setup() {
  * 1.x media_management_update_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------=------------------ Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const SUPPLEMENT_ID = 'supplement_id';
@@ -174,11 +174,11 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
   const OAI_SCHEMALOCATION = 'oai_schemalocation';
   const SUPPLEMENT = 'supplement';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -220,21 +220,21 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
-  // ------------------------------------------------------------------ Override Process Rest Args.
-  protected function process_rest_args(array $a_var_setup) {
+  // ----------------------------------------------- Override Process Rest Args.
+  protected function process_rest_args(array $var_setup) {
 
     // Run parent so we can get the values.
-    parent::process_rest_args($a_var_setup);
+    parent::process_rest_args($var_setup);
 
     // Either all are not set or all are set.
-    $a_combined = array(self::OAI_NAMESPACEURI, self::OAI_PREFIX, self::OAI_SCHEMALOCATION);
+    $combined = array(self::OAI_NAMESPACEURI, self::OAI_PREFIX, self::OAI_SCHEMALOCATION);
 
     // If one of these are set, then make them all required.
     $oai_set = FALSE;
-    foreach ($a_combined as $param) {
+    foreach ($combined as $param) {
       if ($this->isset_given_param($param)) {
         $oai_set = TRUE;
         break;
@@ -243,30 +243,31 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
 
     // One or more set? Then all required; make them all required.
     if ($oai_set) {
-      foreach ($a_combined as $param) {
-        $a_var_setup[self::VARS][$param][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      foreach ($combined as $param) {
+        $var_setup[self::VARS][$param][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
       }
 
       // When providing OAI stuff, then the supplement is a XML.
-      $a_var_setup[self::VARS][self::SUPPLEMENT][self::VAR_TYPE] = mediamosa_sdk::TYPE_XML_OAI;
+      $var_setup[self::VARS][self::SUPPLEMENT][self::VAR_TYPE] = mediamosa_sdk::TYPE_XML_OAI;
     }
     else {
       // No OAI set? Then Supplement is required.
-      $a_var_setup[self::VARS][self::SUPPLEMENT][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::SUPPLEMENT][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
     }
 
     // Run parent again.
-    return parent::process_rest_args($a_var_setup);
+    return parent::process_rest_args($var_setup);
   }
+
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Get args.
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -284,7 +285,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     mediamosa_asset_supplement::update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement);
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -299,17 +300,17 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
  * 1.x media_management_delete_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ---------------------------------------------------------=--------- Consts.
   // Rest vars;
   const SUPPLEMENT_ID = 'supplement_id';
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::SUPPLEMENT_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_SUPPLEMENT_ID,
@@ -330,18 +331,18 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Get args.
     $supplement_id = $this->get_param_value(self::SUPPLEMENT_ID);
@@ -351,6 +352,6 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
     mediamosa_asset_supplement::delete($app_id, $user_id, $supplement_id);
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

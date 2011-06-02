@@ -215,8 +215,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Get a list of servers and process the job status.
-   *
-   * 1.x: _vpx_jobhandler_check_status_all_servers
    */
   static public function check_status_all_servers() {
     $job_processor_servers = mediamosa_server::get_enabled_job_processor();
@@ -331,8 +329,6 @@ class mediamosa_job_scheduler {
   /**
    * Send a delete on server to remove job.
    *
-   * 1.x: _vpx_jobhandler_remove_job_on_server
-   *
    * @param string $uri
    * @param integer $job_id
    */
@@ -345,20 +341,13 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Haal de informatie van een transcodejob op met daarbij gekoppeld de
-   * filename van het orginele bron bestand
-   * velden: asset_id, filename
-   */
-  /**
    * Get the informatiob of transcode job plus
    * related info.
-   *
-   * 1.x: _vpx_jobhandler_get_transcodejob_info
    *
    * @param $job_id
    */
   function get_transcodejob_info($job_id) {
-    $a_result = array();
+    $result = array();
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', 'mf.asset_id = j.asset_id');
@@ -372,7 +361,7 @@ class mediamosa_job_scheduler {
 
     if ($result_row) {
       $new_filename = mediamosa_io::get_base_filename($result_row[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $result_row[mediamosa_asset_mediafile_db::FILE_EXTENSION];
-      $a_result = array(
+      $result = array(
         'asset_id' => $result_row[mediamosa_job_db::ASSET_ID],
         'owner' => $result_row[mediamosa_job_db::OWNER_ID],
         'app_id' => $result_row[mediamosa_job_db::APP_ID],
@@ -389,13 +378,11 @@ class mediamosa_job_scheduler {
       self::log('Could not find original mediafile for job_id @job_id <br /><br />@link', array('@job_id' => $job_id, '@link' => $link));
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
    * Create WMV job.
-   *
-   * 1.x: _vpx_jobhandler_create_wmv_job
    *
    * @param integer $job_id
    * @param $asset_id
@@ -634,7 +621,7 @@ class mediamosa_job_scheduler {
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
     // And deleting with asset_id is definetly not a good idea, while we have multiple stills per mediafile
-    //_media_management_delete_still($asset_id);
+    // _media_management_delete_still($asset_id);
 
     // Add record to the mediafile metadata table.
     if (is_array($filenames)) {
@@ -668,8 +655,6 @@ class mediamosa_job_scheduler {
   /**
    * Called when transcode failed or was canceled.
    *
-   * 1.x: _vpx_jobhandler_parse_failed_transcode
-   *
    * @param integer $job_id
    * @param string $mediafile_id_dest
    */
@@ -701,8 +686,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Get the list and find empty slots to start jobs.
-   *
-   * 1.x: _vpx_jobhandler_start_new_jobs
    */
   static public function start_new_jobs() {
     // Get for every active server (status ON)
@@ -1064,43 +1047,41 @@ class mediamosa_job_scheduler {
   /**
    * Based on job type, get more information.
    *
-   * 1.x: _jobhandler_get_job_parameters
-   *
    * @param $job_id
    * @param $job_type
    * @param $mediafile_id
    */
   static public function get_job_parameters($job_id, $job_type, $mediafile_id) {
-    $a_result = array();
+    $result = array();
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
         // Get job transcode.
-        $a_job_transcode = mediamosa_job_transcode::get($job_id);
+        $job_transcode = mediamosa_job_transcode::get($job_id);
 
-        $a_result["profile_id"] = $a_job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID];
-        $a_result["tool"] = $a_job_transcode[mediamosa_job_transcode_db::TOOL];
-        $a_result["file_extension"] = $a_job_transcode[mediamosa_job_transcode_db::FILE_EXTENSION];
-        $a_result["command"] = self::map_parameters($a_job_transcode[mediamosa_job_transcode_db::TOOL], $a_job_transcode[mediamosa_job_transcode_db::COMMAND], $mediafile_id);
+        $result["profile_id"] = $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID];
+        $result["tool"] = $job_transcode[mediamosa_job_transcode_db::TOOL];
+        $result["file_extension"] = $job_transcode[mediamosa_job_transcode_db::FILE_EXTENSION];
+        $result["command"] = self::map_parameters($job_transcode[mediamosa_job_transcode_db::TOOL], $job_transcode[mediamosa_job_transcode_db::COMMAND], $mediafile_id);
         break;
 
       case mediamosa_job_db::JOB_TYPE_STILL:
         $query_job = mediamosa_job_still::get($job_id);
 
         if ($query_job) {
-          $a_result["blackstill_check"] = $query_job['blackstill_check'];
-          $a_result["still_parameters"] = unserialize($query_job['still_parameters']);
-          $a_result["frametime"] = $a_result["still_parameters"]['frametime'];
-          $a_result["h_padding"] = $a_result["still_parameters"]['h_padding'];
-          $a_result["v_padding"] = $a_result["still_parameters"]['v_padding'];
-          $a_result["tag"] = $a_result["still_parameters"]['tag'];
+          $result["blackstill_check"] = $query_job['blackstill_check'];
+          $result["still_parameters"] = unserialize($query_job['still_parameters']);
+          $result["frametime"] = $result["still_parameters"]['frametime'];
+          $result["h_padding"] = $result["still_parameters"]['h_padding'];
+          $result["v_padding"] = $result["still_parameters"]['v_padding'];
+          $result["tag"] = $result["still_parameters"]['tag'];
 
           $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
           $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
           // Calculating aspect ratio
           // Base value
-          $target_size = $a_result["still_parameters"]['size'];
+          $target_size = $result["still_parameters"]['size'];
           switch ($query_job['size']) {
             case 'sqcif':
               $target_size = '128x96';
@@ -1219,34 +1200,34 @@ class mediamosa_job_scheduler {
           $still_padding = mediamosa_app::get_still_padding_value($app_id);
 
           // Get the parameter string.
-          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding'], $still_padding == mediamosa_app_db::STILL_PADDING_YES);
+          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $result['h_padding'], $result['v_padding'], $still_padding == mediamosa_app_db::STILL_PADDING_YES);
 
           // Set result
           if ($cmmd) {
-            $a_result['size'] = $cmmd['width'] . 'x' . $cmmd['height'];
-            $a_result['h_padding'] = $cmmd['h_padding'];
-            $a_result['v_padding'] = $cmmd['v_padding'];
+            $result['size'] = $cmmd['width'] . 'x' . $cmmd['height'];
+            $result['h_padding'] = $cmmd['h_padding'];
+            $result['v_padding'] = $cmmd['v_padding'];
           }
           else {
             if ($width && $height) {
-              $a_result['size'] = $width . 'x' . $height;
+              $result['size'] = $width . 'x' . $height;
             }
             else {
-              $a_result['size'] = '176x144';
+              $result['size'] = '176x144';
             }
-            $a_result['h_padding'] = 0;
-            $a_result['v_padding'] = 0;
+            $result['h_padding'] = 0;
+            $result['v_padding'] = 0;
           }
         }
         else {
           // Something went wrong in the analyse script
           // Fall back to the default values
-          $a_result['frametime'] = mediamosa_settings::STILL_DEFAULT_FRAME_TIME;
-          $a_result['size'] = '176x144';
-          $a_result['h_padding'] = 0;
-          $a_result['v_padding'] = 0;
-          $a_result['blackstill_check'] = 'FALSE';
-          $a_result['tag'] = '';
+          $result['frametime'] = mediamosa_settings::STILL_DEFAULT_FRAME_TIME;
+          $result['size'] = '176x144';
+          $result['h_padding'] = 0;
+          $result['v_padding'] = 0;
+          $result['blackstill_check'] = 'FALSE';
+          $result['tag'] = '';
         }
         break;
 
@@ -1254,20 +1235,18 @@ class mediamosa_job_scheduler {
         break;
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
    * Check and map profile parameters.
-   *
-   * 1.x: _vpx_jobhandler_map_parameters
    *
    * @param string $tool
    * @param string $command
    * @param string $mediafile_id
    */
   static public function map_parameters($tool, $command, $mediafile_id) {
-    $a_cli = array();
+    $command_line = array();
 
     // First determine if we have to alter the aspect ratio.
     $alter_size_param = FALSE;
@@ -1296,7 +1275,7 @@ class mediamosa_job_scheduler {
           $command);
 
         if ($value != '') {
-          $a_cli[] = $value;
+          $command_line[] = $value;
         }
       }
     }
@@ -1326,11 +1305,11 @@ class mediamosa_job_scheduler {
       // Get the parameter string.
       $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $is_padding);
       if (!empty($ratio)) {
-        $a_cli[] = $ratio;
+        $command_line[] = $ratio;
       }
     }
 
-    return implode(';', $a_cli);
+    return implode(';', $command_line);
   }
 
   /**

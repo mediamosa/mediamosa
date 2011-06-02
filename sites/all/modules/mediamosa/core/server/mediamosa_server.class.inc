@@ -103,7 +103,10 @@ class mediamosa_server {
   }
 
   /**
-   * Get random upload server.
+   * Get upload server by its node ID.
+   *
+   * @param integer $nid
+   *  The node ID.
    */
   static public function get_upload_by_nid($nid) {
     return mediamosa_db::db_query(

@@ -52,6 +52,9 @@ class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
     // Get content.
     $supplement = file_get_contents($this->getTestImage_BlobGif());
 
+    // We got something?
+    $this->assertTrue(strlen($supplement));
+
     // Create supplement.
     $supplement_id = $this->createAssetSupplement($asset_id);
 

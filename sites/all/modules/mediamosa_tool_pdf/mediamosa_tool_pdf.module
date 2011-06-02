@@ -29,8 +29,6 @@
  * PDF tool module.
  */
 
-// Constants.
-
 /**
  * Implements hook_mediamosa_tool_can_analyse().
  */

@@ -10,6 +10,9 @@ Known issues;
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
+- Some installations will fail the 'Asset supplement - add tests'. For unknown
+  reason(s), the web server is not receiving the supplement data. Behaviour 
+  observed on nginx/0.7.67, while on nginx/0.7.65 the test ran without problems.
 
 OpenAPI development:
 - Alternative output formats (JSON, Atom, RSS)
