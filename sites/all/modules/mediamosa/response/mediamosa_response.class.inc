@@ -170,6 +170,11 @@ class mediamosa_response extends mediamosa {
         session_regenerate_id(FALSE);
       }
 
+      // Some stuff is not setup when we are called inside simpletest and we
+      // are called as REST call inside the test. Setup now if we are in
+      // simpletest.
+      mediamosa::setup_simpletest();
+
       // Make sure response type is set.
       if (empty($this->rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $this->rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_response::RESPONSE_TYPE_XML;

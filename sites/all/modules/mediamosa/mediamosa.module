@@ -633,7 +633,6 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
     /**
      * Image style to client.
      */
-
     $app_id = arg(5);
 
     if (!isset($app_id) || !is_numeric($app_id)) {

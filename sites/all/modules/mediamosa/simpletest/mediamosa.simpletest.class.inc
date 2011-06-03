@@ -158,13 +158,48 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Lets put debug on high.
     mediamosa::variable_set('mediamosa_debug_level', 10);
+
+    // Must be TRUE;
+    assert(mediamosa::in_simpletest_sandbox());
   }
 
   /**
-   * Implements tearDown().
-   * Because drupal doesn't tear down our tables, we have to do it.
+   * In Drupal Web Test class, the error log is only visible when verbose is
+   * on. Lets dump it anyway.
+   */
+  protected function mediamosa_dump_error_log() {
+    // FIXME: public:// does not seem to work here.
+    $log = 'sites/default/files/simpletest/' . substr($this->databasePrefix, 10) . '/error.log';
+    $found = FALSE;
+    if (file_exists($log)) {
+      $found = 0;
+      foreach (file($log) as $line) {
+        if (preg_match('/\[.*?\] (.*?): (.*?) in (.*) on line (\d+)/', $line, $match)) {
+          // Parse PHP fatal errors for example: PHP Fatal error: Call to
+          // undefined function break_me() in /path/to/file.php on line 17
+          $caller = array(
+            'line' => $match[4],
+            'file' => $match[3],
+            'function' => 'Unknown',
+          );
+          $this->assert(FALSE, $line, $match[1], $caller);
+        }
+        else {
+          $this->assert(FALSE, $line, 'Error log dump');
+        }
+        $found++;
+      }
+    }
+
+    return $found;
+  }
+
+  /**
+   * Ending the test.
    */
   protected function tearDown() {
+    // Dump our PHP error log 1st (if any).
+    $this->mediamosa_dump_error_log();
 
     // Unlink files.
     foreach ($this->unlinks as $filename) {
@@ -177,8 +212,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Clean up...
     $this->unlinks = array();
 
-    // For some reason our tables are not dropped by teardown parent.
-    // So we need to do it ourselfs.
+    // Our tables are not dropped because simpletest uses a test profile in
+    // which our tables are not present. So we need to do it ourselfs.
     // We'll only drop tables from this simpletest.
     $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 

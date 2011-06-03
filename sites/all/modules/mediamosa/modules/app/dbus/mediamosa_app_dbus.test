@@ -40,7 +40,26 @@ class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
   }
 
   function setUp() {
-    parent::setUp('mediamosa_app_dbus');
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Our needed modules.
+    $args = array_unique(
+      array_merge(
+        array(
+          'mediamosa_app_dbus',
+        ),
+        $args
+      )
+    );
+
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
 
     // Create and login user
     $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
@@ -49,10 +68,9 @@ class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
 
   function testAppAuthentication() {
     // Create all stuff needed for this test.
-    $a_app = $this->createApp();
-    $app_name = $a_app[mediamosa_app_db::APP_NAME];
-    $shared_key = $a_app[mediamosa_app_db::SHARED_KEY];
-
+    $app = $this->createApp();
+    $app_name = $app[mediamosa_app_db::APP_NAME];
+    $shared_key = $app[mediamosa_app_db::SHARED_KEY];
 
     // Step 1: start auth and capture cookie
     $response = $this->restCall('login', 'POST', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 ' . $app_name));
@@ -72,7 +90,6 @@ class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
 
     $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::get_server_guid(), 'Login fase 2 success');
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
-
 
     // Now test with suppling wrong password.
 

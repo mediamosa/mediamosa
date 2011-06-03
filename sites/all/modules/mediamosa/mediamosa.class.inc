@@ -459,18 +459,25 @@ class mediamosa {
    * @return boolean
    */
   static public function show_drupal_login() {
+    // We allow login and password recovery.
+    $allowed_paths = array(
+      'user/login',
+      'user/password',
+    );
 
-    // Check if interface is enabled, if so, check if we are logged in.
-    // If not logged in, allow user/login and user/password url.
-    if (mediamosa::is_admin_enabled()) {
-      if (user_is_logged_in()) {
-        // Logged in as Drupal user, allow.
-        return TRUE;
-      }
+    // Admin not enabled, then we don't do Drupal.
+    if (!mediamosa::is_admin_enabled()) {
+      return FALSE;
+    }
 
-      // Not logged in as Drupal user.
-      // We allow login and password recovery.
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password') {
+    // We are logged in Drupal? Then allow Drupal.
+    if (user_is_logged_in()) {
+      return TRUE;
+    }
+
+    // Now see if we are at one of out allowed Drupal paths.
+    foreach ($allowed_paths as $allowed_path) {
+      if (mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen($allowed_path)) == $allowed_path) {
         return TRUE;
       }
     }
@@ -563,11 +570,28 @@ class mediamosa {
   }
 
   /**
+   * If the REST call was called inside an simpletest, then error_log() will
+   * be lost. Setup error log so we log in the simpletest.
+   */
+  static protected function setup_simpletest() {
+    if (!self::in_simpletest_sandbox()) {
+      return;
+    }
+
+    $public_files_directory  = variable_get('file_public_path');
+    assert(!empty($public_files_directory));
+
+    // Log fatal errors.
+    ini_set('log_errors', 1);
+    ini_set('error_log', $public_files_directory . '/error.log');
+  }
+
+  /**
    * Wrapper around the drupal_http_request function.
    * See drupal functions for details.
    */
-  static public function drupal_http_request($url, array $a_options = array()) {
-    return drupal_http_request($url, $a_options);
+  static public function drupal_http_request($url, array $options = array()) {
+    return drupal_http_request($url, $options);
   }
 
   /**

@@ -108,8 +108,15 @@ class mediamosa_debug {
   /**
    * Log without logging to the database, go to php.log instead.
    */
-  static public function error_log($message, $filename = NULL, $line = NULL) {
-    error_log(strtr('In @filename at line @line; @message.', array('@filename' => ($filename ? $filename : 'unknown'), '@line' => (isset($line) ? $line : 'unknown'), '@message' => $message)));
+  static public function error_log($message, $file = NULL, $line = NULL) {
+
+    if (empty($file)) {
+      $caller = _drupal_get_last_caller(debug_backtrace());
+      $file = $caller['file'];
+      $line = $caller['line'];
+    }
+
+    error_log(strtr('MediaMosa debug: @message in @file on line @line', array('@file' => (!empty($file) ? $file : 'unknown'), '@line' => (isset($line) ? $line : 'unknown'), '@message' => drupal_ucfirst($message))));
   }
 
   /**

@@ -69,6 +69,10 @@ Other changes (not ticket related).
   the automated simpletest testing page (developers only).
 - Fixed problem with download test where PHP memory ran out.
 - Fixed download problem when file contains spaces.
+- Added dump of error_log in our unit tests when present.
+- The PHP error_log will now be correctly set during simpletest and we are
+  inside a PHP unit test. Previously lost any error_log() entries inside REST
+  calls.
 
 MediaMosa 3.0 (build 1698)
 --------------------------

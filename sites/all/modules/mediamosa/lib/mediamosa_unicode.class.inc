@@ -135,7 +135,9 @@ class mediamosa_unicode {
   }
 
   /**
-   * Replacement array for invalid chars.
+   * Return an array with any multi-byte value that XML can not handle. Good
+   * test for this is reading the XML into the SimpleTest class. Will fail if
+   * any of these chars are used.
    */
   static public function get_invalid_char_str() {
     static $invalid_char = array();
@@ -155,7 +157,8 @@ class mediamosa_unicode {
    * Although XML only requires < > " ' & to be encoded, we have problems with
    * non-asc values generating invalid XML when using SimpleXML class.
    *
-   * This function will correctly encode non-asc values.
+   * Even if we encode them to &#00 values, the SimpleXML class will fail
+   * loading the XML. Current fix is now replacing the invalid values with '?'.
    *
    * @param string $text
    *  The value to encode.

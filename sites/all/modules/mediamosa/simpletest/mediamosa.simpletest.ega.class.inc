@@ -53,7 +53,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // current server settings to be copied into our test environment.
   protected $default_servers = FALSE; // FALSE: use the current server setup.
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Implements setUp().
    */
