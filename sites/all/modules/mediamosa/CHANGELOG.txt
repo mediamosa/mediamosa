@@ -29,6 +29,14 @@ TODO: (v3.0)
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
+- Add metadata module enable on migration 1.7->3.x scripts.
+
+
+MediaMosa 3.0.2 (build 1724)
+----------------------------
+Other changes (not ticket related).
+- Upgraded Drupal 7.0 to Drupal 7.2 release.
+
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
 - Transcoding from mp3 to mp4 generates an error (See vpcore ticket #241)

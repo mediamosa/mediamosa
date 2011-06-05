@@ -598,20 +598,27 @@ function drupal_settings_initialize() {
     // in drupal_settings_initialize().
     if (!empty($_SERVER['HTTP_HOST'])) {
       $cookie_domain = $_SERVER['HTTP_HOST'];
-      // Strip leading periods, www., and port numbers from cookie domain.
-      $cookie_domain = ltrim($cookie_domain, '.');
-      if (strpos($cookie_domain, 'www.') === 0) {
-        $cookie_domain = substr($cookie_domain, 4);
-      }
-      $cookie_domain = explode(':', $cookie_domain);
-      $cookie_domain = '.' . $cookie_domain[0];
     }
   }
+
+  // Strip leading periods, and port numbers from cookie domain.
+  $cookie_domain = ltrim($cookie_domain, '.');
+  $cookie_domain = '.' . array_shift(explode(':', $cookie_domain));
+
   // Per RFC 2109, cookie domains must contain at least one dot other than the
   // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
+  // todo: how about co.uk type of domains?
   if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
+    if (count(explode('.', $cookie_domain)) > 3) {
+      // remove first part before the dot and replace by a dot only
+      $cookie_domain = explode('.', substr($cookie_domain, 1), 2);
+      array_shift($cookie_domain);
+      $cookie_domain = '.' . implode($cookie_domain);
+    }
+
     ini_set('session.cookie_domain', $cookie_domain);
   }
+
   // To prevent session cookies from being hijacked, a user can configure the
   // SSL version of their website to only transfer session cookies via SSL by
   // using PHP's session.cookie_secure setting. The browser will then use two
@@ -2184,6 +2191,17 @@ function drupal_valid_test_ua() {
 
   if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
     list(, $prefix, $time, $salt, $hmac) = $matches;
+
+    // Hotfix problem when using load balancers; As filectime() and fileinode()
+    // will not work for our MediaMosa simpletests running on load balancers or
+    // different REST servers, then filectime(__FILE__) . fileinode(__FILE__)
+    // will never return the same for each server. Also same problem when
+    // mixing linux and windows servers. Also time() might be different on
+    // servers as these servers might not be synced to the same clock.
+    // FIXME: we do need to add $drupal_hash_salt.
+    $test_prefix = $prefix;
+    return $test_prefix;
+
     $check_string =  $prefix . ';' . $time . ';' . $salt;
     // We use the salt from settings.php to make the HMAC key, since
     // the database is not yet initialized and we can't access any Drupal variables.
