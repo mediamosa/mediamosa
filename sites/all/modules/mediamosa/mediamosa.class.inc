@@ -454,31 +454,6 @@ class mediamosa {
   }
 
   /**
-   * Bypass Drupal 'user/' path collisions.
-   *
-   * @return boolean
-   */
-  static public function show_drupal_login() {
-
-    // Check if interface is enabled, if so, check if we are logged in.
-    // If not logged in, allow user/login and user/password url.
-    if (mediamosa::is_admin_enabled()) {
-      if (user_is_logged_in()) {
-        // Logged in as Drupal user, allow.
-        return TRUE;
-      }
-
-      // Not logged in as Drupal user.
-      // We allow login and password recovery.
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password') {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
    * Exit the page with an 503 error.
    *
    * @param string $message
