@@ -454,38 +454,6 @@ class mediamosa {
   }
 
   /**
-   * Bypass Drupal 'user/' path collisions.
-   *
-   * @return boolean
-   */
-  static public function show_drupal_login() {
-    // We allow login and password recovery.
-    $allowed_paths = array(
-      'user/login',
-      'user/password',
-    );
-
-    // Admin not enabled, then we don't do Drupal.
-    if (!mediamosa::is_admin_enabled()) {
-      return FALSE;
-    }
-
-    // We are logged in Drupal? Then allow Drupal.
-    if (user_is_logged_in()) {
-      return TRUE;
-    }
-
-    // Now see if we are at one of out allowed Drupal paths.
-    foreach ($allowed_paths as $allowed_path) {
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen($allowed_path)) == $allowed_path) {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
    * Exit the page with an 503 error.
    *
    * @param string $message
