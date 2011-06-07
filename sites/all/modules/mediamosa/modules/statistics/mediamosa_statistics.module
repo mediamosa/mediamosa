@@ -567,7 +567,7 @@ function mediamosa_statistics_mediamosa_configuration_collect() {
 /**
  * Implements the hook_mediamosa_configuration_validate()
  */
-function mediamosa_statistics_mediamosa_configuration_validate($form, &$form_state) {
+function mediamosa_statistics_mediamosa_configuration_validate($form, $form_state) {
   $path = $form_state['values']['mediamosa_statistics_streaming_log_path'];
   $timezone = $form_state['values']['mediamosa_statistics_streaming_log_timezone'];
   $ticket = $form_state['values']['mediamosa_statistics_streaming_log_ticket'];

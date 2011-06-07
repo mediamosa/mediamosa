@@ -32,7 +32,7 @@ module_load_include('theme.inc', 'mediamosa_maintenance_status', 'mediamosa_main
  */
 
 /**
- * Result severity -- Informational message only.
+ * Result severity -- Informative messages only.
  */
 define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO', -1);
 
@@ -191,6 +191,13 @@ function _mediamosa_maintenance_status_status() {
   global $user;
 
   $output = array();
+
+  // Ok first time ever on the home page will cause an bug in the theming.
+  // Lets fix it by reseting the status page.
+  if (!variable_get('mediamosa_status_page_hack')) {
+    variable_del('mediamosa_status_last_time');
+    variable_set('mediamosa_status_page_hack', TRUE);
+  }
 
   // For the available codecs fieldset.
   drupal_add_js('misc/form.js');

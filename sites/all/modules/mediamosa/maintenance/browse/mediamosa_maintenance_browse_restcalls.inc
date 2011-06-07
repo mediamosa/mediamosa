@@ -24,15 +24,15 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Browser of REST calls.
-  */
+/**
+ * @file
+ * Browser of REST calls.
+ */
 
 /**
- * The main browse form.
+ * The main REST call browse page.
  */
-function mediamosa_maintenance_browse_restcall_form() {
+function _mediamosa_maintenance_browse_restcall_page() {
 
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
@@ -41,26 +41,261 @@ function mediamosa_maintenance_browse_restcall_form() {
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   drupal_set_breadcrumb($breadcrumb);
 
+  // Add our CSS.
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse_restcalls.css');
+
+  $build = array();
+
+  $build['restcalls_filter'] = drupal_get_form('mediamosa_maintenance_browse_restcall_filter_form');
+  $build['restcalls_list'] = drupal_get_form('mediamosa_maintenance_browse_restcall_list_form');
+
+  return $build;
+}
+
+function _mediamosa_maintenance_browse_restcalls_filters() {
+
+  // Collect the versions.
+  $versions = array();
+
+  // Need restcalls for versions.
+  $rest_calls = _mediamosa_maintenance_browse_restcalls_get();
+
+  // Collect versions.
+  foreach ($rest_calls as $uri => $method_rest_call) {
+    foreach ($method_rest_call as $method => $rest_call) {
+      $versions[$rest_call[mediamosa_rest_call::VERSION]] = $rest_call[mediamosa_rest_call::VERSION];
+    }
+  }
+
+  ksort($versions);
+
+  return array(
+    mediamosa_rest_call::STATUS => array(
+      'title' => t('Status'),
+      'options' => array(mediamosa_rest_call::STATUS_ACTIVE => t('active'), mediamosa_rest_call::STATUS_DEPRECATED => t('deprecated'), mediamosa_rest_call::STATUS_DISABLED => t('disabled')),
+      'default' => array(mediamosa_rest_call::STATUS_ACTIVE => mediamosa_rest_call::STATUS_ACTIVE),
+    ),
+    mediamosa_rest_call::METHOD => array(
+      'title' => t('Method'),
+      'options' => array(
+        mediamosa_rest_call::METHOD_DELETE => t('DELETE'),
+        mediamosa_rest_call::METHOD_GET => t('GET'),
+        mediamosa_rest_call::METHOD_POST => t('POST'),
+        mediamosa_rest_call::METHOD_PUT => t('PUT'),
+      ),
+      'default' => array(
+        mediamosa_rest_call::METHOD_DELETE => mediamosa_rest_call::METHOD_DELETE,
+        mediamosa_rest_call::METHOD_GET => mediamosa_rest_call::METHOD_GET,
+        mediamosa_rest_call::METHOD_POST => mediamosa_rest_call::METHOD_POST,
+        mediamosa_rest_call::METHOD_PUT => mediamosa_rest_call::METHOD_PUT,
+      ),
+    ),
+    mediamosa_rest_call::VERSION => array(
+      'title' => t('Version'),
+      'options' => $versions,
+      'default' => $versions,
+    ),
+    mediamosa_rest_call::FOR_INTERFACE => array(
+      'title' => t('Interface'),
+      'options' => array(
+        mediamosa_rest_call::FOR_INTERFACE_APP => t('App'),
+        mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD => t('Download'),
+        mediamosa_rest_call::FOR_INTERFACE_OPENAPI => t('OpenAPI'),
+        mediamosa_rest_call::FOR_INTERFACE_UPLOAD => t('Upload'),
+      ),
+      'default' => array(
+        mediamosa_rest_call::FOR_INTERFACE_APP => mediamosa_rest_call::FOR_INTERFACE_APP,
+        mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD => mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
+        mediamosa_rest_call::FOR_INTERFACE_OPENAPI => mediamosa_rest_call::FOR_INTERFACE_OPENAPI,
+        mediamosa_rest_call::FOR_INTERFACE_UPLOAD => mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
+      ),
+    ),
+  );
+}
+
+/**
+ * Return the default setup of the filters.
+ */
+function _mediamosa_maintenance_browse_restcalls_filter_default() {
+  $mediamosa_restcalls_filter = array();
+  foreach (_mediamosa_maintenance_browse_restcalls_filters() as $name => $filter) {
+    $mediamosa_restcalls_filter[$name] = $filter['default'];
+  }
+
+  // Others.
+  $mediamosa_restcalls_filter['uri'] = '';
+
+  return $mediamosa_restcalls_filter;
+}
+
+/**
+ * The filter REST call browse form.
+ *
+ * @ingroup forms
+ * @see mediamosa_maintenance_browse_restcall_filter_form_submit()
+ * @see mediamosa_maintenance_browse_restcall_filter_form_validate()
+ */
+function mediamosa_maintenance_browse_restcall_filter_form($form) {
+
+  // Get the filters.
+  $filters = _mediamosa_maintenance_browse_restcalls_filters();
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter REST calls'),
+    '#collapsible' => TRUE,
+    '#collapsed' => empty($_SESSION['mediamosa_restcalls_filter']) || $_SESSION['mediamosa_restcalls_filter'] == _mediamosa_maintenance_browse_restcalls_filter_default(),
+  );
+
+  foreach ($filters as $key => $filter) {
+    $form['filters']['restcall']['filters'][$key] = array(
+      '#title' => $filter['title'],
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#size' => 6,
+      '#options' => $filter['options'],
+      '#default_value' => empty($_SESSION['mediamosa_restcalls_filter'][$key]) ? $filter['default'] : $_SESSION['mediamosa_restcalls_filter'][$key],
+    );
+  }
+
+  $form['filters']['restcall']['uri'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URI'),
+    '#description' => t('Enter part of uri to filter.'),
+    '#size' => 40,
+    '#maxlength' => 100,
+    '#required' => FALSE,
+    '#default_value' => empty($_SESSION['mediamosa_restcalls_filter']['uri']) ? '' : $_SESSION['mediamosa_restcalls_filter']['uri'],
+  );
+
+  $form['filters']['actions'] = array(
+    '#type' => 'actions',
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  $form['filters']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
+
+  if (!empty($_SESSION['mediamosa_restcalls_filter']) && $_SESSION['mediamosa_restcalls_filter'] != _mediamosa_maintenance_browse_restcalls_filter_default()) {
+    $form['filters']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset')
+    );
+  }
+  return $form;
+}
+
+/**
+ * Validate result from the filter form.
+ */
+function mediamosa_maintenance_browse_restcall_filter_form_validate($form, &$form_state) {
+  if ($form_state['values']['op'] == t('Filter') && empty($form_state['values']['status']) && empty($form_state['values']['uri'])) {
+    form_set_error('type', t('You must select something to filter by.'));
+  }
+}
+
+/**
+ * Process result from the filter form.
+ */
+function mediamosa_maintenance_browse_restcall_filter_form_submit($form, &$form_state) {
+
+  // Get the filters.
+  $filters = _mediamosa_maintenance_browse_restcalls_filters();
+
+  $op = $form_state['values']['op'];
+  switch ($op) {
+    case t('Filter'):
+      $_SESSION['mediamosa_restcalls_filter']['uri'] = trim($form_state['values']['uri']);
+      // Set default or value.
+      foreach ($filters as $name => $filter) {
+        $_SESSION['mediamosa_restcalls_filter'][$name] = empty($form_state['values'][$name]) ? $filter['default'] : $form_state['values'][$name];
+      }
+      break;
+
+    case t('Reset'):
+      $_SESSION['mediamosa_restcalls_filter'] = _mediamosa_maintenance_browse_restcalls_filter_default();
+      break;
+  }
+  return 'admin/reports/dblog';
+}
+
+/**
+ * Get the REST calls.
+ */
+function _mediamosa_maintenance_browse_restcalls_get() {
+
+  $rest_calls = &drupal_static(__FUNCTION__, array());
+  if (!empty($rest_calls)) {
+    return $rest_calls;
+  }
+
   // Call the REST call hook to get the registered REST calls.
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
   $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
   $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
+  return $rest_calls;
+}
+
+/**
+ * The main REST call browse form.
+ */
+function mediamosa_maintenance_browse_restcall_list_form() {
+
   $item_count_total = 0;
 
-  // Skip internal calls, but count the rest.
-  foreach ($rest_calls as $key => $rest_call) {
-    foreach ($rest_call as $method => $value) {
+  // Get the filters.
+  $filters = _mediamosa_maintenance_browse_restcalls_filters();
 
-      if (isset($value['access']) && ($value['access'] == mediamosa_rest_call::ACCESS_INTERNAL_ONLY)) {
-        unset($rest_calls[$key][$method]);
+  if (empty($_SESSION['mediamosa_restcalls_filter'])) {
+    $_SESSION['mediamosa_restcalls_filter'] = _mediamosa_maintenance_browse_restcalls_filter_default();
+  }
+
+  // Get the REST calls.
+  $rest_calls = _mediamosa_maintenance_browse_restcalls_get();
+
+  // Skip internal calls, but count the rest.
+  foreach ($rest_calls as $uri => $method_rest_call) {
+    foreach ($method_rest_call as $method => $rest_call) {
+
+      // Set the method here.
+      $rest_call[mediamosa_rest_call::METHOD] = $method;
+      $rest_call = mediamosa_rest::set_default_rest_call($rest_call);
+
+      // Don't show internals.
+      if (isset($rest_call['access']) && ($rest_call[mediamosa_rest_call::ACCESS] == mediamosa_rest_call::ACCESS_INTERNAL_ONLY)) {
+        unset($rest_calls[$uri][$method]);
+        continue;
       }
-      elseif (isset($value['status']) && ($value['status'] == 'deprecated')) { // @todo make switch for admin to select to show them.
-        unset($rest_calls[$key][$method]);
+
+      foreach ($filters as $name => $filter) {
+        if (is_array($rest_call[$name])) {
+          foreach ($rest_call[$name] as $value) {
+            if (!in_array($value, $_SESSION['mediamosa_restcalls_filter'][$name])) {
+              unset($rest_calls[$uri][$method]);
+              continue 3;
+            }
+          }
+        }
+        elseif (!in_array($rest_call[$name], $_SESSION['mediamosa_restcalls_filter'][$name])) {
+          unset($rest_calls[$uri][$method]);
+          continue 2;
+        }
       }
-      else {
-        $item_count_total++;
+
+      // Status filter.
+
+      // Uri entered?
+      if (!empty($_SESSION['mediamosa_restcalls_filter']['uri'])) {
+        if (stripos($uri, $_SESSION['mediamosa_restcalls_filter']['uri']) === FALSE) {
+          unset($rest_calls[$uri][$method]);
+          continue;
+        }
       }
+
+      // Ok, added.
+      $item_count_total++;
     }
   }
 
@@ -73,9 +308,10 @@ function mediamosa_maintenance_browse_restcall_form() {
 
   $header = array(
     array('data' => t('URI')),
-    array('data' => t('Method')),
-    array('data' => t('Status')),
-    array('data' => t('Version')),
+    array('data' => t('REST Interfaces'), 'class' => 'header-interface'),
+    array('data' => t('Method'), 'class' => 'header-method'),
+    array('data' => t('Status'), 'class' => 'header-status'),
+    array('data' => t('Version'), 'class' => 'header-version'),
   );
 
   $form = $rows = array();
@@ -90,7 +326,6 @@ function mediamosa_maintenance_browse_restcall_form() {
     ksort($rest_calls_2);
     $has_warnings = FALSE;
     foreach ($rest_calls_2 as $method => $rest_call) {
-
       // Because we get all the REST calls, we need to skip some before we start.
       if ($pos < $offset) {
         $pos++;
@@ -100,6 +335,10 @@ function mediamosa_maintenance_browse_restcall_form() {
         break;
       }
 
+      // Setup default values.
+      $rest_call = mediamosa_rest::set_default_rest_call($rest_call);
+
+      // Next position.
       $pos++;
 
       $has_example_request = !empty($rest_call[mediamosa_rest_call::EXAMPLE_REQUEST]);
@@ -115,11 +354,17 @@ function mediamosa_maintenance_browse_restcall_form() {
         $warnings[] = '<sup>2</sup>';
       }
 
+      $for_interface = array();
+      foreach ($rest_call[mediamosa_rest_call::FOR_INTERFACE] as $interface) {
+        $for_interface[] = $filters[mediamosa_rest_call::FOR_INTERFACE]['options'][$interface];
+      }
+
       $rows[] = array(
         l(t('/' . $uri), 'admin/mediamosa/browse/restcall/' . str_replace('/', '-', $uri) . '/' . urlencode($method)) . ' ' . implode(' ', $warnings),
-        $method,
-        $rest_call[mediamosa_rest_call::STATUS],
-        $rest_call[mediamosa_rest_call::VERSION],
+        array('data' => implode(',', $for_interface), 'class' => 'header-interface'),
+        array('data' => $method, 'class' => 'header-method'),
+        array('data' => $rest_call[mediamosa_rest_call::STATUS], 'class' => 'header-status'),
+        array('data' => $rest_call[mediamosa_rest_call::VERSION], 'class' => 'header-version'),
       );
     }
   }

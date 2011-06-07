@@ -4,19 +4,44 @@ TH.simpletest_test {
   width: 300px;
 }
 
-DIV.form-item-asset-id, DIV.form-item-mediafile-id, DIV.form-item-free-search {
-	padding-top: 0px;
-  padding-bottom: 3px;
+#block-mediamosa-mediamosa-version {
+	border: 0px;
 }
 
-DIV.form-item-asset-id {
-  float:left;
-  padding-top: 0px;
-  padding-right: 8px;
+/*
+ Fix problem when using float on form elements. Overrides the 
+ setting on .form-item in rubik theme.
+*/
+DIV.form-item {
+  position:static;
 }
 
-DIV.form-item-mediafile-id {
-  padding-top: 0px;
+.form-item-type,
+.form-item-asset-id,
+.form-item-mediafile-id {
+  float: left; /* LTR */
+  padding-right: .8em; /* LTR */
+  margin: 0.1em;
+  width: 15em;
+}
+
+#edit-severity, #edit-type {
+	width: 15em;
+}
+
+.form-item-free-search {
+	clear: both;
+}
+
+.form-text {
+	width: auto;
+}
+
+input.form-autocomplete,
+input.form-text,
+textarea.form-textarea,
+select.form-select {
+  border-color:#ccc;
 }
 
 #mediamosa-dblog-filters {
@@ -24,7 +49,31 @@ DIV.form-item-mediafile-id {
 }
 
 SMALL {
-	font-size:11px;
+  font-size:11px;
+}
+
+.form-item label {
+  color: #333;
+}
+
+.collapsed .fieldset-legend a {
+  color: #333;
+}
+
+.system-themes-list-disabled .theme-selector {
+  color:#333;
+}
+
+.vertical-tabs-list li a {
+  color:#333;
+}
+
+.form-item .description, .description {
+  color:#333;
+}
+
+.odd {
+  background-color: #f8f8f8;
 }
 
 /**
@@ -32,42 +81,42 @@ SMALL {
  */
 .path-admin-mediamosa span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-30px 0px;
+  background-position:-30px 0px;
 }
 
 .path-admin-mediamosa-config-global span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-60px 0px;
+  background-position:-60px 0px;
 }
 
 .path-admin-mediamosa-config-connector span.icon, .path-admin-config-media-mediamosa-connector span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-90px 0px;
+  background-position:-90px 0px;
 }
 
 .path-admin-mediamosa-config-server span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:0px -30px;
+  background-position:0px -30px;
 }
 
 .path-admin-mediamosa-config-app span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-30px -30px;
+  background-position:-30px -30px;
 }
 
 .path-admin-mediamosa-config-development span.icon, .path-admin-config-development-mediamosa-development span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-60px -30px;
+  background-position:-60px -30px;
 }
 
 .path-admin-mediamosa-config-tool_params span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:-90px -30px;
+  background-position:-90px -30px;
 }
 
 .path-admin-mediamosa-config-transcode_profile span.icon { 
   background-image:url(images/mediamosa-icons.png);
-	background-position:0px -60px;
+  background-position:0px -60px;
 }
 
 .path-admin-mediamosa-config-webservice span.icon { 

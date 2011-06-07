@@ -3,25 +3,13 @@
 START CHANGELOG:
 
 Known issues;
-- Servers (processor, download, upload etc) that are installed on a subdir are
-  not correctly retrieved on the server status page. (See ticket #367).
 - TODO: Tool params should validate the values, when the user save the node:
   * Nice parameter is unique.
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
-- Some installations will fail the 'Asset supplement - add tests'. For unknown
-  reason(s), the web server is not receiving the supplement data. Behaviour 
-  observed on nginx/0.7.67, while on nginx/0.7.65 the test ran without problems.
 
-OpenAPI development:
-- Alternative output formats (JSON, Atom, RSS)
-- OpenAPI interface
-- OpenAPI search
-- OpenSocial GET
-- OpenSocial POST
-
-TODO: (v3.0)
+@TODO
 - OAI delete support (for solr).
 
 - Hotfix for .asx and .smil files (apache);
@@ -39,6 +27,18 @@ Other changes (not ticket related).
 - REST calls in combination with Drupal login now works.
 - Breadcrumb configuration form added.
 - configuration form permission added.
+- Hack: After installing MediaMosa the CRON hooks are run by Drupal, this caused
+  the front page not to display correctly the first time. Added code to reset 
+  the front page when visiting it the first time.
+- Upload, download REST call interface restriction added. On upload and download
+  servers, only REST calls which are defined allowed for Upload / Download can
+  be used on those servers. Other REST calls will return 404 as error. Make sure
+  you upload and download server definitions are correctly setup and that the
+  REST interface setting in settings.php of these server are correct. Use the
+  page admin/mediamosa/server to see if your download and upload servers are
+  correctly setup.
+- Extended the REST call browser with a filter form. Now also shows which REST
+  calls are exclusively used on what REST interface.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------

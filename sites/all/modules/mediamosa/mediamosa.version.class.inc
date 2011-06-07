@@ -45,7 +45,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION = MEDIAMOSA_VERSION_SHORT;
   const MEDIAMOSA_VERSION_FULL = MEDIAMOSA_VERSION_FULL;
 
-  // Official versions (only in define when actually used somewhere).
+  // Official versions, only in define when actually used in REST calls.
   const MEDIAMOSA_VERSION_1_1_0 = '1.1.0';
   const MEDIAMOSA_VERSION_1_1_5 = '1.1.5';
   const MEDIAMOSA_VERSION_1_1_7 = '1.1.7';

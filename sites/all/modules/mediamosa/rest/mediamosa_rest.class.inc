@@ -218,6 +218,7 @@ class mediamosa_rest {
       mediamosa_rest_call::BEHAVE_AS_EXTERNAL => FALSE,
       mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT,
       mediamosa_rest_call::NO_USER_ABORT => in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_DELETE)) || $_SERVER['REQUEST_METHOD'] == mediamosa_rest_call::METHOD_HEAD,
+      mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_APP),
     );
 
     return $rest_call;
@@ -231,12 +232,26 @@ class mediamosa_rest {
    *  Maximum of items in result.
    * @param integer $offset
    *  Offset in items list.
-   * @param string $key
-   *  Key name used in result array dimension 1.
-   * @param string $key2
-   *  Key name used in result array dimension 2.
+   * @param array $options
+   *  - key ('method')
+   *    The name of the first array key to use.
+   *  - key2 ('uri')
+   *    The name of the second array key to use (keep empty to skip).
+   *  - get_class_name (FALSE)
+   *    Get the class filename stored in the registry for REST class.
+   *  - restrict_interface (TRUE)
+   *    Test if the interface matches the interface of the REST call. E.g. test
+   *    if an upload REST call is called from the upload interface, else skip.
    */
-  public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
+  public function get_rest_calls($limit = 0, $offset = 0, array $options = array()) {
+
+    $options += array(
+      'key' => mediamosa_rest_call::METHOD,
+      'key2' => mediamosa_rest_call::URI,
+      'get_class_name' => FALSE,
+      'restrict_interface' => TRUE,
+    );
+
     // Find all REST calls of enabled modules.
     $rest_calls = module_invoke_all('mediamosa_register_rest_call');
     $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
@@ -252,19 +267,21 @@ class mediamosa_rest {
       $limit = -1; // get all.
     }
 
-    // Restriction for just a few specific calls.
-    $current_interface = array();
-    if (mediamosa::is_app_app_enabled()) {
-      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_APP;
-    }
-    if (mediamosa::is_app_upload_enabled()) {
-      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_UPLOAD;
-    }
-    if (mediamosa::is_app_download_enabled()) {
-      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD;
-    }
-    if (mediamosa::is_app_openapi_enabled()) {
-      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_OPENAPI;
+    if ($options['restrict_interface']) {
+      // Restriction for just a few specific calls.
+      $current_interface = array();
+      if (mediamosa::is_app_app_enabled()) {
+        $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_APP;
+      }
+      if (mediamosa::is_app_upload_enabled()) {
+        $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_UPLOAD;
+      }
+      if (mediamosa::is_app_download_enabled()) {
+        $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD;
+      }
+      if (mediamosa::is_app_openapi_enabled()) {
+        $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_OPENAPI;
+      }
     }
 
     $pos = 1;
@@ -276,17 +293,19 @@ class mediamosa_rest {
           continue;
         }
 
-        // TODO Upload, Download restriction.
-        if (empty($rest_call[mediamosa_rest_call::FOR_INTERFACE])) {
-          $rest_call[mediamosa_rest_call::FOR_INTERFACE] = array(
-            mediamosa_rest_call::FOR_INTERFACE_APP,
-            mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
-            mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
-          );
-        }
-        $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
-        if (empty($intersec)) {
-          continue;
+        if ($options['restrict_interface']) {
+          if (empty($rest_call[mediamosa_rest_call::FOR_INTERFACE])) {
+            $rest_call[mediamosa_rest_call::FOR_INTERFACE] = array(
+              mediamosa_rest_call::FOR_INTERFACE_APP,
+              mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
+              mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
+            );
+          }
+          $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
+          if (empty($intersec)) {
+            $pos++;
+            continue;
+          }
         }
 
         // Set method.
@@ -302,14 +321,16 @@ class mediamosa_rest {
         ksort($rest_call);
 
         // Copy into result.
-        if (isset($key2)) {
-          $results[$rest_call[$key]][$rest_call[$key2]] = $rest_call;
+        if (!empty($options['key2'])) {
+          $results[$rest_call[$options['key']]][$rest_call[$options['key2']]] = $rest_call;
         }
         else {
-          $rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE type = 'class' AND name = :name", array(':name' => $rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
+          assert(!isset($results[$rest_call[$options['key']]]));
+          $results[$rest_call[$options['key']]] = $rest_call;
+        }
 
-          assert(!isset($results[$rest_call[$key]]));
-          $results[$rest_call[$key]] = $rest_call;
+        if ($options['get_class_name']) {
+          $rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE name = :name AND type = 'class'", array(':name' => $rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
         }
 
         // no more?

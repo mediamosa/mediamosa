@@ -327,6 +327,7 @@ class mediamosa {
           '%function' => $caller['function'],
           '%file' => $caller['file'],
           '%line' => $caller['line'],
+          'severity_level' => WATCHDOG_ERROR,
         ), FALSE);
       }
     }

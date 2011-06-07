@@ -205,6 +205,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
   // Upload still.
@@ -492,6 +493,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
   $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_PUT] = array(
@@ -501,6 +503,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
   $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_PUT] = array(
@@ -510,6 +513,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
   // Download file.
@@ -521,6 +525,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
   );
 
   // Allowed on POST as well.
@@ -535,6 +540,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_STILL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
   );
 
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
@@ -575,6 +581,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_PLAIN,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
   // In sandbox we have /still as special REST call so we don't have problems

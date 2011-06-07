@@ -54,7 +54,7 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
     $offset = $this->get_param_value(mediamosa_rest_call::OFFSET);
 
     // Get all rest calls.
-    $calls = mediamosa_rest::get_rest_calls($limit, $offset);
+    $calls = mediamosa_rest::get_rest_calls($limit, $offset, array('restrict_interface' => FALSE));
 
     foreach ($calls as $call_method) { // Method
       foreach ($call_method as $call_uri) { // Uri
@@ -90,7 +90,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.
-    $rest_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
+    $rest_calls = mediamosa_rest::get_rest_calls(0, 0, array('key' => mediamosa_rest_call::ID, 'key2' => '', 'get_class_name' => TRUE, 'restrict_interface' => FALSE));
 
     if (!isset($rest_calls[$uri_id])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_NOT_FOUND, array('@uri_id' => $uri_id));
