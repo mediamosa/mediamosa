@@ -20,13 +20,13 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.2 (build 1724)
+MediaMosa 3.0.2 (build 1726)
 ----------------------------
 Other changes (not ticket related).
 - Upgraded Drupal 7.0 to Drupal 7.2 release.
 - REST calls in combination with Drupal login now works.
 - Breadcrumb configuration form added.
-- configuration form permission added.
+- Configuration form permission added.
 - Hack: After installing MediaMosa the CRON hooks are run by Drupal, this caused
   the front page not to display correctly the first time. Added code to reset 
   the front page when visiting it the first time.
@@ -39,6 +39,7 @@ Other changes (not ticket related).
   correctly setup.
 - Extended the REST call browser with a filter form. Now also shows which REST
   calls are exclusively used on what REST interface.
+- Added some CSS class to mediamosa.css to make some text better readable.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
