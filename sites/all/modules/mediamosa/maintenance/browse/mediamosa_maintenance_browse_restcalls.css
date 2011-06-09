@@ -1,0 +1,44 @@
+/* $Id: $ */
+
+.form-item-status,
+.form-item-method,
+.form-item-version {
+  float: left; /* LTR */
+  padding-right: .8em; /* LTR */
+  margin: 0.1em;
+}
+
+#edit-status, #edit-method, #edit-version {
+  margin-right: .8em; /* LTR */
+}
+
+.form-item-uri {
+  clear: both;
+}
+
+.header-method {
+	width: 30px;
+	text-align: center;
+	margin-left: 4px;
+  margin-right: 4px;
+}
+
+.header-status {
+  width: 90px;
+  text-align: center;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.header-version {
+  width: 50px;
+  text-align: center;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+.header-interface {
+  width: 150px;
+  text-align: center;
+  margin-left: 4px;
+  margin-right: 4px;
+}
