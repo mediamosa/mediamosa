@@ -30,8 +30,13 @@
  * and POST functions to communicate with MediaMosa.
  */
 
+// Prevent notice/warnings on code checkers.
+if (!function_exists('drupal_generate_test_ua')) {
+  function drupal_generate_test_ua() {}
+}
+
 /**
- * mediamosa_connector is a class which conains all functions for communication
+ * mediamosa_connector is a class which contains all functions for communication
  * with MediaMosa backend REST interface.
  */
 class mediamosa_connector {
@@ -41,7 +46,7 @@ class mediamosa_connector {
   const MAX_RESULT_SET = 200;
 
   // Maximum of entries in our log, lets not overflow memory.
-  // Log will store the last # of requests and will drop the first.
+  // Will log the first # of requests.
   const MAX_LOG_ENTRIES = 50;
 
   // Connector error codes.
@@ -423,88 +428,399 @@ class mediamosa_connector {
 
     // Add clean uri.
     $url .= $uri;
+
+    // Started when?
     $start = microtime(TRUE);
 
-    // The call to 7.x is different.
-    if (DRUPAL_CORE_COMPATIBILITY == '7.x') {
-      $response = drupal_http_request($url, $options);
-    }
-    else {
-      $response = drupal_http_request($url, $options['headers'], $options['method'], $options['data']);
+    // Do the request.
+    $mediamosa_connector_response = self::http_request($url, $options);
 
-      // Make the header items names lowercase like in D7.
-      foreach ($response->headers as $name => $value) {
-        unset($response->headers[$name]);
-        $response->headers[drupal_strtolower($name)] = $value;
-      }
-    }
-
+    // Ended when?
     $end = microtime(TRUE);
 
-    // If the log size overflows our buffer, lose the first.
-    if (count($this->log) > self::MAX_LOG_ENTRIES) {
-      array_shift($this->log);
+    // Only add to log if we allow it for memory.
+    if (count($this->log) < self::MAX_LOG_ENTRIES) {
+      // Log the request.
+      $this->log[] = array(
+        'method' => $options['method'],
+        'url' => $url,
+        'response_time' => round($end - $start, 3),
+        'result_id' => (!empty($mediamosa_connector_response->xml) ? (int) $mediamosa_connector_response->xml->header->request_result_id : 0),
+        'result_description' => (isset($mediamosa_connector_response->xml) ? (string) $mediamosa_connector_response->xml->header->request_result_description : ''),
+        'errors' => (isset($mediamosa_connector_response->xml) && isset($mediamosa_connector_response->xml->header->errors) ? (is_array($mediamosa_connector_response->xml->header->errors) ? implode('<br />', $mediamosa_connector_response->xml->header->errors) : (string) $mediamosa_connector_response->xml->header->errors) : NULL),
+        'data' => $mediamosa_connector_response->data,
+      );
     }
-
-    // Set to empty.
-    $response->xml = NULL;
-    // If we detect xml output, fill the xml member.
-    if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, drupal_strlen('<?xml')) == '<?xml')) {
-      try {
-        $response->xml = new mediamosa_connector_response($response->data);
-      }
-      catch (Exception $e) {
-        // Dont care.
-        $response->xml = NULL;
-      }
-    }
-
-    // Log the request.
-    $this->log[] = array(
-      'method' => $options['method'],
-      'url' => $url,
-      'response_time' => round($end - $start, 3),
-      'result_id' => (isset($response->xml) ? (int)$response->xml->header->request_result_id : 0),
-      'result_description' => (isset($response->xml) ? (string) $response->xml->header->request_result_description : ''),
-      'errors' => (isset($response->xml) && isset($response->xml->header->errors) ? (is_array($response->xml->header->errors) ? implode('<br />', $response->xml->header->errors) : (string) $response->xml->header->errors) : NULL),
-      'data' => $response->data,
-    );
 
     if (variable_get('mediamosa_connector_debug', FALSE)) {
       $_SESSION['mediamosa_connector_debug_info'] = $this->log;
     }
 
     // Must be HTTP 200 response.
-    if ((int) $response->code != 200) {
+    if ((int) $mediamosa_connector_response->code != 200) {
       return FALSE;
     }
 
     // Basic version.
     $version = '1.0.0';
-    if (!empty($response->xml->header->version)) {
-      $version = $response->xml->header->version; // Position is the same on all MediaMosa versions.
+    if (!empty($mediamosa_connector_response->xml->header->version)) {
+      $version = $mediamosa_connector_response->xml->header->version; // Position is the same on all MediaMosa versions.
     }
 
     // Store an version array in the response object.
-    $response->mediamosa_version = mediamosa_sdk::parse_version($version);
+    $mediamosa_connector_response->mediamosa_version = mediamosa_sdk::parse_version($version);
 
     // Return result.
-    return $response;
+    return $mediamosa_connector_response;
+  }
+
+  /**
+   * Perform an HTTP request.
+   *
+   * Original code from Drupal 7.2. See orignal copyright http://drupal.org.
+   *
+   * Changes to code to make it compatible with Drupal 6 and 7 simpletest. Also
+   * will work outside Drupal.
+   *
+   * This is a flexible and powerful HTTP client implementation. Correctly
+   * handles GET, POST, PUT or any other HTTP requests. Handles redirects.
+   *
+   * @param $url
+   *   A string containing a fully qualified URI.
+   * @param array $options
+   *   (optional) An array that can have one or more of the following elements:
+   *   - headers: An array containing request headers to send as name/value pairs.
+   *   - method: A string containing the request method. Defaults to 'GET'.
+   *   - data: A string containing the request body, formatted as
+   *     'param=value&param=value&...'. Defaults to NULL.
+   *   - max_redirects: An integer representing how many times a redirect
+   *     may be followed. Defaults to 3.
+   *   - timeout: A float representing the maximum number of seconds the function
+   *     call may take. The default is 30 seconds. If a timeout occurs, the error
+   *     code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *   - context: A context resource created with stream_context_create().
+   *
+   * @return object
+   *   An object that can have one or more of the following components:
+   *   - request: A string containing the request body that was sent.
+   *   - code: An integer containing the response status code, or the error code
+   *     if an error occurred.
+   *   - protocol: The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+   *   - status_message: The status message from the response, if a response was
+   *     received.
+   *   - redirect_code: If redirected, an integer containing the initial response
+   *     status code.
+   *   - redirect_url: If redirected, a string containing the redirection location.
+   *   - error: If an error occurred, the error message. Otherwise not set.
+   *   - headers: An array containing the response headers as name/value pairs.
+   *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
+   *     easy access the array keys are returned in lower case.
+   *   - data: A string containing the response body that was received.
+   */
+  private function http_request($url, array $options = array()) {
+    // Create our response object.
+    $mediamosa_connector_response = new mediamosa_connector_response();
+
+    // Parse the URL and make sure we can handle the schema.
+    $uri = @parse_url($url);
+
+    if ($uri == FALSE) {
+      $mediamosa_connector_response->error = 'unable to parse URL';
+      $mediamosa_connector_response->code = -1001;
+      return $mediamosa_connector_response;
+    }
+
+    if (!isset($uri['scheme'])) {
+      $mediamosa_connector_response->error = 'missing schema';
+      $mediamosa_connector_response->code = -1002;
+      return $mediamosa_connector_response;
+    }
+
+    timer_start(__FUNCTION__);
+
+    // Merge the default options.
+    $options += array(
+      'headers' => array(),
+      'method' => 'GET',
+      'data' => NULL,
+      'max_redirects' => 3,
+      'timeout' => 30.0,
+      'context' => NULL,
+    );
+
+    // stream_socket_client() requires timeout to be a float.
+    $options['timeout'] = (float) $options['timeout'];
+
+    switch ($uri['scheme']) {
+      case 'http':
+      case 'feed':
+        $port = isset($uri['port']) ? $uri['port'] : 80;
+        $socket = 'tcp://' . $uri['host'] . ':' . $port;
+        // RFC 2616: "non-standard ports MUST, default ports MAY be included".
+        // We don't add the standard port to prevent from breaking rewrite rules
+        // checking the host that do not take into account the port number.
+        $options['headers']['Host'] = $uri['host'] . ($port != 80 ? ':' . $port : '');
+        break;
+
+      case 'https':
+        // Note: Only works when PHP is compiled with OpenSSL support.
+        $port = isset($uri['port']) ? $uri['port'] : 443;
+        $socket = 'ssl://' . $uri['host'] . ':' . $port;
+        $options['headers']['Host'] = $uri['host'] . ($port != 443 ? ':' . $port : '');
+        break;
+
+      default:
+        $mediamosa_connector_response->error = 'invalid schema ' . $uri['scheme'];
+        $mediamosa_connector_response->code = -1003;
+        return $mediamosa_connector_response;
+    }
+
+    if (empty($options['context'])) {
+      $fp = @stream_socket_client($socket, $errno, $errstr, $options['timeout']);
+    }
+    else {
+      // Create a stream with context. Allows verification of a SSL certificate.
+      $fp = @stream_socket_client($socket, $errno, $errstr, $options['timeout'], STREAM_CLIENT_CONNECT, $options['context']);
+    }
+
+    // Make sure the socket opened properly.
+    if (!$fp) {
+      // When a network error occurs, we use a negative number so it does not
+      // clash with the HTTP status codes.
+      $mediamosa_connector_response->code = -$errno;
+      $mediamosa_connector_response->error = trim($errstr) ? trim($errstr) : t('Error opening socket @socket', array('@socket' => $socket));
+
+      if (function_exists('variable_set')) {
+        // Mark that this request failed. This will trigger a check of the web
+        // server's ability to make outgoing HTTP requests the next time that
+        // requirements checking is performed.
+        // See system_requirements()
+        variable_set('drupal_http_request_fails', TRUE);
+      }
+
+      return $mediamosa_connector_response;
+    }
+
+    // Construct the path to act on.
+    $path = isset($uri['path']) ? $uri['path'] : '/';
+    if (isset($uri['query'])) {
+      $path .= '?' . $uri['query'];
+    }
+
+    // Merge the default headers.
+    $options['headers'] += array(
+      'User-Agent' => 'Drupal (+http://drupal.org/)',
+    );
+
+    // Only add Content-Length if we actually have any content or if it is a POST
+    // or PUT request. Some non-standard servers get confused by Content-Length in
+    // at least HEAD/GET requests, and Squid always requires Content-Length in
+    // POST/PUT requests.
+    $content_length = strlen($options['data']);
+    if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
+      $options['headers']['Content-Length'] = $content_length;
+    }
+
+    // If the server URL has a user then attempt to use basic authentication.
+    if (isset($uri['user'])) {
+      $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (!empty($uri['pass']) ? ":" . $uri['pass'] : ''));
+    }
+
+    // If the database prefix is being used by SimpleTest to run the tests in a
+    // copied database then set the user-agent header to the database prefix so
+    // that any calls to other Drupal pages will run the SimpleTest prefixed
+    // database. The user-agent is used to ensure that multiple testing sessions
+    // running at the same time won't interfere with each other as they would if
+    // the database prefix were stored statically in a file or database
+    // variable.
+    if (defined(DRUPAL_CORE_COMPATIBILITY)) {
+      switch (DRUPAL_CORE_COMPATIBILITY) {
+        case '6.x':
+          global $db_prefix;
+
+          if (isset($db_prefix) && is_string($db_prefix) && preg_match('/^simpletest\d+$/', $db_prefix, $matches)) {
+            $options['headers']['User-Agent'] = 'User-Agent: ' . $matches[0];
+          }
+          break;
+
+        case '7.x':
+          $test_info = &$GLOBALS['drupal_test_info'];
+          if (!empty($test_info['test_run_id'])) {
+            $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
+          }
+          break;
+
+        default:
+          assert(0); // Unsupported Drupal version.
+          break;
+      }
+    }
+
+    $mediamosa_connector_response->request = $options['method'] . ' ' . $path . " HTTP/1.0\r\n";
+    foreach ($options['headers'] as $name => $value) {
+      $mediamosa_connector_response->request .= $name . ': ' . trim($value) . "\r\n";
+    }
+    $mediamosa_connector_response->request .= "\r\n" . $options['data'];
+
+    // Calculate how much time is left of the original timeout value.
+    $timeout = $options['timeout'] - timer_read(__FUNCTION__) / 1000;
+    if ($timeout > 0) {
+      stream_set_timeout($fp, floor($timeout), floor(1000000 * fmod($timeout, 1)));
+      fwrite($fp, $mediamosa_connector_response->request);
+    }
+
+    // Fetch response. Due to PHP bugs like http://bugs.php.net/bug.php?id=43782
+    // and http://bugs.php.net/bug.php?id=46049 we can't rely on feof(), but
+    // instead must invoke stream_get_meta_data() each iteration.
+    $info = stream_get_meta_data($fp);
+    $alive = !$info['eof'] && !$info['timed_out'];
+    $response = '';
+
+    while ($alive) {
+      // Calculate how much time is left of the original timeout value.
+      $timeout = $options['timeout'] - timer_read(__FUNCTION__) / 1000;
+      if ($timeout <= 0) {
+        $info['timed_out'] = TRUE;
+        break;
+      }
+      stream_set_timeout($fp, floor($timeout), floor(1000000 * fmod($timeout, 1)));
+      $chunk = fread($fp, 1024);
+      $response .= $chunk;
+      $info = stream_get_meta_data($fp);
+      $alive = !$info['eof'] && !$info['timed_out'] && $chunk;
+    }
+    fclose($fp);
+
+    if ($info['timed_out']) {
+      $mediamosa_connector_response->code = HTTP_REQUEST_TIMEOUT;
+      $mediamosa_connector_response->error = 'request timed out';
+      return $mediamosa_connector_response;
+    }
+    // Parse response headers from the response body.
+    // Be tolerant of malformed HTTP responses that separate header and body with
+    // \n\n or \r\r instead of \r\n\r\n.
+    list($response, $mediamosa_connector_response->data) = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+    $mediamosa_connector_response->protocol = $protocol;
+    $mediamosa_connector_response->status_message = $status_message;
+
+    $mediamosa_connector_response->headers = array();
+
+    // Parse the response headers.
+    $line = trim(array_shift($response));
+    while ($line) {
+      list($name, $value) = explode(':', $line, 2);
+      $name = strtolower($name);
+      if (isset($mediamosa_connector_response->headers[$name]) && $name == 'set-cookie') {
+        // RFC 2109: the Set-Cookie response header comprises the token Set-
+        // Cookie:, followed by a comma-separated list of one or more cookies.
+        $mediamosa_connector_response->headers[$name] .= ',' . trim($value);
+      }
+      else {
+        $mediamosa_connector_response->headers[$name] = trim($value);
+      }
+
+      // Get next line.
+      $line = trim(array_shift($response));
+    }
+
+    $responses = array(
+      100 => 'Continue',
+      101 => 'Switching Protocols',
+      200 => 'OK',
+      201 => 'Created',
+      202 => 'Accepted',
+      203 => 'Non-Authoritative Information',
+      204 => 'No Content',
+      205 => 'Reset Content',
+      206 => 'Partial Content',
+      300 => 'Multiple Choices',
+      301 => 'Moved Permanently',
+      302 => 'Found',
+      303 => 'See Other',
+      304 => 'Not Modified',
+      305 => 'Use Proxy',
+      307 => 'Temporary Redirect',
+      400 => 'Bad Request',
+      401 => 'Unauthorized',
+      402 => 'Payment Required',
+      403 => 'Forbidden',
+      404 => 'Not Found',
+      405 => 'Method Not Allowed',
+      406 => 'Not Acceptable',
+      407 => 'Proxy Authentication Required',
+      408 => 'Request Time-out',
+      409 => 'Conflict',
+      410 => 'Gone',
+      411 => 'Length Required',
+      412 => 'Precondition Failed',
+      413 => 'Request Entity Too Large',
+      414 => 'Request-URI Too Large',
+      415 => 'Unsupported Media Type',
+      416 => 'Requested range not satisfiable',
+      417 => 'Expectation Failed',
+      500 => 'Internal Server Error',
+      501 => 'Not Implemented',
+      502 => 'Bad Gateway',
+      503 => 'Service Unavailable',
+      504 => 'Gateway Time-out',
+      505 => 'HTTP Version not supported',
+    );
+    // RFC 2616 states that all unknown HTTP codes must be treated the same as the
+    // base code in their class.
+    if (!isset($responses[$code])) {
+      $code = floor($code / 100) * 100;
+    }
+    $mediamosa_connector_response->code = $code;
+
+    switch ($code) {
+      case 200: // OK
+        $mediamosa_connector_response->set_response($mediamosa_connector_response->data, $mediamosa_connector_response->headers['content-type']);
+      case 304: // Not modified
+        break;
+
+      case 301: // Moved permanently
+      case 302: // Moved temporarily
+      case 307: // Moved temporarily
+        $location = $mediamosa_connector_response->headers['location'];
+        $options['timeout'] -= timer_read(__FUNCTION__) / 1000;
+        if ($options['timeout'] <= 0) {
+          $mediamosa_connector_response->code = HTTP_REQUEST_TIMEOUT;
+          $mediamosa_connector_response->error = 'request timed out';
+        }
+        elseif ($options['max_redirects']) {
+          // Redirect to the new location.
+          $options['max_redirects']--;
+          $mediamosa_connector_response = self::http_request($location, $options);
+          $mediamosa_connector_response->redirect_code = $code;
+        }
+
+        $mediamosa_connector_response->redirect_url = $location;
+        break;
+
+      default:
+        $mediamosa_connector_response->error = $status_message;
+    }
+
+    return $mediamosa_connector_response;
   }
 
   /**
    * Check the result.
    *
-   * @param xml_object $response
+   * @param xml_object $mediamosa_connector_response
    * @param string $ok
    * @param string $error
    */
-  static public function check_result($response, $ok = NULL, $error = NULL) {
-    $result_id = $response ? (int)$response->xml->header->request_result_id : 0;
+  static public function check_result($mediamosa_connector_response, $ok = NULL, $error = NULL) {
+    $result_id = $mediamosa_connector_response ? (int)$mediamosa_connector_response->xml->header->request_result_id : 0;
 
     if ($result_id != mediamosa_sdk::ERRORCODE_OKAY && $result_id != mediamosa_sdk::ERRORCODE_EMPTY_RESULT) {
       if (isset($error)) {
-        $error = t($error, array('%code' => $result_id, '%message' => $response->xml->header->request_result_description));
+        $error = t($error, array('%code' => $result_id, '%message' => $mediamosa_connector_response->xml->header->request_result_description));
         drupal_set_message($error, 'error');
       }
 
@@ -521,9 +837,16 @@ class mediamosa_connector {
   /**
    * Simple function to correctly convert simplexml to array.
    *
+   * @deprecated: Stop using this function, as it will be removed in the future.
+   *              Instead use the SimpleXML object directly.
+   *
    * @param object $xml
    */
   private static function _simplexml2array($xml) {
+    if (is_object($xml) && get_class($xml) == 'mediamosa_connector_response') {
+      return self::_simplexml2array($xml->xml);
+    }
+
     $xml_copy = $xml;
     if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
       foreach ($xml->attributes() as $key => $value) {
@@ -555,6 +878,9 @@ class mediamosa_connector {
    * Basicly the same as simplexml2array, with the exception that it will fix
    * the problem with single and multi items where a single item will end up
    * in a non-indexed array and multi items will.
+   *
+   * @deprecated: Stop using this function, as it will be removed in the future.
+   *              Instead use the SimpleXML object directly.
    *
    * @param object $xml
    */
@@ -593,10 +919,13 @@ class mediamosa_connector {
    * Correctly convert to array and return the items object from the mediamosa
    * response as array. Will return FALSE when supplied with FALSE.
    *
-   * @param object $response
+   * @deprecated: Stop using this function, as it will be removed in the future.
+   *              Instead use the SimpleXML object directly.
+   *
+   * @param object $mediamosa_connector_response
    */
-  public static function response2array($response) {
-    return $response ? self::responsexml2array($response->xml) : FALSE;
+  public static function response2array($mediamosa_connector_response) {
+    return $mediamosa_connector_response ? self::responsexml2array($mediamosa_connector_response->xml) : FALSE;
   }
 
   /**

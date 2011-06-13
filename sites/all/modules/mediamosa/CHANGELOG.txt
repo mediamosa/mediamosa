@@ -40,6 +40,7 @@ Other changes (not ticket related).
 - Extended the REST call browser with a filter form. Now also shows which REST
   calls are exclusively used on what REST interface.
 - Added some CSS class to mediamosa.css to make some text better readable.
+- Fixed notice on REST call browser listing.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------

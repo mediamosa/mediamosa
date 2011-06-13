@@ -26,9 +26,9 @@
 
 /**
  * @file
- * Helper class to support output format of MediaMosa REST XML.
+ * Helper class to support output format of MediaMosa REST XML (or other formats
+ * in the future).
  */
-
 class mediamosa_connector_response {
 
   const VERSION_MAJOR = 'major';
@@ -38,15 +38,61 @@ class mediamosa_connector_response {
   const VERSION_INFO = 'info';
 
   // Store the SimpleXML here.
-  protected $xml;
+  public $xml = NULL;
 
   /**
-   * Basic construtor.
+   * Basic constructor.
+   *
+   * Provide the data returned from the REST call and its content-type.
+   *
+   * @param string $data
+   *  The raw data returned by the REST call.
+   * @param string $content_type
+   *  The content type of the returned raw data.
+   */
+  public function __construct($data = NULL, $content_type = 'text/xml') {
+    // $data is not required.
+    if (!empty($data)) {
+      self::set_response($data, $content_type);
+    }
+  }
+
+  /**
+   * Set the response using the data string.
+   *
+   * @param string $data
+   *  The data returned with HTTP.
+   * @param string $content_type
+   *  The content type, like 'text/xml'.
+   */
+  public function set_response($data, $content_type) {
+
+    // Some might contain ; parts.
+    if (strpos($content_type, ';') !== FALSE) {
+      list($content_type, $other) = explode(';', $content_type, 2);
+    }
+
+    // Trim it.
+    $content_type = trim($content_type);
+
+    switch ($content_type) {
+      case 'text/xml':
+        // For now XML only.
+        self::set_response_xml($data);
+        break;
+
+      default:
+        assert(0); // So its logged.
+        break;
+    }
+  }
+
+  /**
+   * Response is XML, create the SimpleXML object from it.
    *
    * @param string $data
    */
-  public function __construct($data) {
-
+  protected function set_response_xml($data) {
     // Replace the namespaces and translate to 2.x version.
     $data = strtr($data,
       array(
@@ -59,6 +105,7 @@ class mediamosa_connector_response {
       )
     );
 
+    // Build the simpleXML object from our data.
     $this->xml = new SimpleXMLElement($data);
 
     // Map old header items of 2.x to 3.x.
@@ -67,38 +114,6 @@ class mediamosa_connector_response {
       $this->xml->header->request_result_id = $this->xml->header->request->resultId;
       $this->xml->header->request_result_description = $this->xml->header->request->resultDescription;
     }
-  }
-
-  /**
-   * Magic function to support -> on object.
-   *
-   * @param $name
-   */
-  public function __get($name) {
-    if (isset($this->xml->$name)) {
-      return $this->xml->$name;
-    }
-
-    $trace = debug_backtrace();
-    trigger_error('Undefined property via mediamosa_connector_response::__get(): ' . $name . ' in ' . $trace[0]['file'] . ' on line ' . $trace[0]['line'], E_NOTICE);
-
-    return null;
-  }
-
-  /**
-   * Magic function to support -> on object.
-   *
-   * @param $name
-   */
-  public function __isset($name) {
-    return isset($this->xml->$name);
-  }
-
-  /**
-   * Return the SimpleXML object.
-   */
-  public function get() {
-    return $this->xml;
   }
 
   /**
@@ -124,6 +139,4 @@ class mediamosa_connector_response {
       self::VERSION_INFO => $info,
     );
   }
-
-
 }

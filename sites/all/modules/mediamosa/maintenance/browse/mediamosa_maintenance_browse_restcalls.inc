@@ -335,6 +335,9 @@ function mediamosa_maintenance_browse_restcall_list_form() {
         break;
       }
 
+      // Set by hand for set_default_rest_call().
+      $rest_call[mediamosa_rest_call::METHOD] = $method;
+
       // Setup default values.
       $rest_call = mediamosa_rest::set_default_rest_call($rest_call);
 
