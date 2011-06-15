@@ -103,6 +103,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   const OPERATOR = 'operator';
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
   const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
+  const CALCULATE_TOTAL_NUMOFVIDEOS = 'calculate_total_numofvideos';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -184,6 +185,11 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::CALCULATE_TOTAL_NUMOFVIDEOS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Calculate exact total number of videos in the search. Performance wise to use this parameter with value 'FALSE' if you don't need to know the exact total number of videos in your scope result.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
         // Old fasion search params.
@@ -315,6 +321,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
       $this->get_param_value(self::IS_APP_ADMIN),
       $this->get_param_value(self::IS_PUBLIC_LIST),
       $this->get_param_value(self::CALCULATE_TOTAL_COUNT),
+      $this->get_param_value(self::CALCULATE_TOTAL_NUMOFVIDEOS),
       $this->get_param_value(self::HIDE_EMPTY_ASSETS),
       $this->get_param_value_limit(),
       $this->get_param_value_offset()

@@ -30,6 +30,9 @@ MediaMosa 3.0.1 (build 1720)
 ----------------------------
 - Transcoding from mp3 to mp4 generates an error (See vpcore ticket #241)
 - Job priority development (See vpcore ticket #242).
+- VP-Core timeouts (See ticket #213).
+  A new parameter was added to the /collection [GET] call to increase the performance:
+  calculate_total_numofvideos, type = boolean, required = optional, default value = TRUE
 
 Other changes (not ticket related).
 - Fixed: Automated simpletest didn't show its results on the test page.
