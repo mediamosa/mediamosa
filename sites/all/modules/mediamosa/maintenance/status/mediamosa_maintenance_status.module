@@ -94,6 +94,15 @@ function mediamosa_maintenance_status_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
   );
 
+  $items['admin/mediamosa/status/status/refresh'] = array(
+    'title' => 'Status',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_maintenance_status_status_refresh',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_REFRESH),
+    'weight' => 0,
+  );
+
   return $items;
 }
 
@@ -185,6 +194,16 @@ function _mediamosa_maintenance_status_update() {
 }
 
 /**
+ * Refresh the timer for update main status page.
+ */
+function _mediamosa_maintenance_status_status_refresh() {
+  variable_del('mediamosa_status_last_time');
+
+  drupal_goto();
+}
+
+
+/**
  * Menu callback: displays the MediaMosa status report.
  */
 function _mediamosa_maintenance_status_status() {
@@ -264,7 +283,7 @@ function _mediamosa_maintenance_status_status() {
         $last_update[] = t('next update imminent');
       }
       else {
-        $last_update[] = t('next update in %planned (estimate)', array('%planned' => format_interval($planned - REQUEST_TIME)));
+        $last_update[] = t('next update in %planned (estimate) (!refresh_now)', array('%planned' => format_interval($planned - REQUEST_TIME), '!refresh_now' => l('refresh now', 'admin/mediamosa/status/status/refresh')));
       }
     }
     else {

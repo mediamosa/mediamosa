@@ -51,6 +51,7 @@ class mediamosa_permission {
 
   // Status page.
   const ACCESS_STATUS = 'mediamosa|access|status';
+  const ACCESS_STATUS_REFRESH = 'mediamosa|access|status|refresh'; // Able to refresh the status page.
   const ACCESS_STATUS_COMMON = 'mediamosa|access|status|common';
   const ACCESS_STATUS_SERVERS = 'mediamosa|access|status|servers';
   const ACCESS_STATUS_JOB = 'mediamosa|access|status|job';
