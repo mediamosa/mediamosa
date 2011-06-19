@@ -31,15 +31,18 @@
  */
 class mediamosa_connector_response {
 
+  // ------------------------------------------------------------------- Consts.
   const VERSION_MAJOR = 'major';
   const VERSION_MINOR = 'minor';
   const VERSION_RELEASE = 'release';
   const VERSION_BUILD = 'build';
   const VERSION_INFO = 'info';
 
+  // --------------------------------------------------------------------- Vars.
   // Store the SimpleXML here.
   public $xml = NULL;
 
+  // -------------------------------------------------------------- Constructor.
   /**
    * Basic constructor.
    *
@@ -56,6 +59,42 @@ class mediamosa_connector_response {
       self::set_response($data, $content_type);
     }
   }
+
+  // ------------------------------------------------------------ Magic methods.
+   /**
+   * Magic function to support -> on object.
+   *
+   * @param $name
+   */
+  public function __get($name) {
+    assert($name != 'xml');
+    if (isset($this->xml->$name)) {
+      return $this->xml->$name;
+    }
+
+    $trace = debug_backtrace();
+    trigger_error('Undefined property via mediamosa_connector_response::__get(): ' . $name . ' in ' . $trace[0]['file'] . ' on line ' . $trace[0]['line'], E_NOTICE);
+
+    return null;
+  }
+
+  /**
+   * Magic function to support -> on object.
+   *
+   * @param $name
+   */
+  public function __isset($name) {
+    return isset($this->xml->$name);
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Return the stored XML (if any).
+   */
+  public function get() {
+    return $this->xml;
+  }
+
 
   /**
    * Set the response using the data string.
@@ -94,6 +133,8 @@ class mediamosa_connector_response {
    */
   protected function set_response_xml($data) {
     // Replace the namespaces and translate to 2.x version.
+    // We need to replace it like this, because SimpleXML does not seem to
+    // handle this correctly, and also tries to retrieve the XSL each time.
     $data = strtr($data,
       array(
         '<opensearch:itemsPerPage>' => '<item_count>',
@@ -108,11 +149,17 @@ class mediamosa_connector_response {
     // Build the simpleXML object from our data.
     $this->xml = new SimpleXMLElement($data);
 
-    // Map old header items of 2.x to 3.x.
-    if ($this->mediamosa_is_version_3() && isset($this->xml->header->request->result)) {
+    // Map new header items of 3.x to 2.x.
+    if (!empty($this->xml->header->request)) {
       $this->xml->header->request_result = $this->xml->header->request->result;
       $this->xml->header->request_result_id = $this->xml->header->request->resultId;
       $this->xml->header->request_result_description = $this->xml->header->request->resultDescription;
+
+      // Ok, because of SimpleXML and its terrible workings with namespaces, we
+      // will need to redo the opensearch params.
+      $this->xml->header->itemsPerPage = $this->xml->header->item_count;
+      $this->xml->header->totalResults = $this->xml->header->item_count_total;
+      $this->xml->header->startIndex = $this->xml->header->item_offset;
     }
   }
 
@@ -132,10 +179,10 @@ class mediamosa_connector_response {
 
     list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", $version, 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
-      self::VERSION_MAJOR => $major,
-      self::VERSION_MINOR => $minor,
-      self::VERSION_RELEASE => $release,
-      self::VERSION_BUILD => $build,
+      self::VERSION_MAJOR => (int) $major,
+      self::VERSION_MINOR => (int) $minor,
+      self::VERSION_RELEASE => (int) $release,
+      self::VERSION_BUILD => (int) $build,
       self::VERSION_INFO => $info,
     );
   }

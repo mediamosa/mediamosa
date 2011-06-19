@@ -41,6 +41,15 @@ Other changes (not ticket related).
   calls are exclusively used on what REST interface.
 - Added some CSS class to mediamosa.css to make some text better readable.
 - Fixed notice on REST call browser listing.
+- Added 'refresh now' option on the MediaMosa status page.
+- Hook 'hook_mediamosa_tool_options' been renamed to 
+  'hook_mediamosa_tool_info' to match Drupals standard. Also now returns an
+  array of information about the tool.
+- Removed hook 'hook_mediamosa_tool_iteration', use 'hook_mediamosa_tool_info'
+  instead.
+- Fixed implentation of tool choice in client application where the numberic ID
+  was used from 'hook_mediamosa_tool_iteration' which is random and will change
+  when modules are turned off and on. Will now use the tool ID instead.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------

@@ -114,7 +114,6 @@ class mediamosa_job_server {
    * Trigger every minute.
    *
    * Will timeout on itself after 2 minutes.
-   *
    */
   static public function run_parse_queue() {
 
@@ -189,26 +188,24 @@ class mediamosa_job_server {
    * 1. Get a list of all jobs that are not finished, failed or canceled.
    * 2. For all jobs with status WAITING, the job is started.
    * 3. For all running jobs de status is updated.
-   *
-   * 1.x: vpx_jobserver_parse_queue.
    */
   static public function parse_queue() {
     // Retrieve all jobs of this server.
-    $result = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
+    $job_server_jobs = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
       ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id())
       ->condition(mediamosa_job_server_db::JOB_STATUS, array(mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED), 'NOT IN')
       ->orderBy(mediamosa_job_server_db::ID, 'ASC')
       ->execute();
 
-    foreach ($result as $a_job_server_job) {
-      if ($a_job_server_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING) {
+    foreach ($job_server_jobs as $job_server_job) {
+      if ($job_server_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING) {
         // New job, start it.
-        self::waiting_job_start($a_job_server_job);
+        self::waiting_job_start($job_server_job);
       }
       else {
         // Running job, update it.
-        self::running_job_update($a_job_server_job);
+        self::running_job_update($job_server_job);
       }
     }
   }
@@ -334,8 +331,6 @@ class mediamosa_job_server {
 
   /**
    * Start the job.
-   *
-   * 1.x: _vpx_jobserver_startjob.
    */
   static public function waiting_job_start($job_server_job) {
 
@@ -364,8 +359,10 @@ class mediamosa_job_server {
     // but first do a clear cache.
     mediamosa_io::clearstatcache();
 
+    // Get the filename of the source.
     $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_src);
 
+    // Check of the source file exists.
     if (!file_exists($filename)) {
       $link_asset = self::get_asset_link($job_id);
       self::log_mediafile($mediafile_id_src, "Job ID: @job_id File '@file' not found,<br /><br/>@link", array('@job_id' => $job_id, '@file' => $filename, '@link' => $link_asset), NULL, WATCHDOG_CRITICAL);
@@ -378,7 +375,7 @@ class mediamosa_job_server {
     $execution_string = "";
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
-        // Clean up earlier status files.
+        // Clean up possible earlier status files.
         mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
 
         // Make sure the tmp transcode directory exists.
@@ -419,7 +416,7 @@ class mediamosa_job_server {
         )
       );
 
-      if ($s_output != "") {
+      if (!empty($s_output)) {
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FINISHED, '1.000');
       }
       else {
@@ -467,8 +464,6 @@ class mediamosa_job_server {
    * 1. Get possible status file and parse it.
    * 2. When transcode or still job is done, files will be moved to the
    *    correct location.
-   *
-   * 1.x: _vpx_jobserver_updatestatus.
    */
   static public function running_job_update($job_server_job) {
 
@@ -577,9 +572,6 @@ class mediamosa_job_server {
    * Retrieve a listing of the jobs.
    *
    * This function may only be called from jobserver (via internal).
-   *
-   * 1.x: vpx_jobserver_get_jobs_status (not exact port(!)).
-   *
    */
   static public function search() {
     $query = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js');
@@ -621,8 +613,6 @@ class mediamosa_job_server {
 
   /**
    * Set the job status on a jobserver table.
-   *
-   * _vpx_jobserver_set_job_status
    *
    * @param $job_id
    * @param $job_status
@@ -701,37 +691,35 @@ class mediamosa_job_server {
   /**
    * Create the string send with the vpx-analyse script.
    *
-   * 1.x: _vpx_jobserver_get_analyse_string
-   *
    * @param string $mediafile_src
    * @param $job_id
    */
   static public function get_analyse_string($mediafile_id, $job_id) {
 
     // Get the job.
-    $a_job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
-    $app_id = $a_job[mediamosa_job_db::APP_ID];
-    $hint = $a_job[mediamosa_job_db::HINT];
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
+    $app_id = $job[mediamosa_job_db::APP_ID];
+    $hint = $job[mediamosa_job_db::HINT];
 
     // Get the app.
     $app = mediamosa_app::get_by_appid($app_id);
 
-    $a_options = array();
+    $options = array();
 
     if (is_null($hint)) {
       // If hint is null, we want to use the site default parameters.
       if ($app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
-        $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
       }
 
       if ($app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
-        $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
     }
     elseif ($hint == 'TRUE') {
       // We want to hint.
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
     }
     else {
       // Do nothing. We don't want hinting.
@@ -745,15 +733,13 @@ class mediamosa_job_server {
       $mediafile_id
     );
 
-    $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
+    $execution_string .= (count($options) ? ' ' . implode(' ', $options) : '');
 
     return $execution_string;
   }
 
   /**
    * Generate the string that is used for the vpx_transcode script.
-   *
-   * 1.x: _vpx_jobserver_get_transcode_string
    *
    * @param string $jobserver_job_id
    * @param string $mediafile_id
@@ -807,9 +793,14 @@ class mediamosa_job_server {
         // Now check if for this tool the hook exists.
         $class_name = 'mediamosa_tool_' . $tool;
 
+        // FIXME:
+        // This code here is first attempt to rewrite the jobs module in more
+        // flexible one. In future ::transcode is called directly and jobs
+        // will no longer worry about exec strings.
+
         // Now see if transcode function is found.
         if (class_exists($class_name) && method_exists($class_name, 'transcode')) {
-          $options = array(
+          $args = array(
             // Jobserver job ID.
             'jobserver_job_id' => $jobserver_job_id,
             // ID of mediafile to transcode.
@@ -827,7 +818,7 @@ class mediamosa_job_server {
           );
 
           // PHP 5.2.3 or higher.
-          $execution_string = call_user_func_array($class_name . '::transcode', $options);
+          $execution_string = call_user_func_array($class_name . '::transcode', $args);
         }
     }
 
@@ -845,8 +836,6 @@ class mediamosa_job_server {
 
   /**
    * Generate the still execute string.
-   *
-   * 1.x: _vpx_jobserver_get_still_string
    *
    * @param string $jobserver_job_id
    * @param string $mediafile_id

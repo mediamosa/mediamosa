@@ -134,3 +134,13 @@ audiocodec:libfaac;audiobitrate:64000;audiosamplingrate:44100;audiochannels:2;vi
 function mediamosa_tool_ffmpeg_uninstall() {
   // Do nothing. We don't delete the existing data.
 }
+
+/**
+ * Rebuild the registry. We added a new class.
+ */
+function mediamosa_tool_ffmpeg_update_7000() {
+  // Rebuild the registry, added new class.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+}

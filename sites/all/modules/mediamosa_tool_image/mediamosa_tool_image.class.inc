@@ -40,9 +40,9 @@ class mediamosa_tool_image {
   const MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL = 'image';
 
   /**
-   * Short id of the module.
+   * Name / ID of the module.
    */
-  const MEDIAMOSA_TOOL_IMAGE_ID = 'image';
+  const NAME = 'image';
 
   /**
    * Key value separator.
@@ -87,7 +87,4 @@ class mediamosa_tool_image {
       return strtr('mkdir @file_location; cd @file_location; convert @mediafile_location @params @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;', $options);
     }
   }
-
-
-
 }

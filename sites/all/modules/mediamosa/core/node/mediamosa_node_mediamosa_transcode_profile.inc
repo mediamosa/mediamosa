@@ -211,7 +211,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   //$apps = array('0' => '');
   $apps = mediamosa_app::collect_allowed_apps();
   $apps[0] = '[global profile]';
-  
+
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
@@ -272,14 +272,16 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
   );
 
-  $tools_default = mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node);
-  $tools = module_invoke_all('mediamosa_tool_iteration');
-  $tools = array_combine($tools, $tools);
-  $tools += array($tools_default => $tools_default);
+  $tools = module_invoke_all('mediamosa_tool_info');
+  $options = array();
+  foreach ($tools as $tool_id => $tool) {
+    $options[$tool_id] = $tool['name'];
+  }
+
   $form['required'][mediamosa_transcode_profile_db::TOOL] = array(
     '#title' => t('Transcoding Tool'),
     '#type' => 'select',
-    '#default_value' => $tools_default,
+    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL, $node),
     '#options' => $tools,
     '#required' => TRUE,
     '#description' => t('The transcoding tool used for this profile.'),

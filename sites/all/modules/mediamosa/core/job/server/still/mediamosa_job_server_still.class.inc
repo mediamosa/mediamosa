@@ -30,10 +30,10 @@
  */
 class mediamosa_job_server_still {
 
-  static function get($jobserver_id, $a_fields = array()) {
+  static function get($jobserver_id, $fields = array()) {
 
     return mediamosa_db::db_select(mediamosa_job_server_still_db::TABLE_NAME, 'jss')
-      ->fields('jss', $a_fields)
+      ->fields('jss', $fields)
       ->condition(mediamosa_job_server_still_db::ID, $jobserver_id)
       ->execute()
       ->fetchAssoc();

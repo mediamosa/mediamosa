@@ -181,7 +181,7 @@ function mediamosa_tool_menu() {
   // Mapping.
 
   $items['admin/mediamosa/config/tool_mapping'] = array(
-    'title' => 'Tool mapping',
+    'title' => 'Tool metadata mapping',
     'description' => 'Specify how the input data from tools are mapped to asset metadata during the analyse fase.',
     'page callback' => '_mediamosa_tool_mapping_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,

@@ -1103,13 +1103,9 @@ class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job
 
 /**
  * URI: /asset/$asset_id/still/create
- *
  * Method: POST
  *
  * Create a still job.
- *
- * 1.x: vpx_jobscheduler_create_new_still_job_2
- *
  */
 class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_create {
   // ------------------------------------------------------------------- Consts.
@@ -1230,8 +1226,6 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  * is that mediafile_id comes from the URI, which is not a problem for the
  * MediaMosa REST interface. Doesn't matter if mediafile_id comes from
  * URI / GET / POST.
- *
- * 1.x: vpx_jobscheduler_create_new_still_job_for_mediafile
  *
  */
 class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_call_job_create_still {

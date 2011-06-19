@@ -28,3 +28,9 @@
  * @file
  * Windows tool functions.
  */
+class mediamosa_tool_windows {
+  /**
+   * Name / ID of the module.
+   */
+  const NAME = 'windows';
+}

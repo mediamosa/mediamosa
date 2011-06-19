@@ -126,12 +126,6 @@ class mediamosa_job {
   /**
    * Get all information of this job in the database.
    *
-   * 1.x -> 2.0 change:
-   * will now merge with extra table and
-   * will not contain NULL fields from other child tables.
-   *
-   * 1.x: _vpx_jobs_get_job_info
-   *
    * @param integer $job_id
    */
   static public function get_job_ext($job_id) {
@@ -243,8 +237,6 @@ class mediamosa_job {
 
   /**
    * Add retranscode jobs.
-   *
-   * 1.x: _vpx_jobs_add_retranscode_jobs
    *
    * @param string $asset_id
    *  The asset ID.
@@ -802,14 +794,14 @@ class mediamosa_job {
     foreach (module_implements('mediamosa_tool_can_analyse') as $module) {
       if (module_invoke($module, 'mediamosa_tool_can_analyse', $mime_type)) {
         // Get the tool id.
-        $tool_options = module_invoke($module, 'mediamosa_tool_options');
+        $tool_info = module_invoke($module, 'mediamosa_tool_info');
 
         // Get the app.
         $app = mediamosa_app::get_by_appid($job_ext[mediamosa_job_db::APP_ID]);
         $tool_analyse = unserialize($app[mediamosa_app_db::TOOL_ANALYSE]);
 
         // Check if the tool is enabled for this app.
-        if (!empty($tool_analyse[$tool_options['tool']])) {
+        if (!empty($tool_analyse[key($tool_info)])) {
           // Start the analyse process.
           module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
           break;
@@ -1107,10 +1099,7 @@ class mediamosa_job {
   /**
    * Cancel job.
    * Can only be removed if status is WAITING, FINISHED or FAILED and
-   * not assigned to server.
-   *
-   * 1.x: _vpx_jobs_cancel_job
-   *
+   * not assigned to server (WAITING).
    */
   static public function cancel_job($app_id, $job_id, $user_id) {
 
@@ -1118,7 +1107,7 @@ class mediamosa_job {
     self::must_exists($job_id);
 
     // Check if can be removed.
-    $a_row_job = mediamosa_db::db_query(
+    $job = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_job} WHERE
        #job_id = :job_id AND
        #status IN (:JOBSTATUS_WAITING, :JOBSTATUS_FINISHED, :JOBSTATUS_FAILED) AND
@@ -1135,22 +1124,22 @@ class mediamosa_job {
       )
     )->fetchAssoc();
 
-    if ($a_row_job == FALSE) {
+    if ($job == FALSE) {
       throw new mediamosa_exception_error_job_could_not_be_removed(array('@job_id' => $job_id));
     }
 
     // Must be owner.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_row_job['app_id'], $a_row_job['owner']);
+    mediamosa_acl::owner_check($app_id, $user_id, $job['app_id'], $job['owner']);
 
-    $job_status = $a_row_job['status'];
-    $job_type = $a_row_job['job_type'];
+    $job_status = $job['status'];
+    $job_type = $job['job_type'];
 
     // If we try to delete a analyse job, then make sure its has a metadata row.
     if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $job_status == mediamosa_job_db::JOB_STATUS_WAITING) {
 
       $num_rows = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mamm')
         ->fields('mamm', array(mediamosa_asset_mediafile_metadata_db::ID))
-        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_row_job['mediafile_id'])
+        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $job['mediafile_id'])
         ->countQuery()->execute()->fetchField();
 
       if (!$num_rows) {

@@ -318,7 +318,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-      $breadcrumb[] = l(t('Tool mapping'), 'admin/mediamosa/config/tool_mapping');
+      $breadcrumb[] = l(t('Tool metadata mapping'), 'admin/mediamosa/config/tool_mapping');
       drupal_set_breadcrumb($breadcrumb);
       break;
 

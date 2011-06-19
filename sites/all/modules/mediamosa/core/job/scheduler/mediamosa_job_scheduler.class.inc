@@ -172,9 +172,6 @@ class mediamosa_job_scheduler {
    * This function is the heart of the handler system. It must be
    * called at regular intervals, like every 1 minute.
    * It will cleanup, run and update jobs.
-   *
-   * 1.x: vpx_jobhandler_parse_queue
-   *
    */
   static public function parse_queue() {
 
@@ -228,7 +225,6 @@ class mediamosa_job_scheduler {
    * With A REST call we'll retrieve the status of the jobs.
    * And we'll process the jobs.
    *
-   * 1.x: _vpx_jobhandler_update_server_job_status
    * @param $uri
    */
   static public function update_server_job_status($uri) {
@@ -452,8 +448,6 @@ class mediamosa_job_scheduler {
   /**
    * Remove the raw avi file for wmv transcode
    *
-   * 1.x: _vpx_jobhandler_wmv_remove_raw_file
-   *
    * @param integer $job_id
    */
   static public function wmv_remove_raw_file($job_id) {
@@ -478,8 +472,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Called when transcode was successfully finished.
-   *
-   * 1.x: _vpx_jobhandler_parse_finished_transcode
    *
    * @param integer $job_id
    * @param string $mediafile_id_src
@@ -586,8 +578,6 @@ class mediamosa_job_scheduler {
   /**
    * Process the data from a still job.
    *
-   * 1.x: _vpx_jobhandler_add_still_to_db
-   *
    * @param $job_id
    * @param $filenames
    */
@@ -691,7 +681,7 @@ class mediamosa_job_scheduler {
     // Get for every active server (status ON)
     // the number of job that is not FINISHED, FAILED of CANCELLED
     // and job type is not UPLOAD (does not take a slot).
-    $result = mediamosa_db::db_query(
+    $server_jobs = mediamosa_db::db_query(
       "SELECT #nid, #uri, #slots,
              (SELECT COUNT(msj.#job_id)
               FROM {#mediamosa_server_job} AS msj
@@ -724,12 +714,12 @@ class mediamosa_job_scheduler {
       )
     )->fetchAll();
 
-    foreach ($result as $result_row) {
+    foreach ($server_jobs as $server_job) {
       // Try to start as many jobs as there are free slots.
-      for ($i = $result_row['jobcount']; $i < $result_row['slots']; $i++) {
+      for ($i = $server_job['jobcount']; $i < $server_job['slots']; $i++) {
 
         // Get 1 new job.
-        $job_info = self::fetch_single_available_job($result_row[mediamosa_server_db::NID]);
+        $job_info = self::fetch_single_available_job($server_job[mediamosa_server_db::NID]);
 
         if (empty($job_info)) {
           break; // no more for this server.
@@ -739,8 +729,8 @@ class mediamosa_job_scheduler {
           self::start_server_job(
             $job_info[mediamosa_job_db::ID],
             $job_info[mediamosa_job_db::JOB_TYPE],
-            $result_row[mediamosa_server_db::NID],
-            $result_row[mediamosa_server_db::SERVER_URI],
+            $server_job[mediamosa_server_db::NID],
+            $server_job[mediamosa_server_db::SERVER_URI],
             $job_info[mediamosa_job_db::MEDIAFILE_ID]);
         }
       }
@@ -897,8 +887,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Function for starting a still job
-   *
-   * 1.x: _vpx_jobhandler_start_server_still_job
    */
   static public function start_server_still_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
@@ -958,6 +946,7 @@ class mediamosa_job_scheduler {
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
 
     if ($response->code == '201' || $response->code == '200') {
+
       try {
         $simple_xml_response = new mediamosa_connector_response($response->data);
       }
@@ -1315,8 +1304,6 @@ class mediamosa_job_scheduler {
   /**
    * Check the mapping and value.
    *
-   * 1.x: _job_handler_mapping_value
-   *
    * @param $nice_parameter
    * @param $tool_parameter
    * @param $min_value
@@ -1385,8 +1372,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Calculate ffmpeg parameters if we have to maintain aspect ratio.
-   *
-   * 1.x: _vpx_jobhandler_calc_aspect_ratio
    *
    * @param $w_source
    *   Width of video source.

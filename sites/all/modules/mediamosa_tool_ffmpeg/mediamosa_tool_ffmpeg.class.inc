@@ -28,3 +28,9 @@
  * @file
  * FFmpeg tool functions.
  */
+class mediamosa_tool_ffmpeg {
+  /**
+   * Name / ID of the module.
+   */
+  const NAME = 'ffmpeg';
+}

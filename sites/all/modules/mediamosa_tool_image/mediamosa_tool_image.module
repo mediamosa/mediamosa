@@ -43,29 +43,22 @@ function mediamosa_tool_image_mediamosa_tool_can_analyse($mime_type) {
  */
 function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_image';
-  $tool_id = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+  $tool_id = mediamosa_tool_image::NAME;
   $execution_command = 'exiv2 @mediafile_location';
   $separator = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR;
   mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
 }
 
 /**
- * Implements hook_mediamosa_tool_options().
+ * Implements hook_mediamosa_tool_info().
+ *
+ * Get information about the tool.
  */
-function mediamosa_tool_image_mediamosa_tool_options() {
-  return array(
-    'name' => t('Image'),
+function mediamosa_tool_image_mediamosa_tool_info() {
+  return array(mediamosa_tool_image::NAME => array(
+    'name' => t('ImageMagic'),
     'description' => t('Image files like JPG, PNG, TIFF.'),
-    'tool' => mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID,
-  );
-}
-
-/**
- * Get module id.
- * Implements hook_mediamosa_tool_iteration().
- */
-function mediamosa_tool_image_mediamosa_tool_iteration() {
-  return mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+  ));
 }
 
 /**

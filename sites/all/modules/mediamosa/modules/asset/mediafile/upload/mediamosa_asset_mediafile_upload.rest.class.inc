@@ -34,8 +34,6 @@
  *      /mediafile/$mediafile_id/upload_ticket (deprecated)
  *
  * Method: GET
- *
- * 1.x: vpx_upload_create_ticket
  */
 class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_rest_call {
 
@@ -119,8 +117,6 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
  * URI: /mediafile/upload
  *
  * Method: POST
- *
- * 1.x: vpx_upload_handle_file
  */
 class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
@@ -428,10 +424,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
 /**
  * URI: /mediafile/upload
- *
  * Method: PUT
- *
- * 1.x: vpx_upload_handle_file_put_app
  */
 class mediamosa_rest_call_asset_mediafile_upload_put extends mediamosa_rest_call_asset_mediafile_upload {
 
@@ -460,10 +453,7 @@ class mediamosa_rest_call_asset_mediafile_upload_put extends mediamosa_rest_call
 
 /**
  * URI: mediafile/uploadprogress
- *
  * Method: GET
- *
- * 1.x: vpx_upload_uploadprogress_get
  */
 class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_call {
 

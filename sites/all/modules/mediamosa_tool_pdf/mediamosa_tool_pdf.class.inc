@@ -38,7 +38,7 @@ class mediamosa_tool_pdf {
   /**
    * Short id of the module.
    */
-  const MEDIAMOSA_TOOL_PDF_ID = 'pdf';
+  const NAME = 'pdf';
 
   /**
    * Key value separator.

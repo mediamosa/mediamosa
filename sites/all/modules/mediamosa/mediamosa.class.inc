@@ -39,7 +39,7 @@
 
 class mediamosa {
 
-  // ------------------------------------------------------------------ Parameters.
+  // --------------------------------------------------------------- Parameters.
   static private $is_db_logging = FALSE;
 
   static private $num_of_queries = array();

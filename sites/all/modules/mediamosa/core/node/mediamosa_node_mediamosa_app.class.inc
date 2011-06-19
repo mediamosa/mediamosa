@@ -470,14 +470,9 @@ function mediamosa_app_form($node, &$form_state) {
   }
   */
 
-  $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_options');
-  $options = array();
-  if (isset($tool_analyse_checkboxes['name']) && is_array($tool_analyse_checkboxes['name'])) {
-    foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
-      if (isset($tool_analyse_checkboxes['tool'][$tool_analyse_key])) {
-        $options[$tool_analyse_checkboxes['tool'][$tool_analyse_key]] = $tool_analyse_checkbox;
-      }
-    }
+  $tools = module_invoke_all('mediamosa_tool_info');
+  foreach ($tools as $tool_id => $tool) {
+    $options[$tool_id] = $tool['name'];
   }
 
   $form['tool'] = array(
@@ -487,7 +482,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#title' => t('Tool selection'),
     '#description' => t('')
   );
-  $default_value = mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, '');
+  $default_value = mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, array());
   $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
     '#type' => 'checkboxes',
     '#title' => t('Choose the tools that may copy technical metadata to asset metadata.'),
