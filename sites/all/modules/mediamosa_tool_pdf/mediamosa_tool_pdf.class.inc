@@ -65,11 +65,15 @@ class mediamosa_tool_pdf {
   }
 
   /**
-   * Transcode the file.
+   * Get the exec string for transcoding the file.
+   *
+   * @deprecated: Although new, its deprecated. We will replace this function
+   *              with transcode() very soon and no longer rely on exec
+   *              strings return. Rewrite of jobs is planned for v3.5.
    *
    * @param array $options
    */
-  static public function transcode($options) {
+  static public function get_transcode_exec($options) {
 
     if ($options['file_extension'] == 'swf') {
       // Build the values.

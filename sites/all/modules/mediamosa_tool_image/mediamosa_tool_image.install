@@ -86,4 +86,6 @@ function mediamosa_tool_image_install() {
  */
 function mediamosa_tool_image_uninstall() {
   // Do nothing. We don't delete the existing data.
+  // FIXME: Yes we do, thats why we put into a module in the first place. So
+  //        make a uninstaller.
 }

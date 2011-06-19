@@ -50,6 +50,11 @@ Other changes (not ticket related).
 - Fixed implentation of tool choice in client application where the numberic ID
   was used from 'hook_mediamosa_tool_iteration' which is random and will change
   when modules are turned off and on. Will now use the tool ID instead.
+- Fixed mime-type matcher in image module, did also match fooimage/gif instead
+  of only image/*.
+- Fixed image tool transcode() function where it only accepted 'swf' files for
+  transcoding.
+- Renamed tool method ::transcode() to ::get_transcode_exec().
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------

@@ -29,8 +29,6 @@
  * FFmpeg tool module.
  */
 
-// Constants.
-
 /**
  * Implements hook_permission().
  */
@@ -52,7 +50,7 @@ function mediamosa_tool_ffmpeg_permission() {
 function mediamosa_tool_ffmpeg_mediamosa_tool_info() {
   return array(mediamosa_tool_ffmpeg::NAME => array(
     'name' => t('ffmpeg'),
-    'description' => t('Our ffmpeg tool.'),
+    'description' => t('The ffmpeg tool for transcoding video files.'),
   ));
 }
 
