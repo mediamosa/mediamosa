@@ -31,6 +31,8 @@ MediaMosa 2.3.10 (build 1385)
 Other changes (not ticket related)
 - Transcoding from mp3 to mp4 generates error. 
 - Added still check to integrity check (code commited by flyapen on Github).
+- Fixed: transcode with keep aspect ratio has incorrect padding (Fix commited 
+  by flyapen, GitHub)
 
 MediaMosa 2.3.9 (build 1381)
 ----------------------------
