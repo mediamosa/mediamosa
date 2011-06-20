@@ -773,7 +773,7 @@ class mediamosa_job_server {
     $parameter_string = '';
     $pairs = explode(';', $parameter_list);
     foreach ($pairs as $pair) {
-      $parameter_string .= str_replace(':' , ' ', $pair) . ' ';
+      $parameter_string .= preg_replace('/:/', ' ', $pair, 1) . ' ';
     }
 
     // Replace the one parameter placeholder.
