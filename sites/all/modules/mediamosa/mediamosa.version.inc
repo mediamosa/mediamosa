@@ -25,7 +25,7 @@
  */
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 1385);
+define('MEDIAMOSA_BUILD', 1387);
 define('MEDIAMOSA_VERSION', '2.3.10');
 
 // Optional changes:

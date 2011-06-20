@@ -26,7 +26,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.10 (build 1385)
+MediaMosa 2.3.10 (build 1387)
 -----------------------------
 Other changes (not ticket related)
 - Transcoding from mp3 to mp4 generates error. 
