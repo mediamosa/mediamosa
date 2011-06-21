@@ -11,6 +11,9 @@ Known issues;
 
 @TODO
 - OAI delete support (for solr).
+- Add unit test or status page item that checks if all error codes are found in
+  database. (so we dont forget the installer).
+
 
 - Hotfix for .asx and .smil files (apache);
 <IfModule mod_alias.c>
@@ -55,6 +58,10 @@ Other changes (not ticket related).
 - Fixed image tool transcode() function where it only accepted 'swf' files for
   transcoding.
 - Renamed tool method ::transcode() to ::get_transcode_exec().
+- Fixed: transcode with keep aspect ratio has incorrect padding (Fix commited 
+  by flyapen, GitHub)
+- Added missing installer for errorcode 1156.
+- Added still generation for image files using the image tool module.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
