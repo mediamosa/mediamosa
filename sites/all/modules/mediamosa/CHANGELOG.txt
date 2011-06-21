@@ -23,7 +23,7 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.2 (build 1730)
+MediaMosa 3.0.2 (build 1732)
 ----------------------------
 Other changes (not ticket related).
 - Upgraded Drupal 7.0 to Drupal 7.2 release.
