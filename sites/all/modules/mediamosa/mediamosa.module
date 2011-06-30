@@ -587,7 +587,7 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function mediamosa_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'dblog_filter_form') {
@@ -621,7 +621,7 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
     $form['filters']['mediamosa']['free_search'] = array(
       '#type' => 'textfield',
       '#title' => t('Free text search'),
-      '#size' => 68,
+      '#size' => 50,
       '#maxlength' => 100,
       '#required' => FALSE,
       '#default_value' => empty($_SESSION['mediamosa_watchdog_overview_filter']['free_search']) ? '' : $_SESSION['mediamosa_watchdog_overview_filter']['free_search'],
@@ -633,7 +633,6 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
     /**
      * Image style to client.
      */
-
     $app_id = arg(5);
 
     if (!isset($app_id) || !is_numeric($app_id)) {
@@ -702,7 +701,7 @@ function _mediamosa_watchdog_filter_form_submit($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_query_alter().
+ * Implements hook_query_alter().
  */
 function mediamosa_query_alter(QueryAlterableInterface $query) {
 
@@ -736,7 +735,7 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
 }
 
 /**
- * Implementation of hook_cron().
+ * Implements hook_cron().
  */
 function mediamosa_cron() {
 
@@ -766,7 +765,7 @@ function mediamosa_cron() {
 }
 
 /**
- * Implementation of hook_mediamosa_search_engine().
+ * Implements hook_mediamosa_search_engine().
  */
 function mediamosa_mediamosa_search_engine() {
 

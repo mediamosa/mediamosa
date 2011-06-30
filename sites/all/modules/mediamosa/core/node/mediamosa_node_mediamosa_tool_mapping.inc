@@ -99,7 +99,7 @@ function mediamosa_tool_mapping_view($node, $view_mode = 'full') {
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  $breadcrumb[] = l(t('Tool mapping'), 'admin/mediamosa/config/tool_mapping');
+  $breadcrumb[] = l(t('Tool metadata mapping'), 'admin/mediamosa/config/tool_mapping');
   drupal_set_breadcrumb($breadcrumb);
 
   // Default parameters.
@@ -148,15 +148,17 @@ function mediamosa_tool_mapping_form($node, $form_state) {
     '#maxlength' => mediamosa_tool_mapping_db::PARAMETER_LENGTH,
   );
 
-  $tools_default = mediamosa_node::default_value(mediamosa_tool_mapping_db::TOOL, $node);
-  $tools = module_invoke_all('mediamosa_tool_iteration');
-  $tools = array_combine($tools, $tools);
-  $tools += array($tools_default => $tools_default);
+  $tools = module_invoke_all('mediamosa_tool_info');
+  $options = array();
+  foreach ($tools as $tool_id => $tool) {
+    $options[$tool_id] = $tool['name'];
+  }
+
   $form[mediamosa_tool_mapping_db::TOOL] = array(
     '#title' => t('Tool'),
     '#type' => 'select',
-    '#default_value' => $tools_default,
-    '#options' => $tools,
+    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL, $node),
+    '#options' => $options,
     '#required' => TRUE,
     '#description' => t('Select one of the available tools.'),
   );
@@ -182,13 +184,13 @@ function mediamosa_tool_mapping_form($node, $form_state) {
  */
 function mediamosa_tool_mapping_validate($node) {
   // Tool.
-  $tools = module_invoke_all('mediamosa_tool_iteration');
-  if (!in_array($node->{mediamosa_tool_mapping_db::TOOL}, $tools)) {
-    form_set_error(mediamosa_tool_mapping_db::TOOL, t('Not existing tool.'));
+  $tools = module_invoke_all('mediamosa_tool_info');
+  if (empty($tools[$node->{mediamosa_tool_mapping_db::TOOL}])) {
+    form_set_error(mediamosa_tool_mapping_db::TOOL, t('Not existing or enabled tool.'));
   }
 
   if (!$node->title) {
-    form_set_error('title', t('Parameter can not be empty.'));
+    form_set_error('title', t('Title can not be empty.'));
   }
 
   // Prop_id value.

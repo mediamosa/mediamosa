@@ -1,8 +1,8 @@
 Index: bootstrap.inc
 ===================================================================
---- a/includes/bootstrap.inc  Wed Dec 01 10:58:56 2010 +0100
-+++ b/includes/bootstrap.inc  Wed Dec 01 12:58:31 2010 +0100
-@@ -601,18 +601,24 @@
+--- a/includes/bootstrap.inc
++++ b/includes/bootstrap.inc
+@@ -598,20 +598,24 @@ function drupal_settings_initialize() {
      // in drupal_settings_initialize().
      if (!empty($_SERVER['HTTP_HOST'])) {
        $cookie_domain = $_SERVER['HTTP_HOST'];
@@ -24,28 +24,32 @@ Index: bootstrap.inc
    // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
 +  // todo: how about co.uk type of domains?
    if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
+-    ini_set('session.cookie_domain', $cookie_domain);
+-  }
 +    if (count(explode('.', $cookie_domain)) > 3) {
 +      // remove first part before the dot and replace by a dot only
 +      $cookie_domain = explode('.', substr($cookie_domain, 1), 2);
 +      array_shift($cookie_domain);
 +      $cookie_domain = '.' . implode($cookie_domain);
-+    }
++   }
 +
-     ini_set('session.cookie_domain', $cookie_domain);
-   }
    // To prevent session cookies from being hijacked, a user can configure the
-@@ -2308,6 +2314,15 @@
+   // SSL version of their website to only transfer session cookies via SSL by
+   // using PHP's session.cookie_secure setting. The browser will then use two
+@@ -2184,6 +2188,17 @@ function drupal_valid_test_ua() {
  
    if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
      list(, $prefix, $time, $salt, $hmac) = $matches;
 +
-+    // Fix problem when using load balancers, filectime() and fileinode() will
-+    // not work for our simpletests running on load balancers (bootstrap.inc)
-+    // will not be same. Also same problem when mixing linux and windows
-+    // servers.
++    // Hotfix problem when using load balancers; As filectime() and fileinode()
++    // will not work for our MediaMosa simpletests running on load balancers or
++    // different REST servers, then filectime(__FILE__) . fileinode(__FILE__)
++    // will never return the same for each server. Also same problem when
++    // mixing linux and windows servers. Also time() might be different on
++    // servers as these servers might not be synced to the same clock.
++    // FIXME: we do need to add $drupal_hash_salt.
 +    $test_prefix = $prefix;
 +    return $test_prefix;
-+
 +
      $check_string =  $prefix . ';' . $time . ';' . $salt;
      // We use the salt from settings.php to make the HMAC key, since

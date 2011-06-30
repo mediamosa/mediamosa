@@ -205,15 +205,17 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#maxlength' => mediamosa_tool_params_db::NICE_PARAMETER_LENGTH,
   );
 
-  $tools_default = mediamosa_node::default_value(mediamosa_tool_params_db::TOOL, $node);
-  $tools = module_invoke_all('mediamosa_tool_iteration');
-  $tools = array_combine($tools, $tools);
-  $tools += array($tools_default => $tools_default);
+  $tools = module_invoke_all('mediamosa_tool_info');
+  $options = array();
+  foreach ($tools as $tool_id => $tool) {
+    $options[$tool_id] = $tool['name'];
+  }
+
   $form[mediamosa_tool_params_db::TOOL] = array(
     '#title' => t('Tool'),
     '#type' => 'select',
-    '#default_value' => $tools_default,
-    '#options' => $tools,
+    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL, $node),
+    '#options' => $options,
     '#required' => TRUE,
     '#description' => t('Select one of the available tools.'),
   );
@@ -315,8 +317,8 @@ function mediamosa_tool_params_validate($node) {
   }
 
   // Tool.
-  $tools = module_invoke_all('mediamosa_tool_iteration');
-  if (!in_array($node->{mediamosa_tool_params_db::TOOL}, $tools)) {
+  $tools = module_invoke_all('mediamosa_tool_info');
+  if (empty($tools[$node->{mediamosa_tool_params_db::TOOL}])) {
     form_set_error(mediamosa_tool_params_db::TOOL, t('This tool is either not enabled or does not exists.'));
   }
 

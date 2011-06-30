@@ -29,8 +29,6 @@
  * PDF tool module.
  */
 
-// Constants.
-
 /**
  * Implements hook_mediamosa_tool_can_analyse().
  */
@@ -45,30 +43,20 @@ function mediamosa_tool_pdf_mediamosa_tool_can_analyse($mime_type) {
  */
 function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_pdf';
-  $tool_id = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
+  $tool_id = mediamosa_tool_pdf::NAME;
   $execution_command = 'pdfinfo @mediafile_location';
   $separator = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR;
   mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
 }
 
 /**
- * Implements hook_mediamosa_tool_options().
+ * Implements hook_mediamosa_tool_info().
  */
-function mediamosa_tool_pdf_mediamosa_tool_options() {
-  return array(
-    'name' => t('PDF'),
-    'description' => t('PDF files'),
-    'tool' => mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID,
-  );
-}
-
-/**
- * Implements hook_mediamosa_tool_iteration().
- *
- * Get tool id.
- */
-function mediamosa_tool_pdf_mediamosa_tool_iteration() {
-  return mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
+function mediamosa_tool_pdf_mediamosa_tool_info() {
+  return array(mediamosa_tool_pdf::NAME => array(
+    'name' => t('PDF tool'),
+    'description' => t('Tool for PDF files.'),
+  ));
 }
 
 /**

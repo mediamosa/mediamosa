@@ -32,8 +32,6 @@
 /**
  * URI: /asset/$asset_id/still/delete
  * Method: POST
- *
- * 1.x media_management_asset_delete_stills
  */
 class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -146,8 +144,6 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
 /**
  * URI: /asset/$asset_id/still/default
  * Method: POST
- *
- * 1.x mediamosa_rest_call_set_still_default
  */
 class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -414,8 +410,6 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
 /**
  * URI: /asset/$asset_id/still/order
  * Method: POST
- *
- * 1.x media_management_set_still_order
  */
 class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -497,8 +491,6 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
 /**
  * URI: /mediafile/$mediafile_id/still
  * Method: GET
- *
- * 1.x media_management_get_still_for_mediafile
  */
 class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_asset_mediafile_play {
   // ------------------------------------------------------------------ Consts.
@@ -539,8 +531,6 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
 /**
  * URI: /asset/$asset_id/still
  * Method: GET
- *
- * 1.x media_management_get_still
  */
 class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_play {
   // ------------------------------------------------------------------ Consts.

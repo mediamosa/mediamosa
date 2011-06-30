@@ -29,12 +29,6 @@
  * FFmpeg tool module.
  */
 
-// Constants.
-/**
- * Tool name.
- */
-define('MEDIAMOSA_TOOL_FFMPEG_NAME', 'ffmpeg');
-
 /**
  * Implements hook_permission().
  */
@@ -48,12 +42,16 @@ function mediamosa_tool_ffmpeg_permission() {
 }
 
 /**
- * Implements hook_mediamosa_tool_iteration().
+ * Implements hook_mediamosa_tool_info().
  *
- * @return The name of the tool.
+ * @return array
+ *  An array filled with information about the tool.
  */
-function mediamosa_tool_ffmpeg_mediamosa_tool_iteration() {
-  return MEDIAMOSA_TOOL_FFMPEG_NAME;
+function mediamosa_tool_ffmpeg_mediamosa_tool_info() {
+  return array(mediamosa_tool_ffmpeg::NAME => array(
+    'name' => t('ffmpeg'),
+    'description' => t('The ffmpeg tool for transcoding video files.'),
+  ));
 }
 
 /**
@@ -62,14 +60,15 @@ function mediamosa_tool_ffmpeg_mediamosa_tool_iteration() {
  * @return The mapping array.
  */
 function mediamosa_tool_ffmpeg_mediamosa_tool_mapping() {
-  return mediamosa_tool_params::get_by_tool(MEDIAMOSA_TOOL_FFMPEG_NAME);
+  return mediamosa_tool_params::get_by_tool(mediamosa_tool_ffmpeg::NAME);
 }
 
 /**
  * Implements hook_mediamosa_tool_param_checking().
  *
- * @return The mapping array.
+ * @return array
+ *  The mapping array.
  */
 function mediamosa_tool_ffmpeg_mediamosa_tool_param_checking($nice_parameter, $value) {
-  mediamosa_tool_params::check_mapping(MEDIAMOSA_TOOL_FFMPEG_NAME, $nice_parameter, $value);
+  mediamosa_tool_params::check_mapping(mediamosa_tool_ffmpeg::NAME, $nice_parameter, $value);
 }

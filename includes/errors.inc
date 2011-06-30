@@ -1,5 +1,4 @@
 <?php
-// $Id: errors.inc,v 1.9 2010/10/16 00:00:16 webchick Exp $
 
 /**
  * @file
@@ -210,7 +209,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
     $number++;
   }
 
-  watchdog('php', '%type: !message in %function (line %line of %file).', $error, isset($error['severity_level']) ? $error['severity_level'] : WATCHDOG_NOTICE);
+  watchdog('php', '%type: !message in %function (line %line of %file).', $error, $error['severity_level']);
 
   if ($fatal) {
     drupal_add_http_header('Status', '500 Service unavailable (with message)');

@@ -53,6 +53,9 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     // Get content.
     $supplement = file_get_contents($this->getTestImage_BlobGif());
 
+    // We got something?
+    $this->assertTrue(strlen($supplement), 'Got file for supplement.');
+
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -77,7 +80,7 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     );
     $this->assertTrue(
       $supplements['items']['item'][0]['supplement_base64'] === '',
-      t("Supplement base64 is empty.")
+      t('Supplement base64 is empty.')
     );
 
     //
@@ -101,7 +104,7 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     //
 
     // Set up.
-    $a_data = array(
+    $oai_data = array(
       'supplement' => '<tag>test</tag>',
       'oai_prefix' => 'test_prefix',
       'oai_namespaceuri' => 'test_namespaceuri',
@@ -109,18 +112,18 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Update the supplement.
-    $a_parameters = array(
-      mediamosa_rest_call_asset_supplement_update::OAI_PREFIX => $a_data['oai_prefix'],
-      mediamosa_rest_call_asset_supplement_update::OAI_NAMESPACEURI => $a_data['oai_namespaceuri'],
-      mediamosa_rest_call_asset_supplement_update::OAI_SCHEMALOCATION => $a_data['oai_schemalocation'],
+    $parameters = array(
+      mediamosa_rest_call_asset_supplement_update::OAI_PREFIX => $oai_data['oai_prefix'],
+      mediamosa_rest_call_asset_supplement_update::OAI_NAMESPACEURI => $oai_data['oai_namespaceuri'],
+      mediamosa_rest_call_asset_supplement_update::OAI_SCHEMALOCATION => $oai_data['oai_schemalocation'],
     );
-    $this->updateAssetSupplement($asset_id, $supplement_id, $a_data['supplement'], $a_parameters);
+    $this->updateAssetSupplement($asset_id, $supplement_id, $oai_data['supplement'], $parameters);
 
     // Get the supplement.
     $supplements = $this->getAssetSupplement($asset_id);
 
     // Check the supplement.
-    foreach ($a_data as $key => $value) {
+    foreach ($oai_data as $key => $value) {
       if ($key == 'supplement') {
         $this->assertTrue(
           $supplements['items']['item'][0]['supplement_base64'] == base64_encode($value),
@@ -140,7 +143,7 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     //
 
     // Set up.
-    $a_data = array(
+    $oai_data = array(
       'supplement' => '<tag>test</tags>',
       'oai_prefix' => 'test_prefix',
       'oai_namespaceuri' => 'test_namespaceuri',
@@ -148,12 +151,12 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Update the supplement.
-    $a_parameters = array(
-      mediamosa_rest_call_asset_supplement_update::OAI_PREFIX => $a_data['oai_prefix'],
-      mediamosa_rest_call_asset_supplement_update::OAI_NAMESPACEURI => $a_data['oai_namespaceuri'],
-      mediamosa_rest_call_asset_supplement_update::OAI_SCHEMALOCATION => $a_data['oai_schemalocation'],
+    $parameters = array(
+      mediamosa_rest_call_asset_supplement_update::OAI_PREFIX => $oai_data['oai_prefix'],
+      mediamosa_rest_call_asset_supplement_update::OAI_NAMESPACEURI => $oai_data['oai_namespaceuri'],
+      mediamosa_rest_call_asset_supplement_update::OAI_SCHEMALOCATION => $oai_data['oai_schemalocation'],
     );
-    $this->updateAssetSupplement($asset_id, $supplement_id, $a_data['supplement'], $a_parameters, 'Update on asset supplement', array(mediamosa_error::ERRORCODE_INVALID_SUPPLEMENT));
+    $this->updateAssetSupplement($asset_id, $supplement_id, $oai_data['supplement'], $parameters, 'Update on asset supplement', array(mediamosa_error::ERRORCODE_INVALID_SUPPLEMENT));
 
     //
     // Make empty supplement to reach the maximum supplement per asset error.

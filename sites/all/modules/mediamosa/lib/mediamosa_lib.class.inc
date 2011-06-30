@@ -151,6 +151,9 @@ class mediamosa_lib {
    * Simple function to correctly convert simplexml to array.
    *
    * @param object $xml
+   *
+   * @deprecated: Stop using this function, as it will be removed in the future.
+   *              Instead use the SimpleXML object directly.
    */
   static public function simplexml2array($xml) {
     if (is_object($xml) && get_class($xml) == 'mediamosa_connector_response') {
@@ -190,6 +193,9 @@ class mediamosa_lib {
    * in a non-indexed array and multi items will.
    *
    * @param object $xml
+   *
+   * @deprecated: Stop using this function, as it will be removed in the future.
+   *              Instead use the SimpleXML object directly.
    */
   static public function responsexml2array($xml) {
     if (!$xml) {

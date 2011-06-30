@@ -115,8 +115,6 @@ class mediamosa_asset_mediafile_metadata {
    * Test if mediafile can be transcoded.
    * Will throw an exception when failure.
    *
-   * 1.x: media_management_is_transcodable.
-   *
    * @param string $mediafile_id
    */
   static public function is_transcodable($mediafile_id) {
@@ -138,8 +136,6 @@ class mediamosa_asset_mediafile_metadata {
 
   /**
    * Calculate the bits per plane.
-   *
-   * 1.x: _vpx_jobhandler_calculate_bpp
    *
    * @param $width
    * @param $height

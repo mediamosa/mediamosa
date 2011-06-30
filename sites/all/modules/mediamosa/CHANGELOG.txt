@@ -3,30 +3,67 @@
 START CHANGELOG:
 
 Known issues;
-- Servers (processor, download, upload etc) that are installed on a subdir are
-  not correctly retrieved on the server status page. (See ticket #367).
 - TODO: Tool params should validate the values, when the user save the node:
   * Nice parameter is unique.
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
 
-OpenAPI development:
-- Alternative output formats (JSON, Atom, RSS)
-- OpenAPI interface
-- OpenAPI search
-- OpenSocial GET
-- OpenSocial POST
-
-TODO: (v3.0)
+@TODO
 - OAI delete support (for solr).
+- Add unit test or status page item that checks if all error codes are found in
+  database. (so we dont forget the installer).
+
 
 - Hotfix for .asx and .smil files (apache);
 <IfModule mod_alias.c>
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
 
-MediaMosa 3.0.1 (build 1720)
+- Add metadata module enable on migration 1.7->3.x scripts.
+
+
+MediaMosa 3.0.2 (build 1732)
+----------------------------
+Other changes (not ticket related).
+- Upgraded Drupal 7.0 to Drupal 7.2 release.
+- REST calls in combination with Drupal login now works.
+- Breadcrumb configuration form added.
+- Configuration form permission added.
+- Hack: After installing MediaMosa the CRON hooks are run by Drupal, this caused
+  the front page not to display correctly the first time. Added code to reset 
+  the front page when visiting it the first time.
+- Upload, download REST call interface restriction added. On upload and download
+  servers, only REST calls which are defined allowed for Upload / Download can
+  be used on those servers. Other REST calls will return 404 as error. Make sure
+  you upload and download server definitions are correctly setup and that the
+  REST interface setting in settings.php of these server are correct. Use the
+  page admin/mediamosa/server to see if your download and upload servers are
+  correctly setup.
+- Extended the REST call browser with a filter form. Now also shows which REST
+  calls are exclusively used on what REST interface.
+- Added some CSS class to mediamosa.css to make some text better readable.
+- Fixed notice on REST call browser listing.
+- Added 'refresh now' option on the MediaMosa status page.
+- Hook 'hook_mediamosa_tool_options' been renamed to 
+  'hook_mediamosa_tool_info' to match Drupals standard. Also now returns an
+  array of information about the tool.
+- Removed hook 'hook_mediamosa_tool_iteration', use 'hook_mediamosa_tool_info'
+  instead.
+- Fixed implentation of tool choice in client application where the numberic ID
+  was used from 'hook_mediamosa_tool_iteration' which is random and will change
+  when modules are turned off and on. Will now use the tool ID instead.
+- Fixed mime-type matcher in image module, did also match fooimage/gif instead
+  of only image/*.
+- Fixed image tool transcode() function where it only accepted 'swf' files for
+  transcoding.
+- Renamed tool method ::transcode() to ::get_transcode_exec().
+- Fixed: transcode with keep aspect ratio has incorrect padding (Fix commited 
+  by flyapen, GitHub)
+- Added missing installer for errorcode 1156.
+- Added still generation for image files using the image tool module.
+
+MediaMosa 3.0.1 (build 1722)
 ----------------------------
 - Transcoding from mp3 to mp4 generates an error (See vpcore ticket #241)
 - Job priority development (See vpcore ticket #242).
@@ -69,6 +106,10 @@ Other changes (not ticket related).
   the automated simpletest testing page (developers only).
 - Fixed problem with download test where PHP memory ran out.
 - Fixed download problem when file contains spaces.
+- Added dump of error_log in our unit tests when present.
+- The PHP error_log will now be correctly set during simpletest and we are
+  inside a PHP unit test. Previously lost any error_log() entries inside REST
+  calls.
 
 MediaMosa 3.0 (build 1698)
 --------------------------

@@ -32,9 +32,6 @@
 /**
  * URI: /mediafile/count
  * Method: GET
- *
- * 1.x: media_management_mediafile_count.
- *
  */
 class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -88,7 +85,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
 }
 
 /**
- * URI: /mediafile/$mediafile_id (1.x media_management_get_mediafile)
+ * URI: /mediafile/$mediafile_id
  * Method: GET
  */
 class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
@@ -152,8 +149,6 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 /**
  * URI: /asset/$asset_id/mediafile
  * Method: GET
- *
- * 1.x: media_management_get_asset_mediafiles
  */
 class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -228,8 +223,6 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
 /**
  * URI: /mediafile/$mediafile_id/delete
  * Method: GET
- *
- * 1.x: media_management_delete_mediafile
  */
 class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -373,8 +366,6 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
 /**
  * URI: /asset/$asset_id/mediafile/create
  * Method: POST
- *
- * 1.x: media_management_create_mediafile
  */
 class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -535,8 +526,6 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
 /**
  * URI: /mediafile/$mediafile_id
  * Method: POST
- *
- * 1.x: media_management_update_mediafile
  */
 class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.

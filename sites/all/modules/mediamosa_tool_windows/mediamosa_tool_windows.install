@@ -42,3 +42,18 @@ function mediamosa_tool_windows_install() {
 function mediamosa_tool_windows_uninstall() {
   // Do nothing. We don't delete the existing data.
 }
+
+/**
+ * Turn off the MediaMosa Windows tool module, its no longer supported. It was only used when you used MediaMosa to transcode into the wmf format and running the MediaMosa job server on a Windows server.
+ */
+function mediamosa_tool_windows_update_7000() {
+  // Rebuild the registry, added new class.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+
+  // Turn off this module.
+  module_disable(array('mediamosa_tool_windows'));
+
+  return 'The Windows tool module has been disable, do not turn it back on. The Windows tool module will no longer be supported in the future versions of MediaMosa.';
+}

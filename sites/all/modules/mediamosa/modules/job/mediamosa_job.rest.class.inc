@@ -61,9 +61,9 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -149,12 +149,12 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -182,7 +182,7 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
     mediamosa_job::update_status($a_job_ext, $status, $progress, $error_description);
 
     // Set Ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -208,9 +208,9 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -242,7 +242,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -291,9 +291,9 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -308,12 +308,12 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -328,7 +328,7 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
     mediamosa_job::update_progress_upload($job_id, $uploaded_file_size);
 
     // Set Okay.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -382,9 +382,9 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const RETRANSCODE = 'retranscode';
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -549,32 +549,32 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function process_rest_args(array $a_var_setup) {
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+  protected function process_rest_args(array $var_setup) {
+    $var_setup = parent::process_rest_args($var_setup);
 
     $job_type = $this->get_param_value(self::JOB_TYPE);
 
     // Make File size required when uploading.
     if ($job_type == mediamosa_job_db::JOB_TYPE_UPLOAD) {
-      $a_var_setup[self::VARS][self::FILE_SIZE][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
-      $a_var_setup[self::VARS][self::GROUP_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::FILE_SIZE][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::GROUP_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -657,7 +657,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     }
 
     // Return the created job_id.
-    $o_mediamosa->add_item(array('job_id' => $job_id));
+    $mediamosa->add_item(array('job_id' => $job_id));
   }
 }
 
@@ -677,9 +677,9 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -690,12 +690,12 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -707,7 +707,7 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin);
 
     // Get the count.
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
@@ -724,7 +724,7 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $o_mediamosa->add_item($a_job);
+      $mediamosa->add_item($a_job);
     }
   }
 }
@@ -747,9 +747,9 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -769,18 +769,18 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     );
 
     // Set limit and offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_JOBLIST, mediamosa_settings::LIMIT_DEFAULT_JOBLIST);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX_JOBLIST, mediamosa_settings::LIMIT_DEFAULT_JOBLIST);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ---------------------------------------------- Override Validate Rest Args.
   // Override for checking CQL string.
-  protected function validate_rest_args(array $a_var_setup) {
+  protected function validate_rest_args(array $var_setup) {
 
     // Validate first.
-    parent::validate_rest_args($a_var_setup);
+    parent::validate_rest_args($var_setup);
 
     $cql = $this->get_param_value(self::CQL);
     $app_ids = $this->get_param_value_app();
@@ -793,7 +793,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $a_app_ids = $this->get_param_value_app();
@@ -820,7 +820,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $result = mediamosa_job::get_job_list($a_app_ids, $user_id, $is_full_access, FALSE, $asset_id, '', $cql, $limit, $offset);
 
     // Get the count.
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
@@ -837,7 +837,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $o_mediamosa->add_item($a_job);
+      $mediamosa->add_item($a_job);
     }
   }
 }
@@ -859,9 +859,9 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -877,12 +877,12 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -898,7 +898,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, FALSE, $mediafile_id);
 
     // Get the count.
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
     foreach ($result as $a_row) {
@@ -916,7 +916,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $o_mediamosa->add_item($a_job);
+      $mediamosa->add_item($a_job);
     }
   }
 }
@@ -941,9 +941,9 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -959,12 +959,12 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -980,7 +980,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, $job_id);
 
     // Get the count.
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
     foreach ($result as $a_row) {
@@ -998,7 +998,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $o_mediamosa->add_item($a_job);
+      $mediamosa->add_item($a_job);
     }
   }
 }
@@ -1019,23 +1019,23 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
-    unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+    unset($var_setup[self::VARS][parent::JOB_TYPE]);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
 
     // Set job type and give it fixed value.
-    $a_var_setup[self::VARS][self::JOB_TYPE] = array(
+    $var_setup[self::VARS][self::JOB_TYPE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
@@ -1043,9 +1043,9 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
     );
 
     // GET / POST to array.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1066,23 +1066,23 @@ class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
-    unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+    unset($var_setup[self::VARS][parent::JOB_TYPE]);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
 
     // Set job type and give it fixed value.
-    $a_var_setup[self::VARS][self::JOB_TYPE] = array(
+    $var_setup[self::VARS][self::JOB_TYPE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
@@ -1090,9 +1090,9 @@ class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job
     );
 
     // GET / POST to array.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1103,13 +1103,9 @@ class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job
 
 /**
  * URI: /asset/$asset_id/still/create
- *
  * Method: POST
  *
  * Create a still job.
- *
- * 1.x: vpx_jobscheduler_create_new_still_job_2
- *
  */
 class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_create {
   // ------------------------------------------------------------------- Consts.
@@ -1122,41 +1118,41 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
-    unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+    unset($var_setup[self::VARS][parent::JOB_TYPE]);
 
     // Although its required, its not used(!).
     // note: mediamosa_rest_call_job_create_still_for_mediafile() depends on
     // this non-requirement and non-usage.
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
     );
 
-    $a_var_setup[self::VARS][self::WIDTH] = array(
+    $var_setup[self::VARS][self::WIDTH] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_DESCRIPTION => 'Still width. Deprecated, use size instead.',
     );
-    $a_var_setup[self::VARS][self::HEIGHT] = array(
+    $var_setup[self::VARS][self::HEIGHT] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_DESCRIPTION => 'Still height. Deprecated, use size instead.',
     );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
 
     // Set job type and give it fixed value.
-    $a_var_setup[self::VARS][self::JOB_TYPE] = array(
+    $var_setup[self::VARS][self::JOB_TYPE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
@@ -1164,7 +1160,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     );
 
     // GET / POST to array.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
     // Fix problems with usage of obsolete FRAMETIME, WIDTH and HEIGHT.
     $frametime = $this->get_param_value(self::FRAMETIME);
@@ -1203,11 +1199,11 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_value($app_id));
     }
 
-    unset($a_var_setup[self::VARS][self::FRAMETIME]);
-    unset($a_var_setup[self::VARS][self::WIDTH]);
-    unset($a_var_setup[self::VARS][self::HEIGHT]);
+    unset($var_setup[self::VARS][self::FRAMETIME]);
+    unset($var_setup[self::VARS][self::WIDTH]);
+    unset($var_setup[self::VARS][self::HEIGHT]);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1231,20 +1227,18 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  * MediaMosa REST interface. Doesn't matter if mediafile_id comes from
  * URI / GET / POST.
  *
- * 1.x: vpx_jobscheduler_create_new_still_job_for_mediafile
- *
  */
 class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_call_job_create_still {
   // ------------------------------------------------------------------- Consts.
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
     // Unset the asset_id (we dont use it).
-    unset($a_var_setup[self::VARS][self::ASSET_ID]);
+    unset($var_setup[self::VARS][self::ASSET_ID]);
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1271,9 +1265,9 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -1289,7 +1283,7 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1318,20 +1312,20 @@ class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Run them.
     mediamosa_job_scheduler::run_parse_queue();
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1343,19 +1337,19 @@ class mediamosa_rest_call_cron_jobserver extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Run them.
     mediamosa_job_server::run_parse_queue();
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

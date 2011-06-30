@@ -43,29 +43,40 @@ function mediamosa_tool_image_mediamosa_tool_can_analyse($mime_type) {
  */
 function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_image';
-  $tool_id = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+  $tool_id = mediamosa_tool_image::NAME;
   $execution_command = 'exiv2 @mediafile_location';
   $separator = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR;
   mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
 }
 
 /**
- * Implements hook_mediamosa_tool_options().
+ * Implements hook_mediamosa_tool_can_generate_still().
  */
-function mediamosa_tool_image_mediamosa_tool_options() {
-  return array(
-    'name' => t('Image'),
-    'description' => t('Image files like JPG, PNG, TIFF.'),
-    'tool' => mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID,
-  );
+function mediamosa_tool_image_mediamosa_tool_can_generate_still($mime_type) {
+  return mediamosa_tool_image::is_supported($mime_type);
 }
 
 /**
- * Get module id.
- * Implements hook_mediamosa_tool_iteration().
+ * Implements hook_mediamosa_tool_get_generate_still_exec().
+ *
+ * @deprecated: Although new hook, we will replace this with a other hook in
+ *              v3.5 called 'hook_mediamosa_tool_generate_still' which will
+ *              generate still without returning a exec string.
  */
-function mediamosa_tool_image_mediamosa_tool_iteration() {
-  return mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+function mediamosa_tool_image_mediamosa_tool_get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
+  return mediamosa_tool_image::get_generate_still_exec($jobserver_job_id, $mediafile_id_source);
+}
+
+/**
+ * Implements hook_mediamosa_tool_info().
+ *
+ * Get information about the tool.
+ */
+function mediamosa_tool_image_mediamosa_tool_info() {
+  return array(mediamosa_tool_image::NAME => array(
+    'name' => t('ImageMagic'),
+    'description' => t('Image files like JPG, PNG, TIFF.'),
+  ));
 }
 
 /**

@@ -83,7 +83,7 @@ function mediamosa_maintenance_browse_help($path, $arg) {
     case 'admin/mediamosa/browse/log':
       return '<p>' . t('The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. Besides checking the MediaMosa status page, it\'s also vital to check the MediaMosa report on a regular basis.') . '</p>';
     case 'admin/mediamosa/browse/restcall':
-      return '<p>' . t('The REST call browser allows you to view all REST calls and their properties.') . '</p>';
+      return '<p>' . t('The REST call browser allows you to view all REST calls and their properties. Use the filter form to filter your results. Status value indicates if the REST call is activated, deprecated or disabled. Disabled REST calls can not be used. Deprecated REST calls will be disabled in future releases. Interface allows where the REST call can be used. Upload REST calls will have the upload interface defined, allowing them to be used on the upload server (see !mediamosa_servers). The same for REST call defined with download interface. These can be used on download servers. App interface must be the closed REST interface and is not specified by the !mediamosa_servers listing. The OpenAPI REST calls are allowed on the OpenAPI REST interface and should be public, as these REST calls do not require client application authentication.', array('!mediamosa_servers' => l('MediaMosa Servers', 'admin/mediamosa/config/server'))) . '</p>';
     case 'admin/mediamosa/browse/revision':
       return '<p>' . t('The revision log is a list of changes made on the configuration of MediaMosa. You can view changes made on transcode profiles, client applications, servers and global settings.') . '</p>';
     case 'admin/mediamosa/browse/errorcode':
@@ -226,8 +226,7 @@ function mediamosa_maintenance_browse_menu() {
   $items['admin/mediamosa/browse/restcall'] = array(
     'title' => 'Rest calls browser',
     'description' => 'View and browse through the REST calls of MediaMosa.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_maintenance_browse_restcall_form'),
+    'page callback' => '_mediamosa_maintenance_browse_restcall_page',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_RESTCALLS),
     'file' => 'mediamosa_maintenance_browse_restcalls.inc',

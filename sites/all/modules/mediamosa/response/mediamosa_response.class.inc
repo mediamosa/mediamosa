@@ -141,14 +141,39 @@ class mediamosa_response extends mediamosa {
       // Find the rest call.
       $this->rest_call = $this->mediamosa_rest->match_call();
 
-      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user pages.
-      if (!$this->rest_call || mediamosa::show_drupal_login()) {
-        // Put back previous (drupal) handler.
-        if (!empty($previous_handler)) {
-          set_error_handler($previous_handler, E_ALL);
+      if (!$this->rest_call) {
+        // No REST call: proceed with Drupal.
+        if (mediamosa::is_admin_enabled()) {
+          if (!empty($previous_handler)) {
+            set_error_handler($previous_handler, E_ALL);
+          }
+          return;
         }
-
-        return; // At this point we override for (drupal) interface mode.
+      }
+      else {
+        // Proceed with REST call but make exception for /user/login
+        // and /user/password and /user.
+        if (mediamosa::is_admin_enabled() && (user_is_logged_in())) {
+          // Then allow all restcalls without /user, /user/{number} and /user/logout
+          if ((mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') || (mediamosa_unicode::substr(mediamosa::request_uri(), -11) == 'user/logout')) {
+            // Proceed with Drupal: first put back previous (drupal) handler.
+            if (!empty($previous_handler)) {
+              set_error_handler($previous_handler, E_ALL);
+            }
+            return;
+          }
+        }
+        elseif ((mediamosa::is_admin_enabled()) && (!user_is_logged_in())) {
+          // Then allow all restcalls without /user/login and /user/password.
+          // Known issue: /user gives rest call here instead of Drupal login page.
+          if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password' || mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') {
+            // Proceed with Drupal: first put back previous (drupal) handler.
+            if (!empty($previous_handler)) {
+              set_error_handler($previous_handler, E_ALL);
+            }
+            return;
+          } 
+        }
       }
 
       // At this point we take over the output from Drupal and will no longer
@@ -169,6 +194,11 @@ class mediamosa_response extends mediamosa {
       elseif (mediamosa::in_simpletest_sandbox()) {
         session_regenerate_id(FALSE);
       }
+
+      // Some stuff is not setup when we are called inside simpletest and we
+      // are called as REST call inside the test. Setup now if we are in
+      // simpletest.
+      mediamosa::setup_simpletest();
 
       // Make sure response type is set.
       if (empty($this->rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {

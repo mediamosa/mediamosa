@@ -1,6 +1,6 @@
 ; $Id: $
 name = "Mediamosa Tool Windows"
-description = "Mediamosa Tool module for Windows toolset"
+description = "Mediamosa Tool module for transcoding into the WMF format. <b>This tool is no longer supported and will be removed in the future. Do not use this module.</b>"
 package = "MediaMosa - Tool"
 version = "2.3.0"
 core = 7.x

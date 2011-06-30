@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * Tool mapping functions.
+  * Tool metadata mapping functions.
   */
 
 class mediamosa_tool_mapping {

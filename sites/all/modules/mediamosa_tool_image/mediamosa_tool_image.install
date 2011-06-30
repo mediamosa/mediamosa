@@ -71,7 +71,7 @@ function mediamosa_tool_image_install() {
 
         $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
 
-        $node->{mediamosa_tool_mapping_db::TOOL} = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
+        $node->{mediamosa_tool_mapping_db::TOOL} = mediamosa_tool_image::NAME;
         $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
         $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
 
@@ -86,4 +86,6 @@ function mediamosa_tool_image_install() {
  */
 function mediamosa_tool_image_uninstall() {
   // Do nothing. We don't delete the existing data.
+  // FIXME: Yes we do, thats why we put into a module in the first place. So
+  //        make a uninstaller.
 }

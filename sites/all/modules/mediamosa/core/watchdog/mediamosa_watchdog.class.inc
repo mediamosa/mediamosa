@@ -50,7 +50,7 @@ class mediamosa_watchdog {
   /**
    * Log asset ids.
    */
-  static public function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
+  static public function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $mediafile_id = '') {
     // Unique id for identifing the watchdog id.
     $link = mediamosa_db::uuid(0);
 
@@ -76,7 +76,7 @@ class mediamosa_watchdog {
       ->fields(array(
         mediamosa_watchdog_db::ID => $wid,
         mediamosa_watchdog_db::ASSET_ID => $asset_id,
-        mediamosa_watchdog_db::MEDIAFILE_ID => '',
+        mediamosa_watchdog_db::MEDIAFILE_ID => $mediafile_id,
       ))
       ->execute();
   }
@@ -85,6 +85,9 @@ class mediamosa_watchdog {
    * Log mediafile ids.
    */
   static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE, $type = NULL) {
+    // Need to know.
+    assert(!empty($mediafile_id));
+
     // Fill the asset id.
     if (!$asset_id && $mediafile_id) {
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
@@ -95,17 +98,7 @@ class mediamosa_watchdog {
     }
 
     // Logging the message and insert the asset_id.
-    $wid = self::log_asset($asset_id, $message, $variables, $severity, $type);
-
-    // Insert the mediafile_id.
-    $num_updated = mediamosa_db::db_update(mediamosa_watchdog_db::TABLE_NAME)
-      ->fields(array(
-        mediamosa_watchdog_db::MEDIAFILE_ID => $mediafile_id,
-      ))
-      ->condition('wid', $wid)
-      ->execute();
-
-    return $wid;
+    return self::log_asset($asset_id, $message, $variables, $severity, $type, $mediafile_id);
   }
 
   /**

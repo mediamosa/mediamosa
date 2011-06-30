@@ -1,5 +1,4 @@
 <?php
-// $Id: install.core.inc,v 1.49 2011/01/03 15:48:11 webchick Exp $
 
 /**
  * @file
@@ -375,7 +374,6 @@ function install_run_tasks(&$install_state) {
  *   The output of the task function, if there is any.
  */
 function install_run_task($task, &$install_state) {
-
   $function = $task['function'];
 
   if ($task['type'] == 'form') {

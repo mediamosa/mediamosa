@@ -25,8 +25,8 @@
  */
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 1720);
-define('MEDIAMOSA_VERSION', '3.0.1');
+define('MEDIAMOSA_BUILD', 1732);
+define('MEDIAMOSA_VERSION', '3.0.2');
 
 // Optional changes:
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD);
@@ -45,7 +45,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION = MEDIAMOSA_VERSION_SHORT;
   const MEDIAMOSA_VERSION_FULL = MEDIAMOSA_VERSION_FULL;
 
-  // Official versions (only in define when actually used somewhere).
+  // Official versions, only in define when actually used in REST calls.
   const MEDIAMOSA_VERSION_1_1_0 = '1.1.0';
   const MEDIAMOSA_VERSION_1_1_5 = '1.1.5';
   const MEDIAMOSA_VERSION_1_1_7 = '1.1.7';

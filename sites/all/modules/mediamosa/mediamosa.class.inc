@@ -39,7 +39,7 @@
 
 class mediamosa {
 
-  // ------------------------------------------------------------------ Parameters.
+  // --------------------------------------------------------------- Parameters.
   static private $is_db_logging = FALSE;
 
   static private $num_of_queries = array();
@@ -327,6 +327,7 @@ class mediamosa {
           '%function' => $caller['function'],
           '%file' => $caller['file'],
           '%line' => $caller['line'],
+          'severity_level' => WATCHDOG_ERROR,
         ), FALSE);
       }
     }
@@ -454,31 +455,6 @@ class mediamosa {
   }
 
   /**
-   * Bypass Drupal 'user/' path collisions.
-   *
-   * @return boolean
-   */
-  static public function show_drupal_login() {
-
-    // Check if interface is enabled, if so, check if we are logged in.
-    // If not logged in, allow user/login and user/password url.
-    if (mediamosa::is_admin_enabled()) {
-      if (user_is_logged_in()) {
-        // Logged in as Drupal user, allow.
-        return TRUE;
-      }
-
-      // Not logged in as Drupal user.
-      // We allow login and password recovery.
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password') {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
    * Exit the page with an 503 error.
    *
    * @param string $message
@@ -563,11 +539,28 @@ class mediamosa {
   }
 
   /**
+   * If the REST call was called inside an simpletest, then error_log() will
+   * be lost. Setup error log so we log in the simpletest.
+   */
+  static protected function setup_simpletest() {
+    if (!self::in_simpletest_sandbox()) {
+      return;
+    }
+
+    $public_files_directory  = variable_get('file_public_path');
+    assert(!empty($public_files_directory));
+
+    // Log fatal errors.
+    ini_set('log_errors', 1);
+    ini_set('error_log', $public_files_directory . '/error.log');
+  }
+
+  /**
    * Wrapper around the drupal_http_request function.
    * See drupal functions for details.
    */
-  static public function drupal_http_request($url, array $a_options = array()) {
-    return drupal_http_request($url, $a_options);
+  static public function drupal_http_request($url, array $options = array()) {
+    return drupal_http_request($url, $options);
   }
 
   /**

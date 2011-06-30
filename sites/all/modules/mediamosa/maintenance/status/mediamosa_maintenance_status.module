@@ -32,7 +32,7 @@ module_load_include('theme.inc', 'mediamosa_maintenance_status', 'mediamosa_main
  */
 
 /**
- * Result severity -- Informational message only.
+ * Result severity -- Informative messages only.
  */
 define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO', -1);
 
@@ -92,6 +92,15 @@ function mediamosa_maintenance_status_menu() {
     'page callback' => '_mediamosa_maintenance_status_job_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
+  );
+
+  $items['admin/mediamosa/status/status/refresh'] = array(
+    'title' => 'Status',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_maintenance_status_status_refresh',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_REFRESH),
+    'weight' => 0,
   );
 
   return $items;
@@ -185,12 +194,29 @@ function _mediamosa_maintenance_status_update() {
 }
 
 /**
+ * Refresh the timer for update main status page.
+ */
+function _mediamosa_maintenance_status_status_refresh() {
+  variable_del('mediamosa_status_last_time');
+
+  drupal_goto();
+}
+
+
+/**
  * Menu callback: displays the MediaMosa status report.
  */
 function _mediamosa_maintenance_status_status() {
   global $user;
 
   $output = array();
+
+  // Ok first time ever on the home page will cause an bug in the theming.
+  // Lets fix it by reseting the status page.
+  if (!variable_get('mediamosa_status_page_hack')) {
+    variable_del('mediamosa_status_last_time');
+    variable_set('mediamosa_status_page_hack', TRUE);
+  }
 
   // For the available codecs fieldset.
   drupal_add_js('misc/form.js');
@@ -257,7 +283,7 @@ function _mediamosa_maintenance_status_status() {
         $last_update[] = t('next update imminent');
       }
       else {
-        $last_update[] = t('next update in %planned (estimate)', array('%planned' => format_interval($planned - REQUEST_TIME)));
+        $last_update[] = t('next update in %planned (estimate) (!refresh_now)', array('%planned' => format_interval($planned - REQUEST_TIME), '!refresh_now' => l('refresh now', 'admin/mediamosa/status/status/refresh')));
       }
     }
     else {
