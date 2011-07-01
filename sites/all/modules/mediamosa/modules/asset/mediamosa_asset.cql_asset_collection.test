@@ -162,7 +162,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     }
 
     // Qoute test
-// FIXME: Solr and SQL both handle search on quotes differently.
+    // FIXME: Solr and SQL both handle search on quotes differently.
     //$this->cql_do_search_test_assets_3('vpx:dc.description = "obama\"s"', array());
     // FIXME: searching for text with \" does not work.
     // $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\\\"s"', array($asset_id_7 => TRUE));
