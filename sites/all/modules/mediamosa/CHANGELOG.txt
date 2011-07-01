@@ -25,6 +25,8 @@ Known issues;
 
 MediaMosa 3.0.2 (build 1732)
 ----------------------------
+- VP-Core productie: nieuwe FTP user onmogelijk (See ticket #244). New user with appropriate rights fix.
+
 Other changes (not ticket related).
 - Upgraded Drupal 7.0 to Drupal 7.2 release.
 - REST calls in combination with Drupal login now works.

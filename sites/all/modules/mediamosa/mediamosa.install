@@ -3143,3 +3143,25 @@ function mediamosa_update_7123() {
     ->execute();
   }
 }
+
+/**
+ * VPCore ticket: #244 (VP-Core productie: nieuwe FTP user onmogelijk) fix.
+ */
+function mediamosa_update_7124() {
+  $result = db_query('SELECT * FROM {mediamosa_ftp_user}');
+  foreach ($result as $user) {
+    $username = $user->userid;
+
+    // Create FTP dir.
+    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . '/' . mediamosa_configuration_storage::ftp_location_get() . '/' . $username;
+
+    try {
+      $old_mask = umask(0);
+      chmod($user_home_dir, 0775);
+      umask($old_mask);
+    }
+    catch (mediamosa_exception $e) {
+      // Ignore.
+    }
+  }
+}
