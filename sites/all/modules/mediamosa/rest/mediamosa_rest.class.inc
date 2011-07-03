@@ -178,9 +178,8 @@ class mediamosa_rest {
             $wildchar++;
           }
         }
-        if (!$rest_call_return || $rest_call_return[mediamosa_rest_call::URI_WILDCHAR] > $wildchar) {
+        if (!$rest_call_return) {
           $rest_call[mediamosa_rest_call::URI] = $uri;
-          $rest_call[mediamosa_rest_call::URI_WILDCHAR] = $wildchar;
           $rest_call_return = $rest_call;
         }
       }

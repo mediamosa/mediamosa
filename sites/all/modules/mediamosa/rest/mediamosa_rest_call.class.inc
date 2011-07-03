@@ -50,7 +50,6 @@ abstract class mediamosa_rest_call {
   const URI = 'uri';
   const URI_PARAMS = 'uri_params';
   const URI_REQUEST = 'uri_request'; // Original URI.
-  const URI_WILDCHAR = 'wildchar';
   const MATCH_URI_FUNCTION = 'match_uri';
 
   // Response type, see mediamosa_response for list.
