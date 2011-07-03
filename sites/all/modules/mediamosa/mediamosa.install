@@ -3120,3 +3120,26 @@ function mediamosa_update_7121() {
 function mediamosa_update_7122() {
   db_query("ALTER TABLE {mediamosa_ftp_user} MODIFY `userid` varbinary(255) NOT NULL COMMENT 'The User ID.'");
 }
+
+/**
+ * Create new "Still can not be created for mediafile with '@mediafile_id'"
+ * errorcode in database.
+ */
+function mediamosa_update_7123() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_STILL_IS_NOT_CREATABLE')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_STILL_IS_NOT_CREATABLE',
+        'message' => "Still can not be created for mediafile with '@mediafile_id'",
+        'code' => 1156, // mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
+      ))
+    ->execute();
+  }
+}
