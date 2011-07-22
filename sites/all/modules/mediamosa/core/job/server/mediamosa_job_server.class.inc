@@ -791,7 +791,7 @@ class mediamosa_job_server {
         // soon.
 
         // Now see if transcode function is found.
-        if (class_exists($class_name) && method_exists($class_name, 'transcode')) {
+        if (class_exists($class_name) && method_exists($class_name, 'get_transcode_exec')) {
           $args = array(
             // Jobserver job ID.
             'jobserver_job_id' => $jobserver_job_id,
@@ -810,7 +810,7 @@ class mediamosa_job_server {
           );
 
           // PHP 5.2.3 or higher.
-          $execution_string = call_user_func_array($class_name . '::get_transcode_exec', $args);
+          $execution_string = call_user_func($class_name . '::get_transcode_exec', $args);
         }
     }
 
