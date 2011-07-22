@@ -282,7 +282,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#title' => t('Transcoding Tool'),
     '#type' => 'select',
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL, $node),
-    '#options' => $tools,
+    '#options' => $options,
     '#required' => TRUE,
     '#description' => t('The transcoding tool used for this profile.'),
   );
