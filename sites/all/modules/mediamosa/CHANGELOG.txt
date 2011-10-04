@@ -63,6 +63,7 @@ Other changes (not ticket related).
 - Added missing installer for errorcode 1156.
 - Added still generation for image files using the image tool module.
 - Removed unused param in REST call matcher.
+- Fixed typo in windows tool module (fix by pforgacs, madcap-nl).
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
