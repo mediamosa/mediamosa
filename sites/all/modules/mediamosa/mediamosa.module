@@ -645,6 +645,7 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
       return;
     }
 
+    $form['name']['#value'] = $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR;
     $form['#validate'][] = 'mediamosa_node_mediamosa_app_image_style_validate';
   }
   elseif ($form_id == 'image_style_form') {
@@ -675,8 +676,8 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
       '#markup' => l(t('Go back to your client application edit page (without save the changes)'), 'admin/mediamosa/config/app/' . $nid . '/edit'),
     );
 
-    $form['name']['#default_value'] = drupal_substr($style, $pos + 1);
     $form['#validate'][] = 'mediamosa_node_mediamosa_app_image_style_validate';
+    $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_submit';
   }
 }
 
