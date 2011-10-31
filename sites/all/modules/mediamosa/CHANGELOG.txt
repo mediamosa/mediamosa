@@ -25,8 +25,8 @@ Known issues;
 
 MediaMosa 3.0.3 (build xxxx)
 ----------------------------
-- Fixed typo in windows tool module (fix by pforgacs, madcap-nl).
-
+- Fixed typo in windows tool module (by pforgacs, madcap-nl).
+- Status page solr variable fix (by pforgacs, madcap-nl).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
