@@ -23,6 +23,11 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
+MediaMosa 3.0.3 (build xxxx)
+----------------------------
+- Fixed typo in windows tool module (fix by pforgacs, madcap-nl).
+
+
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
 Other changes (not ticket related).
