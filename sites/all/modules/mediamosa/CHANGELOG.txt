@@ -31,6 +31,7 @@ MediaMosa 3.0.3 (build xxxx)
 - New ftp-user gets correct ftp directory with appropriate rights (by pforgacs, madcap-nl).
 - Content-type in still download REST call added (by pforgacs, madcap-nl).
 - OpenAPI config page bug fix (by pforgacs, madcap-nl).
+- Fixed lua script: transcoding issues in existing assets (by pforgacs, madcap-nl).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
