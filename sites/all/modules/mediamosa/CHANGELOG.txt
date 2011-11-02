@@ -33,6 +33,7 @@ MediaMosa 3.0.3 (build xxxx)
 - OpenAPI config page bug fix (by pforgacs, madcap-nl).
 - Fixed lua script: transcoding issues in existing assets (by pforgacs, madcap-nl).
 - Corrected MediaMosa version check for collection (by pforgacs, madcap-nl, see ticket #332).
+- Corrected incorrect reporting of max_execution_time during cron runs.
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
