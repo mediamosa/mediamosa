@@ -25,15 +25,16 @@ Known issues;
 
 MediaMosa 3.0.3 (build xxxx)
 ----------------------------
-- Fixed typo in windows tool module (by pforgacs, madcap-nl).
-- Status page solr variable fix (by pforgacs, madcap-nl).
-- Status page Exiv2 and ImageMagic link fix (by pforgacs, madcap-nl).
-- New ftp-user gets correct ftp directory with appropriate rights (by pforgacs, madcap-nl).
-- Content-type in still download REST call added (by pforgacs, madcap-nl).
-- OpenAPI config page bug fix (by pforgacs, madcap-nl).
-- Fixed lua script: transcoding issues in existing assets (by pforgacs, madcap-nl).
-- Corrected MediaMosa version check for collection (by pforgacs, madcap-nl, see ticket #332).
-- Corrected incorrect reporting of max_execution_time during cron runs.
+- Fixed typo in windows tool module.
+- Status page solr variable fix.
+- Status page Exiv2 and ImageMagic link fix.
+- New ftp-user gets correct ftp directory with appropriate rights (see ticket #244).
+- Content-type in still download REST call added.
+- OpenAPI config page bug fix.
+- Fixed lua script: transcoding issues in existing assets (see ticket #267).
+- Corrected MediaMosa version check for collection (see ticket #332).
+- Corrected incorrect reporting of max_execution_time during cron runs (see ticket #412).
+- Don't store invalid bitrates (see ticket #394).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
