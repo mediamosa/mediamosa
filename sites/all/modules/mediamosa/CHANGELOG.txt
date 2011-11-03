@@ -36,6 +36,7 @@ MediaMosa 3.0.3 (build xxxx)
 - Corrected incorrect reporting of max_execution_time during cron runs (see ticket #412).
 - Don't store invalid bitrates (see ticket #394).
 - Fix in Lua script vpx-transcode for unpatched ffmpeg versions.
+- oAuth security feature added in addition to Dbus (see ticket #10).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
