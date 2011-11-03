@@ -38,6 +38,8 @@ MediaMosa 3.0.3 (build xxxx)
 - Fix in Lua script vpx-transcode for unpatched ffmpeg versions.
 - oAuth security feature added in addition to Dbus (see ticket #10).
 - Support for imagetool options and bugfix in transcoding tools support (see ticket #505 and #506).
+- Support alt parameter for openapi/search.
+- Support Request-Parameter-Formet-Value parameter too for openapi REST calls (OpenSocial docu error).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
