@@ -431,7 +431,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     end
 
     local frame = string.match(line, "^frame=.-time=(.-) bitrate")
-    if frame and duration then
+    if frame and duration and (type(frame) == "number") and (duration > 0) then
       local progress = frame / duration
       if pass >= 1 then
         progress = progress / 2
