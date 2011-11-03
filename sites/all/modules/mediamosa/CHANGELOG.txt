@@ -23,7 +23,11 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.3 (build xxxx)
+MediaMosa 3.0.4 (build xxxx)
+----------------------------
+- CZP simpletest bug fix.
+
+MediaMosa 3.0.3 (build 1735)
 ----------------------------
 - Fixed typo in windows tool module.
 - Status page solr variable fix.
