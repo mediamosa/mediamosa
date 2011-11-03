@@ -37,6 +37,7 @@ MediaMosa 3.0.3 (build xxxx)
 - Don't store invalid bitrates (see ticket #394).
 - Fix in Lua script vpx-transcode for unpatched ffmpeg versions.
 - oAuth security feature added in addition to Dbus (see ticket #10).
+- Support for imagetool options and bugfix in transcoding tools support (see ticket #505 and #506).
 
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
