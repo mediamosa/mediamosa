@@ -134,6 +134,18 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Returns the mimetype of mediafile, if analyzed.
+   *
+   * @param string $mediafile_id
+   *
+   * @return string
+   *   Mimetype of the mediafile, or FALSE.
+   */
+  static public function get_mimetype($mediafile_id) {
+    return mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'mime_type');
+  }
+
+  /**
    * Will test if mediafile exits, will throw when fail.
    *
    * @param string $mediafile_id
