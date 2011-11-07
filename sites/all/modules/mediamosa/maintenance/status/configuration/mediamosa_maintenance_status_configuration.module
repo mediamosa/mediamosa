@@ -125,7 +125,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'severity' => _mediamosa_maintenance_status_okwarning($php_post_max_size_ok),
   );
 
-  $php_max_execution_time = ini_get('max_execution_time');
+  $php_max_execution_time = get_cfg_var('max_execution_time');
   $php_max_execution_time_ok = $php_max_execution_time >= 30;
 
   $results['php_max_execution_time'] = array(
@@ -134,7 +134,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'severity' => _mediamosa_maintenance_status_okwarning($php_max_execution_time_ok),
   );
 
-  $php_max_input_time = ini_get('max_input_time');
+  $php_max_input_time = get_cfg_var('max_input_time');
   $php_max_input_time_ok = $php_max_input_time >= 60;
 
   $results['php_max_input_time'] = array(
@@ -156,7 +156,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     $exec_output_codecs = array();
     mediamosa_io::command_installed('ffmpeg -codecs', $exec_output_codecs);
 
-    $form_ffmpeg['mediamosa_solr'] = array(
+    $form_ffmpeg['mediamosa_ffmpeg'] = array(
       '#type' => 'fieldset',
       '#title' => t('Available codecs'),
       '#collapsible' => TRUE,
@@ -166,7 +166,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     );
 
     unset($exec_output_codecs[0]);
-    $form_ffmpeg['mediamosa_solr']['codecs'] = array(
+    $form_ffmpeg['mediamosa_ffmpeg']['codecs'] = array(
       '#markup' => '<pre>' . implode("\n", $exec_output_codecs) . '</pre>',
     );
 

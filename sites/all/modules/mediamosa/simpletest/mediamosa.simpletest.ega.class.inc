@@ -83,6 +83,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_statistics',
       'mediamosa_ftp_user',
       'mediamosa_tool_ffmpeg',
+      'mediamosa_metadata_dc',
+      'mediamosa_metadata_qdc',
+      'mediamosa_metadata_czp',
     ), $args));
 
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {

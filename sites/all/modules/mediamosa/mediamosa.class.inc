@@ -215,7 +215,7 @@ class mediamosa {
   /**
    * Enables global app environment.
    *
-   * @param string $name
+   * @param array $app_ids
    */
   static public function set_environment_app_ids(array $app_ids) {
     $app_id = reset($app_ids);

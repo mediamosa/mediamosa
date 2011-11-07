@@ -140,7 +140,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_sdk', 'simpletest', 'mediamosa', 'mediamosa_app', 'mediamosa_metadata_dc', 'mediamosa_metadata_qdc'), $args));
+    $args = array_unique(array_merge(array('mediamosa_sdk', 'simpletest', 'mediamosa', 'mediamosa_app'), $args));
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }
