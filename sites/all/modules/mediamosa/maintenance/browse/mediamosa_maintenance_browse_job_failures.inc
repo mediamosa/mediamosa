@@ -32,6 +32,7 @@
 
 define('MEDIAMOSA_BROWSE_JOB_FAILURES', 'mediafile_browse_job_failures');
 define('MEDIAMOSA_BROWSE_JOB_FAILURES_HIDDEN', 'HIDDEN');
+define('MEDIAMOSA_BROWSE_JOB_FAILURES_PREFIX', 'job_id');
 
 /**
  * Build the form for browsing collections.
@@ -139,7 +140,7 @@ function mediamosa_browse_job_failures_page_submit($form, $form_state) {
   $jobs = array();
   $op = $form_state['values']['op'];
 
-  $prefix = 'job_id';
+  $prefix = MEDIAMOSA_BROWSE_JOB_FAILURES_PREFIX;
   $prefix_length = drupal_strlen($prefix);
 
   foreach($form_state['values'] as $form_key => $form_value) {
@@ -225,7 +226,9 @@ function _mediamosa_browse_job_failures_reanalyse_transcode($jobs = array()) {
       $priority = NULL;
 
       $new_job_id = mediamosa_job::create_job_transcode($app_id, $owner_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority, $hint, $mediafile_dest);
-      $all_ok &= (is_numeric($new_job_id) && $new_job_id > 0);
+      if ($all_ok) {
+        $all_ok = (is_numeric($new_job_id) && $new_job_id > 0);
+      }
     }
   }
 
@@ -260,13 +263,6 @@ function _mediamosa_browse_job_failures_execute($page, $limit) {
     'offset' => $page * $limit,
     'order_by' => 'job_id',
     'order_direction' => 'desc',
-  );
-
-  // Add params.
-  $params['visibility'] = (
-    isset($session['visibility']) && $session['visibility'] == MEDIAMOSA_BROWSE_JOB_FAILURES_HIDDEN ?
-    mediamosa_job_display_db::VISIBILITY_HIDDEN :
-    mediamosa_job_display_db::VISIBILITY_DISPLAY
   );
 
   // Do the rest call.

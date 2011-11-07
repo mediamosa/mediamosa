@@ -103,6 +103,18 @@ class mediamosa_job {
   }
 
   /**
+   * Get the job from the main job table.
+   * @param integer $mediafile_id
+   *  The mediafile ID.
+   */
+  static public function get_by_mediafileid_all($mediafile_id, array $fields = array()) {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->fields('j', $fields)
+      ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+  }
+
+  /**
    * Get the failed transcode jobs.
    *
    * @param $visibility
@@ -162,7 +174,7 @@ class mediamosa_job {
     }
 
     // Filtering the same failed jobs.
-    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID);
+    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID . ', job.' . mediamosa_job_db::JOB_TYPE);
 
     // Number of total result.
     $num_rows = $query->countQuery()->execute()->fetchField();

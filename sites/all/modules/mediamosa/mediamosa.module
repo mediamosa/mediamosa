@@ -119,6 +119,14 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa browse (errorcodes)'),
       'description' => t($text_view_switch, array('@type' => 'file integrity')),
     ),
+    mediamosa_permission::ACCESS_BROWSE_JOB_FAILURE =>  array(
+      'title' => t('Access MediaMosa browse (failured job)'),
+      'description' => t($text_view_switch, array('@type' => 'failured job')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION =>  array(
+      'title' => t('Access MediaMosa browse (transcode length deviation)'),
+      'description' => t($text_view_switch, array('@type' => 'transcode length deviation')),
+    ),
 
     mediamosa_permission::ACCESS_STATS =>  array(
       'title' => t('Access MediaMosa statistics'),
