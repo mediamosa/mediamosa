@@ -34,8 +34,7 @@ class mediamosa_job_display_db {
   const TABLE_NAME = 'mediamosa_job_display';
 
   // Database fields;
-  const ID = 'display_job_id';
-  const JOB_ID = 'job_id';
+  const ID = 'job_id';
   const VISIBILITY = 'visibility';
   const VISIBILITY_DISPLAY = 'display';
   const VISIBILITY_HIDDEN = 'hidden';

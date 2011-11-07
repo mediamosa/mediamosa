@@ -61,10 +61,11 @@ function mediamosa_job_display_schema() {
         'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_job_display_db::VISIBILITY => array(
+        'description' => 'The visibility attribute.',
         'type' => "enum('" . implode("','", array(mediamosa_job_display_db::VISIBILITY_DISPLAY, mediamosa_job_display_db::VISIBILITY_HIDDEN)) . "')",
         'not null' => TRUE,
-        'unsigned' => TRUE,
-        'description' => 'The visibility attribute.',
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_display_db::VISIBILITY_DISPLAY, mediamosa_job_display_db::VISIBILITY_HIDDEN)) . "')",
+        'default' => mediamosa_job_display_db::VISIBILITY_DISPLAY,
       ),
     ),
     'primary key' => array(mediamosa_job_display_db::ID),

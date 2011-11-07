@@ -30,10 +30,10 @@
  * Deviant length transcoding browser.
  */
 
-define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
+define('MEDIAMOSA_BROWSE_TRANSCODE_LENGTH_DEVIATION_PREFIX', 'mediafile_id-');
 
 /**
- * Build the form for browsing collections.
+ * Build the form for browsing transcode length deviation.
  */
 function mediamosa_browse_transcode_length_deviation_page($form) {
   $breadcrumb = array();
@@ -45,43 +45,40 @@ function mediamosa_browse_transcode_length_deviation_page($form) {
 
   $build = array();
 
-  //$build['collection_filter'] = drupal_get_form('mediamosa_browse_transcode_length_deviation_filter_form');
-  $build['deviant_length_transcoding_list'] = mediamosa_browse_transcode_length_deviation_list_form();
+  $build['deviant_length_transcoding_list'] = _mediamosa_browse_transcode_length_deviation_list_form();
 
   return $build;
 }
 
 /**
  * Form builder; deviant length listing page.
- *
  */
-function mediamosa_browse_transcode_length_deviation_list_form() {
-  // Get session.
-  $session = _mediamosa_browse_transcode_length_deviation_session();
+function _mediamosa_browse_transcode_length_deviation_list_form() {
+
   // Include our css.
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
 
-  $visibility = $session['visibility'];
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
-  $item_count_total = 0;
+  $limit = mediamosa_settings::maintenance_items_per_page();
 
-  $result = _mediamosa_browse_transcode_length_deviation_execute();
-  $item_count_total = count($result);
+  $result_array = _mediamosa_browse_transcode_length_deviation_execute($page, $limit);
+  $item_count_total = $result_array['found_rows'];
+  $result = $result_array['result'];
 
   $rows = array();
 
-  // Get destination.
-  $l_options = array('query' => drupal_get_destination());
-
   $form['devlen']['table'] = array(
     '#theme' => 'mediamosa_browse_transcode_length_deviation',
-    '#header' => $header,
+    '#header' => '',
     '#showhidehidden' => '',
     '#title' => t('Deviant length transcodings (@total)' , array('@total' => $item_count_total)),
     '#description' => t('Below list displays transcodings in the jobs table that deviate 10% or more to their original.'),
-    '#item_count_total' => t('Deviant length transcodings found: @total', array('@total' => $item_count_total))
+    '#item_count_total_text' => t('Deviant length transcodings found: @total', array('@total' => $item_count_total)),
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
   );
-  
+
   foreach ($result as $row) {
     $form['devlen']['table'][$row['asset_id']]['mediafile_id-' . $row['trans_mediafile_id']] = array(
       '#type' => 'checkbox',
@@ -93,11 +90,11 @@ function mediamosa_browse_transcode_length_deviation_list_form() {
     );
   }
 
-  // Operation buttons.
+  // Retranscode buttons.
   if (isset($result)) {
-    $form['devlen']['op1'] = array(
+    $form['devlen']['retranscode'] = array(
       '#type' => 'submit',
-      '#value' => t('Re-Transcode'),
+      '#value' => t('Retranscode'),
     );
   }
 
@@ -105,45 +102,50 @@ function mediamosa_browse_transcode_length_deviation_list_form() {
 }
 
 function mediamosa_browse_transcode_length_deviation_page_submit($form, $form_state) {
-
   $mediafiles = array();
   $op = $form_state['values']['op'];
-  foreach($form_state['values'] as $form_key=>$form_value){
-    if((substr($form_key, 0, 13) == 'mediafile_id-') && ($form_value == 1)){
-      $mediafiles[] = substr($form_key, 13);
+
+  $prefix = MEDIAMOSA_BROWSE_TRANSCODE_LENGTH_DEVIATION_PREFIX;
+  $prefix_length = drupal_strlen($prefix);
+
+  foreach ($form_state['values'] as $form_key => $form_value) {
+    if (drupal_substr($form_key, 0, $prefix_length) == $prefix && $form_value == 1) {
+      $mediafiles[] = substr($form_key, $prefix_length);
     }
   }
 
   switch ($op) {
-    case t('Re-Transcode'):
+    case t('Retranscode'):
       _mediamosa_browse_transcode_length_deviation_retranscode($mediafiles);
       break;
   }
 }
 
 function _mediamosa_browse_transcode_length_deviation_retranscode($mediafiles = array()) {
+  $all_ok = TRUE;
 
-  $allok = true;
-
-  foreach($mediafiles as $mediafile_id){
+  foreach ($mediafiles as $mediafile_id) {
     $mediafile_details = mediamosa_asset_mediafile::get($mediafile_id);
     $asset_id = $mediafile_details['asset_id'];
-    $allok &= _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id);
+    if ($all_ok) {
+      $all_ok = _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id);
+    }
   }
-  
-  if($allok){
-    if(count($mediafiles)>0)
+
+  if ($all_ok) {
+    if (count($mediafiles) > 0) {
       drupal_set_message(t('All selected mediafile succesfully set for re-transcode.'));
-    else
+    }
+    else {
       drupal_set_message(t('No mediafile(s) selected.'));
+    }
   }
-  else
-  {
+  else {
     drupal_set_message(t('Error(s) during setting of retranscode.'));
   }
 }
 
-function _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id){
+function _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id) {
   // REST uri.
   $uri = strtr('mediafile/@mediafile_id/retranscode', array('@mediafile_id' => $mediafile_id));
 
@@ -155,22 +157,30 @@ function _mediamosa_browse_transcode_length_deviation_process_retranscode($asset
     $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
 
     if (mediamosa_response_connector::static_result_okay($result)) {
-      return true;
+      return TRUE;
     }
   }
 
   // Set failed.
-  drupal_set_message(t('Failed to start retranscode for mediafile \'' . $mediafile_id . '\''));
-  return false;
+  drupal_set_message(t('Failed to start retranscode for mediafile @mediafile_id', array('@mediafile_id' => $mediafile_id,)));
+  return FALSE;
 }
 
-function _mediamosa_browse_transcode_length_deviation_execute() {
+/**
+ * Execute the query.
+ *
+ * @param $page
+ *
+ * @return array($found_rows, $result)
+ */
+function _mediamosa_browse_transcode_length_deviation_execute($page, $limit) {
   // Prop ids.
   $prop_id_file_duration = mediamosa_asset_mediafile_metadata_property::get_property_id_char('file_duration');
 
   // Query.
-  $result = mediamosa_db::db_query("
+  $result = mediamosa_db::db_query_range("
     SELECT
+      SQL_CALC_FOUND_ROWS
       org.#asset_id AS asset_id,
       org.#mediafile_id AS mediafile_id,
       (SUBSTR(meta.#val_char,1,2) * 3600) + (SUBSTR(meta.#val_char,4,2) * 60) + SUBSTR(meta.#val_char,7,2) AS org_sec,
@@ -185,7 +195,7 @@ function _mediamosa_browse_transcode_length_deviation_execute() {
     WHERE org.#is_original_file = :is_original_file_true AND trans.#is_original_file = :is_original_file_false AND org.#is_still = :is_still_false AND trans.#is_still = :is_still_false AND meta.#val_char IS NOT NULL
     HAVING trans_sec IS NULL OR ABS(org_sec - trans_sec) > (org_sec / 10)
     ORDER BY ABS(org_sec - trans_sec) DESC
-  ", array(
+  ", $page * $limit, $limit, array(
     '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
     '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
     '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
@@ -202,54 +212,16 @@ function _mediamosa_browse_transcode_length_deviation_execute() {
     ':prop_id' => $prop_id_file_duration,
   ));
 
-  $row_count = $result->rowCount();
+  $found_rows = mediamosa_db::db_found_rows();
 
-  foreach ($result as $record) {
-    $return_result[] = $record;
-  }
-  return $return_result;
-}
-
-/**
- * Get and set the session.
- */
-function _mediamosa_browse_transcode_length_deviation_session($filter_form_state = array()) {
-  // Get session.
-  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
-  // Get these from _GET if present.
-  foreach (array('order', 'sort', 'page') as $param) {
-    unset($session[$param]);
-    if (isset($_GET[$param])) {
-      $session[$param] = $_GET[$param];
-    }
-  }
-
-  // Set defaults.
-  $session += array(
-    'order' => t('Title'),
-    'sort' => 'asc',
-    'page' => 0,
-    'visibility' => null,
-    'limit' => mediamosa_settings::maintenance_items_per_page(),
+  return array(
+    'found_rows' => $found_rows,
+    'result' => $result,
   );
-
-  // Process filter.
-  if (!empty($filter_form_state['input']['operator'])) {
-    $session['operator'] = $filter_form_state['input']['operator'];
-  }
-
-  if (!empty($filter_form_state['input']['filters'])) {
-    $session['filters'] = $filter_form_state['input']['filters'];
-  }
-
-  // Set it again.
-  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
-
-  return $session;
 }
 
 /**
- * Reuse simpletest test table.
+ * Theme.
  */
 function theme_mediamosa_browse_transcode_length_deviation($variables) {
 
@@ -269,60 +241,56 @@ function theme_mediamosa_browse_transcode_length_deviation($variables) {
     array('data' => t('Transcoded time'), 'class' => array('mmmediafileid')),
   );
 
-   // Cycle through each deviant and create a row.
+   // Cycle through each deviant and create rows.
   $rows = array();
   foreach (element_children($table) as $key) {
-    $element = &$table[$key];
-    $row = array();
-    
-    // Cycle through each test within the current group.
-    foreach (element_children($element) as $test_name) {
-      $test = $element[$test_name];
+    $element = $table[$key];
+
+    // Cycle through each result within the current group.
+    foreach (element_children($element) as $deviant_name) {
+      $deviant = $element[$deviant_name];
       $row = array();
 
-      $org_sec = $test['#org_sec'];
-      $trans_sec = $test['#trans_sec'];
-      $asset_id = $test['#asset_id'];
-      $mediafile_id = $test['#mediafile_id'];
-      $trans_mediafile_id = $test['#trans_mediafile_id'];
+      $org_sec = $deviant['#org_sec'];
+      $trans_sec = $deviant['#trans_sec'];
+      $asset_id = $deviant['#asset_id'];
+      $mediafile_id = $deviant['#mediafile_id'];
+      $trans_mediafile_id = $deviant['#trans_mediafile_id'];
 
-      $test['#title_display'] = 'invisible';
-      unset($test['#description']);
+      $deviant['#title_display'] = 'invisible';
+      unset($deviant['#description']);
 
       // Test name is used to determine what tests to run.
-      $test['#name'] = $test_name;
+      $deviant['#name'] = $deviant_name;
 
       $row[] = array(
-        'data' => drupal_render($test),
+        'data' => drupal_render($deviant),
         'class' => array('simpletest-test-select'),
       );
       $row[] = array(
-        'data' => '<div>' . $asset_id . '</label>',
+        'data' => '<div>' . l(check_plain($asset_id), 'admin/mediamosa/browse/asset/' . $asset_id) . '</label>',
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(
-        'data' => '<div>' . $mediafile_id . '</label>',
+        'data' => '<div>' . check_plain($mediafile_id) . '</label>',
         'class' => array('simpletest-test-label'),
       );
-     
+
       $row[] = array(
-        'data' => '<div>' . $trans_mediafile_id . '</div>',
+        'data' => '<div>' . check_plain($trans_mediafile_id) . '</div>',
         'style' => array('simpletest-test-label'),
       );
       $row[] = array(
-        'data' => '<div class="description">' . $org_sec . '</div>',
+        'data' => '<div class="description">' . check_plain($org_sec) . '</div>',
         'style' => 'width:100px',
       );
       $row[] = array(
-        'data' => '<div class="description">' . $trans_sec . '</div>',
+        'data' => '<div class="description">' . check_plain($trans_sec) . '</div>',
         'style' => 'width:100px',
       );
-      $rows[] = array('data' => $row, 'class' => array($test_class . '-failure', ($collapsed ? 'js-hide' : '')));
+      $rows[] = array('data' => $row);
     }
   }
-
-  // Add js array of settings.
-  drupal_add_js(array('simpleTest' => $js), 'setting');
 
   if (empty($rows)) {
     return '<h1>No deviant length transcoding jobs...</h1>';
@@ -333,8 +301,16 @@ function theme_mediamosa_browse_transcode_length_deviation($variables) {
 
     $buildtable = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'simpletest-form-table')));
     $caption_top = '<div align="right">' . $table['#showhidehidden'] . '</div>';
-    $caption_bottom = '<div align="right">' . check_plain($table['#item_count_total']) . '</div>';
-    $complete_table = $title . $description . $caption_top . $buildtable . $caption_bottom;
+    $caption_bottom = '<div align="right">' . check_plain($table['#item_count_total_text']) . '</div>';
+
+    $pager_variables = array(
+      'page' => $table['#page'],
+      'item_count_total' => $table['#item_count_total'],
+      'item_limit' => $table['#item_limit'],
+    );
+    $pager = theme('mediamosa_maintenance_pager', $pager_variables);
+
+    $complete_table = $title . $description . $pager . $caption_top . $buildtable . $caption_bottom . $pager;
 
     return  $complete_table;
   }

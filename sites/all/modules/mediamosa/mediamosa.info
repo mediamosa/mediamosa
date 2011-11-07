@@ -183,6 +183,10 @@ files[] = core/job/mediamosa_job.class.inc
 ; Job Scheduler.
 files[] = core/job/scheduler/mediamosa_job_scheduler.class.inc
 
+; Job Display.
+files[] = core/job/display/mediamosa_job_display_db.class.inc
+files[] = core/job/display/mediamosa_job_display.class.inc
+
 ; Job Server.
 files[] = core/job/server/mediamosa_job_server_db.class.inc
 files[] = core/job/server/mediamosa_job_server.class.inc

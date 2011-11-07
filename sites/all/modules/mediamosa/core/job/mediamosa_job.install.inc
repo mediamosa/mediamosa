@@ -36,6 +36,7 @@ require_once 'still/mediamosa_job_still.install.inc';
 require_once 'server/mediamosa_job_server.install.inc';
 require_once 'transcode/mediamosa_job_transcode.install.inc';
 require_once 'upload/mediamosa_job_upload.install.inc';
+require_once 'display/mediamosa_job_display.install.inc';
 
 /**
  * Implements hook_install().
@@ -55,12 +56,18 @@ function _mediamosa_job_install() {
 
   // Create Job Server table.
   _mediamosa_job_server_install();
+
+  // Create Job Display table.
+  _mediamosa_job_display_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
 function _mediamosa_job_uninstall() {
+  // Drop Job Display table.
+  _mediamosa_job_display_uninstall();
+
   // Drop Job Server table.
   _mediamosa_job_server_uninstall();
 

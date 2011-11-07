@@ -184,14 +184,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 
-  // Failures list.
-  $rest_calls['transcode/failures'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_failures',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_failure',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
-  );
-
   return $rest_calls;
 }
 

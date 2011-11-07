@@ -218,6 +218,14 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::NO_USER_ABORT => TRUE,
   );
 
+  // List of failured jobs.
+  $rest_calls['job/failures'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_failures',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_failure',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
+  );
+
   return $rest_calls;
 }
 
@@ -534,6 +542,15 @@ user_id=admin',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  // List of failured jobs.
+  $rest_calls['job/failures'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Failed jobs.',
+    mediamosa_rest_call::DESCRIPTION => 'Overview of failed jobs.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'job/failures',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   return $rest_calls;

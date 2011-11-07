@@ -31,52 +31,6 @@
 class mediamosa_job_transcode {
 
   /**
-   * Get the failed transcode jobs.
-   */
-  static public function getFailed($visibility = NULL, $order_by = mediamosa_job_db::ID, $order_direction = 'asc') {
-
-    // Build the query.
-    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'job');
-
-    // Joins.
-    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mediafile', 'mediafile.mediafile_id = job.mediafile_id');
-    $query->leftjoin(mediamosa_job_transcode_db::TABLE_NAME, 'transcode', 'transcode.job_id = job.job_id');
-    $query->leftjoin(mediamosa_job_display_db::TABLE_NAME, 'display', 'display  .job_id = job.job_id');
-
-    $query->fields('job', array(mediamosa_job_db::ID, mediamosa_job_db::APP_ID, mediamosa_job_db::JOB_TYPE, mediamosa_job_db::ASSET_ID, mediamosa_job_db::MEDIAFILE_ID, mediamosa_job_db::STARTED, mediamosa_job_db::CHANGED, mediamosa_job_db::ERROR_DESCRIPTION));
-    $query->fields('mediafile', array(mediamosa_asset_mediafile_db::FILENAME));
-
-    if(!is_null($visibility))
-    {
-      $query->where('display.' . mediamosa_job_display_db::VISIBILITY . ' = \'HIDDEN\'');
-    }
-    else
-    {
-      $display_or = db_or();
-      $display_or->condition('display.' . mediamosa_job_display_db::VISIBILITY, null);
-      $display_or->condition('display.' . mediamosa_job_display_db::VISIBILITY, mediamosa_job_display_db::VISIBILITY_DISPLAY);
-      $query->condition($display_or);
-    }
-
-    $job_type_or = db_or();
-    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_ANALYSE);
-    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_TRANSCODE);
-    $query->condition($job_type_or);
-
-    $query->where('job.' . mediamosa_job_db::JOB_STATUS . ' = \'' . mediamosa_job_db::JOB_STATUS_FAILED . '\'');
-
-    // Order_by and order_direction.
-    if ($order_by) {
-      $query->orderBy($order_by, $order_direction);
-    }
-
-    $result = $query->execute();
-
-    return $result;
-  }
-
-  
-  /**
    * Get the job transcode data.
    * @param integer $job_id
    *  The job ID.
