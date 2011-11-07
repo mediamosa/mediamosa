@@ -31,8 +31,9 @@
 class mediamosa_server_job {
 
   /**
- * Verwijder de job-server-relatie van de job lijst.
- */
+   * Delete the job-server-relation of the job.
+   */
+
   /**
    * Remove server<->job link.
    *
