@@ -306,6 +306,7 @@ class mediamosa_sdk {
   const TYPE_COMMAND                     = 'COMMAND';
   const TYPE_JOB_STATUS                  = 'TYPE_JOB_STATUS';
   const TYPE_JOB_PROGRESS                = 'TYPE_JOB_PROGRESS';
+  const TYPE_JOB_VISIBILITY              = 'TYPE_JOB_VISIBILITY';
 
   // Use to select what is slaved to other apps.
   const TYPE_BOOL_IS_SLAVED              = 'BOOL_IS_SLAVED';

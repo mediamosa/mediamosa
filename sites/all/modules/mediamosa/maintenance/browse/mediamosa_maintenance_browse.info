@@ -16,3 +16,7 @@ dependencies[] = mediamosa_asset
 dependencies[] = mediamosa_collection
 dependencies[] = mediamosa_maintenance
 dependencies[] = simpletest
+
+; Used files.
+files[] = display/mediamosa_job_display.class.inc
+files[] = display/mediamosa_job_display_db.class.inc

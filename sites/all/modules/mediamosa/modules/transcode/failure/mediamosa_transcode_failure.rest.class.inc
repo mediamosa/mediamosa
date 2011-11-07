@@ -38,11 +38,26 @@
  */
 class mediamosa_rest_call_transcode_failures extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Var Setup.
+  // Rest vars;
+  const VISIBILITY = 'visibility';
+  const ORDER = 'order';
+  const SORT = 'sort';
+
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
-    // Enrich with required REST vars.
+    $a_var_setup = array(
+      self::VARS => array(
+        self::VISIBILITY => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_JOB_VISIBILITY,
+          self::VAR_DESCRIPTION => 'The visibility attribute.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        ),
+      )
+    );
+
+
     return self::get_var_setup_default($a_var_setup);
   }
 
@@ -50,23 +65,24 @@ class mediamosa_rest_call_transcode_failures extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    // Get the app_id.
-    $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
+    // Get the visibility attribute.
+    $visibility = $this->get_param_value(self::VISIBILITY);
 
     // Get the listing.
-    $a_transcode_failures = mediamosa_job_transcode::getFailed();
+    $a_transcode_failures = mediamosa_job_transcode::getFailed($visibility);
 
     foreach ($a_transcode_failures as $a_transcode_failure) {
       $a_item = array();
       $a_item['transcode_job_id'] = $a_transcode_failure[mediamosa_job_db::ID];
-      $a_item['transcode_asset_id'] = $a_transcode_failure[mediamosa_job_db::ASSET_ID];
-      $a_item['transcode_mediafile_id'] = $a_transcode_failure[mediamosa_job_db::MEDIAFILE_ID];
-      $a_item['transcode_app_id'] = $a_transcode_failure[mediamosa_job_db::APP_ID];
+      $a_item['transcode_job_asset_id'] = $a_transcode_failure[mediamosa_job_db::ASSET_ID];
+      $a_item['transcode_job_mediafile_id'] = $a_transcode_failure[mediamosa_job_db::MEDIAFILE_ID];
+      $a_item['transcode_job_app_id'] = $a_transcode_failure[mediamosa_job_db::APP_ID];
+      $a_item['transcode_job_type'] = $a_transcode_failure[mediamosa_job_db::JOB_TYPE];
       $a_item['transcode_job_started'] = $a_transcode_failure[mediamosa_job_db::STARTED];
+      $a_item['transcode_job_modified'] = $a_transcode_failure[mediamosa_job_db::CHANGED];
       $a_item['transcode_job_filename'] = $a_transcode_failure[mediamosa_asset_mediafile_db::FILENAME];
-      $a_item['transcode_error_description'] = $a_transcode_failure[mediamosa_job_db::ERROR_DESCRIPTION];
-      $a_item['command'] = $a_transcode_failure[mediamosa_job_transcode_db::COMMAND];
+      $a_item['transcode_job_error_description'] = $a_transcode_failure[mediamosa_job_db::ERROR_DESCRIPTION];
+      $a_item['transcode_job_command'] = $a_transcode_failure[mediamosa_job_transcode_db::COMMAND];
 
       $o_mediamosa->add_item($a_item);
     }

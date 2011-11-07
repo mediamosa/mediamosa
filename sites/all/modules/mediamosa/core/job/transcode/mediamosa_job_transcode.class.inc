@@ -33,27 +33,45 @@ class mediamosa_job_transcode {
   /**
    * Get the failed transcode jobs.
    */
-  static public function getFailed() {
+  static public function getFailed($visibility = NULL, $order_by = mediamosa_job_db::ID, $order_direction = 'asc') {
 
-    $a_query = array();
+    // Build the query.
+    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'job');
 
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "*";
-    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_job}";
+    // Joins.
+    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mediafile', 'mediafile.mediafile_id = job.mediafile_id');
+    $query->leftjoin(mediamosa_job_transcode_db::TABLE_NAME, 'transcode', 'transcode.job_id = job.job_id');
+    $query->leftjoin(mediamosa_job_display_db::TABLE_NAME, 'display', 'display  .job_id = job.job_id');
 
-    $a_query[mediamosa_db_query::A_JOIN]["job_transcode"] = "JOIN {mediamosa_job_transcode} USING (job_id)";
-    $a_query[mediamosa_db_query::A_JOIN]["asset_mediafile"] = "JOIN {mediamosa_asset_mediafile} ON (mediamosa_asset_mediafile.mediafile_id = mediamosa_job.mediafile_id)";
-    
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "{mediamosa_job}.job_type = 'TRANSCODE'";
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "{mediamosa_job}.status = 'FAILED'";
-    
-    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+    $query->fields('job', array(mediamosa_job_db::ID, mediamosa_job_db::APP_ID, mediamosa_job_db::JOB_TYPE, mediamosa_job_db::ASSET_ID, mediamosa_job_db::MEDIAFILE_ID, mediamosa_job_db::STARTED, mediamosa_job_db::CHANGED, mediamosa_job_db::ERROR_DESCRIPTION));
+    $query->fields('mediafile', array(mediamosa_asset_mediafile_db::FILENAME));
 
-    // Do the query.
-    $result = mediamosa_db_query::query($query);
+    if(!is_null($visibility))
+    {
+      $query->where('display.' . mediamosa_job_display_db::VISIBILITY . ' = \'HIDDEN\'');
+    }
+    else
+    {
+      $display_or = db_or();
+      $display_or->condition('display.' . mediamosa_job_display_db::VISIBILITY, null);
+      $display_or->condition('display.' . mediamosa_job_display_db::VISIBILITY, mediamosa_job_display_db::VISIBILITY_DISPLAY);
+      $query->condition($display_or);
+    }
 
-    // Set the found_rows on the object.
-    $result->found_rows = mediamosa_db_query::found_rows();
-    //print_r($result);
+    $job_type_or = db_or();
+    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_ANALYSE);
+    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_TRANSCODE);
+    $query->condition($job_type_or);
+
+    $query->where('job.' . mediamosa_job_db::JOB_STATUS . ' = \'' . mediamosa_job_db::JOB_STATUS_FAILED . '\'');
+
+    // Order_by and order_direction.
+    if ($order_by) {
+      $query->orderBy($order_by, $order_direction);
+    }
+
+    $result = $query->execute();
+
     return $result;
   }
 

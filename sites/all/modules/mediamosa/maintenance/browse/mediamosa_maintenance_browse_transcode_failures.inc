@@ -1,4 +1,5 @@
 <?php
+
 // $Id$
 
 /**
@@ -57,22 +58,15 @@ function mediamosa_browse_transcode_failures_page($form) {
 function mediamosa_browse_transcode_failures_list_form() {
   // Get session.
   $session = _mediamosa_browse_transcode_failures_session();
-
   // Include our css.
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
 
-  $limit = $session['limit'];
+  $visibility = $session['visibility'];
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
   $item_count_total = 0;
 
-  $header = array(
-    array('field' => 'title', 'data' => t('Title'), 'sort' => 'asc'),
-    array('field' => 'app_id', 'data' => t('App ID'), 'class' => array('mmappid')),
-    array('field' => 'changed', 'data' => t('Job started'), 'class' => array('mmdate')),
-    array('data' => t('Operations'), 'class' => array('mmoperation')),
-  );
-
   $result = _mediamosa_browse_transcode_failures_execute();
+
   $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
 
   $rows = array();
@@ -80,43 +74,60 @@ function mediamosa_browse_transcode_failures_list_form() {
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
+  if($session['visibility']=='HIDDEN'){
+    $filter_text = "Failed, but hidden, transcodings";
+  } else {
+    $filter_text = "Failed transcodings";
+  }
+
   $form['transfail']['table'] = array(
     '#theme' => 'mediamosa_browse_transcode_failures',
-    '#header' => 'header',
-    '#title' => t('Failed transcodings (@total)', array('@total' => $item_count_total)),
+    '#header' => $header,
+    '#showhidehidden' => '',
+    '#title' => t($filter_text . '(@total)' , array('@total' => $item_count_total)),
     '#description' => t('Below list displays the failed transcodings in the jobs table. Select the desired jobs and select a mass operation to apply.'),
     '#item_count_total' => t('Failed transcodings found: @total', array('@total' => $item_count_total))
   );
-
-
+  
   foreach ($result['items'] as $row) {
     $form['transfail']['table']['job_id' .  $row['transcode_job_id']]['job_id' . $row['transcode_job_id']] = array(
       '#type' => 'checkbox',
       '#job_id' => $row['transcode_job_id'],
-      '#filename' => $row['transcode_job_filename'],
-      '#asset_id' => $row['transcode_asset_id'],
-      '#mediafile_id' => $row['transcode_mediafile_id'],
+      '#job_type' => $row['transcode_job_type'],
+      '#filename' => substr($row['transcode_job_filename'], 0, 25) . '...',
+      '#asset_id' => $row['transcode_job_asset_id'],
+      '#mediafile_id' => $row['transcode_job_mediafile_id'],
       '#date_started' => theme('mediamosa_maintenance_date', array('datetime' => $row['transcode_job_started'])),
-      '#app_id' => $row['transcode_app_id'],
-      '#error_description' => $row['transcode_error_description'],
+      '#date_modified' => theme('mediamosa_maintenance_date', array('datetime' => $row['transcode_job_modified'])),
+      '#app_id' => $row['transcode_job_app_id'],
+      '#error_description' => $row['transcode_job_error_description'],
     );
   }
 
   // Operation buttons.
-  if (!isset($form['transfail']['table'])) {
+  if (isset($result['items'])) {
     $form['transfail']['op1'] = array(
       '#type' => 'submit',
-      '#value' => t('Re-Transcode'),
+      '#value' => t('Re-Transcode/Analyse'),
     );
 
-    $form['transfail']['op2'] = array(
-      '#type' => 'submit',
-      '#value' => t('Re-Analyse'),
-    );
+    if($session['visibility']=='HIDDEN'){
+      $form['transfail']['op3'] = array(
+        '#type' => 'submit',
+        '#value' => t('Unhide'),
+      );
+    }
+    else
+    {
+      $form['transfail']['op3'] = array(
+        '#type' => 'submit',
+        '#value' => t('Hide'),
+      );
+    }
 
-    $form['transfail']['op3'] = array(
+    $form['transfail']['op4'] = array(
       '#type' => 'submit',
-      '#value' => t('Delete'),
+      '#value' => t('ToggleHidden'),
     );
   }
 
@@ -126,7 +137,6 @@ function mediamosa_browse_transcode_failures_list_form() {
 function mediamosa_browse_transcode_failures_page_submit($form, $form_state) {
 
   $jobs = array();
-
   $op = $form_state['values']['op'];
 
   foreach($form_state['values'] as $form_key=>$form_value){
@@ -136,93 +146,69 @@ function mediamosa_browse_transcode_failures_page_submit($form, $form_state) {
   }
 
   switch ($op) {
-    case t('Re-Transcode'):
-      _mediamosa_browse_transcode_failures_retranscode($jobs[0]);
-      drupal_set_message('re transcode');
+    case t('Re-Transcode/Analyse'):
+      _mediamosa_browse_transcode_failures_reanalyse_transcode($jobs);
       break;
-    case t('Re-Analyse'):
-      _mediamosa_browse_transcode_failures_reanalyse($jobs[0]);
-      drupal_set_message('re analyse');
-      break;     
-    case t('Delete'):
-      _mediamosa_browse_transcode_failures_deletejobs($jobs);
-      drupal_set_message('deleting');
+    case t('Hide'):
+      _mediamosa_browse_transcode_failures_hidejobs($jobs);
+      break;
+    case t('Unhide'):
+      _mediamosa_browse_transcode_failures_unhidejobs($jobs);
+      break;
+    case t('ToggleHidden'):
+      _mediamosa_browse_transcode_failures_toggle_hidden($jobs);
       break;
   }
-  drupal_set_message(print_r($jobs, true));
 }
 
-function _mediamosa_browse_transcode_failures_deletejobs($jobs) {
+function _mediamosa_browse_transcode_failures_unhidejobs($jobs) {
+  foreach($jobs as $job_id){
+    mediamosa_job_display::unhide($job_id);
+  }
+}
+
+function _mediamosa_browse_transcode_failures_hidejobs($jobs) {
+  foreach($jobs as $job_id){
+    mediamosa_job_display::hide($job_id);
+  }
+}
+
+function _mediamosa_browse_transcode_failures_toggle_hidden() {
+  
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
+
+  // Toggle hidden attribute
+  if($session['visibility'] == 'HIDDEN'){
+    $session['visibility'] = null;
+  }
+  else {
+    $session['visibility'] = 'HIDDEN';
+  }
+
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+}
+
+function _mediamosa_browse_transcode_failures_reanalyse_transcode($jobs = array()) {
 
   $allok = true;
 
-  // Delete all the jobs.
   foreach($jobs as $job_id){
-    if(mediamosa_job::get($job_id))
-    $allok &= mediamosa_job::delete_job($job_id);
+    // Unhide the job, in case it is hidden.
+    mediamosa_job_display::unhide($job_id);
+    $allok &= mediamosa_job::set_progress($job_id, 0, false, mediamosa_job_db::JOB_STATUS_WAITING);
   }
 
   if($allok){
-    drupal_set_message(t('All marked jobs succesfully deleted.'));
+    if(count($jobs)>0)
+      drupal_set_message(t('All jobs succesfully set for re-analysis.'));
+    else
+      drupal_set_message(t('No job(s) selected.'));
   }
   else
   {
-    drupal_set_message(t('Error(s) during jobs delete.'));
+    drupal_set_message(t('Error(s) during job(s) delete.'));
   }
 }
-
-function _mediamosa_browse_transcode_failures_reanalyse($job_id) {
-
-  // Get the job details
-  $job = mediamosa_job::get($job_id, array(mediamosa_job_db::ASSET_ID, mediamosa_job_db::MEDIAFILE_ID));
-
-  // REST uri.
-  $uri = strtr('mediafile/@mediafile_id/analyse', array('@mediafile_id' => $job['mediafile_id']));
-
-  // Get the asset.
-  $asset = mediamosa_asset::get($job['asset_id']);
-
-  if ($asset) {
-    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
-    $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
-
-    if (mediamosa_response_connector::static_result_okay($result)) {
-      drupal_set_message(t('Analyse started.'));
-      drupal_goto('admin/mediamosa/browse/failures/');
-    }
-  }
-
-  // Set failed.
-  drupal_set_message(t('Failed to start re-analyse.'));
-  drupal_goto('admin/mediamosa/browse/failures/');
-}
-
-function _mediamosa_browse_transcode_failures_retranscode($job_id) {
-
-  // Get the job details
-  $job = mediamosa_job::get($job_id, array(mediamosa_job_db::ASSET_ID, mediamosa_job_db::MEDIAFILE_ID));
-
-  // REST uri.
-  $uri = strtr('mediafile/@mediafile_id/transcode', array('@mediafile_id' => $job['mediafile_id']));
-
-  // Get the asset.
-  $asset = mediamosa_asset::get($job['asset_id']);
-
-  if ($asset) {
-    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
-    $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
-
-    if (mediamosa_response_connector::static_result_okay($result)) {
-      drupal_set_message(t('Analyse started.'));
-      drupal_goto('admin/mediamosa/browse/failures/');
-    }
-  }
-
-  // Set failed.
-  drupal_set_message(t('Failed to start re-transcode.'));
-  drupal_goto('admin/mediamosa/browse/failures/');
-}
-
 
 /**
  * Do the REST call and return the response object.
@@ -231,44 +217,13 @@ function _mediamosa_browse_transcode_failures_execute() {
   // Get session.
   $session = _mediamosa_browse_transcode_failures_session();
 
-  // What to sort on.
-  $sort = $session['sort'];
-  $order = $session['order'];
-  $limit = $session['limit'];
-  $page = $session['page'];
-
-  switch ($order) {
-    case t('App ID'):
-      $order = 'app_id';
-      break;
-
-    case t('Job started'):
-      $order = 'changed';
-      break;
-
-    case t('Title'):
-    default:
-      $order = 'title';
-      break;
-  }
-
   $params = array();
 
-  $cqls = array();
-
-  $cql_session = _mediamosa_browse_cql_build($session);
-  if (!empty($cql_session)) {
-    $cqls[] = $cql_session;
-  }
-
-  // Add sort.
-  $cqls[] = strtr('sortBy @order/@sort', array('@order' => $order, '@sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
-
   // Add params.
-  $params['cql'] = implode(' ', $cqls);
-  $params['limit'] = $limit;
-  $params['offset'] = $page * $limit;
+  if((isset($session['visibility'])) && ($session['visibility']=='HIDDEN'))
+    $params['visibility'] = $session['visibility'];
 
+  
   // Do the rest call.
   return mediamosa_response_connector::static_do_restcall_drupal('transcode/failures', 'GET', $params);
 }
@@ -279,7 +234,6 @@ function _mediamosa_browse_transcode_failures_execute() {
 function _mediamosa_browse_transcode_failures_session($filter_form_state = array()) {
   // Get session.
   $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
-
   // Get these from _GET if present.
   foreach (array('order', 'sort', 'page') as $param) {
     unset($session[$param]);
@@ -293,6 +247,7 @@ function _mediamosa_browse_transcode_failures_session($filter_form_state = array
     'order' => t('Title'),
     'sort' => 'asc',
     'page' => 0,
+    'visibility' => null,
     'limit' => mediamosa_settings::maintenance_items_per_page(),
   );
 
@@ -325,13 +280,15 @@ function theme_mediamosa_browse_transcode_failures($variables) {
   // Create header for test selection table.
   $header = array(
     array('class' => array('select-all')),
-    array('data' => t('Job ID'), 'class' => array('simpletest_test')),
-    array('data' => t('Asset ID'), 'class' => array('simpletest_test')),
-    array('data' => t('Mediafile ID'), 'class' => array('simpletest_test')),
-    array('data' => t('Filename'), 'class' => array('simpletest_test')),
-    array('data' => t('Date started'), 'class' => array('simpletest_test')),
-    array('data' => t('App ID'), 'class' => array('simpletest_test')),
-    array('data' => t('Description'), 'class' => array('simpletest_description')),
+    array('data' => t('Job ID'), 'class' => array('mmjobid')),
+    array('data' => t('Job type'), 'class' => array('mmjobtype')),
+    array('data' => t('Asset ID'), 'class' => array('mmassetid')),
+    array('data' => t('Mediafile ID'), 'class' => array('mmmediafileid')),
+    array('data' => t('Filename'), 'class' => array('mmfilename')),
+    array('data' => t('Date started'), 'class' => array('mmdate')),
+    array('data' => t('Date modified'), 'class' => array('mmdate')),
+    array('data' => t('App ID'), 'class' => array('mmappid')),
+    array('data' => t('Description'), 'class' => array('mmdescription')),
   );
 
    // Cycle through each failure and create a row.
@@ -345,13 +302,14 @@ function theme_mediamosa_browse_transcode_failures($variables) {
       $test = $element[$test_name];
       $row = array();
 
-      // Store test title and description so that checkbox won't render them.
       $job_id = $test['#job_id'];
+      $job_type = $test['#job_type'];
       $filename = $test['#filename'];
       $asset_id = $test['#asset_id'];
       $mediafile_id = $test['#mediafile_id'];
       $app_id = $test['#app_id'];
       $date_started = $test['#date_started'];
+      $date_modified = $test['#date_modified'];
       $error_description = $test['#error_description'];
 
       $test['#title_display'] = 'invisible';
@@ -366,6 +324,10 @@ function theme_mediamosa_browse_transcode_failures($variables) {
       );
       $row[] = array(
         'data' => '<div>' . $job_id . '</label>',
+        'class' => array('simpletest-test-label'),
+      );
+      $row[] = array(
+        'data' => '<div>' . $job_type . '</label>',
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(
@@ -385,6 +347,10 @@ function theme_mediamosa_browse_transcode_failures($variables) {
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(
+        'data' => '<div>' . $date_modified . '</label>',
+        'class' => array('simpletest-test-label'),
+      );
+      $row[] = array(
         'data' => '<div>' . $app_id . '</div>',
         'style' => array('simpletest-test-label'),
       );
@@ -400,16 +366,16 @@ function theme_mediamosa_browse_transcode_failures($variables) {
   drupal_add_js(array('simpleTest' => $js), 'setting');
 
   if (empty($rows)) {
-    return '<h1>No failed transcoding jobs...</h1>';
+    return '<h1>No failed transcoding/analyses jobs...</h1>';
   }
   else {
     $title = '<h1>' . check_plain($table['#title']) . '</h1>';
     $description = '<p>' . check_plain($table['#description']) . '</p>';
 
     $buildtable = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'simpletest-form-table')));
-
+    $caption_top = '<div align="right">' . $table['#showhidehidden'] . '</div>';
     $caption_bottom = '<div align="right">' . check_plain($table['#item_count_total']) . '</div>';
-    $complete_table = $title . $description . $buildtable . $caption_bottom;
+    $complete_table = $title . $description . $caption_top . $buildtable . $caption_bottom;
 
     return  $complete_table;
   }

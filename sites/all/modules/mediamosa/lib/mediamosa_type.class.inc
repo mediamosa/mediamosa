@@ -198,6 +198,10 @@ class mediamosa_type {
         $checked_param_value = (string) $mixed_param_value;
         break;
 
+      case mediamosa_sdk::TYPE_JOB_VISIBILITY:
+        $checked_param_value = (string) $mixed_param_value;
+        break;
+      
       case mediamosa_sdk::TYPE_LIMIT:
         $range_start = 0;
         if ($range_end < 1) {
