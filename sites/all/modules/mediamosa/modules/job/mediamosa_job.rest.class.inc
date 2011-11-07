@@ -811,9 +811,6 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     // We show all data is it is app_admin or first element in application ID array is zero.
     $is_full_access = $is_app_admin || ($first_app_id == 0);
 
-    // @todo: if app have no access at all we just return empty list now. If exception needed - add it here.
-    // mediamosa_acl::owner_check was here earlier.
-
     $item_count_total = NULL;
 
     // Get the jobs from the user.
