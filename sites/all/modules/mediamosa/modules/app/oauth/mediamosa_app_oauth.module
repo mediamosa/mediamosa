@@ -64,6 +64,7 @@ function mediamosa_app_oauth_menu() {
   /*
   // This is for later development.
   // See: mediamosa_app_form() of sites/all/modules/mediamosa/core/node/mediamosa_node_mediamosa_app.class.inc
+  // See: mediamosa_response.class.inc
   $items['admin/oauth_test'] = array(
     'title' => 'oAuth test',
     'page callback' => '_mediamosa_oauth_test',
@@ -575,6 +576,7 @@ function mediamosa_app_oauth_mediamosa_app_authorized() {
           if ($consumer->key == $consumer_key && $token->key == $token_key) {
             // Grant access.
             $_GET['app_id'] = $token_stored[mediamosa_app_oauth_token_db::APP_ID];
+            mediamosa::set_environment_app_ids(array(0, $token_stored[mediamosa_app_oauth_token_db::APP_ID]));
             return TRUE;
           }
         }

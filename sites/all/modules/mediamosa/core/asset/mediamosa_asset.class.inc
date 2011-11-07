@@ -918,7 +918,7 @@ class mediamosa_asset {
       if ($show_collections && isset($collections[$asset[mediamosa_asset_db::ID]])) {
         // Show in old format? Yes, if the app client < 3.0.
         $mediamosa_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
-        $is_version_30 =  $mediamosa_version[mediamosa_version::MAJOR] < 3;
+        $is_version_30 = $mediamosa_version[mediamosa_version::MAJOR] >= 3;
 
         if ($is_version_30) {
           $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections'] = array();

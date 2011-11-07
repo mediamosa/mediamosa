@@ -55,6 +55,10 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
   const DURATION = 'duration';
   const CALLBACK = 'callback';
 
+  const ALT = 'alt';
+  const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
+  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
+
   // Other vars;
   const DEFAULT_LIMIT = 10;
   const DEFAULT_OFFSET = 0;
@@ -63,6 +67,39 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
+        self::ALT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
+        ),
+        self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
+        ),
         self::QUERY => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Search query.',
@@ -337,6 +374,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
   const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
+  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
 
   // Collection Request Parameters.
   const REQUEST_PARAMETER_COUNT_VALUE = 'Request-Parameter-Count-Value';
@@ -368,6 +406,17 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
         self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
@@ -653,6 +702,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
   const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
+  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
 
   // Call related paramters.
   const ITEMS_USER_ID = 'items_user_id';
@@ -697,6 +747,17 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
         self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
@@ -1008,6 +1069,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
   const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
+  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
 
   // Call related paramters.
   const ALBUM_ID = 'album_id';
@@ -1050,6 +1112,17 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
         self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
