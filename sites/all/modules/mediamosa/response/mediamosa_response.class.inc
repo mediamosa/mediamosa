@@ -1202,7 +1202,15 @@ class mediamosa_response extends mediamosa {
     $first_key = key($mixed_value);
     if (is_numeric($first_key)) {
       foreach ($mixed_value as $mixed_key => $value) {
-        $item->addChild($key, mediamosa_unicode::xmlentities($value));
+        if (is_array($value)) {
+          $item_child = $item->addChild($key);
+          foreach ($value as $key_child => $value_child) {
+            $this->generate_plain_xml_add_child($item_child, $key_child, $value_child, $max_depth);
+          }
+        }
+        else {
+          $item->addChild($key, mediamosa_unicode::xmlentities($value));
+        }
       }
 
       return NULL;
