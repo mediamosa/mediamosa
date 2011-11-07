@@ -41,7 +41,7 @@ class MediaMosaCookieDomain extends MediaMosaTestCase {
     );
   }
 
-  // ------------------------------------------------------------------ Test still delete.
+  // ------------------------------------------------------------------ Tests.
   public function testCookieDomainCoreFix() {
     global $base_url, $base_path, $base_root;
 
