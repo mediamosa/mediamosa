@@ -199,7 +199,9 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     }
 
     // Set headers.
-    header('Content-Type: image/jpeg');
+    $type = mediamosa_asset_mediafile::get_mimetype($still_id);
+    $type = isset($type) ? $type : 'image/jpeg';
+    header('Content-Type: ' . $type);
 
     // Make sure we send the header now.
     ob_clean();
