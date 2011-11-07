@@ -44,7 +44,7 @@ function mediamosa_tool_windows_permission() {
 /**
  * Implements hook_mediamosa_tool_info().
  */
-function mediamosa_tool_pdf_mediamosa_tool_info() {
+function mediamosa_tool_windows_mediamosa_tool_info() {
   return array(mediamosa_tool_windows::NAME => array(
     'name' => t('Windows tool'),
     'description' => t('For transcoding to wmf files. This tool is no longer supported and will be removed in future versions.'),

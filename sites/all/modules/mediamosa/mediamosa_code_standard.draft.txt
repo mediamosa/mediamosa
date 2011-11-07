@@ -1,6 +1,8 @@
-
-
 Draft for starting code standard for MediaMosa 2.x and higher.
+
+- General;
+  * Follow the Drupal coding standard:
+    http://drupal.org/coding-standards
 
 - Misc;
   * Use mediamosa_io for IO related functions like mkdir, unlink, etc.
@@ -52,7 +54,7 @@ Draft for starting code standard for MediaMosa 2.x and higher.
   * Stop using object() instead of assoc() related functions, prefer arrays over 
     objects. Remember that the mediamosa_db will always return array. This 
     choice is based on 1.x code base. This does not mean there are no objects in 
-    mediamosa. 
+    Mediamosa.
 
 - Set up folders MediaMosa map;
   * Core modules are not drupal modules and are not considered as drupal 
@@ -81,5 +83,3 @@ Draft for starting code standard for MediaMosa 2.x and higher.
     mediamosa_asset.module (Drupal module file)
     mediamosa_asset.rest.class.inc (REST functions)
     mediamosa_asset.info (Drupal module info file)
-  
-  
