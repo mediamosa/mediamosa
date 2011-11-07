@@ -68,6 +68,10 @@ function mediamosa_maintenance_browse_theme() {
       'render element' => 'table',
       'file' => 'mediamosa_maintenance_browse_simpletest.inc',
     ),
+    'mediamosa_browse_transcode_failures' => array(
+      'render element' => 'table',
+      'file' => 'mediamosa_maintenance_browse_transcode_failures.inc',
+    ),
   );
 }
 
@@ -108,6 +112,17 @@ function mediamosa_maintenance_browse_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
   );
+
+  $items['admin/mediamosa/browse/failures'] = array(
+    'title' => 'Failed transcodings',
+    'description' => 'View failed transcoding jobs.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_transcode_failures_page'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
+    'file' => 'mediamosa_maintenance_browse_transcode_failures.inc',
+  );
+
   $items['admin/mediamosa/browse/asset/list'] = array(
     'title' => 'Asset browser',
     'type' => MENU_DEFAULT_LOCAL_TASK,

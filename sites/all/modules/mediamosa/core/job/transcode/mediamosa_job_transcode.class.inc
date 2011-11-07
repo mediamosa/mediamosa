@@ -31,6 +31,34 @@
 class mediamosa_job_transcode {
 
   /**
+   * Get the failed transcode jobs.
+   */
+  static public function getFailed() {
+
+    $a_query = array();
+
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "*";
+    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_job}";
+
+    $a_query[mediamosa_db_query::A_JOIN]["job_transcode"] = "JOIN {mediamosa_job_transcode} USING (job_id)";
+    $a_query[mediamosa_db_query::A_JOIN]["asset_mediafile"] = "JOIN {mediamosa_asset_mediafile} ON (mediamosa_asset_mediafile.mediafile_id = mediamosa_job.mediafile_id)";
+    
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "{mediamosa_job}.job_type = 'TRANSCODE'";
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "{mediamosa_job}.status = 'FAILED'";
+    
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+
+    // Do the query.
+    $result = mediamosa_db_query::query($query);
+
+    // Set the found_rows on the object.
+    $result->found_rows = mediamosa_db_query::found_rows();
+    //print_r($result);
+    return $result;
+  }
+
+  
+  /**
    * Get the job transcode data.
    * @param integer $job_id
    *  The job ID.
