@@ -2845,7 +2845,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN id id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the FTP user.'");
-  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN userid userid varbinary(32) NOT NULL COMMENT 'The User ID.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN userid userid varbinary(255) NOT NULL COMMENT 'The User ID.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN passwd passwd varbinary(255) NOT NULL COMMENT 'The Password.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN gid gid smallint(6) NOT NULL DEFAULT '200' COMMENT 'The linux group ID of the FTP user.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN homedir homedir varchar(255) NOT NULL COMMENT 'The home directory path.'");
