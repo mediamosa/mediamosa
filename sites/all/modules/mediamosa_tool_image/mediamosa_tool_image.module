@@ -85,8 +85,8 @@ function mediamosa_tool_image_mediamosa_tool_info() {
 function _mediamosa_tool_image_status_generate() {
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'imagemagic' => l('here', 'http://mediamosa.org/trac/wiki/ImageMagic'),
-    'exiv2' => l('here', 'http://mediamosa.org/trac/wiki/exiv2'),
+    'imagemagic' => l('here', 'http://www.imagemagick.org/'),
+    'exiv2' => l('here', 'http://www.exiv2.org/'),
   );
 
   $results = array();
@@ -116,7 +116,7 @@ function _mediamosa_tool_image_status_generate() {
     'title' => t('Image tool: Exiv2'),
     'value' => $status_line,
     'severity' => _mediamosa_maintenance_status_okerror($found),
-    'description' => $found ? '' : t('Install Exiv2. You can find more information how to install ImageMagic !here', array('!here' => $helper_links['exiv2'])),
+    'description' => $found ? '' : t('Install Exiv2. You can find more information how to install Exiv2 !here', array('!here' => $helper_links['exiv2'])),
   );
 
   // Making the report.

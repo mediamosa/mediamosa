@@ -36,7 +36,6 @@
 
 /* FTP settings
  */
-define('MEDIAMOSA_FTP_ROOTDIR', '/ftp');
 define('MEDIAMOSA_FTP_CREDENTIAL_LENGTH', 8);
 
 /**
@@ -147,7 +146,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
 
     // Create FTP dir.
-    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username;
+    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . '/' . mediamosa_configuration_storage::ftp_location_get() . '/' . $username;
 
     try {
       mediamosa_io::mkdir($user_home_dir, TRUE, 0775);

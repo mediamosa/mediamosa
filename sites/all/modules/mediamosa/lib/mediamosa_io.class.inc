@@ -51,9 +51,9 @@ class mediamosa_io {
    * @param bool $recursive
    *  Enable recursive to create the sub maps required to create directory.
    * @param int $mode
-   *  Default mode value for created directory, defaults to mode 0777.
+   *  Default mode value for created directory, defaults to mode 0775.
    */
-  static public function mkdir($pathname, $recursive = TRUE, $mode = 0777) {
+  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {
@@ -69,7 +69,8 @@ class mediamosa_io {
         )
       );
     }
-
+    drupal_chmod($pathname, NULL); // default 0775 to override umask problems.
+    
     return TRUE;
   }
 
@@ -399,4 +400,33 @@ class mediamosa_io {
   static public function disk_usage_recursive($directory) {
     return self::disk_usage($directory, TRUE);
   }
+
+  /**
+   * Determine Mime type of a file.
+   *
+   * @param $filename
+   *  file to get the mimetype of.
+   * @param $default
+   *  In case this function cannot determine a mime-type,
+   *  $default is returned.
+   */
+  static public function get_mimetype($filename) {
+    $type = NULL;
+
+    // First try the finfo_file() function.
+    if (function_exists('finfo_file')) {
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $type = finfo_file($finfo, $filename);
+      finfo_close($finfo);
+    }
+    // Step 2: use the "file" command.
+    if (!$type || $type == 'application/octet-stream') {
+      $file_mime = exec('file -b -L --mime-type ' . escapeshellarg($filename), $output, $return_var);
+      if ($return_var == '0' && $file_mime) {
+        $type = $file_mime;
+      }
+    }
+    return $type;
+  }
+
 }
