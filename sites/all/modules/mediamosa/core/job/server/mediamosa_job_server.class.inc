@@ -809,8 +809,7 @@ class mediamosa_job_server {
             'location_source_file' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
           );
 
-          // PHP 5.2.3 or higher.
-          $execution_string = call_user_func($class_name . '::get_transcode_exec', $args);
+          $execution_string = call_user_func_array($class_name . '::get_transcode_exec', array($args));
         }
     }
 
