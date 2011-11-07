@@ -801,7 +801,7 @@ class mediamosa_job {
         $tool_analyse = unserialize($app[mediamosa_app_db::TOOL_ANALYSE]);
 
         // Check if the tool is enabled for this app.
-        if (!empty($tool_analyse[key($tool_info)])) {
+        if (isset($tool_analyse[key($tool_info)])) {
           // Start the analyse process.
           module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
           break;

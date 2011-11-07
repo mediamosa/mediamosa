@@ -269,7 +269,10 @@ class mediamosa_asset_mediafile_metadata {
 
     // file-bitrate.
     $bitrate = isset($a_metadata['File-bitrate']) ? intval($a_metadata['File-bitrate']) : '0';
-    self::create_mediafile_metadata($mediafile_id, $bitrate, mediamosa_asset_mediafile_metadata::BITRATE, $type_int);
+    if ($bitrate) {
+      // Don't store invalid data.
+      self::create_mediafile_metadata($mediafile_id, $bitrate, mediamosa_asset_mediafile_metadata::BITRATE, $type_int);
+    }
 
     // bpp.
     $value = (string)self::calculate_bpp($width, $height, $fps, $bitrate);
