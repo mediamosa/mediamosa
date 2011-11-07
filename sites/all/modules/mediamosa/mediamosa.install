@@ -3143,3 +3143,29 @@ function mediamosa_update_7123() {
     ->execute();
   }
 }
+
+/**
+ * New Ftp user home directory rights fix.
+ */
+function mediamosa_update_7124() {
+  $return = array();
+  $result = db_query('SELECT * FROM {mediamosa_ftp_user}');
+  foreach ($result as $user) {
+    $username = $user->userid;
+
+    // Create FTP dir.
+    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . '/' . mediamosa_configuration_storage::ftp_location_get() . '/' . $username;
+
+    try {
+      $chmod_result = drupal_chmod($user_home_dir, NULL); // changes ftp directories to 0775.
+      if ($chmod_result == FALSE) {
+        $return[] = t('chmod: no such ftp home directory: !userdir', array('!userdir' => $user_home_dir));
+      }
+    }
+    catch (Exception $e) {
+      $return[] = $e->getMessage();
+    }
+  }
+
+  return empty($return) ? NULL : nl2br(t("Ftp homedir execeptions: \n!return.", array('!return' => implode("\n", $return))));
+}
