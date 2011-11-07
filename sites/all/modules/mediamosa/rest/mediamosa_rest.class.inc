@@ -319,6 +319,10 @@ class mediamosa_rest {
         // Sort on Property.
         ksort($rest_call);
 
+        if ($options['get_class_name']) {
+          $rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE name = :name AND type = 'class'", array(':name' => $rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
+        }
+
         // Copy into result.
         if (!empty($options['key2'])) {
           $results[$rest_call[$options['key']]][$rest_call[$options['key2']]] = $rest_call;
@@ -326,10 +330,6 @@ class mediamosa_rest {
         else {
           assert(!isset($results[$rest_call[$options['key']]]));
           $results[$rest_call[$options['key']]] = $rest_call;
-        }
-
-        if ($options['get_class_name']) {
-          $rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE name = :name AND type = 'class'", array(':name' => $rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
         }
 
         // no more?
