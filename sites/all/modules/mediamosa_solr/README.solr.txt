@@ -29,7 +29,7 @@ tar -xf apache-solr-1.4.1.tgz
 sudo cp apache-solr-1.4.1/dist/apache-solr-1.4.1.war /usr/share/tomcat6/webapps/.
 
 * Copy basic setup solr to tomcat6 server
-sudo cp -R /home/rblanker/temp/apache-solr-1.4.1/example/solr/ /usr/share/tomcat6/solr/
+sudo cp -R apache-solr-1.4.1/example/solr/ /usr/share/tomcat6/solr/
 
 * Create a Solr configuration for Tomcat6;
 sudo pico /etc/tomcat6/Catalina/localhost/solr.xml

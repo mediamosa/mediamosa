@@ -23,6 +23,18 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
+MediaMosa 3.0.3 (build xxxx)
+----------------------------
+- Fixed typo in windows tool module (by pforgacs, madcap-nl).
+- Status page solr variable fix (by pforgacs, madcap-nl).
+- Status page Exiv2 and ImageMagic link fix (by pforgacs, madcap-nl).
+- New ftp-user gets correct ftp directory with appropriate rights (by pforgacs, madcap-nl).
+- Content-type in still download REST call added (by pforgacs, madcap-nl).
+- OpenAPI config page bug fix (by pforgacs, madcap-nl).
+- Fixed lua script: transcoding issues in existing assets (by pforgacs, madcap-nl).
+- Corrected MediaMosa version check for collection (by pforgacs, madcap-nl, see ticket #332).
+- Corrected incorrect reporting of max_execution_time during cron runs.
+
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
 Other changes (not ticket related).
