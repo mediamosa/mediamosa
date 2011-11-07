@@ -23,6 +23,21 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
+MediaMosa 3.0.3 (build xxxx)
+----------------------------
+- Fixed typo in windows tool module.
+- Status page solr variable fix.
+- Status page Exiv2 and ImageMagic link fix.
+- New ftp-user gets correct ftp directory with appropriate rights (see ticket #244).
+- Content-type in still download REST call added.
+- OpenAPI config page bug fix.
+- Fixed lua script: transcoding issues in existing assets (see ticket #267).
+- Corrected MediaMosa version check for collection (see ticket #332).
+- Corrected incorrect reporting of max_execution_time during cron runs (see ticket #412).
+- Don't store invalid bitrates (see ticket #394).
+- Fix in Lua script vpx-transcode for unpatched ffmpeg versions.
+- oAuth security feature added in addition to Dbus (see ticket #10).
+
 MediaMosa 3.0.2 (build 1734)
 ----------------------------
 Other changes (not ticket related).

@@ -344,7 +344,7 @@ function mediamosa_openapi_mediamosa_configuration_validate($form, $form_state) 
     mediamosa_response::RESPONSE_TYPE_JSON  => 'JSON',
   );
 
-  if (!in_array($response_type, $options)) {
+  if (!array_key_exists($response_type, $options)) {
     form_set_error(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, t("Invalid response type."));
   }
 }
