@@ -51,9 +51,9 @@ class mediamosa_io {
    * @param bool $recursive
    *  Enable recursive to create the sub maps required to create directory.
    * @param int $mode
-   *  Default mode value for created directory, defaults to mode 0777.
+   *  Default mode value for created directory, defaults to mode 0775.
    */
-  static public function mkdir($pathname, $recursive = TRUE, $mode = 0777) {
+  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {
@@ -69,7 +69,8 @@ class mediamosa_io {
         )
       );
     }
-
+    drupal_chmod($pathname, NULL); // default 0775 to override umask problems.
+    
     return TRUE;
   }
 
