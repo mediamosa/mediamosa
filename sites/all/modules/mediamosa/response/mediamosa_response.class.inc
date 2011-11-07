@@ -828,7 +828,7 @@ class mediamosa_response extends mediamosa {
       elseif (!empty($item['mediafile_id'])) {
         $mediafile_id = $item['mediafile_id'];
       }
-      $link = $base_url . '/openapi/play/' . $mediafile_id;
+      $link = $base_url . '/openapi/mediaItems/@me/@self/' . $item['asset_id'] . '/' . $mediafile_id;
 
       // Author.
       $xml_element = $xml_response_item->addChild('author');
@@ -977,7 +977,7 @@ class mediamosa_response extends mediamosa {
       elseif (!empty($item['mediafile_id'])) {
         $mediafile_id = $item['mediafile_id'];
       }
-      $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
+      $link = $base_url . '/openapi/mediaItems/@me/@self/' . $item['asset_id'] . '/' . $mediafile['mediafile_id'];
 
       // Base data.
       $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
