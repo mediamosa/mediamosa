@@ -507,6 +507,7 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
     _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . chr($i));
   }
   // Other.
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/style/');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/data/transcode');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/links');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/download_links');

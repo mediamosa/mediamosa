@@ -637,55 +637,6 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
     unset($form['#validate']);
     $form['#submit'][] = '_mediamosa_watchdog_filter_form_submit';
   }
-  elseif ($form_id == 'image_style_add_form') {
-    /**
-     * Image style to client.
-     */
-    $app_id = arg(5);
-
-    if (!isset($app_id) || !is_numeric($app_id)) {
-      return;
-    }
-
-    $app = mediamosa_app::get_by_appid($app_id);
-
-    if (!$app) {
-      return;
-    }
-
-    $form['#validate'][] = 'mediamosa_node_mediamosa_app_image_style_validate';
-  }
-  elseif ($form_id == 'image_style_form') {
-    /**
-     * Image style to client.
-     */
-
-    $style = arg(5);
-
-    if (!isset($style)) {
-      return;
-    }
-
-    $pos = strpos($style, mediamosa_settings::IMAGE_STYLE_SEPARATOR);
-    if ($pos === FALSE) {
-      return;
-    }
-
-    $app_id = drupal_substr($style, 0, $pos);
-    $app = mediamosa_app::get_by_appid($app_id);
-    if (!$app) {
-      return;
-    }
-
-    $nid = $app[mediamosa_app_db::NID];
-
-    $form['back_to_client'] = array(
-      '#markup' => l(t('Go back to your client application edit page (without save the changes)'), 'admin/mediamosa/config/app/' . $nid . '/edit'),
-    );
-
-    $form['name']['#default_value'] = drupal_substr($style, $pos + 1);
-    $form['#validate'][] = 'mediamosa_node_mediamosa_app_image_style_validate';
-  }
 }
 
 /**

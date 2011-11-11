@@ -134,8 +134,12 @@ files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metad
 ; Asset Mediafile Playproxy.
 files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc
 
-; Asset Mediafile Thumnails.
+; Asset Mediafile Still.
 files[] = core/asset/mediafile/still/mediamosa_asset_mediafile_still.class.inc
+
+; Asset Mediafile Still Style.
+files[] = core/asset/mediafile/still/style/mediamosa_asset_mediafile_still_style_db.class.inc
+files[] = core/asset/mediafile/still/style/mediamosa_asset_mediafile_still_style.class.inc
 
 ; Asset Mediafile Upload.
 files[] = core/asset/mediafile/upload/mediamosa_asset_mediafile_upload.class.inc

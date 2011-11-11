@@ -3174,9 +3174,25 @@ function mediamosa_update_7124() {
  * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
  * New table mediamosa_job_display was added.
  */
-function mediamosa_update_7127() {
+function mediamosa_update_7125() {
   if (!db_table_exists('mediamosa_job_display')) {
     // Install mediamosa_job_display table.
     mediamosa::drupal_install_schema('mediamosa_job_display');
   }
+}
+
+/**
+ * MediaMosa ticket #371 (object code enhancement).
+ * New table mediamosa_asset_mediafile_still_style was added.
+ */
+function mediamosa_update_7126() {
+  if (!db_table_exists('mediamosa_asset_mediafile_still_style')) {
+    // Install mediamosa_asset_mediafile_still_style table.
+    mediamosa::drupal_install_schema('mediamosa_asset_mediafile_still_style');
+  }
+  // Create style directory.
+  mediamosa_io::mkdir(mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION, TRUE);
+
+  // Also the simpletest equivalent.
+  mediamosa_io::mkdir(mediamosa_configuration_storage::get_data_location() . DIRECTORY_SEPARATOR . 'simpletest/data/stills/' . mediamosa_settings::STILL_LINK_STYLE_LOCATION);
 }
