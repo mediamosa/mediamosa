@@ -647,23 +647,20 @@ class mediamosa_asset_mediafile_still {
     // Source of still.
     $source = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
 
-    $pos = strpos($style, mediamosa_settings::IMAGE_STYLE_SEPARATOR);
-    if ($pos === FALSE) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
-    }
+
+    // Validate the style.
 
     $mediafile = mediamosa_asset_mediafile::must_exists($still_id);
     $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
-    if (mediamosa_unicode::substr($style, 0, mediamosa_unicode::strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
+    $still_style = mediamosa_asset_mediafile_still_style::get($style, $app_id);
+
+    if (!$still_style) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
     }
 
+    // File of style.
     $file = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? $ticket_id : mediamosa_configuration_storage::objectid_to_location($still_id));
-
-    if (file_exists($file)) {
-      return $file;
-    }
 
     // Target symlink.
     $target = mediamosa_configuration_storage::still_style_location_get_full($style) . mediamosa_configuration_storage::objectid_to_location($still_id);
@@ -683,6 +680,10 @@ class mediamosa_asset_mediafile_still {
       if (!$success || !is_file($target)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
       }
+    }
+
+    if (file_exists($file)) {
+      return $file;
     }
 
     // Create the symlink ticket.

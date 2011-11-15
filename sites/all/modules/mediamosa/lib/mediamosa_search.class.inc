@@ -102,6 +102,11 @@ class mediamosa_search {
       return call_user_func($name . '::asset_search', $parameters);
     }
     catch (Exception $e) {
+      // Do not support fallback for database when running tests.
+      if (mediamosa::in_simpletest_sandbox()) {
+        throw $e;
+      }
+
       // If other database fails, then do MySQL default (unless it was MySQL).
       if ($name != 'mediamosa_search') {
         return self::asset_search($parameters);

@@ -26,26 +26,16 @@
 
 /**
  * @file
- *
+ * Transcode job table.
  */
-class mediamosa_server_job {
+class mediamosa_job_display_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_job_display';
 
-  /**
-   * Delete the job-server-relation of the job.
-   */
-
-  /**
-   * Remove server<->job link.
-   *
-   * _vpx_jobhandler_clear_serverjob
-   *
-   * @param integer $job_id
-   *  The Job ID.
-   */
-  static public function delete_by_jobid($job_id) {
-    // Remove link.
-    mediamosa_db::db_delete(mediamosa_server_job_db::TABLE_NAME)
-      ->condition(mediamosa_server_job_db::JOB_ID, $job_id)
-      ->execute();
-  }
+  // Database fields;
+  const ID = 'job_id';
+  const VISIBILITY = 'visibility';
+  const VISIBILITY_DISPLAY = 'display';
+  const VISIBILITY_HIDDEN = 'hidden';
 }

@@ -68,6 +68,14 @@ function mediamosa_maintenance_browse_theme() {
       'render element' => 'table',
       'file' => 'mediamosa_maintenance_browse_simpletest.inc',
     ),
+    'mediamosa_browse_job_failures' => array(
+      'render element' => 'table',
+      'file' => 'mediamosa_maintenance_browse_job_failures.inc',
+    ),
+    'mediamosa_browse_transcode_length_deviation' => array(
+      'render element' => 'table',
+      'file' => 'mediamosa_maintenance_browse_transcode_length_deviation.inc',
+    ),
   );
 }
 
@@ -108,6 +116,7 @@ function mediamosa_maintenance_browse_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
   );
+
   $items['admin/mediamosa/browse/asset/list'] = array(
     'title' => 'Asset browser',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -356,6 +365,26 @@ function mediamosa_maintenance_browse_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_asset.inc',
+  );
+
+  $items['admin/mediamosa/browse/failure'] = array(
+    'title' => 'Failed jobs',
+    'description' => 'View failed jobs.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_job_failures_page'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_JOB_FAILURE),
+    'file' => 'mediamosa_maintenance_browse_job_failures.inc',
+  );
+
+  $items['admin/mediamosa/browse/transcode_length_deviation'] = array(
+    'title' => 'Transcode length deviation',
+    'description' => 'View transcodings that deviate in length from the original upload.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_transcode_length_deviation_page'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION),
+    'file' => 'mediamosa_maintenance_browse_transcode_length_deviation.inc',
   );
 
   return $items;

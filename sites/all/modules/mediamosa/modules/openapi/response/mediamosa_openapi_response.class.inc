@@ -127,7 +127,7 @@ class mediamosa_openapi_response extends mediamosa_response {
       elseif (!empty($item['mediafile_id'])) {
         $mediafile_id = $item['mediafile_id'];
       }
-      $link = $base_url . '/openapi/play/' . $mediafile_id;
+      $link = $base_url . '/openapi/mediaItems/@me/@self/' . $item['asset_id'] . '/' . $mediafile_id;
 
       // Author.
       $xml_element = $xml_response_item->addChild('author');

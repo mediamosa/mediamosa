@@ -24,28 +24,18 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- *
- */
-class mediamosa_server_job {
+ /**
+  * @file
+  * The database class of the asset_mediafile_still_style module.
+  */
 
-  /**
-   * Delete the job-server-relation of the job.
-   */
+class mediamosa_asset_mediafile_still_style_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_asset_mediafile_still_style';
 
-  /**
-   * Remove server<->job link.
-   *
-   * _vpx_jobhandler_clear_serverjob
-   *
-   * @param integer $job_id
-   *  The Job ID.
-   */
-  static public function delete_by_jobid($job_id) {
-    // Remove link.
-    mediamosa_db::db_delete(mediamosa_server_job_db::TABLE_NAME)
-      ->condition(mediamosa_server_job_db::JOB_ID, $job_id)
-      ->execute();
-  }
+  // Database fields;
+  const ID = 'style';
+  const ID_LENGTH = 255;
+  const APP_ID = 'app_id';
 }

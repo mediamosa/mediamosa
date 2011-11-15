@@ -115,9 +115,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     if (!$ticket_id && !$still_id) {
       throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
-
-      // Nor ticket_id, nor still_id.
-      //throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
     }
 
     if ($ticket_id) {
@@ -203,6 +200,13 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $type = isset($type) ? $type : 'image/jpeg';
     header('Content-Type: ' . $type);
 
+    // Set the cache header in case of permanent stills.
+    if ($still_id) {
+      header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : 'public, max-age=' . mediamosa_settings::STILL_REST_CACHE_SECOND . ', must-revalidate'));
+      header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . ' GMT');
+      header('Expires: ' . (isset($response->headers['expires']) ? $response->headers['expires'] : gmdate('D, d M Y H:i:s', time() + mediamosa_settings::STILL_REST_CACHE_SECOND) . " GMT"));
+    }
+
     // Make sure we send the header now.
     ob_clean();
     flush();
@@ -219,6 +223,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     // Close the file.
     fclose($handle);
+    die;
 
     // Set the result, reponse object will know what to do.
     $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);

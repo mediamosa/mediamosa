@@ -32,6 +32,7 @@
 require_once 'mediamosa_asset_mediafile.class.inc';
 require_once 'mediamosa_asset_mediafile_db.class.inc';
 require_once 'metadata/mediamosa_asset_mediafile_metadata.install.inc';
+require_once 'still/mediamosa_asset_mediafile_still.install.inc';
 
 /**
  * Implements hook_install().
@@ -42,12 +43,18 @@ function _mediamosa_asset_mediafile_install() {
 
   // Call the asset media metadata installer.
   _mediamosa_asset_mediafile_metadata_install();
+
+  // Call the asset media still installer.
+  _mediamosa_asset_mediafile_still_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
 function _mediamosa_asset_mediafile_uninstall() {
+  // Call the asset media still uninstaller.
+  _mediamosa_asset_mediafile_still_uninstall();
+
   // Call the asset media metadata uninstaller.
   _mediamosa_asset_mediafile_metadata_uninstall();
 

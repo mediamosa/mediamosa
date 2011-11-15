@@ -142,6 +142,13 @@ class mediamosa_settings {
   const STILL_RESAMPLE_WIDTH = 150;
   const STILL_RESAMPLE_HEIGHT = 150;
 
+  // Still REST call.
+  const STILL_REST_TEST_IMAGE = 'sites/all/modules/mediamosa/lib/misc/1px.png';
+
+  // Image cache max time: 60*60*24*30 = 2592000 sec.
+  const STILL_REST_CACHE_SECOND = 2592000;
+  const STILL_REST_CACHE = 'no-cache, must-revalidate, post-check=0, pre-check=0';
+
   // FFmpeg.
 
   const STILL_STRING = "' -s %s -padtop %d -padbottom %d -padleft %d -padright %d -vframes %d -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";

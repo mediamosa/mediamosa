@@ -18,3 +18,6 @@ files[] = mediamosa_job.cql.test
 
 ; Job Server.
 files[] = server/mediamosa_job_server.rest.class.inc
+
+; Job Failed.
+files[] = failure/mediamosa_job_failure.rest.class.inc

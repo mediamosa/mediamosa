@@ -62,6 +62,121 @@ function mediamosa_asset_cron() {
 }
 
 /**
+ * Implements hook_menu_alter().
+ */
+function mediamosa_asset_menu_alter(&$items) {
+  $items['admin/config/media/image-styles']['access callback'] = '_mediamosa_asset_admin_config_media_image_styles_access_callback';
+}
+
+function _mediamosa_asset_admin_config_media_image_styles_access_callback() {
+  // Only the Mediamosa admin can acces that page.
+  return (user_access('administer image styles') && user_access(mediamosa_permission::ADMIN_MEDIAMOSA));
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mediamosa_asset_form_alter(&$form, &$form_state, $form_id) {
+  // Is this user MediaMosa administratior?
+  $mediamosa_admin = user_access('administer image styles') && user_access(mediamosa_permission::ADMIN_MEDIAMOSA);
+
+  if ($form_id == 'image_style_add_form') {
+    // Image style to client application add form.
+
+    $app_id = arg(5);
+
+    if (!isset($app_id) || !is_numeric($app_id)) {
+      // Does admin uses the image style page directly?
+      if (!$mediamosa_admin) {
+        drupal_access_denied();
+        drupal_goto('');
+      }
+      return;
+    }
+
+    $app = mediamosa_app::get_by_appid($app_id);
+
+    if (!$app || (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin)) {
+      drupal_access_denied();
+      drupal_goto('');
+      return;
+    }
+
+    // Insert the style - app_id data.
+    $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_add_submit';
+
+    $form['app_id'] = array(
+      '#type' => 'value',
+      '#value' => $app_id,
+    );
+
+    $form['back_to_client'] = array(
+      '#markup' => l(t('Go back to the client application (app_id = @app_id) edit page', array('@app_id' => $app_id)), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/edit'),
+    );
+  }
+  elseif ($form_id == 'image_style_form' || $form_id == 'image_style_delete_form') {
+    // Image style to client application edit or delete form.
+
+    $style = arg(5);
+
+    if (!isset($style)) {
+      // Does admin uses the image style page directly?
+      if (!$mediamosa_admin) {
+        drupal_access_denied();
+        drupal_goto('');
+      }
+      return;
+    }
+
+    $still_style = mediamosa_asset_mediafile_still_style::get($style);
+    $app_id = ($still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] ? $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] : '');
+
+    if (!$still_style || (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin)) {
+      drupal_access_denied();
+      drupal_goto('');
+      return;
+    }
+
+    $app = mediamosa_app::get_by_appid($app_id);
+
+    if ($form_id == 'image_style_form') {
+      // If edit, then we update the style - app_id data and delete style images.
+      $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_edit_submit';
+    }
+    elseif ($form_id == 'image_style_delete_form') {
+      foreach ($form['replacement']['#options'] as $key => $value) {
+        if ($key) {
+          if ($key == 'thumbnail' || $key == 'medium' || $key == 'large') {
+            // We want to delete the default ones too.
+            //continue;
+          }
+          $still_style = mediamosa_asset_mediafile_still_style::get($key);
+          $app_id_replace = ($still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] ? $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] : '');
+          if (!$still_style || !user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) || $app_id != $app_id_replace) {
+            unset($form['replacement']['#options'][$key]);
+          }
+        }
+      }
+      // If delete, then we delete the style - app_id data and delete style images.
+      $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_delete_submit';
+    }
+
+    $form['style'] = array(
+      '#type' => 'value',
+      '#value' => $style,
+    );
+    $form['app_id'] = array(
+      '#type' => 'value',
+      '#value' => $app_id,
+    );
+
+    $form['back_to_client'] = array(
+      '#markup' => l(t('Go back to the client application (app_id = @app_id) edit page', array('@app_id' => $app_id)), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/edit'),
+    );
+  }
+}
+
+/**
  * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_asset_mediamosa_register_rest_call() {
@@ -530,6 +645,18 @@ function mediamosa_asset_mediamosa_register_rest_call() {
 
   // Allowed on POST as well.
   $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
+
+  // Media.
+  $rest_calls['media/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
+  );
 
   // Still.
   $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
