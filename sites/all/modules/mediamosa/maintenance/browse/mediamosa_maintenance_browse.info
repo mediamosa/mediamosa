@@ -11,8 +11,8 @@ core = 7.x
 ; Dependencies
 dependencies[] = mediamosa
 dependencies[] = mediamosa_app
+dependencies[] = mediamosa_job
 dependencies[] = mediamosa_asset
 dependencies[] = mediamosa_collection
-dependencies[] = mediamosa_maintenance
 dependencies[] = mediamosa_maintenance
 dependencies[] = simpletest

@@ -103,6 +103,94 @@ class mediamosa_job {
   }
 
   /**
+   * Get the job from the main job table.
+   * @param integer $mediafile_id
+   *  The mediafile ID.
+   */
+  static public function get_by_mediafileid_all($mediafile_id, array $fields = array()) {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->fields('j', $fields)
+      ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+  }
+
+  /**
+   * Get the failed transcode jobs.
+   *
+   * @param $visibility
+   * @param $order_by
+   * @param $order_direction
+   *
+   * @return $result
+   */
+  static public function get_failed($visibility, $limit, $offset, $order_by = mediamosa_job_db::ID, $order_direction = 'asc') {
+
+    // Build the query.
+    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'job');
+
+    // Joins.
+    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mediafile', 'mediafile.' . mediamosa_asset_mediafile_db::ID . ' = job.' . mediamosa_job_db::MEDIAFILE_ID);
+    $query->leftjoin(mediamosa_job_display_db::TABLE_NAME, 'display', 'display.' . mediamosa_job_display_db::ID . ' = job.' . mediamosa_job_db::ID);
+    // Filter failed jobs, where the same mediafile has finished job too.
+    $query->leftjoin(mediamosa_job_db::TABLE_NAME, 'job_test',
+      'job.' . mediamosa_job_db::MEDIAFILE_ID . ' = job_test.' . mediamosa_job_db::MEDIAFILE_ID . ' AND job.' . mediamosa_job_db::JOB_TYPE . ' = job_test.' . mediamosa_job_db::JOB_TYPE . ' AND job_test.' . mediamosa_job_db::JOB_STATUS . ' = \'' . mediamosa_job_db::JOB_STATUS_FINISHED . '\''
+    );
+
+    // Get the last job_id.
+    $query->addExpression('MAX(job.' . mediamosa_job_db::ID . ')', 'job_id');
+    $query->fields('job', array(
+      //mediamosa_job_db::ID,
+      mediamosa_job_db::APP_ID,
+      mediamosa_job_db::JOB_TYPE,
+      mediamosa_job_db::ASSET_ID,
+      mediamosa_job_db::MEDIAFILE_ID,
+      mediamosa_job_db::STARTED,
+      mediamosa_job_db::CHANGED,
+      mediamosa_job_db::ERROR_DESCRIPTION,
+    ));
+    $query->fields('mediafile', array(mediamosa_asset_mediafile_db::FILENAME));
+
+    if ($visibility == mediamosa_job_display_db::VISIBILITY_HIDDEN) {
+      $query->condition('display.' . mediamosa_job_display_db::VISIBILITY, mediamosa_job_display_db::VISIBILITY_HIDDEN);
+    }
+    else {
+      $query->isNull('display.' . mediamosa_job_display_db::VISIBILITY);
+    }
+
+    $job_type_or = db_or();
+    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_ANALYSE);
+    $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_TRANSCODE);
+    $query->condition($job_type_or);
+
+    $query->condition('job.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_FAILED);
+
+    $query->condition('mediafile.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+
+    $query->isNull('job_test.' . mediamosa_job_db::JOB_STATUS);
+
+    // Order_by and order_direction.
+    if ($order_by) {
+      $query->orderBy($order_by, $order_direction);
+    }
+
+    // Filtering the same failed jobs.
+    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID . ', job.' . mediamosa_job_db::JOB_TYPE);
+
+    // Number of total result.
+    $num_rows = $query->countQuery()->execute()->fetchField();
+
+    // Range.
+    $query->range($offset, $limit);
+
+    $result = $query->execute();
+
+    return array(
+      'item_count_total' => $num_rows,
+      'result' => $result,
+    );
+  }
+
+  /**
    * Store the error description.
    *
    * @param integer $job_id
@@ -282,7 +370,7 @@ class mediamosa_job {
    * @param string $completed_transcoding_url
    * @param string $priority
    */
-  static public function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
+  static public function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
 
     // Must have user_quota.
     mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
@@ -291,7 +379,7 @@ class mediamosa_job {
     mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest);
 
     // Create sub transcode job.
     mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id);

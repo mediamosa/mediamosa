@@ -2,28 +2,26 @@
 
 START CHANGELOG:
 
-Known issues;
-- TODO: Tool params should validate the values, when the user save the node:
-  * Nice parameter is unique.
-  * Tool parameter is unique.
-  * Allowed value is a ";" separated string.
-  * Default value is exists in the allowed values.
+MediaMosa 3.0.5 (build 1775)
+----------------------------
+Image Styles for stills (See ticket #371, #472).
+Bug fixes for maintenance module.
+Function for re-analyse and re-transcode mediafiles (see ticket #391).
+Openapi links were changed to mediaItems [GET] pages (see ticket #433).
+Translation fix.
+REST call: rest/$id "class_file_name" fix.
+Timezone unittest fix.
+admin transcode failure functions (see ticket #391).
+Solr class path fix.
+Granted field fix (see ticket #521).
+Added browse: failed transcodes overview.
+Added two versions of the Solr schema, 1 for Solr 1.x, the other for Solr 3.x. Also updated README.solr.txt.
+fixed user id varbinary size.
+Fixed problem with play request for still with assets without stills (see ticket #270).
+Solr fix for missing T (terminator) in date stamps, fixed in CQL class of solr instead of the main CQL class.
+Fixed missing renames on 'aut' to 'acl', causing problems for Solr ACL indexing.
 
-@TODO
-- OAI delete support (for solr).
-- Add unit test or status page item that checks if all error codes are found in
-  database. (so we dont forget the installer).
-
-
-- Hotfix for .asx and .smil files (apache);
-<IfModule mod_alias.c>
-  AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
-</IfModule>
-
-- Add metadata module enable on migration 1.7->3.x scripts.
-
-
-MediaMosa 3.0.4 (build xxxx)
+MediaMosa 3.0.4 (build 1736)
 ----------------------------
 - CZP simpletest bug fix.
 

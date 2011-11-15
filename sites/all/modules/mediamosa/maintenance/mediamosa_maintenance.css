@@ -2,12 +2,34 @@
 
 .mmappid {
   width: 60px;
-  text-align: center;
+  text-align: left;
+}
+
+.mmjobid {
+  width: 75px;
+  text-align: left;
+}
+
+.mmjobtype {
+  width: 90px;
+  text-align: left;
+}
+
+.mmassetid {
+  width: 220px;
+}
+
+.mmmediafileid {
+  width: 240px;
+}
+
+.mmfilename {
+  width: 240px;
 }
 
 .mmdate {
   width: 180px;
-  text-align: center;
+  text-align: left;
 }
 
 .mmoperation {

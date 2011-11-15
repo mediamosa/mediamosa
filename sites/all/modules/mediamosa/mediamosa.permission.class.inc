@@ -67,6 +67,8 @@ class mediamosa_permission {
   const ACCESS_BROWSE_TESTING = 'mediamosa|access|browse|testing';
   const ACCESS_BROWSE_BATCH = 'mediamosa|access|browse|batch';
   const ACCESS_BROWSE_FILE_INTEGRITY = 'mediamosa|access|browse|file_integrity';
+  const ACCESS_BROWSE_JOB_FAILURE = 'mediamosa|access|browse|job_failure';
+  const ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION = 'mediamosa|access|browse|transcode_length_deviation';
 
   // Start right.
   const ACCESS_START_FILE_INTEGRITY_START = 'mediamosa|start|file_integrity';

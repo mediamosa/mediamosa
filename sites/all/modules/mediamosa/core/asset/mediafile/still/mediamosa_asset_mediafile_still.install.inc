@@ -26,26 +26,24 @@
 
 /**
  * @file
- *
+ * The install file for asset media
  */
-class mediamosa_server_job {
 
-  /**
-   * Delete the job-server-relation of the job.
-   */
+require_once 'mediamosa_asset_mediafile_still.class.inc';
+require_once 'style/mediamosa_asset_mediafile_still_style.install.inc';
 
-  /**
-   * Remove server<->job link.
-   *
-   * _vpx_jobhandler_clear_serverjob
-   *
-   * @param integer $job_id
-   *  The Job ID.
-   */
-  static public function delete_by_jobid($job_id) {
-    // Remove link.
-    mediamosa_db::db_delete(mediamosa_server_job_db::TABLE_NAME)
-      ->condition(mediamosa_server_job_db::JOB_ID, $job_id)
-      ->execute();
-  }
+/**
+ * Implements hook_install().
+ */
+function _mediamosa_asset_mediafile_still_install() {
+  // Call the asset media still style installer.
+  _mediamosa_asset_mediafile_still_style_install();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function _mediamosa_asset_mediafile_still_uninstall() {
+  // Call the asset media still style uninstaller.
+  _mediamosa_asset_mediafile_still_style_uninstall();
 }

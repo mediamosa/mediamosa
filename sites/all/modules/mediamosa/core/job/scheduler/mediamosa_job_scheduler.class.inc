@@ -1540,13 +1540,13 @@ class mediamosa_job_scheduler {
       // For each found job, send a remove to the transcode server.
       self::remove_job_on_server($result_row[mediamosa_server_db::SERVER_URI], $result_row[mediamosa_job_db::ID]);
 
-      // verwijder de job uit de koppeltabel
+      // Delete the job from the server job table.
       mediamosa_server_job::delete_by_jobid($result_row[mediamosa_job_db::ID]);
 
-      // update de status van de job.
+      // Update the status of the job.
       $error_message = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_TRANSCODE_TIMEOUT, array('@timeout' => mediamosa_settings::JOB_TRANSCODE_TIMEOUT));
 
-      // Get the status
+      // Get the status.
       $a_job = mediamosa_job::get($result_row[mediamosa_job_db::ID], array(mediamosa_job_db::JOB_STATUS));
       $status = $a_job[mediamosa_job_db::JOB_STATUS];
       mediamosa_job::set_job_status_failed($result_row[mediamosa_job_db::ID], $error_message, $status);

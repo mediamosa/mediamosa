@@ -2845,7 +2845,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN id id int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the FTP user.'");
-  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN userid userid varbinary(32) NOT NULL COMMENT 'The User ID.'");
+  db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN userid userid varbinary(255) NOT NULL COMMENT 'The User ID.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN passwd passwd varbinary(255) NOT NULL COMMENT 'The Password.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN gid gid smallint(6) NOT NULL DEFAULT '200' COMMENT 'The linux group ID of the FTP user.'");
   db_query("ALTER TABLE {mediamosa_ftp_user} CHANGE COLUMN homedir homedir varchar(255) NOT NULL COMMENT 'The home directory path.'");
@@ -3168,4 +3168,31 @@ function mediamosa_update_7124() {
   }
 
   return empty($return) ? NULL : nl2br(t("Ftp homedir execeptions: \n!return.", array('!return' => implode("\n", $return))));
+}
+
+/**
+ * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
+ * New table mediamosa_job_display was added.
+ */
+function mediamosa_update_7125() {
+  if (!db_table_exists('mediamosa_job_display')) {
+    // Install mediamosa_job_display table.
+    mediamosa::drupal_install_schema('mediamosa_job_display');
+  }
+}
+
+/**
+ * MediaMosa ticket #371 (object code enhancement).
+ * New table mediamosa_asset_mediafile_still_style was added.
+ */
+function mediamosa_update_7126() {
+  if (!db_table_exists('mediamosa_asset_mediafile_still_style')) {
+    // Install mediamosa_asset_mediafile_still_style table.
+    mediamosa::drupal_install_schema('mediamosa_asset_mediafile_still_style');
+  }
+  // Create style directory.
+  mediamosa_io::mkdir(mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION, TRUE);
+
+  // Also the simpletest equivalent.
+  mediamosa_io::mkdir(mediamosa_configuration_storage::get_data_location() . DIRECTORY_SEPARATOR . 'simpletest/data/stills/' . mediamosa_settings::STILL_LINK_STYLE_LOCATION);
 }
