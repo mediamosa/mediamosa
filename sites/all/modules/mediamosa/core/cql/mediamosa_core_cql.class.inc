@@ -1076,7 +1076,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             break;
           case 'acl':
           case 'aut':
-            $context_set = 'mediamosa:aut';
+            $context_set = 'mediamosa:acl';
             break;
           default:
             $context_set = 'mediamosa:' . $a_def['propgroup_name'];
@@ -1131,13 +1131,14 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
      'qdc' => 'mediamosa:qdc', // Reference
      'czp' => 'mediamosa:czp', // Reference
      'acl' => 'mediamosa:acl', // Reference (1.x)
-     'aut' => 'mediamosa:aut', // Reference (1.x)
+     'aut' => 'mediamosa:acl', // Reference (1.x)
      'vpx:acl' => 'mediamosa:acl', // Reference (1.x)
-     'vpx:aut' => 'mediamosa:aut', // Reference (1.x)
+     'vpx:aut' => 'mediamosa:acl', // Reference (1.x)
      'vpx:dc' => 'mediamosa:dc', // Reference (1.x)
      'vpx:qdc' => 'mediamosa:qdc', // Reference (1.x)
      'vpx:czp' => 'mediamosa:czp', // Reference (1.x)
      'vpx' => 'mediamosa', // Reference (1.x)
+     'mediamosa:aut' => 'mediamosa:acl', // Reference (2.x)
     ),
 
     MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
@@ -1299,7 +1300,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
               ),
             ),
           ),
-          'mediamosa:aut' => array(
+          'mediamosa:acl' => array(
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'acl_app' => array(
                 // All mediafiles.

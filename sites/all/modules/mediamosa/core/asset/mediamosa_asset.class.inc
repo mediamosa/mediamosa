@@ -1334,8 +1334,8 @@ class mediamosa_asset {
     // Get mediafiles.
     $result['mediafiles'] = mediamosa_asset_mediafile::get_by_asset_id($asset_id);
 
-    // Get AUT rules.
-    $result['aut'] = mediamosa_acl_object::get_for_asset($asset_id);
+    // Get acl rules.
+    $result['acl'] = mediamosa_acl_object::get_for_asset($asset_id);
 
     return $result;
   }
