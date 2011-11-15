@@ -740,7 +740,7 @@ abstract class mediamosa_cql {
    * @param string $timezone
    *  Supply timezone for conversion.
    */
-  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC') {
+  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC', $format = 'Y-m-d H:i:s') {
     // Make the date valid for MySQL;
     $date_default = '0000-01-01T00:00:00';
     $date = $date . mediamosa_unicode::substr($date_default, mediamosa_unicode::strlen($date));
@@ -759,7 +759,7 @@ abstract class mediamosa_cql {
       $time = mktime($date_parsed['hour'], $date_parsed['minute'], $date_parsed['second'], $date_parsed['month'], $date_parsed['day'], $date_parsed['year']);
 
       // Back to GMT date again, make it valid.
-      $result = gmdate('Y-m-d H:i:s', $time);
+      $result = gmdate($format, $time);
     }
     catch (Exception $e) {
       // Make sure we return to old time zone.

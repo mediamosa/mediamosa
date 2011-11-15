@@ -346,8 +346,8 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @param string $timezone
    *  Supply timezone for conversion.
    */
-  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC') {
-    return parent::mediamosa_cql_str_date_2_db_date($date, mediamosa::get_environment_timezone());
+  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC', $format = 'Y-m-d H:i:s') {
+    return parent::mediamosa_cql_str_date_2_db_date($date, mediamosa::get_environment_timezone(), $format);
   }
 
   /**
