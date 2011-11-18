@@ -277,9 +277,10 @@ class mediamosa_settings {
     static $mediamosa_ffmpeg_pad = NULL;
 
     if (is_null($mediamosa_ffmpeg_pad)) {
-      $mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'vf=pad') === FALSE);
+      $ffmpeg_response = exec('ffmpeg -padtop 0 2>&1');
+      $mediamosa_ffmpeg_pad = (strpos($ffmpeg_response, 'vf=pad') === FALSE);
       if ($mediamosa_ffmpeg_pad) {
-        $mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'failed') === FALSE);
+        $mediamosa_ffmpeg_pad = (strpos(drupal_strtolower($ffmpeg_response), 'failed') === FALSE);
       }
     }
 

@@ -21,6 +21,7 @@ local errors = {}
 
 local space = lpeg.S(" \t\n\r")^0
 
+local POINT = lpeg.P(".") * space
 local COMMA = lpeg.P(",") * space
 local SEMIC = lpeg.P(";") * space
 local COLON = lpeg.P(":") * space
@@ -38,6 +39,7 @@ local word = lpeg.C(symbol) * space
 local number = lpeg.C(digits) * space
 local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
+local steam_number = lpeg.C(digits * POINT^0 * COLON^0 * digits) * space
 local time = lpeg.C(digits * ":" * digits * ":" * digits * "." * digits) * space
 local hex = lpeg.C("0x" * lpeg.R("09", "AF")^1) * space
 local dimension = lpeg.C(digits * "x" * digits) * space
@@ -48,7 +50,9 @@ local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
 local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
-local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space
+local ffjunk = (space * (LPAREN * (1 - RPAREN)^0 * RPAREN))^0
+-- local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space * ffjunk
+local codec = (lpeg.C(symbol)) * space * ffjunk
 local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
 local is_hinted = lpeg.C(symbol)
 local unit = lpeg.C(lpeg.P("k")^-1) * space
@@ -71,8 +75,10 @@ local ln_duration = space * "Duration" * COLON *
 -- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
 -- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
 -- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
+-- Stream #0.1: Audio: pcm_u8, 11024 Hz, 1 channels, u8, 88 kb/s
+-- Stream #0.1: Audio: pcm_u8 ([1][0][0][0] / 0x0001), 11024 Hz, 1 channels, u8, 88 kb/s
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
-local ln_audio = space * "Stream #" * float * language^-1 * COLON *
+local ln_audio = space * "Stream #" * steam_number * language^-1 * COLON *
   "Audio" * COLON *
   codec * COMMA *
   number * "Hz" * COMMA *
@@ -107,9 +113,11 @@ end
 -- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
 -- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
 -- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- Stream #0.0: Video: mjpeg, yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
+-- Stream #0.0: Video: mjpeg (MJPG / 0x47504A4D), yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
-local ln_video = space * "Stream #" * float * language * COLON *
+local ln_video = space * "Stream #" * steam_number * language * COLON *
   "Video" * COLON *
   codec * COMMA *
   ((word * COMMA) + lpeg.Cc("unknown")) *
@@ -208,7 +216,7 @@ function find_best_streams(source_path, hash)
   while line do
     -- log[#log+1] = line
 
-    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+    local streamtype = string.match(line, "Stream #%d+[%.:]%d+.*: (.*): .*")
 
     if streamtype == "Audio" then
       local stream, codec, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
@@ -376,7 +384,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
     end
 
     -- parse audio / video stream properties
-    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+    local streamtype = string.match(line, "Stream #%d+[%.:]%d+.*: (.*): .*")
 
     if streamtype == "Audio" then
       local stream, codec, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
