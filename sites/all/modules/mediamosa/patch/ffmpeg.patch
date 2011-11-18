@@ -1,9 +1,9 @@
-Index: ffmpeg.c
-===================================================================
---- ffmpeg.c	(revision 26402)
-+++ ffmpeg.c	(working copy)
-@@ -86,6 +86,14 @@
- const char program_name[] = "FFmpeg";
+diff --git a/ffmpeg.c b/ffmpeg.c
+index b250f0a..798a33b 100644
+--- a/ffmpeg.c
++++ b/ffmpeg.c
+@@ -90,6 +90,14 @@
+ const char program_name[] = "ffmpeg";
  const int program_birth_year = 2000;
  
 +#define MAX_IMAGE 2000
@@ -15,16 +15,16 @@ Index: ffmpeg.c
 +static char *scene_file;
 +
  /* select an input stream for an output stream */
- typedef struct AVStreamMap {
-     int file_index;
-@@ -1140,15 +1148,15 @@
-     if(video_sync_method){
-         double vdelta = sync_ipts - ost->sync_opts;
+ typedef struct StreamMap {
+     int disabled;           /** 1 is this mapping is disabled by a negative map */
+@@ -1219,15 +1227,15 @@ static void do_video_out(AVFormatContext *s,
+     if (format_video_sync) {
+         double vdelta = sync_ipts - ost->sync_opts + duration;
          //FIXME set to 0.5 after we fix some dts/pts bugs like in avidec.c
 -        if (vdelta < -1.1)
 +        if (vdelta < 0.0)
              nb_frames = 0;
-         else if (video_sync_method == 2 || (video_sync_method<0 && (s->oformat->flags & AVFMT_VARIABLE_FPS))){
+         else if (format_video_sync == 2) {
              if(vdelta<=-0.6){
                  nb_frames=0;
              }else if(vdelta>0.6)
@@ -36,55 +36,87 @@ Index: ffmpeg.c
  //fprintf(stderr, "vdelta:%f, ost->sync_opts:%"PRId64", ost->sync_ipts:%f nb_frames:%d\n", vdelta, ost->sync_opts, get_sync_ipts(ost), nb_frames);
          if (nb_frames == 0){
              ++nb_frames_drop;
-@@ -1275,7 +1283,15 @@
+@@ -1262,7 +1270,12 @@ static void do_video_out(AVFormatContext *s,
+             pkt.pts= av_rescale_q(ost->sync_opts, enc->time_base, ost->st->time_base);
+             pkt.flags |= AV_PKT_FLAG_KEY;
+ 
+-            write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
++            if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
++              write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
++               imp_pointer++;
++            }
++            frame_num++;
++
+         } else {
+             AVFrame big_picture;
+ 
+@@ -1310,7 +1323,13 @@ static void do_video_out(AVFormatContext *s,
  
                  if(enc->coded_frame->key_frame)
                      pkt.flags |= AV_PKT_FLAG_KEY;
 -                write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
 +
 +                if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
-+                //if (dec->coded_frame->pict_type == 1) {
-+                  //write_frame(s, &pkt, ost->st->codec, bitstream_filters[ost->file_index][pkt.stream_index]);
 +                  write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
-+                  imp_pointer++;
++                   imp_pointer++;
 +                }
 +                frame_num++;
 +
                  *frame_size = ret;
                  video_size += ret;
                  //fprintf(stderr,"\nFrame: %3d size: %5d type: %d",
-@@ -1438,7 +1454,7 @@
-                   nb_frames_dup, nb_frames_drop);
+@@ -1480,7 +1499,7 @@ static void print_report(OutputFile *output_files,
+         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " dup=%d drop=%d",
+                 nb_frames_dup, nb_frames_drop);
  
-         if (verbose >= 0)
--            fprintf(stderr, "%s    \r", buf);
-+            fprintf(stderr, "%s    \n", buf);
+-    av_log(NULL, is_last_report ? AV_LOG_WARNING : AV_LOG_INFO, "%s    \r", buf);
++    av_log(NULL, is_last_report ? AV_LOG_WARNING : AV_LOG_INFO, "%s    \n", buf);
  
-         fflush(stderr);
-     }
-@@ -3073,6 +3089,13 @@
-     return 0;
+     fflush(stderr);
+ 
+@@ -2929,6 +2948,33 @@ static int opt_map_meta_data(OptionsContext *o, const char *opt, const char *arg
+     return opt_map_metadata(o, opt, arg);
  }
  
-+static int opt_scene_changes(const char *opt, const char *arg)
++static int opt_scene_changes(OptionsContext *o, const char *opt, const char *arg)
 +{
 +    scene_changes = 1;
 +    scene_file = arg;
++
++    FILE *file;
++    file = fopen(scene_file, "r"); 
++    if(file==NULL) {
++        av_log(NULL, AV_LOG_FATAL, "%s: file does not exist\n", scene_file);
++        exit_program(1);
++    }
++
++    char c[10];
++    int iter;
++
++    iter = 0;
++    while(fgets(c, 10, file)!=NULL && iter < max_image) {
++      imp_image[iter] = atoi(c);
++      iter++;
++    }
++    imp_image[iter] = -1;
++
++    fclose(file);
++
 +    return 0;
 +}
 +
- static int opt_recording_timestamp(const char *opt, const char *arg)
+ static int opt_recording_timestamp(OptionsContext *o, const char *opt, const char *arg)
  {
-     recording_timestamp = parse_time_or_die(opt, arg, 0) / 1000000;
-@@ -4192,6 +4215,7 @@
-     { "t", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_time}, "record or transcode \"duration\" seconds of audio/video", "duration" },
-     { "fs", HAS_ARG | OPT_INT64, {(void*)&limit_filesize}, "set the limit file size in bytes", "limit_size" }, //
-     { "ss", OPT_FUNC2 | HAS_ARG, {(void*)opt_start_time}, "set the start time offset", "time_off" },
-+    { "scene", OPT_FUNC2 | HAS_ARG, {(void*)opt_scene_changes}, "scene changes file name", "scene_changes" },
-     { "itsoffset", OPT_FUNC2 | HAS_ARG, {(void*)opt_input_ts_offset}, "set the input ts offset", "time_off" },
-     { "itsscale", HAS_ARG, {(void*)opt_input_ts_scale}, "set the input ts scale", "stream:scale" },
-     { "timestamp", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_timestamp}, "set the recording timestamp ('now' to set the current time)", "time" },
-@@ -4337,9 +4361,28 @@
+     char buf[128];
+@@ -4235,6 +4281,7 @@ static const OptionDef options[] = {
+     { "t", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(recording_time)}, "record or transcode \"duration\" seconds of audio/video", "duration" },
+     { "fs", HAS_ARG | OPT_INT64 | OPT_OFFSET, {.off = OFFSET(limit_filesize)}, "set the limit file size in bytes", "limit_size" }, //
+     { "ss", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(start_time)}, "set the start time offset", "time_off" },
++    { "scene", HAS_ARG | OPT_FUNC2, {(void*)opt_scene_changes}, "scene changes file name", "scene_changes" },
+     { "itsoffset", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(input_ts_offset)}, "set the input ts offset", "time_off" },
+     { "itsscale", HAS_ARG | OPT_DOUBLE | OPT_SPEC, {.off = OFFSET(ts_scale)}, "set the input ts scale", "scale" },
+     { "timestamp", HAS_ARG | OPT_FUNC2, {(void*)opt_recording_timestamp}, "set the recording timestamp ('now' to set the current time)", "time" },
+@@ -4386,6 +4433,9 @@ int main(int argc, char **argv)
  
      show_banner();
  
@@ -92,53 +124,13 @@ Index: ffmpeg.c
 +    scene_file = "";
 +
      /* parse options */
-     parse_options(argc, argv, options, opt_output_file);
+     parse_options(&o, argc, argv, options, opt_output_file);
  
-+    if (strcmp(scene_file, "")) {
-+      char c[10];
-+      FILE *file;
-+      int iter;
-+      file = fopen(scene_file, "r"); 
-+      if(file!=NULL) {
-+        iter = 0;
-+        while(fgets(c, 10, file)!=NULL && iter < max_image) {
-+          imp_image[iter] = atoi(c);
-+          iter++;
-+        }
-+        imp_image[iter] = -1;
-+        fclose(file);
-+      }
-+    }
-+
-     if(nb_output_files <= 0 && nb_input_files == 0) {
-         show_usage();
-         fprintf(stderr, "Use -h to get full help or, even better, run 'man ffmpeg'\n");
-Index: libavcodec/rawenc.c
-===================================================================
---- libavcodec/rawenc.c	(revision 26402)
-+++ libavcodec/rawenc.c	(working copy)
-@@ -34,7 +34,7 @@
-     avctx->coded_frame = (AVFrame *)avctx->priv_data;
-     avctx->coded_frame->pict_type = FF_I_TYPE;
-     avctx->coded_frame->key_frame = 1;
--    avctx->bits_per_coded_sample = av_get_bits_per_pixel(&av_pix_fmt_descriptors[avctx->pix_fmt]);
-+    // avctx->bits_per_coded_sample = av_get_bits_per_pixel(&av_pix_fmt_descriptors[avctx->pix_fmt]);
-     if(!avctx->codec_tag)
-         avctx->codec_tag = avcodec_pix_fmt_to_codec_tag(avctx->pix_fmt);
-     return 0;
-@@ -58,6 +58,7 @@
- AVCodec rawvideo_encoder = {
-     "rawvideo",
-     AVMEDIA_TYPE_VIDEO,
-+    // CODEC_TYPE_VIDEO,
-     CODEC_ID_RAWVIDEO,
-     sizeof(AVFrame),
-     raw_init_encoder,
-Index: libavcodec/mpegvideo_enc.c
-===================================================================
---- libavcodec/mpegvideo_enc.c	(revision 26402)
-+++ libavcodec/mpegvideo_enc.c	(working copy)
-@@ -364,7 +364,7 @@
+diff --git a/libavcodec/mpegvideo_enc.c b/libavcodec/mpegvideo_enc.c
+index 5943ce7..6365c9e 100644
+--- a/libavcodec/mpegvideo_enc.c
++++ b/libavcodec/mpegvideo_enc.c
+@@ -377,7 +377,7 @@ av_cold int MPV_encode_init(AVCodecContext *avctx)
  
      if(!s->fixed_qscale && avctx->bit_rate*av_q2d(avctx->time_base) > avctx->bit_rate_tolerance){
          av_log(avctx, AV_LOG_ERROR, "bitrate tolerance too small for bitrate\n");
@@ -147,3 +139,16 @@ Index: libavcodec/mpegvideo_enc.c
      }
  
      if(   s->avctx->rc_max_rate && s->avctx->rc_min_rate == s->avctx->rc_max_rate
+diff --git a/libavcodec/rawenc.c b/libavcodec/rawenc.c
+index 7077de1..373282c 100644
+--- a/libavcodec/rawenc.c
++++ b/libavcodec/rawenc.c
+@@ -34,7 +34,7 @@ static av_cold int raw_init_encoder(AVCodecContext *avctx)
+     avctx->coded_frame = (AVFrame *)avctx->priv_data;
+     avctx->coded_frame->pict_type = AV_PICTURE_TYPE_I;
+     avctx->coded_frame->key_frame = 1;
+-    avctx->bits_per_coded_sample = av_get_bits_per_pixel(&av_pix_fmt_descriptors[avctx->pix_fmt]);
++    //avctx->bits_per_coded_sample = av_get_bits_per_pixel(&av_pix_fmt_descriptors[avctx->pix_fmt]);
+     if(!avctx->codec_tag)
+         avctx->codec_tag = avcodec_pix_fmt_to_codec_tag(avctx->pix_fmt);
+     return 0;
