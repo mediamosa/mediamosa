@@ -104,13 +104,13 @@ function _mediamosa_webservice_list() {
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
-  $actions = array();
-  if (_mediamosa_user_access(mediamosa_permission::UPDATE_CONFIG_WEBSERVICES)) {
-    $actions[] = l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options);
-  }
-
   $rows = array();
   foreach ($result as $row) {
+    $actions = array();
+    if (_mediamosa_user_access(mediamosa_permission::UPDATE_CONFIG_WEBSERVICES)) {
+      $actions[] = l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options);
+    }
+
     $rows[] = array(
       $row->{mediamosa_webservice_db::ID},
       $row->{mediamosa_webservice_db::HANDLE},
