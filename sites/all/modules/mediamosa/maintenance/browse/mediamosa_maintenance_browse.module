@@ -36,6 +36,40 @@ define('MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION', 'mediamosa_maintenance
 module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse');
 
 /**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_maintenance_browse_mediamosa_configuration_collect() {
+
+  // Admin only.
+  if (user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
+    $form['mediamosa_maintenance_browse'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Browse settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_deviation'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Deviation for browse transcode lenth deviation'),
+      '#description' => t('Deviation for browse transcode lenth deviation in percentage. Eg. 10%'),
+      '#required' => TRUE,
+      '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_deviation', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION),
+    );
+
+    $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_days'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Days for browse transcode lenth deviation'),
+      '#description' => t('Days for browse transcode lenth deviation. Eg. 14'),
+      '#required' => TRUE,
+      '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_days', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS),
+    );
+  }
+
+  return $form;
+}
+
+/**
  * Implements hook_theme().
  */
 function mediamosa_maintenance_browse_theme() {

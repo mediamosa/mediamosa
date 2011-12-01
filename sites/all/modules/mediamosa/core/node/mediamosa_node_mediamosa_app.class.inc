@@ -405,7 +405,7 @@ function mediamosa_app_form($node, &$form_state) {
   $form['client_application'][mediamosa_app_db::TIMEZONE] = array(
     '#type' => 'select',
     '#title' => t('Default time zone'),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TIMEZONE, $node, mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TIMEZONE, $node, variable_get('date_default_timezone', date_default_timezone_get())),
     '#options' => $timezones,
     '#required' => TRUE,
   );
