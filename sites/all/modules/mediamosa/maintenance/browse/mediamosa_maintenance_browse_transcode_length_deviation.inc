@@ -72,7 +72,10 @@ function _mediamosa_browse_transcode_length_deviation_list_form() {
     '#header' => '',
     '#showhidehidden' => '',
     '#title' => t('Deviant length transcodings (@total)' , array('@total' => $item_count_total)),
-    '#description' => t('Below list displays transcodings in the jobs table that deviate 10% or more to their original.'),
+    '#description' => t('Below list displays transcodings in the jobs table that deviate @deviation% or more to their original for the last @days days.', array(
+      '@deviation' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_deviation', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION),
+      '@days' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_days', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS),
+    )),
     '#item_count_total_text' => t('Deviant length transcodings found: @total', array('@total' => $item_count_total)),
     '#page' => $page,
     '#item_count_total' => $item_count_total,
@@ -183,18 +186,18 @@ function _mediamosa_browse_transcode_length_deviation_execute($page, $limit) {
       SQL_CALC_FOUND_ROWS
       org.#asset_id AS asset_id,
       org.#mediafile_id AS mediafile_id,
-      (SUBSTR(meta.#val_char,1,2) * 3600) + (SUBSTR(meta.#val_char,4,2) * 60) + SUBSTR(meta.#val_char,7,2) AS org_sec,
+      TIME_TO_SEC(meta.#val_char) AS org_sec,
       trans.#mediafile_id as trans_mediafile_id,
-      (SUBSTR(meta2.#val_char,1,2) * 3600) + (SUBSTR(meta2.#val_char,4,2) * 60) + SUBSTR(meta2.#val_char,7,2) AS trans_sec
+      TIME_TO_SEC(meta2.#val_char) AS trans_sec
 
     FROM {#mediamosa_asset_mediafile} AS org
     JOIN {#mediamosa_asset_mediafile_metadata} AS meta ON (meta.#mediafile_id_metadata = org.#mediafile_id AND meta.#prop_id = :prop_id)
-    JOIN {#mediamosa_asset_mediafile} AS trans ON (trans.#asset_id = org.#asset_id AND trans.#mediafile_id_source = org.#mediafile_id)
+    JOIN {#mediamosa_asset_mediafile} AS trans ON (trans.#changed > DATE_SUB(NOW(), INTERVAL :days DAY) AND trans.#asset_id = org.#asset_id AND trans.#mediafile_id_source = org.#mediafile_id)
     LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS meta2 ON (trans.#mediafile_id = meta2.#mediafile_id_metadata AND meta2.#prop_id = :prop_id)
 
     WHERE org.#is_original_file = :is_original_file_true AND trans.#is_original_file = :is_original_file_false AND org.#is_still = :is_still_false AND trans.#is_still = :is_still_false AND meta.#val_char IS NOT NULL
-    HAVING trans_sec IS NULL OR ABS(org_sec - trans_sec) > (org_sec / 10)
-    ORDER BY ABS(org_sec - trans_sec) DESC
+      AND (meta2.#val_char IS NULL OR ABS(TIME_TO_SEC(meta.#val_char) - TIME_TO_SEC(meta2.#val_char)) > (TIME_TO_SEC(meta.#val_char) * :deviation))
+    ORDER BY ABS(TIME_TO_SEC(meta.#val_char) - TIME_TO_SEC(meta2.#val_char)) DESC
   ", $page * $limit, $limit, array(
     '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
     '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
@@ -204,12 +207,15 @@ function _mediamosa_browse_transcode_length_deviation_execute($page, $limit) {
     '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
     '#val_char' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
     '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+    '#changed' => mediamosa_asset_mediafile_db::CHANGED,
     '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
     '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+    ':days' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_days', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS),
     ':is_original_file_true' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
     ':is_original_file_false' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
     ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
     ':prop_id' => $prop_id_file_duration,
+    ':deviation' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_deviation', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION) / 100,
   ));
 
   $found_rows = mediamosa_db::db_found_rows();

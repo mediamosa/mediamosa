@@ -74,6 +74,7 @@ class mediamosa_collection {
       FALSE,
       FALSE,
       TRUE,
+      TRUE,
       $hide_empty_assets,
       1,
       0

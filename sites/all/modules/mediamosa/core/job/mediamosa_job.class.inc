@@ -131,15 +131,9 @@ class mediamosa_job {
     // Joins.
     $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mediafile', 'mediafile.' . mediamosa_asset_mediafile_db::ID . ' = job.' . mediamosa_job_db::MEDIAFILE_ID);
     $query->leftjoin(mediamosa_job_display_db::TABLE_NAME, 'display', 'display.' . mediamosa_job_display_db::ID . ' = job.' . mediamosa_job_db::ID);
-    // Filter failed jobs, where the same mediafile has finished job too.
-    $query->leftjoin(mediamosa_job_db::TABLE_NAME, 'job_test',
-      'job.' . mediamosa_job_db::MEDIAFILE_ID . ' = job_test.' . mediamosa_job_db::MEDIAFILE_ID . ' AND job.' . mediamosa_job_db::JOB_TYPE . ' = job_test.' . mediamosa_job_db::JOB_TYPE . ' AND job_test.' . mediamosa_job_db::JOB_STATUS . ' = \'' . mediamosa_job_db::JOB_STATUS_FINISHED . '\''
-    );
 
-    // Get the last job_id.
-    $query->addExpression('MAX(job.' . mediamosa_job_db::ID . ')', 'job_id');
     $query->fields('job', array(
-      //mediamosa_job_db::ID,
+      mediamosa_job_db::ID,
       mediamosa_job_db::APP_ID,
       mediamosa_job_db::JOB_TYPE,
       mediamosa_job_db::ASSET_ID,
@@ -149,6 +143,9 @@ class mediamosa_job {
       mediamosa_job_db::ERROR_DESCRIPTION,
     ));
     $query->fields('mediafile', array(mediamosa_asset_mediafile_db::FILENAME));
+
+    //$query->where('job.job_id = (SELECT max(j.job_id) FROM mediamosa_job j WHERE j.mediafile_id = job.mediafile_id AND j.job_type = job.job_type)');
+    $query->where('job.' . mediamosa_job_db::ID . ' = (SELECT MAX(j.' . mediamosa_job_db::ID . ') FROM ' . mediamosa_job_db::TABLE_NAME . ' j WHERE j.' . mediamosa_job_db::MEDIAFILE_ID . ' = job.' . mediamosa_job_db::MEDIAFILE_ID . ' AND j.' . mediamosa_job_db::JOB_TYPE . ' = job.' . mediamosa_job_db::JOB_TYPE . ')');
 
     if ($visibility == mediamosa_job_display_db::VISIBILITY_HIDDEN) {
       $query->condition('display.' . mediamosa_job_display_db::VISIBILITY, mediamosa_job_display_db::VISIBILITY_HIDDEN);
@@ -162,19 +159,17 @@ class mediamosa_job {
     $job_type_or->condition('job.' . mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_TRANSCODE);
     $query->condition($job_type_or);
 
-    $query->condition('job.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_FAILED);
+    $job_status_or = db_or();
+    $job_status_or->condition('job.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_FAILED);
+    $job_status_or->condition('job.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_CANCELLED);
+    $query->condition($job_status_or);
 
     $query->condition('mediafile.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-
-    $query->isNull('job_test.' . mediamosa_job_db::JOB_STATUS);
 
     // Order_by and order_direction.
     if ($order_by) {
       $query->orderBy($order_by, $order_direction);
     }
-
-    // Filtering the same failed jobs.
-    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID . ', job.' . mediamosa_job_db::JOB_TYPE);
 
     // Number of total result.
     $num_rows = $query->countQuery()->execute()->fetchField();

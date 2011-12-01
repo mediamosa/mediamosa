@@ -191,6 +191,11 @@ class mediamosa_settings {
   // The number of items per page in admin listings, like client apps listing.
   const MAINTENANCE_ITEMS_PER_PAGE = 25;
 
+  // The number of days for browsing the transcode length deviation.
+  const MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS = 14;
+  // The deviation in percentage.
+  const MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION = 10;
+
   // The number of maximum tables in the database before we stop the status page
   // of running new simpletests. Will try to clean up if to many tables are
   // found.
