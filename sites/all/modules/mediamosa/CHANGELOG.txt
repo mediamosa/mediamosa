@@ -1,4 +1,12 @@
 
+MediaMosa 3.0.7 (build 1790)
+----------------------------
+- Fixed default timezone for new client applications (forum issue).
+- Fixed links on first page of install profile (forum issue).
+- Fixed PHP log error with server definition forms (forum issue).
+- Fixed function for re-analyse and re-transcode mediafiles in admin (ticket #391).
+- Added optional performance parameter for collection search.
+
 MediaMosa 3.0.6 (build 1780)
 ----------------------------
 - Webservice Management fix (See ticket #527).
