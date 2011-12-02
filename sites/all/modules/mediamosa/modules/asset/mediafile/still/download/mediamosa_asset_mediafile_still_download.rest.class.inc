@@ -59,21 +59,24 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
    *   TRUE, if match.
    */
   public static function match_uri($uri) {
-    // $delta = 1, if we are not in a simpletest.
-    $delta = (mediamosa::get()->in_simpletest_sandbox() ? 2 : 1);
+    // Delta is needed in simpletest.
+    $delta = (mediamosa::get()->in_simpletest_sandbox() && $uri[0] == 'simpletest' ? 2 : 1);
     $uri_parts = explode('/', $uri);
 
     // Match if there isn't second argument, or the first is "ticket", or the length of the first is 1.
     // This is necessary, because of REST calls, like: still/$still_id/watermark.
     return
-      // still/$still_id
-      (empty($uri_parts[$delta + 1]) ||
-      // still/$still_id/style/$style
-      (!empty($uri_parts[$delta + 1]) && $uri_parts[$delta + 1] == 'style') ||
-      // still/ticket/$ticket_id and still/ticket/$ticket_id/style/$style
-      (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') ||
-      // still/[1stletter $still_id]/$still_id and still/[1stletter $still_id]/$still_id/style/$style
-      (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1));
+      $uri_parts[$delta] == 'still' && (
+        // still/$still_id
+        (empty($uri_parts[$delta + 1]) ||
+        // still/$still_id/style/$style
+        (!empty($uri_parts[$delta + 1]) && $uri_parts[$delta + 1] == 'style') ||
+        // still/ticket/$ticket_id and still/ticket/$ticket_id/style/$style
+        (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') ||
+        // still/[1stletter $still_id]/$still_id and still/[1stletter $still_id]/$still_id/style/$style
+        (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1)
+      )
+    );
   }
 
   public function get_var_setup() {

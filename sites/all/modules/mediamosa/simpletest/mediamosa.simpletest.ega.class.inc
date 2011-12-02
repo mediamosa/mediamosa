@@ -659,6 +659,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     list($response, $data) = explode("\r\n\r\n", $out, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
 
+    // Create a SimpleXMLElement from the restcall's output.
+    try {
+      // We expect char '<' on REST calls, if not we need to output it.
+      if ($data[0] != '<') {
+        $this->var_export($data);
+      }
+      else {
+        $this->var_export_verbose(mediamosa_unicode::substr($data, 0, 10000) . (mediamosa_unicode::strlen($data) > 10000 ? '...<snap>...' : ''));
+      }
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'var_export of REST response body failed! ' . $e->getMessage());
+      return;
+    }
+    
     try {
       $xml = new mediamosa_connector_response($data);
     }
@@ -750,6 +765,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     list($response, $data) = explode("\r\n\r\n", $out, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
+
+    // Create a SimpleXMLElement from the restcall's output.
+    try {
+      // We expect char '<' on REST calls, if not we need to output it.
+      if ($data[0] != '<') {
+        $this->var_export($data);
+      }
+      else {
+        $this->var_export_verbose(mediamosa_unicode::substr($data, 0, 10000) . (mediamosa_unicode::strlen($data) > 10000 ? '...<snap>...' : ''));
+      }
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'var_export of REST response body failed! ' . $e->getMessage());
+      return;
+    }
 
     try {
       $xml = new mediamosa_connector_response($data);

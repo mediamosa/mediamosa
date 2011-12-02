@@ -87,14 +87,14 @@ class mediamosa_rest {
       }
     }
 
-    // Make copy.
-    $request_uri_cpy = $request_uri;
-
     // Find all REST calls of enabled modules.
     $rest_calls = self::get_rest_calls();
-    foreach ($rest_calls as $method => $unused) {
-      krsort($rest_calls[$method]);
+    if (empty($rest_calls[$request_method])) {
+      return FALSE;
     }
+
+    // Sort the rest calls for the requested method.
+    krsort($rest_calls[$request_method]);
 
     // Remove any double //, so explode will work fine.
     while (strpos($request_uri, '//') !== FALSE) {
@@ -111,6 +111,9 @@ class mediamosa_rest {
       }
     }
 
+    // We need the original.
+    $request_uri_cpy = implode('/', $request_uris);
+
     // Check if URL internal / external.
     if ($request_uris[0] == 'internal' || $request_uris[0] == 'external') {
       unset($request_uris[0]);
@@ -118,12 +121,8 @@ class mediamosa_rest {
       $request_uris = explode('/', $request_uri);
     }
 
+    // Reset our matching call.
     $rest_call_return = FALSE;
-
-    // No Rest calls for this method?
-    if (!isset($rest_calls[$request_method])) {
-      return FALSE;
-    }
 
     // Now find a match.
     foreach ($rest_calls[$request_method] as $uri => $rest_call) {
