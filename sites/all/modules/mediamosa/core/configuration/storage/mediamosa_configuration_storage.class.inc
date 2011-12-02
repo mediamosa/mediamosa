@@ -78,32 +78,21 @@ class mediamosa_configuration_storage {
   }
 
   /**
-   * Return the data location folder.
-   * Based on 1.x define DATA_LOCATION.
+   * Return the [mountpoint]/data folder.
    *
    * @return string
    */
   static public function data_location_get() {
-    return mediamosa_settings::SAN_NAS_DATA_FOLDER;
+    return mediamosa_settings::SAN_NAS_DATA_FOLDER . DIRECTORY_SEPARATOR;
   }
 
   /**
-   * Return the still file name location.
+   * Return the [mountpoint]/data/still folder.
    *
    * @return string
    */
-  static public function still_filename_get($still_id) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($still_id);
-  }
-
-  /**
-   * Return the still data location folder.
-   * Based on the 1.x define STILL_LOCATION.
-   *
-   * @return string
-   */
-  static public function still_location_get() {
-    return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_STILLS_FOLDER;
+  static public function data_still_location_get() {
+    return self::data_location_get() . mediamosa_settings::SAN_NAS_STILLS_FOLDER . DIRECTORY_SEPARATOR;
   }
 
   /**
@@ -111,40 +100,33 @@ class mediamosa_configuration_storage {
    *
    * @return string
    */
-  static public function still_location_get_full() {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR;
+  static public function data_still_get_path() {
+    return self::mount_point_get() . self::data_still_location_get();
   }
 
   /**
-   * Return the complete still style data location folder.
-   *
-   * @param $style
+   * Return the still file name location.
    *
    * @return string
    */
-  static public function still_style_location_get_full($style) {
-    return self::still_location_get_full() . mediamosa_settings::STILL_DATA_STYLE_LOCATION . DIRECTORY_SEPARATOR . $style . DIRECTORY_SEPARATOR;
+  static public function data_still_get_file($mediafile_id) {
+    return self::data_still_get_path() . self::objectid_to_location($mediafile_id);
   }
 
   /**
    * Return the tmp transcode folder.
    */
   static public function transcode_tmp_location_get() {
-    return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER;
+    return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR;
   }
 
   /**
    * Return the default path for the play ticket.
-   * Based on the 1.x function _play_proxy_play_ticket_location.
    *
    * @return string
    */
   static public function ticket_play_location_get($app_id = -1) {
-    if ($app_id >= 0) {
-      return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
-    }
-
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION;
+    return self::mount_point_get() . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . ($app_id >= 0 ? $app_id . DIRECTORY_SEPARATOR : '');
   }
 
   /**
@@ -154,27 +136,84 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function ticket_download_location_get($app_id = -1) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR;
+    return self::mount_point_get() . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR;
   }
 
   /**
-   * Return the default path for the ticket and permanent stills.
+   * Return the path of the media directory.
    *
-   * @return string
+   * @param $app_id
+   *   The application ID (optional).
+   * @param $ticket_id
+   *   The ticket ID (optional, required when app_id is provided).
+   *
+   * @return
+   *   The path.
    */
-  static public function ticket_still_location_get() {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR;
+  static public function media_get_path($app_id = -1, $mediafile_id = '') {
+    $path = self::mount_point_get() . mediamosa_settings::SAN_NAS_MEDIA_FOLDER . DIRECTORY_SEPARATOR;
+
+    // Full path?
+    if ($app_id > 0) {
+      $path .= $app_id . DIRECTORY_SEPARATOR . (empty($mediafile_id) ? '' : $mediafile_id[0] . DIRECTORY_SEPARATOR);
+    }
+
+    return $path;
   }
 
   /**
-   * Return the still style location for the ticket and permanent stills.
+   * Return the full path and filename of the media.
    *
-   * @param string $style
+   * @param $app_id
+   *   The application ID.
+   * @param $mediafile_id
+   *   The mediafile ID.
    *
-   * @return string
+   * @return
+   *   The path.
    */
-  static public function ticket_still_style_location_get($style) {
-    return self::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR . $style . DIRECTORY_SEPARATOR;
+  static public function media_get_file($app_id, $mediafile_id) {
+    // Return link.
+    return self::media_get_path($app_id, $mediafile_id) . $mediafile_id;
+  }
+
+  /**
+   * Return the path of the media directory.
+   *
+   * @param $app_id
+   *   The application ID (optional).
+   * @param $ticket_id
+   *   The ticket ID (optional, required when app_id is provided).
+   *
+   * @return
+   *   The path.
+   */
+  static public function media_get_ticket_path($app_id = -1, $mediafile_id = '') {
+    $path = self::mount_point_get() . mediamosa_settings::SAN_NAS_MEDIA_FOLDER . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TICKET_FOLDER . DIRECTORY_SEPARATOR;
+
+    // Full path?
+    if ($app_id > 0) {
+      assert(!empty($mediafile_id));
+      $path .= $app_id . DIRECTORY_SEPARATOR . (empty($mediafile_id) ? '' : $mediafile_id[0] . DIRECTORY_SEPARATOR);
+    }
+
+    return $path;
+  }
+
+  /**
+   * Return the full path and filename of the media.
+   *
+   * @param $app_id
+   *   The application ID.
+   * @param $ticket_id
+   *   The ticket ID.
+   *
+   * @return
+   *   The path.
+   */
+  static public function media_get_ticket_file($app_id, $ticket_id) {
+    // Return link.
+    return self::media_get_ticket_path($app_id, $ticket_id) . $ticket_id;
   }
 
   /**
@@ -196,7 +235,7 @@ class mediamosa_configuration_storage {
    * @param string $filename
    */
   static public function transcode_file_location_get($filename) {
-    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $filename;
+    return mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $filename;
   }
 
   /**
@@ -206,7 +245,7 @@ class mediamosa_configuration_storage {
    * @param integer $job_id
    */
   static public function still_scene_file_location_get($job_id) {
-    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $job_id . '_scene.txt';
+    return mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $job_id . '_scene.txt';
   }
 
   /**
@@ -216,8 +255,8 @@ class mediamosa_configuration_storage {
    * @return string
    *  path to ticket location
    */
-  function asx_file_location($ticket) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket . '.asx';
+  static public function asx_file_location($app_id, $ticket) {
+    return self::media_get_file($app_id, $ticket) . '.asx';
   }
 
   /**
@@ -227,9 +266,9 @@ class mediamosa_configuration_storage {
    *
    * @return string
    */
-  static public function mount_point_get($in_simpletest_sandbox = FALSE) { // vpx_get_san_nas_base_path
-    $path = mediamosa::is_windows_platform() ? self::windows_get() : self::linux_get();
-    return (mediamosa::in_simpletest_sandbox() || $in_simpletest_sandbox ? $path . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . 'simpletest' : $path);
+  static public function mount_point_get($in_simpletest_sandbox = FALSE) {
+    $path = rtrim(mediamosa::is_windows_platform() ? self::windows_get() : self::linux_get(), '/');
+    return (mediamosa::in_simpletest_sandbox() || $in_simpletest_sandbox ? $path . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_MEDIA_FOLDER . DIRECTORY_SEPARATOR . 'simpletest' . DIRECTORY_SEPARATOR : $path . DIRECTORY_SEPARATOR);
   }
 
   /**
@@ -238,50 +277,53 @@ class mediamosa_configuration_storage {
    *
    * @param string $id
    */
-  static public function objectid_to_location($id) {
-    return $id[0] . DIRECTORY_SEPARATOR . $id;
+  static public function objectid_to_location($id, $ds = DIRECTORY_SEPARATOR) {
+    return $id[0] . $ds . $id;
   }
 
   /**
    * Get the Mediafile mountpath path.
    *
-   * @param array $mediafile
-   *  The mediafile array or simular, must contain at least 'mediafile_id'.
+   * @param $mediafile
+   *   The mediafile array or simular, must contain at least 'mediafile_id'.
    */
-  static public function mediafile_filename_get($mediafile) {
-    if (!isset($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
-      $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::mount_point_get();
-    }
+  static public function mediafile_filename_get(array $mediafile) {
+    // Get the mount point either from mediafile or our default setting.
+    $mount_point = empty($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) ? self::mount_point_get() : rtrim($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-    return $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile[mediamosa_asset_mediafile_db::ID]);
+    return $mount_point . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**
    * Get the Mediafile mountpath path.
    *
-   * @param string $mediafile_id
-   *  The mediafile_id.
+   * @param $mediafile_id
+   *   The mediafile_id.
    */
   static public function mediafile_id_filename_get($mediafile_id) {
-    $directory = self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR;
-    mediamosa_io::mkdir($directory . $mediafile_id[0]);
-    return $directory . self::objectid_to_location($mediafile_id);
+    $file = self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
+
+    // FIXME: Is this really required?
+    mediamosa_io::mkdir(mediamosa_io::dirname($file));
+    return $file;
   }
 
   /**
    * Get the data location path.
    */
   static public function get_data_location() {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get();
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR;
   }
 
   /**
    * Get the Mediafile still path.
-   * @param string $mediafile_id
-   *  The mediafile ID.
+   *
+   * @param $mediafile_id
+   *   The mediafile ID.
    */
   static public function mediafile_still_filename_get($mediafile_id, $mount_point = '') {
-    return (empty($mount_point) ? self::mount_point_get() : $mount_point) . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
+    $mount_point = empty($mount_point) ? self::mount_point_get() : rtrim($mount_point, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    return $mount_point . self::data_still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
 
   /**
@@ -317,5 +359,49 @@ class mediamosa_configuration_storage {
    */
   static public function current_job_path() {
     return self::get_full_history_path() . DIRECTORY_SEPARATOR . mediamosa_settings::FTP_CURRENT_JOB_DIR;
+  }
+
+  /**
+   * Returns the contents for the .htaccess file under [mountpoint]/media.
+   *
+   * @return
+   *   The contents for the .htaccess file for [mount_pount]/media/.htaccess.
+   */
+  static public function media_get_htaccess_contents() {
+    return file_get_contents(drupal_get_path('module', 'mediamosa') . '/lib/misc/media_htaccess_contents.txt');
+  }
+
+  /**
+   * Creates an .htaccess file in the given directory using the given contents.
+   *
+   * @param $directory
+   *   The directory.
+   * @param $contents
+   *   The contents to write.
+   */
+  static public function file_create_htaccess($directory, $contents) {
+    if (file_uri_scheme($directory)) {
+      $directory = file_stream_wrapper_uri_normalize($directory);
+    }
+    else {
+      $directory = rtrim($directory, '/\\');
+    }
+    $htaccess_path =  $directory . '/.htaccess';
+
+    // If file already exists, then bail out.
+    if (file_exists($htaccess_path)) {
+      return TRUE;
+    }
+
+    // Write the .htaccess file.
+    if (file_put_contents($htaccess_path, $contents)) {
+      drupal_chmod($htaccess_path, 0444);
+      return TRUE;
+    }
+
+    // Make log entry about error.
+    $variables = array('%directory' => $directory, '@path' => $htaccess_path, '!htaccess' => '<br />' . nl2br(check_plain($contents)));
+    mediamosa_watchdog::log("Warning: Couldn't write .htaccess file in location @path. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables, WATCHDOG_ERROR);
+    return FALSE;
   }
 }

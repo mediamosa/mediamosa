@@ -8,6 +8,7 @@ core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
+dependencies[] = image
 
 ; Used files.
 files[] = mediamosa_asset.rest.class.inc
@@ -26,7 +27,7 @@ files[] = mediamosa_asset.cql_mediafile_duration.test
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.class.inc
 
-; Media.
+; Mediafile.
 files[] = mediafile/mediamosa_asset_mediafile.rest.class.inc
 files[] = mediafile/mediamosa_asset_mediafile.streaming.test
 files[] = mediafile/mediamosa_asset_mediafile.delete.test
@@ -40,15 +41,15 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
 
 ; Mediafile Play Proxy.
-files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc
-files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.stills.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.ticket_mechanisme.test
 
 ; Mediafile Still.
 files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.class.inc
-files[] = mediafile/still/download/mediamosa_asset_mediafile_still.permanent_link.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.audio_file.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
@@ -56,9 +57,10 @@ files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.upload.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.watermark.test
 
-; Mediafile Still Download.
-files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.class.inc
-files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.test
+; Media.
+files[] = mediafile/media/mediamosa_asset_mediafile_media.permanent_link.test
+files[] = mediafile/media/mediamosa_asset_mediafile_media.rest.class.inc
+files[] = mediafile/media/mediamosa_asset_mediafile_media.test
 
 ; Mediafile Still Upload.
 files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.rest.class.inc

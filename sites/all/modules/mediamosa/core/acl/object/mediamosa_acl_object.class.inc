@@ -70,10 +70,10 @@ class mediamosa_acl_object {
   /**
    * Delete all connection based on acl_type and acl_id.
    *
-   * @param string $acl_type
-   * @param integer $acl_id
+   * @param $acl_type
+   * @param $acl_id
    */
-  function delete($acl_type, $acl_id) {
+  static public function delete($acl_type, $acl_id) {
 
     // Delete all connections.
     mediamosa_db::db_delete(mediamosa_acl_object_db::TABLE_NAME)
@@ -85,19 +85,23 @@ class mediamosa_acl_object {
   /**
    * Creates a link between object and acl_name
    *
-   * @param string $acl_object_id
-   * @param string $acl_type
-   * @param string $acl_object_type
-   * @param integer $acl_id
-   * @param array $a_rights (reserved)
+   * @param $acl_object_id
+   * @param $acl_type
+   * @param $acl_object_type
+   * @param $acl_id
+   * @param $rights (reserved)
    */
-  function link_to_object($acl_object_id, $acl_type, $acl_object_type, $acl_id, $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
-    // Here so the var is used and Zend doesn't complain).
-    assert(is_array($a_rights));
-
-    // Master-slave safe now.
+  static public function link_to_object($acl_object_id, $acl_type, $acl_object_type, $acl_id, array $rights = array(mediamosa_acl::RIGHT_ACCESS)) {
+    // NOT master-slave safe.
     try {
-      mediamosa_db::db_query("INSERT INTO {mediamosa_acl_object} SET acl_object_type = '%s', acl_object_id = '%s', acl_type = '%s', acl_id= %d", $acl_object_type, $acl_object_id, $acl_type, $acl_id);
+      mediamosa_db::db_insert(mediamosa_acl_object_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_acl_object_db::ACL_OBJECT_ID => $acl_object_id,
+          mediamosa_acl_object_db::ACL_TYPE => $acl_type,
+          mediamosa_acl_object_db::ACL_OBJECT_TYPE => $acl_object_type,
+          mediamosa_acl_object_db::ACL_ID => $acl_id,
+        ))
+        ->execute();
     }
     catch (PDOException $e) {
       assert($e);
@@ -108,7 +112,7 @@ class mediamosa_acl_object {
   /**
    * Get the acl information for given asset.
    */
-  function get_for_asset($asset_id) {
+  static public function get_for_asset($asset_id) {
 
     // Collection of acl rules on asset/mediafiles.
     $asset_acl_info = array(

@@ -154,6 +154,9 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id = $this->createAsset();
     $mediafile_id = $this->createMediafile($asset_id);
 
+    // Our App ID.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['width'] = '640';
     $a_mediafile_ext['metadata']['height'] = '400';
@@ -230,7 +233,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
         // Check if ASX file was created (we also will remove the file again)
         if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
-          $filename = mediamosa_configuration_storage::asx_file_location($ticket);
+          $filename = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
           if (file_exists($filename)) {
             mediamosa_io::unlink($filename);
           }

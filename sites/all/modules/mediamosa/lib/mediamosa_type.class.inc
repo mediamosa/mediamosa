@@ -253,9 +253,20 @@ class mediamosa_type {
         $checked_param_value = (string) $mixed_param_value;
         break;
 
-      // Check ticket id for download/still downloads.
+      // Check ticket id for downloads.
       case mediamosa_sdk::TYPE_TICKET_ID:
         if (preg_match("@^([a-zA-Z0-9]+)(\\.asx)?$@", $mixed_param_value, $matches) !== 1) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string) $mixed_param_value;
+        break;
+
+      // Extended format for filenames; mediafile_id[,style_id][.ext].
+      case mediamosa_sdk::TYPE_MEDIAFILE_STR:
+      // Extended format for filenames; ticket_id[,style_id][.ext].
+      case mediamosa_sdk::TYPE_MEDIATICKET_STR:
+        if (preg_match('@^([a-zA-Z0-9]+)(,[0-9]+)?(\.[a-zA-Z0-9]+)?$@', $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
@@ -279,7 +290,7 @@ class mediamosa_type {
       case mediamosa_sdk::TYPE_USER_ID:
       case mediamosa_sdk::TYPE_GROUP_ID:
       case mediamosa_sdk::TYPE_ASSET_ID:
-      case mediamosa_sdk::TYPE_MEDIAFILE_ID:
+      case mediamosa_sdk::TYPE_MEDIAFILE_ID: // might contain , for style info in /media calls.
       case mediamosa_sdk::TYPE_COLLECTION_ID:
       case mediamosa_sdk::TYPE_BATCH_ID:
         $checked_param_value = (string) $mixed_param_value;

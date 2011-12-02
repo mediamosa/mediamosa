@@ -121,7 +121,7 @@ s1.write('mediaspace');
       , 'Apache - WebM', 0, '', '', 'APC', ''),
 
     array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', 'Default download server', 0, '', '', 'APC', ''),
-    array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'still/{TICKET}', '', '', 'Default still server', 0, '', '', 'APC', ''),
+    array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
     array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
     array(14, 0, 'OFF', 'job_processor', 'http://job2.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
     array(15, 0, 'ON', 'upload', 'http://upload.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'mediafile/upload?upload_ticket={TICKET}', '', '', 'Default upload server', 0, '', 'http://upload.mediamosa.local/mediafile/uploadprogress?id={PROGRESS_ID}', 'APC', 'http://upload.mediamosa.local/progress?X-Progress-ID={PROGRESS_ID}'),

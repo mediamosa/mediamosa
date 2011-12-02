@@ -281,20 +281,17 @@ function mediamosa_node_mediamosa_app_image_style_add_submit($form, &$form_state
 function mediamosa_node_mediamosa_app_image_style_edit_submit($form, &$form_state) {
   $values = $form_state['values'];
 
-  $style = $values['style'];
+  $style_id = $values['style'];
   $app_id = $values['app_id'];
   $style_new = $values['name'];
-
-  // Remove style image files.
-  $dir_symlink = mediamosa_configuration_storage::ticket_still_style_location_get($style);
-  mediamosa_io::delete_style_directory($dir_symlink, $style);
-  $dir_style = mediamosa_configuration_storage::still_style_location_get_full($style);
-  mediamosa_io::delete_style_directory($dir_style, $style);
 
   $fields = array(
     mediamosa_asset_mediafile_still_style_db::ID => $style_new,
   );
-  mediamosa_asset_mediafile_still_style::update($style, $app_id, $fields);
+  mediamosa_asset_mediafile_still_style::update($style_id, $app_id, $fields);
+
+  // Remove style image files.
+  mediamosa_asset_mediafile_still_style::delete_style_files($app_id, $style_id);
 }
 
 /**
@@ -303,16 +300,11 @@ function mediamosa_node_mediamosa_app_image_style_edit_submit($form, &$form_stat
 function mediamosa_node_mediamosa_app_image_style_delete_submit($form, &$form_state) {
   $values = $form_state['values'];
 
-  $style = $values['style'];
+  $style_id = $values['style'];
   $app_id = $values['app_id'];
 
-  mediamosa_asset_mediafile_still_style::delete($style, $app_id);
-
-  // Remove style image files.
-  $dir_symlink = mediamosa_configuration_storage::ticket_still_style_location_get($style);
-  mediamosa_io::delete_style_directory($dir_symlink, $style);
-  $dir_style = mediamosa_configuration_storage::still_style_location_get_full($style);
-  mediamosa_io::delete_style_directory($dir_style, $style);
+  // Also deletes the files.
+  mediamosa_asset_mediafile_still_style::delete($style_id, $app_id);
 }
 
 /**

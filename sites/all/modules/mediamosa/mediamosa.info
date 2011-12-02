@@ -42,6 +42,7 @@ files[] = lib/mediamosa_gd.class.inc
 files[] = lib/mediamosa_http.class.inc
 files[] = lib/mediamosa_io.class.inc
 files[] = lib/mediamosa_lib.class.inc
+files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
 files[] = lib/mediamosa_log.class.inc
 files[] = lib/mediamosa_type.class.inc
@@ -118,6 +119,9 @@ files[] = core/asset/mediamosa_asset_search.class.inc
 ; Asset Delete.
 files[] = core/asset/delete/mediamosa_asset_delete_db.class.inc
 files[] = core/asset/delete/mediamosa_asset_delete.class.inc
+
+; Asset Media.
+files[] = core/asset/mediafile/media/mediamosa_asset_mediafile_media.class.inc
 
 ; Asset Mediafile.
 files[] = core/asset/mediafile/mediamosa_asset_mediafile_db.class.inc

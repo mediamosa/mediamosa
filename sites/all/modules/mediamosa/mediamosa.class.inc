@@ -408,7 +408,7 @@ class mediamosa {
     // The name of the http var.
     $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
 
-      // Based if this is present, we always are APP on simpletest mode.
+    // Based if this is present, we always are APP on simpletest mode.
     return empty($_SERVER[$disable_app]);
   }
 

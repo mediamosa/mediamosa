@@ -37,7 +37,7 @@ class mediamosa_debug {
    * @param array $variables
    * @param string $type
    */
-  static public function log($message, array $variables = array(), $type = NULL, $link = NULL) {
+  static public function log($message, array $variables = array(), $type = 'debug', $link = NULL) {
     if (self::is_debug_normal()) {
       mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type, $link);
     }

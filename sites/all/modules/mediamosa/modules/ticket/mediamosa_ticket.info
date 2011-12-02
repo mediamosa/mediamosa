@@ -8,3 +8,6 @@ core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
+
+; Tests.
+files[] = mediamosa_ticket.cleanup.test

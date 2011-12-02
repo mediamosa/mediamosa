@@ -33,9 +33,6 @@
  * URI: /asset/$asset_id/play
  *      /video/$asset_id/play (deprecated)
  * Method: GET
- *
- * 1.x: play_proxy_request.
- *
  */
 class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -320,7 +317,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $ticket = mediamosa_db::uuid($app_id);
 
     if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
-      $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      // FIXME: Hmmm not still response type, but we do supply still_id?
+      $ticket = mediamosa_ticket::process_play_ticket($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
     }
 
     // If response type is still, we get all information of all stills with all details.
@@ -335,7 +333,12 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
         if (!empty($still_id_default)) {
           // Generate ticket or perm link?
-          $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id_default, $is_app_admin) ? $still_id_default : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
+          if (mediamosa_asset_mediafile_still::is_still_permanent($still_id_default, $is_app_admin)) {
+            $ticket =  $still_id_default . '.' . mediamosa_asset_mediafile::get_file_extension($still_id_default);
+          }
+          else {
+            $ticket = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
+          }
         }
       }
 
@@ -443,7 +446,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             // make a play or download symlink.
             if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
               // Generate ticket or perm link?
-              $ticket_still = mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+              $ticket_still = mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
             }
 
             $t_stills['ticket'] = $ticket_still;

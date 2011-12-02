@@ -615,7 +615,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Copy the test video
     $this->assertTrue(
       mediamosa_io::symlink($source, $dest) != FALSE,
-      t("Symlink: Created 98 | symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
+      t("Symlink: Created symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
     );
 
     $this->assertTrue(

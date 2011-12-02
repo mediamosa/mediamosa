@@ -206,6 +206,25 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'severity' => _mediamosa_maintenance_status_okerror($lua_run),
   );
 
+  // Only unix/linux platform.
+  if (!mediamosa::is_windows_platform()) {
+    $lua_run = is_executable(mediamosa_settings::analyse_file());
+
+    $results['app_lua_xmod1'] = array(
+      'title' => t('LUA analyse script'),
+      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::analyse_file())),
+      'severity' => _mediamosa_maintenance_status_okerror($lua_run),
+    );
+
+    $lua_run = is_executable(mediamosa_settings::ffmpeg_transcode_file());
+
+    $results['app_lua_xmod2'] = array(
+      'title' => t('LUA transcode script'),
+      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::ffmpeg_transcode_file())),
+      'severity' => _mediamosa_maintenance_status_okerror($lua_run),
+    );
+  }
+
   // Lpeg.
   $exec_output = array();
   exec('lua ' . escapeshellcmd(DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa_maintenance_status')) . '/configuration/lua/lua_lpeg_test', $exec_output);
@@ -255,6 +274,41 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'value' => $_SERVER['SERVER_SOFTWARE'],
     'severity' => _mediamosa_maintenance_status_okwarning($version_ok),
   );
+
+  // ------------------------------------------------------- Check alias /media.
+  // Check the /media alias.
+  $server_downloads = mediamosa_server::get_enabled_download(); // future.
+  $servers = mediamosa_server::get_enabled_download();
+
+  // Create file in /media dir.
+  $filename = mediamosa_configuration_storage::media_get_path() . DIRECTORY_SEPARATOR . '0/t/test.txt';
+  if (!mediamosa_io::file_exists($filename)) {
+    mediamosa_io::mkdir(mediamosa_io::dirname($filename));
+    mediamosa_io::touch($filename);
+  }
+
+  foreach ($servers as $key => $server) {
+    // Check if we can find the file.
+    $url = rtrim($server[mediamosa_server_db::SERVER_URI], '/') . '/media/0/t/test.txt';
+    $result = mediamosa_http::drupal_http_request($url);
+
+    // Must be 200 code and not served by mediamosa.
+    $got_200 = $result->code == 200;
+    $is_webserver = empty($result->headers['x-mediamosa-version']);
+
+    $results['server_download_' . $key] = array(
+      'title' => t('Webserver media alias'),
+      'value' => $got_200 && $is_webserver ? t('Alias present and working for server @name, uri: @uri', array('@name' => $server[mediamosa_server_db::SERVER_NAME], '@uri' => $server[mediamosa_server_db::SERVER_URI])) : t('Alias not working for server @name, uri: @uri', array('@name' => $server[mediamosa_server_db::SERVER_NAME], '@uri' => $server[mediamosa_server_db::SERVER_URI])),
+      'severity' => _mediamosa_maintenance_status_okerror($got_200),
+    );
+
+    if (!$got_200 || !$is_webserver) {
+      $results['server_download_' . $key]['description'] = t("Your webserver is missing the alias 'media' to serve files on your server configuration. Please add an alias rule for '/media' uri to '@path' under your server uri: @server_uri<br />Apache example;<br /><code>Alias /media @path</code>", array('@path' => rtrim(mediamosa_configuration_storage::media_get_path(), '/'), '@server_uri' => $server[mediamosa_server_db::SERVER_URI]));
+    }
+  }
+
+  // Remove the file.
+  mediamosa_io::unlink($filename);
 
   if (function_exists('apache_get_modules')) {
     // Apache mod_rewrite.
@@ -544,7 +598,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
           }
         }
 
-// Drop the test table.
+        // Drop the test table.
         mediamosa_db::db_drop_table($test_table_name);
       }
     }
@@ -568,9 +622,10 @@ function _mediamosa_maintenance_status_configuration_generate() {
 /**
  * Implements hook_mediamosa_status_collect().
  *
- * @param reset boolean
+ * @param $reset
+ *   Set to TRUE to regenerate.
  *
- * @return array
+ * @return
  *   All the statuses in an array
  */
 function mediamosa_maintenance_status_configuration_mediamosa_status_collect($reset = FALSE) {

@@ -294,6 +294,12 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'version', // no dates.
       'openapi/oauth/request_token',// No need to check.
       'openapi/oauth/access_token',// No need to check.
+      'media/$app_id/$mediafile_str_prefix/$mediafile_str', // New 3.1.
+      'media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str', // New 3.1.
+      'still/$app_id/$mediafile_str_prefix/$mediafile_str', // New 3.1.
+      'still/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str', // New 3.1.
+      'media/simpletest/media/$app_id/$mediafile_str_prefix/$mediafile_str', // New 3.1.
+      'media/simpletest/media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str', // New 3.1.
     );
 
     $uri_fixed_params = array(

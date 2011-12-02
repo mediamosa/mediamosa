@@ -673,7 +673,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $this->assert(FALSE, 'var_export of REST response body failed! ' . $e->getMessage());
       return;
     }
-    
+
     try {
       $xml = new mediamosa_connector_response($data);
     }
@@ -1258,6 +1258,40 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return data.
     return $supplements;
+  }
+
+  /**
+   * Get the still(s) from a mediafile..
+   * Based on the rest call /mediafile/$mediafile_id/still (GET)
+   */
+  protected function getAssetStill($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters still.
+    $parameters += array(
+      mediamosa_rest_call_get_still_for_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set uri.
+    $uri = strtr('asset/@asset_id/still', array('@asset_id' => $asset_id));
+
+    // Do Get call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Get asset still with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $response = mediamosa_lib::responsexml2array($response['xml']);
+    return empty($response['items']['item']) ? array() : $response['items']['item'];
   }
 
   /**

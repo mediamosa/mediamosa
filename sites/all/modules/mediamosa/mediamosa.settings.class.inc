@@ -77,6 +77,9 @@ class mediamosa_settings {
   const SAN_NAS_STILLS_FOLDER = 'stills';
   const SAN_NAS_TRANSCODE_FOLDER = 'transcode';
 
+  const SAN_NAS_MEDIA_FOLDER = 'media';
+  const SAN_NAS_TICKET_FOLDER = 'ticket';
+
   // Ticket locations.
   const PLAY_TICKET_LOCATION = 'links';
   const DOWNLOAD_TICKET_LOCATION = 'download_links';
@@ -145,9 +148,8 @@ class mediamosa_settings {
   // Still REST call.
   const STILL_REST_TEST_IMAGE = 'sites/all/modules/mediamosa/lib/misc/1px.png';
 
-  // Image cache max time: 60*60*24*30 = 2592000 sec.
-  const STILL_REST_CACHE_SECOND = 2592000;
-  const STILL_REST_CACHE = 'no-cache, must-revalidate, post-check=0, pre-check=0';
+  // Media cache max time: 60*60*24*30 = 2592000 sec (30 days).
+  const MEDIA_CACHE_SECOND = 2592000;
 
   // FFmpeg.
 

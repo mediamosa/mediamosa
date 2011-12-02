@@ -188,6 +188,8 @@ class mediamosa_rest {
       return FALSE; // Not found.
     }
 
+    mediamosa_debug::log("Matched URI '@uri' to REST call '@rest_uri'", array('@uri' => $request_uri_cpy, '@rest_uri' => $rest_call_return[mediamosa_rest_call::URI]));
+
     // Store the original.
     $rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
 
@@ -409,6 +411,7 @@ class mediamosa_rest {
     $mediamosa = mediamosa::get();
 
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      mediamosa_watchdog::log_export(arg());
       throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
     }
 

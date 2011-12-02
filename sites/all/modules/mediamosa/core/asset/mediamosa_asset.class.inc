@@ -453,8 +453,6 @@ class mediamosa_asset {
   /**
    * Collect the asset information.
    *
-   * 1.x: media_management_asset_collect
-   *
    * @param array $asset_ids
    *  Array asset_ids.
    * @param array $app_ids
@@ -566,7 +564,12 @@ class mediamosa_asset {
       $items['assets'][] = $row;
     }
 
-    $result = mediamosa_db::db_query(sprintf("SELECT * FROM {mediamosa_asset_delete} WHERE asset_id IN ('%s')", $s_ids));
+    // Find deleted.
+    $result = mediamosa_db::db_select(mediamosa_asset_delete_db::TABLE_NAME, 'a')
+      ->fields('a')
+      ->condition(mediamosa_asset_delete_db::ID, $asset_ids, 'IN')
+      ->execute();
+
     foreach ($result as $row) {
       $row['status'] = 'deleted';
       $items['assets'][] = $row;
@@ -589,15 +592,13 @@ class mediamosa_asset {
     // Get all favorites.
     $items['user_favorites'] = array();
     if ($acl_user_id != '') {
-      $query = array();
-      $query[mediamosa_db_query::A_SELECT_EXPR][] = "fav_id";
-      $query[mediamosa_db_query::A_FROM][] = "{mediamosa_user_favorite}";
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("name = '%s'", mediamosa_db::escape_string($acl_user_id));
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("app_id IN(%s)", implode(',', $app_ids));
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_type = '%s'", mediamosa_user_favorite_db::FAV_TYPE_ASSET);
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_id IN ('%s')", $s_ids);
-      $query_str = mediamosa_db_query::query_select($query);
-      $result = mediamosa_db::db_query($query_str);
+      $result = mediamosa_db::db_select('mediamosa_user_favorite', 'uf')
+        ->fields('uf', array(mediamosa_user_favorite_db::FAV_ID))
+        ->condition(mediamosa_user_favorite_db::NAME, $acl_user_id)
+        ->condition(mediamosa_user_favorite_db::APP_ID, $app_ids, 'IN')
+        ->condition(mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_TYPE_ASSET)
+        ->condition(mediamosa_user_favorite_db::FAV_ID, $asset_ids)
+        ->execute();
 
       foreach ($result as $row) {
         $items['user_favorites'][] = $row[mediamosa_user_favorite_db::FAV_ID];
@@ -866,17 +867,17 @@ class mediamosa_asset {
                 $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
 
                 if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
-                  $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
+                  $filename = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
+                  $response = mediamosa_asset_mediafile_play_proxy::create_response_still($filename, $app_id);
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
                 }
                 else {
-                  $ticket = mediamosa_db::uuid($app_id);
-                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL, $app_id, $acl_user_id, $still_id);
+                  $ticket_id = mediamosa_ticket::process_play_ticket(mediamosa_db::uuid($app_id), $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL, $app_id, $acl_user_id, $still_id);
 
                   if ($ticket_id) {
                     // Create still response.
-                    $response = mediamosa_asset_mediafile_play_proxy::create_response_still(mediamosa_ticket::TICKET_PATH . $ticket, $app_id);
+                    $response = mediamosa_asset_mediafile_play_proxy::create_response_still(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $ticket_id, $app_id);
                     $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
                     $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
                   }
@@ -1176,7 +1177,7 @@ class mediamosa_asset {
       // Remove the permanent still links.
       $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
       foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+        mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
       }
     }
 
@@ -1227,7 +1228,7 @@ class mediamosa_asset {
       // Remove the permanent still links.
       $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
       foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+        mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
       }
     }
 
