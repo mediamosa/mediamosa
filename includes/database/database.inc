@@ -152,7 +152,7 @@
  *   }
  *
  *   // $txn goes out of scope here.  Unless the transaction was rolled back, it
- *   // gets automatically commited here.
+ *   // gets automatically committed here.
  * }
  *
  * function my_other_function($id) {
@@ -273,20 +273,25 @@ abstract class DatabaseConnection extends PDO {
   protected $schema = NULL;
 
   /**
-   * The default prefix used by this database connection.
-   *
-   * Separated from the other prefixes for performance reasons.
-   *
-   * @var string
-   */
-  protected $defaultPrefix = '';
-
-  /**
-   * The non-default prefixes used by this database connection.
+   * The prefixes used by this database connection.
    *
    * @var array
    */
   protected $prefixes = array();
+
+  /**
+   * List of search values for use in prefixTables().
+   *
+   * @var array
+   */
+  protected $prefixSearch = array();
+
+  /**
+   * List of replacement values for use in prefixTables().
+   *
+   * @var array
+   */
+  protected $prefixReplace = array();
 
   function __construct($dsn, $username, $password, $driver_options = array()) {
     // Initialize and prepare the connection prefix.
@@ -375,7 +380,7 @@ abstract class DatabaseConnection extends PDO {
   }
 
   /**
-   * Preprocess the prefixes used by this database connection.
+   * Set the list of prefixes used by this database connection.
    *
    * @param $prefix
    *   The prefixes, in any of the multiple forms documented in
@@ -383,14 +388,27 @@ abstract class DatabaseConnection extends PDO {
    */
   protected function setPrefix($prefix) {
     if (is_array($prefix)) {
-      $this->defaultPrefix = isset($prefix['default']) ? $prefix['default'] : '';
-      unset($prefix['default']);
-      $this->prefixes = $prefix;
+      $this->prefixes = $prefix + array('default' => '');
     }
     else {
-      $this->defaultPrefix = $prefix;
-      $this->prefixes = array();
+      $this->prefixes = array('default' => $prefix);
     }
+
+    // Set up variables for use in prefixTables(). Replace table-specific
+    // prefixes first.
+    $this->prefixSearch = array();
+    $this->prefixReplace = array();
+    foreach ($this->prefixes as $key => $val) {
+      if ($key != 'default') {
+        $this->prefixSearch[] = '{' . $key . '}';
+        $this->prefixReplace[] = $val . $key;
+      }
+    }
+    // Then replace remaining tables with the default prefix.
+    $this->prefixSearch[] = '{';
+    $this->prefixReplace[] = $this->prefixes['default'];
+    $this->prefixSearch[] = '}';
+    $this->prefixReplace[] = '';
   }
 
   /**
@@ -408,12 +426,7 @@ abstract class DatabaseConnection extends PDO {
    *   The properly-prefixed string.
    */
   public function prefixTables($sql) {
-    // Replace specific table prefixes first.
-    foreach ($this->prefixes as $key => $val) {
-      $sql = strtr($sql, array('{' . $key . '}' => $val . $key));
-    }
-    // Then replace remaining tables with the default prefix.
-    return strtr($sql, array('{' => $this->defaultPrefix , '}' => ''));
+    return str_replace($this->prefixSearch, $this->prefixReplace, $sql);
   }
 
   /**
@@ -427,7 +440,7 @@ abstract class DatabaseConnection extends PDO {
       return $this->prefixes[$table];
     }
     else {
-      return $this->defaultPrefix;
+      return $this->prefixes['default'];
     }
   }
 
@@ -1009,7 +1022,9 @@ abstract class DatabaseConnection extends PDO {
     }
 
     // We need to find the point we're rolling back to, all other savepoints
-    // before are no longer needed.
+    // before are no longer needed. If we rolled back other active savepoints,
+    // we need to throw an exception.
+    $rolled_back_other_active_savepoints = FALSE;
     while ($savepoint = array_pop($this->transactionLayers)) {
       if ($savepoint == $savepoint_name) {
         // If it is the last the transaction in the stack, then it is not a
@@ -1019,10 +1034,20 @@ abstract class DatabaseConnection extends PDO {
           break;
         }
         $this->query('ROLLBACK TO SAVEPOINT ' . $savepoint);
+        $this->popCommittableTransactions();
+        if ($rolled_back_other_active_savepoints) {
+          throw new DatabaseTransactionOutOfOrderException();
+        }
         return;
+      }
+      else {
+        $rolled_back_other_active_savepoints = TRUE;
       }
     }
     parent::rollBack();
+    if ($rolled_back_other_active_savepoints) {
+      throw new DatabaseTransactionOutOfOrderException();
+    }
   }
 
   /**
@@ -1071,15 +1096,28 @@ abstract class DatabaseConnection extends PDO {
     if (!$this->supportsTransactions()) {
       return;
     }
-    if (!$this->inTransaction()) {
+    if (!isset($this->transactionLayers[$name])) {
       throw new DatabaseTransactionNoActiveException();
     }
 
-    // Commit everything since SAVEPOINT $name.
-    while($savepoint = array_pop($this->transactionLayers)) {
-      if ($savepoint != $name) continue;
+    // Mark this layer as committable.
+    $this->transactionLayers[$name] = FALSE;
+    $this->popCommittableTransactions();
+  }
+
+  /**
+   * Internal function: commit all the transaction layers that can commit.
+   */
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
+      // Stop once we found an active transaction.
+      if ($active) {
+        break;
+      }
 
       // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
       if (empty($this->transactionLayers)) {
         if (!parent::commit()) {
           throw new DatabaseTransactionCommitFailedException();
@@ -1087,7 +1125,6 @@ abstract class DatabaseConnection extends PDO {
       }
       else {
         $this->query('RELEASE SAVEPOINT ' . $name);
-        break;
       }
     }
   }
@@ -1732,6 +1769,11 @@ class DatabaseTransactionCommitFailedException extends Exception { }
 class DatabaseTransactionExplicitCommitNotAllowedException extends Exception { }
 
 /**
+ * Exception thrown when a rollback() resulted in other active transactions being rolled-back.
+ */
+class DatabaseTransactionOutOfOrderException extends Exception { }
+
+/**
  * Exception thrown for merge queries that do not make semantic sense.
  *
  * There are many ways that a merge query could be malformed.  They should all
@@ -1826,7 +1868,7 @@ class DatabaseTransaction {
 
   public function __destruct() {
     // If we rolled back then the transaction would have already been popped.
-    if ($this->connection->inTransaction() && !$this->rolledBack) {
+    if (!$this->rolledBack) {
       $this->connection->popTransaction($this->name);
     }
   }
@@ -1857,21 +1899,19 @@ class DatabaseTransaction {
 }
 
 /**
- * A prepared statement.
+ * Represents a prepared statement.
  *
- * Some methods in that class are purposely commented out. Due to a change in
+ * Some methods in that class are purposefully commented out. Due to a change in
  * how PHP defines PDOStatement, we can't define a signature for those methods
  * that will work the same way between versions older than 5.2.6 and later
- * versions.
- *
- * Please refer to http://bugs.php.net/bug.php?id=42452 for more details.
+ * versions.  See http://bugs.php.net/bug.php?id=42452 for more details.
  *
  * Child implementations should either extend PDOStatement:
  * @code
  * class DatabaseStatement_oracle extends PDOStatement implements DatabaseStatementInterface {}
  * @endcode
- * or implement their own class, but in that case they will also have to
- * implement the Iterator or IteratorArray interfaces before
+ * or define their own class. If defining their own class, they will also have
+ * to implement either the Iterator or IteratorAggregate interface before
  * DatabaseStatementInterface:
  * @code
  * class DatabaseStatement_oracle implements Iterator, DatabaseStatementInterface {}
@@ -1955,7 +1995,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The numeric index of the field to return. Defaults to the first field.
    *
    * @return
-   *   A single field from the next record.
+   *   A single field from the next record, or FALSE if there is no next record.
    */
   public function fetchField($index = 0);
 
@@ -1975,7 +2015,7 @@ interface DatabaseStatementInterface extends Traversable {
    * helper method, so one is added.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or FALSE if there is no next row.
    */
   public function fetchAssoc();
 
@@ -2003,7 +2043,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The index of the column number to fetch.
    *
    * @return
-   *   An indexed array.
+   *   An indexed array, or an empty array if there is no result set.
    */
   public function fetchCol($index = 0);
 
@@ -2023,7 +2063,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The numeric index of the field to use as the array value.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or an empty array if there is no result set.
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1);
 
@@ -2042,7 +2082,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   set for the query will be used.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or an empty array if there is no result set.
    */
   public function fetchAllAssoc($key, $fetch = NULL);
 }

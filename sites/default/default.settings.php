@@ -1,5 +1,4 @@
 <?php
-// $Id: default.settings.php,v 1.51 2010/10/11 23:49:48 dries Exp $
 
 /**
  * @file
@@ -23,19 +22,19 @@
  * http://www.drupal.org/mysite/test/, the 'settings.php'
  * is searched in the following directories:
  *
- *  1. sites/www.drupal.org.mysite.test
- *  2. sites/drupal.org.mysite.test
- *  3. sites/org.mysite.test
+ * - sites/www.drupal.org.mysite.test
+ * - sites/drupal.org.mysite.test
+ * - sites/org.mysite.test
  *
- *  4. sites/www.drupal.org.mysite
- *  5. sites/drupal.org.mysite
- *  6. sites/org.mysite
+ * - sites/www.drupal.org.mysite
+ * - sites/drupal.org.mysite
+ * - sites/org.mysite
  *
- *  7. sites/www.drupal.org
- *  8. sites/drupal.org
- *  9. sites/org
+ * - sites/www.drupal.org
+ * - sites/drupal.org
+ * - sites/org
  *
- * 10. sites/default
+ * - sites/default
  *
  * If you are installing on a non-standard port number, prefix the
  * hostname with that number. For example,
@@ -282,13 +281,14 @@ ini_set('session.cookie_lifetime', 2000000);
 
 /**
  * Drupal automatically generates a unique session cookie name for each site
- * based on on its full domain name. If you have multiple domains pointing at
- * the same Drupal site, you can either redirect them all to a single domain
- * (see comment in .htaccess), or uncomment the line below and specify their
- * shared base domain. Doing so assures that users remain logged in as they
- * cross between your various domains.
+ * based on its full domain name. If you have multiple domains pointing at the
+ * same Drupal site, you can either redirect them all to a single domain (see
+ * comment in .htaccess), or uncomment the line below and specify their shared
+ * base domain. Doing so assures that users remain logged in as they cross
+ * between your various domains. Make sure to always start the $cookie_domain
+ * with a leading dot, as per RFC 2109.
  */
-# $cookie_domain = 'example.com';
+# $cookie_domain = '.example.com';
 
 /**
  * Variable overrides:
@@ -322,41 +322,49 @@ ini_set('session.cookie_lifetime', 2000000);
 # $conf['maintenance_theme'] = 'bartik';
 
 /**
- * Enable this setting to determine the correct IP address of the remote
- * client by examining information stored in the X-Forwarded-For headers.
- * X-Forwarded-For headers are a standard mechanism for identifying client
- * systems connecting through a reverse proxy server, such as Squid or
- * Pound. Reverse proxy servers are often used to enhance the performance
+ * Reverse Proxy Configuration:
+ *
+ * Reverse proxy servers are often used to enhance the performance
  * of heavily visited sites and may also provide other site caching,
- * security or encryption benefits. If this Drupal installation operates
- * behind a reverse proxy, this setting should be enabled so that correct
- * IP address information is captured in Drupal's session management,
- * logging, statistics and access management systems; if you are unsure
- * about this setting, do not have a reverse proxy, or Drupal operates in
- * a shared hosting environment, this setting should remain commented out.
+ * security, or encryption benefits. In an environment where Drupal
+ * is behind a reverse proxy, the real IP address of the client should
+ * be determined such that the correct client IP address is available
+ * to Drupal's logging, statistics, and access management systems. In
+ * the most simple scenario, the proxy server will add an
+ * X-Forwarded-For header to the request that contains the client IP
+ * address. However, HTTP headers are vulnerable to spoofing, where a
+ * malicious client could bypass restrictions by setting the
+ * X-Forwarded-For header directly. Therefore, Drupal's proxy
+ * configuration requires the IP addresses of all remote proxies to be
+ * specified in $conf['reverse_proxy_addresses'] to work correctly.
+ *
+ * Enable this setting to get Drupal to determine the client IP from
+ * the X-Forwarded-For header (or $conf['reverse_proxy_header'] if set).
+ * If you are unsure about this setting, do not have a reverse proxy,
+ * or Drupal operates in a shared hosting environment, this setting
+ * should remain commented out.
+ *
+ * In order for this setting to be used you must specify every possible
+ * reverse proxy IP address in $conf['reverse_proxy_addresses'].
+ * If a complete list of reverse proxies is not available in your
+ * environment (for example, if you use a CDN) you may set the
+ * $_SERVER['REMOTE_ADDR'] variable directly in settings.php.
+ * Be aware, however, that it is likely that this would allow IP
+ * address spoofing unless more advanced precautions are taken.
  */
 # $conf['reverse_proxy'] = TRUE;
 
 /**
- * Set this value if your proxy server sends the client IP in a header other
- * than X-Forwarded-For.
- *
- * The "X-Forwarded-For" header is a comma+space separated list of IP addresses,
- * only the last one (the left-most) will be used.
- */
-# $conf['reverse_proxy_header'] = 'HTTP_X_CLUSTER_CLIENT_IP';
-
-/**
- * reverse_proxy accepts an array of IP addresses.
- *
- * Each element of this array is the IP address of any of your reverse
- * proxies. Filling this array Drupal will trust the information stored
- * in the X-Forwarded-For headers only if Remote IP address is one of
- * these, that is the request reaches the web server from one of your
- * reverse proxies. Otherwise, the client could directly connect to
- * your web server spoofing the X-Forwarded-For headers.
+ * Specify every reverse proxy IP address in your environment.
+ * This setting is required if $conf['reverse_proxy'] is TRUE.
  */
 # $conf['reverse_proxy_addresses'] = array('a.b.c.d', ...);
+
+/**
+ * Set this value if your proxy server sends the client IP in a header
+ * other than X-Forwarded-For.
+ */
+# $conf['reverse_proxy_header'] = 'HTTP_X_CLUSTER_CLIENT_IP';
 
 /**
  * Page caching:
@@ -369,8 +377,7 @@ ini_set('session.cookie_lifetime', 2000000);
  * the cache. If the site has mostly anonymous users except a few known
  * editors/administrators, the Vary header can be omitted. This allows for
  * better caching in HTTP proxies (including reverse proxies), i.e. even if
- * clients send different cookies, they still get content served from the cache
- * if aggressive caching is enabled and the minimum cache time is non-zero.
+ * clients send different cookies, they still get content served from the cache.
  * However, authenticated users should access the site directly (i.e. not use an
  * HTTP proxy, and bypass the reverse proxy if one is used) in order to avoid
  * getting cached pages from the proxy.
@@ -430,6 +437,42 @@ ini_set('session.cookie_lifetime', 2000000);
 # );
 
 /**
+ * Fast 404 pages:
+ *
+ * Drupal can generate fully themed 404 pages. However, some of these responses
+ * are for images or other resource files that are not displayed to the user.
+ * This can waste bandwidth, and also generate server load.
+ *
+ * The options below return a simple, fast 404 page for URLs matching a
+ * specific pattern:
+ * - 404_fast_paths_exclude: A regular expression to match paths to exclude,
+ *   such as images generated by image styles, or dynamically-resized images.
+ *   If you need to add more paths, you can add '|path' to the expression.
+ * - 404_fast_paths: A regular expression to match paths that should return a
+ *   simple 404 page, rather than the fully themed 404 page. If you don't have
+ *   any aliases ending in htm or html you can add '|s?html?' to the expression.
+ * - 404_fast_html: The html to return for simple 404 pages.
+ *
+ * Add leading hash signs if you would like to disable this functionality.
+ */
+$conf['404_fast_paths_exclude'] = '/\/(?:styles)\//';
+$conf['404_fast_paths'] = '/\.(?:txt|png|gif|jpe?g|css|js|ico|swf|flv|cgi|bat|pl|dll|exe|asp)$/i';
+$conf['404_fast_html'] = '<html xmlns="http://www.w3.org/1999/xhtml"><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL "@path" was not found on this server.</p></body></html>';
+
+/**
+ * By default, fast 404s are returned as part of the normal page request
+ * process, which will properly serve valid pages that happen to match and will
+ * also log actual 404s to the Drupal log. Alternatively you can choose to
+ * return a 404 now by uncommenting the following line. This will reduce server
+ * load, but will cause even valid pages that happen to match the pattern to
+ * return 404s, rather than the actual page. It will also prevent the Drupal
+ * system log entry. Ensure you understand the effects of this before enabling.
+ *
+ * To enable this functionality, remove the leading hash sign below.
+ */
+# drupal_fast_404();
+
+/**
  * Authorized file system operations:
  *
  * The Update manager module included with Drupal provides a mechanism for
@@ -444,106 +487,3 @@ ini_set('session.cookie_lifetime', 2000000);
  * Remove the leading hash signs to disable.
  */
 # $conf['allow_authorize_operations'] = FALSE;
-
-// Define slave for heavy searches on slave database.
-/*
-$databases['slave']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'mediamosa',
-  'username' => 'mediamosa',
-  'password' => 'mediamosa',
-  'host' => 'localhost'
-);
-*/
-
-/**
- * The following settings you can use when migration 1.7.x MediaMosa databases
- * to the new MediaMosa.x database.
- *
- * You can remove/disable mig_memo, mig_memo_data and mig_vpx_ftp if you are not
- * planning to migrate your old database.
- */
-
-// Migration memo 1.7.x Drupal database.
-/*
-$databases['mig_memo']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'memo',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-// Migration memo 1.7.x MediaMosa data database.
-$databases['mig_memo_data']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'memo_data',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-// In case you want to convert vpx_ftp.
-$databases['mig_vpx_ftp']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_ftp',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-*/
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST interface. Putting it on FALSE will disable the interface
- * for this URL / Location, disabling all REST calls; except upload
- * REST calls, which is controlled by mediamosa_app_upload.
- */
-$conf['mediamosa_app'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST upload interface. The upload setting allows REST call
- * relating to uploading files, it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface
- * as an upload interface, put 'mediamosa_app' to FALSE and set
- * 'mediamosa_app_upload' to TRUE.
- */
-$conf['mediamosa_app_upload'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST download interface. The download setting allows you
- * to download mediafile using tickets. For now its used to download
- * files and still images.
- * Warning: If your download servers point to the admin, then make sure
- * sure you allow this setting on the admin, else your MediaMosa status page
- * will show failures.
- */
-$conf['mediamosa_app_download'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST OpenAPI interface. The OpenAPI setting allows REST call
- * relating to OpenAPI (eg. OpenSocial), it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface
- * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
- * 'mediamosa_app_openapi' to TRUE.
- */
-$conf['mediamosa_app_openapi'] = FALSE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * CMS admin interface. You can turn on the admin with app interface
- * but remember that some url like /user conflicts with the drupal
- * /user and the /user mediamosa.
- */
-$conf['mediamosa_admin'] = TRUE;
-
-/**
- * The 'mediamosa_installation_id' defines the default install ID for multiple
- * installations of mediamosa. For now only job servers need to have unique IDs.
- * Best practise is to give each MediaMosa installation its own ID. F.e. if you
- * have 'job1.mediamosa.example' for your 1st job server, then specify 'job1' as
- * installation ID here. 'admin.mediamosa.example' would be 'admin' as
- * installation ID, etc, etc. Max length for this ID is 16 chars.
- */
-//                                    1234567890123456 chars max
-$conf['mediamosa_installation_id'] = 'default';

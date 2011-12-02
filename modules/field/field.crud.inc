@@ -38,7 +38,7 @@
  *   - settings: each omitted setting is given the default value defined in
  *     hook_field_info().
  *   - storage:
- *     - type: the storage backend specified in the 'field_default_storage'
+ *     - type: the storage backend specified in the 'field_storage_default'
  *       system variable.
  *     - settings: each omitted setting is given the default value specified in
  *       hook_field_storage_info().
@@ -727,7 +727,7 @@ function field_read_instances($params = array(), $include_additional = array()) 
  *   An instance structure.
  * @param $field_cleanup
  *   If TRUE, the field will be deleted as well if its last instance is being
- *   deleted. If FALSE, it is the caller's responsability to handle the case of
+ *   deleted. If FALSE, it is the caller's responsibility to handle the case of
  *   fields left without instances. Defaults to TRUE.
  */
 function field_delete_instance($instance, $field_cleanup = TRUE) {

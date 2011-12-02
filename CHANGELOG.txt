@@ -1,4 +1,101 @@
 
+Drupal 7.9, 2011-10-26
+----------------------
+- Critical fixes to OpenID to spec violations that could allow for
+  impersonation in certain scenarios. Existing OpenID users should see
+  http://drupal.org/node/1120290#comment-5092796 for more information on
+  transitioning.
+- Fixed files getting lost when adding multiple files to multiple file fields
+  at the same time.
+- Improved usability of the clean URL test screens.
+- Restored height/width attributes on images run through the theme system.
+- Fixed usability bug with first password field being pre-filled by certain
+  browser plugins.
+- Fixed file_usage_list() so that it can return more than one result.
+- Fixed bug preventing preview of private images on node form.
+- Fixed PDO error when inserting an aggregator title longer than 255 characters.
+- Spelled out what TRADITIONAL means in MySQL sql_mode.
+- Deprecated "!=" operator for DBTNG; should be "<>".
+- Added two new API functions (menu_tree_set_path()/menu_tree_get_path()) were
+  added in order to enable setting the active menu trail for dynamically
+  generated menu paths.
+- Added new "fast 404" capability in settings.php to bypass Drupal bootstrap
+  when serving 404 pages for certain file types.
+- Added format_string() function which can perform string munging ala the t()
+  function without the overhead of the translation system.
+- Numerous #states system fixes.
+- Numerous EntityFieldQuery, DBTNG, and SQLite fixes.
+- Numerous Shortcut module fixes.
+- Numerous language system fixes.
+- Numerous token fixes.
+- Numerous CSS fixes.
+- Numerous upgrade path fixes.
+- Numerous minor string fixes.
+- Numerous notice fixes.
+
+Drupal 7.8, 2011-08-31
+----------------------
+- Fixed critical upgrade path issue with multilingual sites, leading to lost
+  content.
+- Numerous fixes to upgrade path, preventing fatal errors due to incorrect
+  dependencies.
+- Fixed issue with saving files on hosts with open_basedir restrictions.
+- Fixed Update manger error when used with Overlay.
+- Fixed RTL support in Seven administration theme and Overlay.
+- Fixes to nested transaction support.
+- Introduced performance pattern to reduce Drupal core's RAM usage.
+- Added support for HTML 5 tags to filter_xss_admin().
+- Added exception handling to cron.
+- Added new hook hook_field_widget_form_alter() for contribtued modules.
+- element_validate_*() functions now available to contrib.
+- Added new maintainers for several subsystems.
+- Numerous testing system improvements.
+- Numerous markup and CSS fixes.
+- Numerous poll module fixes.
+- Numerous notice/warning fixes.
+- Numerous documentation fixes.
+- Numerous token fixes.
+
+Drupal 7.7, 2011-07-27
+----------------------
+- Fixed VERSION string.
+
+Drupal 7.6, 2011-07-27
+----------------------
+- Fixed support for remote streamwrappers.
+- AJAX now binds to 'click' instead of 'mousedown'.
+- 'Translatable' flag on fields created in UI now defaults to FALSE, to match those created via the API.
+- Performance enhancement to permissions page on large numbers of permissions.
+- More secure password generation.
+- Fix for temporary directory on Windows servers.
+- run-tests.sh now uses proc_open() instead of pcntl_fork() for better Windows support.
+- Numerous upgrade path fixes.
+- Numerous documentation fixes.
+- Numerous notice fixes.
+- Numerous fixes to improve PHP 5.4 support.
+- Numerous RTL improvements.
+
+Drupal 7.5, 2011-07-27
+----------------------
+- Fixed security issue (Access bypass), see SA-CORE-2011-003.
+
+Drupal 7.4, 2011-06-29
+----------------------
+- Rolled back patch that caused fatal errors in CTools, Feeds, and other modules using the class registry.
+- Fixed critical bug with saving default images.
+- Fixed fatal errors when uninstalling some modules.
+- Added workaround for MySQL transaction support breaking on DDL statments.
+- Improved page caching with external caching systems.
+- Fix to Batch API, which was terminating too early.
+- Numerous upgrade path fixes.
+- Performance fixes.
+- Additional test coverage.
+- Numerous documentation fixes.
+
+Drupal 7.3, 2011-06-29
+----------------------
+- Fixed security issue (Access bypass), see SA-CORE-2011-002.
+
 Drupal 7.2, 2011-05-25
 ----------------------
 - Added a default .gitignore file.
@@ -235,6 +332,9 @@ Drupal 7.0, 2011-01-05
     * Added queue API support to cron API.
     * Added a locking framework to coordinate long-running operations across
       requests.
+
+Drupal 6.23-dev, xxxx-xx-xx (development release)
+-----------------------
 
 Drupal 6.22, 2011-05-25
 -----------------------
@@ -993,7 +1093,7 @@ Drupal 4.5.0, 2004-10-18
 - Filter system:
     * Added support for using multiple input formats on the site
     * Expanded the embedded PHP-code feature so it can be used everywhere
-    * Added support for role-dependant filtering, through input formats
+    * Added support for role-dependent filtering, through input formats
 - UI translation:
     * Managing translations is now completely done through the administration interface
     * Added support for importing/exporting gettext .po files

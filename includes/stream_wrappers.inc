@@ -341,7 +341,11 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
    * Base implementation of chmod().
    */
   function chmod($mode) {
-    return @chmod($this->getLocalPath(), $mode);
+    $output = @chmod($this->getLocalPath(), $mode);
+    // We are modifying the underlying file here, so we have to clear the stat
+    // cache so that PHP understands that URI has changed too.
+    clearstatcache();
+    return $output;
   }
 
   /**
@@ -352,10 +356,18 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
   }
 
   /**
-   * Return the local filesystem path.
+   * Returns the canonical absolute path of the URI, if possible.
    *
-   * @param $uri
-   *   Optional URI, supplied when doing a move or rename.
+   * @param string $uri
+   *   (optional) The stream wrapper URI to be converted to a canonical
+   *   absolute path. This may point to a directory or another type of file.
+   *
+   * @return string|false
+   *   If $uri is not set, returns the canonical absolute path of the URI
+   *   previously set by the DrupalStreamWrapperInterface::setUri() function.
+   *   If $uri is set and valid for this class, returns its canonical absolute
+   *   path, as determined by the realpath() function. If $uri is set but not
+   *   valid, returns FALSE.
    */
   protected function getLocalPath($uri = NULL) {
     if (!isset($uri)) {
@@ -397,7 +409,7 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
     $this->handle = ($options & STREAM_REPORT_ERRORS) ? fopen($path, $mode) : @fopen($path, $mode);
 
     if ((bool) $this->handle && $options & STREAM_USE_PATH) {
-      $opened_url = $path;
+      $opened_path = $path;
     }
 
     return (bool) $this->handle;

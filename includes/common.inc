@@ -89,7 +89,7 @@ define('JS_THEME', 100);
  * Error code indicating that the request made by drupal_http_request() exceeded
  * the specified timeout.
  */
-define('HTTP_REQUEST_TIMEOUT', 1);
+define('HTTP_REQUEST_TIMEOUT', -1);
 
 /**
  * Constants defining cache granularity for blocks and renderable arrays.
@@ -752,7 +752,8 @@ function drupal_access_denied() {
  *     received.
  *   - redirect_code: If redirected, an integer containing the initial response
  *     status code.
- *   - redirect_url: If redirected, a string containing the redirection location.
+ *   - redirect_url: If redirected, a string containing the URL of the redirect
+ *     target.
  *   - error: If an error occurred, the error message. Otherwise not set.
  *   - headers: An array containing the response headers as name/value pairs.
  *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
@@ -859,7 +860,7 @@ function drupal_http_request($url, array $options = array()) {
 
   // If the server URL has a user then attempt to use basic authentication.
   if (isset($uri['user'])) {
-    $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (!empty($uri['pass']) ? ":" . $uri['pass'] : ''));
+    $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (isset($uri['pass']) ? ':' . $uri['pass'] : ''));
   }
 
   // If the database prefix is being used by SimpleTest to run the tests in a copied
@@ -1008,7 +1009,9 @@ function drupal_http_request($url, array $options = array()) {
         $result = drupal_http_request($location, $options);
         $result->redirect_code = $code;
       }
-      $result->redirect_url = $location;
+      if (!isset($result->redirect_url)) {
+        $result->redirect_url = $location;
+      }
       break;
     default:
       $result->error = $status_message;
@@ -1293,7 +1296,7 @@ function check_url($uri) {
  * for scripts and styles.
  */
 function filter_xss_admin($string) {
-  return filter_xss($string, array('a', 'abbr', 'acronym', 'address', 'b', 'bdo', 'big', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup', 'dd', 'del', 'dfn', 'div', 'dl', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'ins', 'kbd', 'li', 'ol', 'p', 'pre', 'q', 'samp', 'small', 'span', 'strong', 'sub', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'tt', 'ul', 'var'));
+  return filter_xss($string, array('a', 'abbr', 'acronym', 'address', 'article', 'aside', 'b', 'bdi', 'bdo', 'big', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup', 'command', 'dd', 'del', 'details', 'dfn', 'div', 'dl', 'dt', 'em', 'figcaption', 'figure', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'i', 'img', 'ins', 'kbd', 'li', 'mark', 'menu', 'meter', 'nav', 'ol', 'output', 'p', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'small', 'span', 'strong', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'time', 'tr', 'tt', 'u', 'ul', 'var', 'wbr'));
 }
 
 /**
@@ -2193,8 +2196,9 @@ function url($path = NULL, array $options = array()) {
  */
 function url_is_external($path) {
   $colonpos = strpos($path, ':');
-  // Only call the slow drupal_strip_dangerous_protocols() if $path contains a
-  // ':' before any / ? or #.
+  // Avoid calling drupal_strip_dangerous_protocols() if there is any
+  // slash (/), hash (#) or question_mark (?) before the colon (:)
+  // occurrence - if any - as this would clearly mean it is not a URL.
   return $colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && drupal_strip_dangerous_protocols($path) == $path;
 }
 
@@ -2252,7 +2256,7 @@ function drupal_http_header_attributes(array $attributes = array()) {
  *   An associative array of key-value pairs to be converted to attributes.
  *
  * @return
- *   A string ready for insertion in a tag.
+ *   A string ready for insertion in a tag (starts with a space).
  *
  * @ingroup sanitization
  */
@@ -2288,7 +2292,9 @@ function drupal_attributes(array $attributes = array()) {
  *     to work in a call to drupal_attributes($options['attributes']).
  *   - 'html' (default FALSE): Whether $text is HTML or just plain-text. For
  *     example, to make an image tag into a link, this must be set to TRUE, or
- *     you will see the escaped HTML image tag.
+ *     you will see the escaped HTML image tag. $text is not sanitized if
+ *     'html' is TRUE. The calling function must ensure that $text is already
+ *     safe.
  *   - 'language': An optional language object. If the path being linked to is
  *     internal to the site, $options['language'] is used to determine whether
  *     the link is "active", or pointing to the current page (the language as
@@ -2470,6 +2476,9 @@ function drupal_deliver_html_page($page_callback_result) {
 
         watchdog('page not found', check_plain($_GET['q']), NULL, WATCHDOG_WARNING);
 
+        // Check for and return a fast 404 page if configured.
+        drupal_fast_404();
+
         // Keep old path for reference, and to allow forms to redirect to it.
         if (!isset($_GET['destination'])) {
           $_GET['destination'] = $_GET['q'];
@@ -2486,7 +2495,7 @@ function drupal_deliver_html_page($page_callback_result) {
         if (empty($return) || $return == MENU_NOT_FOUND || $return == MENU_ACCESS_DENIED) {
           // Standard 404 handler.
           drupal_set_title(t('Page not found'));
-          $return = t('The requested page could not be found.');
+          $return = t('The requested page "@path" could not be found.', array('@path' => request_uri()));
         }
 
         drupal_set_page_content($return);
@@ -2740,13 +2749,14 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
  * @param $data
  *   (optional) The stylesheet data to be added, depending on what is passed
  *   through to the $options['type'] parameter:
- *   - 'file': The path to the CSS file relative to the base_path(), e.g.,
- *     "modules/devel/devel.css". Note that Modules should always prefix the
- *     names of their CSS files with the module name; for example,
- *     system-menus.css rather than simply menus.css. Themes can override
- *     module-supplied CSS files based on their filenames, and this prefixing
- *     helps prevent confusing name collisions for theme developers. See
- *     drupal_get_css() where the overrides are performed. Also, if the
+ *   - 'file': The path to the CSS file relative to the base_path(), or a
+ *     stream wrapper URI. For example: "modules/devel/devel.css" or
+ *     "public://generated_css/stylesheet_1.css". Note that Modules should
+ *     always prefix the names of their CSS files with the module name; for
+ *     example, system-menus.css rather than simply menus.css. Themes can
+ *     override module-supplied CSS files based on their filenames, and this
+ *     prefixing helps prevent confusing name collisions for theme developers.
+ *     See drupal_get_css() where the overrides are performed. Also, if the
  *     direction of the current language is right-to-left (Hebrew, Arabic,
  *     etc.), the function will also look for an RTL CSS file and append it to
  *     the list. The name of this file should have an '-rtl.css' suffix.  For
@@ -2822,6 +2832,8 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
  *
  * @return
  *   An array of queued cascading stylesheets.
+ *
+ * @see drupal_get_css()
  */
 function drupal_add_css($data = NULL, $options = NULL) {
   $css = &drupal_static(__FUNCTION__, array());
@@ -2902,8 +2914,11 @@ function drupal_add_css($data = NULL, $options = NULL) {
  *   (optional) If set to TRUE, this function skips calling drupal_alter() on
  *   $css, useful when the calling function passes a $css array that has already
  *   been altered.
+ *
  * @return
  *   A string of XHTML CSS tags.
+ *
+ * @see drupal_add_css()
  */
 function drupal_get_css($css = NULL, $skip_alter = FALSE) {
   if (!isset($css)) {
@@ -3004,7 +3019,7 @@ function drupal_sort_css_js($a, $b) {
  * are always groupable, and items of the 'external' type are never groupable.
  * This function also ensures that the process of grouping items does not change
  * their relative order. This requirement may result in multiple groups for the
- * same type, media, and browsers, if needed to accomodate other items in
+ * same type, media, and browsers, if needed to accommodate other items in
  * between.
  *
  * @param $css
@@ -4409,6 +4424,8 @@ function drupal_process_attached($elements, $group = JS_DEFAULT, $dependency_che
  * The following states may be applied to an element:
  * - enabled
  * - disabled
+ * - required
+ * - optional
  * - visible
  * - invisible
  * - checked
@@ -4417,26 +4434,22 @@ function drupal_process_attached($elements, $group = JS_DEFAULT, $dependency_che
  * - collapsed
  *
  * The following states may be used in remote conditions:
- * - enabled
- * - disabled
- * - visible
- * - invisible
+ * - empty
+ * - filled
  * - checked
  * - unchecked
+ * - expanded
+ * - collapsed
  * - value
  *
- * The following states exist for both states and remote conditions, but are not
- * fully implemented and may not change anything on the element:
- * - required
- * - optional
+ * The following states exist for both elements and remote conditions, but are
+ * not fully implemented and may not change anything on the element:
  * - relevant
  * - irrelevant
  * - valid
  * - invalid
  * - touched
  * - untouched
- * - filled
- * - empty
  * - readwrite
  * - readonly
  *
@@ -5031,7 +5044,15 @@ function drupal_cron_run() {
     drupal_register_shutdown_function('drupal_cron_cleanup');
 
     // Iterate through the modules calling their cron handlers (if any):
-    module_invoke_all('cron');
+    foreach (module_implements('cron') as $module) {
+      // Do not let an exception thrown by one module disturb another.
+      try {
+        module_invoke($module, 'cron');
+      }
+      catch (Exception $e) {
+        watchdog_exception('cron', $e);
+      }
+    }
 
     // Record cron time
     variable_set('cron_last', REQUEST_TIME);
@@ -5498,15 +5519,24 @@ function drupal_render_page($page) {
  *
  * Recursively iterates over each of the array elements, generating HTML code.
  *
- * HTML generation is controlled by two properties containing theme functions,
- * #theme and #theme_wrappers.
+ * Renderable arrays have two kinds of key/value pairs: properties and
+ * children. Properties have keys starting with '#' and their values influence
+ * how the array will be rendered. Children are all elements whose keys do not
+ * start with a '#'. Their values should be renderable arrays themselves,
+ * which will be rendered during the rendering of the parent array. The markup
+ * provided by the children is typically inserted into the markup generated by
+ * the parent array.
+ *
+ * HTML generation for a renderable array, and the treatment of any children,
+ * is controlled by two properties containing theme functions, #theme and
+ * #theme_wrappers.
  *
  * #theme is the theme function called first. If it is set and the element has
- * any children, they have to be rendered there. For elements that are not
- * allowed to have any children, e.g. buttons or textfields, it can be used to
- * render the element itself. If #theme is not present and the element has
- * children, they are rendered and concatenated into a string by
- * drupal_render_children().
+ * any children, it is the responsibility of the theme function to render
+ * these children. For elements that are not allowed to have any children,
+ * e.g. buttons or textfields, the theme function can be used to render the
+ * element itself. If #theme is not present and the element has children, they
+ * are rendered and concatenated into a string by drupal_render_children().
  *
  * The #theme_wrappers property contains an array of theme functions which will
  * be called, in order, after #theme has run. These can be used to add further
@@ -6105,10 +6135,13 @@ function element_child($key) {
 }
 
 /**
- * Return the children of an element, optionally sorted by weight.
+ * Identifies the children of an element array, optionally sorted by weight.
+ *
+ * The children of a element array are those key/value pairs whose key does
+ * not start with a '#'. See drupal_render() for details.
  *
  * @param $elements
- *   The element to be sorted.
+ *   The element array whose children are to be identified.
  * @param $sort
  *   Boolean to indicate whether the children should be sorted by weight.
  * @return
@@ -6146,7 +6179,7 @@ function element_children(&$elements, $sort = FALSE) {
 }
 
 /**
- * Return the visibile children of an element.
+ * Returns the visible children of an element.
  *
  * @param $elements
  *   The parent element.
@@ -7039,6 +7072,7 @@ function drupal_parse_info_format($data) {
  *   Array of the possible severity levels for log messages.
  *
  * @see watchdog()
+ * @ingroup logging_severity_levels
  */
 function watchdog_severity_levels() {
   return array(
@@ -7127,7 +7161,7 @@ function drupal_flush_all_caches() {
 
   // Don't clear cache_form - in-progress form submissions may break.
   // Ordered so clearing the page cache will always be the last action.
-  $core = array('cache', 'cache_filter', 'cache_bootstrap', 'cache_page');
+  $core = array('cache', 'cache_path', 'cache_filter', 'cache_bootstrap', 'cache_page');
   $cache_tables = array_merge(module_invoke_all('flush_caches'), $core);
   foreach ($cache_tables as $table) {
     cache_clear_all('*', $table, TRUE);
@@ -7360,12 +7394,24 @@ function entity_info_cache_clear() {
  */
 function entity_extract_ids($entity_type, $entity) {
   $info = entity_get_info($entity_type);
+
   // Objects being created might not have id/vid yet.
   $id = isset($entity->{$info['entity keys']['id']}) ? $entity->{$info['entity keys']['id']} : NULL;
   $vid = ($info['entity keys']['revision'] && isset($entity->{$info['entity keys']['revision']})) ? $entity->{$info['entity keys']['revision']} : NULL;
-  // If no bundle key provided, then we assume a single bundle, named after the
-  // entity type.
-  $bundle = $info['entity keys']['bundle'] ? $entity->{$info['entity keys']['bundle']} : $entity_type;
+
+  if (!empty($info['entity keys']['bundle'])) {
+    // Explicitly fail for malformed entities missing the bundle property.
+    if (!isset($entity->{$info['entity keys']['bundle']}) || $entity->{$info['entity keys']['bundle']} === '') {
+      throw new EntityMalformedException(t('Missing bundle property on entity of type @entity_type.', array('@entity_type' => $entity_type)));
+    }
+    $bundle = $entity->{$info['entity keys']['bundle']};
+  }
+  else {
+    // The entity type provides no bundle key: assume a single bundle, named
+    // after the entity type.
+    $bundle = $entity_type;
+  }
+
   return array($id, $vid, $bundle);
 }
 
@@ -7431,7 +7477,8 @@ function entity_create_stub_entity($entity_type, $ids) {
  *   Whether to reset the internal cache for the requested entity type.
  *
  * @return
- *   An array of entity objects indexed by their ids.
+ *   An array of entity objects indexed by their ids. When no results are
+ *   found, an empty array is returned.
  *
  * @todo Remove $conditions in Drupal 8.
  */
@@ -7537,44 +7584,30 @@ function entity_prepare_view($entity_type, $entities, $langcode = NULL) {
  *   uri of its own.
  */
 function entity_uri($entity_type, $entity) {
-  // This check enables the URI of an entity to be easily overridden from what
-  // the callback for the entity type or bundle would return, and it helps
-  // minimize performance overhead when entity_uri() is called multiple times
-  // for the same entity.
-  if (!isset($entity->uri)) {
-    $info = entity_get_info($entity_type);
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $info = entity_get_info($entity_type);
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-    // A bundle-specific callback takes precedence over the generic one for the
-    // entity type.
-    if (isset($info['bundles'][$bundle]['uri callback'])) {
-      $uri_callback = $info['bundles'][$bundle]['uri callback'];
-    }
-    elseif (isset($info['uri callback'])) {
-      $uri_callback = $info['uri callback'];
-    }
-    else {
-      $uri_callback = NULL;
-    }
-
-    // Invoke the callback to get the URI. If there is no callback, set the
-    // entity's 'uri' property to FALSE to indicate that it is known to not have
-    // a URI.
-    if (isset($uri_callback) && function_exists($uri_callback)) {
-      $entity->uri = $uri_callback($entity);
-      if (!isset($entity->uri['options'])) {
-        $entity->uri['options'] = array();
-      }
-      // Pass the entity data to url() so that alter functions do not need to
-      // lookup this entity again.
-      $entity->uri['options']['entity_type'] = $entity_type;
-      $entity->uri['options']['entity'] = $entity;
-    }
-    else {
-      $entity->uri = FALSE;
-    }
+  // A bundle-specific callback takes precedence over the generic one for the
+  // entity type.
+  if (isset($info['bundles'][$bundle]['uri callback'])) {
+    $uri_callback = $info['bundles'][$bundle]['uri callback'];
   }
-  return $entity->uri ? $entity->uri : NULL;
+  elseif (isset($info['uri callback'])) {
+    $uri_callback = $info['uri callback'];
+  }
+  else {
+    return NULL;
+  }
+
+  // Invoke the callback to get the URI. If there is no callback, return NULL.
+  if (isset($uri_callback) && function_exists($uri_callback)) {
+    $uri = $uri_callback($entity);
+    // Pass the entity data to url() so that alter functions do not need to
+    // lookup this entity again.
+    $uri['options']['entity_type'] = $entity_type;
+    $uri['options']['entity'] = $entity;
+    return $uri;
+  }
 }
 
 /**

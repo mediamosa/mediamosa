@@ -12,17 +12,27 @@ function field_ui_fields_list() {
   $instances = field_info_instances();
   $field_types = field_info_field_types();
   $bundles = field_info_bundles();
+
+  $modules = system_rebuild_module_data();
+
   $header = array(t('Field name'), t('Field type'), t('Used in'));
   $rows = array();
   foreach ($instances as $entity_type => $type_bundles) {
     foreach ($type_bundles as $bundle => $bundle_instances) {
       foreach ($bundle_instances as $field_name => $instance) {
         $field = field_info_field($field_name);
+
+        // Initialize the row if we encounter the field for the first time.
+        if (!isset($rows[$field_name])) {
+          $rows[$field_name]['class'] = $field['locked'] ? array('menu-disabled') : array('');
+          $rows[$field_name]['data'][0] = $field['locked'] ? t('@field_name (Locked)', array('@field_name' => $field_name)) : $field_name;
+          $module_name = $field_types[$field['type']]['module'];
+          $rows[$field_name]['data'][1] = $field_types[$field['type']]['label'] . ' ' . t('(module: !module)', array('!module' => $modules[$module_name]->info['name']));
+        }
+
+        // Add the current instance.
         $admin_path = _field_ui_bundle_admin_path($entity_type, $bundle);
-        $rows[$field_name]['data'][0] = $field['locked'] ? t('@field_name (Locked)', array('@field_name' => $field_name)) : $field_name;
-        $rows[$field_name]['data'][1] = $field_types[$field['type']]['label'];
         $rows[$field_name]['data'][2][] = $admin_path ? l($bundles[$entity_type][$bundle]['label'], $admin_path . '/fields') : $bundles[$entity_type][$bundle]['label'];
-        $rows[$field_name]['class'] = $field['locked'] ? array('menu-disabled') : array('');
       }
     }
   }
@@ -244,12 +254,17 @@ function theme_field_ui_table($variables) {
         $row += $element['#attributes'];
       }
 
+      // Render children as table cells.
       foreach (element_children($element) as $cell_key) {
-        $cell = array('data' => drupal_render($element[$cell_key]));
-        if (isset($element[$cell_key]['#cell_attributes'])) {
-          $cell += $element[$cell_key]['#cell_attributes'];
+        $child = &$element[$cell_key];
+        // Do not render a cell for children of #type 'value'.
+        if (!(isset($child['#type']) && $child['#type'] == 'value')) {
+          $cell = array('data' => drupal_render($child));
+          if (isset($child['#cell_attributes'])) {
+            $cell += $child['#cell_attributes'];
+          }
+          $row['data'][] = $cell;
         }
-        $row['data'][] = $cell;
       }
       $table['rows'][] = $row;
     }
@@ -509,6 +524,12 @@ function field_ui_field_overview_form($form, &$form_state, $entity_type, $bundle
         '#cell_attributes' => array('colspan' => 3),
         '#prefix' => '<div class="add-new-placeholder">&nbsp;</div>',
       ),
+      // Place the 'translatable' property as an explicit value so that contrib
+      // modules can form_alter() the value for newly created fields.
+      'translatable' => array(
+        '#type' => 'value',
+        '#value' => FALSE,
+      ),
     );
   }
 
@@ -753,7 +774,7 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
     $field = array(
       'field_name' => $values['field_name'],
       'type' => $values['type'],
-      'translatable' => TRUE,
+      'translatable' => $values['translatable'],
     );
     $instance = array(
       'field_name' => $field['field_name'],
@@ -778,7 +799,7 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
       $form_state['fields_added']['_add_new_field'] = $field['field_name'];
     }
     catch (Exception $e) {
-      drupal_set_message(t('There was a problem creating field %label: @message.', array('%label' => $instance['label'], '@message' => $e->getMessage())));
+      drupal_set_message(t('There was a problem creating field %label: @message.', array('%label' => $instance['label'], '@message' => $e->getMessage())), 'error');
     }
   }
 
@@ -808,7 +829,7 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
         $form_state['fields_added']['_add_existing_field'] = $instance['field_name'];
       }
       catch (Exception $e) {
-        drupal_set_message(t('There was a problem creating field instance %label: @message.', array('%label' => $instance['label'], '@message' => $e->getMessage())));
+        drupal_set_message(t('There was a problem creating field instance %label: @message.', array('%label' => $instance['label'], '@message' => $e->getMessage())), 'error');
       }
     }
   }
@@ -1576,10 +1597,8 @@ function field_ui_field_settings_form_submit($form, &$form_state) {
     drupal_set_message(t('Updated field %label field settings.', array('%label' => $instance['label'])));
     $form_state['redirect'] = field_ui_next_destination($entity_type, $bundle);
   }
-  catch (FieldException $e) {
+  catch (Exception $e) {
     drupal_set_message(t('Attempt to update field %label failed: %message.', array('%label' => $instance['label'], '%message' => $e->getMessage())), 'error');
-    // TODO: Where do we go from here?
-    $form_state['redirect'] = field_ui_next_destination($entity_type, $bundle);
   }
 }
 
@@ -1650,7 +1669,7 @@ function field_ui_widget_type_form_submit($form, &$form_state) {
     field_update_instance($instance);
     drupal_set_message(t('Changed the widget for field %label.', array('%label' => $instance['label'])));
   }
-  catch (FieldException $e) {
+  catch (Exception $e) {
     drupal_set_message(t('There was a problem changing the widget for field %label.', array('%label' => $instance['label'])));
   }
 
@@ -1713,6 +1732,14 @@ function field_ui_field_delete_form_submit($form, &$form_state) {
 
   $admin_path = _field_ui_bundle_admin_path($entity_type, $bundle);
   $form_state['redirect'] = field_ui_get_destinations(array($admin_path . '/fields'));
+
+  // Fields are purged on cron. However field module prevents disabling modules
+  // when field types they provided are used in a field until it is fully
+  // purged. In the case that a field has minimal or no content, a single call
+  // to field_purge_batch() will remove it from the system. Call this with a
+  // low batch limit to avoid administrators having to wait for cron runs when
+  // removing instances that meet this criteria.
+  field_purge_batch(10);
 }
 
 /**
@@ -1970,7 +1997,13 @@ function field_ui_field_edit_form_submit($form, &$form_state) {
   // Update any field settings that have changed.
   $field_source = field_info_field($instance['field_name']);
   $field = array_merge($field_source, $field);
-  field_update_field($field);
+  try {
+    field_update_field($field);
+  }
+  catch (Exception $e) {
+    drupal_set_message(t('Attempt to update field %label failed: %message.', array('%label' => $instance['label'], '%message' => $e->getMessage())), 'error');
+    return;
+  }
 
   // Handle the default value.
   if (isset($form['instance']['default_value_widget'])) {

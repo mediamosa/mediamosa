@@ -385,10 +385,6 @@ if (empty($op) && update_access_allowed()) {
   // Set up theme system for the maintenance page.
   drupal_maintenance_theme();
 
-  // Rebuild the registry to ensure that removed hooks in modules do not result
-  // in undefined function errors and that newly defined hooks are called.
-  registry_rebuild();
-
   // Check the update requirements for Drupal.
   update_check_requirements();
 
@@ -460,7 +456,7 @@ else {
   $output = update_access_denied_page();
 }
 if (isset($output) && $output) {
-  // Explictly start a session so that the update.php token will be accepted.
+  // Explicitly start a session so that the update.php token will be accepted.
   drupal_session_start();
   // We defer the display of messages until all updates are done.
   $progress_page = ($batch = batch_get()) && isset($batch['running']);

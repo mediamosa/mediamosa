@@ -570,7 +570,7 @@ abstract class DatabaseTasks {
 }
 
 /**
- * @class Exception class used to throw error if the DatabaseInstaller fails.
+ * Exception thrown if the database installer fails.
  */
 class DatabaseTaskException extends Exception {
 }
@@ -1183,10 +1183,11 @@ function drupal_check_module($module) {
  *    dependencies[] = dblog
  * @endcode
  *
- * @param profile
+ * @param $profile
  *   Name of profile.
- * @param locale
+ * @param $locale
  *   Name of locale used (if any).
+ *
  * @return
  *   The info array.
  */
