@@ -28,3 +28,11 @@
  * @file
  * MediaMosa support for Metadata type Qualified Dublin Core.
  */
+
+/**
+ * Implements hook_mediamosa_metadata_info().
+ */
+function mediamosa_metadata_qdc_mediamosa_metadata_info() {
+  return mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME;
+}
+  
