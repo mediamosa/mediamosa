@@ -31,14 +31,16 @@
 
 /**
  * Our class will reuse as much from version 2 as we can.
+ *
+ * Warning; v4 output is still experimental.
  */
-class mediamosa_response_v3 extends mediamosa_response {
+class mediamosa_response_v4 extends mediamosa_response {
 
   /**
    * Generate output.
    */
   protected function generate_output() {
-    if (!mediamosa::is_v3_output()) {
+    if (!mediamosa::is_v4_output()) {
       return parent::generate_output();
     }
 
@@ -53,7 +55,7 @@ class mediamosa_response_v3 extends mediamosa_response {
   }
 
   /**
-   * Generate the XML output in v3 format.
+   * Generate the XML output in v4 format.
    *
    * @return string
    */
@@ -63,7 +65,7 @@ class mediamosa_response_v3 extends mediamosa_response {
     }
 
     // Get default template.
-    $xml = self::render_template(drupal_get_path('module', 'mediamosa') . '/response/mediamosa_response.v3.tpl.inc');
+    $xml = self::render_template(drupal_get_path('module', 'mediamosa') . '/response/mediamosa_response.v4.tpl.inc');
 
     // Output the XML.
     header('Connection: close');

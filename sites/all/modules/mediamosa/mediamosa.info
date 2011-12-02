@@ -61,7 +61,7 @@ files[] = cql/mediamosa_cql_prefix_assignment.class.inc
 
 ; Response class.
 files[] = response/mediamosa_response.class.inc
-files[] = response/mediamosa_response.v3.class.inc
+files[] = response/mediamosa_response.v4.class.inc
 files[] = response/connector/mediamosa_response_connector.class.inc
 files[] = response/mediamosa_response.test
 

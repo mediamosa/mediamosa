@@ -174,8 +174,8 @@ class mediamosa {
         $mediamosa_response = reset($responses);
       }
       else {
-        // For now we create v3.
-        $mediamosa_response = new mediamosa_response_v3();
+        // V3 output has been delayed until next version.
+        $mediamosa_response = new mediamosa_response();
       }
     }
 
@@ -184,11 +184,25 @@ class mediamosa {
 
   /**
    * Returns TRUE or FALSE when v3 output is active.
+   *
+   * V3 changes on v2 and lower; aut_* variables in output are now prefixed
+   * with acl_*.
    */
   static public function is_v3_output() {
     // Get the active version of current environment.
     $env_active_version = self::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
     return ($env_active_version[mediamosa_version::MAJOR] >= 3);
+  }
+
+  /**
+   * Returns TRUE or FALSE when v4 output is active.
+   *
+   * Warning: v4 output is still experimental.
+   */
+  static public function is_v4_output() {
+    // Get the active version of current environment.
+    $env_active_version = self::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
+    return ($env_active_version[mediamosa_version::MAJOR] >= 4);
   }
 
   /**
