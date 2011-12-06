@@ -1,7 +1,7 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -637,17 +637,21 @@ function mediamosa_profile_apache_settings_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '');
   $document_root = _mediamosa_profile_document_root();
 
-  $apache_settings_local = st("Single-server setup with http://localhost/ for demonstration or testing purposes.
-  <p><li>Add the following lines to your default localhost apache definition:</p>
+  $apache_settings_local = st("This setup is for installation of MediaMosa on 1 server and 1 domain.
+  Can be used for simple testing setups, but also for a small server deploy. MediaMosa can be installed on a subdirectory
+  (http://domain/mediamosa), or in the document root (http://domain).
+  <p><li>Add the following lines to your default apache definition:</p>
     <pre>" . htmlentities("
-    # ticket
-    Alias /ticket !mount_point/links
+    # MediaMosa tickets
+    Alias !rel_directoryticket !mount_point/links
     <Directory !mount_point/links>
       Options FollowSymLinks
-      AllowOverride All
       Order deny,allow
       Allow from All
     </Directory>
+
+    # Media
+    Alias !rel_directorymedia !mount_point/media
 
     <IfModule mod_php5.c>
         php_admin_value post_max_size 2008M
@@ -658,6 +662,9 @@ function mediamosa_profile_apache_settings_form() {
 <p><li>Restart your Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>
 ', array(
       '!mount_point' => $mount_point,
+      '!server_name_clean' => $server_name,
+      '!document_root' => $document_root,
+      '!rel_directory' => url(),
     ));
 
   $server_name_clean = $server_name;
@@ -693,7 +700,6 @@ function mediamosa_profile_apache_settings_form() {
     Alias /ticket !mount_point/links
     <Directory !mount_point/links>
       Options FollowSymLinks
-      AllowOverride All
       Order deny,allow
       Allow from All
     </Directory>
@@ -823,14 +829,14 @@ function mediamosa_profile_apache_settings_form() {
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => '<b>' . t("Simple setup, I'm testing") . '</b>',
-      'advanced' => '<b>' . t("Multi server setup, I'm setting up production or development") . '</b>',
+      'simple' => '<b>' . t("Single server / domain setup.") . '</b>',
+      'advanced' => '<b>' . t("Multiple server / domain setup.") . '</b>',
     ),
   );
 
   $form['apache']['local'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Localhost setup (testing)'),
+    '#title' => t('Single server / domain setup.'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'simple'),
@@ -843,7 +849,7 @@ function mediamosa_profile_apache_settings_form() {
 
   $form['apache']['multi'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Multiserver setup (production / development)'),
+    '#title' => t('Multi server/domain setup.'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'advanced'),
@@ -873,50 +879,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
   if (variable_get('apache_setting') == 'simple') {
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/ticket/{TICKET}'
-        ))
-      ->condition('server_type', 'streaming', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/download/{TICKET}'
-        ))
-      ->condition('server_type', 'download', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/still/{TICKET}'
-        ))
-      ->condition('server_type', 'still', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_status' => 'OFF'
-        ))
-      ->condition('server_uri', 'http://job2.mediamosa.local', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name
-        ))
-      ->condition('server_uri', 'http://job1.mediamosa.local', '=')
-      ->execute();
     variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name . '/');
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/mediafile/upload?upload_ticket={TICKET}',
-          'uri_upload_progress' => 'http://' . $server_name . '/mediafile/uploadprogress'
-        ))
-      ->condition('server_type', 'upload', '=')
-      ->execute();
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name . '/');
   }
   else {
@@ -924,30 +887,17 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . '/');
   }
 
-  if (strcasecmp($server_name, 'mediamosa.local')) {
-    // We need to patch server table then.
-    $results = db_select('mediamosa_server', 'ms')
-      ->fields('ms')
-      ->execute();
+  // Get all mediamosa_server nodes nids, and update server_uri.
+  $results = db_select('mediamosa_server', 'ms')
+    ->fields('ms')
+    ->execute();
 
-    // Lets save all entries in an array.
-    $rows = array();
-    foreach ($results as $row) {
-      $rows[] = $row;
+  foreach ($results as $result) {
+    $node = node_load($result->nid);
+    if (variable_get('apache_setting') == 'simple') {
+      $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
     }
-
-    foreach ($rows as $row) {
-      $server_uri = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->server_uri);
-      $uri_upload_progress = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->uri_upload_progress);
-      db_update('mediamosa_server')
-        ->fields(
-            array(
-              'server_uri' => $server_uri,
-              'uri_upload_progress' => $uri_upload_progress,
-            ))
-        ->condition('nid', $row->nid, '=')
-        ->execute();
-    }
+    node_save($node);
   }
 }
 
