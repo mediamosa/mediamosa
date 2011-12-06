@@ -49,8 +49,8 @@ files[] = tests/upgrade/upgrade.translatable.test
 files[] = tests/upgrade/upgrade.upload.test
 files[] = tests/upgrade/upgrade.user.test
 
-; Information added by drupal.org packaging script on 2011-10-26
-version = "7.9"
+; Information added by drupal.org packaging script on 2011-12-05
+version = "7.10"
 project = "drupal"
-datestamp = "1319660730"
+datestamp = "1323125439"
 
