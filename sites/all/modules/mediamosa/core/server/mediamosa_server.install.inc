@@ -75,7 +75,7 @@ function _mediamosa_server_install() {
       'flv', '',
       "<script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
         <a href=\"{TICKET_URI}\"
-            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\" 
+            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
@@ -136,20 +136,20 @@ s1.write('mediaspace');
       'ogg', '',
       "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
 <link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
-  <script type=\"text/javascript\"> 
+  <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
-   </script> 
-  <!-- Begin VideoJS --> 
+   </script>
+  <!-- Begin VideoJS -->
   <div class=\"video-js-box\">
-    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody --> 
-    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\"> 
-      <source src=\"{TICKET_URI}\" type='video/ogg' /> 
-      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. --> 
+    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
+    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\">
+      <source src=\"{TICKET_URI}\" type='video/ogg' />
+      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
     <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
-        <a 
+        <a
             href=\"{TICKET_URI}\"
-            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\" 
+            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
@@ -162,36 +162,36 @@ s1.write('mediaspace');
           });
         </script>
     </div>
-    </video> 
-    <!-- Download links provided for devices that can't play video in the browser. --> 
-    <p class=\"vjs-no-video\"><strong>Download Video:</strong> 
+    </video>
+    <!-- Download links provided for devices that can't play video in the browser. -->
+    <p class=\"vjs-no-video\"><strong>Download Video:</strong>
       <a href=\"{TICKET_URI}\">Ogg</a>,
-      <!-- Support VideoJS by keeping this link. --> 
+      <!-- Support VideoJS by keeping this link. -->
       <a href=\"http://videojs.com\">HTML5 Video Player</a> by VideoJS
-    </p> 
+    </p>
     <br>
-  </div> 
+  </div>
   <!-- End VideoJS -->",
      'VideoJS player; ogg videos', 0, '', '', 'APC', ''),
 
     array(7, 0, 'ON', 'STREAMING', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
-      'matroska;webm', '', 
+      'matroska;webm', '',
       "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
 <link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
-  <script type=\"text/javascript\"> 
+  <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
-   </script> 
-  <!-- Begin VideoJS --> 
+   </script>
+  <!-- Begin VideoJS -->
   <div class=\"video-js-box\">
-    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody --> 
-    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\"> 
+    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
+    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\">
       <source src=\"{TICKET_URI}\" type='video/webm' />
-      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. --> 
+      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
     <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
-        <a 
+        <a
             href=\"{TICKET_URI}\"
-            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\" 
+            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
@@ -204,15 +204,15 @@ s1.write('mediaspace');
           });
         </script>
     </div>
-    </video> 
-    <!-- Download links provided for devices that can't play video in the browser. --> 
-    <p class=\"vjs-no-video\"><strong>Download Video:</strong> 
+    </video>
+    <!-- Download links provided for devices that can't play video in the browser. -->
+    <p class=\"vjs-no-video\"><strong>Download Video:</strong>
       <a href=\"{TICKET_URI}\">WebM</a>,
-      <!-- Support VideoJS by keeping this link. --> 
+      <!-- Support VideoJS by keeping this link. -->
       <a href=\"http://videojs.com\">HTML5 Video Player</a> by VideoJS
-    </p> 
+    </p>
     <br>
-  </div> 
+  </div>
   <!-- End VideoJS -->",
       'VideoJS player; WebM Videos', 0, '', '', 'APC', ''),
 
@@ -221,20 +221,20 @@ s1.write('mediaspace');
       'mov;mp4;m4a;3gp;3g2;mj2:h264', '',
       "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
 <link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
-  <script type=\"text/javascript\"> 
+  <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
-   </script> 
-  <!-- Begin VideoJS --> 
+   </script>
+  <!-- Begin VideoJS -->
   <div class=\"video-js-box\">
-    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody --> 
-    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\"> 
-      <source src=\"{TICKET_URI}\" type='video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"' /> 
-      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. --> 
+    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
+    <video id=\"MediaMosa_video_1\" class=\"video-js\" width=\"{WIDTH}\" height=\"{HEIGHT}\" controls=\"controls\" preload=\"auto\" poster=\"{STILL_URI}\">
+      <source src=\"{TICKET_URI}\" type='video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"' />
+      <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
     <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
-        <a 
+        <a
             href=\"{TICKET_URI}\"
-            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\" 
+            style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
@@ -247,20 +247,20 @@ s1.write('mediaspace');
           });
         </script>
     </div>
-    </video> 
-    <!-- Download links provided for devices that can't play video in the browser. --> 
-    <p class=\"vjs-no-video\"><strong>Download Video:</strong> 
+    </video>
+    <!-- Download links provided for devices that can't play video in the browser. -->
+    <p class=\"vjs-no-video\"><strong>Download Video:</strong>
       <a href=\"{TICKET_URI}\">MP4</a>,
-      <!-- Support VideoJS by keeping this link. --> 
+      <!-- Support VideoJS by keeping this link. -->
       <a href=\"http://videojs.com\">HTML5 Video Player</a> by VideoJS
-    </p> 
+    </p>
     <br>
-  </div> 
+  </div>
   <!-- End VideoJS -->",
       'VideoJS player; mp4/h264 videos', 0, '', '', 'APC', ''),
 
     array(11, 2, 'ON', 'DOWNLOAD', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
-    array(12, 0, 'ON', 'STILL', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'still/{TICKET}', '', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
+    array(12, 0, 'ON', 'STILL', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
     array(13, 0, 'ON', 'JOB_PROCESSOR', 'http://job1.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
     array(14, 0, 'OFF', 'JOB_PROCESSOR', 'http://job2.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
     array(15, 0, 'ON', 'UPLOAD', 'http://upload.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'mediafile/upload?upload_ticket={TICKET}', '', '', '', 'Default upload server', 0, '', mediamosa_server_db::SERVER_PATH_BASE_URI . 'uploadprogress?id={PROGRESS_ID}', 'APC', mediamosa_server_db::SERVER_PATH_BASE_URI . 'progress?X-Progress-ID={PROGRESS_ID}'),

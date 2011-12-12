@@ -122,8 +122,9 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->toEga_2();
 
     // Get the stills.
-    $stills = $this->getAssetStill($asset_id);
-    $this->assertTrue(count($stills) == 1, 'Found still.');
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
 
     $this->toEga_1();
 

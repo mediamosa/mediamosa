@@ -81,7 +81,7 @@ function mediamosa_profile_install_tasks() {
     'mediamosa_profile_domain_usage_form' => array(
       'display_name' => st('Your domain usage'),
       'type' => 'form',
-      'run' => variable_get('apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+      'run' => variable_get('mediamosa_apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
     'mediamosa_profile_migration_form' => array(
       'display_name' => st('Migration of your v1.7 database'),
@@ -589,7 +589,7 @@ function mediamosa_profile_cron_settings_form() {
 
   // Get the server name.
   $server_name = _mediamosa_profile_server_name();
-  if (variable_get('apache_setting') == 'simple') {
+  if (variable_get('mediamosa_apache_setting') == 'simple') {
     $server_name = 'localhost';
   }
 
@@ -652,6 +652,12 @@ function mediamosa_profile_apache_settings_form() {
 
     # Media
     Alias !rel_directorymedia !mount_point/media
+    <Directory !mount_point/media>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
 
     <IfModule mod_php5.c>
         php_admin_value post_max_size 2008M
@@ -772,6 +778,12 @@ function mediamosa_profile_apache_settings_form() {
 
     # Media
     Alias /media !mount_point/media
+    <Directory !mount_point/media>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
 
     ErrorLog /var/log/apache2/download.!server_name_clean_error.log
     CustomLog /var/log/apache2/download.!server_name_clean_access.log combined
@@ -876,9 +888,9 @@ function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
 
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   $server_name = _mediamosa_profile_server_name();
-  variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
+  variable_set('mediamosa_apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
-  if (variable_get('apache_setting') == 'simple') {
+  if (variable_get('mediamosa_apache_setting') == 'simple') {
     variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name . '/');
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name . '/');
   }
@@ -894,7 +906,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
 
   foreach ($results as $result) {
     $node = node_load($result->nid);
-    if (variable_get('apache_setting') == 'simple') {
+    if (variable_get('mediamosa_apache_setting') == 'simple') {
       $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
     }
     node_save($node);

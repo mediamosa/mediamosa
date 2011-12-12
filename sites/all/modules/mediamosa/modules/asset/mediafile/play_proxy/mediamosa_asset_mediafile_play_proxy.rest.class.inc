@@ -440,13 +440,27 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $result = $query->execute();
 
         foreach ($result as $t_stills) {
+          // Enrich the t_stills with the still parameters.
           if ($this->metadata_values($t_stills, $width, $height, $format, $a_orders)) {
+
+            // Get file ext.
+            $file_ext = mediamosa_asset_mediafile::get_file_extension($t_stills['still_id']);
+
+            // Generate ticket_id.
             $ticket_still = mediamosa_db::uuid($app_id);
 
             // make a play or download symlink.
             if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
               // Generate ticket or perm link?
-              $ticket_still = mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+              if (mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin)) {
+                $ticket_still = $t_stills['still_id'] . '.' . $file_ext;
+              }
+              else {
+                $ticket_still = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+              }
+            }
+            else {
+              $ticket_still .= '.' . $file_ext;
             }
 
             $t_stills['ticket'] = $ticket_still;

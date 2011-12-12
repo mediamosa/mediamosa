@@ -368,7 +368,9 @@ class mediamosa_configuration_storage {
    *   The contents for the .htaccess file for [mount_pount]/media/.htaccess.
    */
   static public function media_get_htaccess_contents() {
-    return file_get_contents(drupal_get_path('module', 'mediamosa') . '/lib/misc/media_htaccess_contents.txt');
+    $subdir = trim(url(), '/');
+    $ht_access = file_get_contents(drupal_get_path('module', 'mediamosa') . '/lib/misc/media_htaccess_contents.txt');
+    return strtr($ht_access, array('{SUBDIR}' => $subdir == '' ? '' : '/' . $subdir));
   }
 
   /**

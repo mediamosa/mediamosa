@@ -303,7 +303,8 @@ function _mediamosa_maintenance_status_configuration_generate() {
     );
 
     if (!$got_200 || !$is_webserver) {
-      $results['server_download_' . $key]['description'] = t("Your webserver is missing the alias 'media' to serve files on your server configuration. Please add an alias rule for '/media' uri to '@path' under your server uri: @server_uri<br />Apache example;<br /><code>Alias /media @path</code>", array('@path' => rtrim(mediamosa_configuration_storage::media_get_path(), '/'), '@server_uri' => $server[mediamosa_server_db::SERVER_URI]));
+      $subdir = trim(url(), '/');
+      $results['server_download_' . $key]['description'] = t("Your webserver is missing the alias 'media' to serve files on your server configuration. Please add an alias rule for '@subdir/media' uri to '@path' under your server uri: @server_uri<br />Apache example;<br /><code>Alias @subdir/media @path</code>", array('@path' => rtrim(mediamosa_configuration_storage::media_get_path(), '/'), '@server_uri' => $server[mediamosa_server_db::SERVER_URI], '@subdir' => $subdir == '' ? '' : '/' . $subdir));
     }
   }
 
