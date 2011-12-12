@@ -503,6 +503,8 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   // /media is replacing /still_links.
   _mediamosa_profile_mkdir($values['current_mount_point'], '/media');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/media/ticket');
+
+  mediamosa_configuration_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_configuration_storage::media_get_htaccess_contents());
 }
 
 /**

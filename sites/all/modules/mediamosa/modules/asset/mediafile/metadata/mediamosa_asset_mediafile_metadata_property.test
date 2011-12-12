@@ -82,7 +82,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     );
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id, $allowed_values),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values, TRUE)))
     );
   }
 
@@ -151,7 +151,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     // Check the metadatas for the first mediafile.
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
 
@@ -171,7 +171,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     // Check the metadatas for this mediafile.
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
 
@@ -182,7 +182,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     // Check the metadatas for this mediafile.
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
 
@@ -193,14 +193,14 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     // Check the metadatas for this mediafile.
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
 
     // Check the metadatas for the second mediafile.
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_2, $allowed_values_2),
-      t("Metadata 2 table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_2, TRUE)))
+      t("Metadata 2 table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_2, TRUE)))
     );
 
 
@@ -234,7 +234,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     );
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values after multiple creation (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values after multiple creation (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
     // Check with an invalid metadata.
@@ -242,7 +242,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     //$this->createMediafileMetadata($mediafile_id_1, mediamosa_db::uuid(rand(1, 1000)), mediamosa_db::uuid(rand(1, 1000)), mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
     // Check with an invalid mediafile.
@@ -254,7 +254,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     }
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values after creating metadta for invalid mediafile (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values after creating metadta for invalid mediafile (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
 
     // Check with an invalid value (int type with char value, converted to 0).
@@ -266,19 +266,7 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     );
     $this->assertTrue(
       $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values after creating integer with char value (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
-    );
-
-    // Check with an invalid type.
-    // This drops an exception. This is the good behaviour.
-    try {
-      $this->createMediafileMetadata($mediafile_id_1, mediamosa_db::uuid(rand(1, 1000)), mediamosa_db::uuid(rand(1, 1000)), 'not_existing_type');
-    }
-    catch (mediamosa_exception_program_error $e) {
-    }
-    $this->assertTrue(
-      $this->checkMediafileMetadata($mediafile_id_1, $allowed_values_1),
-      t("Metadata table has the good values after creating property with invalid type (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
+      t("Metadata table has the correct values after creating integer with char value (@allowed_values)", array('@allowed_values' => print_r($allowed_values_1, TRUE)))
     );
   }
 }
