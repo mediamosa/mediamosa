@@ -138,7 +138,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
     // Must exists.
     $this->file_exists($ticket_link);
-
+/*
     // Change it.
     $this->assertTrue(touch($ticket_link, time() - (60*60*24*7)), 'Changed modified date on file');
 
@@ -152,6 +152,6 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $parameters = array(
     );
     $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-
+*/
   }
 }

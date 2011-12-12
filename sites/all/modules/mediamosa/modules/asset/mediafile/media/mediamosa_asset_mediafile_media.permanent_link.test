@@ -234,8 +234,6 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
       t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-
-
     //
     // Now same test but on asset/$asset_id/play.
     //
@@ -247,7 +245,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket'], 'permanent still check');
+    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']), 'permanent still check');
 
     // Add ACL rule.
     $parameters = array(
@@ -285,7 +283,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket'], 'permanent still check');
+    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']), 'permanent still check');
 
     // Not make asset unappropriate
     $parameters = array(
@@ -338,7 +336,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket']);
+    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']));
 
 
     //
