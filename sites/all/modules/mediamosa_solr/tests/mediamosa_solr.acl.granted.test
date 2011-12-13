@@ -34,10 +34,10 @@ class MediaMosaSolrTestCaseAclGrantedJobTest extends MediaMosaTestCaseAclGranted
 
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
-
     $info = parent::getInfo();
     $info['name'] = 'SOLR - ' . $info['name'];
     $info['group'] = 'MediaMosa Solr';
+    $info['automatic_run_disabled'] = module_exists('mediamosa_solr') ? FALSE : TRUE;
 
     return $info;
   }

@@ -366,14 +366,14 @@ class mediamosa_rest {
     $rest_call = $this->get_uri_definition($uri, $method);
 
     // If FALSE, then the URI didn't match with a REST call.
-    if ($rest_call == FALSE) {
-      if (mediamosa::is_admin_enabled()) {
+    if (!$rest_call) {
+      if (mediamosa::is_admin_enabled() && mediamosa::in_simpletest_sandbox_enable_app()) {
         return FALSE;
       }
 
       // Check the allowed paths.
-      foreach (module_implements('mediamosa_allowed_path') as $module) {
-        $allowed_path = module_invoke($module, 'mediamosa_allowed_path');
+      foreach (module_implements('mediamosa_pass_call_drupal') as $module) {
+        $allowed_path = module_invoke($module, 'mediamosa_pass_call_drupal');
         if ($allowed_path) {
           return FALSE;
         }
@@ -411,6 +411,7 @@ class mediamosa_rest {
     $mediamosa = mediamosa::get();
 
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      mediamosa_watchdog::log_export($rest_call);
       mediamosa_watchdog::log_export(arg());
       throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
     }

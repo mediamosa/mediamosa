@@ -87,24 +87,24 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-          case mediamosa_server_db::SERVER_TYPE_UPLOAD:
             $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
 
             $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url . 'version')));
             $response = mediamosa_http::drupal_http_request($url . 'version', array('method' => 'GET'));
             break;
 
-            /** 
-             * Does not work on single domain, we need a different test.
-             *
-             * $server_url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
-             * $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $server_url)));
-             *
-             * // We know it will fail, but we dont care, we just want to know the version.
-             * $response = mediamosa_http::drupal_http_request($server_url, array('method' => 'GET'));
-             * $expecting_codes = array(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, mediamosa_error::ERRORCODE_ACCESS_DENIED);
-             * break;
-             */
+          case mediamosa_server_db::SERVER_TYPE_UPLOAD:
+
+            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $url)));
+
+            // Rebuild.
+            $url = strtr($enabled_server[mediamosa_server_db::SERVER_PATH], array('{base_uri}' => $url, '{TICKET}' => 'foo'));
+
+            // We know it will fail, but we dont care, we just want to know the version.
+            $response = mediamosa_http::drupal_http_request($url, array('method' => 'GET'));
+            $expecting_codes = array(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, mediamosa_error::ERRORCODE_ACCESS_DENIED);
+            break;
 
           case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
           case mediamosa_server_db::SERVER_TYPE_STILL:
