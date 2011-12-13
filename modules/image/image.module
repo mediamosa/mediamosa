@@ -185,6 +185,8 @@ function image_theme() {
       'variables' => array(
         'style_name' => NULL,
         'path' => NULL,
+        'width' => NULL,
+        'height' => NULL,
         'alt' => '',
         'title' => NULL,
         'attributes' => array(),
@@ -410,6 +412,58 @@ function image_image_style_save($style) {
  */
 function image_image_style_delete($style) {
   image_image_style_save($style);
+}
+
+/**
+ * Implements hook_field_delete_field().
+ */
+function image_field_delete_field($field) {
+  if ($field['type'] != 'image') {
+    return;
+  }
+
+  // The value of a managed_file element can be an array if #extended == TRUE.
+  $fid = (is_array($field['settings']['default_image']) ? $field['settings']['default_image']['fid'] : $field['settings']['default_image']);
+  if ($fid && ($file = file_load($fid))) {
+    file_usage_delete($file, 'image', 'default_image', $field['id']);
+  }
+}
+
+/**
+ * Implements hook_field_update_field().
+ */
+function image_field_update_field($field, $prior_field, $has_data) {
+  if ($field['type'] != 'image') {
+    return;
+  }
+
+  // The value of a managed_file element can be an array if #extended == TRUE.
+  $fid_new = (is_array($field['settings']['default_image']) ? $field['settings']['default_image']['fid'] : $field['settings']['default_image']);
+  $fid_old = (is_array($prior_field['settings']['default_image']) ? $prior_field['settings']['default_image']['fid'] : $prior_field['settings']['default_image']);
+
+  $file_new = $fid_new ? file_load($fid_new) : FALSE;
+
+  if ($fid_new != $fid_old) {
+
+    // Is there a new file?
+    if ($file_new) {
+      $file_new->status = FILE_STATUS_PERMANENT;
+      file_save($file_new);
+      file_usage_add($file_new, 'image', 'default_image', $field['id']);
+    }
+
+    // Is there an old file?
+    if ($fid_old && ($file_old = file_load($fid_old))) {
+      file_usage_delete($file_old, 'image', 'default_image', $field['id']);
+    }
+  }
+
+  // If the upload destination changed, then move the file.
+  if ($file_new && (file_uri_scheme($file_new->uri) != $field['settings']['uri_scheme'])) {
+    $directory = $field['settings']['uri_scheme'] . '://default_images/';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+    file_move($file_new, $directory . $file_new->filename);
+  }
 }
 
 /**
@@ -760,6 +814,39 @@ function image_style_create_derivative($style, $source, $destination) {
 }
 
 /**
+ * Determines the dimensions of the styled image.
+ *
+ * Applies all of an image style's effects to $dimensions.
+ *
+ * @param $style_name
+ *   The name of the style to be applied.
+ * @param $dimensions
+ *   Dimensions to be modified - an array with components width and height, in
+ *   pixels.
+ */
+function image_style_transform_dimensions($style_name, array &$dimensions) {
+  module_load_include('inc', 'image', 'image.effects');
+  $style = image_style_load($style_name);
+
+  if (!is_array($style)) {
+    return;
+  }
+
+  foreach ($style['effects'] as $effect) {
+    if (isset($effect['dimensions passthrough'])) {
+      continue;
+    }
+
+    if (isset($effect['dimensions callback'])) {
+      $effect['dimensions callback']($dimensions, $effect['data']);
+    }
+    else {
+      $dimensions['width'] = $dimensions['height'] = NULL;
+    }
+  }
+}
+
+/**
  * Flush cached media for a style.
  *
  * @param $style
@@ -1085,6 +1172,8 @@ function image_effect_apply($image, $effect) {
  *   - path: The path of the image file relative to the Drupal files directory.
  *     This function does not work with images outside the files directory nor
  *     with remotely hosted images.
+ *   - width: The width of the source image (if known).
+ *   - height: The height of the source image (if known).
  *   - alt: The alternative text for text-based browsers.
  *   - title: The title text is displayed when the image is hovered in some
  *     popular browsers.
@@ -1093,6 +1182,18 @@ function image_effect_apply($image, $effect) {
  * @ingroup themeable
  */
 function theme_image_style($variables) {
+  // Determine the dimensions of the styled image.
+  $dimensions = array(
+    'width' => $variables['width'],
+    'height' => $variables['height'],
+  );
+
+  image_style_transform_dimensions($variables['style_name'], $dimensions);
+
+  $variables['width'] = $dimensions['width'];
+  $variables['height'] = $dimensions['height'];
+
+  // Determine the url for the styled image.
   $variables['path'] = image_style_url($variables['style_name'], $variables['path']);
   return theme('image', $variables);
 }

@@ -17,7 +17,7 @@ function field_ui_help($path, $arg) {
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Planning fields') . '</dt>';
-      $output .= '<dd>' . t('There are several decisions you will need to make before definining a field for content, comments, etc.:') . '<dl>';
+      $output .= '<dd>' . t('There are several decisions you will need to make before defining a field for content, comments, etc.:') . '<dl>';
       $output .= '<dt>' . t('What the field will be called') . '</dt>';
       $output .= '<dd>' . t('A field has a <em>label</em> (the name displayed in the user interface) and a <em>machine name</em> (the name used internally). The label can be changed after you create the field, if needed, but the machine name cannot be changed after you have created the field.') . '</li>';
       $output .= '<dt>' . t('What type of data the field will store') . '</dt>';
@@ -45,6 +45,17 @@ function field_ui_help($path, $arg) {
     case 'admin/reports/fields':
       return '<p>' . t('This list shows all fields currently in use for easy reference.') . '</p>';
   }
+}
+
+/**
+ * Implements hook_field_attach_rename_bundle().
+ */
+function field_ui_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
+  // The Field UI relies on entity_get_info() to build menu items for entity
+  // field administration pages. Clear the entity info cache and ensure that
+  // the menu is rebuilt.
+  entity_info_cache_clear();
+  menu_rebuild();
 }
 
 /**
@@ -358,7 +369,7 @@ function field_ui_form_node_type_form_alter(&$form, $form_state) {
  * Redirect to manage fields form.
  */
 function field_ui_form_node_type_form_submit($form, &$form_state) {
-  if ($form_state['clicked_button']['#parents'][0] === 'save_continue') {
+  if ($form_state['triggering_element']['#parents'][0] === 'save_continue') {
     $form_state['redirect'] = _field_ui_bundle_admin_path('node', $form_state['values']['type']) .'/fields';
   }
 }

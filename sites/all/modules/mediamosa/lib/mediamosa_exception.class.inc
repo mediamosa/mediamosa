@@ -45,7 +45,7 @@ class mediamosa_exception extends Exception {
   public function __construct($errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
     $msg = empty($msg) ? sprintf("MediaMosa exception was thrown: %d", $errorcode) : $msg;
 
-    if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
+    if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL || mediamosa_debug::is_debug()) {
       $log_serverity = $severity >= MEDIAMOSA_EXCEPTION_SEVERITY_HIGH ? WATCHDOG_CRITICAL : WATCHDOG_NOTICE;
 
       $levels = watchdog_severity_levels();
@@ -136,9 +136,9 @@ class mediamosa_exception_error_unexpected_error extends mediamosa_exception_pro
 }
 
 class mediamosa_exception_program_error extends mediamosa_exception {
-  public function __construct($msg, $tags = array()) {
-    $msg = strtr($msg, $tags);
-    parent::__construct(mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, $msg, MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+  public function __construct($message, $tags = array()) {
+    $message = strtr($message, $tags);
+    parent::__construct(mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, $message, MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
   }
 }
 
@@ -258,6 +258,13 @@ class mediamosa_exception_error_mediafile_not_found extends mediamosa_exception_
   }
 }
 
+class mediamosa_exception_error_invalid_ticket extends mediamosa_exception_error_debug {
+  public function __construct($tags = array()) {
+    assert(isset($tags['@ticket_id']));
+    parent::__construct(mediamosa_error::ERRORCODE_INVALID_TICKET, $tags);
+  }
+}
+
 class mediamosa_exception_error_userman_invalid_user extends mediamosa_exception_error_debug {
   public function __construct($tags = array()) {
     assert(isset($tags['@user_id']));
@@ -334,6 +341,13 @@ class mediamosa_exception_error_masterslave_disallowed extends mediamosa_excepti
   }
 }
 
+// Bad request.
+class mediamosa_exception_error_400 extends mediamosa_exception_error_debug {
+  public function __construct() {
+    parent::__construct(mediamosa_error::HTTP_BAD_REQUEST);
+  }
+}
+
 // Forbidden
 class mediamosa_exception_error_403 extends mediamosa_exception_error_debug {
   public function __construct() {
@@ -345,6 +359,15 @@ class mediamosa_exception_error_403 extends mediamosa_exception_error_debug {
 class mediamosa_exception_error_404 extends mediamosa_exception_error_debug {
   public function __construct() {
     parent::__construct(mediamosa_error::HTTP_NOT_FOUND);
+  }
+}
+
+/**
+ * Thrown when error is fatal or can not be handled.
+ */
+class mediamosa_exception_error_500 extends mediamosa_exception_error_debug {
+  public function __construct() {
+    parent::__construct(mediamosa_error::HTTP_INTERNAL_SERVER_ERROR);
   }
 }
 

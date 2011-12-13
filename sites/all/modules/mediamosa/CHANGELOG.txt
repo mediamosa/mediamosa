@@ -1,3 +1,18 @@
+MediaMosa 3.1.0-rc (build 1805)
+-------------------------------
+- Fixed several unittests.
+- introduction of media/.htaccess
+- Upgrade to Drupal 7.10.
+- Refactured server definitions (with support for VideoJS).
+- Removed old still unit tests that are replaced by new unit tests.
+- Major rewrite permanent stills.
+- Removed coder and devel module.
+- Regular file names have mode 644.
+- Fix for watermark unit test; Rest call did not match correctly with uri in Simpletest.
+- Ticket #429: Rollback. Turned off new version 3 output, REST call return format is now compatible with version 2.
+- Fix for Timezone unittest conflict in simple setup.
+- Ticket #500, Commented out unit tests code.
+- Added a mediamosa_metadata_info hook, to allow more metadataformats.
 
 MediaMosa 3.0.7 (build 1790)
 ----------------------------

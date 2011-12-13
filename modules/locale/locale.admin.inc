@@ -80,9 +80,19 @@ function theme_locale_languages_overview_form($variables) {
       if ($key == $default->language) {
         $form['enabled'][$key]['#attributes']['disabled'] = 'disabled';
       }
+
+      // Add invisible labels for the checkboxes and radio buttons in the table
+      // for accessibility. These changes are only required and valid when the
+      // form is themed as a table, so it would be wrong to perform them in the
+      // form constructor.
+      $title = drupal_render($form['name'][$key]);
+      $form['enabled'][$key]['#title'] = t('Enable !title', array('!title' => $title));
+      $form['enabled'][$key]['#title_display'] = 'invisible';
+      $form['site_default'][$key]['#title'] = t('Set !title as default', array('!title' => $title));
+      $form['site_default'][$key]['#title_display'] = 'invisible';
       $rows[] = array(
         'data' => array(
-          '<strong>' . drupal_render($form['name'][$key]) . '</strong>',
+          '<strong>' . $title . '</strong>',
           drupal_render($form['native'][$key]),
           check_plain($key),
           drupal_render($form['direction'][$key]),
@@ -297,7 +307,7 @@ function _locale_languages_common_controls(&$form, $language = NULL) {
     '#title' => t('Language domain'),
     '#maxlength' => 128,
     '#default_value' => @$language->domain,
-    '#description' => t('URL <strong>including protocol</strong> to use for this language, if your <em>Detection and selection</em> settings use URL domains. For the default language, this value may be left blank. <strong>Modifying this value may break existing URLs. Use with caution in a production environment.</strong> Example: Specifying "http://example.de" or "http://de.example.com" as language domains for German results in URLs like "http://example.de/contact" and "http://de.example.com/contact", respectively.'),
+    '#description' => t('The domain name to use for this language if URL domains are used for <em>Detection and selection</em>. Leave blank for the default language. <strong>Changing this value may break existing URLs.</strong> Example: Specifying "de.example.com" as language domain for German will result in an URL like "http://de.example.com/contact".'),
   );
   $form['direction'] = array('#type' => 'radios',
     '#title' => t('Direction'),

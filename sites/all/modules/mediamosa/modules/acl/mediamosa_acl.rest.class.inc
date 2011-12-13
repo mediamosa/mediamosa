@@ -36,9 +36,7 @@
  */
 function fix_vars_acl_2_aut($row) {
   // Is v3 output?
-  $is_v3_output = mediamosa::is_v3_output();
-
-  if ($is_v3_output) {
+  if (mediamosa::is_v3_output()) {
     return $row;
   }
 

@@ -327,15 +327,12 @@ class mediamosa_asset_mediafile {
           }
 
           if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
-            $ticket = $row[mediamosa_asset_mediafile_db::ID];
+            $ticket = $row[mediamosa_asset_mediafile_db::ID] . '.' . mediamosa_asset_mediafile::get_file_extension($row[mediamosa_asset_mediafile_db::ID]);
           }
           else {
-            // Create unique ID.
-            $ticket = mediamosa_db::uuid($app_id);
-
             // Create ticket.
-            mediamosa_ticket::create_play_proxy(
-              $ticket,
+            $ticket_id = mediamosa_ticket::process_play_ticket(
+              mediamosa_db::uuid($app_id),
               NULL,
               mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
               $app_id,
@@ -343,7 +340,7 @@ class mediamosa_asset_mediafile {
               $row[mediamosa_asset_mediafile_db::ID]
             );
 
-            $ticket = mediamosa_ticket::TICKET_PATH . $ticket;
+            $ticket = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $ticket_id . '.' . mediamosa_asset_mediafile::get_file_extension($row[mediamosa_asset_mediafile_db::ID]);
           }
 
           // Create response.
@@ -844,5 +841,20 @@ class mediamosa_asset_mediafile {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Return the file extension for output. Does not require to be the real
+   * extension of the filename, but should always reflect the file type.
+   *
+   * @param $mediafile_id
+   *   The mediafile ID.
+   *
+   * @return
+   *   The file extension (e.g. 'jpeg') without the dot.
+   */
+  static public function get_file_extension($mediafile_id) {
+    // Get mime-type, and match it to a file-ext.
+    return mediamosa_mimetype::mimetype2extension(mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE));
   }
 }

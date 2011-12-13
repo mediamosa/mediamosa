@@ -852,14 +852,14 @@ class mediamosa_acl {
 
           // If its a still then remove the possible link to still.
           if (mediamosa_asset_mediafile::is_still($object)) {
-            mediamosa_asset_mediafile_still::remove_permanent_link($acl_object_id);
+            mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $acl_object_id);
           }
           else {
             // Remove all perm. still links to stills.
             $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
 
             foreach ($still_ids as $still_id) {
-              mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+              mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
             }
           }
 
@@ -896,7 +896,7 @@ class mediamosa_acl {
           // Remove the permanent still links.
           $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($acl_object_id);
           foreach ($still_ids as $still_id) {
-            mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+            mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
           }
 
           // Reindex the asset.

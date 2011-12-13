@@ -134,7 +134,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
    * @param boolean $is_app_admin
    * @param $play_call
    *
-   * @return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket)
+   * @return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id)
    */
   private function get_asset_mediafile_details($mediafile_id, $user_id = NULL, $group_id = NULL, $acl_domain = NULL, $acl_realm = NULL, $is_app_admin = FALSE, $play_call = TRUE) {
     $app_ids = $this->get_param_value_app();
@@ -165,10 +165,11 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
     $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
 
-    // Create ticket ID.
-    $ticket = mediamosa_db::uuid($app_id);
+    // Create random ticket ID.
+    $ticket_id = mediamosa_db::uuid($app_id);
 
-    return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket);
+    // Do not change order.
+    return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -229,7 +230,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
 
       $filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile);
       if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
-        $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
+        $ticket = mediamosa_ticket::process_play_ticket($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
 
         $response = mediamosa_asset_mediafile_play_proxy::create_response(
           $response_type,
@@ -272,16 +273,24 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
       $mediafile_id = $still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
 
-      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
+      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
+
+      // Get the metadata, need it for extension.
+      $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       // Generate ticket or perm link?
-      $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin) ? $still_id : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
+      if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
+        $ticket_str = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
+      }
+      else {
+        $ticket_str = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_id, $mediafile, $response_type, $app_id, $user_id, $still_id);
+      }
 
       // Create the response.
       $response = mediamosa_asset_mediafile_play_proxy::create_response(
         $response_type,
         $app_id,
-        $ticket,
+        $ticket_str,
         $asset_id,
         TRUE,
         ($maxwidth ? $maxwidth : 0),

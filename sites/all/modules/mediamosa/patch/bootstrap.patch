@@ -1,8 +1,6 @@
-Index: bootstrap.inc
-===================================================================
 --- a/includes/bootstrap.inc
 +++ b/includes/bootstrap.inc
-@@ -598,20 +598,24 @@ function drupal_settings_initialize() {
+@@ -768,20 +768,27 @@ function drupal_settings_initialize() {
      // in drupal_settings_initialize().
      if (!empty($_SERVER['HTTP_HOST'])) {
        $cookie_domain = $_SERVER['HTTP_HOST'];
@@ -10,11 +8,11 @@ Index: bootstrap.inc
 -      $cookie_domain = ltrim($cookie_domain, '.');
 -      if (strpos($cookie_domain, 'www.') === 0) {
 -        $cookie_domain = substr($cookie_domain, 4);
--      }
+       }
 -      $cookie_domain = explode(':', $cookie_domain);
 -      $cookie_domain = '.' . $cookie_domain[0];
      }
-   }
+-  }
 +
 +  // Strip leading periods, and port numbers from cookie domain.
 +  $cookie_domain = ltrim($cookie_domain, '.');
@@ -24,19 +22,20 @@ Index: bootstrap.inc
    // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
 +  // todo: how about co.uk type of domains?
    if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
--    ini_set('session.cookie_domain', $cookie_domain);
--  }
 +    if (count(explode('.', $cookie_domain)) > 3) {
 +      // remove first part before the dot and replace by a dot only
 +      $cookie_domain = explode('.', substr($cookie_domain, 1), 2);
 +      array_shift($cookie_domain);
 +      $cookie_domain = '.' . implode($cookie_domain);
-+   }
++    }
++
+     ini_set('session.cookie_domain', $cookie_domain);
+   }
 +
    // To prevent session cookies from being hijacked, a user can configure the
    // SSL version of their website to only transfer session cookies via SSL by
    // using PHP's session.cookie_secure setting. The browser will then use two
-@@ -2184,6 +2188,17 @@ function drupal_valid_test_ua() {
+@@ -2374,6 +2381,17 @@ function drupal_valid_test_ua() {
  
    if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
      list(, $prefix, $time, $salt, $hmac) = $matches;

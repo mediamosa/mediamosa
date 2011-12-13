@@ -143,6 +143,21 @@
  * - #ajax['event']: The JavaScript event to respond to. This is normally
  *   selected automatically for the type of form widget being used, and
  *   is only needed if you need to override the default behavior.
+ * - #ajax['prevent']: A JavaScript event to prevent when 'event' is triggered.
+ *   Defaults to 'click' for #ajax on #type 'submit', 'button', and
+ *   'image_button'. Multiple events may be specified separated by spaces.
+ *   For example, when binding #ajax behaviors to form buttons, pressing the
+ *   ENTER key within a textfield triggers the 'click' event of the form's first
+ *   submit button. Triggering Ajax in this situation leads to problems, like
+ *   breaking autocomplete textfields. Because of that, Ajax behaviors are bound
+ *   to the 'mousedown' event on form buttons by default. However, binding to
+ *   'mousedown' rather than 'click' means that it is possible to trigger a
+ *   click by pressing the mouse, holding the mouse button down until the Ajax
+ *   request is complete and the button is re-enabled, and then releasing the
+ *   mouse button. For this case, 'prevent' can be set to 'click', so an
+ *   additional event handler is bound to prevent such a click from triggering a
+ *   non-Ajax form submission. This also prevents a textfield's ENTER press
+ *   triggering a button's non-Ajax form submission behavior.
  * - #ajax['method']: The jQuery method to use to place the new HTML.
  *   Defaults to 'replaceWith'. May be: 'replaceWith', 'append', 'prepend',
  *   'before', 'after', or 'html'. See the
@@ -247,19 +262,13 @@ function ajax_render($commands = array()) {
     }
   }
 
-  // Settings are handled separately, later in this function, so that changes to
-  // the ajaxPageState setting that occur during drupal_get_css() and
-  // drupal_get_js() get included, and because the jQuery.extend() code produced
-  // by drupal_get_js() for adding settings isn't appropriate during an Ajax
-  // response, because it does not pass TRUE for the "deep" parameter, and
-  // therefore, can clobber existing settings on the page.
+  // Render the HTML to load these files, and add AJAX commands to insert this
+  // HTML in the page. We pass TRUE as the $skip_alter argument to prevent the
+  // data from being altered again, as we already altered it above. Settings are
+  // handled separately, afterwards.
   if (isset($items['js']['settings'])) {
     unset($items['js']['settings']);
   }
-
-  // Render the HTML to load these files, and add Ajax commands to insert this
-  // HTML in the page. We pass TRUE as the $skip_alter argument to prevent the
-  // data from being altered again, as we already altered it above.
   $styles = drupal_get_css($items['css'], TRUE);
   $scripts_footer = drupal_get_js('footer', $items['js'], TRUE);
   $scripts_header = drupal_get_js('header', $items['js'], TRUE);
@@ -278,11 +287,10 @@ function ajax_render($commands = array()) {
     $commands = array_merge($extra_commands, $commands);
   }
 
+  // Now add a command to merge changes and additions to Drupal.settings.
   $scripts = drupal_add_js();
   if (!empty($scripts['settings'])) {
     $settings = $scripts['settings'];
-    // Automatically extract any settings added via drupal_add_js() and make
-    // them the first command.
     array_unshift($commands, ajax_command_settings(call_user_func_array('array_merge_recursive', $settings['data']), TRUE));
   }
 
@@ -591,6 +599,7 @@ function ajax_process_form($element, &$form_state) {
  *   An associative array containing the properties of the element.
  *   Properties used:
  *   - #ajax['event']
+ *   - #ajax['prevent']
  *   - #ajax['path']
  *   - #ajax['options']
  *   - #ajax['wrapper']
@@ -619,13 +628,26 @@ function ajax_pre_render_element($element) {
       case 'submit':
       case 'button':
       case 'image_button':
-        // Use the mousedown instead of the click event because form
-        // submission via pressing the enter key triggers a click event on
-        // submit inputs, inappropriately triggering Ajax behaviors.
+        // Pressing the ENTER key within a textfield triggers the click event of
+        // the form's first submit button. Triggering Ajax in this situation
+        // leads to problems, like breaking autocomplete textfields, so we bind
+        // to mousedown instead of click.
+        // @see http://drupal.org/node/216059
         $element['#ajax']['event'] = 'mousedown';
-        // Attach an additional event handler so that Ajax behaviors
-        // can be triggered still via keyboard input.
+        // Retain keyboard accessibility by setting 'keypress'. This causes
+        // ajax.js to trigger 'event' when SPACE or ENTER are pressed while the
+        // button has focus.
         $element['#ajax']['keypress'] = TRUE;
+        // Binding to mousedown rather than click means that it is possible to
+        // trigger a click by pressing the mouse, holding the mouse button down
+        // until the Ajax request is complete and the button is re-enabled, and
+        // then releasing the mouse button. Set 'prevent' so that ajax.js binds
+        // an additional handler to prevent such a click from triggering a
+        // non-Ajax form submission. This also prevents a textfield's ENTER
+        // press triggering this button's non-Ajax form submission behavior.
+        if (!isset($element['#ajax']['prevent'])) {
+          $element['#ajax']['prevent'] = 'click';
+        }
         break;
 
       case 'password':

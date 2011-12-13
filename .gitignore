@@ -7,3 +7,7 @@ sites/*/private
 
 # ignore dot files. Will not affected .htaccess, its already added.
 .*
+
+# ignore coder and devel module.
+sites/all/modules/devel
+sites/all/modules/coder

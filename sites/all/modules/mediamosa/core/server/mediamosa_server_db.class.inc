@@ -67,11 +67,11 @@ class mediamosa_server_db {
   const VERSION = 'version';
 
   // Server types
-  const SERVER_TYPE_DOWNLOAD = 'download';
-  const SERVER_TYPE_STILL = 'still';
-  const SERVER_TYPE_STREAMING = 'streaming';
-  const SERVER_TYPE_JOB_PROCESSOR = 'job_processor';
-  const SERVER_TYPE_UPLOAD = 'upload';
+  const SERVER_TYPE_DOWNLOAD = 'DOWNLOAD';
+  const SERVER_TYPE_STILL = 'STILL';
+  const SERVER_TYPE_STREAMING = 'STREAMING';
+  const SERVER_TYPE_JOB_PROCESSOR = 'JOB_PROCESSOR';
+  const SERVER_TYPE_UPLOAD = 'UPLOAD';
 
   const UPLOAD_PROGRESS_SERVER_TYPE_APC = 'APC';
   const UPLOAD_PROGRESS_SERVER_TYPE_PROXY = 'PROXY';

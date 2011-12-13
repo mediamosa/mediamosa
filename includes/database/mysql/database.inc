@@ -60,8 +60,10 @@ class DatabaseConnection_mysql extends DatabaseConnection {
     // This allows Drupal to run almost seamlessly on many different
     // kinds of database systems. These settings force MySQL to behave
     // the same as postgresql, or sqlite in regards to syntax interpretation
-    // and invalid data handling. See http://drupal.org/node/344575 for further discussion.
-    $this->exec("SET sql_mode='ANSI,TRADITIONAL'");
+    // and invalid data handling. See http://drupal.org/node/344575 for
+    // further discussion. Also, as MySQL 5.5 changed the meaning of
+    // TRADITIONAL we need to spell out the modes one by one.
+    $this->exec("SET sql_mode='ANSI,STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER'");
   }
 
   public function queryRange($query, $from, $count, array $args = array(), array $options = array()) {
@@ -131,6 +133,50 @@ class DatabaseConnection_mysql extends DatabaseConnection {
     // these queries fail, the sequence will work just fine, just use a bit
     // more database storage and memory.
     catch (PDOException $e) {
+    }
+  }
+
+  /**
+   * Overridden to work around issues to MySQL not supporting transactional DDL.
+   */
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
+      // Stop once we found an active transaction.
+      if ($active) {
+        break;
+      }
+
+      // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
+      if (empty($this->transactionLayers)) {
+        if (!PDO::commit()) {
+          throw new DatabaseTransactionCommitFailedException();
+        }
+      }
+      else {
+        // Attempt to release this savepoint in the standard way.
+        try {
+          $this->query('RELEASE SAVEPOINT ' . $name);
+        }
+        catch (PDOException $e) {
+          // However, in MySQL (InnoDB), savepoints are automatically committed
+          // when tables are altered or created (DDL transactions are not
+          // supported). This can cause exceptions due to trying to release
+          // savepoints which no longer exist.
+          //
+          // To avoid exceptions when no actual error has occurred, we silently
+          // succeed for MySQL error code 1305 ("SAVEPOINT does not exist").
+          if ($e->errorInfo[1] == '1305') {
+            // If one SAVEPOINT was released automatically, then all were.
+            // Therefore, we keep just the topmost transaction.
+            $this->transactionLayers = array('drupal_transaction' => 'drupal_transaction');
+          }
+          else {
+            throw $e;
+          }
+        }
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "3.0.7.1790"
+version = "3.1.0-rc1"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -42,6 +42,7 @@ files[] = lib/mediamosa_gd.class.inc
 files[] = lib/mediamosa_http.class.inc
 files[] = lib/mediamosa_io.class.inc
 files[] = lib/mediamosa_lib.class.inc
+files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
 files[] = lib/mediamosa_log.class.inc
 files[] = lib/mediamosa_type.class.inc
@@ -61,7 +62,7 @@ files[] = cql/mediamosa_cql_prefix_assignment.class.inc
 
 ; Response class.
 files[] = response/mediamosa_response.class.inc
-files[] = response/mediamosa_response.v3.class.inc
+files[] = response/mediamosa_response.v4.class.inc
 files[] = response/connector/mediamosa_response_connector.class.inc
 files[] = response/mediamosa_response.test
 
@@ -118,6 +119,9 @@ files[] = core/asset/mediamosa_asset_search.class.inc
 ; Asset Delete.
 files[] = core/asset/delete/mediamosa_asset_delete_db.class.inc
 files[] = core/asset/delete/mediamosa_asset_delete.class.inc
+
+; Asset Media.
+files[] = core/asset/mediafile/media/mediamosa_asset_mediafile_media.class.inc
 
 ; Asset Mediafile.
 files[] = core/asset/mediafile/mediamosa_asset_mediafile_db.class.inc

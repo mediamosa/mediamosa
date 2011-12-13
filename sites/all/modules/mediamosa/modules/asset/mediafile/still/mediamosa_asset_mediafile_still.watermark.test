@@ -67,7 +67,6 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     $still_id_watermarked = $this->watermarkStill($still['still_id'], $watermark['still_id'], $parameters);
     $still_id_watermarked_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_watermarked);
 
-
     // Reproduce the process.
 
     // Get the original files.
@@ -112,7 +111,7 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     // Write still.
     mediamosa_gd::imagejpeg($dest, $still_filename_new, mediamosa_asset_mediafile_still::SAVE_QUALITY);
 
-    $this->verbose(t('Contoll still id = @still_id, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct', array(
+    $this->verbose(t('Control still id = @still_id, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct', array(
       '@still_id' => $still_id_new,
       '@dst_x' => $dst_x,
       '@dst_y' => $dst_y,

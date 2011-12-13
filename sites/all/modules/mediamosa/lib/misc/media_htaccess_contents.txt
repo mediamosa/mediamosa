@@ -1,0 +1,6 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^/?(.*)$ {SUBDIR}/index.php?url=$1 [L]
+</IfModule>

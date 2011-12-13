@@ -542,7 +542,7 @@ class mediamosa_job {
         $still_id = $a_mediafile['mediafile_id'];
 
         // Destination.
-        $destination = mediamosa_configuration_storage::still_filename_get($still_id);
+        $destination = mediamosa_configuration_storage::data_still_get_file($still_id);
 
         // Still size.
         $size = mediamosa_gd::getimagesize($destination);

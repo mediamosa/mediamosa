@@ -51,6 +51,17 @@ class mediamosa_db {
   const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
 
   // ------------------------------------------------------------------ Static Function.
+  /**
+   * Returns a new DeleteQuery object for the active database.
+   *
+   * @param $table
+   *   The table from which to delete.
+   * @param $options
+   *   An array of options to control how the query operates.
+   *
+   * @return DeleteQuery
+   *   A new DeleteQuery object for this connection.
+   */
   static public function db_delete(/* $table, $options = NULL*/) {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
@@ -65,7 +76,10 @@ class mediamosa_db {
   }
 
   /**
-   * Return the number of found rows during SQL_CALC_FOUND_ROWS (mysql).
+   * Return the number of found rows with SELECT queries using
+   * SQL_CALC_FOUND_ROWS (mysql).
+   *
+   * Warning: MySQL specific.
    */
   static public function db_found_rows() {
     return mediamosa_db::db_query('SELECT found_rows()')->fetchField();
@@ -109,7 +123,7 @@ class mediamosa_db {
           $args[4] = array();
         }
 
-       // By default, specify we want array's and not objects.
+        // By default, specify we want array's and not objects.
         $args[4] += array(
           'fetch' => PDO::FETCH_ASSOC,
         );
@@ -175,21 +189,40 @@ class mediamosa_db {
   }
 
   /**
-   * Same as db_query, except for adding an range for query.
+   * Executes a query against the active database, restricted to a range.
    *
-   * @return DB result
-   *  DB result set object.
+   * @param $query
+   *   The prepared statement query to run. Although it will accept both named and
+   *   unnamed placeholders, named placeholders are strongly preferred as they are
+   *   more self-documenting.
+   * @param $from
+   *   The first record from the result set to return.
+   * @param $count
+   *   The number of records to return from the result set.
+   * @param $args
+   *   An array of values to substitute into the query. If the query uses named
+   *   placeholders, this is an associative array in any order. If the query uses
+   *   unnamed placeholders (?), this is an indexed array and the order must match
+   *   the order of placeholders in the query string.
+   * @param $options
+   *   An array of options to control how the query operates.
+   *
+   * @return DatabaseStatementInterface
+   *   A prepared statement object, already executed.
+   *
+   * @see DatabaseConnection::defaultOptions()
    */
   static public function db_query_range(/* $query, $from, $count, array $args = array(), array $options = array()*/) {
     $args = func_get_args();
     return self::query('db_query_range', $args);
   }
 
+
   /**
    * Execute DB query.
    *
-   * @return DB result
-   *  DB result set object.
+   * @return DatabaseStatementInterface
+   *   A prepared statement object, already executed.
    */
   static public function db_query(/* $query, $args = array(), $options = array()*/) {
     $args = func_get_args();
@@ -269,8 +302,8 @@ class mediamosa_db {
   /**
    * Execute DB query in an temporary table.
    *
-   * @return DB result
-   *  DB result set object.
+   * @return
+   *   The name of the temporary table.
    */
   static public function db_query_temporary(/* $query, array $args = array(), array $options = array()*/) {
     $args = func_get_args();
@@ -278,10 +311,18 @@ class mediamosa_db {
   }
 
   /**
-   * Create an db_select object.
+   * Returns a new SelectQuery object for the active database.
    *
-   * @return object
-   *  DB Select object.
+   * @param $table
+   *   The base table for this query. May be a string or another SelectQuery
+   *   object. If a query object is passed, it will be used as a subselect.
+   * @param $alias
+   *   The alias for the base table of this query.
+   * @param $options
+   *   An array of options to control how the query operates.
+   *
+   * @return SelectQuery
+   *   A new SelectQuery object for this connection.
    */
   static public function db_select(/* $table, $alias = NULL, array $options = array()*/) {
     // Increase query count.
@@ -308,10 +349,15 @@ class mediamosa_db {
   }
 
   /**
-   * Create an db_insert object.
+   * Returns a new InsertQuery object for the active database.
    *
-   * @return object
-   *  DB Insert object.
+   * @param $table
+   *   The table into which to insert.
+   * @param $options
+   *   An array of options to control how the query operates.
+   *
+   * @return InsertQuery
+   *   A new InsertQuery object for this connection.
    */
   static public function db_insert(/* $table, array $options = array()*/) {
     // Increase query count.
@@ -344,10 +390,15 @@ class mediamosa_db {
   }
 
   /**
-   * Create an db_update object.
+   * Returns a new UpdateQuery object for the active database.
    *
-   * @return object
-   *  DB Update object.
+   * @param $table
+   *   The table to update.
+   * @param $options
+   *   An array of options to control how the query operates.
+   *
+   * @return UpdateQuery
+   *   A new UpdateQuery object for this connection.
    */
   static public function db_update(/* $table, array $options = array()*/) {
     // Increase query count.
@@ -521,18 +572,14 @@ class mediamosa_db {
           db_query($query);
         }
         catch (PDOException $e) {
-          assert($e);
-
-          assert(0);// so we know.
-
           // We do not using mediamosa::log() here because it might be inaccessible during install.
           watchdog('Mediamosa',
-            "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query', message: #message.",
+            "Failed to create foreign key 'fk_@table_name_@column' on table '@table_name', query; '@query', message: @message.",
             array(
-              '#table_name' => $module_name,
-              '#column' => $column,
-              '#query' => $query,
-              '#message' => $e->getMessage(),
+              '@table_name' => $module_name,
+              '@column' => $column,
+              '@query' => $query,
+              '@message' => $e->getMessage(),
             ),
             WATCHDOG_ERROR
           );
@@ -646,9 +693,7 @@ class mediamosa_db {
       case mediamosa_transcode_profile_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $columns_and[mediamosa_transcode_profile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_metadata_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_metadata_property_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
       case mediamosa_asset_metadata_property_group_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
     }
@@ -779,8 +824,6 @@ class mediamosa_db {
  *    $transaction->rollback();
  *    throw $e;
  *  }
-
- *
  */
   static public function db_transaction($name = NULL, array $options = array()) {
     return db_transaction($name, $options);

@@ -94,7 +94,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
 
     // File check.
-    $file = mediamosa_configuration_storage::still_filename_get($still_id);
+    $file = mediamosa_configuration_storage::data_still_get_file($still_id);
     $this->assertTrue(
       mediamosa_io::file_exists($file, TRUE),
       t("file lookup on @file.", array('@file' => $file))
@@ -125,7 +125,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
 
     // File check.
-    $file = mediamosa_configuration_storage::still_filename_get($still_id);
+    $file = mediamosa_configuration_storage::data_still_get_file($still_id);
     /*
      * Removed for problems with timed san nas deletes.
     $this->assertFalse(

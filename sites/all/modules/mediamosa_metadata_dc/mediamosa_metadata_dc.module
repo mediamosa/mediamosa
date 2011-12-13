@@ -28,3 +28,11 @@
  * @file
  * MediaMosa support for Metadata type Dublin Core.
  */
+
+/**
+ * Implements hook_mediamosa_metadata_info().
+ */
+function mediamosa_metadata_dc_mediamosa_metadata_info() {
+  return mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME;
+}
+  

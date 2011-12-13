@@ -39,7 +39,7 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Play proxy - Stills',
+      'name' => 'PlayProxy - Stills',
       'description' => 'Play proxy calls on the stills.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
     );
@@ -47,11 +47,35 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Tests.
   public function testStillPlayProxy() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    // Check if masterslaving does not generate stills.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    // Switch to app 1.
+    $this->toEga_1();
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -60,22 +84,24 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->doQueueCycleAll();
 
     // Get the stills.
-    $a_stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'Found still.');
 
     // Get first array.
-    $a_stills = $a_stills[0];
+    $stills = $stills[0];
 
     // Still list.
-    $a_still_list = $a_stills['stills'];
+    $a_still_list = $stills['stills'];
+
+    $this->var_export($stills);
 
     // Some tests.
-    $this->assertTrue(isset($a_stills['stills']), 'Found the still.');
-    $this->assertTrue(!empty($a_stills['output']), 'Found the output url.');
-    $this->assertTrue(!empty($a_stills['ticket_id']), 'Found the ticket ID.');
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
 
     // Test the output, do output call.
-    $still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
+    $still_url = str_replace('/media/', '/media/simpletest/media/', $stills['output']);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($still_url);
@@ -85,5 +111,95 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
       $result->code == 200,
       t("Download the test image from '@url' (code = @code)", array('@url' => $still_url, '@code' => $result->code))
     );
+
+    // Masterslave the mediafile.
+    $this->setMediafileAcl($mediafile_id, array('acl_app' => $app_id_2));
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id);
+    $this->assertTrue(count($stills) == 1, 'Found still.');
+
+    $this->toEga_2();
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
+
+    $this->toEga_1();
+
+    // Delete the mediafile.
+    $this->deleteMediafile($mediafile_id);
+
+    // Delete the asset.
+    $this->deleteAsset($asset_id);
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Delete mediafils.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+           // Delete the mediafile.
+          $this->deleteMediafile($mediafile_child['mediafile_id']);
+        }
+      }
+      else {
+         // Delete the mediafile.
+        $this->deleteMediafile($mediafile['mediafile_id']);
+      }
+    }
+
+    // Delete the asset.
+    $this->deleteAsset($asset_id);
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Masterslave the mediafile.
+    $this->setMediafileAcl($mediafile_id, array('acl_app' => $app_id_2));
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
+
+    $this->toEga_2();
+
+    // Get the stills.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills);
+    $this->assertTrue(empty($stills), 'No stills found.');
   }
 }

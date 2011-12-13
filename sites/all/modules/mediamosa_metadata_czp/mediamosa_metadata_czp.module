@@ -29,3 +29,9 @@
  * MediaMosa support for Metadata type Content Zoek Profiel (Content Search
  * Profile).
  */
+/**
+ * Implements hook_mediamosa_metadata_info().
+ */
+function mediamosa_metadata_czp_mediamosa_metadata_info() {
+  return mediamosa_metadata_czp::METADATA_PROPERTY_GROUP_NAME;
+}

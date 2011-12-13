@@ -202,10 +202,8 @@ function mediamosa_server_view($node, $view_mode = 'full') {
     mediamosa_server_db::TOOLS => t('Tools'),
     mediamosa_server_db::OBJECT_CODE => t('Object Code'),
   );
-
+  
   switch ($node->{mediamosa_server_db::SERVER_TYPE}) {
-    default:
-      assert(0); // so we know.
     case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
     case mediamosa_server_db::SERVER_TYPE_STILL:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
@@ -236,6 +234,8 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       unset($fields[mediamosa_server_db::SLOTS]);
       unset($fields[mediamosa_server_db::TOOLS]);
       break;
+    default:
+      assert(0); // so we know.
   }
 
   foreach ($fields as $key => $title) {

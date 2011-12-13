@@ -3190,9 +3190,70 @@ function mediamosa_update_7126() {
     // Install mediamosa_asset_mediafile_still_style table.
     mediamosa::drupal_install_schema('mediamosa_asset_mediafile_still_style');
   }
-  // Create style directory.
-  mediamosa_io::mkdir(mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION, TRUE);
+}
 
-  // Also the simpletest equivalent.
-  mediamosa_io::mkdir(mediamosa_configuration_storage::get_data_location() . DIRECTORY_SEPARATOR . 'simpletest/data/stills/' . mediamosa_settings::STILL_LINK_STYLE_LOCATION);
+/**
+ * Create the new /media directory under the MediaMosa mount point. Also create
+ * the .htaccess file.
+ */
+function mediamosa_update_7127() {
+  // Create the new directory.
+  $path = mediamosa_configuration_storage::media_get_path();
+  $found = mediamosa_io::file_exists($path . '.htaccess');
+
+  // Create when missing.
+  if (!$found && is_writable(mediamosa_configuration_storage::mount_point_get())) {
+    // Make the [mount_point]/media directory.
+    mediamosa_io::mkdir($path);
+    mediamosa_io::mkdir($path . 'ticket' . DIRECTORY_SEPARATOR);
+    $found = mediamosa_configuration_storage::file_create_htaccess($path, mediamosa_configuration_storage::media_get_htaccess_contents());
+  }
+
+  return strtr((found ? 'The @mount_pointmedia directory has been created under the MediaMosa mount point. This will replace the @mount_pointstill_links directory.' : 'Warning: Was unable to create /media under mount point (@mount_point). Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.'), array('@url' => url('/', array('absolute' => TRUE)), '@mount_point' => mediamosa_configuration_storage::mount_point_get()));
+}
+
+/**
+ * Replace the /still call with the new /media call for still images.
+ */
+function mediamosa_update_7128() {
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+
+  // Update the MediaMosa server for still to support /media now.
+  db_update('mediamosa_server')
+    ->fields(array('server_path' => '{base_uri}media/{TICKET}'))
+    ->condition('server_type', 'still')
+    ->condition('server_path', '{base_uri}still/{TICKET}')
+    ->execute();
+
+  return 'The /media REST call has been enabled and has replaced the now depricated /still REST call.';
+}
+
+/**
+ * Update the errorcode table.
+ */
+function mediamosa_update_7129() {
+  // Remove depricated version.
+  db_delete('mediamosa_error')
+    ->condition('name', 'ERRORCODE_INVALID_STILL_TICKET')
+    ->execute();
+
+  // Insert the new code.
+  db_insert('mediamosa_error')
+    ->fields(array(
+      'name' => 'ERRORCODE_INVALID_TICKET',
+      'code' => mediamosa_error::ERRORCODE_INVALID_TICKET,
+      'message' => "Invalid ticket with ID '@ticket_id'",
+    ))
+    ->execute();
+}
+
+/**
+ * Move the simpletest directory to the new location under media.
+ */
+function mediamosa_update_7130() {
+    // Create the new directory.
+  $path = mediamosa_configuration_storage::mount_point_get();
+  mediamosa_io::move($path . '/data/simpletest', $path . '/media/simpletest');
 }

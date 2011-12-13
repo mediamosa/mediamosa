@@ -72,8 +72,8 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
 
   function testTicket616() {
 
-    $a_app = $this->createApp();
-    $app_id = $a_app[mediamosa_app_db::APP_ID];
+    $app = $this->createApp();
+    $app_id = $app[mediamosa_app_db::APP_ID];
     $ticket_id = mediamosa_db::uuid(1);
     $uuid = mediamosa_db::uuid(1);
     $filename = "plus'q %20uote";
@@ -93,10 +93,10 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $this->copy($test_video, $target);
 
     // Create ticket.
-    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
+    $ticket_id = mediamosa_ticket::process_play_ticket($ticket_id, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
 
     // For cleanup.
-    $ticket_symlink = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id . DIRECTORY_SEPARATOR . $filename;
+    $ticket_symlink = mediamosa_configuration_storage::ticket_download_location_get() . $ticket_id . DIRECTORY_SEPARATOR . $filename;
 
     $this->assertTrue(mediamosa_io::is_link($ticket_symlink), 'Is symlink: ' . $ticket_symlink);
     $this->assertTrue(mediamosa_io::file_exists($ticket_symlink, TRUE), 'Symlink found: ' . $ticket_symlink);

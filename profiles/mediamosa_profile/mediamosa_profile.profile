@@ -1,7 +1,7 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -81,7 +81,7 @@ function mediamosa_profile_install_tasks() {
     'mediamosa_profile_domain_usage_form' => array(
       'display_name' => st('Your domain usage'),
       'type' => 'form',
-      'run' => variable_get('apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+      'run' => variable_get('mediamosa_apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
     'mediamosa_profile_migration_form' => array(
       'display_name' => st('Migration of your v1.7 database'),
@@ -350,9 +350,6 @@ function _command_installed($command, &$exec_output, $allowed_ret_values = array
  */
 function _mediamosa_profile_installed_programs() {
 
-  // Just here for notice prev.
-  $ret_val = 0;
-
   // FFmpeg.
   $exec_output = array();
   $ffmpeg_installed = _command_installed('ffmpeg -version', $exec_output);
@@ -377,6 +374,7 @@ function _mediamosa_profile_installed_programs() {
 
   // Lpeg.
   $exec_output = array();
+  $ret_val = 0;
   exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
 
   $requirements['lpeg'] = array(
@@ -473,7 +471,7 @@ function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
     form_set_error('current_mount_point', t('The current Linux mount point is not a directory.'));
   }
   elseif (!is_writable($values['current_mount_point'])) {
-    form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the apache user.'));
+    form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the webserver (@server_software).', array('@server_software' => $_SERVER['SERVER_SOFTWARE'])));
   }
 }
 
@@ -486,33 +484,27 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   // Inside the storage location, create a MediaMosa storage structure.
   // data.
   _mediamosa_profile_mkdir($values['current_mount_point'], '/data');
-  for ($i = 0; $i <= 9; $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . $i);
-  }
-  for ($i = ord('a'); $i <= ord('z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . chr($i));
-  }
-  for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . chr($i));
-  }
-  // data/stills.
   _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills');
-  for ($i = 0; $i <= 9; $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . $i);
+
+  // We store each file in separate directories based on the first letter of the
+  // file. We need to create these directories.
+  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ';
+  for ($x = 0; $x < strlen($prefixes); $x++) {
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . $prefixes{$x});
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . $prefixes{$x});
   }
-  for ($i = ord('a'); $i <= ord('z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . chr($i));
-  }
-  for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . chr($i));
-  }
+
   // Other.
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/style/');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/data/transcode');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/links');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/download_links');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/still_links');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/ftp');
+
+  // /media is replacing /still_links.
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/media');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/media/ticket');
+
+  mediamosa_configuration_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_configuration_storage::media_get_htaccess_contents());
 }
 
 /**
@@ -571,7 +563,6 @@ function mediamosa_profile_configure_server($install_state) {
     ));
   }
 
-
   // Configure.
   // URL REST.
   variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
@@ -600,7 +591,7 @@ function mediamosa_profile_cron_settings_form() {
 
   // Get the server name.
   $server_name = _mediamosa_profile_server_name();
-  if (variable_get('apache_setting') == 'simple') {
+  if (variable_get('mediamosa_apache_setting') == 'simple') {
     $server_name = 'localhost';
   }
 
@@ -648,12 +639,22 @@ function mediamosa_profile_apache_settings_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '');
   $document_root = _mediamosa_profile_document_root();
 
-  $apache_settings_local = st("Single-server setup with http://localhost/ for demonstration or testing purposes.
-  <p><li>Add the following lines to your default localhost apache definition:</p>
+  $apache_settings_local = st("This setup is for installation of MediaMosa on 1 server and 1 domain.
+  Can be used for simple testing setups, but also for a small server deploy. MediaMosa can be installed on a subdirectory
+  (http://domain/mediamosa), or in the document root (http://domain).
+  <p><li>Add the following lines to your default apache definition:</p>
     <pre>" . htmlentities("
-    # ticket
-    Alias /ticket !mount_point/links
+    # MediaMosa tickets
+    Alias !rel_directoryticket !mount_point/links
     <Directory !mount_point/links>
+      Options FollowSymLinks
+      Order deny,allow
+      Allow from All
+    </Directory>
+
+    # Media
+    Alias !rel_directorymedia !mount_point/media
+    <Directory !mount_point/media>
       Options FollowSymLinks
       AllowOverride All
       Order deny,allow
@@ -669,6 +670,9 @@ function mediamosa_profile_apache_settings_form() {
 <p><li>Restart your Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>
 ', array(
       '!mount_point' => $mount_point,
+      '!server_name_clean' => $server_name,
+      '!document_root' => $document_root,
+      '!rel_directory' => url(),
     ));
 
   $server_name_clean = $server_name;
@@ -704,7 +708,6 @@ function mediamosa_profile_apache_settings_form() {
     Alias /ticket !mount_point/links
     <Directory !mount_point/links>
       Options FollowSymLinks
-      AllowOverride All
       Order deny,allow
       Allow from All
     </Directory>
@@ -775,6 +778,15 @@ function mediamosa_profile_apache_settings_form() {
         allow from all
     </Directory>
 
+    # Media
+    Alias /media !mount_point/media
+    <Directory !mount_point/media>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
+
     ErrorLog /var/log/apache2/download.!server_name_clean_error.log
     CustomLog /var/log/apache2/download.!server_name_clean_access.log combined
     ServerSignature On
@@ -831,14 +843,14 @@ function mediamosa_profile_apache_settings_form() {
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => '<b>' . t("Simple setup, I'm testing") . '</b>',
-      'advanced' => '<b>' . t("Multi server setup, I'm setting up production or development") . '</b>',
+      'simple' => '<b>' . t("Single server / domain setup.") . '</b>',
+      'advanced' => '<b>' . t("Multiple server / domain setup.") . '</b>',
     ),
   );
 
   $form['apache']['local'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Localhost setup (testing)'),
+    '#title' => t('Single server / domain setup.'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'simple'),
@@ -851,7 +863,7 @@ function mediamosa_profile_apache_settings_form() {
 
   $form['apache']['multi'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Multiserver setup (production / development)'),
+    '#title' => t('Multi server/domain setup.'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'advanced'),
@@ -878,53 +890,10 @@ function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
 
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   $server_name = _mediamosa_profile_server_name();
-  variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
+  variable_set('mediamosa_apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
-  if (variable_get('apache_setting') == 'simple') {
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/ticket/{TICKET}'
-        ))
-      ->condition('server_type', 'streaming', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/download/{TICKET}'
-        ))
-      ->condition('server_type', 'download', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/still/{TICKET}'
-        ))
-      ->condition('server_type', 'still', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_status' => 'OFF'
-        ))
-      ->condition('server_uri', 'http://job2.mediamosa.local', '=')
-      ->execute();
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name
-        ))
-      ->condition('server_uri', 'http://job1.mediamosa.local', '=')
-      ->execute();
+  if (variable_get('mediamosa_apache_setting') == 'simple') {
     variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name . '/');
-    db_update('mediamosa_server')
-      ->fields(
-        array(
-          'server_uri' => 'http://' . $server_name . '/mediafile/upload?upload_ticket={TICKET}',
-          'uri_upload_progress' => 'http://' . $server_name . '/mediafile/uploadprogress'
-        ))
-      ->condition('server_type', 'upload', '=')
-      ->execute();
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name . '/');
   }
   else {
@@ -932,30 +901,17 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . '/');
   }
 
-  if (strcasecmp($server_name, 'mediamosa.local')) {
-    // We need to patch server table then.
-    $results = db_select('mediamosa_server', 'ms')
-      ->fields('ms')
-      ->execute();
+  // Get all mediamosa_server nodes nids, and update server_uri.
+  $results = db_select('mediamosa_server', 'ms')
+    ->fields('ms')
+    ->execute();
 
-    // Lets save all entries in an array.
-    $rows = array();
-    foreach ($results as $row) {
-      $rows[] = $row;
+  foreach ($results as $result) {
+    $node = node_load($result->nid);
+    if (variable_get('mediamosa_apache_setting') == 'simple') {
+      $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
     }
-
-    foreach ($rows as $row) {
-      $server_uri = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->server_uri);
-      $uri_upload_progress = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->uri_upload_progress);
-      db_update('mediamosa_server')
-        ->fields(
-            array(
-              'server_uri' => $server_uri,
-              'uri_upload_progress' => $uri_upload_progress,
-            ))
-        ->condition('nid', $row->nid, '=')
-        ->execute();
-    }
+    node_save($node);
   }
 }
 
@@ -1064,25 +1020,20 @@ function mediamosa_profile_domain_usage_form() {
 
 
 /**
- * Advanced mkdir().
- * Check if the directory is exist, before makes it.
- * @param string $check_dir Directory to check.
+ * Check if the directory is exist, else create it.
+ *
+ * @param $path
+ *   Directory to create.
  */
-function _mediamosa_profile_mkdir($mountpoint, $check_dir) {
-  if (!file_exists($mountpoint . $check_dir)) {
-    mkdir($mountpoint . $check_dir);
+function _mediamosa_profile_mkdir($mountpoint, $path) {
+  if (!file_exists($mountpoint . $path)) {
+    drupal_mkdir($mountpoint . $path, NULL, TRUE);
   }
 
-  // Make sure its a directory.
-  assert(is_dir($mountpoint . $check_dir));
-
-  if (!file_exists($mountpoint . '/data/simpletest')) {
-    mkdir($mountpoint . '/data/simpletest');
-  }
-
-  // Simpletest version.
-  if (!file_exists($mountpoint . '/data/simpletest' . $check_dir)) {
-    mkdir($mountpoint . '/data/simpletest' . $check_dir);
+  // To separate simpletest from our installation, simpletest has its own
+  // mount pount.
+  if (!file_exists($mountpoint . '/media/simpletest' . $path)) {
+    drupal_mkdir($mountpoint . '/media/simpletest' . $path, NULL, TRUE);
   }
 }
 
@@ -1091,7 +1042,7 @@ function _mediamosa_profile_mkdir($mountpoint, $check_dir) {
  */
 function _mediamosa_profile_server_name() {
   $server_name = url('', array('absolute' => TRUE));
-  $server_name = drupal_substr($server_name, 0, -1);
+  $server_name = rtrim($server_name, '/');
   $server_name = drupal_substr($server_name, drupal_strlen('http://'));
   $server_name = check_plain($server_name);
   return $server_name;

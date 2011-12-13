@@ -224,9 +224,9 @@ function _mediamosa_error_install() {
     'ERRORCODE_IMAGE_FILE_TOO_BIG' => 'The image file size is bigger, than the allowed maximum (@filesize byte)',
     'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => "Transcode profile with name '@profile_name' already exists",
     'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => "Transcode profile with ID '@profile_id' was not found",
-    'ERRORCODE_INVALID_STILL_TICKET' => "Invalid still ticket with ID '@ticket_id'",
     'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
     'ERRORCODE_INVALID_REST_CALL' => "Invalid REST call with ID '@rest_call'",
+    'ERRORCODE_INVALID_TICKET' => "Invalid ticket with ID '@ticket_id'",
   );
 
   $query = array();
