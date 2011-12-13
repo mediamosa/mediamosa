@@ -629,6 +629,9 @@ class mediamosa_asset_mediafile_play_proxy {
               // Get the filename for the asx file.
               $file_asx = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
 
+              // Create a possible app_id directory.
+              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE);
+
               // Open file for writing.
               $handle_file_asx = @fopen($file_asx, 'w+');
 
@@ -650,8 +653,7 @@ class mediamosa_asset_mediafile_play_proxy {
                   }
 
                   // Create new streaming server URI based on asx file.
-                  // @fixme: looks broken, only 2 input values for str_replace?
-                  $streaming_server_ticket_uri = str_replace($app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/') . '.asx', $uri);
+                  $streaming_server_ticket_uri = str_replace('{TICKET}', $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/') . '.asx', $uri);
 
                   // Changed to text/html for ticket #188.
                   //'video/x-ms-asx';
