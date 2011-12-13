@@ -540,6 +540,9 @@ class mediamosa_asset_mediafile_metadata {
 
     // Check if metadata for this mediafile exists.
     if (!isset($mediafile_metadata[$mediafile_id])) {
+      // Default empty.
+      $mediafile_metadata[$mediafile_id] = array();
+
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'amm');
       $query->join(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'ammp', 'ammp.' . mediamosa_asset_mediafile_metadata_property_db::ID . '=' . 'amm.' . mediamosa_asset_mediafile_metadata_db::PROP_ID);
 
@@ -571,13 +574,14 @@ class mediamosa_asset_mediafile_metadata {
     }
 
     // No value?
-    if (empty($mediafile_metadata[$mediafile_id][$prop_name])) {
+    if (empty($mediafile_metadata[$mediafile_id][$prop_name][$type])) {
       return;
     }
 
-    if (empty($mediafile_metadata[$mediafile_id][$prop_name][$type])) {
-      mediamosa_watchdog::log_export($mediafile_metadata);
-
+    // Propname ok, but wrong type?
+    if (isset($mediafile_metadata[$mediafile_id][$prop_name]) && !isset($mediafile_metadata[$mediafile_id][$prop_name][$type])) {
+      mediamosa_debug::log($prop_name);
+      mediamosa_watchdog::log_export($mediafile_metadata[$mediafile_id]);
       throw new mediamosa_exception_program_error('Unknown metadata property type; @type', array('@type' => $type));
     }
 
