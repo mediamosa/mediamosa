@@ -236,7 +236,7 @@ class mediamosa_asset_metadata_property {
    *
    * @return array
    */
-  static public function get_metadata_properties(array $metadata_property_groups = array('dublin_core'), $get_all_apps = FALSE) {
+  static public function get_metadata_properties(array $metadata_property_groups = array(), $get_all_apps = FALSE) {
 
     // Caching.
     static $metadata_properties = array();
@@ -297,7 +297,15 @@ class mediamosa_asset_metadata_property {
    *
    * @return array
    */
-  static public function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array('dublin_core', 'qualified_dublin_core', 'czp')) {
+  static public function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array()) {
+
+    // Get all metadata property groups.
+    if (count($metadata_property_groups) == 0) {
+      foreach (module_implements('mediamosa_metadata_info') as $module) {
+        $metadata_property_groups[] = module_invoke($module, 'mediamosa_metadata_info');
+      }
+    }
+    
     if ($mixed_app_id) {
       $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 

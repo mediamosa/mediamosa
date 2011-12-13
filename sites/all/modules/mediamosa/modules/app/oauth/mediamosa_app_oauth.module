@@ -56,7 +56,7 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_app_oauth_menu() {
   $items = array();
@@ -91,22 +91,17 @@ function mediamosa_app_oauth_menu() {
 }
 
 /**
- * Implementation of hook_mediamosa_allowed_path().
+ * Implements hook_mediamosa_pass_call_drupal().
  */
-function mediamosa_app_oauth_mediamosa_allowed_path() {
+function mediamosa_app_oauth_mediamosa_pass_call_drupal() {
   global $conf;
-
-  if (mediamosa::in_simpletest_sandbox()) {
-    // Simpletest mode, special case.
-    return mediamosa::in_simpletest_sandbox_enable_app();
-  }
 
   // Just for openapi/oauth/authorize.
   return (isset($conf['mediamosa_app_openapi']) && $conf['mediamosa_app_openapi'] && arg(0) == 'openapi' && arg(1) == 'oauth' && arg(2) == 'authorize');
 }
 
 /**
- * Implementation of hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_app_oauth_permission() {
   return array(
@@ -485,7 +480,7 @@ function _mediamosa_oauth_test_phase2() {
  */
 
 /**
- * Implementation of hook_cron().
+ * Implements hook_cron().
  */
 function mediamosa_app_oauth_cron() {
   mediamosa_app_oauth::clean_up();

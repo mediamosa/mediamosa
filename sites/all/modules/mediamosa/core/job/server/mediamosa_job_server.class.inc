@@ -719,7 +719,7 @@ class mediamosa_job_server {
 
     $execution_string = sprintf('%s %s %s',
       mediamosa_settings::analyse_file(),
-      mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+      mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get(),
       $mediafile_id
     );
 
@@ -776,7 +776,7 @@ class mediamosa_job_server {
           $parameter_string = "'" . $parameter_string . "'";
         }
 
-        $execution_string = sprintf('%s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $file_extension, $parameter_string);
+        $execution_string = sprintf('%s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $file_extension, $parameter_string);
         break;
 
       default:
@@ -802,7 +802,7 @@ class mediamosa_job_server {
             // Parameter string for cmd.
             'parameter_string' => $parameter_string,
             // the data dir in sannas (extra).
-            'path_mount_point_data' => mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR,
+            'path_mount_point_data' => mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR,
             // Path to the transcode file.
             'location_dest_file' => mediamosa_configuration_storage::transcode_file_location_get($mediafile_id),
             // Location of source mediafile.

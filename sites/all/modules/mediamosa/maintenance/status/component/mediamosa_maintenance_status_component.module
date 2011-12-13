@@ -54,6 +54,7 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING', 1024 * 10
 function mediamosa_maintenance_status_component_generate() {
   $results = array();
 
+  // Get the mount point. The mount point always ends with DIRECTORY_SEPARATOR.
   $mount_point = mediamosa_configuration_storage::mount_point_get();
 
   // ------------------------------------------------------- SANNAS mount point.
@@ -69,15 +70,46 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => _mediamosa_maintenance_status_okerror(mediamosa_io::is_dir($mount_point)),
   );
 
+  // --------------------------------------------------- SANNAS media/.htaccess.
+  $path = mediamosa_configuration_storage::media_get_path();
+  $found = mediamosa_io::file_exists($path . '.htaccess');
+
+  // Create when missing.
+  if (!$found && is_writable($mount_point)) {
+    // Make the [mount_point]/media directory.
+    mediamosa_io::mkdir($path);
+    mediamosa_io::mkdir($path . 'ticket' . DIRECTORY_SEPARATOR);
+    $found = mediamosa_configuration_storage::file_create_htaccess($path, mediamosa_configuration_storage::media_get_htaccess_contents());
+  }
+
+  $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
+  foreach ($htaccess as $key => $line) {
+    $htaccess[$key] = trim($line, "\n\r\t ");
+  }
+  $htaccess_org = explode("\n", trim(mediamosa_configuration_storage::media_get_htaccess_contents()));
+  foreach ($htaccess_org as $key => $line) {
+    $htaccess_org[$key] = trim($line, "\n\r\t ");
+  }
+  $contents = $found ? implode('', $htaccess) == implode('', $htaccess_org) : FALSE;
+  $results['mount_media_htaccess'] = array(
+    'title' => t('SANNAS .htaccess media'),
+    'value' => $found && $contents ? t('Found & contents ok') : ($found && !$contents ? t('Found, but incorrect contents') : t('Not found, unable to create')),
+    'severity' => !$contents && $found ? _mediamosa_maintenance_status_okwarning(FALSE) : _mediamosa_maintenance_status_okerror($found && $contents),
+  );
+  if (!$found || !$contents) {
+    $variables = array('%directory' => $path, '@path' => $path . '.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_configuration_storage::media_get_htaccess_contents())));
+    $results['mount_media_htaccess']['description'] = t("Warning: Couldn't find .htaccess file in location @path (or with correct contents).<br />Please create a .htaccess file in your %directory directory which contains the following lines: <br /><code>!htaccess</code>", $variables);
+  }
+
   // --------------------------------------------------- SANNAS Structure check.
   $checks = array(
     'is_structured' => array(),
     'is_writeable' => array(),
   );
 
-  $dirs = array('data', 'data/stills', 'data/transcode', 'links', 'download_links', 'still_links', 'ftp');
+  $dirs = array('data', 'data/stills', 'data/transcode', 'links', 'download_links', 'media', 'media/ticket', 'ftp');
   foreach ($dirs as $dir) {
-    $checks = _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
+    $checks = _mediamosa_maintenance_status_component_directory($mount_point . $dir, $checks);
   }
 
   $maps = array(
@@ -86,8 +118,8 @@ function mediamosa_maintenance_status_component_generate() {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
   );
   foreach ($maps as $map) {
-    _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $map, $checks);
-    _mediamosa_maintenance_status_component_directory($mount_point . '/data/stills/' . $map, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . 'data' . DIRECTORY_SEPARATOR . $map, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . 'data' . DIRECTORY_SEPARATOR . 'stills' . DIRECTORY_SEPARATOR . $map, $checks);
   }
 
   $results['mount_structure'] = array(
@@ -125,7 +157,8 @@ function mediamosa_maintenance_status_component_generate() {
     unlink($filename);
   }
 
-  // Note; you can not rename the key 'mount_rea_write' (!)
+  // Note; you can not rename the key 'mount_rea_write' (!).
+  // This name can not be changed because its used in the status REST call.
   $results['mount_rea_write'] = array(
     'title' => t('SANNAS read and write'),
     'value' => t('Readable & writable'),

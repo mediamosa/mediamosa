@@ -176,9 +176,6 @@ class mediamosa_asset_mediafile_play_proxy {
 
   /**
    * Calculate the size of the video based on given size and type.
-   * See Mantis [0016569] for specification.
-   *
-   * 1.x: _play_proxy_calc_video_size
    *
    * @param integer v_width
    *  mediafile width
@@ -246,6 +243,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
   /**
    * Wrapper for 1.x to 2.x.
+   *
    * @param array $a_parameters
    * @param array $a_asset_info (used for the metadata)
    * @param array $mediafile_ext
@@ -286,7 +284,10 @@ class mediamosa_asset_mediafile_play_proxy {
 
     // Any still?
     if (!empty($still_id)) {
-      $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
+      // Its not a ticket, but its called that in create_response_*.
+      $ticket = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
+
+      $response = self::create_response_still($ticket, $app_id);
       return $response['output'];
     }
 
@@ -295,9 +296,6 @@ class mediamosa_asset_mediafile_play_proxy {
 
   /**
    * Create response for mediafile.
-   * 1.x params; $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
-   *
-   * 1.x: _play_proxy_create_response
    *
    * @param string $response_type
    *  See RESPONSE_*.
@@ -342,7 +340,7 @@ class mediamosa_asset_mediafile_play_proxy {
     array $stills = array()
   ) {
 
-    // Not an array here.
+    // Not a array here.
     assert(!is_array($app_id));
 
     $content_type = '';
@@ -353,26 +351,26 @@ class mediamosa_asset_mediafile_play_proxy {
       $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
     }
 
-    // Replace {TICKET} with app_id / ticket.
-    if ($response_type != self::RESPONSE_STILL) {
-      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
-    }
-
     // Uri for non-tickets (still, download etc).
     foreach ($stills as $key => $value) {
-      $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $stills[$key]['ticket']));
+      if (mediamosa_unicode::substr($value['ticket'], 0, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/')) == mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/') {
+        // Remove prefix 'ticket/'.
+        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $app_id . '/' . mediamosa_configuration_storage::objectid_to_location(mediamosa_unicode::substr($value['ticket'], strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/'))), '/'));
+      }
+      else {
+        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($value['ticket']), '/'));
+      }
     }
 
-    // Replace ticket param in URI.
-    $streaming_server_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket));
+    // Replace the {TICKET} with value.
+    $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
 
-    // So it exists.
+    // Default empty.
     $variables = array();
     $output = '';
 
     switch ($response_type) {
       case self::RESPONSE_METAFILE:
-
         switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_MP4:
             if ($mediafile_ext['metadata']['video_codec'] == self::VIDEO_CODEC_H264) {
@@ -525,7 +523,7 @@ class mediamosa_asset_mediafile_play_proxy {
           $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
-        $output = $streaming_server_uri . '/' . rawurlencode($mediafile_ext['filename']);
+        $output = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket)) . '/' . rawurlencode($mediafile_ext['filename']);
         break;
 
       case self::RESPONSE_OBJECT:
@@ -629,7 +627,7 @@ class mediamosa_asset_mediafile_play_proxy {
               }
 
               // Get the filename for the asx file.
-              $file_asx = mediamosa_configuration_storage::asx_file_location($ticket);
+              $file_asx = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
 
               // Open file for writing.
               $handle_file_asx = @fopen($file_asx, 'w+');
@@ -652,7 +650,8 @@ class mediamosa_asset_mediafile_play_proxy {
                   }
 
                   // Create new streaming server URI based on asx file.
-                  $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket) . '.asx', $uri);
+                  // @fixme: looks broken, only 2 input values for str_replace?
+                  $streaming_server_ticket_uri = str_replace($app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/') . '.asx', $uri);
 
                   // Changed to text/html for ticket #188.
                   //'video/x-ms-asx';
@@ -676,7 +675,14 @@ class mediamosa_asset_mediafile_play_proxy {
         break;
 
       case self::RESPONSE_STILL:
-        $output = $streaming_server_uri;
+        // Fix ticket/[ticket_id].
+        $is_ticket = mediamosa_unicode::substr($ticket, 0, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/')) == mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/';
+        if ($is_ticket) {
+          // Remove prefix 'ticket/'.
+          $ticket = mediamosa_unicode::substr($ticket, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/'));
+        }
+
+        $output = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => ($is_ticket ? mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' : '') . $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/')));
         break;
     }
 

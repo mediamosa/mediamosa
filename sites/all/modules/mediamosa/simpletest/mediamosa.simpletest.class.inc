@@ -541,8 +541,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Get the result ID.
     if (!empty($out['xml']->header)) {
-      $result_id = empty($out['xml']->header->request->resultId) ? 0 : (int) $out['xml']->header->request->resultId;
-      $result_description = empty($out['xml']->header->request->description) ? 'no description' : (string) $out['xml']->header->request->description;
+      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
+      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
     }
     elseif (!empty($out['xml']->extension)) {
       $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int) $out['xml']->extension->request_result_id;
@@ -615,7 +615,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Copy the test video
     $this->assertTrue(
       mediamosa_io::symlink($source, $dest) != FALSE,
-      t("Symlink: Created 98 | symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
+      t("Symlink: Created symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
     );
 
     $this->assertTrue(

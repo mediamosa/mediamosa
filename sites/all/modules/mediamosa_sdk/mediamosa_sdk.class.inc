@@ -40,6 +40,7 @@ class mediamosa_sdk {
   const HTTP_CREATED = 201;
   const HTTP_NO_CONTENT = 204;
 
+  const HTTP_BAD_REQUEST = 400;
   const HTTP_UNAUTHORIZED = 401;
   const HTTP_FORBIDDEN = 403;
   const HTTP_NOT_FOUND = 404;
@@ -224,7 +225,9 @@ class mediamosa_sdk {
   const ERRORCODE_USERMAN_USER_EXISTS = 1904;
   const ERRORCODE_IS_UNAPPROPRIATE = 1905;
 
+  // @deprecated use ERRORCODE_INVALID_TICKET instead.
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
+  const ERRORCODE_INVALID_TICKET = 2000;
 
   const ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID = 2100;
 
@@ -273,10 +276,12 @@ class mediamosa_sdk {
   const TYPE_ASSET_ID                    = 'ASSET_ID';
   const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
   const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
+  const TYPE_MEDIAFILE_STR               = 'MEDIAFILE_STR'; // format: mediafile_id[,style][.ext] used for /media calls.
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
   const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
   const TYPE_TICKET_ID                   = 'TICKET_ID';
+  const TYPE_MEDIATICKET_STR             = 'MEDIATICKET_STR'; // extension on ticket ID, see TYPE_MEDIAFILE.
   const TYPE_JOB_ID                      = 'JOB_ID';
 
   const TYPE_DOMAIN                      = 'DOMAIN';

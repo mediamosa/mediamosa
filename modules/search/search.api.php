@@ -107,6 +107,10 @@ function hook_search_reset() {
 /**
  * Report the status of indexing.
  *
+ * The core search module only invokes this hook on active modules.
+ * Implementing modules do not need to check whether they are active when
+ * calculating their return values.
+ *
  * @return
  *  An associative array with the key-value pairs:
  *  - 'remaining': The number of items left to index.
@@ -168,7 +172,7 @@ function hook_search_admin() {
  * parameters to the search expression.
  *
  * See node_search_execute() for an example of a module that uses the search
- * index, and user_search_execute() for an example that doesn't ues the search
+ * index, and user_search_execute() for an example that doesn't use the search
  * index.
  *
  * @param $keys

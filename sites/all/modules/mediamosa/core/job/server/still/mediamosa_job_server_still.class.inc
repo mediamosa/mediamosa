@@ -77,7 +77,7 @@ class mediamosa_job_server_still {
 
       if ($im) {
         // Calculate the color variation.
-        $size = getimagesize($source);
+        $size = mediamosa_gd::getimagesize($source);
         $rgb = mediamosa_gd::imagecolorat($im, ($size[0] >> 1), ($size[1] >> 1));
         $r = ($rgb >> 16) & 0xFF;
         $g = ($rgb >> 8) & 0xFF;

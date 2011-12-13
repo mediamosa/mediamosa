@@ -528,7 +528,8 @@ class mediamosa_asset_search {
         }
 
         try {
-          $table_name = db_query_temporary($query);
+          // Create temporary table and fill it with result of query.
+          $table_name = mediamosa_db::db_query_temporary($query);
 
           // Deleted asset query
           mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a' . ($d_where ? ' WHERE ' . $d_where : '') . ' GROUP BY a.asset_id', array(

@@ -95,11 +95,14 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
 
-            $server_url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
-            $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $server_url)));
+            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $url)));
+
+            // Rebuild.
+            $url = strtr($enabled_server[mediamosa_server_db::SERVER_PATH], array('{base_uri}' => $url, '{TICKET}' => 'foo'));
 
             // We know it will fail, but we dont care, we just want to know the version.
-            $response = mediamosa_http::drupal_http_request($server_url, array('method' => 'GET'));
+            $response = mediamosa_http::drupal_http_request($url, array('method' => 'GET'));
             $expecting_codes = array(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, mediamosa_error::ERRORCODE_ACCESS_DENIED);
             break;
 
@@ -123,7 +126,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
       try {
         $xml = new mediamosa_connector_response($response->data);
-        $this->assertTrue(in_array($xml->header->request->resultId, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request->resultId)));
+        $this->assertTrue(in_array($xml->header->request_result_id, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request_result_id)));
 
         // Now compare versions.
         $xml_ver = isset($xml->header->vpx_version) ? $xml->header->vpx_version : $xml->header->version;

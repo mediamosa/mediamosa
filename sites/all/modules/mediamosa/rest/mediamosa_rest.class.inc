@@ -87,14 +87,14 @@ class mediamosa_rest {
       }
     }
 
-    // Make copy.
-    $request_uri_cpy = $request_uri;
-
     // Find all REST calls of enabled modules.
     $rest_calls = self::get_rest_calls();
-    foreach ($rest_calls as $method => $unused) {
-      krsort($rest_calls[$method]);
+    if (empty($rest_calls[$request_method])) {
+      return FALSE;
     }
+
+    // Sort the rest calls for the requested method.
+    krsort($rest_calls[$request_method]);
 
     // Remove any double //, so explode will work fine.
     while (strpos($request_uri, '//') !== FALSE) {
@@ -111,6 +111,9 @@ class mediamosa_rest {
       }
     }
 
+    // We need the original.
+    $request_uri_cpy = implode('/', $request_uris);
+
     // Check if URL internal / external.
     if ($request_uris[0] == 'internal' || $request_uris[0] == 'external') {
       unset($request_uris[0]);
@@ -118,12 +121,8 @@ class mediamosa_rest {
       $request_uris = explode('/', $request_uri);
     }
 
+    // Reset our matching call.
     $rest_call_return = FALSE;
-
-    // No Rest calls for this method?
-    if (!isset($rest_calls[$request_method])) {
-      return FALSE;
-    }
 
     // Now find a match.
     foreach ($rest_calls[$request_method] as $uri => $rest_call) {
@@ -188,6 +187,8 @@ class mediamosa_rest {
     if (!$rest_call_return) {
       return FALSE; // Not found.
     }
+
+    mediamosa_debug::log("Matched URI '@uri' to REST call '@rest_uri'", array('@uri' => $request_uri_cpy, '@rest_uri' => $rest_call_return[mediamosa_rest_call::URI]));
 
     // Store the original.
     $rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
@@ -365,14 +366,14 @@ class mediamosa_rest {
     $rest_call = $this->get_uri_definition($uri, $method);
 
     // If FALSE, then the URI didn't match with a REST call.
-    if ($rest_call == FALSE) {
-      if (mediamosa::is_admin_enabled()) {
+    if (!$rest_call) {
+      if (mediamosa::is_admin_enabled() && mediamosa::in_simpletest_sandbox_enable_app()) {
         return FALSE;
       }
 
       // Check the allowed paths.
-      foreach (module_implements('mediamosa_allowed_path') as $module) {
-        $allowed_path = module_invoke($module, 'mediamosa_allowed_path');
+      foreach (module_implements('mediamosa_pass_call_drupal') as $module) {
+        $allowed_path = module_invoke($module, 'mediamosa_pass_call_drupal');
         if ($allowed_path) {
           return FALSE;
         }
@@ -410,6 +411,8 @@ class mediamosa_rest {
     $mediamosa = mediamosa::get();
 
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      mediamosa_watchdog::log_export($rest_call);
+      mediamosa_watchdog::log_export(arg());
       throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
     }
 

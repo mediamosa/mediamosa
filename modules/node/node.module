@@ -272,10 +272,10 @@ function node_admin_paths() {
  * Gathers a listing of links to nodes.
  *
  * @param $result
- *   A DB result object from a query to fetch node entities. If your query
- *   joins the <code>node_comment_statistics</code> table so that the
- *   <code>comment_count</code> field is available, a title attribute will
- *   be added to show the number of comments.
+ *   A database result object from a query to fetch node entities. If your
+ *   query joins the {node_comment_statistics} table so that the comment_count
+ *   field is available, a title attribute will be added to show the number of
+ *   comments.
  * @param $title
  *   A heading for the resulting list.
  *
@@ -558,7 +558,6 @@ function node_add_body_field($type, $label = 'Body') {
       'field_name' => 'body',
       'type' => 'text_with_summary',
       'entity_types' => array('node'),
-      'translatable' => TRUE,
     );
     $field = field_create_field($field);
   }
@@ -1074,7 +1073,7 @@ function node_save($node) {
         $node->log = '';
       }
     }
-    elseif (empty($node->log)) {
+    elseif (!isset($node->log) || $node->log === '') {
       // If we are updating an existing node without adding a new revision, we
       // need to make sure $node->log is unset whenever it is empty. As long as
       // $node->log is unset, drupal_write_record() will not attempt to update
@@ -1404,11 +1403,13 @@ function node_show($node, $message = FALSE) {
     drupal_set_title(t('Revision of %title from %date', array('%title' => $node->title, '%date' => format_date($node->revision_timestamp))), PASS_THROUGH);
   }
 
+  // For markup consistency with other pages, use node_view_multiple() rather than node_view().
+  $nodes = node_view_multiple(array($node->nid => $node), 'full');
+
   // Update the history table, stating that this user viewed this node.
   node_tag_new($node);
 
-  // For markup consistency with other pages, use node_view_multiple() rather than node_view().
-  return node_view_multiple(array($node->nid => $node), 'full');
+  return $nodes;
 }
 
 /**
@@ -1455,6 +1456,7 @@ function template_preprocess_node(&$variables) {
   $variables = array_merge((array) $node, $variables);
 
   // Helpful $content variable for templates.
+  $variables += array('content' => array());
   foreach (element_children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
   }
@@ -2073,6 +2075,15 @@ function node_page_title($node) {
   return $node->title;
 }
 
+/**
+ * Finds the last time a node was changed.
+ *
+ * @param $nid
+ *   The ID of a node.
+ *
+ * @return
+ *   A unix timestamp indicating the last time the node was changed.
+ */
 function node_last_changed($nid) {
   return db_query('SELECT changed FROM {node} WHERE nid = :nid', array(':nid' => $nid))->fetch()->changed;
 }
@@ -2158,7 +2169,7 @@ function node_block_save($delta = '', $edit = array()) {
 }
 
 /**
- * Find the most recent nodes that are available to the current user.
+ * Finds the most recently changed nodes that are available to the current user.
  *
  * @param $number
  *   (optional) The maximum number of nodes to find. Defaults to 10.
@@ -2414,7 +2425,10 @@ function node_block_list_alter(&$blocks) {
 }
 
 /**
- * A generic function for generating RSS feeds from a set of nodes.
+ * Generates and prints an RSS feed.
+ *
+ * Generates an RSS feed from an array of node IDs, and prints it with an HTTP
+ * header, with Content Type set to RSS/XML.
  *
  * @param $nids
  *   An array of node IDs (nid). Defaults to FALSE so empty feeds can be
@@ -2433,7 +2447,7 @@ function node_feed($nids = FALSE, $channel = array()) {
     $nids = db_select('node', 'n')
       ->fields('n', array('nid', 'created'))
       ->condition('n.promote', 1)
-      ->condition('status', 1)
+      ->condition('n.status', 1)
       ->orderBy('n.created', 'DESC')
       ->range(0, variable_get('feed_default_items', 10))
       ->addTag('node_access')
@@ -2780,8 +2794,9 @@ function node_search_validate($form, &$form_state) {
  * hook_node_access() is not called on each node for performance reasons and for
  * proper functioning of the pager system. When adding a node listing to your
  * module, be sure to use a dynamic query created by db_select() and add a tag
- * of "node_access" to ensure that only nodes to which the user has access
- * are retrieved.
+ * of "node_access". This will allow modules dealing with node access to ensure
+ * only nodes to which the user has access are retrieved, through the use of
+ * hook_query_TAG_alter().
  *
  * Note: Even a single module returning NODE_ACCESS_DENY from hook_node_access()
  * will block access to the node. Therefore, implementers should take care to
@@ -2813,8 +2828,6 @@ function node_search_validate($form, &$form_state) {
  *   TRUE if the operation may be performed, FALSE otherwise.
  */
 function node_access($op, $node, $account = NULL) {
-  global $user;
-
   $rights = &drupal_static(__FUNCTION__, array());
 
   if (!$node || !in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
@@ -2824,7 +2837,7 @@ function node_access($op, $node, $account = NULL) {
   }
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
-    $account = $user;
+    $account = $GLOBALS['user'];
   }
 
   // $node may be either an object or a node type. Since node types cannot be
@@ -3109,7 +3122,7 @@ function node_access_view_all_nodes($account = NULL) {
  * 'update' and 'delete').
  */
 function node_query_node_access_alter(QueryAlterableInterface $query) {
-  _node_query_node_access_alter($query, 'node', 'node');
+  _node_query_node_access_alter($query, 'node');
 }
 
 /**
@@ -3120,7 +3133,7 @@ function node_query_node_access_alter(QueryAlterableInterface $query) {
  * conditions are added for field values belonging to nodes only.
  */
 function node_query_entity_field_access_alter(QueryAlterableInterface $query) {
-  _node_query_node_access_alter($query, $query->getMetaData('base_table'), 'entity');
+  _node_query_node_access_alter($query, 'entity');
 }
 
 /**
@@ -3128,14 +3141,12 @@ function node_query_entity_field_access_alter(QueryAlterableInterface $query) {
  *
  * @param $query
  *   The query to add conditions to.
- * @param $base_table
- *   The table holding node ids.
  * @param $type
  *   Either 'node' or 'entity' depending on what sort of query it is. See
  *   node_query_node_access_alter() and node_query_entity_field_access_alter()
  *   for more.
  */
-function _node_query_node_access_alter($query, $base_table, $type) {
+function _node_query_node_access_alter($query, $type) {
   global $user;
 
   // Read meta-data from query, if provided.
@@ -3159,14 +3170,61 @@ function _node_query_node_access_alter($query, $base_table, $type) {
     return;
   }
 
+  $tables = $query->getTables();
+  $base_table = $query->getMetaData('base_table');
+  // If no base table is specified explicitly, search for one.
+  if (!$base_table) {
+    $fallback = '';
+    foreach ($tables as $alias => $table_info) {
+      if (!($table_info instanceof SelectQueryInterface)) {
+        $table = $table_info['table'];
+        // If the node table is in the query, it wins immediately.
+        if ($table == 'node') {
+          $base_table = $table;
+          break;
+        }
+        // Check whether the table has a foreign key to node.nid. If it does,
+        // do not run this check again as we found a base table and only node
+        // can triumph that.
+        if (!$base_table) {
+          // The schema is cached.
+          $schema = drupal_get_schema($table);
+          if (isset($schema['fields']['nid'])) {
+            if (isset($schema['foreign keys'])) {
+              foreach ($schema['foreign keys'] as $relation) {
+                if ($relation['table'] === 'node' && $relation['columns'] === array('nid' => 'nid')) {
+                  $base_table = $table;
+                }
+              }
+            }
+            else {
+              // At least it's a nid. A table with a field called nid is very
+              // very likely to be a node.nid in a node access query.
+              $fallback = $table;
+            }
+          }
+        }
+      }
+    }
+    // If there is nothing else, use the fallback.
+    if (!$base_table) {
+      if ($fallback) {
+        watchdog('security', 'Your node listing query is using @fallback as a base table in a query tagged for node access. This might not be secure and might not even work. Specify foreign keys in your schema to node.nid ', array('@fallback' => $fallback), WATCHDOG_WARNING);
+        $base_table = $fallback;
+      }
+      else {
+        throw new Exception(t('Query tagged for node access but there is no nid. Add foreign keys to node.nid in schema to fix.'));
+      }
+    }
+  }
+
   // Prevent duplicate records.
   $query->distinct();
 
-  // Find all instances of the {node} table being joined -- could appear
+  // Find all instances of the base table being joined -- could appear
   // more than once in the query, and could be aliased. Join each one to
   // the node_access table.
 
-  $tables = $query->getTables();
   $grants = node_access_grants($op, $account);
   if ($type == 'entity') {
     // The original query looked something like:
@@ -3290,6 +3348,9 @@ function node_access_acquire_grants($node, $delete = TRUE) {
  * will always delete a grant from the 'all' realm. Modules that utilize
  * node_access can use this function when doing mass updates due to widespread
  * permission changes.
+ *
+ * Note: Don't call this function directly from a contributed module. Call
+ * node_access_acquire_grants() instead.
  *
  * @param $node
  *   The $node being written to. All that is necessary is that it contains a

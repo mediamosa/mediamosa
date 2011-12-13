@@ -605,7 +605,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $still_id
    */
   static public function check($still_id) {
-    // controleer of de still op het filesystem staat
+    // Check if still file exists.
     $filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
     if (!file_exists($filename)) {
       throw new mediamosa_exception_error_file_not_found(array('@filename' => $filename));
@@ -613,107 +613,74 @@ class mediamosa_asset_mediafile_still {
   }
 
   /**
-   * Handle still style request.
+   * Creates a new still image derivative based on an image style.
    *
-   * @param string $style
-   * @param $ticket_id
-   * @param $still_id
+   * The derivative still is stored next to the original, but with ,[style_id]
+   * behind the file name. It does not have a extension either, like the
+   * original still.
    *
-   * @return string $file
+   * @param $mediafile_id
+   *   The still mediafile ID.
+   * @param $style_id
+   *   The style of the image to create.
+   *
+   * @return
+   *   The file path of the (created) style still.
+   *
+   * @see image_style_create_derivative()
+   *
+   * @throws mediamosa_exception_error_mediafile_not_found()
+   * @throws mediamosa_exception_error()
+   *   mediamosa_error::ERRORCODE_CREATING_DERIVATIVE
    */
-  static public function handle_still_style_request($file, $style, $ticket_id = NULL, $still_id = NULL) {
-    if (!$ticket_id && !$still_id) {
-      // One of them is necessary.
-      return $file;
+  static public function image_style_create_derivative($mediafile_id, $style_id) {
+    // The original still.
+    $source_still = mediamosa_configuration_storage::data_still_get_file($mediafile_id);
+    if (mediamosa_io::file_exists($source_still)) {
+      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id)); // not found?
     }
-
-    if (!$style) {
-      return $file;
-    }
-
-    // Check $ticket_id.
-    if ($ticket_id) {
-      // Convert $ticket_id to $still_id.
-      $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
-      $query
-        ->condition('t.' . mediamosa_ticket_db::ID, $ticket_id)
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
-        ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID,));
-      $result = $query->execute();
-      $ticket = $result->fetchCol();
-      $still_id = $ticket[0];
-    }
-
-    // Source of still.
-    $source = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
-
 
     // Validate the style.
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
-    $mediafile = mediamosa_asset_mediafile::must_exists($still_id);
+    // Make sure the mediafile is a still.
+    if ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] != mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
+      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
+    }
+
+    // Need app_id.
     $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
-    $still_style = mediamosa_asset_mediafile_still_style::get($style, $app_id);
-
+    // Get the style.
+    $still_style = mediamosa_asset_mediafile_still_style::get($style_id, $app_id);
     if (!$still_style) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => $source_still));
     }
 
-    // File of style.
-    $file = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? $ticket_id : mediamosa_configuration_storage::objectid_to_location($still_id));
+    // The [mount_point]/data/still version does not have a extension (like the
+    // original).
+    $mediafile_str = mediamosa_asset_mediafile_media::mediafile_str_build($mediafile_id, '', $style_id);
 
-    // Target symlink.
-    $target = mediamosa_configuration_storage::still_style_location_get_full($style) . mediamosa_configuration_storage::objectid_to_location($still_id);
+    // The destination still.
+    $destination_still = mediamosa_configuration_storage::data_still_get_file($mediafile_str);
 
-    // Create the derivative.
-
-    if (!is_file($target)) {
-      $success = FALSE;
-
+    // Create the derivative if not already.
+    if (!mediamosa_io::file_exists($destination_still)) {
       // Load the style.
-      $style_array = image_style_load($style);
-      if (is_array($style_array) && !empty($style_array)) {
+      $style_array = image_style_load($style_id);
+      if (!empty($style_array)) {
         // Create the resized image.
-        $success = image_style_create_derivative($style_array, $source, $target);
-      }
-
-      if (!$success || !is_file($target)) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
+        if (!image_style_create_derivative($style_array, $source_still, $destination_still)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => $source_still));
+        }
       }
     }
 
-    if (file_exists($file)) {
-      return $file;
-    }
-
-    // Create the symlink ticket.
-
-    // Create the permanent link.
-    $path = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? '' : $still_id[0]);
-
-    // Create directory.
-    mediamosa_io::mkdir($path, TRUE);
-
-    // Make sure the location is a directory.
-    if (!is_dir($path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $path));
-    }
-
-    // Must be able to write there.
-    if (!mediamosa_io::is_writable($path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $path));
-    }
-
-    if (!mediamosa_io::symlink($target, $file)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK);
-    }
-
-    return $file;
+    return $destination_still;
   }
 
   /**
    * Delete a still from database and file.
-   * 1.x _media_management_delete_still
    *
    * @param $asset_id
    *  The asset_id. (will remove all stills from this asset_id).
@@ -726,8 +693,8 @@ class mediamosa_asset_mediafile_still {
     // Get the mediafile stills we need to remove.
     if ($still_id != '') {
       // Get specific still.
-      $result = mediamosa_db::db_query(
-        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id = :asset_id',
+      $mediafiles = mediamosa_db::db_query(
+        'SELECT #mediafile_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id = :asset_id',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
@@ -744,8 +711,8 @@ class mediamosa_asset_mediafile_still {
     }
     elseif ($mediafile_id != '') {
       // Get all stills of mediafile.
-      $result = mediamosa_db::db_query(
-        'SELECT s.#mediafile_id AS still_id, s.#app_id, s.#sannas_mount_point, s.#mediafile_id_source FROM {#mediamosa_asset_mediafile} AS s
+      $mediafiles = mediamosa_db::db_query(
+        'SELECT s.#mediafile_id, s.#app_id, s.#sannas_mount_point, s.#mediafile_id_source FROM {#mediamosa_asset_mediafile} AS s
          INNER JOIN {#mediamosa_asset_mediafile} AS m ON m.#asset_id = s.#asset_id
          WHERE m.#mediafile_id = :mediafile_id AND m.#asset_id = :asset_id AND s.#asset_id = :asset_id AND s.#mediafile_id_source = :mediafile_id_source AND s.#is_still = :is_still_true',
         array(
@@ -765,8 +732,8 @@ class mediamosa_asset_mediafile_still {
     }
     else {
       // Get all stills from asset.
-      $result = mediamosa_db::db_query(
-        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id = :asset_id AND #is_still = :is_still_true',
+      $mediafiles = mediamosa_db::db_query(
+        'SELECT #mediafile_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id = :asset_id AND #is_still = :is_still_true',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
@@ -782,95 +749,81 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Collect the mediafiles we need to delete.
-    $a_mediafile_ids = array();
-    foreach ($result as $a_row) {
+    $mediafile_ids = array();
+    foreach ($mediafiles as $mediafile) {
       // Build the path and filename of the still.
-      $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($a_row['still_id'], $a_row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($mediafile['mediafile_id'], $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
       if (isset($mediafile_id) && $mediafile_id) {
-        mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
+        mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $mediafile_filename), $asset_id);
       }
 
-      // Remove from SAN/NAS.
+      // Remove data from SAN/NAS.
 
       // Ticket part.
       $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
       $query
-        ->condition('t.' . mediamosa_ticket_db::MEDIAFILE_ID, $a_row['still_id'])
+        ->condition('t.' . mediamosa_ticket_db::MEDIAFILE_ID, $mediafile['mediafile_id'])
         ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
         ->fields('t', array(mediamosa_ticket_db::ID,));
       $result = $query->execute();
       foreach ($result as $record) {
+        // Ticket.
         $ticket_id = $record[mediamosa_ticket_db::ID];
 
-        // Remove ticket still styles.
+        // Get the app id.
+        $app_id = $record[mediamosa_ticket_db::APP_ID];
+
+        // Remove all tickets symlinks.
         mediamosa_io::exec(
           strtr(
-            'find @still_location. -maxdepth 2 -mindepth 2 -name "@wildmatch" -type l -delete',
+            'find @media_ticket_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
             array(
-              '@still_location' => mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR,
+              '@media_ticket_location' => mediamosa_configuration_storage::media_get_ticket_path(),
               '@wildmatch' => $ticket_id,
             )
           )
         );
-
-        // Remove ticket still link.
-        mediamosa_io::unlink(mediamosa_configuration_storage::ticket_still_location_get() . $ticket_id);
       }
 
-      // Remove permanent still styles.
+      // Remove all permanent symlinks.
       mediamosa_io::exec(
         strtr(
-          'find @still_location. -maxdepth 3 -mindepth 3 -name "@wildmatch" -type l -delete',
+          'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
           array(
-            '@still_location' => mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR,
-            '@wildmatch' => $a_row['still_id'],
+            '@media_location' => mediamosa_configuration_storage::media_get_path(),
+            '@wildmatch' => $mediafile['mediafile_id'],
           )
         )
       );
 
-      // Remove permanent still link.
-      mediamosa_io::unlink(mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($a_row['still_id']));
-
-      // Remove still styles.
-      mediamosa_io::exec(
-        strtr(
-          'find @still_location. -maxdepth 3 -mindepth 3 -name "@wildmatch" -type f -delete',
-          array(
-            '@still_location' => mediamosa_configuration_storage::still_location_get_full() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR,
-            '@wildmatch' => $a_row['still_id'],
-          )
-        )
-      );
-
-      // Remove still.
+      // Remove stills.
       mediamosa_io::unlink($still_filename);
 
-
       // Collect the mediafile id of the still.
-      $a_mediafile_ids[] = $a_row['still_id'];
+      $mediafile_ids[] = $mediafile['mediafile_id'];
 
       if ($mediafile_id == '') {
-        $mediafile_id = $a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+        $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
       }
     }
 
     // Remove the stills from the database.
-    if (!empty($a_mediafile_ids)) {
+    if (!empty($mediafile_ids)) {
       // Remove our metadatas.
-      $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
-      $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
-      $query->execute();
+      mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
+        ->execute();
 
       // Remove the mediafiles.
-      $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_db::TABLE_NAME);
-      $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
-      $query->execute();
+      mediamosa_db::db_delete(mediamosa_asset_mediafile_db::TABLE_NAME)
+        ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN')
+        ->execute();
 
       // Remove tickets.
-      $query = mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME);
-      $query->condition(mediamosa_ticket_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
-      $query->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL);
-      $query->execute();
+      mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME)
+        ->condition(mediamosa_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
+        ->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
+        ->execute();
     }
 
     // Happens when there where no stills to delete. (check added 2.x)
@@ -946,6 +899,17 @@ class mediamosa_asset_mediafile_still {
         );
       }
     }
+  }
+
+  /**
+   * Remove the style files of an specific style.
+   *
+   */
+  static public function delete_files($app_id) {
+    // Get media path, remove the symlinks.
+    $media_app_path = mediamosa_configuration_storage::media_get_path($app_id);
+
+    // Remove originals.
   }
 
   /**
@@ -1039,21 +1003,17 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $still_id
    */
-  static public function remove_permanent_link($still_id) {
-    // Remove permanent still styles.
+  static public function remove_permanent_link($app_id, $still_id) {
+    // Remove permanent stills.
     mediamosa_io::exec(
       strtr(
-        'find @still_location. -maxdepth 3 -mindepth 3 -name "@wildmatch" -type l -delete',
+        'find @media_location -maxdepth 2 -mindepth 2 -name "@wildmatch*" -type l -delete',
         array(
-          '@still_location' => mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR,
+          '@media_location' => mediamosa_configuration_storage::media_get_path($app_id),
           '@wildmatch' => $still_id,
         )
       )
     );
-
-    // Remove the permanent still link.
-    $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
-    mediamosa_io::unlink($file);
   }
 
   /**
@@ -1061,8 +1021,9 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $still_id
    *
-   * @throws Will throw mediamosa_exception_error_is_unappropriate when you
-   *         still link is not allowed at all.
+   * @throws mediamosa_exception_error_is_unappropriate
+   *         Will throw mediamosa_exception_error_is_unappropriate when your
+   *         still link is not allowed.
    */
   static public function is_still_permanent($still_id, $is_app_admin = FALSE) {
     // Protected mediafiles (stills) can not be permanent.

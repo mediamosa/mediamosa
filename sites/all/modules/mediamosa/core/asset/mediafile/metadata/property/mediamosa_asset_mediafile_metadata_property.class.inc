@@ -46,6 +46,7 @@ class mediamosa_asset_mediafile_metadata_property {
           mediamosa_asset_mediafile_metadata_property_db::TYPE,
         ))
         ->execute();
+
       foreach ($result as $row) {
         $prop_ids
           [$row[mediamosa_asset_mediafile_metadata_property_db::NAME]]
@@ -130,27 +131,22 @@ class mediamosa_asset_mediafile_metadata_property {
    * Get the property.
    *
    * @param prop_id
-   * @return array(prop_name, type)
+   *
+   * @return
+   *   Returns single array(prop_name, type)
    */
   static public function get_property($prop_id, $reset = FALSE) {
     static $props = NULL;
 
     if (is_null($props) || $reset) {
-      $props = array();
-
-      $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'p')
+      $props = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'p')
         ->fields('p', array(
           mediamosa_asset_mediafile_metadata_property_db::ID,
           mediamosa_asset_mediafile_metadata_property_db::NAME,
           mediamosa_asset_mediafile_metadata_property_db::TYPE,
         ))
-        ->execute();
-      foreach ($result as $row) {
-        $props[$row[mediamosa_asset_mediafile_metadata_property_db::ID]] = array(
-          'prop_name' => $row[mediamosa_asset_mediafile_metadata_property_db::NAME],
-          'type' => $row[mediamosa_asset_mediafile_metadata_property_db::TYPE],
-        );
-      }
+        ->execute()
+        ->fetchAllAssoc(mediamosa_asset_mediafile_metadata_property_db::ID);
     }
 
     return (!empty($props[$prop_id]) ? $props[$prop_id] : NULL);

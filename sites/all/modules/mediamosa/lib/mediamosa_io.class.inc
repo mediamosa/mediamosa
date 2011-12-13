@@ -54,6 +54,8 @@ class mediamosa_io {
    *  Default mode value for created directory, defaults to mode 0775.
    */
   static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
+    // Log it
+    mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {
@@ -160,7 +162,7 @@ class mediamosa_io {
   /**
    * Return the file extension (excluding the dot, like 'jpg' or 'mp4').
    *
-   * @param string $filename
+   * @param $filename
    */
   static public function get_ext($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
@@ -171,10 +173,25 @@ class mediamosa_io {
   /**
    * Returns directory name component of path.
    *
-   * @param string $path
+   * @param $path
    */
   static public function dirname($path) {
     return dirname($path);
+  }
+
+  /**
+   * Returns trailing name component of path.
+   *
+   * @param $path
+   *   A path.
+   * @param $suffix
+   *  If the name component ends in suffix this will also be cut off (optional).
+   *
+   * @return
+   *   Returns the base name of the given path.
+   */
+  static public function basename($path, $suffix = '') {
+    return basename($path);
   }
 
   /**
@@ -256,6 +273,53 @@ class mediamosa_io {
   }
 
   /**
+   * Converts absolute symlink target->link to relative link.
+   */
+  static public function symlink_absolute2relative($target, $link) {
+    // Check if absolute, link and target needs to absolute for this to work.
+    if (mediamosa_unicode::substr($target, 0, 1) == DIRECTORY_SEPARATOR && mediamosa_unicode::substr($link, 0, 1) == DIRECTORY_SEPARATOR) {
+      // Remove double slashes.
+      $target = str_replace(DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $target);
+      $link = str_replace(DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $link);
+
+      // Get path.
+      $target_path = is_file($target) ? self::dirname($target) : $target;
+
+      // Strip /.
+      $target_path = trim($target_path, DIRECTORY_SEPARATOR);
+      $link = trim(self::dirname($link), DIRECTORY_SEPARATOR);
+
+      // Into parts.
+      $target_parts = explode(DIRECTORY_SEPARATOR, $target_path);
+      $link_parts = explode(DIRECTORY_SEPARATOR, $link);
+
+      // Must contain something.
+      if (empty($link_parts)) {
+        return $target;
+      }
+
+      // If root is not the same, then related .. comes in front.
+      if (!empty($target_parts) && $target_parts[0] == $link_parts[0]) {
+        // Flag if both path have a common start point.
+        $relative_count = FALSE;
+        for ($x = 0; $x < count($target_parts) && $x < count($link_parts); $x++) {
+          if ($target_parts[$x] != $link_parts[$x]) {
+            break;
+          }
+
+          unset($link_parts[$x]);
+          unset($target_parts[$x]);
+        }
+      }
+
+      // Rebuild target.
+      $target = str_repeat('..' . DIRECTORY_SEPARATOR, count($link_parts)) . implode(DIRECTORY_SEPARATOR, $target_parts) . (is_file($target) ? DIRECTORY_SEPARATOR . self::basename($target) : '');
+    }
+
+    return $target;
+  }
+
+  /**
    * Create a symbolic link.
    *
    * @param string $target
@@ -263,7 +327,13 @@ class mediamosa_io {
    * @param string $link
    *  Link to file to create.
    */
-  static public function symlink($target, $link) {
+  static public function symlink($target, $link, $make_relative = TRUE) {
+    if ($make_relative) {
+      // Make symlinks targets relative.
+      $target = self::symlink_absolute2relative($target, $link);
+    }
+
+    mediamosa_debug::log('Creating symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
     return symlink($target, $link);
   }
 
@@ -331,8 +401,9 @@ class mediamosa_io {
    * @param string $dest
    */
   static public function move($source, $dest) {
-    @copy($source, $dest);
-    self::unlink($source);
+    @rename($source, $dest);
+
+    //self::unlink($source);
   }
 
   /**
@@ -471,4 +542,77 @@ class mediamosa_io {
     return $type;
   }
 
+  /**
+   * Examines a file object and returns appropriate content headers for
+   * download.
+   *
+   * Based on Drupal's version 'file_get_content_headers()'. We also re-use the
+   * file_inline_types variable.
+   *
+   * @param $file
+   *   A file object.
+   *
+   * @return
+   *   An associative array of headers.
+   *
+   * @see file_get_content_headers()
+   */
+  static public function file_get_content_headers($filename, $mimetype) {
+    $content_length = filesize($filename);
+    $last_modified = filemtime($filename);
+    $filename = mime_header_encode($filename);
+    $mimetype = mime_header_encode($mimetype);
+
+    // Serve images, text, and flash content for display rather than download.
+    $inline_types = variable_get('file_inline_types', array('^text/', '^image/', 'flash$'));
+    $disposition = 'attachment';
+    foreach ($inline_types as $inline_type) {
+      // Exclamation marks are used as delimiters to avoid escaping slashes.
+      if (preg_match('!' . $inline_type . '!', $mimetype)) {
+        $disposition = 'inline';
+      }
+    }
+
+    return array(
+      'Content-Type' => $mimetype . '; name="' . $filename . '"',
+      'Content-Length' => $content_length,
+      'Content-Disposition' => $disposition . '; filename="' . $filename . '"',
+      'Cache-Control' => 'private, max-age=' . mediamosa_settings::MEDIA_CACHE_SECOND . ', must-revalidate',
+      'Last-Modified' => gmdate(DATE_RFC1123, $last_modified),
+      'Expires' => gmdate(DATE_RFC1123, time() + mediamosa_settings::MEDIA_CACHE_SECOND),
+    );
+  }
+
+  /**
+   * Transfer file using HTTP to client. In future we will use scheme wrappers
+   * for files.
+   *
+   * Based on Drupal's file_transfer().
+   *
+   * @param $file
+   *   String specifying the file URI to transfer.
+   * @param $headers
+   *   An array of HTTP headers to send along with file.
+   */
+  static public function file_transfer($file, $headers) {
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
+
+    foreach ($headers as $name => $value) {
+      drupal_add_http_header($name, $value);
+    }
+    drupal_send_headers();
+
+    // Transfer file in chunks to save memory usage.
+    $fd = fopen($file, 'rb');
+    if ($fd) {
+      while (!feof($fd)) {
+        print fread($fd, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
+      }
+      fclose($fd);
+
+      drupal_exit();
+    }
+  }
 }

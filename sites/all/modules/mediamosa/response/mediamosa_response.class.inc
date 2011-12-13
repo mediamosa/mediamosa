@@ -49,8 +49,8 @@ class mediamosa_response extends mediamosa {
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'download';
 
-  // Download stills.
-  const RESPONSE_TYPE_STILL = 'still';
+  // Media (new 3.1)
+  const RESPONSE_TYPE_MEDIA = 'media';
 
   // ------------------------------------------------------------------ Members
   // The stored response.
@@ -141,19 +141,20 @@ class mediamosa_response extends mediamosa {
       // Find the rest call.
       $this->rest_call = $this->mediamosa_rest->match_call();
 
+      // No rest call matched? Will only get FALSE when admin switch is on.
       if (!$this->rest_call) {
-        // No REST call: proceed with Drupal.
-        if (mediamosa::is_admin_enabled()) {
-          if (!empty($previous_handler)) {
-            set_error_handler($previous_handler, E_ALL);
-          }
-          return;
+        // Restore previous handler.
+        if (!empty($previous_handler)) {
+          set_error_handler($previous_handler, E_ALL);
         }
+
+        return;
       }
-      else {
+
+      if (mediamosa::is_admin_enabled() && !mediamosa::in_simpletest_sandbox()) {
         // Proceed with REST call but make exception for /user/login
         // and /user/password and /user.
-        if (mediamosa::is_admin_enabled() && (user_is_logged_in())) {
+        if (user_is_logged_in()) {
           // Then allow all restcalls without /user, /user/{number} and /user/logout
           if ((mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') || (mediamosa_unicode::substr(mediamosa::request_uri(), -11) == 'user/logout')) {
             // Proceed with Drupal: first put back previous (drupal) handler.
@@ -163,7 +164,7 @@ class mediamosa_response extends mediamosa {
             return;
           }
         }
-        elseif ((mediamosa::is_admin_enabled()) && (!user_is_logged_in())) {
+        else {
           // Then allow all restcalls without /user/login and /user/password.
           // Known issue: /user gives rest call here instead of Drupal login page.
           if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password' || mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') {
@@ -172,7 +173,7 @@ class mediamosa_response extends mediamosa {
               set_error_handler($previous_handler, E_ALL);
             }
             return;
-          } 
+          }
         }
       }
 
@@ -223,6 +224,11 @@ class mediamosa_response extends mediamosa {
       print($e->getMessage());
       exit();
     }
+    catch (mediamosa_exception_error_400 $e) {
+      // Bad request.
+      header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
+      exit();
+    }
     catch (mediamosa_exception_error_403 $e) {
       // Forbidden
       header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
@@ -231,6 +237,11 @@ class mediamosa_response extends mediamosa {
     catch (mediamosa_exception_error_404 $e) {
       // Not found
       header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+      exit();
+    }
+    catch (mediamosa_exception_error_500 $e) {
+      // Internal server error.
+      header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error');
       exit();
     }
     catch (mediamosa_exception_error_501 $e) {
@@ -392,7 +403,7 @@ class mediamosa_response extends mediamosa {
           break;
 
         case mediamosa_response::RESPONSE_TYPE_DOWNLOAD:
-        case mediamosa_response::RESPONSE_TYPE_STILL:
+        case mediamosa_response::RESPONSE_TYPE_MEDIA:
           // Output already handled by REST call.
           $output = '';
 

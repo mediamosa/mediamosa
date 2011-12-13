@@ -16,10 +16,10 @@ if ($args['help'] || $count == 0) {
   exit;
 }
 
-if ($args['execute-batch']) {
+if ($args['execute-test']) {
   // Masquerade as Apache for running tests.
   simpletest_script_init("Apache");
-  simpletest_script_execute_batch();
+  simpletest_script_run_one_test($args['test-id'], $args['execute-test']);
 }
 else {
   // Run administrative functions as CLI.
@@ -78,7 +78,7 @@ simpletest_script_reporter_init();
 $test_id = db_insert('simpletest_test_id')->useDefaults(array('test_id'))->execute();
 
 // Execute tests.
-simpletest_script_command($args['concurrency'], $test_id, implode(",", $test_list));
+simpletest_script_execute_batch($test_id, simpletest_script_get_test_list());
 
 // Retrieve the last database prefix used for testing and the last test class
 // that was run from. Use the information to read the lgo file in case any
@@ -98,6 +98,9 @@ if ($args['xml']) {
 
 // Cleanup our test results.
 simpletest_clean_results_table($test_id);
+
+// Test complete, exit.
+exit;
 
 /**
  * Print help text.
@@ -121,7 +124,7 @@ All arguments are long options.
   --clean     Cleans up database tables or directories from previous, failed,
               tests and then exits (no tests are run).
 
-  --url       Immediately preceeds a URL to set the host and path. You will
+  --url       Immediately precedes a URL to set the host and path. You will
               need this parameter if Drupal is in a subdirectory on your
               localhost and you have not set \$base_url in settings.php. Tests
               can be run under SSL by including https:// in the URL.
@@ -130,9 +133,7 @@ All arguments are long options.
 
   --concurrency [num]
 
-              Run tests in parallel, up to [num] tests at a time. This requires
-              the Process Control Extension (PCNTL) to be compiled in PHP, not
-              supported under Windows.
+              Run tests in parallel, up to [num] tests at a time.
 
   --all       Run all available tests.
 
@@ -166,7 +167,7 @@ Drupal installation as the webserver user (differs per configuration), or root:
 sudo -u [wwwrun|www-data|etc] php ./scripts/{$args['script']}
   --url http://example.com/ --all
 sudo -u [wwwrun|www-data|etc] php ./scripts/{$args['script']}
-  --url http://example.com/ --class UploadTestCase
+  --url http://example.com/ --class BlockTestCase
 \n
 EOF;
 }
@@ -193,8 +194,8 @@ function simpletest_script_parse_args() {
     'verbose' => FALSE,
     'test_names' => array(),
     // Used internally.
-    'test-id' => NULL,
-    'execute-batch' => FALSE,
+    'test-id' => 0,
+    'execute-test' => '',
     'xml' => '',
   );
 
@@ -234,10 +235,6 @@ function simpletest_script_parse_args() {
   // Validate the concurrency argument
   if (!is_numeric($args['concurrency']) || $args['concurrency'] <= 0) {
     simpletest_script_print_error("--concurrency must be a strictly positive integer.");
-    exit;
-  }
-  elseif ($args['concurrency'] > 1 && !function_exists('pcntl_fork')) {
-    simpletest_script_print_error("Parallel test execution requires the Process Control extension to be compiled in PHP. See http://php.net/manual/en/intro.pcntl.php for more information.");
     exit;
   }
 
@@ -310,93 +307,96 @@ function simpletest_script_init($server_software) {
 /**
  * Execute a batch of tests.
  */
-function simpletest_script_execute_batch() {
+function simpletest_script_execute_batch($test_id, $test_classes) {
   global $args;
 
-  if (!isset($args['test-id'])) {
-    simpletest_script_print_error("--execute-batch should not be called interactively.");
-    exit;
-  }
-  if ($args['concurrency'] == 1) {
-    // Fallback to mono-threaded execution.
-    if (count($args['test_names']) > 1) {
-      foreach ($args['test_names'] as $test_class) {
-        // Execute each test in its separate Drupal environment.
-        simpletest_script_command(1, $args['test-id'], $test_class);
-      }
-      exit;
-    }
-    else {
-      // Execute an individual test.
-      $test_class = array_shift($args['test_names']);
-      drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-      simpletest_script_run_one_test($args['test-id'], $test_class);
-      exit;
-    }
-  }
-  else {
-    // Multi-threaded execution.
-    $children = array();
-    while (!empty($args['test_names']) || !empty($children)) {
-      // Fork children safely since Drupal is not bootstrapped yet.
-      while (count($children) < $args['concurrency']) {
-        if (empty($args['test_names'])) break;
-
-        $child = array();
-        $child['test_class'] = $test_class = array_shift($args['test_names']);
-        $child['pid'] = pcntl_fork();
-        if (!$child['pid']) {
-          // This is the child process, bootstrap and execute the test.
-          drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-          simpletest_script_run_one_test($args['test-id'], $test_class);
-          exit;
-        }
-        else {
-          // Register our new child.
-          $children[] = $child;
-        }
+  // Multi-process execution.
+  $children = array();
+  while (!empty($test_classes) || !empty($children)) {
+    while (count($children) < $args['concurrency']) {
+      if (empty($test_classes)) {
+        break;
       }
 
-      // Wait for children every 200ms.
-      usleep(200000);
+      // Fork a child process.
+      $test_class = array_shift($test_classes);
+      $command = simpletest_script_command($test_id, $test_class);
+      $process = proc_open($command, array(), $pipes, NULL, NULL, array('bypass_shell' => TRUE));
 
-      // Check if some children finished.
-      foreach ($children as $cid => $child) {
-        if (pcntl_waitpid($child['pid'], $status, WUNTRACED | WNOHANG)) {
-          // This particular child exited.
-          unset($children[$cid]);
+      if (!is_resource($process)) {
+        echo "Unable to fork test process. Aborting.\n";
+        exit;
+      }
+
+      // Register our new child.
+      $children[] = array(
+        'process' => $process,
+        'class' => $test_class,
+        'pipes' => $pipes,
+      );
+    }
+
+    // Wait for children every 200ms.
+    usleep(200000);
+
+    // Check if some children finished.
+    foreach ($children as $cid => $child) {
+      $status = proc_get_status($child['process']);
+      if (empty($status['running'])) {
+        // The child exited, unregister it.
+        proc_close($child['process']);
+        if ($status['exitcode']) {
+          echo 'FATAL ' . $test_class . ': test runner returned a non-zero error code (' . $status['exitcode'] . ').' . "\n";
         }
+        unset($children[$cid]);
       }
     }
-    exit;
   }
 }
 
 /**
- * Run a single test (assume a Drupal bootstrapped environment).
+ * Bootstrap Drupal and run a single test.
  */
 function simpletest_script_run_one_test($test_id, $test_class) {
-  $test = new $test_class($test_id);
-  $test->run();
-  $info = $test->getInfo();
+  try {
+    // Bootstrap Drupal.
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-  $status = ((isset($test->results['#fail']) && $test->results['#fail'] > 0)
-           || (isset($test->results['#exception']) && $test->results['#exception'] > 0) ? 'fail' : 'pass');
-  simpletest_script_print($info['name'] . ' ' . _simpletest_format_summary_line($test->results) . "\n", simpletest_script_color_code($status));
+    $test = new $test_class($test_id);
+    $test->run();
+    $info = $test->getInfo();
+
+    $had_fails = (isset($test->results['#fail']) && $test->results['#fail'] > 0);
+    $had_exceptions = (isset($test->results['#exception']) && $test->results['#exception'] > 0);
+    $status = ($had_fails || $had_exceptions ? 'fail' : 'pass');
+    simpletest_script_print($info['name'] . ' ' . _simpletest_format_summary_line($test->results) . "\n", simpletest_script_color_code($status));
+
+    // Finished, kill this runner.
+    exit(0);
+  }
+  catch (Exception $e) {
+    echo (string) $e;
+    exit(1);
+  }
 }
 
 /**
- * Execute a command to run batch of tests in separate process.
+ * Return a command used to run a test in a separate process.
+ *
+ * @param $test_id
+ *  The current test ID.
+ * @param $test_class
+ *  The name of the test class to run.
  */
-function simpletest_script_command($concurrency, $test_id, $tests) {
+function simpletest_script_command($test_id, $test_class) {
   global $args, $php;
 
-  $command = "$php ./scripts/{$args['script']} --url {$args['url']}";
+  $command = escapeshellarg($php) . ' ' . escapeshellarg('./scripts/' . $args['script']) . ' --url ' . escapeshellarg($args['url']);
   if ($args['color']) {
     $command .= ' --color';
   }
-  $command .= " --php " . escapeshellarg($php) . " --concurrency $concurrency --test-id $test_id --execute-batch $tests";
-  passthru($command);
+  $command .= " --php " . escapeshellarg($php) . " --test-id $test_id --execute-test $test_class";
+  return $command;
 }
 
 /**
@@ -487,12 +487,13 @@ function simpletest_script_reporter_init() {
     echo "\n";
   }
 
-  echo "Test run started: " . format_date($_SERVER['REQUEST_TIME'], 'long') . "\n";
+  echo "Test run started:\n";
+  echo " " . format_date($_SERVER['REQUEST_TIME'], 'long') . "\n";
   timer_start('run-tests');
   echo "\n";
 
-  echo "Test summary:\n";
-  echo "-------------\n";
+  echo "Test summary\n";
+  echo "------------\n";
   echo "\n";
 }
 
@@ -573,7 +574,7 @@ function simpletest_script_reporter_timer_stop() {
   echo "\n";
   $end = timer_stop('run-tests');
   echo "Test run duration: " . format_interval($end['time'] / 1000);
-  echo "\n";
+  echo "\n\n";
 }
 
 /**

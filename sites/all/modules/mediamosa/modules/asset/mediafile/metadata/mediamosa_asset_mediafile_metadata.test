@@ -54,7 +54,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id = $this->createAsset();
 
     // Get the metadata definitions.
-    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties(array('dublin_core', 'qualified_dublin_core'));
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
 
     // Collect metadatas.
     $a_parameters = array();
@@ -82,7 +82,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the asset metadatas.
     $a_asset = $this->getAsset($asset_id);
-    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core'], $a_asset['czp']);
 
     // Check the metadatas.
     // From sent.

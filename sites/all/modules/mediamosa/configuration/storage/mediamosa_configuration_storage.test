@@ -64,10 +64,10 @@ class MediaMosaConfigurationStorageTestCase extends MediaMosaTestCase {
 
     $a_locations = array(
       mediamosa_configuration_storage::data_location_get() => FALSE,
-      mediamosa_configuration_storage::still_location_get() => FALSE,
+      mediamosa_configuration_storage::data_still_location_get() => FALSE,
       mediamosa_configuration_storage::ticket_play_location_get() => TRUE,
       mediamosa_configuration_storage::ticket_download_location_get() => TRUE,
-      mediamosa_configuration_storage::ticket_still_location_get() => TRUE,
+      mediamosa_configuration_storage::media_get_ticket_path() => TRUE,
       mediamosa_configuration_storage::transcode_tmp_location_get() => FALSE,
     );
 
