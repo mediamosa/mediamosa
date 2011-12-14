@@ -52,8 +52,11 @@ class mediamosa_io {
    *  Enable recursive to create the sub maps required to create directory.
    * @param int $mode
    *  Default mode value for created directory, defaults to mode 0775.
+   * @param int chmod_depth
+   *  Directory depth to perform an addition chmod to avoid umask problems with mkdir.
+   *  0 = do nothing, 1 = only current dir, 2 = perform chmod on 2 dirs, etc.
    */
-  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
+  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775, $chmod_depth = 1) {
     // Log it
     mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
 
@@ -71,7 +74,15 @@ class mediamosa_io {
         )
       );
     }
-    drupal_chmod($pathname, NULL); // default 0775 to override umask problems.
+
+    // If a server umask is set, the rights of the new directories are != 0775
+    // so we have to perform an extra chmod.
+    $directory_array = explode(DIRECTORY_SEPARATOR, $pathname);
+    $count = count($directory_array);
+    for ($i = $count; $i > $count - $chmod_depth; $i--) {
+      $path = implode(DIRECTORY_SEPARATOR, array_slice($directory_array, 0, $i));
+      drupal_chmod($path, NULL); // default 0775 to override umask problems.
+    }
 
     return TRUE;
   }

@@ -630,7 +630,7 @@ class mediamosa_asset_mediafile_play_proxy {
               $file_asx = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
 
               // Create a possible app_id directory.
-              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE);
+              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE, 0775, 2);
 
               // Open file for writing.
               $handle_file_asx = @fopen($file_asx, 'w+');
