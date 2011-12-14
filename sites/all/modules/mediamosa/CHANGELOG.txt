@@ -1,4 +1,11 @@
-MediaMosa 3.1.0-rc (build 1805)
+MediaMosa 3.1.0-rc2 (build 1810)
+-------------------------------
+- Fixed security issue with session app_id.
+- Fixed filesystem rights of some sannas directories.
+- Fixed playproxy .asx files.
+- Fixed Metadata properties that where empty caused wrong exception.
+
+MediaMosa 3.1.0-rc1 (build 1805)
 -------------------------------
 - Fixed several unittests.
 - introduction of media/.htaccess

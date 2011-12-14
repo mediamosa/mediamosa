@@ -1,0 +1,113 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Timezone unittest effects all parts of MediaMosa.
+  */
+class MediaMosaEnvironmentTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa - Environment tests',
+      'description' => 'Tests for environment settings and global session data.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  public function testSession() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    // Create an asset.
+    $asset_id_1 = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+
+    // Do login on other egas.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+
+    // Do call asset with normal app.
+
+    // Get the asset.
+    $asset_1 = $this->getAsset($asset_id_1);
+
+    // Now do same with other app.
+    $this->toEga_2();
+
+    // Create an asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Create a mediafile.
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    // Do call asset with normal app.
+
+    // Get the asset.
+    $asset_2 = $this->getAsset($asset_id_2);
+
+    // Try to get other asset with same user, other app, should fail.
+    $asset_1 = $this->getAsset($asset_id_1, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Set parameters.
+    $parameters = array(mediamosa_rest_call_asset_get::USER_ID => 'other');
+
+    // Try to get other asset, should fail.
+    $asset_1 = $this->getAsset($asset_id_1, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now switch back, see if other app can not get other asset.
+    $this->toEga_1();
+
+    // Try to get other asset, should fail.
+    $asset_2 = $this->getAsset($asset_id_2, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now give app ID with call, try to get it, must fail (i'm in app 1).
+    $asset_2 = $this->getAsset($asset_id_2, array('app_id' => $app_id_2), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now give app ID with call, try to get it, must fail (i'm in app 1) even
+    // with not owner of asset.
+    $asset_2 = $this->getAsset($asset_id_2, array('app_id' => $app_id_2, mediamosa_rest_call_asset_get::USER_ID => 'other'), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now switch back, see if other app can not get other asset.
+    $this->toEga_2();
+
+    // Try to get other asset, should fail.
+    $asset_1 = $this->getAsset($asset_id_1, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now give app ID with call, try to get it, must fail (i'm in app 1).
+    $asset_1 = $this->getAsset($asset_id_1, array('app_id' => $app_id_1), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Now give app ID with call, try to get it, must fail (i'm in app 1) even
+    // with not owner of asset.
+    $asset_1 = $this->getAsset($asset_id_1, array('app_id' => $app_id_1, mediamosa_rest_call_asset_get::USER_ID => 'other'), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+  }
+}
