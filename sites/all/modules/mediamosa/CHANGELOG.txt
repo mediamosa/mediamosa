@@ -1,3 +1,6 @@
+MediaMosa 3.0.8 (build 1791)
+----------------------------
+- Fixed security issue with session app_id.
 
 MediaMosa 3.0.7 (build 1790)
 ----------------------------
