@@ -59,7 +59,7 @@ class mediamosa_asset_metadata_property {
     }
 
     // Must be from these app(s).
-    $query->condition(mediamosa_rest_call::APP_ID, array_unique($app_ids), 'IN');
+    $query->condition(mediamosa_asset_metadata_property_db::APP_ID, array_unique($app_ids), 'IN');
     if ($name != '') {
       $query->condition(mediamosa_asset_metadata_property_db::NAME, $name, '=');
     }
