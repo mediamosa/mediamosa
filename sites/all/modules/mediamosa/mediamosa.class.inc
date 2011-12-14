@@ -88,18 +88,20 @@ class mediamosa {
    * Set up environment based on the input app_id(s).
    */
   protected function setup_environment() {
-    // Because the REST interface is not up, we are going to retrieve the
-    // app_id value.
-    $app_ids = mediamosa_rest_call::get_param_value_global(mediamosa_rest_call::APP_ID);
+    // Session app_id must have priority before we accept any given app_id.
+    if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
+      $app_ids = array($_SESSION['mediamosa_app']['app_id']);
+    }
+
     if (empty($app_ids)) {
       $app_ids = array(0);
 
-      if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
-        $app_ids = array($_SESSION['mediamosa_app']['app_id']);
+      // Because the REST interface is not up, we are going to retrieve the
+      // app_id value.
+      $app_ids = mediamosa_rest_call::get_param_value_global(mediamosa_rest_call::APP_ID);
+      if (!is_array($app_ids)) {
+        $app_ids = array($app_ids);
       }
-    }
-    elseif (!is_array($app_ids)) {
-      $app_ids = array($app_ids);
     }
 
     // Get the first app_id.
