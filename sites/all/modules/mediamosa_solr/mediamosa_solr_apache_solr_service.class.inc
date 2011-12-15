@@ -57,6 +57,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   const MEDIAMOSA_SOLR_DEFAULT_HOST = 'solr.mediamosa.local';
   const MEDIAMOSA_SOLR_DEFAULT_PORT = 8983;
   const MEDIAMOSA_SOLR_DEFAULT_PATH = '/solr/';
+  const MEDIAMOSA_SOLR_DEFAULT_SCHEME = 'http';
 
   // -------------------------------------------------------------- Constructor.
   public function __construct($url = NULL) {
@@ -111,7 +112,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * Return the url for the solr servlet.
    */
   static public function mediamosaGetUrl() {
-    $url = variable_get('mediamosa_solr_url', 'http://' . self::MEDIAMOSA_SOLR_DEFAULT_HOST . '/');
+    $url = variable_get('mediamosa_solr_url', self::MEDIAMOSA_SOLR_DEFAULT_SCHEME . '://' . self::MEDIAMOSA_SOLR_DEFAULT_HOST . '/');
 
     // Parse the url into parts.
     $parse_url = parse_url($url);
@@ -123,13 +124,14 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
 
     // Add possible missing stuff.
     $parse_url += array(
-      'host' => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
-      'port' => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
-      'path' => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
+      'scheme'  => self::MEDIAMOSA_SOLR_DEFAULT_SCHEME,
+      'host'  => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
+      'port'  => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
+      'path'  => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
     );
 
-    // Solr only uses host, port and path.
-    return 'http://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/';
+    // Solr only uses scheme, host, port and path.
+    return $parse_url['scheme'] . '://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/';
   }
 
   /**
@@ -146,13 +148,14 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
 
     // Add possible missing stuff.
     $parse_url += array(
-      'host' => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
-      'port' => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
-      'path' => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
+      'scheme'  => self::MEDIAMOSA_SOLR_DEFAULT_SCHEME,
+      'host'  => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
+      'port'  => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
+      'path'  => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
     );
 
-    // Solr only uses host, port and path.
-    variable_set('mediamosa_solr_url', 'http://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/');
+    // Solr only uses scheme, host, port and path.
+    variable_set('mediamosa_solr_url', $parse_url['scheme'] . '://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/');
   }
 
   /**
