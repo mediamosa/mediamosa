@@ -209,6 +209,9 @@ class mediamosa_ticket {
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_OGG:
               $ticket_id .= '.ogg';
               break;
+            case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WEBM:
+              $ticket_id .= '.webm';
+              break;
           }
         }
 

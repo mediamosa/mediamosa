@@ -56,6 +56,7 @@ class mediamosa_asset_mediafile_play_proxy {
   const CONTAINER_TYPE_MP4 = 'mov;mp4;m4a;3gp;3g2;mj2';
   const CONTAINER_TYPE_FLV = 'flv';
   const CONTAINER_TYPE_OGG = 'ogg';
+  const CONTAINER_TYPE_WEBM = 'webm';
 
   /**
    * Video codec types.
