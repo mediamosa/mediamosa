@@ -44,7 +44,11 @@ class mediamosa_io {
 
   /**
    * Attempts to create the directory specified by pathname.
-   * Fails with exception.
+   *
+   * Fails with exception. This overrides the recursive php mkdir
+   * as it does not correctly sets chmod recursively. It also uses the
+   * sannas mount point as a basis, so it never tries to create a directory
+   * outside this tree.
    *
    * @param string $pathname
    *  Path of the directory to create.
@@ -52,12 +56,9 @@ class mediamosa_io {
    *  Enable recursive to create the sub maps required to create directory.
    * @param int $mode
    *  Default mode value for created directory, defaults to mode 0775.
-   * @param int chmod_depth
-   *  Directory depth to perform an addition chmod to avoid umask problems with mkdir.
-   *  0 = do nothing, 1 = only current dir, 2 = perform chmod on 2 dirs, etc.
    */
-  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775, $chmod_depth = 1) {
-    // Log it
+  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
+    // Log it.
     mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
 
     // Already exists? Then don't try to create.
@@ -65,25 +66,35 @@ class mediamosa_io {
       return TRUE; // Return TRUE for unit test.
     }
 
-    if (!drupal_mkdir($pathname, $mode, $recursive)) {
-      throw new mediamosa_exception_error(
-        mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
-        array(
-          '@location' => $pathname,
-          '@reason' => mediamosa::last_php_error_message()
-        )
-      );
+    // first determine sannas mount point.
+    $sannas = mediamosa_configuration_storage::mount_point_get();
+    if (substr($sannas, -1) == DIRECTORY_SEPARATOR) {
+      $sannas = substr($sannas, 0, -1); // remove possible trailing slash.
     }
+    $sannas_depth = count(explode(DIRECTORY_SEPARATOR, $sannas));
 
-    // If a server umask is set, the rights of the new directories are != 0775
-    // so we have to perform an extra chmod.
-    $directory_array = explode(DIRECTORY_SEPARATOR, $pathname);
-    $count = count($directory_array);
-    for ($i = $count; $i > $count - $chmod_depth; $i--) {
-      $path = implode(DIRECTORY_SEPARATOR, array_slice($directory_array, 0, $i));
-      drupal_chmod($path, NULL); // default 0775 to override umask problems.
+    if (substr($pathname, -1) == DIRECTORY_SEPARATOR) {
+      $pathname = substr($pathname, 0, -1); // remove possible trailing slash.
     }
+    $dirs = explode(DIRECTORY_SEPARATOR, $pathname);
+    $count = count($dirs);
 
+    $path = $sannas; // we start with sannas mount point.
+    for ($i = $sannas_depth; $i < $count; $i++) {
+      $path .= DIRECTORY_SEPARATOR . $dirs[$i];
+      if (!is_dir($path)) {
+        if (!drupal_mkdir($path)) {
+          throw new mediamosa_exception_error(
+            mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+            array(
+              '@location' => $path,
+              '@reason' => mediamosa::last_php_error_message()
+            )
+          );
+        }
+        drupal_chmod($path, 0775);
+      }
+    }
     return TRUE;
   }
 

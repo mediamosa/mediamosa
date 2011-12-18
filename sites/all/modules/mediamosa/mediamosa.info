@@ -305,3 +305,4 @@ files[] = patch/mediamosa_cookie_domain.test
 ; Core tests.
 files[] = mediamosa.timezone.test
 files[] = mediamosa.environment.test
+files[] = mediamosa.lib.test

@@ -220,7 +220,7 @@ class mediamosa_ticket {
     $ticket_path = mediamosa_io::dirname($ticket_symlink);
 
     // Create directory.
-    mediamosa_io::mkdir($ticket_path, TRUE, 0775, 2);
+    mediamosa_io::mkdir($ticket_path, TRUE, 0775);
 
     // Make sure the location of the ticket is a directory.
     if (!is_dir($ticket_path)) {
