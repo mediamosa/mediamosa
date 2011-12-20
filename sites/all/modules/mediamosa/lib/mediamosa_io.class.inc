@@ -67,15 +67,10 @@ class mediamosa_io {
     }
 
     // first determine sannas mount point.
-    $sannas = mediamosa_configuration_storage::mount_point_get();
-    if (substr($sannas, -1) == DIRECTORY_SEPARATOR) {
-      $sannas = substr($sannas, 0, -1); // remove possible trailing slash.
-    }
+    $sannas = rtrim(mediamosa_configuration_storage::mount_point_get(), DIRECTORY_SEPARATOR); // remove possible trailing slash.
+    $pathname = rtrim($pathname, DIRECTORY_SEPARATOR); // remove possible trailing slash.
     $sannas_depth = count(explode(DIRECTORY_SEPARATOR, $sannas));
 
-    if (substr($pathname, -1) == DIRECTORY_SEPARATOR) {
-      $pathname = substr($pathname, 0, -1); // remove possible trailing slash.
-    }
     $dirs = explode(DIRECTORY_SEPARATOR, $pathname);
     $count = count($dirs);
 
