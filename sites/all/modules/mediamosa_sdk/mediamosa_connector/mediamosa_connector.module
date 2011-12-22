@@ -213,6 +213,7 @@ function theme_mediamosa_connector_call($variables) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#attributes' => array('class' => array('collapsible collapsed')),
+    '#attached' => array('library' => array(array('system', 'drupal.collapse'))),
   );
 
   $form['restcall']['data'] = array(
