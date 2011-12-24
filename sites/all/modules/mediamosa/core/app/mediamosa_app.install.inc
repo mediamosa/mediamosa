@@ -223,14 +223,14 @@ function mediamosa_app_schema() {
         'type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_HINT_MP4_FALSE, mediamosa_app_db::ALWAYS_HINT_MP4_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_HINT_MP4_FALSE, mediamosa_app_db::ALWAYS_HINT_MP4_TRUE)) . "')",
-        'default' => mediamosa_app_db::ALWAYS_HINT_MP4_TRUE,
+        'default' => mediamosa_app_db::ALWAYS_HINT_MP4_FALSE,
       ),
       mediamosa_app_db::ALWAYS_INSERT_MD => array(
-        'description' => 'Always insert extra metadata flv files.',
+        'description' => 'Always hint (make streamable) flv files.',
         'type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_INSERT_MD_FALSE, mediamosa_app_db::ALWAYS_INSERT_MD_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_INSERT_MD_FALSE, mediamosa_app_db::ALWAYS_INSERT_MD_TRUE)) . "')",
-        'default' => mediamosa_app_db::ALWAYS_INSERT_MD_TRUE,
+        'default' => mediamosa_app_db::ALWAYS_INSERT_MD_FALSE,
       ),
       mediamosa_app_db::IS_METADATA_PUBLIC => array(
         'description' => 'Is metadata of this client application public visible in OAI?',
