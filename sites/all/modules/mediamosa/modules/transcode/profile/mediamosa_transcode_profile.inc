@@ -53,8 +53,8 @@ function _mediamosa_transcode_profile_list() {
   }
 
   $header = array(
-    array('data' => t('Profile'), 'field' => 'tp.' . mediamosa_transcode_profile_db::PROFILE),
     array('data' => t('Transcode profile id'), 'field' => 'tp.' . mediamosa_transcode_profile_db::ID),
+    array('data' => t('Profile'), 'field' => 'tp.' . mediamosa_transcode_profile_db::PROFILE),
     array('data' => t('Is Default'), 'field' => 'tp.' . mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_transcode_profile_db::TOOL),
     array('data' => t('App owner'), 'field' => 'tp.' . mediamosa_transcode_profile_db::APP_ID),
@@ -96,8 +96,8 @@ function _mediamosa_transcode_profile_list() {
     }
 
     $owner = ($transcode_profile[mediamosa_transcode_profile_db::APP_ID] == 0) ? 'global profile' : $transcode_profile[mediamosa_transcode_profile_db::APP_ID];    $rows[] = array(
-      'title' => array('data' => l($transcode_profile[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID]), 'field' => $transcode_profile[mediamosa_transcode_profile_db::PROFILE]),
       'transcode_profile_id' => $transcode_profile[mediamosa_transcode_profile_db::ID],
+      'title' => array('data' => l($transcode_profile[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID]), 'field' => $transcode_profile[mediamosa_transcode_profile_db::PROFILE]),
       'description' => $transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE],
       'tool' => $transcode_profile[mediamosa_transcode_profile_db::TOOL],
       'owner' => $owner,
