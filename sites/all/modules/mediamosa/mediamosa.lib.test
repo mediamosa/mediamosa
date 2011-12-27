@@ -1,0 +1,90 @@
+<?php
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Unittests to test funcions from the lib.
+  */
+class MediaMosaMkdir extends MediaMosaTestCase {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa - recursive mkdir tests',
+      'description' => 'Test if mkdir recursively correctly sets the chmod of the dirs.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testMkdir() {
+
+    // determine test sannas dir
+    $sannas = mediamosa_configuration_storage::mount_point_get(TRUE);
+
+    // Call mkdir.
+    $path = $sannas . 'foo';
+    mediamosa_io::mkdir($path, TRUE, 0775);
+
+    $perms = substr(sprintf('%o', fileperms($path)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('foo'): $perms");
+
+    // Call mkdir with 2 levels deep.
+    $path = $sannas . 'bar'. DIRECTORY_SEPARATOR . 'foo';
+
+    mediamosa_io::mkdir($path, TRUE, 0775);
+    $perms = substr(sprintf('%o', fileperms($path)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('bar/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms($sannas . 'bar')), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('bar/foo'): $perms");
+    
+    // Call mkdir with 3 levels deep.
+    $path = $sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar'. DIRECTORY_SEPARATOR . 'foo';
+
+    mediamosa_io::mkdir($path, TRUE, 0775);
+    $perms = substr(sprintf('%o', fileperms($path)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('baz/bar/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar')), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('baz/bar/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms($sannas . 'baz')), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of baz after mkdir('baz/bar/foo'): $perms");
+  }
+
+  
+  protected function tearDown() {
+    // determine test sannas dir
+    $sannas = mediamosa_configuration_storage::mount_point_get(TRUE);
+
+    drupal_rmdir($sannas . 'foo');
+    drupal_rmdir($sannas . 'bar'. DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($sannas . 'bar');
+    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar'. DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar');
+    drupal_rmdir($sannas . 'baz');
+
+    parent::teardown();
+  }
+}

@@ -336,6 +336,7 @@ function _mediamosa_browse_asset_execute() {
   $params = array();
 
   $cqls = array();
+  $add_sort_cql = TRUE;
 
   switch ($op) {
     case t('Apply filter'):
@@ -353,11 +354,16 @@ function _mediamosa_browse_asset_execute() {
 
     case t('Apply CQL filter'):
       $cqls[] = $session['cql'];
+
+      // Can't add sorting when its in users cql.
+      $add_sort_cql = stripos($session['cql'], 'sortby ') === FALSE;
       break;
   }
 
-  // Add sort.
-  $cqls[] = strtr('sortBy !order/!sort', array('!order' => $order, '!sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
+  if ($add_sort_cql) {
+    // Add sort.
+    $cqls[] = strtr('sortBy !order/!sort', array('!order' => $order, '!sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
+  }
 
   // Add params.
   $params['cql'] = implode(' ', $cqls);

@@ -129,8 +129,8 @@ class mediamosa_settings {
   // Time in seconds at which a still is made in a movie, if the movie is
   // shorter than 10 seconds, half the movie length is used.
   const STILL_DEFAULT_FRAME_TIME = 10;
-  // Still default size qcif = 176x144.
-  const STILL_DEFAULT_SIZE = '176x144';
+  // Still default size 640x360.
+  const STILL_DEFAULT_SIZE = '640x360';
   // Stills are generated with STILL_INTERVAL as interval in seconds.
   const STILL_INTERVAL = 1;
   // If you wish to space the interval (STILL_INTERVAL) every still being

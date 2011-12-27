@@ -44,15 +44,17 @@ function mediamosa_tool_ffmpeg_install() {
     array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', t('The allowed value is between 0 and 2@default')),
 
     array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo','flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
-    array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', 'The -vpre option is an preset option of ffmpeg used till version 0.8 for libx264 and later used only for libvpx, it is recommended that you use -profile and -preset for libx264.'),
     array('ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array('', 'main', 'baseline', 'ipod320', 'ipod640'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'x264_profile', '-profile', NULL, NULL, array('', 'baseline', 'main', 'high'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
+    array('ffmpeg', 'x264_preset', '-preset', NULL, NULL, array('', 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
     array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('','1','2'), NULL, 'FALSE', t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
     array('ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', t('Set the video bitrate in bit/s@default')),
     array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', t('Set frame rate (Hz value, fraction or abbereviation@default')),
     array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', t('Maximum video quantizer scale (VBR)@default')),
     array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', t('Duration of the video.')),
     array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
-    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360', '640x390'), '640x390', 'FALSE', t('Set frame size using format WIDTHxHEIGHT@default')),
+    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080', '480x320','480x270','480x360', '640x390', '640x360', '854x480'), '640x390', 'FALSE', t('Set frame size using format WIDTHxHEIGHT@default')),
     array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', t('Aspect ratio')),
     array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force maintain the original video aspect ratio or not@default')),
     array('ffmpeg', 'padding', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force padding, if aspect ratio is maintained@default')),
@@ -80,37 +82,53 @@ function mediamosa_tool_ffmpeg_install() {
   $a_default_profiles = array(
 
     // Two (less used) flash profiles.
-    array('flash small', 'TRUE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:500000;size:320x200;maintain_aspect_ratio:yes;padding:yes'),
-    array('flash 480x270', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:128000;audiosamplingrate:22050;videocodec:flv;videobitrate:600000;size:480x270;maintain_aspect_ratio:yes;padding:yes'),
+    array('flash small', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:250000;size:320x200;maintain_aspect_ratio:yes'),
+    array('flash 400x240', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:500000;size:400x240;maintain_aspect_ratio:yes'),
+    array('flash 480x270', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:128000;audiosamplingrate:22050;videocodec:flv;videobitrate:800000;size:480x270;maintain_aspect_ratio:yes'),
 
     // old 3gp mobile phones format.
-    // ffmpeg -i input_video.mp4 -s 176x144 -vcodec h263 -r 25 -b 12200 -ab 12200 -ac 1 -ar 8000 output_video.3gp
-    array('3gp mobile format', 'FALSE', 'ffmpeg', '3gp', 'audiobitrate:12200;audiosamplingrate:8000;audiochannels:1;videocodec:h263;videobitrate:56000;fps:25;size:176x144'),
-
+    // resource used: http://goinggnu.wordpress.com/2007/02/13/convert-avi-to-3gp-using-ffmpeg/
+    // ffmpeg -i inputfile.mpg -s qcif -vcodec h263 -acodec aac -ac 1 -ar 8000 -r 25 -ab 32 -y outputfile.3gp
+    array('3gp mobile format', 'FALSE', 'ffmpeg', '3gp', 'audiocodec:libfaac;audiobitrate:32000;audiosamplingrate:110025;audiochannels:1;videocodec:h263;videobitrate:56000;fps:25;size:176x144'),
     // libx264
 
-    // a slow h264 transcode (2 pass), with no size.
-    array('mp4 h264 (baseline, slow 2 pass)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;2_pass_h264_encoding:2;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
+    // a baseline h264 transcode, without size.
+    array('mp4 h264 (baseline, slow 2 pass), ffmpeg < 0.7.7', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
 
-    // iphone libx264 -- not android compatible. 480x320
-    array('mp4 h264 (iphone)', 'FALSE', 'ffmpeg', 'mp4', '
-audiocodec:libfaac;audiobitrate:64000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:ipod320;2_pass_h264_encoding:2;videobitrate:536000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
+    // a baseline h264 transcode, without size.
+    array('mp4 h264 (baseline, ffmpeg > 0.7.7)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
 
     // based on android h264 recommendations: http://developer.android.com/guide/appendix/media-formats.html
-    array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
-    array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
-    array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+    array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
+    array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
+    array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+    array('mp4 h264 HD (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
+    // same as before but now with default profile.
+    array('mp4 h264 low quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
+    array('mp4 h264 medium quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
+    array('mp4 h264 high quality', 'TRUE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+    array('mp4 h264 HD - 2kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+    array('mp4 h264 HD - 4kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:4000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+
+    // h264 lossless profiles.
+    
     // mpeg4
     array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
 
     // mpeg4 iphone format (untested)
     array('mpeg4 iphone', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiochannels:2;videocodec:mpeg4;videobitrate:800000;size:240x160'),
-    // webm
-    array('WebM', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx'),
+
+    // webm, settings from http://en.wikipedia.org/wiki/YouTube
+    array('WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
+    array('WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
+    array('WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+    array('WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:4000000;fps:30;size:1920x1080;maintain_aspect_ratio:yes'),
 
     // ogg
-    array('Theora/Ogg', 'FALSE', 'ffmpeg', 'ogg', 'audiocodec:libvorbis;videocodec:libtheora'),
+    array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
+    array('Theora/Ogv 480p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
+    array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
   );
 

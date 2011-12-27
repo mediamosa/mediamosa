@@ -56,6 +56,7 @@ class mediamosa_asset_mediafile_play_proxy {
   const CONTAINER_TYPE_MP4 = 'mov;mp4;m4a;3gp;3g2;mj2';
   const CONTAINER_TYPE_FLV = 'flv';
   const CONTAINER_TYPE_OGG = 'ogg';
+  const CONTAINER_TYPE_WEBM = 'webm';
 
   /**
    * Video codec types.
@@ -630,7 +631,7 @@ class mediamosa_asset_mediafile_play_proxy {
               $file_asx = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
 
               // Create a possible app_id directory.
-              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE, 0775, 2);
+              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE, 0775);
 
               // Open file for writing.
               $handle_file_asx = @fopen($file_asx, 'w+');
