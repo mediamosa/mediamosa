@@ -57,8 +57,8 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     // Now transcode both.
 
     // Create transcode job.
-    $job_id_1 = $this->createMediafileTranscode($mediafile_id_1);
-    $job_id_2 = $this->createMediafileTranscode($mediafile_id_2);
+    $job_id_1 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => 1));
+    $job_id_2 = $this->createMediafileTranscode($mediafile_id_2, array('profile_id' => 1));
 
     // Parse the queue.
     $this->doQueueCycleAll();

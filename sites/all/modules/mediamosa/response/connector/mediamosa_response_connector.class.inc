@@ -108,7 +108,7 @@ class mediamosa_response_connector extends mediamosa_response {
 
     if ($result['header']['request_result'] != self::SUCCESS) {
       drupal_set_message($uri);
-      drupal_set_message($result['header']['request_result__id'] . ': ' . $result['header']['request_result_description'], 'error');
+      drupal_set_message($result['header']['request_result_id'] . ': ' . $result['header']['request_result_description'], 'error');
     }
 
     return $result;

@@ -56,6 +56,9 @@ class MediaMosaSolrAclSlaveRightsTestCaseEga extends MediaMosaAclSlaveRightsTest
    * Any changes; see other classes(!)
    */
   protected function setUp() {
+    // Get Solr url from parent install.
+    $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
+
     // Run parent first so we are inside sandbox.
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
@@ -71,6 +74,9 @@ class MediaMosaSolrAclSlaveRightsTestCaseEga extends MediaMosaAclSlaveRightsTest
     else {
       call_user_func_array('parent::setUp', $args);
     }
+
+    // Solr set url.
+    variable_set('mediamosa_solr_url', $mediamosa_solr_url);
 
     // Turn on Solr as search engine.
     variable_set('mediamosa_search_engine', 'mediamosa_solr');

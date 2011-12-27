@@ -1226,7 +1226,7 @@ function mediamosa_update_7059() {
         'type' => 'varchar',
         'length' => 25,
         'not null' => FALSE,
-        'default' => '176x144',
+        'default' => '640x360',
       ));
     }
     if (!db_field_exists('mediamosa_app', 'still_padding')) {
@@ -2103,7 +2103,7 @@ function mediamosa_update_7099() {
   }
 
   if (!db_field_exists('mediamosa_app', 'still_default_size')) {
-    db_query("ALTER TABLE {mediamosa_app} ADD still_default_size varchar(25) DEFAULT '176x144' COMMENT 'The default size of the still image.' AFTER timezone");
+    db_query("ALTER TABLE {mediamosa_app} ADD still_default_size varchar(25) DEFAULT '640x360' COMMENT 'The default size of the still image.' AFTER timezone");
   }
 
   if (!db_field_exists('mediamosa_app', 'still_padding')) {
@@ -3256,4 +3256,13 @@ function mediamosa_update_7130() {
     // Create the new directory.
   $path = mediamosa_configuration_storage::mount_point_get();
   mediamosa_io::move($path . '/data/simpletest', $path . '/media/simpletest');
+}
+
+/**
+ * Upgrade the default still size and tune yamdi and mp4box hinting down.
+ */
+function mediamosa_update_7131() {
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN always_hint_mp4 always_hint_mp4 enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Always hint (make streamable) mp4 files.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN always_insert_md always_insert_md enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Always hint (make streamable) flv files.'");
+  db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN still_default_size still_default_size varchar(25) NULL DEFAULT '640x360' COMMENT 'The default size of the still image.'");
 }

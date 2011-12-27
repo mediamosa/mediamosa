@@ -1147,6 +1147,9 @@ class mediamosa_job_scheduler {
             case 'ega':
               $target_size = '640x350';
               break;
+            case 'hd360':
+              $target_size = '640x360';
+              break;
             case 'hd480':
               $target_size = '852x480';
               break;
@@ -1202,7 +1205,7 @@ class mediamosa_job_scheduler {
               $result['size'] = $width . 'x' . $height;
             }
             else {
-              $result['size'] = '176x144';
+              $result['size'] = '640x360';
             }
             $result['h_padding'] = 0;
             $result['v_padding'] = 0;
@@ -1212,7 +1215,7 @@ class mediamosa_job_scheduler {
           // Something went wrong in the analyse script
           // Fall back to the default values
           $result['frametime'] = mediamosa_settings::STILL_DEFAULT_FRAME_TIME;
-          $result['size'] = '176x144';
+          $result['size'] = '640x360';
           $result['h_padding'] = 0;
           $result['v_padding'] = 0;
           $result['blackstill_check'] = 'FALSE';

@@ -407,7 +407,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   end
   local command =
     string.format(cd_command ..
-                  "ffmpeg -i %s/%s/%s %s %s %s -y %s/%s.%s 2>&1 || " ..
+                  "ffmpeg -i %s/%s/%s %s %s %s -y %s/%s.%s 2>&1 | tr '\\r' '\\n' || " ..
                   "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
                   source_path, string.sub(hash, 1, 1), hash,
                   second_input, params, precommand,
@@ -419,6 +419,10 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local log = {}
   local output_seen = false
   print(command)
+
+  write_status_file({ Status = "transcoding",
+                      Progress = string.format("%.3f", 0)
+  })
 
   while line do
     log[#log+1] = line

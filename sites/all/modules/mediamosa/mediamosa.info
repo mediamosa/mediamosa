@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "3.1.0-rc2"
+version = "3.1.0"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -305,3 +305,4 @@ files[] = patch/mediamosa_cookie_domain.test
 ; Core tests.
 files[] = mediamosa.timezone.test
 files[] = mediamosa.environment.test
+files[] = mediamosa.lib.test
