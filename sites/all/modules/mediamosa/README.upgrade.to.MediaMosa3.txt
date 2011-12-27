@@ -1,4 +1,37 @@
 
+Upgrading to MediaMosa 3.1
+--------------------------
+
+Before you upgrade, make a backup!
+
+Read http://drupal.org/upgrade for more general information on how to
+upgrade a Drupal site. Do not forget to run update.php after updating
+the MediaMosa codebase.
+
+Upgrading from 3.0 will keep the existing transcode profiles and
+server object codes in place. If you want the newer versions, it is
+recommended you do a new test installation and review the new profiles
+and object players.
+
+Also version 3.1 adds a /media alias and a new still download server
+definition pointing to this alias. This ensures a better performance
+for stills in MediaMosa, so it is advised to do so.
+
+add the next to your apache setup:
+    # Media
+    Alias /media [mount_point]/media
+    <Directory [mount_point]/media>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
+
+And go in the Admin site to MediaMosa-Configuration-Servers, edit the
+STILL server and change 'PATH'-field. Change the /still to /media, to
+for example: {base_uri}media/{TICKET}
+
+
 Upgrading to MediaMosa 3
 ------------------------
 

@@ -1,3 +1,15 @@
+MediaMosa 3.1.0 (build 1820)
+----------------------------
+- Redesigned example video transcode profiles.
+- Default still is now 640x360.
+- Fixed 2 lua bugs: progress status and logerror with statusfile.
+- Fixed header result id mapping to drupal_set_message.
+- Fix error when using sortBy in CQL in the asset browser tool.
+- Fixed debug info block in MediaMosa SDK.
+- Solr update: unittest to work with parent solr url, updated documentation.
+- Forum issue by DZenker: Added .webm as a extention to ticket links for webm videos.
+- Fixed mkdir to make sure all directories have the correct mode (755).
+
 MediaMosa 3.1.0-rc2 (build 1810)
 -------------------------------
 - Fixed security issue with session app_id.
