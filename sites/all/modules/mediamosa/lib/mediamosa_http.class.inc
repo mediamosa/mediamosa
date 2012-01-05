@@ -655,7 +655,7 @@ class mediamosa_http {
    */
   static public function uri2url($uri) {
     $uri = trim($uri);
-    if (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') {
+    if ( (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') && (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('https://')) != 'https://') ){
       $uri = 'http://' . trim($uri, "/ \n\r\t\0");
     }
 
