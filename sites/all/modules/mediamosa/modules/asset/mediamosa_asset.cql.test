@@ -178,4 +178,49 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     // May not find anything.
     $this->cql_do_search_test_assets_1('created >= "2010-01-01 00:00:00"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
   }
+
+  // Test multiple property cql search.
+  public function testCQLProperties() {
+
+    // Create assets.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+
+    // add properties
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'asset 1',
+        'publisher' => 'foo',
+      )
+    );
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'asset 2',
+        'publisher' => 'bar',
+      )
+    );
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'asset 3',
+        'publisher' => array('foo', 'bar'),
+      )
+    );
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'asset 4',
+      )
+    );
+    $this->cql_do_search_test_assets_1('title = "asset"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    $this->cql_do_search_test_assets_1('dc.publisher = "foo"', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+
+    $this->cql_do_search_test_assets_1('dc.publisher = "bar"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // In the next 2 tests, asset_id_3 is controversial.
+    $this->cql_do_search_test_assets_1('dc.publisher <> "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    $this->cql_do_search_test_assets_1('NOT dc.publisher = "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+  }
 }
