@@ -517,7 +517,14 @@ function _mediamosa_maintenance_status_configuration_generate() {
   $schema_description = '';
 
   // Scan the install files.
-  $files = file_scan_directory('sites/all/modules/mediamosa', '/^.*\.install\.inc$/');
+  /**
+   * This test is currently disabled as it gives in some installations
+   * false errors on the status page.
+   * This should be rewritten as a proper unit test so the simpletest tables can
+   * be compared with the current installation.
+   */
+  // $files = file_scan_directory('sites/all/modules/mediamosa', '/^.*\.install\.inc$/');
+  $files = array();
   $test_table_prefix = 'mediamosa__' . mt_rand(1000, 9999);
 
   // Go through the install files.
@@ -604,12 +611,14 @@ function _mediamosa_maintenance_status_configuration_generate() {
       }
     }
   }
+  /*
   $results['database_schemas'] = array(
     'title' => t('Database schema'),
     'value' => $is_schemas ? t("Schema's match database installation") : t("Schema's do not match database installation"),
     'description' => $is_schemas ? '' : '<pre>' . $schema_description . '</pre>',
     'severity' => _mediamosa_maintenance_status_okwarning($is_schemas),
   );
+  */
 
   // Making the report.
   return array(
