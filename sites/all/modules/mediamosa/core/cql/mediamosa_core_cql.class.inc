@@ -1106,6 +1106,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
         }
 
         $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
+          MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
           MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mediamosa_asset_metadata_' . $name,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,

@@ -3266,3 +3266,25 @@ function mediamosa_update_7131() {
   db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN always_insert_md always_insert_md enum('FALSE','TRUE') NOT NULL DEFAULT 'FALSE' COMMENT 'Always hint (make streamable) flv files.'");
   db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN still_default_size still_default_size varchar(25) NULL DEFAULT '640x360' COMMENT 'The default size of the still image.'");
 }
+
+/**
+ * Fixes upgrade path reported by forum.
+ */
+function mediamosa_update_7132() {
+
+  // install dc and qdc metadata formats if not already enabled.
+  $module_list = array(
+    'mediamosa_metadata_dc',
+    'mediamosa_metadata_qdc',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+
+  // Server definitions are always uppercase.
+  $result = db_query('SELECT nid FROM {mediamosa_server}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    $node->server_type = drupal_strtoupper($node->server_type);
+    node_save($node);
+  } 
+}

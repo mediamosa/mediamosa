@@ -183,7 +183,12 @@ table tr.region td { background:#f8f8f8; }
 
 /* Hide tabledrag markers */
 table tr.draggable span.tabledrag-changed { display:none; }
-
+ 
+/* Stripe administrative tables */
+.page-admin table tr.even, .page-admin table tr.even td {
+  background: #f9f9f9;
+}
+               
 /**
  * Forms ==============================================================
  */
@@ -383,23 +388,24 @@ select.form-select {
 .fieldset-title a,
 .fieldset-content { display:block; }
 
-.fieldset { margin:0px 0px 10px; }
-
-.fieldset.titled {
+.fieldset {
+  margin:0px 0px 10px;
   display:block;
   position:relative;
-  min-height:30px;
+  min-height:28px;
+  border: 1px solid #CCCCCC;
   }
+fieldset legend {
+  display: block;
+  float: left;
+  width: 100%;
+}
+body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane fieldset {
+  padding:0;
+}
 
 .fieldset-legend {
   display:block;
-  position:absolute;
-  left:0px;
-  right:0px;
-  top:0px;
-  border-width:1px;
-  border-style:solid;
-  border-color:#ddd #ddd #eee;
   }
 
 .container-inline .fieldset-legend .fieldset-content,
@@ -417,7 +423,7 @@ select.form-select {
   margin:0px;
   padding:4px 9px 5px;
   color:#333;
-  background:#f4f4f4;
+  background:#f6f6f6;
   }
 
   .fieldset-legend,
@@ -462,14 +468,6 @@ select.form-select {
   background:#fff;
   }
 
-  .container-inline .fieldset-content,
-  .fieldset-content {
-    border-width:1px;
-    border-style:solid;
-    border-color:#ddd;
-    }
-
-  .titled .fieldset-content { border-width:0px 1px 1px; }
 
   html.js .collapsed .fieldset-content { display:none; }
 
@@ -479,6 +477,7 @@ select.form-select {
 .filter-wrapper {
   font-size:11px;
   margin-top:-10px;
+  border-top:none; 
   }
 
 .filter-wrapper .fieldset-content {
@@ -744,6 +743,9 @@ body.tao #admin-toolbar a.menu-hover span.menu-description span.icon {
   border:0px;
   padding:10px;
   }
+.vertical-tabs .fieldset-content .fieldset-content {
+  margin-top: 20px;
+}
 
 .vertical-tabs-list li a {
   display:block;
