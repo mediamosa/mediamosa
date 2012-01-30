@@ -1,3 +1,11 @@
+MediaMosa 3.1.1 (build 1830)
+----------------------------
+- Updated Rubik and Tao theme.
+- Disabled db schema check on Status page (forum: after-install-php-error-main-page).
+- Disabled CQL search test with unequal searches for SOLR.
+- Fixed CQL search with unequal searches (<>) on properties.
+- Fixes upgrade path reported by (forum: "error-while-upgrading-31")
+
 MediaMosa 3.1.0 (build 1820)
 ----------------------------
 - Redesigned example video transcode profiles.
