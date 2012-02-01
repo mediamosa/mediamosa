@@ -216,6 +216,32 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       );
     }
 
+    // Test for unsetting the play_restriction_* dates.
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
+    );
+    $response = $this->updateAsset($asset_id, $parameters);
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check the result.
+    $test = array(
+      mediamosa_asset_db::PLAY_RESTRICTION_START => '',
+      mediamosa_asset_db::PLAY_RESTRICTION_END => '',
+      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $asset[$key] == $value,
+        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $asset[$key]))
+      );
+    }
+
     //
     // Change the ownership as not an ega admin.
     //
