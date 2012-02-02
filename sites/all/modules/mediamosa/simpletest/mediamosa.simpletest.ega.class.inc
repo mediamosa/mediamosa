@@ -507,7 +507,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFile($filename = '', $asset_id = NULL) {
+  protected function uploadTestFile($filename = '', $asset_id = NULL, $use_put = FALSE) {
 
     if (empty($asset_id)) {
       // Create an asset.
@@ -517,20 +517,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);
 
-    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $filename);
+    // Upload the file.
+    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $filename, $use_put);
 
-    // Lets return the mediafile_id for now.
+    // Lets return the asset_id, mediafile_id and filename.
     return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename);
   }
 
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFileForMediafile($asset_id, $mediafile_id, $filename = '') {
+  protected function uploadTestFileForMediafile($asset_id, $mediafile_id, $filename = '', $use_put = FALSE) {
     // Create upload ticket.
     $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
-    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
+    $result = db_select(mediamosa_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
     foreach ($result as $row) {
       $this->var_export($row, 'Dump Ticket');
     }
@@ -542,17 +543,67 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Get link to upload file.
     $filename = empty($filename) ? self::getTestVideo() : $filename;
 
+    // Get the filesize of the original.
+    $filesize_original = filesize($filename);
+
     // URL.
     $action = $uploadticket['action'];
-
-    // File.
-    $a_post['file'] = '@' . $filename;
 
     // No headers.
     $headers = array();
 
-    // Upload the test file.
-    $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $a_post, CURLOPT_HTTPHEADER => $headers));
+    // POST or PUT.
+    if (!$use_put) { // POST.
+      // File.
+      $postfields = array('file' => '@' . $filename);
+
+      // Upload the test file.
+      $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
+
+      // Our upload.
+      $this->verbose('POST request to: ' . $action .
+                    '<hr />Ending URL: ' . $this->getUrl() .
+                    '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
+                    '<hr />' . $out);
+    }
+    else { // PUT.
+      // Open the file to transfer.
+      $handle = fopen($filename, 'rb');
+
+      // Split up action so we can add filename to the URL.
+      $parse_url = mediamosa_http::parse_url($action);
+
+      // Split up the query.
+      $query = explode('&', $parse_url['query']);
+      $query[] = 'filename=' . rawurlencode(mediamosa_io::basename($filename));
+      // The user_id will be removed from the PUT upload, its not used.
+      $query[] = 'user_id=' . rawurlencode('itsignoredandwillberemovedinrestcall');
+      $parse_url['query'] = implode('&', $query);
+
+      // Rebuild again.
+      $action = mediamosa_http::build_url($parse_url);
+
+      $this->curlInitialize();
+      curl_setopt($this->curlHandle, CURLOPT_BINARYTRANSFER, TRUE);
+      curl_setopt($this->curlHandle, CURLOPT_URL, $action);
+      curl_setopt($this->curlHandle, CURLOPT_HTTPHEADER, $headers);
+      curl_setopt($this->curlHandle, CURLOPT_PUT, 1);
+      curl_setopt($this->curlHandle, CURLOPT_INFILE, $handle);
+      curl_setopt($this->curlHandle, CURLOPT_INFILESIZE, $filesize_original);
+
+      // We can't use $this->curlExec() here, does not support PUT.
+      $out = curl_exec($this->curlHandle);
+
+      // Close the curl handle.
+      curl_close($this->curlHandle);
+      unset($this->curlHandle);
+
+      // Close the file.
+      fclose($handle);
+
+      // Our upload.
+      $this->pass('PUT request to: ' . $action . '<hr />' . $out);
+    }
 
     // Add for deletion.
     $this->mediafiles_cleanup[] = $mediafile_id;
@@ -563,34 +614,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $out = $new;
     }
 
-    // Our upload.
-    $this->verbose('POST request to: ' . $action .
-                   '<hr />Ending URL: ' . $this->getUrl() .
-                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($a_post, TRUE), TRUE) .
-                   '<hr />' . $out);
-
     list($response, $data) = explode("\r\n\r\n", $out, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
 
     // Parse the response status line.
     list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
 
-    // Check 200 resonse.
-    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+    if ($use_put) {
+      // Check 100 / 200 response. PUT seems to return 100 code.
+      $this->assertTrue($code == 200 || $code == 100, 'Upload HTML response 200 (OK) or 100 (Continue).');
+    }
+    else {
+      // Check 200 response.
+      $this->assertTrue($code == 200, 'Upload HTML response 200.');
+    }
 
     // Get the upload job.
-    $a_job = mediamosa_job::get_by_mediafileid($mediafile_id);
-    $this->var_export($a_job, 'Dump Job');
+    $job = mediamosa_job::get_by_mediafileid($mediafile_id);
+    $this->var_export($job, 'Dump Job');
 
-    // Other.
-    $a_job_upload = mediamosa_job_upload::get($a_job[mediamosa_job_db::ID]);
-    $this->var_export($a_job_upload, 'Dump Job Upload');
+    // Get upload job.
+    $job_upload = mediamosa_job_upload::get($job[mediamosa_job_db::ID]);
+    $this->var_export($job_upload, 'Dump Job Upload');
+
+    // Check sizes.
+    $this->assertTrue($job_upload['file_size'] == $filesize_original, '$job_upload->file_size [' . $job_upload['file_size'] .  '] must be [' . $filesize_original . ']');
+    $this->assertTrue($job_upload['uploaded_file_size'] == $filesize_original, '$job_upload->uploaded_file_size [' . $job_upload['uploaded_file_size'] .  '] must be  [' . $filesize_original . ']');
 
     // Get the mediafile.
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Check if the file has been uploaded.
     $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been uploaded.');
+
+    // Check the size.
+    $filesize_uploaded = filesize(mediamosa_configuration_storage::mediafile_filename_get($mediafile));
+    $this->assertTrue($filesize_uploaded, 'Uploaded filesize [' . $filesize_uploaded . '] the same as original  [' . $filesize_original . ']');
 
     // Lets return the filename.
     return mediamosa_configuration_storage::mediafile_filename_get($mediafile);

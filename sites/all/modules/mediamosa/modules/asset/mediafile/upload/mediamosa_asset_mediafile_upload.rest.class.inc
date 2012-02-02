@@ -427,27 +427,6 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
  * Method: PUT
  */
 class mediamosa_rest_call_asset_mediafile_upload_put extends mediamosa_rest_call_asset_mediafile_upload {
-
-  // ------------------------------------------------------------------ Consts.
-  // Rest vars;
-  const USER_ID = 'user_id';
-
-  // ------------------------------------------------------------------ Get Var Setup.
-  public function get_var_setup() {
-
-    // Call parent.
-    $a_var_setup = parent::get_var_setup();
-
-    // Add user_id.
-    $a_var_setup[self::VARS][self::USER_ID] = array(
-      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      self::VAR_DESCRIPTION => 'User id, determined to check whether the applicant has the rights and quotas to upload the mediafile.',
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-      self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
-    );
-
-    return $a_var_setup;
-  }
 }
 
 
