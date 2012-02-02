@@ -1354,7 +1354,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::PLAY_RESTRICTION_END => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
-          self::VAR_DESCRIPTION => 'The play restriction range end position. Provide value '' (empty string) to clear this field.',
+          self::VAR_DESCRIPTION => "The play restriction range end position. Provide value '' (empty string) to clear this field.",
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
