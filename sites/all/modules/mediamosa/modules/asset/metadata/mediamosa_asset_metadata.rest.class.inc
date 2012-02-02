@@ -34,8 +34,6 @@
  * URI: /asset/$asset_id/metadata
  *
  * Create the metadata for the asset.
- *
- * 1.x: media_management_create_metadata
  */
 class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
@@ -140,14 +138,11 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
         self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES, // always array.
       );
     }
-    // FIXME:
-    //$_POST['issued'] = '1999-11-30 00:00:00';
 
-
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_app_admin($a_var_setup);
   }
 
-  // ------------------------------------------------------------------ Override process_rest_args.
+  // ----------------------------------------------- Override process_rest_args.
   protected function process_rest_args(array $a_var_setup) {
     // process current args so we can use them.
     $a_var_setup = parent::process_rest_args($a_var_setup);
