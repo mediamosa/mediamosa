@@ -1345,24 +1345,24 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID used for authotication.',
+          self::VAR_DESCRIPTION => 'The user ID used for authorization.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::PLAY_RESTRICTION_START => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
-          self::VAR_DESCRIPTION => 'The play restriction range start position.',
+          self::VAR_DESCRIPTION => "The play restriction range start position. Provide value '' (empty string) to clear this field.",
         ),
         self::PLAY_RESTRICTION_END => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
-          self::VAR_DESCRIPTION => 'The play restriction range end position.',
+          self::VAR_DESCRIPTION => 'The play restriction range end position. Provide value '' (empty string) to clear this field.',
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'If isprivate = true, then the asset is not displayed in public lists, such as top 10, last uploaded, etc.',
+          self::VAR_DESCRIPTION => 'If isprivate = true, the asset is not displayed in public lists, such as top 10, last uploaded, etc.',
         ),
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'If is_inappropiate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
+          self::VAR_DESCRIPTION => 'If is_inappropriate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
