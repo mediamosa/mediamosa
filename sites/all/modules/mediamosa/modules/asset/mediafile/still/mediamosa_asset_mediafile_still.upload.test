@@ -38,7 +38,7 @@ class MediaMosaAssetMediafileStillUploadPNGTestCase extends MediaMosaTestCaseEga
   public static function getInfo() {
     return array(
       'name' => 'Still - Upload PNG test',
-      'description' => 'Upload PNG still test.',
+      'description' => 'Upload PNG still test with POST and PUT.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
@@ -54,9 +54,12 @@ class MediaMosaAssetMediafileStillUploadPNGTestCase extends MediaMosaTestCaseEga
     $default = FALSE;
 
     // Upload PNG.
-    $watermark = $this->uploadTestStill($order, $default, self::getTestImage_Png());
+    $this->uploadTestStill($order, $default, self::getTestImage_Png());
 
     // Upload PNG.
-    $watermark = $this->uploadTestStillAttach($order, $default, self::getTestImage_Png());
+    $this->uploadTestStillAttach($order, $default, self::getTestImage_Png());
+
+    // Upload PNG PUT.
+    $this->uploadTestStill($order, $default, self::getTestImage_Png(), TRUE);
   }
 }

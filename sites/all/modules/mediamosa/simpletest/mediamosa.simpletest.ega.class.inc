@@ -570,6 +570,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       // Open the file to transfer.
       $handle = fopen($filename, 'rb');
 
+      $this->assertTrue($handle !== FALSE, 'Got file handle');
+
       // Split up action so we can add filename to the URL.
       $parse_url = mediamosa_http::parse_url($action);
 
@@ -658,7 +660,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of still.
    */
-  protected function uploadTestStill($order = 0, $default = FALSE, $filename = NULL) {
+  protected function uploadTestStill($order = 0, $default = FALSE, $filename = NULL, $use_put = FALSE) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -668,7 +670,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create upload ticket.
     $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
-    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
+    $result = db_select(mediamosa_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
     foreach ($result as $row) {
       $this->var_export($row, 'Dump Ticket');
     }
@@ -687,33 +689,88 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Still upload does not use the action from the upload ticket.
     $uri = strtr('asset/@asset_id/still/upload', array('@asset_id' => $asset_id));
 
-    // Post parameters.
-    $postfields['file'] = '@' . $filename;
-    $postfields['mediafile_id'] = $mediafile_id;
-    $postfields['upload_ticket'] = $uploadticket['ticket_id'];
-    $postfields['order'] = $order;
-    $postfields['default'] = $default ? 'true' : 'false';
+    // Add for deletion.
+    $this->mediafiles_cleanup[] = $mediafile_id;
 
     // No headers.
     $headers = array();
 
-    // Upload the test file.
-    $out = $this->curlExec(array(CURLOPT_URL => url($uri, array('absolute' => TRUE)), CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
+    // POST or PUT.
+    if (!$use_put) { // POST.
+      // Post parameters.
+      $postfields = array(
+        'file' => '@' . $filename,
+        'mediafile_id' => $mediafile_id,
+        'upload_ticket' => $uploadticket['ticket_id'],
+        'order' => $order,
+        'default' => $default ? 'true' : 'false',
+      );
 
-    // Add for deletion.
-    $this->mediafiles_cleanup[] = $mediafile_id;
+      // Upload the test file.
+      $out = $this->curlExec(array(CURLOPT_URL => url($uri, array('absolute' => TRUE)), CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
 
-    // Replace original page output with new output from redirected page(s).
-    $new = $this->checkForMetaRefresh();
-    if ($new) {
-      $out = $new;
+      // Replace original page output with new output from redirected page(s).
+      $new = $this->checkForMetaRefresh();
+      if ($new) {
+        $out = $new;
+      }
+
+      // Our upload.
+      $this->verbose('POST request to: ' . url($uri, array('absolute' => TRUE)) .
+                    '<hr />Ending URL: ' . $this->getUrl() .
+                    '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
+                    '<hr />' . $out);
     }
+    else { // PUT.
+      // Open the file to transfer.
+      $handle = fopen($filename, 'rb');
 
-    // Our upload.
-    $this->verbose('POST request to: ' . url($uri, array('absolute' => TRUE)) .
-                   '<hr />Ending URL: ' . $this->getUrl() .
-                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
-                   '<hr />' . $out);
+      $this->assertTrue($handle !== FALSE, 'Got file handle');
+
+      // GET parameters (for PUT)
+      $query = array(
+        'mediafile_id' => $mediafile_id,
+        'upload_ticket' => $uploadticket['ticket_id'],
+        'order' => $order,
+        'default' => $default ? 'true' : 'false',
+        'filename' => mediamosa_io::basename($filename),
+      );
+
+      $action = url($uri, array('query' => $query, 'absolute' => TRUE));
+
+      $old_handle = isset($this->curlHandle) ? $this->curlHandle : NULL;
+
+      $this->curlInitialize();
+      curl_setopt($this->curlHandle, CURLOPT_BINARYTRANSFER, TRUE);
+      curl_setopt($this->curlHandle, CURLOPT_URL, $action);
+      curl_setopt($this->curlHandle, CURLOPT_HTTPHEADER, $headers);
+      curl_setopt($this->curlHandle, CURLOPT_PUT, 1);
+      curl_setopt($this->curlHandle, CURLOPT_INFILE, $handle);
+      curl_setopt($this->curlHandle, CURLOPT_INFILESIZE, mediamosa_io::filesize($filename));
+
+      // We can't use $this->curlExec() here, does not support PUT.
+      $out = curl_exec($this->curlHandle);
+
+      // Close the curl handle.
+      curl_close($this->curlHandle);
+      unset($this->curlHandle);
+      if ($old_handle) {
+        $this->curlHandle = $old_handle;
+      }
+
+      // Close the file.
+      fclose($handle);
+
+      // Our upload.
+      $this->pass('PUT request to: ' . $action);
+
+      // Skip 100 responses.
+      while (drupal_substr($out, 0, drupal_strlen('HTTP/1.1 100')) == 'HTTP/1.1 100') {
+        list($dump, $out) = explode("\r\n\r\n", $out, 2);
+      }
+
+      $this->var_export($out, 'Put response dump');
+    }
 
     list($response, $data) = explode("\r\n\r\n", $out, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
@@ -722,7 +779,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     try {
       // We expect char '<' on REST calls, if not we need to output it.
       if ($data[0] != '<') {
-        $this->var_export($data);
+        $this->var_export($data, 'panic dump');
       }
       else {
         $this->var_export_verbose(mediamosa_unicode::substr($data, 0, 10000) . (mediamosa_unicode::strlen($data) > 10000 ? '...<snap>...' : ''));
@@ -740,14 +797,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
     }
 
+    $this->var_export($xml, 'xml dump');
+
     // Get the still ID.
-    $still_id = (string)$xml->items->item->still_id;
+    $still_id = (string) $xml->items->item->still_id;
 
     // Parse the response status line.
     list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
 
-    // Check 200 resonse.
-    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+    if ($use_put) {
+      // Check 100 / 200 response. PUT seems to return 100 code.
+      $this->assertTrue($code == 201, 'Upload HTML response 201.');
+    }
+    else {
+      // Check 200 resonse.
+      $this->assertTrue($code == 200, 'Upload HTML response 200.');
+    }
 
     // Get path to still.
     $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
