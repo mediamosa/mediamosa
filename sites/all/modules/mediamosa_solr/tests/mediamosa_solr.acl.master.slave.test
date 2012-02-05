@@ -99,22 +99,12 @@ class MediaMosaSolrAclMasterSlaveTestCaseEga extends MediaMosaAclMasterSlaveTest
       $app_ids[] = $this->a_app_3['app_id'];
     }
 
-    // Build basic query.
-    foreach ($app_ids as $app_id) {
-      $solr_query[] = 'app_id:' . $app_id;
-    }
-
-    // Select all.
-    if (!empty($solr_query)) {
-      $solr_result = mediamosa_solr::search(implode(' OR ', $solr_query));
-    }
+    // Teardown first (else teardown will sync assets sometimes to SOLR).
+    parent::tearDown();
 
     // Remove it.
     if (!empty($app_ids)) {
       mediamosa_solr::delete_simpletest_documents($app_ids);
-      $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
     }
-
-    parent::tearDown();
   }
 }

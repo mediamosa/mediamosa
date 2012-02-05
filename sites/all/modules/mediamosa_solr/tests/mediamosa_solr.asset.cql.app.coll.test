@@ -100,13 +100,13 @@ class MediaMosaSolrAssetCQLAppCollTestCaseEga extends MediaMosaAssetCQLAppCollTe
       $app_ids[] = $this->a_app_3['app_id'];
     }
 
+    // Teardown first (else teardown will sync assets sometimes to SOLR).
+    parent::tearDown();
+
     // Remove it.
     if (!empty($app_ids)) {
-    //  mediamosa_solr::delete_simpletest_documents($app_ids);
-    //  $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
+      mediamosa_solr::delete_simpletest_documents($app_ids);
     }
-
-    parent::tearDown();
   }
 
   /**

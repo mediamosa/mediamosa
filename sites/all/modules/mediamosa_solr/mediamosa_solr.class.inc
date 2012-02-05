@@ -721,7 +721,8 @@ class mediamosa_solr {
   /**
    * Delete documents of test data of the given app_ids.
    *
-   * @param array $app_ids
+   * @param $app_ids
+   *   The app_ids used for deleting the documents.
    */
   static public function delete_simpletest_documents(array $app_ids = array()) {
     try {
@@ -750,14 +751,13 @@ class mediamosa_solr {
 
           if ($found) {
             $found_total += $found;
-            self::deleteByQuery('app_id:' . $app_id);
+            self::deleteByQuery('app_id:' . $app_id);            
           }
-
         }
 
         // Commit.
         self::commit();
-
+        
         return $found_total;
       }
     }
@@ -1158,7 +1158,7 @@ class mediamosa_solr {
     }
 
     // Optimize when indicated.
-    if ($optimize) {
+    if ($optimize || mediamosa::in_simpletest_sandbox()) {
       // Optimize.
       $mediamosa_apache_solr_service->optimize();
     }
