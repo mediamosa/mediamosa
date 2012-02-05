@@ -36,7 +36,7 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
   public static function getInfo() {
     return array(
       'name' => 'CQL - support app_id / coll_id seach in CQL',
-      'description' => 'Testing asset CQL related functions and rest calls for support app_id / coll_id seach in CQL.',
+      'description' => 'Testing asset CQL related functions and rest calls for support app_id / coll_id search in CQL.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
     );
   }
