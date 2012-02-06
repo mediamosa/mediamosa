@@ -3288,3 +3288,11 @@ function mediamosa_update_7132() {
     node_save($node);
   } 
 }
+
+/**
+ * Clean environment of SOLR for Simpletests (when SOLR module is on).
+ */
+function mediamosa_update_7133() {
+  // Call our cleanup hook for other stuff.
+  module_invoke_all('mediamosa_simpletest_clean_environment');
+}
