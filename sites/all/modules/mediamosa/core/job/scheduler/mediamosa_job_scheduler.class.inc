@@ -1400,7 +1400,7 @@ class mediamosa_job_scheduler {
     }
 
     // if source is unknown, but target is, just return the target size.
-    if ((w_target > 0 && $h_target > 0) && (!($w_source > 0 && $h_source > 0))) {
+    if (($w_target > 0 && $h_target > 0) && (!($w_source > 0 && $h_source > 0))) {
       return(array(
         'width' => $w_target,
         'height' => $h_target,
