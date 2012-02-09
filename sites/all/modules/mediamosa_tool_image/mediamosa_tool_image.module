@@ -50,6 +50,25 @@ function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
 }
 
 /**
+ * Implements hook_mediamosa_tool_store_technical_metadata().
+ */
+function mediamosa_tool_image_mediamosa_tool_store_technical_metadata($technical_metadata_mapping) {
+  $new_mapping = array();
+  foreach ($technical_metadata_mapping as $key => $value) {
+    switch ($key) {
+      case 'image size':
+        $metadata_value = str_replace(' ', '', $value);
+        if (preg_match('/(?P<width>\d+)+x(?P<height>\d+)$/', $metadata_value, $matches)) {
+          $new_mapping['width'][mediamosa_asset_mediafile_metadata_property_db::TYPE_INT] = $matches['width'];
+          $new_mapping['height'][mediamosa_asset_mediafile_metadata_property_db::TYPE_INT] = $matches['height'];
+        }
+        break;
+    }
+  }
+  return $new_mapping;
+}
+
+/**
  * Implements hook_mediamosa_tool_can_generate_still().
  */
 function mediamosa_tool_image_mediamosa_tool_can_generate_still($mime_type) {
