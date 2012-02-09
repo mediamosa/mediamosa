@@ -139,10 +139,11 @@ class mediamosa_tool_mapping {
     $parse_array = array();
     // Get full definitions.
     $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
-    // append, replace, update
-    $action = 'update';
+    $metadata_found = array();
+
     foreach ($output_array as $output_line) {
       if (strpos($output_line, $separator) !== FALSE) {
+        // Map Asset metadata.
         // Eg. CreationDate:   Wed Jul  8 16:14:29 2009
         // => array('CreationDate', 'Wed Jul  8 16:14:29 2009')
         list($key, $metadata_value) = explode($separator, $output_line, 2);
@@ -157,8 +158,28 @@ class mediamosa_tool_mapping {
 
           $parse_array[$mapping_array[$key]] = array($metadata_value);
         }
+
+        $metadata_found[$key] = $metadata_value;
       }
     }
-    mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $parse_array, $action);
+
+    // See if we can store some technical metadata.
+    $visit_func = "mediamosa_tool_" . $tool_id . "_mediamosa_tool_store_technical_metadata";
+    if (function_exists($visit_func)) {
+      $technical_metadata_mapping = call_user_func($visit_func, $metadata_found);
+    }
+    
+    if ($technical_metadata_mapping) {
+      foreach ($technical_metadata_mapping as $key => $value) {
+        mediamosa_asset_mediafile_metadata::delete_mediafile_metadata($mediafile_id, $key, key($value));
+        mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, array( array(
+         'value' => current($value),
+         'prop_name' => $key,
+         'type' => key($value))));
+      }
+    }
+    
+    // Store found asset metadata.
+    mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $parse_array, 'update');
   }
 }
