@@ -1,3 +1,20 @@
+MediaMosa 3.2.0 (build 1840)
+----------------------------
+- Analyze of images now stores proper size (width/height).
+- Fix for Simpletests of SOLR. Cleanup of Solr documents during
+  simpletests did not clean up all objects.
+- Disabled crawling in robots.txt
+- Upgrade to Drupal 7.12.
+- The asset/$asset_id/metadata POST is_app_admin fix.
+- Extended still upload simpletest with PUT method testing.
+- Extended asset mediafile upload test with testing upload with PUT
+  method. 
+- Removed 'user_id' requirement on PUT asset/upload REST call.
+- Updated restcall documentation on [POST] asset/{id}.
+- Fixed: asset/update call did not support unsetting the
+  play_restriction_start and play_restriction_end. Use empty string
+  for unsetting the values on an asset.
+
 MediaMosa 3.1.1 (build 1830)
 ----------------------------
 - Updated Rubik and Tao theme.
