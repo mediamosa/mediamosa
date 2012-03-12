@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -79,7 +77,7 @@ function mediamosa_tool_ffmpeg_install() {
 
   // Install some predefined ffmpeg transcoding profiles.
   // One of the transcode profile must be set TRUE for default.
-  $a_default_profiles = array(
+  $default_profiles = array(
 
     // Two (less used) flash profiles.
     array('flash small', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:250000;size:320x200;maintain_aspect_ratio:yes'),
@@ -98,7 +96,7 @@ function mediamosa_tool_ffmpeg_install() {
     // a baseline h264 transcode, without size.
     array('mp4 h264 (baseline, ffmpeg > 0.7.7)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
 
-    // based on android h264 recommendations: http://developer.android.com/guide/appendix/media-formats.html
+    // based on android h264 recommendations: http://developer.android.com/guide/appendix/media-formats.html.
     array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
     array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
     array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
@@ -107,40 +105,39 @@ function mediamosa_tool_ffmpeg_install() {
     // same as before but now with default profile.
     array('mp4 h264 low quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
     array('mp4 h264 medium quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
-    array('mp4 h264 high quality', 'TRUE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+    array('mp4 h264 high quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
     array('mp4 h264 HD - 2kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
     array('mp4 h264 HD - 4kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:4000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
     // h264 lossless profiles.
-    
-    // mpeg4
+
+    // mpeg4, default profile, as this profile will work on ffmpeg 0.7 ad 0.9.
     array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
 
-    // mpeg4 iphone format (untested)
+    // mpeg4 iphone format (untested).
     array('mpeg4 iphone', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiochannels:2;videocodec:mpeg4;videobitrate:800000;size:240x160'),
 
-    // webm, settings from http://en.wikipedia.org/wiki/YouTube
+    // webm, settings from http://en.wikipedia.org/wiki/YouTube.
     array('WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
     array('WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
     array('WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
     array('WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:4000000;fps:30;size:1920x1080;maintain_aspect_ratio:yes'),
 
-    // ogg
+    // ogg.
     array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
-    array('Theora/Ogv 480p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
+    array('Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
     array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
-
   );
 
-  foreach ($a_default_profiles as $a_default_profile) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $a_default_profile[0]);
+  foreach ($default_profiles as $default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
     $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
     $node->{mediamosa_transcode_profile_db::VERSION} = 0;
-    $node->{mediamosa_transcode_profile_db::PROFILE} = $a_default_profile[0];
-    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $a_default_profile[1];
-    $node->{mediamosa_transcode_profile_db::TOOL} = $a_default_profile[2];
-    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $a_default_profile[3];
-    $node->{mediamosa_transcode_profile_db::COMMAND} = $a_default_profile[4];
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
 
     $node = node_save($node);
   }

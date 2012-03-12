@@ -1313,8 +1313,6 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
  * Method: POST
  *
  * Update asset.
- *
- * 1.x: media_management_update_asset
  */
 class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -1334,9 +1332,9 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -1350,11 +1348,11 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::PLAY_RESTRICTION_START => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
-          self::VAR_DESCRIPTION => "The play restriction range start position. Provide value '' (empty string) to clear this field.",
+          self::VAR_DESCRIPTION => "The play restriction range start position. Provide value '' (empty string) to clear this field. If play_restriction_start is beyond the play_restriction_end date, then the values of play_restriction_start and play_restriction_end parameters are swapped. Setting this value to '' and setting the play_restriction_end, then play_restriction_start is considered infinite.",
         ),
         self::PLAY_RESTRICTION_END => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
-          self::VAR_DESCRIPTION => "The play restriction range end position. Provide value '' (empty string) to clear this field.",
+          self::VAR_DESCRIPTION => "The play restriction range end position. Provide value '' (empty string) to clear this field. If play_restriction_end is before the play_restriction_start date, then the values of play_restriction_start and play_restriction_end parameters are swapped. Setting this value to '' and setting the play_restriction_start, then play_restriction_end is considered infinite.",
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
@@ -1386,7 +1384,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     );
 
     // Include default.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.

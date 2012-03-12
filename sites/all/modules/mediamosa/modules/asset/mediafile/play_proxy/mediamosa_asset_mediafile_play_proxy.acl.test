@@ -107,15 +107,12 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
     $end_time = time() - (24*60*60); // One day in the past.
     try {
       $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
-      $this->assertTrue(
-        FALSE,
-        t("The check_time_restrictions() accepted the wrong value.")
-      );
+      $this->fail(t('The check_time_restrictions() accepted the wrong value.'));
     }
     catch (Exception $e) {
       $this->assertTrue(
         $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_END,
-        t("The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_END error.")
+        t('The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_END error.')
       );
     }
 
@@ -158,15 +155,12 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
     $end_time = time() + (7*24*60*60); // One week in the future.
     try {
       $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
-      $this->assertTrue(
-        FALSE,
-        t("The check_time_restrictions() accepted the wrong value.")
-      );
+      $this->fail(t('The check_time_restrictions() accepted the wrong value.'));
     }
     catch (Exception $e) {
       $this->assertTrue(
         $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_START,
-        t("The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_START error.")
+        t('The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_START error.')
       );
     }
 
@@ -211,16 +205,10 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
     $end_time = time() + (24*60*60); // One day in the future.
     try {
       $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions($start_time, $end_time);
-      $this->assertTrue(
-        TRUE,
-        t("The check_time_restrictions() accepted the good values.")
-      );
+      $this->pass(t('The check_time_restrictions() accepted the good values.'));
     }
     catch (Exception $e) {
-      $this->assertTrue(
-        FALSE,
-        t("The check_time_restrictions() doesn't accepted the good values.")
-      );
+      $this->fail(t("The check_time_restrictions() doesn't accepted the good values."));
     }
 
     //

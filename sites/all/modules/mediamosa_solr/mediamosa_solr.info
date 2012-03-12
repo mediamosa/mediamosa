@@ -34,6 +34,7 @@ files[] = tests/mediamosa_solr.acl.groups.master.slave.test
 files[] = tests/mediamosa_solr.acl.groups.test
 files[] = tests/mediamosa_solr.acl.master.slave.test
 files[] = tests/mediamosa_solr.acl.mediafiles.test
+files[] = tests/mediamosa_solr.acl.play_restriction.test
 files[] = tests/mediamosa_solr.acl.slave.rights.test
 files[] = tests/mediamosa_solr.acl.test
 

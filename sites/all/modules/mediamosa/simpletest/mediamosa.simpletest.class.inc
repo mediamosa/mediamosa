@@ -879,13 +879,29 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the default Profile ID.
+   *
+   * @param $app_id
+   *   The Application ID.
+   */
+  protected function getDefaultProfileId($app_id) {
+    // Get the profile.
+    $profile = mediamosa_transcode_profile::get_default($app_id);
+
+    $this->assertTrue($profile, 'Found default transcode profile');
+    $this->var_export_verbose($profile);
+
+    return $profile[mediamosa_transcode_profile_db::ID];
+  }
+
+  /**
    * Create a transcode job.
    */
   protected function createTranscodeJob($job_id, $fields = array()) {
     $fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
 
     $fields += array(
-      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => 1,
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $this->getDefaultProfileId(),
       mediamosa_job_transcode_db::TOOL => '',
       mediamosa_job_transcode_db::COMMAND => '',
       mediamosa_job_transcode_db::FILE_EXTENSION => '',
@@ -897,7 +913,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $fields[mediamosa_job_transcode_db::ID] = mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)->fields($fields)->execute();
     return $fields[mediamosa_job_transcode_db::ID];
   }
-
 
   /**
    * Create a mediafile metadata property.
