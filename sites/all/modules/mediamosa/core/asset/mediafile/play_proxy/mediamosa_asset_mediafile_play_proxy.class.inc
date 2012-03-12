@@ -764,14 +764,17 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Check if the time has been restricted.
    *
-   * @param string $time_restriction_start
-   * @param string $time_restriction_end
+   * @param $time_restriction_start
+   *   Start time in UTC of the time restriction period in datetime format
+   *   (optional).
+   * @param $time_restriction_end
+   *   End time in UTC of the time restriction period date.
    */
-  function check_time_restrictions($time_restriction_start, $time_restriction_end) {
-    if (time() < $time_restriction_start) {
+  function check_time_restrictions($time_restriction_start = '', $time_restriction_end = '') {
+    if ($time_restriction_start != '' && time() < $time_restriction_start) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date("Y-m-d H:i:s", $time_restriction_start), '@timestamp' => $time_restriction_start));
     }
-    if (time() > $time_restriction_end) {
+    if ($time_restriction_start != '' && time() > $time_restriction_end) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array('@date' => date("Y-m-d H:i:s", $time_restriction_end), '@timestamp' => $time_restriction_end));
     }
   }

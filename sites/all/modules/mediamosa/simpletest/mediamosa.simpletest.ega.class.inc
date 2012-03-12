@@ -1322,6 +1322,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Return the default Profile ID.
+   *
+   * @param $app_id
+   *   The Application ID.
+   */
+  protected function getDefaultProfileId($app_id) {
+    // Get the profile.
+    $profile = mediamosa_transcode_profile::get_default($app_id);
+
+    $this->assertTrue($profile, 'Found default transcode profile');
+    $this->var_export_verbose($profile);
+
+    return $profile[mediamosa_transcode_profile_db::ID];
+  }
+
+  /**
    * Get a mediaitem as oEmbed.
    * Based on the call /services/oembed (GET)
    */

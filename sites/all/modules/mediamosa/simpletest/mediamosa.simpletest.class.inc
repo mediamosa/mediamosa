@@ -885,7 +885,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
 
     $fields += array(
-      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => 1,
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => 16,
       mediamosa_job_transcode_db::TOOL => '',
       mediamosa_job_transcode_db::COMMAND => '',
       mediamosa_job_transcode_db::FILE_EXTENSION => '',

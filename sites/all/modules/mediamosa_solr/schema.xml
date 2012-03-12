@@ -3,7 +3,7 @@
 <!-- $Id: $ -->
 
 <!--
- This is the MediaMosa Solr schema file. This file should be named "schema.xml" 
+ This is the MediaMosa Solr schema file. This file should be named "schema.xml"
  and should be in the conf directory under the solr home
  (i.e. ./solr/conf/schema.xml by default)
  or located where the classloader for the Solr webapp can find it.
@@ -12,14 +12,14 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-3.0.0-asset" version="1.2">
+<schema name="mediamosa-3.2.0-asset" version="1.2">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
        version="1.2" is Solr's version number for the schema syntax and semantics.  It should
        not normally be changed by applications.
        1.0: multiValued attribute did not exist, all fields are multiValued by nature
-       1.1: multiValued attribute introduced, false by default 
+       1.1: multiValued attribute introduced, false by default
        1.2: omitTermFreqAndPositions attribute introduced, true by default except for text fields.
      -->
 
@@ -34,7 +34,7 @@
     -->
 
   <types>
-    <!-- 
+    <!--
       Each asset belongs to one app_id.
       -->
     <fieldType name="app_id" class="solr.TrieIntField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
@@ -165,7 +165,7 @@
           -->
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer> 
+      </analyzer>
     </fieldType>
 
     <!--
@@ -216,7 +216,7 @@
   <fields>
     <!-- Valid attributes for fields:
       name: mandatory - the name for the field
-       type: mandatory - the name of a previously defined type from the <types> 
+       type: mandatory - the name of a previously defined type from the <types>
        section
       indexed: true if this field should be indexed (searchable or sortable)
       stored: true if this field should be retrievable
@@ -232,9 +232,9 @@
         given field.
         When using MoreLikeThis, fields used for similarity should be
         stored for best performance.
-      termPositions: Store position information with the term vector.  
+      termPositions: Store position information with the term vector.
         This will increase storage costs.
-      termOffsets: Store offset information with the term vector. This 
+      termOffsets: Store offset information with the term vector. This
         will increase storage costs.
       default: a value that should be used if no value is specified
         when adding a document.
@@ -243,65 +243,68 @@
     <!--
       The app_id is always stored. (searchable, sortable)
       -->
-    <field name="app_id" type="app_id" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="app_id" type="app_id" indexed="true" stored="false" required="true" multiValued="false" />
 
     <!--
       The asset_id is always stored. (searchable, sortable)
       -->
-    <field name="asset_id" type="asset_id" indexed="true" stored="true" required="true" multiValued="false" /> 
-    
+    <field name="asset_id" type="asset_id" indexed="true" stored="true" required="true" multiValued="false" />
+
     <!--
-      The coll_id is optional. Asset can be in 0 or more collections. 
+      The coll_id is optional. Asset can be in 0 or more collections.
       (searchable, sortable)
-      
+
       Coll_id_ext is stored as;
       coll_id _ isprivate _ is_unappropriate
       coll_id _ owner_id
       -->
-    <field name="coll_id" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="coll_id_ext" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="coll_id_owner" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mediafile_id" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="coll_id" type="string_id" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="coll_id_ext" type="string_id" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="coll_id_owner" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mediafile_id" type="string_id" indexed="true" stored="false" required="false" multiValued="true" />
 
     <!--
       User fav.
       stored as; app_id _ username
       -->
-    <field name="user_fav" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="user_fav" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
 
-    <field name="owner_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="group_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="provider_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="reference_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" /> 
-    
-    <field name="mediafile_duration" type="string" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="mediafile_container_type" type="string" indexed="true" stored="false" required="false" multiValued="false" /> 
+    <field name="owner_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="group_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="provider_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="reference_id" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="false" />
 
-    <field name="mime_type" type="string" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="filename" type="string" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="uri" type="string" indexed="true" stored="false" required="false" multiValued="true" /> 
-    
-    <field name="videotimestamp" type="date" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="videotimestampmodified" type="date" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="created" type="date" indexed="true" stored="false" required="false" multiValued="false" /> 
-    <field name="changed" type="date" indexed="true" stored="false" required="false" multiValued="false" /> 
+    <field name="play_restriction_start" type="date" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="play_restriction_end" type="date" indexed="true" stored="false" required="false" multiValued="false" />
 
-    <field name="viewed" type="int" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="played" type="int" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="mediafile_duration" type="string" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="mediafile_container_type" type="string" indexed="true" stored="false" required="false" multiValued="false" />
+
+    <field name="mime_type" type="string" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="filename" type="string" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="uri" type="string" indexed="true" stored="false" required="false" multiValued="true" />
+
+    <field name="videotimestamp" type="date" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="videotimestampmodified" type="date" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="created" type="date" indexed="true" stored="false" required="false" multiValued="false" />
+    <field name="changed" type="date" indexed="true" stored="false" required="false" multiValued="false" />
+
+    <field name="viewed" type="int" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="played" type="int" indexed="true" stored="false" required="true" multiValued="false" />
 
     <!--
-      The batch_id is optional. Asset can be in 0 or more batches. 
+      The batch_id is optional. Asset can be in 0 or more batches.
       (searchable, sortable)
       -->
-    <field name="batch_id" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="batch_id" type="int" indexed="true" stored="false" required="false" multiValued="true" />
 
-    <!-- 
+    <!--
       Is empty asset flag.
       -->
-    <field name="is_empty_asset" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="isprivate" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="is_unappropriate" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="is_external" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="is_empty_asset" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="isprivate" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="is_unappropriate" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="is_external" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
 
     <!--
       ACL. rules.
@@ -309,58 +312,58 @@
 
       mf_org:[TRUE|FALSE] (TRUE: has 1 or more original mf)
 
-      mf_org_acl_obj_acl_[name|group][]: 
+      mf_org_acl_obj_acl_[name|group][]:
 
       mf_org_acl_obj_[owner|group][]:
 
-      mf_acl_master_slave[]: 
+      mf_acl_master_slave[]:
       is_protected; TRUE: TRUE or DOMAIN_REALM. FALSE: FALSE or USER_USERGROUP
       acl_type_acl_id; is only set when is_protected is != FALSE.
       app_id _ slave_app_id _ master_is_protected _ [acl_type _ acl_id]
-      
+
       -->
-    <field name="mf" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="mf_org" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="mf_org_is_protected" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_org_acl_obj_acl_name" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_org_acl_obj_acl_group" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    
+    <field name="mf" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="mf_org" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="mf_org_is_protected" type="int" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_org_acl_obj_acl_name" type="int" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_org_acl_obj_acl_group" type="int" indexed="true" stored="false" required="false" multiValued="true" />
+
     <!--
       string_id[_ci] type on these are very important.
       -->
-    <field name="mf_org_owner" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_org_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_owner" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_org_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" />
 
     <!--
       ACL CQL context set.
       The ACL CQL context set supports allows EGAs to search on their acl settings.
-      
+
       mf_acl_user: mediamosa_acl_name.USER
       mf_acl_user_group: mediamosa_acl_name.USER_GROUP
       mf_acl_domain: mediamosa_acl_name.DOMAIN
       mf_acl_realm: mediamosa_acl_name.REALM
       mf_acl_realm_prefix: mediamosa_acl_name.REALM_PREFIX
       -->
-    <field name="mf_app_id_master" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_app_id_slave" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="asset_is_master_slaved" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="mf_is_protected" type="boolean" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_user" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_user_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_domain" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_realm" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_acl_realm_prefix" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_app_id_master" type="int" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_app_id_slave" type="int" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="asset_is_master_slaved" type="boolean" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="mf_is_protected" type="boolean" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_user" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_user_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_domain" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_realm" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
+    <field name="mf_acl_realm_prefix" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" />
 
     <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for
-      all metadata, including dc, qdc and czp. 
-      
+      all metadata, including dc, qdc and czp.
+
       All metadata fields can be multivalued. However, sort fields in solr must
       be non-multi. Depending on the sort order, lo or hi field is used. These
       fields hold either the highest or the lowest value of the same field.
       -->
-    
+
     <!-- Searchable fields -->
     <dynamicField name="*_vc" type="val_char" indexed="true" stored="false" multiValued="true"/>
     <dynamicField name="*_vi" type="val_int" indexed="true" stored="false" multiValued="true"/>
@@ -385,7 +388,7 @@
      -->
   </fields>
 
-  <!-- Field to use to determine and enforce document uniqueness. 
+  <!-- Field to use to determine and enforce document uniqueness.
     Unless this field is marked with required="false", it will be a required field
   -->
   <uniqueKey>asset_id</uniqueKey>

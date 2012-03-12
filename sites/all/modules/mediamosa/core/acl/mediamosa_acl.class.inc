@@ -1273,6 +1273,12 @@ class mediamosa_acl {
     // Get of this current user the acl_name/acl_group ids so we know his/her access.
     $a_acl_ids = mediamosa_acl::build_access($app_ids_tmp, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves);
 
+    if (!$do_master_slave_only && $app_id_table_prefix == 'a' && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
+      $now = mediamosa_datetime::utc_current_timestamp_now();
+      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_start IS NULL OR a.play_restriction_start < :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
+      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_end IS NULL OR a.play_restriction_end > :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
+    }
+
     if (!is_null($acl_user_id) || (!is_null($acl_group_ids) && !empty($acl_group_ids)) || count($a_acl_ids) || count($slaves)) {
       switch ($acl_type) {
         case mediamosa_acl::ACL_TYPE_MEDIAFILE:

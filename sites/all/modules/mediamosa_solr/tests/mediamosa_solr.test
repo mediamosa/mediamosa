@@ -55,7 +55,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
   protected function setUp() {
     // Get Solr url from parent install.
     $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
-    
+
     // Change app timezones to UTC default.
     $this->default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL;
 

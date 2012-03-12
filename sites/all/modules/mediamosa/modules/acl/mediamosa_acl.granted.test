@@ -107,7 +107,7 @@ class MediaMosaTestCaseAclGrantedJobTest extends MediaMosaTestCaseEgaJob {
     $mediafile_id_2 = $upload['mediafile_id'];
 
     // Must be the same.
-    $this->assertTrue($asset_id == $asset_id_2);
+    $this->assertTrue($asset_id == $asset_id_2, 'Assets are the same');
 
     // Get Mediafile.
     $mediafile_2 = $this->getMediafile($mediafile_id_2);
