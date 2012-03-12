@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -25,8 +23,8 @@
  */
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 1840);
-define('MEDIAMOSA_VERSION', '3.2.0');
+define('MEDIAMOSA_BUILD', 1844);
+define('MEDIAMOSA_VERSION', '3.2.1');
 
 // Optional changes:
 //define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-dev');
