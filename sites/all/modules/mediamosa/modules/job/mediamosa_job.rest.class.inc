@@ -542,7 +542,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::RETRANSCODE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Retranscode after upload, user with upload jobs.',
+          self::VAR_DESCRIPTION => 'Retranscode after upload, used with upload jobs.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       )

@@ -1209,6 +1209,20 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_DATETIME,
               ),
+              'play_restriction_start' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::PLAY_RESTRICTION_START,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_DATETIME,
+//                MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
+              ),
+              'play_restriction_end' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::PLAY_RESTRICTION_END,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_DATETIME,
+//                MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
+              ),
               'asset_created' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::CREATED,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,

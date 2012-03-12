@@ -75,27 +75,27 @@ class mediamosa_job_transcode {
 
     // Get the default transcode profile settings when not supplied.
     if (empty($profile_id) && $tool == '') {
-      $a_transcode_profile = mediamosa_transcode_profile::get_default($app_id);
-      if (!$a_transcode_profile) {
+      $transcode_profile = mediamosa_transcode_profile::get_default($app_id);
+      if (!$transcode_profile) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE);
       }
 
-      $profile_id = $a_transcode_profile[mediamosa_transcode_profile_db::ID];
-      $tool = $a_transcode_profile[mediamosa_transcode_profile_db::TOOL];
-      $file_extension = $a_transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
-      $command = $a_transcode_profile[mediamosa_transcode_profile_db::COMMAND];
+      $profile_id = $transcode_profile[mediamosa_transcode_profile_db::ID];
+      $tool = $transcode_profile[mediamosa_transcode_profile_db::TOOL];
+      $file_extension = $transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
+      $command = $transcode_profile[mediamosa_transcode_profile_db::COMMAND];
     }
     elseif (!empty($profile_id)) {
       // FIXME: should we add app_id here?
-      $a_transcode_profile = mediamosa_transcode_profile::get($profile_id);
+      $transcode_profile = mediamosa_transcode_profile::get($profile_id);
 
-      if (!$a_transcode_profile) {
+      if (!$transcode_profile) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE);
       }
 
-      $tool = $a_transcode_profile[mediamosa_transcode_profile_db::TOOL];
-      $file_extension = $a_transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
-      $command = $a_transcode_profile[mediamosa_transcode_profile_db::COMMAND];
+      $tool = $transcode_profile[mediamosa_transcode_profile_db::TOOL];
+      $file_extension = $transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
+      $command = $transcode_profile[mediamosa_transcode_profile_db::COMMAND];
     }
     else {
       $profile_id = NULL;

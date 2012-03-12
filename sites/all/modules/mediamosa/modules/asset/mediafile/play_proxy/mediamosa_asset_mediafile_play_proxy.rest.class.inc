@@ -272,7 +272,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     if ($mediafile_id) {
       // Check play restrictions
-      if (isset($asset['play_restriction_start']) && isset($asset['play_restriction_end'])) {
+      if ($asset['play_restriction_start'] != '' || $asset['play_restriction_end'] != '') {
         $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions(
           strtotime($asset['play_restriction_start']),
           strtotime($asset['play_restriction_end'])

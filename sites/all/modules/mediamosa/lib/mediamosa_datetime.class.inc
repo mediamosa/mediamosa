@@ -176,7 +176,7 @@ class mediamosa_datetime {
    *
    * @return timestamp
    */
-  static public function utc_current_timestamp_add_hours($reset = FALSE, $hours) {
+  static public function utc_current_timestamp_add_hours($reset = FALSE, $hours = 0) {
     static $utc_timestamp_add_hours = array();
 
     if (isset($utc_timestamp_add_hours[$hours]) && !$reset) {

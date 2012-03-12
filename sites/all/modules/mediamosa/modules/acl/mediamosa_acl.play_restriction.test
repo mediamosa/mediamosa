@@ -1,0 +1,211 @@
+<?php
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for ACL play restriction.
+  */
+class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Play Restrictions',
+      'description' => 'Testing ACL asset and mediafile request from other application related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  function testPlayRestriction() {
+    // Create upload file.
+    $upload_01 = $this->uploadTestFile();
+    $upload_02 = $this->uploadTestFile();
+    $upload_03 = $this->uploadTestFile();
+    $asset_id_01 = $upload_01['asset_id'];
+    $asset_id_02 = $upload_02['asset_id'];
+    $asset_id_03 = $upload_03['asset_id'];
+
+    // None are restricted, so all should return.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE));
+
+    // With ACL rule, none are restricted, so all should return.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Restrict mediafile 2, but between past and future.
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('-1 week'));
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('+1 week'));
+    $this->updateAsset($asset_id_02, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_02, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Still all should return.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE));
+
+    // With ACL rule, still all should return.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Restrict mediafile 1, but in the past.
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('-1 week'));
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $this->updateAsset($asset_id_01, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_01, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Asset 01 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE));
+
+    // With ACL rule, asset 01 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Restrict mediafile 3, but in the future.
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('+1 day'));
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('+1 week'));
+    $this->updateAsset($asset_id_03, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_03, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
+
+    // With ACL rule, asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Restrict mediafile 2, but in the past and future.
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('-1 week'));
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('+1 week'));
+    $this->updateAsset($asset_id_02, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_02, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
+
+    // With ACL rule, asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Reverse the date, let MediaMosa flip it.
+    // Restrict mediafile 3, but in the future.
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('+1 day'));
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('+1 week'));
+    $this->updateAsset($asset_id_03, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_03, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
+
+    // With ACL rule, asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Remove the date for asset 3.
+    $play_restriction_end = '';
+    $play_restriction_start = '';
+    $this->updateAsset($asset_id_03, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_03, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE));
+
+    // With ACL rule, asset 01,03 should not be granted.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+
+    // -------------------------------------------------------------------------
+    // Test use case for;
+    // Show me all available media (inside the start and end date)
+    // Show me all expired media (outside the start and end date)
+
+
+    // Remove restrictions 1, 2 & 3.
+    $play_restriction_end = '';
+    $play_restriction_start = '';
+    $this->updateAsset($asset_id_01, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_01, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+    $this->updateAsset($asset_id_02, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_02, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Should return all.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $weekago = date('Y-m-d\TH:i:s\Z', strtotime('-1 week'));
+    $weekfuture = date('Y-m-d\TH:i:s\Z', strtotime('+1 week'));
+
+    $play_restriction_start = $weekago;
+    $play_restriction_end = $weekfuture;
+    $this->updateAsset($asset_id_01, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_01, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    $play_restriction_start = $weekago;
+    $play_restriction_end = date('Y-m-d H:i:s', strtotime('+1 day'));
+    $this->updateAsset($asset_id_02, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_02, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    $play_restriction_start = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $play_restriction_end = $weekfuture;
+    $this->updateAsset($asset_id_03, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_03, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // Should still return all.
+    $this->cql_do_search_test_assets('', array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $twodays_ago = date('Y-m-d\TH:i:s\Z', strtotime('-2 day'));
+    $twodays_future = date('Y-m-d\TH:i:s\Z', strtotime('+2 day'));
+
+    // Only 1 & 2.
+    $this->cql_do_search_test_assets(strtr('play_restriction_start < :twodaysago' , array(':twodaysago' => $twodays_ago)), array($asset_id_01 => TRUE, $asset_id_02 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Only 1 & 3.
+    $this->cql_do_search_test_assets(strtr('play_restriction_end > :twodaysfuture' , array(':twodaysfuture' => $twodays_future)), array($asset_id_01 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    $now = mediamosa_datetime::utc_current_timestamp_now();
+    $now = drupal_substr($now, 0, 10) . 'T' . drupal_substr($now, 11, 8) . 'Z';
+
+    // All of them.
+    $this->cql_do_search_test_assets(strtr('play_restriction_start < :now AND play_restriction_end > :now' , array(':now' => $now)), array($asset_id_01 => TRUE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // None of them.
+    $this->cql_do_search_test_assets(strtr('play_restriction_start > :now OR play_restriction_end < :now' , array(':now' => $now)), array(), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Expire asset 3.
+    $play_restriction_start = $weekago;
+    $play_restriction_end = $twodays_ago;
+    $this->updateAsset($asset_id_03, array(mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $play_restriction_start, mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $play_restriction_end));
+    $this->pass(t('Setting for asset @asset_id play restriction start at @start and end at @end', array('@asset_id' => $asset_id_03, '@start' => $play_restriction_start, '@end' => $play_restriction_end)));
+
+    // All of them, except asset 3.
+    $this->cql_do_search_test_assets(strtr('play_restriction_start < :now AND play_restriction_end > :now' , array(':now' => $now)), array($asset_id_01 => TRUE, $asset_id_02 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // Only asset 3.
+    $this->cql_do_search_test_assets(strtr('play_restriction_start > :now OR play_restriction_end < :now' , array(':now' => $now)), array($asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
+}

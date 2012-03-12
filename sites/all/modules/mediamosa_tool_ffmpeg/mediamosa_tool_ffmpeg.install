@@ -107,14 +107,14 @@ function mediamosa_tool_ffmpeg_install() {
     // same as before but now with default profile.
     array('mp4 h264 low quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
     array('mp4 h264 medium quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
-    array('mp4 h264 high quality', 'TRUE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
+    array('mp4 h264 high quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
     array('mp4 h264 HD - 2kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
     array('mp4 h264 HD - 4kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:4000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
     // h264 lossless profiles.
-    
-    // mpeg4
-    array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
+
+    // mpeg4, default profile, as this profile will work on ffmpeg 0.7 ad 0.9.
+    array('mpeg4 default', 'TRUE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
 
     // mpeg4 iphone format (untested)
     array('mpeg4 iphone', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiochannels:2;videocodec:mpeg4;videobitrate:800000;size:240x160'),

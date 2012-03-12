@@ -63,6 +63,7 @@ class mediamosa_solr {
   const ACL = 'acl';
   const ACL_NAME = 'name';
   const ACL_GRP = 'group';
+  const ACL_PLAYRESTRICTION = 'playrestriction';
 
   // ---------------------------------------------------------------- Functions.
   static public function asset_search($parameters) {
@@ -235,6 +236,13 @@ class mediamosa_solr {
 
     // Get of this current user the acl_name/acl_group ids so we know his/her access.
     $acl_ids = mediamosa_acl::build_access($build_access_app_ids, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves);
+
+    if (!$granted && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
+      $now = mediamosa_datetime::utc_current_timestamp_now();
+      $now = drupal_substr($now, 0, 10) . 'T' . drupal_substr($now, 11, 8) . 'Z';
+      $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_start:[* TO *] OR -play_restriction_start:[* TO :now])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
+      $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_end:[* TO *] OR -play_restriction_end:[:now TO *])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
+    }
 
     if (!empty($acl_user_id) || !empty($acl_group_ids) || count($acl_ids) || count($slaves)) {
       // Even if we return all stuff where we have access to, we must still grant only access to master/slave apps
@@ -751,13 +759,13 @@ class mediamosa_solr {
 
           if ($found) {
             $found_total += $found;
-            self::deleteByQuery('app_id:' . $app_id);            
+            self::deleteByQuery('app_id:' . $app_id);
           }
         }
 
         // Commit.
         self::commit();
-        
+
         return $found_total;
       }
     }
@@ -851,6 +859,8 @@ class mediamosa_solr {
       mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED,
       mediamosa_asset_db::CREATED,
       mediamosa_asset_db::CHANGED,
+      mediamosa_asset_db::PLAY_RESTRICTION_START,
+      mediamosa_asset_db::PLAY_RESTRICTION_END,
     );
 
     foreach ($asset_optionals_dates as $optional) {
@@ -1179,46 +1189,45 @@ class mediamosa_solr {
   }
 
   /**
-   * Create the WHERE syntax
+   * Create the WHERE syntax.
    *
-   * @param array $where
-   * @return string
-   */
-  static public function where($where) {
-    return implode(' AND ', self::where_2($where));
-  }
-
-  /**
-   * self::where helper function
+   * @param $where
+   *   Array that describes the query OR processed string.
+   * @param $glue
+   *   Either ' AND ' or ' OR '.
+   * @param $previous_glue
+   *   The previous used glue to prevent unnessary ( ).
    *
-   * @param array $where
-   * @param string $l
-   * @param string $r
-   * @param string $glue
-   * @return array
+   * @return
+   *   Return the created where string.
    */
-  static public function where_2($where, $l = '', $r = '', $glue = ' AND ') {
+  static public function where($where, $glue = ' AND ', $previous_glue = ' AND ') {
     if (!is_array($where)) {
-      return array($where);
+      return $where;
     }
 
     $result = array();
     foreach ($where as $type => $statements) {
       if ($type == self::WHERE_AND) {
-        $glue = " AND ";
-        $statements = self::where_2($statements, '(', ')', " AND ");
-        $result[] = $l . implode(" AND ", $statements) . $r;
+        $result[] = self::where($statements, ' AND ', $glue);
       }
       elseif ($type == self::WHERE_OR) {
-        $statements = self::where_2($statements, '(', ')', ' OR ');
-        $result[] = $l . implode(' OR ', $statements) . $r;
+        $result[] = self::where($statements, ' OR ', $glue);
       }
       else {
-        $result[] = implode($glue, self::where_2($statements, '(', ')', $glue));
+        $result[] = self::where($statements, $glue, $previous_glue);
       }
     }
 
-    return $result;
+    if ($glue == $previous_glue || count($result) < 2) {
+      $l = $r = '';
+    }
+    else {
+      $l = '(';
+      $r = ')';
+    }
+
+    return $l . implode($glue, $result) . $r;
   }
 
   /**
