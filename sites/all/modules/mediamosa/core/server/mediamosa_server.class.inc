@@ -291,7 +291,7 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    if ($servers[$container_type . ':' . $video_codec] && $servers[$container_type . ':' . $video_codec]) {
+    if (isset($servers[$container_type . ':' . $video_codec]) && $servers[$container_type . ':' . $video_codec]) {
       return $servers[$container_type . ':' . $video_codec];
     }
 
@@ -462,12 +462,22 @@ class mediamosa_server {
    *  Codec.
    * @param string $mime_type
    *  Mime type.
+   * @param string $response_type
+   *  Response type.
+   *
+   * @return string $uri
    */
-  static public function get_uri_streaming($container_type, $video_codec, $mime_type = NULL) {
+  static public function get_uri_streaming($container_type, $video_codec, $mime_type = NULL, $response_type = NULL) {
 
     $server = self::get_streaming($container_type, $video_codec, $mime_type);
 
     if ($server) {
+      if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_CUPERTINO || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_SILVERLIGHT) {
+        if ($server[mediamosa_server_db::SERVER_CUPERTINO_PATH]) {
+          $server[mediamosa_server_db::SERVER_PATH] = $server[mediamosa_server_db::SERVER_CUPERTINO_PATH];
+        }
+      }
+
       return self::get_server_url($server);
     }
 

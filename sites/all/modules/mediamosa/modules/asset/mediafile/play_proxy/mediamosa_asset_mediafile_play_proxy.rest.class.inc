@@ -109,7 +109,10 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_URI,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_CUPERTINO,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_RTSP,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_SILVERLIGHT,
           ),
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
         ),

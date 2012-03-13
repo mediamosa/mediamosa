@@ -64,7 +64,7 @@ require_once 'core/webservice/mediamosa_webservice.install.inc';
  */
 function mediamosa_install() {
 
-   // Install the error db.
+  // Install the error db.
   _mediamosa_error_install();
 
   // Install watchdog extend table.
@@ -3290,9 +3290,18 @@ function mediamosa_update_7133() {
 }
 
 /**
- * Cannot edit MediaMosa server settings fix (See #558).
+ * MediaMosa ticket #389 (Additional response-types on asset/{id}/play call).
  */
 function mediamosa_update_7134() {
+  if (!db_field_exists('mediamosa_server', 'server_cupertino_path')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD server_cupertino_path VARCHAR(255) COMMENT 'The path of the Cupertino / Silverlight server.' AFTER server_path");
+  }
+}
+
+/**
+ * Cannot edit MediaMosa server settings fix (See #558).
+ */
+function mediamosa_update_7135() {
 
   // Server definitions are always uppercase.
   $result = db_query('SELECT nid FROM {mediamosa_server}');

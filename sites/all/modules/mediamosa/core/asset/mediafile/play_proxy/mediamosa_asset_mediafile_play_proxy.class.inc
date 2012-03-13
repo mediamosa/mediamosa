@@ -39,10 +39,22 @@ class mediamosa_asset_mediafile_play_proxy {
   const RESPONSE_METAFILE = 'metafile';
   const RESPONSE_OBJECT = 'object';
   const RESPONSE_DOWNLOAD = 'download';
+  const RESPONSE_CUPERTINO = 'cupertino';
+  const RESPONSE_RTSP = 'rtsp';
+  const RESPONSE_SILVERLIGHT = 'silverlight';
 
   // Params in URI replacements.
   const PARAM_URI_TICKET = '{TICKET}';
   const PARAM_URI_SCRIPT = '{SCRIPT}';
+  const PARAM_URI_RTMP = 'rtmp';
+  const PARAM_URI_HTML = 'http';
+  const PARAM_URI_RTSP = 'rtsp';
+
+  // Params in Cupertino replacements.
+  const PARAM_CUPERTINO_FILE = 'playlist.m3u8';
+
+  // Params in Silverlight replacements.
+  const PARAM_SILVERLIGHT_FILE = 'manifest';
 
   // Default width & height for playproxy flash object HTML.
   CONST PP_FLASH_OBJECT_HEIGHT = 240;
@@ -109,7 +121,7 @@ class mediamosa_asset_mediafile_play_proxy {
     $container_type = (empty($mediafile_ext['metadata']['container_type']) ? NULL : $mediafile_ext['metadata']['container_type']);
     $video_codec = (empty($mediafile_ext['metadata']['video_codec']) ? NULL : $mediafile_ext['metadata']['video_codec']);
     $mime_type = (empty($mediafile_ext['metadata']['mime_type']) ? NULL : $mediafile_ext['metadata']['mime_type']);
-    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type);
+    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type, $response_type);
 
     if (!$uri) { // No streaming profile found
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
@@ -498,14 +510,36 @@ class mediamosa_asset_mediafile_play_proxy {
         break;
 
       case self::RESPONSE_URI:
-        switch ($mediafile_ext['metadata']['container_type']) {
-          case self::CONTAINER_TYPE_FLV:
-            $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
-            break;
+        $output = self::get_plain_output($mediafile_ext, $streaming_server_ticket_uri);
+        break;
 
-          default:
-            $output = $streaming_server_ticket_uri;
-            break;
+      case self::RESPONSE_RTSP:
+        // Output: Same as "plain", but with "rtsp://".
+        $output = self::get_plain_output($mediafile_ext, $streaming_server_ticket_uri);
+        if (drupal_substr($output, 0, drupal_strlen(self::PARAM_URI_RTMP . '://')) == self::PARAM_URI_RTMP . '://') {
+          $output = self::PARAM_URI_RTSP . '://' . drupal_substr($output, drupal_strlen(self::PARAM_URI_RTMP . '://'));
+        }
+        break;
+
+      case self::RESPONSE_CUPERTINO:
+        // Output: Same as "plain", but:
+        // * Protocol (rtmp -> http)
+        // * Port (1935 -> 80)
+        // * {extra_folder}
+        // * /playlist.m3u8
+        $output = self::get_plain_output($mediafile_ext, $streaming_server_ticket_uri);
+        if (drupal_substr($output, 0, drupal_strlen(self::PARAM_URI_RTMP . '://')) == self::PARAM_URI_RTMP . '://') {
+          $output = self::PARAM_URI_HTML . '://' . drupal_substr($output, drupal_strlen(self::PARAM_URI_RTMP . '://'));
+          $output .= ($output{drupal_strlen($output) - 1} == '/' ? '' : '/') . self::PARAM_CUPERTINO_FILE;
+        }
+        break;
+
+      case self::RESPONSE_SILVERLIGHT:
+        // Output: Same as "cupertiono", but with "manifest" file.
+        $output = self::get_plain_output($mediafile_ext, $streaming_server_ticket_uri);
+        if (drupal_substr($output, 0, drupal_strlen(self::PARAM_URI_RTMP . '://')) == self::PARAM_URI_RTMP . '://') {
+          $output = self::PARAM_URI_HTML . '://' . drupal_substr($output, drupal_strlen(self::PARAM_URI_RTMP . '://'));
+          $output .= ($output{drupal_strlen($output) - 1} == '/' ? '' : '/') . self::PARAM_SILVERLIGHT_FILE;
         }
         break;
 
@@ -706,6 +740,28 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     return $result;
+  }
+
+  /**
+   * Get plain out.
+   *
+   * @param array $mediafile_ext
+   * @param string $streaming_server_ticket_uri
+   *
+   * @return string $output
+   */
+  static public function get_plain_output($mediafile_ext, $streaming_server_ticket_uri) {
+    switch ($mediafile_ext['metadata']['container_type']) {
+      case self::CONTAINER_TYPE_FLV:
+        $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
+        break;
+
+      default:
+        $output = $streaming_server_ticket_uri;
+        break;
+    }
+
+    return $output;
   }
 
   /**

@@ -49,6 +49,9 @@ class mediamosa_server_db {
   const SERVER_PATH = 'server_path';
   const SERVER_PATH_LENGTH = 255;
   const SERVER_PATH_BASE_URI = '{base_uri}';
+  const SERVER_CUPERTINO_PATH = 'server_cupertino_path';
+  const SERVER_CUPERTINO_PATH_LENGTH = 255;
+  const SERVER_CUPERTINO_PATH_BASE_URI = '';
   const CONTAINERS = 'containers'; // Now TEXT type.
   const CONTAINERS_LENGTH = 1024;
   const MIME_TYPE = 'mime_type';

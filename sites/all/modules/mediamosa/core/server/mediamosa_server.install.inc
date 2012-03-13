@@ -289,6 +289,7 @@ s1.write('mediaspace');
     $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
     $node->{mediamosa_server_db::SERVER_URI} = $default_server[4];
     $node->{mediamosa_server_db::SERVER_PATH} = $default_server[5];
+    $node->{mediamosa_server_db::SERVER_CUPERTINO_PATH} = '';
     $node->{mediamosa_server_db::CONTAINERS} = $default_server[6];
     $node->{mediamosa_server_db::MIME_TYPE} = $default_server[7];
     $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[8];
@@ -387,6 +388,12 @@ function mediamosa_server_schema() {
         'description' => 'The path of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_PATH_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_server_db::SERVER_CUPERTINO_PATH => array(
+        'description' => 'The path of the Cupertino / Silverlight server.',
+        'type' => 'varchar',
+        'length' => mediamosa_server_db::SERVER_CUPERTINO_PATH_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::DESCRIPTION => array(
