@@ -140,6 +140,16 @@ class mediamosa {
     return variable_get('mediamosa_watchdog_rest', FALSE);
   }
 
+  // Check the loggin application id.
+  static public function get_log_rest_app_id() {
+    return variable_get('mediamosa_watchdog_rest_app_id', FALSE);
+  }
+
+  // Check the loggin IP address.
+  static public function get_log_rest_ip_address() {
+    return variable_get('mediamosa_watchdog_rest_ip_address', FALSE);
+  }
+
   // Drupal usage for getting the current URI.
   static public function get_request_uri() {
     return trim(implode('/', arg()), '/');

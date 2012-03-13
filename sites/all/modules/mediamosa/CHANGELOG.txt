@@ -2,6 +2,7 @@ MediaMosa 3.2.1 (build ....)
 ----------------------------
 - Cannot edit MediaMosa server settings fix (See ticket #558).
 - Additional response-types on asset/{id}/play call (See ticket #389).
+- Extra features rest logging (See VPCore ticket #295).
 
 MediaMosa 3.2.0 (build 1840)
 ----------------------------

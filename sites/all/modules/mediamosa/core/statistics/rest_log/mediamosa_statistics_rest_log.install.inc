@@ -78,6 +78,23 @@ function mediamosa_statistics_rest_log_schema() {
         'not null' => TRUE,
         'description' => 'The query count.',
       ),
+      mediamosa_statistics_rest_log_db::IP_ADDRESS => array(
+        'type' => 'varchar',
+        'length' => mediamosa_statistics_rest_log_db::IP_ADDRESS_LENGTH,
+        'description' => 'Location of where the rest call came from.',
+      ),
+      mediamosa_statistics_rest_log_db::DATE => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'Timestamp of when the restcall has been send to mediamosa.',
+      ),
+      mediamosa_statistics_rest_log_db::APP_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => mediamosa_statistics_rest_log_db::APP_ID_DEFAULT,
+        'description' => 'The app_id that is used to authenticate yourself on the platform.',
+      ),
     ),
     'primary key' => array(mediamosa_statistics_rest_log_db::ID),
   );

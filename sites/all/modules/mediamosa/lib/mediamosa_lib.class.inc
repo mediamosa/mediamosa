@@ -301,4 +301,17 @@ class mediamosa_lib {
 
     return implode("\n", $diff);
   }
+
+  /**
+   * Validate IP address.
+   *
+   * @param $ip_address
+   *
+   * @return TRUE in case of valid IP address.
+   */
+  static public function is_valid_ip_address($ip_address) {
+    // Validate the IP address.
+    $regexp = '/^(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/';
+    return preg_match($regexp, $ip_address);
+  }
 }

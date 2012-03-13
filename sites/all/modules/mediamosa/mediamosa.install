@@ -3316,3 +3316,19 @@ function mediamosa_update_7135() {
     node_save($node);
   }
 }
+
+/**
+ * Extra features rest logging development (See VPCore #295).
+ */
+function mediamosa_update_7136() {
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'ip_address')) {
+    db_query("ALTER TABLE {mediamosa_statistics_rest_log} ADD ip_address VARCHAR(15) COMMENT 'Location of where the rest call came from.'");
+  }
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'date')) {
+    db_query("ALTER TABLE {mediamosa_statistics_rest_log} ADD date INT COMMENT 'Timestamp of when the restcall has been send to mediamosa.'");
+  }
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'app_id')) {
+    // There should be a default value, because of the old rows.
+    db_query("ALTER TABLE {mediamosa_statistics_rest_log} ADD app_id INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'The app_id that is used to authenticate yourself on the platform.'");
+  }
+}
