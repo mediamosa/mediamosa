@@ -61,6 +61,26 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
   }
 
   /**
+   * Create a transcode job.
+   */
+  protected function createTranscodeJob($job_id, $fields = array()) {
+    $fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
+
+    $fields += array(
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $this->getDefaultProfileId($this->a_app['app_id']),
+      mediamosa_job_transcode_db::TOOL => '',
+      mediamosa_job_transcode_db::COMMAND => '',
+      mediamosa_job_transcode_db::FILE_EXTENSION => '',
+      mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => '',
+    );
+
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    $fields[mediamosa_job_transcode_db::ID] = mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)->fields($fields)->execute();
+    return $fields[mediamosa_job_transcode_db::ID];
+  }
+
+  /**
    * Create still.
    * Based on REST call /mediafile/$mediafile_id/still/create (POST)
    */

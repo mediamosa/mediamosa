@@ -33,7 +33,7 @@
   * @file
   * Unittests for job.
   */
-class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
