@@ -1,3 +1,7 @@
+MediaMosa 3.2.1 (build ....)
+----------------------------
+- Cannot edit MediaMosa server settings fix (See #558).
+
 MediaMosa 3.2.0 (build 1840)
 ----------------------------
 - Analyze of images now stores proper size (width/height).

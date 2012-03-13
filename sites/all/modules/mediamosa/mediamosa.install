@@ -3279,14 +3279,6 @@ function mediamosa_update_7132() {
   );
   $enable_dependencies = TRUE;
   module_enable($module_list, $enable_dependencies);
-
-  // Server definitions are always uppercase.
-  $result = db_query('SELECT nid FROM {mediamosa_server}');
-  foreach ($result as $record) {
-    $node = node_load($record->nid);
-    $node->server_type = drupal_strtoupper($node->server_type);
-    node_save($node);
-  } 
 }
 
 /**
@@ -3295,4 +3287,23 @@ function mediamosa_update_7132() {
 function mediamosa_update_7133() {
   // Call our cleanup hook for other stuff.
   module_invoke_all('mediamosa_simpletest_clean_environment');
+}
+
+/**
+ * Cannot edit MediaMosa server settings fix (See #558).
+ */
+function mediamosa_update_7134() {
+
+  // Server definitions are always uppercase.
+  $result = db_query('SELECT nid FROM {mediamosa_server}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    $node->server_type = drupal_strtoupper($node->server_type);
+
+    // The uri_upload_progress_server and uri_upload_progress_server_type should have values.
+    $node->uri_upload_progress_server = ($node->uri_upload_progress_server ? $node->uri_upload_progress_server : '');
+    $node->uri_upload_progress_server_type = ($node->uri_upload_progress_server_type ? $node->uri_upload_progress_server_type : mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC);
+
+    node_save($node);
+  }
 }
