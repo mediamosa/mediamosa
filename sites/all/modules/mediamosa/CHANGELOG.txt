@@ -1,4 +1,4 @@
-MediaMosa 3.2.1 (build 1844)
+MediaMosa 3.2.1 (build 1846)
 ----------------------------
 - Added play restriction ACL; media that does meet play restriction rules (when
   set on asset) fail play access.
@@ -11,6 +11,7 @@ MediaMosa 3.2.1 (build 1844)
 - The XML schema of the Solr module has been changed, existing installations
   that use MediaMosa Solr must replace the schema.xml (found in
   /sites/all/modules/mediamosa_solr/schema.xml) in your Solr installation.
+- Fixed notice in common job simpletest.
 
 MediaMosa 3.2.0 (build 1840)
 ----------------------------
