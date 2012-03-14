@@ -2,7 +2,7 @@
 name = "MediaMosa Connector"
 description = "The MediaMosa connector enables Drupal modules to communicate with the MediaMosa REST interface."
 package = "MediaMosa - SDK"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

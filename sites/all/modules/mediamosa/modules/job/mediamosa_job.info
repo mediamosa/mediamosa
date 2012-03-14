@@ -3,7 +3,7 @@
 name = "Jobs"
 description = "The jobs module handles, executes and manages queing of jobs."
 package = "MediaMosa - Modules"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

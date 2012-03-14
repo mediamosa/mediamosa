@@ -1,8 +1,7 @@
-; $Id: $
 name = Qualified Dublin Core
 description = MediaMosa support for the metadata format Qualified Dublin Core. See http://dublincore.org/documents/2000/07/11/dcmes-qualifiers/ for more information. <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
 package = MediaMosa - Metadata
-version = 3.0.0
+version = 7.x-3.x
 core = 7.x
 
 dependencies[] = mediamosa

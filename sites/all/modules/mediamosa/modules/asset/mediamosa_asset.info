@@ -3,7 +3,7 @@
 name = "Asset"
 description = "The asset module contains all submodules for asset like mediafile, metadata, access layer etc."
 package = "MediaMosa - Modules"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

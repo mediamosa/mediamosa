@@ -96,7 +96,7 @@ This call returns all users which are created with /user/create and searches for
 
   $rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update the user information.',
-    mediamosa_rest_call::DESCRIPTION => 'With this call you can add disk space to a user and group.',
+    mediamosa_rest_call::DESCRIPTION => 'This REST call allows a user to be linked with one or more groups. It also allows to set the quotum for upload of this user. Its not possible to remove the user from all groups, as the group_id[] parameter is optional.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/user/admin',
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,

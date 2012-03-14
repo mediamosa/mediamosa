@@ -3,7 +3,7 @@
 name = "Configuration status view page"
 description = "If you enable this module then the MediaMosa status page will be extended with configuration settings."
 package = "MediaMosa - Maintenance"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

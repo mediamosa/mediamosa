@@ -1,3 +1,9 @@
+MediaMosa 3.2.x-dev (build 1850)
+--------------------------------
+- Extended the logging for REST calls and added filtering to log for specific
+  application ID and/or IP address.
+- Fixed: some installations where no longer able to edit the MediaMosa servers.
+
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
 - Added play restriction ACL; media that does meet play restriction rules (when

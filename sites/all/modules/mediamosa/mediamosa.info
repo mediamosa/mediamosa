@@ -1,8 +1,7 @@
-; $Id: $
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "3.2.1"
+version = 7.x-3.x-dev
 core = 7.x
 
 configure = admin/mediamosa/config/global

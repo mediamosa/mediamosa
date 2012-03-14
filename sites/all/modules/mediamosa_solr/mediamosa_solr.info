@@ -1,8 +1,7 @@
-; $Id: $
 name = "MediaMosa Apache Solr"
 description = "MediaMosa Apache Solr Search Integration."
 package = "MediaMosa - Search"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 dependencies[] = mediamosa

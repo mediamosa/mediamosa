@@ -1,8 +1,7 @@
-; $Id: $
 name = "MediaMosa - database migration 1.7.x to 3.x"
 description = "Migration module for database migration from version 1.7 to version 3.x."
 package = "MediaMosa - Misc"
-version = "1.0.0"
+version = 7.x-3.x
 core = 7.x
 
 configure = admin/mediamosa/config/migration/settings

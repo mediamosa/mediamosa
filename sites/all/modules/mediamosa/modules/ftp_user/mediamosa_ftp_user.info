@@ -3,7 +3,7 @@
 name = "FTP user"
 description = "The FTP user allows applications to manage FTP users."
 package = "MediaMosa - Modules"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

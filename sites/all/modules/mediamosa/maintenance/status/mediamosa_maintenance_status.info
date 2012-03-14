@@ -3,7 +3,7 @@
 name = "Status view page"
 description = "The status module allows you to view the status of your MediaMosa installation."
 package = "MediaMosa - Maintenance"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

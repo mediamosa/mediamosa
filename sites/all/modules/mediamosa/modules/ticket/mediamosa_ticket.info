@@ -3,7 +3,7 @@
 name = "Ticket"
 description = "The ticket module enables creation of timed expired tickets for access files, stills and other media."
 package = "MediaMosa - Modules"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

@@ -3,7 +3,7 @@
 name = "Application"
 description = "The application module enables different applications to access MediaMosa within their own database and section in MediaMosa."
 package = "MediaMosa - Modules"
-version = "3.0.0"
+version = 7.x-3.x
 core = 7.x
 
 ; Dependencies (module names)

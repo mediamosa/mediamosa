@@ -277,8 +277,6 @@ class mediamosa_rest_call_user_delete extends mediamosa_rest_call {
  *
  * Method: POST
  *
- * 1.x: user_management_update_user
- *
  */
 class mediamosa_rest_call_user_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -302,12 +300,12 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DESCRIPTION => 'Name of the group where the user will be.',
+          self::VAR_DESCRIPTION => 'A list of the groups in which to link the user to. Will replace all existing links when supplied.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Disk space of the user in megabytes.',
+          self::VAR_DESCRIPTION => 'The upload quotum of the user in megabytes.',
         ),
       )
     );
