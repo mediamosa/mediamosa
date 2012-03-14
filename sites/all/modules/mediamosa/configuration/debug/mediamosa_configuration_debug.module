@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -40,6 +38,8 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
     '#collapsed' => TRUE,
   );
 
+  // Debug level.
+
   $form['settings_debug']['mediamosa_debug_level'] = array(
     '#type' => 'select',
     '#title' => t('Debug level.'),
@@ -54,17 +54,42 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
     '#default_value' => variable_get('mediamosa_debug_level', 0),// Set empty, so its filled.
   );
 
-  $form['settings_debug']['mediamosa_watchdog_rest'] = array(
+  // REST logging.
+
+  $form['settings_debug']['rest_logging'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('REST logging'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_debug']['rest_logging']['mediamosa_watchdog_rest'] = array(
     '#type' => 'checkbox',
     '#title' => t('Turn on REST logging.'),
     '#description' => t('Set this flag to enable logging of all REST calls into the database.'),
     '#default_value' => mediamosa::is_log_rest(),
   );
 
+  $form['settings_debug']['rest_logging']['mediamosa_watchdog_rest_app_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Client application id.'),
+    '#description' => t('Only enable rest logging for a specific application id.'),
+    '#default_value' => mediamosa::get_log_rest_app_id(),
+  );
+
+  $form['settings_debug']['rest_logging']['mediamosa_watchdog_rest_ip_address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Client IP address.'),
+    '#description' => t('Only enable rest logging for a specific IP. You current IP number is; %ip_client.', array('%ip_client' => ip_address())),
+    '#default_value' => mediamosa::get_log_rest_ip_address(),
+  );
+
+  // Debug IP whitelist.
+
   $form['settings_debug']['mediamosa_debug_ip_whitelist'] = array(
     '#type' => 'textfield',
     '#title' => t('Whitelisting of IPs for REST.'),
-    '#description' => t('Set one or more IPs for enabling authorization simulation on REST. This allows you to do queries on the REST interface with own app_id parameter without needing to indentify yourself. Should not be used actively on production, only for testing and debugging purposes. You can add more than one IP by separating with a |. You current IP number is; %ip_client.', array('%ip_client' => $_SERVER['REMOTE_ADDR'])),
+    '#description' => t('Set one or more IPs for enabling authorization simulation on REST. This allows you to do queries on the REST interface with own app_id parameter without needing to indentify yourself. Should not be used actively on production, only for testing and debugging purposes. You can add more than one IP by separating with a |. You current IP number is; %ip_client.', array('%ip_client' => ip_address())),
     '#required' => FALSE,
     '#default_value' => variable_get('mediamosa_debug_ip_whitelist', ''),
   );
@@ -79,5 +104,15 @@ function mediamosa_configuration_debug_mediamosa_configuration_validate($form, $
 
   if (strpos($form_state['values']['mediamosa_debug_ip_whitelist'], ' ') !== FALSE) {
     form_set_error('mediamosa_debug_ip_whitelist', t('You can not enter any spaces.'));
+  }
+
+  $app_id = $form_state['values']['mediamosa_watchdog_rest_app_id'];
+  // Validate the application id.
+  if (!preg_match('/^([0-9]*)$/', $app_id) && $app_id < mediamosa_settings::APP_ID_MIN && $app_id > mediamosa_settings::APP_ID_MAX) {
+    form_set_error('mediamosa_watchdog_rest_app_id', t('Application ID must be a integer between @min and @max.', array('@min' => mediamosa_settings::APP_ID_MIN, '@max' => mediamosa_settings::APP_ID_MAX)));
+  }
+  // Validate the IP address.
+  if ($form_state['values']['mediamosa_watchdog_rest_ip_address'] && !mediamosa_type::is_valid_ip_address($form_state['values']['mediamosa_watchdog_rest_ip_address'])) {
+    form_set_error('mediamosa_watchdog_rest_ip_address', t('This value must be formated as an IP address, like 127.0.0.1.'));
   }
 }

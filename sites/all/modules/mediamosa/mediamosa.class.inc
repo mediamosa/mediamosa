@@ -140,6 +140,27 @@ class mediamosa {
     return variable_get('mediamosa_watchdog_rest', FALSE);
   }
 
+  /**
+   * Get the optional application ID to log from which client application its
+   * REST calls.
+   *
+   * @return
+   *   The client application ID or FALSE.
+   */
+  public static function get_log_rest_app_id() {
+    return variable_get('mediamosa_watchdog_rest_app_id', FALSE);
+  }
+
+  /**
+   * Get the optional IP address to log the REST calls from this IP address.
+   *
+   * @return
+   *   Either a IP address or FALSE.
+   */
+  public static function get_log_rest_ip_address() {
+    return variable_get('mediamosa_watchdog_rest_ip_address', FALSE);
+  }
+
   // Drupal usage for getting the current URI.
   static public function get_request_uri() {
     return trim(implode('/', arg()), '/');

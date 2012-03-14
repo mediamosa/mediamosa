@@ -606,6 +606,19 @@ class mediamosa_type {
 
     return $string_val;
   }
+
+  /**
+   * Validate IP address as IPv4/IPv6 format.
+   *
+   * @param $ip_address
+   *   The IP address to test.
+   *
+   * @return
+   *   Returns FALSE on failure, TRUE on success.
+   */
+  public static function is_valid_ip_address($ip_address) {
+    return filter_var($ip_address, FILTER_VALIDATE_IP) !== FALSE;
+  }
 }
 
 /**

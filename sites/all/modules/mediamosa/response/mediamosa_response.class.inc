@@ -613,11 +613,19 @@ class mediamosa_response extends mediamosa {
    *
    */
   public function log_event_restcall() {
-    if (self::is_log_rest()) {
+    if (self::is_log_rest() &&
+      (!self::get_log_rest_ip_address() || ip_address() == self::get_log_rest_ip_address()) &&
+      (!self::get_log_rest_app_id() || self::get_environment_app_id() == self::get_log_rest_app_id())) {
       mediamosa_statistics::log_event_restcall(
-        '[' . $this->request_method . '] ' . $this->request_uri,
+        t('[@method] @request_uri', array(
+          '@method' => $this->request_method,
+          '@request_uri' => $this->request_uri,
+        )),
         $this->get_processed_time(),
-        mediamosa_db::query_count()
+        mediamosa_db::query_count(),
+        ip_address(),
+        time(),
+        self::get_environment_app_id()
       );
     }
   }

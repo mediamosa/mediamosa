@@ -154,25 +154,35 @@ class mediamosa_statistics {
   /**
    * Log a REST call request.
    *
-   * @param string $request_uri
-   * @param float $processed_time
-   * @param integer $query_count
+   * @param $request
+   *   The REST call request URI text.
+   * @param $process_time
+   *   Time it took to execute the REST call.
+   * @param $query_count
+   *   Amount of queries done during REST call.
+   * @param $ip_address
+   *   IP address of the client.
+   * @param $date
+   *   Date and time when REST call was made.
+   * @param $app_id
+   *   The application ID that executed the REST call.
    */
-  static public function log_event_restcall($request, $process_time, $query_count) {
+  public static function log_event_restcall($request, $process_time, $query_count, $ip_address, $date, $app_id) {
 
-    return mediamosa_db::db_insert(mediamosa_statistics_rest_log_db::TABLE_NAME)
+    mediamosa_db::db_insert(mediamosa_statistics_rest_log_db::TABLE_NAME)
       ->fields(array(
         mediamosa_statistics_rest_log_db::REQUEST => $request,
         mediamosa_statistics_rest_log_db::PROCESS_TIME => $process_time,
         mediamosa_statistics_rest_log_db::QUERY_COUNT => $query_count,
+        mediamosa_statistics_rest_log_db::IP_ADDRESS => $ip_address,
+        mediamosa_statistics_rest_log_db::DATE => $date,
+        mediamosa_statistics_rest_log_db::APP_ID => $app_id,
       ))
       ->execute();
   }
 
   /**
    * Calculate and store used diskspace.
-   *
-   * 1.x: vpx_statistics_calculate_used_diskspace
    *
    * @param $year
    * @param $month

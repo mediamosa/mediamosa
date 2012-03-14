@@ -38,4 +38,9 @@ class mediamosa_statistics_rest_log_db {
   const REQUEST = 'request'; // 1x: varchar, 2.x text.
   const PROCESS_TIME = 'process_time';
   const QUERY_COUNT = 'query_count';
+  const IP_ADDRESS = 'ip_address';
+  const IP_ADDRESS_LENGTH = 15;
+  const DATE = 'date';
+  const APP_ID = 'app_id';
+  const APP_ID_DEFAULT = 0;
 }

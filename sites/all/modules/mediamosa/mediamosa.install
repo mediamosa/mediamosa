@@ -3308,3 +3308,44 @@ function mediamosa_update_7134() {
     node_save($node);
   }
 }
+
+/**
+ * Extend the Statistics REST log table to store extra data.
+ */
+function mediamosa_update_7135() {
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'ip_address')) {
+    db_add_field(
+      'mediamosa_statistics_rest_log',
+      'ip_address',
+      array(
+        'type' => 'varchar',
+        'length' => 15,
+        'description' => 'Location of where the rest call came from.',
+      )
+    );
+  }
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'date')) {
+    db_add_field(
+      'mediamosa_statistics_rest_log',
+      'date',
+      array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'Timestamp of when the restcall has been send to mediamosa.',
+      )
+    );
+  }
+  if (!db_field_exists('mediamosa_statistics_rest_log', 'app_id')) {
+    db_add_field(
+      'mediamosa_statistics_rest_log',
+      'app_id',
+      array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => mediamosa_statistics_rest_log_db::APP_ID_DEFAULT,
+        'description' => 'The app_id that is used to authenticate yourself on the platform.',
+      )
+    );
+  }
+}
