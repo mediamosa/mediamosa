@@ -625,7 +625,7 @@ class mediamosa_response extends mediamosa {
         mediamosa_db::query_count(),
         ip_address(),
         time(),
-        self::get_environment_app_id()
+        (self::get_environment_app_id() ? self::get_environment_app_id() : 0)
       );
     }
   }
