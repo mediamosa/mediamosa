@@ -180,7 +180,7 @@ function mediamosa_maintenance_status_component_generate() {
       'title' => t('Simpletest diskusage'),
       'value' => format_size($du_simpletest),
       'severity' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
-      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'", array('@simpletest_dir' => mediamosa_configuration_storage::mount_point_get(TRUE))) : '',
+      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove their files automaticly. An administrator needs to clean up directory '@simpletest_dir'", array('@simpletest_dir' => mediamosa_configuration_storage::mount_point_get(TRUE))) : '',
     );
   }
 
