@@ -616,15 +616,16 @@ function _mediamosa_migration_mediafile_metadata() {
   $fields = array();
   $columns = mediamosa_db::db_get_columns_with_type('mediafile_metadata', $db_name);
   foreach ($columns as $row) {
+
     // Collect only real properties.
     if (
-      $row->column_name != 'metadata_id' &&
-      $row->column_name != 'mediafile_id' &&
-      $row->column_name != 'created' &&
-      $row->column_name != 'changed'
+      $row->COLUMN_NAME != 'metadata_id' &&
+      $row->COLUMN_NAME != 'mediafile_id' &&
+      $row->COLUMN_NAME != 'created' &&
+      $row->COLUMN_NAME != 'changed'
     ) {
       // Type is eg. "varchar(32)" or "int(10) unsigned" or "enum('FALSE','TRUE')"
-      $type = drupal_strtolower($row->data_type);
+      $type = drupal_strtolower($row->DATA_TYPE);
 
       // Type formatting.
       if (strpos($type, 'int') !== FALSE) {
@@ -638,8 +639,8 @@ function _mediamosa_migration_mediafile_metadata() {
       }
 
       // Insert.
-      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type);
-      $fields[$row->column_name] = array(
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->COLUMN_NAME, $type);
+      $fields[$row->COLUMN_NAME] = array(
         'prop_id' => $prop_id,
         'type' => $type,
       );

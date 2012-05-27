@@ -795,7 +795,8 @@ class mediamosa_db {
     $schema = ($schema ? $schema : $databases['default']['default']['database']);
 
     // Use db_query directly here, not mediamosa_db version.
-    return db_query('SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM information_schema.columns WHERE TABLE_NAME = :table AND TABLE_SCHEMA = :schema', array(
+    // Use Aliases, so we are sure its in upper-case.
+    return db_query('SELECT COLUMN_NAME AS COLUMN_NAME, DATA_TYPE AS DATA_TYPE, COLUMN_TYPE AS COLUMN_TYPE FROM information_schema.columns WHERE TABLE_NAME = :table AND TABLE_SCHEMA = :schema', array(
       ':table' => $table_name,
       ':schema' => $schema,
     ))->fetchAll();
