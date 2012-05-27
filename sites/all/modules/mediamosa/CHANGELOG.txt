@@ -1,10 +1,14 @@
-MediaMosa 3.2.x-dev (build 1852)
+MediaMosa 3.2.x-dev (build 1858)
 --------------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
 - Fixed: some installations where no longer able to edit the MediaMosa servers.
 - Fixed: In some cases when a REST call was logged, an exception was thrown when
   no application ID was available or set.
+- Fixed: Fixing problem with 1.7 migration module; PDO exception with NULL value
+  for metadata name (caused by uppercase name).
+- Upgraded to Drupal 7.14 (with applied MediaMosa bootstrap patch, see patch
+  dir under mediamosa module).
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
