@@ -1,7 +1,11 @@
 MediaMosa 3.2.1 (build ....)
 ----------------------------
+- Transcode job blocks transcodings fix (See ticket #300).
 - OAI: Asset search gives notice (See ticket #303).
 - Still images are missing if the client app_id is differ from the asset app_id (See ticket #301).
+
+MediaMosa 3.2.0.1 (build 1843)
+------------------------------
 - Cannot edit MediaMosa server settings fix (See ticket #558).
 - Additional response-types on asset/{id}/play call (See ticket #389).
 - Extra features rest logging (See VPCore ticket #295).

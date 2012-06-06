@@ -219,6 +219,43 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
       strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
     );
 
+    // Special cases.
+
+    // Wrong target size. Response is string = TRUE.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "", TRUE);
+    $this->assertTrue(
+      $result === '',
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => print_r($result, TRUE)))
+    );
+
+    // Wrong target size. Response is string = FALSE.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "", FALSE);
+    $this->assertTrue(
+      $result === array(),
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => print_r($result, TRUE)))
+    );
+
+    // Without source size. Response is string = TRUE.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(0, 0, "1280x720", TRUE);
+    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:1280x720;-padleft:0;-padright:0" : "-s:1280x720;-vf:'pad=1280:720:0:0:black'");
+    $this->assertTrue(
+      $result === $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => print_r($result, TRUE)))
+    );
+
+    // Without source size. Response is string = FALSE.
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(0, 0, "1280x720", FALSE);
+    $compare = array(
+      'width' => '1280',
+      'height' => '720',
+      'h_padding' => 0,
+      'v_padding' => 0,
+    );
+    $this->assertTrue(
+      $result === $compare,
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => print_r($result, TRUE)))
+    );
+
 
     // TODO: Check, develop, and test this:
     /*

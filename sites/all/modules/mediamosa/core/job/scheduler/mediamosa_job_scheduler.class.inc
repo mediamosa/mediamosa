@@ -1396,21 +1396,41 @@ class mediamosa_job_scheduler {
       $h_target = $matches[2];
     }
     else {
-      return '';
+      return ( $response_string ? '' : array() );
     }
 
     // if source is unknown, but target is, just return the target size.
     if (($w_target > 0 && $h_target > 0) && (!($w_source > 0 && $h_source > 0))) {
-      return(array(
+      if (mediamosa_settings::get_ffmpeg_pad()) {
+        $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d",
+          (int)$w_target,
+          (int)$h_target,
+          0,
+          0
+        );
+      }
+      else {
+        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'",
+          (int)$w_target,
+          (int)$h_target,
+          (int)$w_target,
+          (int)$h_target,
+          0,
+          0
+        );
+      }
+      $param_array = array(
         'width' => $w_target,
         'height' => $h_target,
         'h_padding' => 0,
         'v_padding' => 0,
-      ));
+      );
+
+      return ( $response_string ? $param_string : $param_array );
     }
     // if source is unknown, and target is unknown, jump out and decide there.
     if (!($w_target > 0 && $h_target > 0 && $w_source > 0 && $h_source > 0)) {
-      return '';
+      return ( $response_string ? '' : array() );
     }
 
     if (isset($h_padding) && is_numeric($h_padding) && $h_padding >= 0 && isset($v_padding) && is_numeric($v_padding) && $v_padding >= 0) {
