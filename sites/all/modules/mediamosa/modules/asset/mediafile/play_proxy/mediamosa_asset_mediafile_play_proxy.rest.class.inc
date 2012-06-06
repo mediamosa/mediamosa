@@ -418,7 +418,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       );
       $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
-      $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+      //$query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
       if (!empty($still_id)) {
         $query->condition('m.' . mediamosa_asset_mediafile_db::ID, $still_id);
       }

@@ -1,5 +1,6 @@
 MediaMosa 3.2.1 (build ....)
 ----------------------------
+- Still images are missing if the client app_id is differ from the asset app_id (See ticket #301).
 - Cannot edit MediaMosa server settings fix (See ticket #558).
 - Additional response-types on asset/{id}/play call (See ticket #389).
 - Extra features rest logging (See VPCore ticket #295).
