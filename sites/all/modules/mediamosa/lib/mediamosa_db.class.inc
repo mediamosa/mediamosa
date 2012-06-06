@@ -133,6 +133,13 @@ class mediamosa_db {
 
       case 'db_query_temporary':
       case 'db_query':
+        if (!isset($args[1])) {
+          $args[1] = array();
+        }
+        if (!isset($args[2])) {
+          $args[2] = array();
+        }
+
         // By default, specify we want array's and not objects.
         $args[2] += array(
           'fetch' => PDO::FETCH_ASSOC,

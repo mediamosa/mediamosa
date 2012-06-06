@@ -56,7 +56,9 @@ class mediamosa_asset {
     );
 
     // Convert dates to local timezone.
-    $asset[mediamosa_asset_db::VIDEOTIMESTAMP] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMP]);
+    if (isset($asset[mediamosa_asset_db::VIDEOTIMESTAMP])) {
+      $asset[mediamosa_asset_db::VIDEOTIMESTAMP] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMP]);
+    }
     $asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED]);
   //  $asset[mediamosa_asset_db::CREATED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::CREATED]);
 
