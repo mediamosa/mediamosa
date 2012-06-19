@@ -195,7 +195,6 @@ class mediamosa_rest_call_acl_group_get_hostnames extends mediamosa_rest_call {
     }
 
     $mediamosa->item_count_total = $result->found_rows;
-
   }
 }
 

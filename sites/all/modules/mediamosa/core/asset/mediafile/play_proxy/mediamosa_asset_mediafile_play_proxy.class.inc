@@ -602,6 +602,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
             // If TRUE, create an asx file and when everything goes as planned, ref to the new file.
             if ($use_external_asx_file) {
+              $input = array();
               preg_match('@\{IF_EXTERNAL\}(.*?)\{/IF_EXTERNAL\}@is', $output, $input);
               if (isset($input[0])) {
                 $output_asx = $input[0];
@@ -710,8 +711,6 @@ class mediamosa_asset_mediafile_play_proxy {
 
   /**
    * Return a matching mediafile based on the asset_id and a profile_id.
-   *
-   * 1.x: _play_proxy_get_mediafile_id_on_profile
    *
    * @param $asset_id
    * @param $profile_id

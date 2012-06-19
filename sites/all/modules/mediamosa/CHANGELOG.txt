@@ -1,3 +1,6 @@
+
+
+
 MediaMosa 3.2.x-dev (build 1858)
 --------------------------------
 - Extended the logging for REST calls and added filtering to log for specific
@@ -9,6 +12,10 @@ MediaMosa 3.2.x-dev (build 1858)
   for metadata name (caused by uppercase name).
 - Upgraded to Drupal 7.14 (with applied MediaMosa bootstrap patch, see patch
   dir under mediamosa module).
+- Partial rewrite on ratio calculation function for preventing hangs during
+  transcode jobs.
+- Fixed notices when asset search was called with is_oai = TRUE and assets where
+  included which where deleted.
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------

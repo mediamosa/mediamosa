@@ -1118,10 +1118,11 @@ class mediamosa_job {
   /**
    * Deletes the job. Moved into function for re-use.
    *
-   * _vpx_jobs_cancel_job_by_asset
+   * @param $asset_id
+   *   The ID of the asset to remove jobs from.
    *
-   * @param integer $job_id
-   * @return bool TRUE; job has been deleted
+   * @return
+   *   Returns TRUE when all jobs where deleted.
    */
   static public function delete_job_by_asset($asset_id) {
     mediamosa_db::db_query(
@@ -1174,7 +1175,9 @@ class mediamosa_job {
     $num_rows = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'mj')
       ->fields('mj', array(mediamosa_job_db::ASSET_ID))
       ->condition(mediamosa_job_db::ASSET_ID, $asset_id)
-      ->countQuery()->execute()->fetchField();
+      ->countQuery()
+      ->execute()
+      ->fetchField();
 
     return ($num_rows ? FALSE : TRUE);
   }

@@ -53,12 +53,16 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     // Upload 2 mediafiles.
     $filename_1 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1, $this->getTestVideo());
     $filename_2 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_2, $this->getTestVideo_ogg());
+    assert(!empty($filename_1));
+    assert(!empty($filename_2));
 
     // Now transcode both.
 
     // Create transcode job.
     $job_id_1 = $this->createMediafileTranscode($mediafile_id_1);
     $job_id_2 = $this->createMediafileTranscode($mediafile_id_2);
+    assert($job_id_1);
+    assert($job_id_2);
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -141,34 +145,36 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     // Preparation.
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
-    $filename = $a_upload['filename'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+    $filename = $upload['filename'];
+    assert(!empty($filename));
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
+    assert($job_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
 
     // Update mediafile.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
     );
-    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+    $response = $this->updateMediafile($mediafile_id, $parameters);
+    assert($response);
 
     // Play proxy create ticket.
 
     foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
       // Ask mediafile download url.
-      $a_parameters = array(
+      $parameters = array(
         mediamosa_rest_call_asset_mediafile_play::RESPONSE => $subject,
         mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
       );
-      $a_xml = $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
-
-      $output = $a_xml['items']['item']['output'];
+      $xml = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+      $output = $xml['items']['item']['output'];
 
       switch ($subject) {
         case 'plain':

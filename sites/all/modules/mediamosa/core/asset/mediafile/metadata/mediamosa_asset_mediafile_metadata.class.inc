@@ -634,10 +634,14 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
-   * Get all the metadata values of mediafile.
+   * Get all the technical metadata values of mediafile.
+   *
+   * @todo: Get rid of the calls to get_property by joining in the first query
+   *        with the property table.
    *
    * @param mediafile_id
    *   Unique id for the mediafile.
+   *
    * @return
    *   Value of the properties in an associative array.
    */

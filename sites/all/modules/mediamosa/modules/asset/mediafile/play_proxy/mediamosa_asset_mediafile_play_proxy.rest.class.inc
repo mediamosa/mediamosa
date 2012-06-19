@@ -207,7 +207,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
@@ -322,7 +322,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // If response type is still, we get all information of all stills with all details.
-    $a_stills = array();
+    $stills = array();
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
@@ -357,16 +357,16 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $height = $size_height;
       }
 
-      $a_orders = array();
+      $order = array();
       if (isset($range)) {
         if (is_numeric($range)) {
-          $a_orders[] = $range;
+          $order[] = $range;
         }
         else {
-          $a_range = explode(',', $range);
-          foreach ($a_range as $range_2) {
+          $ranges = explode(',', $range);
+          foreach ($ranges as $range_2) {
             if (is_numeric($range_2)) {
-              $a_orders[] = $range_2;
+              $order[] = $range_2;
             }
             else {
               $pos = strpos($range_2, '-', 1);
@@ -376,7 +376,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
                 $range_2 = explode('!', $range_2);
                 if (is_array($range_2) && isset($range_2[0]) && is_numeric($range_2[0]) && isset($range_2[1]) && is_numeric($range_2[1]) && !isset($range_2[2]) && $range_2[0] <= $range_2[1]) {
                   for ($i = $range_2[0]; $i <= $range_2[1]; $i++) {
-                    $a_orders[] = $i;
+                    $order[] = $i;
                   }
                 }
               }
@@ -403,7 +403,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $query->addField('m', mediamosa_asset_mediafile_db::ID, 'still_id');
       $query->addField('v', mediamosa_asset_mediafile_db::ID, 'mediafile_id');
       $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'asset_id');
-      //$query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'orderasset_id');
       $query->fields('m',
         array(
           mediamosa_asset_mediafile_db::APP_ID,
@@ -431,9 +430,9 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
       if (!empty($still_id)) {
         $result = $query->range(0, 1)->execute()->fetchAssoc();
-        if ($this->metadata_values($result, $width, $height, $format, $a_orders)) {
+        if ($this->metadata_values($result, $width, $height, $format, $order)) {
           $result['ticket'] = $ticket;
-          $a_stills[] = $result;
+          $stills[] = $result;
         }
       }
       else {
@@ -441,7 +440,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
         foreach ($result as $t_stills) {
           // Enrich the t_stills with the still parameters.
-          if ($this->metadata_values($t_stills, $width, $height, $format, $a_orders)) {
+          if ($this->metadata_values($t_stills, $width, $height, $format, $order)) {
 
             // Get file ext.
             $file_ext = mediamosa_asset_mediafile::get_file_extension($t_stills['still_id']);
@@ -464,14 +463,14 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             }
 
             $t_stills['ticket'] = $ticket_still;
-            $a_stills[] = $t_stills;
+            $stills[] = $t_stills;
           }
         }
       }
     }
 
     // If the request is for a still but we have no stills, then we fail.
-    if (($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) && (empty($a_stills))) {
+    if (($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) && (empty($stills))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
@@ -492,26 +491,29 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $this->get_param_value(self::IS_APP_ADMIN),
       $asset_metadata,
       $mediafile_ext,
-      $a_stills
+      $stills
     );
 
     // All ok, now set played + 1
     mediamosa_asset::asset_played($asset_id);
 
     // Add response.
-    $o_mediamosa->add_item($response);
+    $mediamosa->add_item($response);
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 
   /**
    * Metadata values.
    *
    * @param &result
+   *
    * @return is_skip
    */
-  private function metadata_values(&$result, $width, $height, $format, $a_orders) {
+  private function metadata_values(&$result, $width, $height, $format, $order) {
+
+    // Get the technical metadata of the still.
     $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($result['still_id']);
     $values_to_still = array();
 
@@ -527,6 +529,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       mediamosa_asset_mediafile_metadata::STILL_DEFAULT,
     );
 
+    // Collect the values we need.
     foreach ($fields as $field) {
       $values_to_still[$field] = (empty($values[$field]) ? NULL : $values[$field]);
     }
@@ -541,7 +544,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     if (isset($format) && $format != $values_to_still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
       return FALSE;
     }
-    if (count($a_orders) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $a_orders)) {
+    if (count($order) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $order)) {
       return FALSE;
     }
 

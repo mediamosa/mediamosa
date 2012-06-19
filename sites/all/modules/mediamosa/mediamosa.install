@@ -64,7 +64,7 @@ require_once 'core/webservice/mediamosa_webservice.install.inc';
  */
 function mediamosa_install() {
 
-   // Install the error db.
+  // Install the error db.
   _mediamosa_error_install();
 
   // Install watchdog extend table.
