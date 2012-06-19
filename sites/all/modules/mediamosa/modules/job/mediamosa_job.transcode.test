@@ -50,7 +50,7 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Tests.
 
   // (see ticket 194)
-  function testJobTranscode() {
+  public function testJobTranscode() {
 
     // Make a transcode job.
 
@@ -114,111 +114,152 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
   }
 
   // (see ticket 228)
-  function testJobTranscode_calc_aspect_ratio() {
+  public function testJobTranscode_calc_aspect_ratio() {
 
     // Basic tests.
 
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(1024, 576, "640x480");
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x360;-padtop:60;-padbottom:60" : "-s:640x360;-vf:'pad=640:480:0:60:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+    foreach (array(TRUE, FALSE) as $use_ffmpeg_pad) {
+      // Force the value.
+      mediamosa_settings::get_ffmpeg_pad($use_ffmpeg_pad);
 
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(640, 480, "200x200");
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x152;-padtop:24;-padbottom:24" : "-s:200x152;-vf:'pad=200:200:0:24:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(1024, 576, '640x480');
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:640x360;-padtop:60;-padbottom:60' : "-s:640x360;-vf:'pad=640:480:0:60:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, "200x300");
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x200;-padtop:50;-padbottom:50" : "-s:200x200;-vf:'pad=200:300:0:50:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(640, 480, '200x200');
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:200x152;-padtop:24;-padbottom:24' : "-s:200x152;-vf:'pad=200:200:0:24:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, "300x200");
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:200x200;-padleft:50;-padright:50" : "-s:200x200;-vf:'pad=300:200:50:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, '200x300');
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:200x200;-padtop:50;-padbottom:50' : "-s:200x200;-vf:'pad=200:300:0:50:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(1920, 1080, "352x288");
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x198;-padtop:44;-padbottom:44" : "-s:352x198;-vf:'pad=352:286:0:44:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(100, 100, '300x200');
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:200x200;-padleft:50;-padright:50' : "-s:200x200;-vf:'pad=300:200:50:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // With "padding = yes | no".
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(1920, 1080, '352x288');
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:352x198;-padtop:44;-padbottom:44' : "-s:352x198;-vf:'pad=352:286:0:44:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = yes.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "320x240", TRUE, NULL, NULL, TRUE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:320x176;-padtop:32;-padbottom:32" : "-s:320x176;-vf:'pad=320:240:0:32:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // With "padding = yes | no".
 
-    // padding = no.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "320x240", TRUE, NULL, NULL, FALSE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:320x176;-padtop:0;-padbottom:0" : "-s:320x176;-vf:'pad=320:176:0:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = yes.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, '320x240', TRUE, NULL, NULL, TRUE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:320x176;-padtop:32;-padbottom:32' : "-s:320x176;-vf:'pad=320:240:0:32:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = yes.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "640x480", TRUE, NULL, NULL, TRUE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x352;-padtop:64;-padbottom:64" : "-s:640x352;-vf:'pad=640:480:0:64:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = no.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, '320x240', TRUE, NULL, NULL, FALSE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:320x176;-padtop:0;-padbottom:0' : "-s:320x176;-vf:'pad=320:176:0:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = no.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, "640x480", TRUE, NULL, NULL, FALSE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:640x352;-padtop:0;-padbottom:0" : "-s:640x352;-vf:'pad=640:352:0:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = yes.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, '640x480', TRUE, NULL, NULL, TRUE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:640x352;-padtop:64;-padbottom:64' : "-s:640x352;-vf:'pad=640:480:0:64:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = yes.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, "352x288", TRUE, NULL, NULL, TRUE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x200;-padtop:44;-padbottom:44" : "-s:352x200;-vf:'pad=352:288:0:44:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = no.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(320, 176, '640x480', TRUE, NULL, NULL, FALSE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:640x352;-padtop:0;-padbottom:0' : "-s:640x352;-vf:'pad=640:352:0:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = no.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, "352x288", TRUE, NULL, NULL, FALSE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:352x200;-padtop:0;-padbottom:0" : "-s:352x200;-vf:'pad=352:200:0:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = yes.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, '352x288', TRUE, NULL, NULL, TRUE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:352x200;-padtop:44;-padbottom:44' : "-s:352x200;-vf:'pad=352:288:0:44:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = yes.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "1280x720", TRUE, NULL, NULL, TRUE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:1080x720;-padleft:100;-padright:100" : "-s:1080x720;-vf:'pad=1280:720:100:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = no.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(1280, 720, '352x288', TRUE, NULL, NULL, FALSE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:352x200;-padtop:0;-padbottom:0' : "-s:352x200;-vf:'pad=352:200:0:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
-    // padding = no.
-    $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, "1280x720", TRUE, NULL, NULL, FALSE);
-    $compare = (mediamosa_settings::get_ffmpeg_pad() ? "-s:1080x720;-padleft:0;-padright:0" : "-s:1080x720;-vf:'pad=1080:720:0:0:black'");
-    $this->assertTrue(
-      $result == $compare,
-      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
-    );
+      // padding = yes.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, '1280x720', TRUE, NULL, NULL, TRUE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:1080x720;-padleft:100;-padright:100' : "-s:1080x720;-vf:'pad=1280:720:100:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
 
+      // padding = no.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, '1280x720', TRUE, NULL, NULL, FALSE);
+      $compare = mediamosa_settings::get_ffmpeg_pad() ? '-s:1080x720;-padleft:0;-padright:0' : "-s:1080x720;-vf:'pad=1080:720:0:0:black'";
+      $this->assertTrue(
+        $result == $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @expecting', array('@result' => $result, '@expecting' => $compare))
+      );
+
+      // Special cases.
+
+      // Wrong target size. Response is string = TRUE.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, '', TRUE);
+      $this->assertTrue(
+        $result === '',
+        strtr('Calculate ffmpeg params for aspect ratio: @result', array('@result' => print_r($result, TRUE)))
+      );
+
+      // Wrong target size. Response is string = FALSE.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(720, 480, '', FALSE);
+      $this->assertTrue(
+        $result === array(),
+        strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => print_r($result, TRUE)))
+      );
+
+      // Without source size. Response is string = TRUE.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(0, 0, '1280x720', TRUE);
+      $compare = (mediamosa_settings::get_ffmpeg_pad() ? '-s:1280x720;-padtop:0;-padbottom:0' : "-s:1280x720;-vf:'pad=1280:720:0:0:black'");
+      $this->assertTrue(
+        $result === $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @compare', array('@result' => print_r($result, TRUE), '@compare' => print_r($compare, TRUE)))
+      );
+
+      // Without source size. Response is string = FALSE.
+      $result = mediamosa_job_scheduler::calc_aspect_ratio(0, 0, '1280x720', FALSE);
+      $compare = array(
+        'width' => 1280,
+        'height' => 720,
+        'h_padding' => 0,
+        'v_padding' => 0,
+      );
+      $this->assertTrue(
+        $result === $compare,
+        strtr('Calculate ffmpeg params for aspect ratio: got @result, expecting @compare', array('@result' => print_r($result, TRUE), '@compare' => print_r($compare, TRUE)))
+      );
+    }
 
     // TODO: Check, develop, and test this:
     /*

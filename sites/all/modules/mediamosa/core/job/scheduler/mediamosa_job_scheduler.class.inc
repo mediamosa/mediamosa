@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -682,7 +680,7 @@ class mediamosa_job_scheduler {
     // the number of job that is not FINISHED, FAILED of CANCELLED
     // and job type is not UPLOAD (does not take a slot).
     $server_jobs = mediamosa_db::db_query(
-      "SELECT #nid, #uri, #slots,
+      'SELECT #nid, #uri, #slots,
              (SELECT COUNT(msj.#job_id)
               FROM {#mediamosa_server_job} AS msj
               JOIN {#mediamosa_job} AS mj ON mj.#job_id = msj.#job_id
@@ -691,7 +689,7 @@ class mediamosa_job_scheduler {
                 AND mj.#job_type != :JOBTYPE_UPLOAD
                 AND mj.#job_status NOT IN (:JOBSTATUS_FINISHED, :JOBSTATUS_FAILED, :JOBSTATUS_CANCELLED)) AS jobcount
       FROM {#mediamosa_server} AS ms
-      WHERE #server_status = :server_status_on AND #server_type = :server_type",
+      WHERE #server_status = :server_status_on AND #server_type = :server_type',
       array(
         '#nid' => mediamosa_server_db::NID,
         '#server_id' => mediamosa_server_job_db::SERVER_ID,
@@ -804,8 +802,6 @@ class mediamosa_job_scheduler {
   /**
    * Start transcode job by REST call.
    *
-   * 1.x: _vpx_jobhandler_start_server_transcode_job
-   *
    * @param integer $job_id
    * @param string $uri
    * @param string $mediafile_id
@@ -846,8 +842,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Start analyse job by REST call.
-   *
-   * 1.x: _vpx_jobhandler_start_server_analyse_job
    *
    * @param integer $job_id
    * @param string $uri
@@ -968,8 +962,6 @@ class mediamosa_job_scheduler {
    *  - There is no active upload for the asset.
    *  - Low priority goes first. ?
    *  - Job may not be started on other server.
-   *
-   *  1.x: _vpx_jobhandler_fetch_single_available_job
    *
    * @param integer $server_id
    */
@@ -1162,6 +1154,7 @@ class mediamosa_job_scheduler {
             default:
               // FIXME Unspecified sizes ends up here.
               // Check the size.
+              $matches = array();
               preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
               if (!is_array($matches) || count($matches) != 3) {
                 // Get the video size.
@@ -1289,13 +1282,13 @@ class mediamosa_job_scheduler {
       ));
 
       // Determine if padding necessary or not.
-      $is_padding = TRUE;
+      $use_padding = TRUE;
       if (strstr($command, 'padding:no') !== FALSE) {
-        $is_padding = FALSE;
+        $use_padding = FALSE;
       }
 
       // Get the parameter string.
-      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $is_padding);
+      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $use_padding);
       if (!empty($ratio)) {
         $command_line[] = $ratio;
       }
@@ -1374,129 +1367,206 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Calculate ffmpeg parameters if we have to maintain aspect ratio.
+   * Calculate the aspect ratio.
    *
-   * @param $w_source
-   *   Width of video source.
-   * @param $h_source
-   *   Height of video source.
-   * @param $w_target
-   *   Width of video to create.
-   * @param $h_target
-   *   Height of video to create.
+   * Can return cmd line option in ffmpeg when needed.
+   *
+   * @param $source_width
+   *   Width of source.
+   * @param $source_height
+   *   Height of source.
+   * @param $target_size
+   *   The size of the target in WIDTHxHEIGHT format.
+   * @param $response_string
+   *   Return as array (FALSE) or as ffmpeg size/padding cmd line option (TRUE).
+   * @param $h_padding
+   *   Horizontal padding.
+   * @param $v_padding
+   *   Vertical padding.
+   * @param $use_padding
+   *   Use padding parameters.
+   *
    * @return
-   *   Parameter string to use with ffmpeg.
+   *   $response_string == TRUE:
+   *     Parameter string to use with ffmpeg
+   *   $response_string == FALSE
+   *     Array with aspect info.
    */
-  static public function calc_aspect_ratio($w_source, $h_source, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $is_padding = TRUE) {
+  static public function calc_aspect_ratio($source_width, $source_height, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $use_padding = TRUE) {
 
-    // Get target width and height, format is 'wxh'.
-    preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
-    if ((is_array($matches)) && (count($matches) == 3)) {
-      $w_target = $matches[1];
-      $h_target = $matches[2];
-    }
-    else {
-      return '';
+    // Get target width and height, format is 'WIDTHxHEIGHT'.
+    $matches = array();
+    if (!preg_match('/(\d+)x(\d+)/',  $target_size, $matches)) {
+      return ($response_string ? '' : array());
     }
 
-    // if source is unknown, but target is, just return the target size.
-    if (($w_target > 0 && $h_target > 0) && (!($w_source > 0 && $h_source > 0))) {
-      return(array(
-        'width' => $w_target,
-        'height' => $h_target,
+    // Get the data.
+    $target_width = (int) $matches[1];
+    $target_height = (int) $matches[2];
+
+    // if source is unknown, but target is not, then just return the target size.
+    if ($target_width > 0 && $target_height > 0 && $source_width < 1 && $source_height < 1) {
+      if ($response_string) {
+        if (mediamosa_settings::get_ffmpeg_pad()) {
+          return strtr('-s:@w_targetx@h_target;-padtop:0;-padbottom:0',
+            array(
+              '@w_target' => $target_width,
+              '@h_target' => $target_height,
+            )
+          );
+        }
+
+        return strtr("-s:@w_targetx@h_target;-vf:'pad=@w_target:@h_target:0:0:black'",
+          array(
+            '@w_target' => $target_width,
+            '@h_target' => $target_height,
+          )
+        );
+      }
+
+      // Return as array.
+      return array(
+        'width' => $target_width,
+        'height' => $target_height,
         'h_padding' => 0,
         'v_padding' => 0,
-      ));
+      );
     }
-    // if source is unknown, and target is unknown, jump out and decide there.
-    if (!($w_target > 0 && $h_target > 0 && $w_source > 0 && $h_source > 0)) {
-      return '';
+
+    // When source is unknown and target is unknown, jump out and decide there.
+    if ($target_width < 1 && $target_height < 1 && $source_width < 1 && $source_height < 1) {
+      return ($response_string ? '' : array());
     }
 
     if (isset($h_padding) && is_numeric($h_padding) && $h_padding >= 0 && isset($v_padding) && is_numeric($v_padding) && $v_padding >= 0) {
-      if (mediamosa_settings::get_ffmpeg_pad()) {
-        $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d;-padleft:%d;-padright:%d", (int)$w_target, (int)$h_target, (int)$h_padding, (int)$h_padding, (int)$v_padding, (int)$v_padding);
+      if ($response_string) {
+        if (mediamosa_settings::get_ffmpeg_pad()) {
+          return strtr('-s:@w_targetx@h_target;-padtop:@h_padding;-padbottom:@h_padding;-padleft:@v_padding;-padright:@v_padding',
+            array(
+              '@w_target' => $target_width,
+              '@h_target' => $target_height,
+              '@h_padding' => (int) $h_padding,
+              '@v_padding' => (int) $v_padding,
+            )
+          );
+        }
+
+        return strtr("-s:@w_targetx@h_target;-vf:'pad=@target_width:@target_height:@v_padding:@h_padding:black'",
+          array(
+            '@w_target' => $target_width,
+            '@h_target' => $target_height,
+            '@target_width' => $target_width + ($v_padding * 2),
+            '@target_height' => $target_height + ($h_padding * 2),
+            '@v_padding' => (int) $v_padding,
+            '@h_padding' => (int) $h_padding,
+          )
+        );
       }
-      else {
-        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'", (int)$w_target, (int)$h_target, (int)$w_target + (2 * (int)$v_padding), (int)$h_target + (2 * (int)$h_padding), (int)$v_padding, (int)$h_padding);
-      }
-      $param_array = array('width' => (int)$w_target, 'height' => (int)$h_target, 'h_padding' => (int)$h_padding, 'v_padding' => $v_padding);
-      return ( $response_string ? $param_string : $param_array );
+
+      return array(
+        'width' => $target_width,
+        'height' => $target_height,
+        'h_padding' => (int) $h_padding,
+        'v_padding' => (int) $v_padding,
+      );
     }
 
-    $w_ratio = $w_source / $w_target;
-    $h_ratio = $h_source / $h_target;
+    // Prevent divided by zero problems.
+    if (!$target_width || !$target_height) {
+      return ($response_string ? '' : array());
+    }
 
+    // Calculate ratio.
+    $w_ratio = $source_width / $target_width;
+    $h_ratio = $source_height / $target_height;
+
+    // Depending on ratio difference we choose the calculation.
     if ($w_ratio > $h_ratio) {
-      // Adjust height padding.
-      $padding = $h_target - ($h_source / $w_ratio); // Total size of padding.
-      $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
-      $new_height = $h_target - (2 * $padding);
-      $new_height = ($new_height - ($new_height % 2)); // must be even.
-      if (mediamosa_settings::get_ffmpeg_pad()) {
-        $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d",
-          (int)$w_target,
-          (int)$new_height,
-          ($is_padding ? (int)$padding : 0),
-          ($is_padding ? (int)$padding : 0)
+      // Total size of padding.
+      $padding = $target_height - ($source_height / $w_ratio);
+
+      // Single size of padding (must be even).
+      $padding = ($padding - ($padding % 4)) / 2;
+
+      // Calculate new height.
+      $new_height = floor($target_height - (2 * $padding));
+
+      // Make even.
+      $new_height -= $new_height & 1;
+
+      if ($response_string) {
+        if (mediamosa_settings::get_ffmpeg_pad()) {
+          return strtr("-s:@target_widthx@new_height;-padtop:@padding;-padbottom:@padding",
+            array(
+              '@target_width' => $target_width,
+              '@new_height' => $new_height,
+              '@padding' => $use_padding ? floor($padding) : 0,
+            )
+          );
+        }
+
+        return strtr("-s:@target_widthx@new_height;-vf:'pad=@target_width:@padded_height:0:@padding:black'",
+          array(
+            '@target_width' => $target_width,
+            '@new_height' => $new_height,
+            '@padded_height' => $new_height + (($use_padding ? floor($padding) : 0) * 2),
+            '@padding' => $use_padding ? floor($padding) : 0,
+          )
         );
       }
-      else {
-        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'",
-          (int)$w_target,
-          (int)$new_height,
-          (int)$w_target,
-          (int)$new_height + (2 * ($is_padding ? (int)$padding : 0)),
-          0,
-          ($is_padding ? (int)$padding : 0)
-        );
-      }
-      $param_array = array(
-        'width' => (int)$w_target,
-        'height' => (int)$new_height,
-        'h_padding' => ($is_padding ? (int)$padding : 0),
+
+      return array(
+        'width' => $target_width,
+        'height' => $new_height,
+        'h_padding' => $use_padding ? floor($padding) : 0,
         'v_padding' => 0
       );
     }
-    else {
-      // Adjust width padding.
-      $padding = $w_target - ($w_source / $h_ratio); // Total size of padding.
-      $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
-      $new_width = $w_target - (2 * $padding);
-      $new_width = ($new_width - ($new_width % 2)); // must be even.
+
+    // Total size of padding.
+    $padding = $target_width - ($source_width / $h_ratio);
+
+    // Single size of padding (must be even).
+    $padding = ($padding - ($padding % 4)) / 2;
+
+    // Calculate new width for target.
+    $new_width = floor($target_width - (2 * $padding));
+
+    // Make even.
+    $new_width -= $new_width & 1;
+
+    if ($response_string) {
       if (mediamosa_settings::get_ffmpeg_pad()) {
-        $param_string = sprintf("-s:%dx%d;-padleft:%d;-padright:%d",
-          (int)$new_width,
-          (int)$h_target,
-          ($is_padding ? (int)$padding : 0),
-          ($is_padding ? (int)$padding : 0)
+        return strtr('-s:@new_widthx@target_height;-padleft:@padding;-padright:@padding',
+          array(
+            '@new_width' => $new_width,
+            '@target_height' => $target_height,
+            '@padding' => $use_padding ? floor($padding) : 0,
+          )
         );
       }
-      else {
-        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'",
-          (int)$new_width,
-          (int)$h_target,
-          (int)$new_width + (2 * ($is_padding ? (int)$padding : 0)),
-          (int)$h_target,
-          ($is_padding ? (int)$padding : 0),
-          0
-        );
-      }
-      $param_array = array(
-        'width' => (int)$new_width,
-        'height' => (int)$h_target,
-        'h_padding' => 0,
-        'v_padding' => ($is_padding ? (int)$padding : 0)
+
+      return strtr("-s:@new_widthx@target_height;-vf:'pad=@padded_width:@target_height:@padding:0:black'",
+        array(
+          '@new_width' => $new_width,
+          '@target_height' => $target_height,
+          '@padded_width' => $new_width + (($use_padding ? floor($padding) : 0) * 2),
+          '@padding' => $use_padding ? floor($padding) : 0,
+        )
       );
     }
-    return ( $response_string ? $param_string : $param_array );
+
+    return array(
+      'width' => $new_width,
+      'height' => $target_height,
+      'h_padding' => 0,
+      'v_padding' => $use_padding ? floor($padding) : 0
+    );
   }
 
 
   /**
    * Function for starting a delete job
-   *
-   * 1.x: _vpx_jobhandler_start_server_delete_job
    *
    * @param $job_id
    * @param $mediafile_id
@@ -1522,8 +1592,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Remove timed-out transcoding jobs.
-   *
-   * 1.x: _vpx_jobhandler_check_transcode_timeout.
    */
   static public function check_transcode_timeout() {
 
@@ -1570,8 +1638,6 @@ class mediamosa_job_scheduler {
 
   /**
    * Check Jobs which have no progress. Change status to FAILED.
-   *
-   * 1.x: _vpx_jobhandler_check_upload_timeout
    */
   static public function check_upload_timeout() {
 
@@ -1610,8 +1676,6 @@ class mediamosa_job_scheduler {
   /**
    * Check if there are servers on CLOSE and have no jobs, then
    * set them on OFF.
-   *
-   * 1.x: _vpx_jobhandler_check_server_on_status_close
    */
   static public function check_server_on_status_close() {
 

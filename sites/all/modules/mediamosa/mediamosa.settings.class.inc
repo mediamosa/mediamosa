@@ -277,13 +277,24 @@ class mediamosa_settings {
 
   // ------------------------------------------------------------------ Functions.
   /**
-   * Gets FFmpeg pad variable.
+   * Test if ffmpeg uses -padtop of vf=pad function in this version.
+   *
+   * @param $set_value
+   *   Force the value, used during unit testing.
+   *
+   * @return
+   *   Returns TRUE when ffmpeg option -padtop can not be used by ffmpeg.
    */
-  static public function get_ffmpeg_pad() {
+  static public function get_ffmpeg_pad($set_value = NULL) {
     // FFmpeg.
     static $mediamosa_ffmpeg_pad = NULL;
 
-    if (is_null($mediamosa_ffmpeg_pad)) {
+    // Force the value?
+    if (isset($set_value)) {
+      $mediamosa_ffmpeg_pad = $set_value;
+    }
+
+    if (!isset($mediamosa_ffmpeg_pad)) {
       $ffmpeg_response = exec('ffmpeg -padtop 0 2>&1');
       $mediamosa_ffmpeg_pad = (strpos($ffmpeg_response, 'vf=pad') === FALSE);
       if ($mediamosa_ffmpeg_pad) {
@@ -295,7 +306,7 @@ class mediamosa_settings {
   }
 
   /**
-   * returns the path where the lua scripts are.
+   * Returns the path where the lua scripts are.
    */
   static public function lua_base_get() {
     // LUA_BASE.
