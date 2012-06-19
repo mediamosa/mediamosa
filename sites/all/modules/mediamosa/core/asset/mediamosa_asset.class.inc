@@ -33,17 +33,23 @@ class mediamosa_asset {
 
   // ------------------------------------------------------------------ Static Function.
   /**
-   * Preprocess the asset output.
+   * Preprocess the asset for output.
    *
-   * @param array $asset
-   * @param array $metadata_definitions_fulls
-   * @return array
+   * @param $asset
+   *   The asset to preprocess.
+   * @param $metadata_definitions_fulls
+   *   The parameters to clear.
+   *
+   * @return
+   *   The processed asset.
    */
-  static public function process_asset_output($asset, $metadata_definitions_fulls) {
+  static public function process_asset_output(array $asset, array $metadata_definitions_fulls) {
+    // Clear out these.
     foreach ($metadata_definitions_fulls as $key => $value) {
       $asset[$value['propgroup_name']][$key] = NULL;
     }
 
+    // Unset these values, to skip out of output/
     unset(
       $asset['parent_id'],
       $asset['asset_property_value'],
@@ -56,9 +62,12 @@ class mediamosa_asset {
     );
 
     // Convert dates to local timezone.
-    $asset[mediamosa_asset_db::VIDEOTIMESTAMP] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMP]);
-    $asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED]);
-  //  $asset[mediamosa_asset_db::CREATED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::CREATED]);
+    if (isset($asset[mediamosa_asset_db::VIDEOTIMESTAMP])) {
+      $asset[mediamosa_asset_db::VIDEOTIMESTAMP] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMP]);
+    }
+    if (isset($asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED])) {
+      $asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED]);
+    }
 
     return $asset;
   }
@@ -66,7 +75,13 @@ class mediamosa_asset {
   /**
    * Get the asset.
    *
-   * @param string $asset_id
+   * @param $asset_id
+   *   The ID of the asset.
+   * @param $app_id
+   *   (optional) The application ID of the asset as extra check.
+   *
+   * @return
+   *   The found asset or FALSE.
    */
   static public function get($asset_id, $app_id = NULL) {
 
@@ -83,20 +98,32 @@ class mediamosa_asset {
    * Get multiple assets within an array, with key
    * as asset_id.
    *
-   * @param array $asset_ids
+   * @param $asset_ids
+   *   The IDs of the assets to get.
+   * @param $fields
+   *   The fields to retrieve.
+   *
+   * @return
+   *   An associative array:
+   *     - The key is asset ID with asset as data.
    */
   static public function getAllAssoc(array $asset_ids, array $fields = array()) {
-
-    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
-    $query->fields('a', $fields);
-    $query->condition('a.' . mediamosa_asset_db::ID, $asset_ids, 'IN');
-    return $query->execute()->fetchAllAssoc(mediamosa_asset_db::ID, PDO::FETCH_ASSOC);
+    // Return the assets.
+    return mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
+      ->fields('a', $fields)
+      ->condition('a.' . mediamosa_asset_db::ID, $asset_ids, 'IN')
+      ->execute()
+      ->fetchAllAssoc(mediamosa_asset_db::ID, PDO::FETCH_ASSOC);
   }
 
   /**
    * Delete jobs attached to asset.
    *
-   * @param string $asset_id
+   * @param $asset_id
+   *   The asset ID of the jobs to remove.
+   *
+   * @return
+   *   Will return FALSE when no jobs where deleted.
    */
   static public function delete_jobs($asset_id) {
     return mediamosa_job::delete_job_by_asset($asset_id);
@@ -112,8 +139,6 @@ class mediamosa_asset {
    *  stills) are present, then deletion will fail.
    *
    * Note: does not return boolean, will throw exception when failure.
-   *
-   * Big change from 1.x; it will now remove mediafiles.
    */
   static public function delete($asset_id, $cascade = TRUE) {
 

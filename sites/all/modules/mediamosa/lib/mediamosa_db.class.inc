@@ -119,20 +119,27 @@ class mediamosa_db {
     // Because the order can change of the a_args per func, lets create pointers to them.
     switch ($func) {
       case 'db_query_range':
-        if (!isset($args[4])) {
-          $args[4] = array();
-        }
+        $args += array(
+          3 => array(),
+          4 => array(),
+        );
 
         // By default, specify we want array's and not objects.
         $args[4] += array(
           'fetch' => PDO::FETCH_ASSOC,
         );
+        
         $query = &$args[0]; // The Query
         $args_cpy = &$args[3];  // The Arguments.
         break;
 
       case 'db_query_temporary':
       case 'db_query':
+        $args += array(
+          1 => array(),
+          2 => array(),
+        );
+
         // By default, specify we want array's and not objects.
         $args[2] += array(
           'fetch' => PDO::FETCH_ASSOC,
