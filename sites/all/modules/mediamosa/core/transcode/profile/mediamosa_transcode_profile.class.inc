@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -39,7 +39,7 @@ class mediamosa_transcode_profile {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function get($transcode_profile_id, $app_id = NULL) {
+  public static function get($transcode_profile_id, $app_id = NULL) {
     $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
       ->fields('tp')
       ->condition(mediamosa_transcode_profile_db::ID, $transcode_profile_id);
@@ -59,7 +59,7 @@ class mediamosa_transcode_profile {
    *  Application ID.
    *
    */
-  static public function get_default($app_id) {
+  public static function get_default($app_id) {
     return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
       ->fields('tp')
       ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
@@ -74,7 +74,7 @@ class mediamosa_transcode_profile {
    *
    * @param $fields
    */
-  static public function get_all(array $fields = array()) {
+  public static function get_all(array $fields = array()) {
 
     // Build the query.
     $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp');
@@ -98,7 +98,7 @@ class mediamosa_transcode_profile {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function search($app_id) {
+  public static function search($app_id) {
 
     return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
       ->fields('tp')
@@ -112,7 +112,7 @@ class mediamosa_transcode_profile {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function get_by_name($app_id, $profile_name) {
+  public static function get_by_name($app_id, $profile_name) {
 
     return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
       ->fields('tp')
@@ -126,7 +126,7 @@ class mediamosa_transcode_profile {
    * Retrieve the transcode profiles based on tool.
    * @param $tool
    */
-  static public function get_by_tool($app_id, $tool, $nice_parameter = NULL) {
+  public static function get_by_tool($app_id, $tool, $nice_parameter = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'mtm')
       ->fields('mtm')
@@ -151,7 +151,7 @@ class mediamosa_transcode_profile {
    *
    * @param integer profile_id
    */
-  static public function must_exists($app_id, $profile_id) {
+  public static function must_exists($app_id, $profile_id) {
     return mediamosa_db::db_must_exists(mediamosa_transcode_profile_db::TABLE_NAME, array(mediamosa_transcode_profile_db::APP_ID => $app_id, mediamosa_transcode_profile_db::ID => $profile_id));
   }
 
@@ -173,7 +173,7 @@ class mediamosa_transcode_profile {
    * @param string $command
    *  Command.
    */
-  static public function create($app_id, $name, $version, $default, $tool, $file_extension, $command) {
+  public static function create($app_id, $name, $version, $default, $tool, $file_extension, $command) {
 
     // Make sure name is not taken.
     if (mediamosa_transcode_profile::get_by_name($app_id, $name)) {
@@ -235,7 +235,7 @@ class mediamosa_transcode_profile {
    * @param string $command
    *  Command.
    */
-  static public function update($app_id, $profile_id, $name = NULL, $version = NULL, $default = 'FALSE', $tool = NULL, $file_extension = NULL, $command = NULL) {
+  public static function update($app_id, $profile_id, $name = NULL, $version = NULL, $default = 'FALSE', $tool = NULL, $file_extension = NULL, $command = NULL) {
 
     // Must exists.
     mediamosa_transcode_profile::must_exists($app_id, $profile_id);
@@ -297,7 +297,7 @@ class mediamosa_transcode_profile {
    * @param integer $profile_id
    *  The ID of the profile to delete.
    */
-  static public function delete($app_id, $profile_id) {
+  public static function delete($app_id, $profile_id) {
     mediamosa_db::db_delete(mediamosa_transcode_profile_db::TABLE_NAME)
       ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
       ->condition(mediamosa_transcode_profile_db::APP_ID, $app_id)
@@ -314,7 +314,7 @@ class mediamosa_transcode_profile {
    * @param string $command
    *  Command to check.
    */
-  static public function check_command_parameters($tool, $command) {
+  public static function check_command_parameters($tool, $command) {
 
     // Split the command into an array.
     $a_parameters = mediamosa_lib::create_named_array($command, ';', ':');

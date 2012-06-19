@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -44,7 +44,7 @@ class mediamosa_rest {
    * @return array
    *  All version numbers
    */
-  static public function get_all_versions($latest = '') {
+  public static function get_all_versions($latest = '') {
 
     // Find all REST calls of enabled modules.
     $rest_calls = module_invoke_all('mediamosa_register_rest_call');
@@ -76,7 +76,7 @@ class mediamosa_rest {
    * @param string $method
    *  The method.
    */
-  static public function get_uri_definition($request_uri, $request_method = FALSE) {
+  public static function get_uri_definition($request_uri, $request_method = FALSE) {
 
     if (!$request_method) {
       $request_method = $_SERVER['REQUEST_METHOD'];
@@ -202,7 +202,7 @@ class mediamosa_rest {
    *
    * @param array $rest_call
    */
-  static public function set_default_rest_call(array $rest_call) {
+  public static function set_default_rest_call(array $rest_call) {
     // Make sure all are valid values.
     assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
     assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::STATUS_DISABLED)));
@@ -441,7 +441,7 @@ class mediamosa_rest {
    * @param array $rest_call
    *  The found REST call with get_uri_definition().
    */
-  static public function get_var_setup(array $rest_call) {
+  public static function get_var_setup(array $rest_call) {
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
       throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
     }

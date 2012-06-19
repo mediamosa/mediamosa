@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -80,7 +80,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param string $mediafile_id
    * @fields array (array(prop_name, type)) The fields to give. If empty, then give all.
    */
-  static public function get_with_mediafileid($mediafile_id, array $fields = array()) {
+  public static function get_with_mediafileid($mediafile_id, array $fields = array()) {
     $values = array();
 
     if (is_array($fields) && !empty($fields)) {
@@ -103,7 +103,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  static public function is_playable($mediafile_id) { // media_management_is_playable.
+  public static function is_playable($mediafile_id) { // media_management_is_playable.
     $value = self::get_mediafile_metadata($mediafile_id, 'mime_type', mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     if ($value == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
@@ -117,7 +117,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  static public function is_transcodable($mediafile_id) {
+  public static function is_transcodable($mediafile_id) {
     $value = self::get_mediafile_metadata($mediafile_id, 'mime_type', mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     if ($value == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
@@ -130,7 +130,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  static public function delete_by_mediafileid($mediafile_id) {
+  public static function delete_by_mediafileid($mediafile_id) {
     return self::delete_all_mediafile_metadata($mediafile_id);
   }
 
@@ -161,7 +161,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param $mime
    * @param $file_type
    */
-  static public function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type) {
+  public static function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type) {
     // Create mediafile metadata.
     $fields = array(
       array(
@@ -218,7 +218,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param mediafile_id
    * @param string $analyse_result
    */
-  static public function parse_store_metadata($mediafile_id, $analyse_result) {
+  public static function parse_store_metadata($mediafile_id, $analyse_result) {
     // Basic values.
     $type_int = mediamosa_asset_mediafile_metadata_property_db::TYPE_INT;
     $type_char = mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR;
@@ -303,7 +303,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param $job_id
    * @param $analyse_result
    */
-  static public function store_analyse($job_id, $analyse_result) {
+  public static function store_analyse($job_id, $analyse_result) {
     // Get the job.
     $job = mediamosa_job::get($job_id);
 
@@ -347,7 +347,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param $analyse_result
    */
-  static public function store_analyse_without_job($job_id, $analyse_result, $mediafile_id) {
+  public static function store_analyse_without_job($job_id, $analyse_result, $mediafile_id) {
     // Get the filesize.
     $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id));
 
@@ -396,7 +396,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param mediafile_id
    * @param mediafile_dest
    */
-  static public function update_mediafile_id($mediafile_id, $mediafile_dest) {
+  public static function update_mediafile_id($mediafile_id, $mediafile_dest) {
     $fields = array(
       mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_dest,
     );
@@ -415,7 +415,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param prop_name Property name
    * @param type Type of the property
    */
-  static public function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
+  public static function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
 
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -468,7 +468,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param value Value of the metadata
    * @param prop_name Property name
    */
-  static public function create_mediafile_metadata_int($mediafile_id, $value, $prop_name) {
+  public static function create_mediafile_metadata_int($mediafile_id, $value, $prop_name) {
     self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
   }
 
@@ -479,7 +479,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param value Value of the metadata
    * @param prop_name Property name
    */
-  static public function create_mediafile_metadata_char($mediafile_id, $value, $prop_name) {
+  public static function create_mediafile_metadata_char($mediafile_id, $value, $prop_name) {
     self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
   }
 
@@ -490,7 +490,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param value Value of the metadata
    * @param prop_name Property name
    */
-  static public function create_mediafile_metadata_datetime($mediafile_id, $value, $prop_name) {
+  public static function create_mediafile_metadata_datetime($mediafile_id, $value, $prop_name) {
     self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
   }
 
@@ -500,7 +500,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param mediafile_id
    * @param metadatas An array (array(value => value, prop_name => prop_name, type => type))
    */
-  static public function create_mediafile_multiple_metadata($mediafile_id, $metadatas) {
+  public static function create_mediafile_multiple_metadata($mediafile_id, $metadatas) {
     if (is_array($metadatas) && !empty($metadatas)) {
       foreach ($metadatas as $metadata) {
         self::create_mediafile_metadata($mediafile_id, $metadata['value'], $metadata['prop_name'], $metadata['type']);
@@ -523,7 +523,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @throws mediamosa_exception_program_error()
    */
-  static public function get_mediafile_metadata($mediafile_id, $prop_name, $type) {
+  public static function get_mediafile_metadata($mediafile_id, $prop_name, $type) {
     // Cache the call to this function.
     static $mediafile_metadata = array();
 
@@ -599,7 +599,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return
    *   Property value, or NULL.
    */
-  static public function get_mediafile_metadata_int($mediafile_id, $prop_name) {
+  public static function get_mediafile_metadata_int($mediafile_id, $prop_name) {
     return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
   }
 
@@ -614,7 +614,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return
    *   Property value, or NULL.
    */
-  static public function get_mediafile_metadata_char($mediafile_id, $prop_name) {
+  public static function get_mediafile_metadata_char($mediafile_id, $prop_name) {
     return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
   }
 
@@ -629,7 +629,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return
    *   Property value, or NULL.
    */
-  static public function get_mediafile_metadata_datetime($mediafile_id, $prop_name) {
+  public static function get_mediafile_metadata_datetime($mediafile_id, $prop_name) {
     return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
   }
 
@@ -645,7 +645,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return
    *   Value of the properties in an associative array.
    */
-  static public function get_all_mediafile_metadata($mediafile_id) {
+  public static function get_all_mediafile_metadata($mediafile_id) {
     $values = array();
 
     $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm')
@@ -688,7 +688,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param type Type of the property
    * @return Number of deleted records, or FALSE in case of validation error
    */
-  static public function delete_mediafile_metadata($mediafile_id, $prop_name, $type) {
+  public static function delete_mediafile_metadata($mediafile_id, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
     if (!$prop_id) {
       return FALSE;
@@ -706,7 +706,7 @@ class mediamosa_asset_mediafile_metadata {
    * Delete all the metadata value of mediafile.
    * @param mediafile_id Unique id for the mediafile
    */
-  static public function delete_all_mediafile_metadata($mediafile_id) {
+  public static function delete_all_mediafile_metadata($mediafile_id) {
     $num_deleted = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
@@ -723,7 +723,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return
    *  Value of the properties in an associative array.
    */
-  static public function get_all_mediafile_metadata_for_asset($asset_id) {
+  public static function get_all_mediafile_metadata_for_asset($asset_id) {
     $values = array();
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');

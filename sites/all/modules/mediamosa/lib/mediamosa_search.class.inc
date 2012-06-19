@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -34,7 +34,7 @@ class mediamosa_search {
   /**
    * Return with the selected search engine.
    */
-  static public function get_search_engine() {
+  public static function get_search_engine() {
     $mediamosa_search_engine = &drupal_static(__FUNCTION__);
 
     if (empty($mediamosa_search_engine)) {
@@ -58,7 +58,7 @@ class mediamosa_search {
   /**
    * Wrapper for asset_search function.
    */
-  static public function asset($parameters) {
+  public static function asset($parameters) {
 
     // Get the search engine.
     $mediamosa_search_engine = self::get_search_engine();
@@ -120,7 +120,7 @@ class mediamosa_search {
   /**
    * Wrapper for access_check_assets function.
    */
-  static public function asset_access($parameters) {
+  public static function asset_access($parameters) {
 
     // Nothing to find?
     if (empty($parameters['asset_ids'])) {
@@ -163,7 +163,7 @@ class mediamosa_search {
    *
    * @param $parameters
    */
-  static public function asset_search(array $parameters) {
+  public static function asset_search(array $parameters) {
 
     // Call our function.
     return mediamosa_asset_search::asset_search(
@@ -197,7 +197,7 @@ class mediamosa_search {
    *
    * @param array $parameters
    */
-  static public function access_check_assets(array $parameters) {
+  public static function access_check_assets(array $parameters) {
     return mediamosa_acl::access_check_assets(
       $parameters['asset_ids'],
       $parameters['app_ids'],
@@ -214,7 +214,7 @@ class mediamosa_search {
    *
    * @param $parameters
    */
-  static public function asset_reindex(array $asset_ids, $search_index_type) {
+  public static function asset_reindex(array $asset_ids, $search_index_type) {
     // Trigger the reindex hook for external search engines.
     try {
       module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => $asset_ids), $search_index_type);
@@ -232,7 +232,7 @@ class mediamosa_search {
    *
    * @param $parameters
    */
-  static public function asset_delete(array $asset_ids) {
+  public static function asset_delete(array $asset_ids) {
     // Trigger the reindex hook for external search engines.
     try {
       module_invoke_all('mediamosa_asset_index_delete', array('asset_ids' => $asset_ids));
@@ -250,7 +250,7 @@ class mediamosa_search {
    *
    * @param $parameters
    */
-  static public function asset_queue(array $asset_ids) {
+  public static function asset_queue(array $asset_ids) {
     // Trigger the reindex hook for external search engines.
     try {
       module_invoke_all('mediamosa_asset_queue', array('asset_ids' => $asset_ids));

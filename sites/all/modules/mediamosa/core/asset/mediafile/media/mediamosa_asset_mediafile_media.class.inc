@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -45,7 +45,7 @@ class mediamosa_asset_mediafile_media {
    *     'extension'
    *
    */
-  static public function mediafile_str_parse($mediafile_str) {
+  public static function mediafile_str_parse($mediafile_str) {
     $matches = array();
     if (preg_match('@^([a-zA-Z0-9]+),?([0-9]+)?(\.[a-zA-Z0-9]+)?$@', $mediafile_str, $matches)) {
       return array($matches[1], empty($matches[2]) ? 0 : $matches[2], empty($matches[3]) ? '' : mediamosa_unicode::substr($matches[3], 1));
@@ -68,7 +68,7 @@ class mediamosa_asset_mediafile_media {
    * @return
    *   The created mediafile_str.
    */
-  static public function mediafile_str_build($mediafile_id, $extension, $style_id = '') {
+  public static function mediafile_str_build($mediafile_id, $extension, $style_id = '') {
     return $mediafile_id . (empty($style_id) ? '' : ',' . $style_id) . '.' . $extension;
   }
 
@@ -84,7 +84,7 @@ class mediamosa_asset_mediafile_media {
    *     'style_id' (always or 0)
    *     'ext'
    */
-  static public function mediaticket_str_parse($mediaticket_str) {
+  public static function mediaticket_str_parse($mediaticket_str) {
     $matches = array();
     if (preg_match('@^([a-zA-Z0-9]+),?([0-9]+)?(\.[a-zA-Z0-9]+)?$@', $mediaticket_str, $matches)) {
       return array($matches[1], empty($matches[2]) ? 0 : $matches[2], empty($matches[3]) ? '' : mediamosa_unicode::substr($matches[3], 1));
@@ -107,7 +107,7 @@ class mediamosa_asset_mediafile_media {
    * @return
    *   The created ticket_str.
    */
-  static public function mediaticket_str_build($ticket_id, $extension, $style_id = '') {
+  public static function mediaticket_str_build($ticket_id, $extension, $style_id = '') {
     return $ticket_id . (empty($style_id) ? '' : ',' . $style_id) . '.' . $extension;
   }
 
@@ -127,7 +127,7 @@ class mediamosa_asset_mediafile_media {
    *     ERRORCODE_UNABLE_TO_CREATE_SYMLINK
    *
    */
-  static protected function handle_media_symlink($target, $link) {
+  protected static function handle_media_symlink($target, $link) {
     // Create the symlink, if not already. In most cases, its either already
     // been created (mean while during this call) or its the first call.
     if (mediamosa_io::file_exists($link)) {
@@ -168,7 +168,7 @@ class mediamosa_asset_mediafile_media {
    * @param $mimetype
    *   The mimetype of the file.
    */
-  static protected function serve_media($file, $mimetype) {
+  protected static function serve_media($file, $mimetype) {
     // Build up the default headers.
     $headers = mediamosa_io::file_get_content_headers($file, $mimetype);
 
@@ -189,7 +189,7 @@ class mediamosa_asset_mediafile_media {
    *
    * @throws mediamosa_exception_error_mediafile_not_found
    */
-  static public function handle_media_request_ticket($app_id, $mediaticket_str) {
+  public static function handle_media_request_ticket($app_id, $mediaticket_str) {
     // Get the parts.
     list($ticket_id, $style_id, $extension) = self::mediaticket_str_parse($mediafile_str);
 
@@ -262,7 +262,7 @@ class mediamosa_asset_mediafile_media {
    * @param $mediafile_str
    *   The mediafile_str is a extended filename version of the mediafile ID.
    */
-  static public function handle_media_request_permanent($app_id, $mediafile_str) {
+  public static function handle_media_request_permanent($app_id, $mediafile_str) {
 
     // Get the parts.
     list($mediafile_id, $style_id, $extension) = self::mediafile_str_parse($mediafile_str);

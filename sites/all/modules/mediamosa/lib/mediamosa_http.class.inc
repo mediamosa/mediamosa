@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -40,7 +40,7 @@ class mediamosa_http {
    *
    * @param string $url
    */
-  static public function parse_url($url) {
+  public static function parse_url($url) {
     $urls = parse_url($url);
 
     if (!$urls) {
@@ -72,7 +72,7 @@ class mediamosa_http {
    * @param $return_parts
    *  Return the array with host and uri.
    */
-  static public function build_url($urls, $return_parts = FALSE) {
+  public static function build_url($urls, $return_parts = FALSE) {
     // We expect these.
     assert(in_array($urls['scheme'], array('ftp', 'http', 'https')));
 
@@ -125,7 +125,7 @@ class mediamosa_http {
    *
    * @return string $uri
    */
-  static public function glue_url(array $parsed) {
+  public static function glue_url(array $parsed) {
     $uri = '';
 
     $uri .= isset($parsed['scheme']) ? $parsed['scheme'] . ':' . ((drupal_strtolower($parsed['scheme']) == 'mailto') ? '' : '//') : '';
@@ -146,7 +146,7 @@ class mediamosa_http {
    *
    * @param unknown_type $url
    */
-  static public function expect_url($url) {
+  public static function expect_url($url) {
     return ( (substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
   }
 
@@ -158,7 +158,7 @@ class mediamosa_http {
    * @param array $data
    * @param $method
    */
-  static public function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET, array $options = array()) {
+  public static function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET, array $options = array()) {
     // Make lower case.
     $host = mediamosa_unicode::strtolower($host);
 
@@ -203,7 +203,7 @@ class mediamosa_http {
    *   - do_head
    *     true to trigger call.
    */
-  static public function do_call($url, array $options = array()) {
+  public static function do_call($url, array $options = array()) {
     $options['do_head'] = FALSE;
     return self::do_head_call($url, $options);
   }
@@ -212,7 +212,7 @@ class mediamosa_http {
    * Do a head call.
    * Triggers the URL without getting or waiting for the output.
    */
-  static public function do_head_call($url, array $options = array()) {
+  public static function do_head_call($url, array $options = array()) {
     // Set defaults.
     $options += array(
       'use_curlproxy' => FALSE,
@@ -293,7 +293,7 @@ class mediamosa_http {
    * @param $url
    * @param $options
    */
-  static public function do_head_internal_call($url, array $options = array()) {
+  public static function do_head_internal_call($url, array $options = array()) {
     $options['do_internal'] = TRUE;
     return self::do_head_call($url, $options);
   }
@@ -309,7 +309,7 @@ class mediamosa_http {
    * @param array $options
    *  HTTP options.
    */
-  static public function do_internal_call_cron($uri, $do_head = FALSE, array $options = array()) {
+  public static function do_internal_call_cron($uri, $do_head = FALSE, array $options = array()) {
     // Just trigger, it has his own protection on overrun.
     $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
     $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
@@ -411,7 +411,7 @@ class mediamosa_http {
    *   - data
    *       A string containing the response body that was received.
    */
-  static public function drupal_http_request($url, array $options = array()) {
+  public static function drupal_http_request($url, array $options = array()) {
     $result = new stdClass();
 
     // Parse the URL and make sure we can handle the schema.
@@ -653,7 +653,7 @@ class mediamosa_http {
    * Port uri to url.
    * Simplefix, do think it will fix all possible problems.
    */
-  static public function uri2url($uri) {
+  public static function uri2url($uri) {
     $uri = trim($uri);
     if ( (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') && (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('https://')) != 'https://') ){
       $uri = 'http://' . trim($uri, "/ \n\r\t\0");

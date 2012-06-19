@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -38,7 +38,7 @@ class mediamosa_user_favorite {
    * @param string $fav_id
    * @return integer
    */
-  static public function count_items($fav_type, $fav_id) {
+  public static function count_items($fav_type, $fav_id) {
 
     // Return the number of found rows.
     $query = mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'muf');
@@ -60,7 +60,7 @@ class mediamosa_user_favorite {
    * @param integer $fav_id
    *  ID asset / collection.
    */
-  static public function get($app_id, $user_id, $fav_type, $fav_id) {
+  public static function get($app_id, $user_id, $fav_type, $fav_id) {
     return mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
       ->fields('uf')
       ->condition(mediamosa_user_favorite_db::NAME, $user_id)
@@ -83,7 +83,7 @@ class mediamosa_user_favorite {
    * @param integer $fav_id
    *  ID asset / collection.
    */
-  static public function delete($app_id, $user_id, $fav_type, $fav_id) {
+  public static function delete($app_id, $user_id, $fav_type, $fav_id) {
     return mediamosa_db::db_delete(mediamosa_user_favorite_db::TABLE_NAME)
       ->condition(mediamosa_user_favorite_db::NAME, $user_id)
       ->condition(mediamosa_user_favorite_db::APP_ID, $app_id)
@@ -109,7 +109,7 @@ class mediamosa_user_favorite {
    * @param integer $fav_id
    *  ID asset / collection.
    */
-  static public function create($app_id, $user_id, $fav_type, $fav_id) {
+  public static function create($app_id, $user_id, $fav_type, $fav_id) {
 
     switch ($fav_type) {
       case mediamosa_user_favorite_db::FAV_TYPE_ASSET:
@@ -156,7 +156,7 @@ class mediamosa_user_favorite {
    *
    * @param $asset_id
    */
-  static public function get_fav_of_asset($asset_id) {
+  public static function get_fav_of_asset($asset_id) {
     return mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
       ->fields('uf')
       ->condition(mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_TYPE_ASSET)

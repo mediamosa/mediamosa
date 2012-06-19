@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -59,7 +59,7 @@ class mediamosa_db_query {
    * @param array $a_where
    * @return string
    */
-  static public function where($a_where) {
+  public static function where($a_where) {
     return implode(' AND ', self::where_2($a_where));
   }
 
@@ -72,7 +72,7 @@ class mediamosa_db_query {
    * @param string $glue
    * @return array
    */
-  static public function where_2($a_where, $l = '', $r = '', $glue = ' AND ') {
+  public static function where_2($a_where, $l = '', $r = '', $glue = ' AND ') {
     if (!is_array($a_where)) {
       return array($a_where);
     }
@@ -103,7 +103,7 @@ class mediamosa_db_query {
    * @param string $glue
    * @return string
    */
-  static public function simple_where($a_where, $glue = ' AND ') {
+  public static function simple_where($a_where, $glue = ' AND ') {
     return ' WHERE ' . implode($glue, $a_where);
   }
 
@@ -113,14 +113,14 @@ class mediamosa_db_query {
    * @param array $a_set (e.g. array("test = 'value'", "foo = 'test'))
    * @return string
    */
-  static public function simple_set($a_set) {
+  public static function simple_set($a_set) {
     return ' SET ' . implode(',', $a_set);
   }
 
   /*
    * Execute a query.
    */
-  static public function query($query) {
+  public static function query($query) {
     // Escape % so its not removed by db_query
     $query = str_replace("%", "%%", $query);
 
@@ -135,7 +135,7 @@ class mediamosa_db_query {
    * @return integer
    *  number of rows
    */
-  static public function found_rows() {
+  public static function found_rows() {
     return mediamosa_db::db_query("SELECT found_rows()")->fetchField();
   }
 
@@ -147,7 +147,7 @@ class mediamosa_db_query {
    * @return string
    *  The SQL result.
    */
-  static public function query_joins($a_joins) {
+  public static function query_joins($a_joins) {
     // make sure the using() joins are first
     $a_joins_sorted = self::query_join_collect($a_joins);
 
@@ -162,7 +162,7 @@ class mediamosa_db_query {
    * @param array $a_joins_sorted
    * @return array
    */
-  static public function query_join_collect($a_joins, $a_joins_sorted = array('a_using' => array(), 'a_other' => array())) {
+  public static function query_join_collect($a_joins, $a_joins_sorted = array('a_using' => array(), 'a_other' => array())) {
 
     foreach ($a_joins as $mixed_join) {
       if (is_array($mixed_join)) {
@@ -188,7 +188,7 @@ class mediamosa_db_query {
    * @param array $a_query
    * @return string
    */
-  static public function query_select($a_query, $a_options = array(self::SQL_CALC_FOUND_ROWS => FALSE)) {
+  public static function query_select($a_query, $a_options = array(self::SQL_CALC_FOUND_ROWS => FALSE)) {
     assert(isset($a_query[self::A_FROM]));
 
     $a_query[self::A_SELECT_OPTIONS] = array();
@@ -258,7 +258,7 @@ class mediamosa_db_query {
    * @param array $a_options
    * @return string
    */
-  static public function query_select_union($a_queries, $limit = 0, $offset = 0, $a_options = array(self::SQL_CALC_FOUND_ROWS => TRUE)) {
+  public static function query_select_union($a_queries, $limit = 0, $offset = 0, $a_options = array(self::SQL_CALC_FOUND_ROWS => TRUE)) {
 
     $a_db_query = array();
     foreach ($a_queries as $a_query) {
@@ -285,7 +285,7 @@ class mediamosa_db_query {
    *
    * @return integer
    */
-  static public function get_last_id() {
+  public static function get_last_id() {
     assert(0);
     throw new mediamosa_exception_program_error('Stop using get_last_id()');
     //return (int)db_result(db_query("SELECT LAST_INSERT_ID()"));
@@ -300,7 +300,7 @@ class mediamosa_db_query {
    * @param string/integer/NULL $s_value
    * @return string
    */
-  static public function query_value($s_value, $is_insert = FALSE) {
+  public static function query_value($s_value, $is_insert = FALSE) {
     return (is_null($s_value) ? ($is_insert ? ' = NULL' : ' IS NULL') : " = '" . mediamosa_db::escape_string($s_value) . "'");
   }
 
@@ -310,7 +310,7 @@ class mediamosa_db_query {
    *
    * @param string $str_like
    */
-  static public function query_escape($str_like) {
+  public static function query_escape($str_like) {
     return mediamosa_db::escape_string($str_like);
   }
 
@@ -321,7 +321,7 @@ class mediamosa_db_query {
    * @param string $str_like
    * @return string
    */
-  static public function query_escape_like($str_like) {
+  public static function query_escape_like($str_like) {
     return mediamosa_db::escape_string_like($str_like);
   }
 
@@ -335,7 +335,7 @@ class mediamosa_db_query {
    * @returns
    *  Name of the database.
    */
-  static public function query_dbname($name) {
+  public static function query_dbname($name) {
     global $db_url;
 
     // Check

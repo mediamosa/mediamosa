@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -37,7 +37,7 @@ class mediamosa_unicode {
    *
    * @param string $string
    */
-  static public function clear($string) {
+  public static function clear($string) {
     $result = '';
 
     // Set local to utf8, but make sure we switch back to original, no idea
@@ -57,7 +57,7 @@ class mediamosa_unicode {
   /**
    * Returns the correct size of an string
    */
-  static public function strlen($string) {
+  public static function strlen($string) {
     return mb_strlen($string);
   }
 
@@ -65,7 +65,7 @@ class mediamosa_unicode {
    * UTF8 version of substr
    * Using drupal function
    */
-  static public function substr($string, $start, $length = NULL) {
+  public static function substr($string, $start, $length = NULL) {
     return is_null($length) ? mb_substr($string, $start) : mb_substr($string, $start, $length);
   }
 
@@ -75,7 +75,7 @@ class mediamosa_unicode {
    *
    * @param string $string
    */
-  static public function strrev($string) {
+  public static function strrev($string) {
     $string_rev = '';
     for ($pos = mb_strlen($string); $pos >= 0; $pos--) {
       $string_rev .= mb_substr($string, $pos, 1);
@@ -87,28 +87,28 @@ class mediamosa_unicode {
   /**
    * To lower case
    */
-  static public function strtolower($string) {
+  public static function strtolower($string) {
     return mb_strtolower($string);
   }
 
   /**
    * To upper case
    */
-  static public function strtoupper($string) {
+  public static function strtoupper($string) {
     return mb_strtoupper($string);
   }
 
   /**
    * Returns pos of found needle
    */
-  static public function strpos($string, $needle, $offset = 0) {
+  public static function strpos($string, $needle, $offset = 0) {
     return mb_strpos($string, $needle, $offset);
   }
 
   /**
    * Returns pos of found needle
    */
-  static public function stripos($string, $needle, $offset = 0) {
+  public static function stripos($string, $needle, $offset = 0) {
     return mb_strpos(self::strtolower($string), self::strtolower($needle), $offset);
   }
 
@@ -117,7 +117,7 @@ class mediamosa_unicode {
    *
    * @param string $string
    */
-  static public function printable($string) {
+  public static function printable($string) {
     for ($pos = 0; $pos < mb_strlen($string); $pos++) {
       if (in_array(mb_substr($string, $pos, 1), array("\n", "\t", "\0", "\r"))) {
         return FALSE;
@@ -130,7 +130,7 @@ class mediamosa_unicode {
   /**
    * Format date
    */
-  static public function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+  public static function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date($timestamp, $type, $format, $timezone, $langcode);
   }
 
@@ -139,7 +139,7 @@ class mediamosa_unicode {
    * test for this is reading the XML into the SimpleTest class. Will fail if
    * any of these chars are used.
    */
-  static public function get_invalid_char_str() {
+  public static function get_invalid_char_str() {
     static $invalid_char = array();
 
     if (empty($invalid_char)) {
@@ -163,7 +163,7 @@ class mediamosa_unicode {
    * @param string $text
    *  The value to encode.
    */
-  static public function xmlentities($text) {
+  public static function xmlentities($text) {
     // Seems multibyte save because only values 00-31 (without tab, LF, CR) are
     // used.
     return str_replace(self::get_invalid_char_str(), '?', htmlspecialchars($text));

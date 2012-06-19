@@ -3,7 +3,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -35,7 +35,7 @@ class mediamosa_job_scheduler {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'job scheduler');
   }
 
@@ -48,7 +48,7 @@ class mediamosa_job_scheduler {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job scheduler');
   }
 
@@ -59,7 +59,7 @@ class mediamosa_job_scheduler {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_debug($message, array $variables = array()) {
+  public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'job_scheduler');
   }
 
@@ -70,14 +70,14 @@ class mediamosa_job_scheduler {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_debug_high($message, array $variables = array()) {
+  public static function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'job_scheduler');
   }
 
   /**
    * Trigger the job scheduler.
    */
-  static public function trigger() {
+  public static function trigger() {
     // Now trigger the jobscheduler.
     $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
 
@@ -108,7 +108,7 @@ class mediamosa_job_scheduler {
    * Will timeout on itself after 2 minutes.
    *
    */
-  static public function run_parse_queue() {
+  public static function run_parse_queue() {
     // Triggert from sandbox, run once, and done.
     if (mediamosa::in_simpletest_sandbox()) {
       self::log('Job Scheduler; run_parse_queue() in sandbox, hit and return.');
@@ -171,7 +171,7 @@ class mediamosa_job_scheduler {
    * called at regular intervals, like every 1 minute.
    * It will cleanup, run and update jobs.
    */
-  static public function parse_queue() {
+  public static function parse_queue() {
 
     // Log start point.
     self::log_debug('Start parse queue job scheduler');
@@ -211,7 +211,7 @@ class mediamosa_job_scheduler {
   /**
    * Get a list of servers and process the job status.
    */
-  static public function check_status_all_servers() {
+  public static function check_status_all_servers() {
     $job_processor_servers = mediamosa_server::get_enabled_job_processor();
 
     foreach ($job_processor_servers as $job_processor_server) {
@@ -225,7 +225,7 @@ class mediamosa_job_scheduler {
    *
    * @param $uri
    */
-  static public function update_server_job_status($uri) {
+  public static function update_server_job_status($uri) {
 
     // Get response.
     $response = mediamosa_http::do_internal_call($uri, 'server/joblist');
@@ -326,7 +326,7 @@ class mediamosa_job_scheduler {
    * @param string $uri
    * @param integer $job_id
    */
-  static public function remove_job_on_server($uri, $job_id) {
+  public static function remove_job_on_server($uri, $job_id) {
 
     $rest_url = strtr('server/@job_id/delete', array('@job_id' => $job_id));
 
@@ -382,7 +382,7 @@ class mediamosa_job_scheduler {
    * @param $asset_id
    * @param $mediafile_id
    */
-  static public function create_wmv_job($job_id, $asset_id, $mediafile_id) {
+  public static function create_wmv_job($job_id, $asset_id, $mediafile_id) {
 
     // FIXME: @mediafile_id is empty.
     self::log_mediafile($mediafile_id, 'Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id), $asset_id);
@@ -448,7 +448,7 @@ class mediamosa_job_scheduler {
    *
    * @param integer $job_id
    */
-  static public function wmv_remove_raw_file($job_id) {
+  public static function wmv_remove_raw_file($job_id) {
 
     // Get the job.
     $a_job = mediamosa_job::get($job_id);
@@ -475,7 +475,7 @@ class mediamosa_job_scheduler {
    * @param string $mediafile_id_src
    * @param string $mediafile_id_dest
    */
-  static public function parse_finished_transcode($job_id, $mediafile_id_src, $mediafile_id_dest) {
+  public static function parse_finished_transcode($job_id, $mediafile_id_src, $mediafile_id_dest) {
 
     // Get the original transcode job.
     $job_info = self::get_transcodejob_info($job_id);
@@ -579,7 +579,7 @@ class mediamosa_job_scheduler {
    * @param $job_id
    * @param $filenames
    */
-  static public function add_still_to_db($job_id, $filenames) {
+  public static function add_still_to_db($job_id, $filenames) {
     // Scene changes
     $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
     $my_file = $destination_path . $job_id . '_scene.txt';
@@ -646,7 +646,7 @@ class mediamosa_job_scheduler {
    * @param integer $job_id
    * @param string $mediafile_id_dest
    */
-  static public function parse_failed_transcode($job_id, $mediafile_id_dest) {
+  public static function parse_failed_transcode($job_id, $mediafile_id_dest) {
     // haal de asset id en original filename op basis van een job op
     $a_job_info = self::get_transcodejob_info($job_id);
 
@@ -675,7 +675,7 @@ class mediamosa_job_scheduler {
   /**
    * Get the list and find empty slots to start jobs.
    */
-  static public function start_new_jobs() {
+  public static function start_new_jobs() {
     // Get for every active server (status ON)
     // the number of job that is not FINISHED, FAILED of CANCELLED
     // and job type is not UPLOAD (does not take a slot).
@@ -748,7 +748,7 @@ class mediamosa_job_scheduler {
    * @param $mediafile_id
    * @param $mediafile_dest
    */
-  static public function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
+  public static function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
     self::log_mediafile($mediafile_id, 'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
 
     switch ($job_type) {
@@ -806,7 +806,7 @@ class mediamosa_job_scheduler {
    * @param string $uri
    * @param string $mediafile_id
    */
-  static public function start_server_transcode_job($job_id, $uri, $mediafile_id) {
+  public static function start_server_transcode_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_TRANSCODE, $mediafile_id);
 
@@ -847,7 +847,7 @@ class mediamosa_job_scheduler {
    * @param string $uri
    * @param string $mediafile_id
    */
-  static public function start_server_analyse_job($job_id, $uri, $mediafile_id) {
+  public static function start_server_analyse_job($job_id, $uri, $mediafile_id) {
 
     // Delete metadata.
     mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
@@ -882,7 +882,7 @@ class mediamosa_job_scheduler {
   /**
    * Function for starting a still job
    */
-  static public function start_server_still_job($job_id, $uri, $mediafile_id) {
+  public static function start_server_still_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id);
 
@@ -965,7 +965,7 @@ class mediamosa_job_scheduler {
    *
    * @param integer $server_id
    */
-  static public function fetch_single_available_job($server_id) {
+  public static function fetch_single_available_job($server_id) {
     return mediamosa_db::db_query(
       'SELECT job_id, job_type, asset_id, mediafile_id FROM {#mediamosa_job} AS mj WHERE
             mj.#job_status = :status
@@ -1032,7 +1032,7 @@ class mediamosa_job_scheduler {
    * @param $job_type
    * @param $mediafile_id
    */
-  static public function get_job_parameters($job_id, $job_type, $mediafile_id) {
+  public static function get_job_parameters($job_id, $job_type, $mediafile_id) {
     $result = array();
 
     switch ($job_type) {
@@ -1230,7 +1230,7 @@ class mediamosa_job_scheduler {
    * @param string $command
    * @param string $mediafile_id
    */
-  static public function map_parameters($tool, $command, $mediafile_id) {
+  public static function map_parameters($tool, $command, $mediafile_id) {
     $command_line = array();
 
     // First determine if we have to alter the aspect ratio.
@@ -1310,7 +1310,7 @@ class mediamosa_job_scheduler {
    * @param $type_parameter
    * @param $command
    */
-  static public function mapping_value($nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $type_parameter, $command) {
+  public static function mapping_value($nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $type_parameter, $command) {
     $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
     $result = "";
 
@@ -1392,7 +1392,7 @@ class mediamosa_job_scheduler {
    *   $response_string == FALSE
    *     Array with aspect info.
    */
-  static public function calc_aspect_ratio($source_width, $source_height, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $use_padding = TRUE) {
+  public static function calc_aspect_ratio($source_width, $source_height, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $use_padding = TRUE) {
 
     // Get target width and height, format is 'WIDTHxHEIGHT'.
     $matches = array();
@@ -1572,7 +1572,7 @@ class mediamosa_job_scheduler {
    * @param $mediafile_id
    * @param $testtag
    */
-  static public function start_server_delete_job($job_id, $mediafile_id) {
+  public static function start_server_delete_job($job_id, $mediafile_id) {
 
     // Get complete job.
     $a_job_ext = mediamosa_job::get_job_ext($job_id);
@@ -1593,7 +1593,7 @@ class mediamosa_job_scheduler {
   /**
    * Remove timed-out transcoding jobs.
    */
-  static public function check_transcode_timeout() {
+  public static function check_transcode_timeout() {
 
     $result = mediamosa_db::db_query(
        'SELECT mj.#job_id, mj.#asset_id, mj.#mediafile_id, ms.#uri FROM {#mediamosa_job} AS mj
@@ -1639,7 +1639,7 @@ class mediamosa_job_scheduler {
   /**
    * Check Jobs which have no progress. Change status to FAILED.
    */
-  static public function check_upload_timeout() {
+  public static function check_upload_timeout() {
 
     // Upload jobs in progress and waiting which have no activity.
     mediamosa_db::db_query(
@@ -1677,7 +1677,7 @@ class mediamosa_job_scheduler {
    * Check if there are servers on CLOSE and have no jobs, then
    * set them on OFF.
    */
-  static public function check_server_on_status_close() {
+  public static function check_server_on_status_close() {
 
     mediamosa_db::db_query(
        'UPDATE {#mediamosa_server}

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -59,7 +59,7 @@ class mediamosa_app_dbus {
   /**
    * Returns the server guid.
    */
-  static public function get_server_guid() {
+  public static function get_server_guid() {
     return self::APP_AUTH_SERVER_GUID;
   }
 
@@ -88,7 +88,7 @@ class mediamosa_app_dbus {
    * @param string $name
    * @return array
    */
-  static public function get_app($name) {
+  public static function get_app($name) {
     return mediamosa_app::get_by_name($name);
   }
 

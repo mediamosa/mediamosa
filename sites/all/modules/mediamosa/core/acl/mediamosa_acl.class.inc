@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -58,26 +58,26 @@ class mediamosa_acl {
   const MEDIAFILE_IS_PROTECTED_DOMAIN_REALM = 'DOMAIN_REALM';
 
   // ------------------------------------------------------------------ Static Function.
-  static public function valid_realm($realm) {
+  public static function valid_realm($realm) {
     assert($realm != '');
     return TRUE;
   }
 
-  static public function valid_domain($domain) {
+  public static function valid_domain($domain) {
     assert($domain != '');
     return TRUE;
   }
 
-  static public function is_group_domain($s_group_domain) {
+  public static function is_group_domain($s_group_domain) {
     return (preg_match('/(.*)\.group$/', $s_group_domain) > 0 ? TRUE : FALSE);
   }
 
-  static public function is_group_realm($s_group_realm) {
+  public static function is_group_realm($s_group_realm) {
     return (preg_match('/@[^.]+\.group$/', $s_group_realm) > 0 ? TRUE : FALSE);
   }
 
   // Simple check if input is realm
-  static public function is_realm($s_hostname) {
+  public static function is_realm($s_hostname) {
     return ((strpos($s_hostname, '@') === FALSE) ? FALSE : TRUE);
   }
 
@@ -91,7 +91,7 @@ class mediamosa_acl {
    * @param array $acl_domain
    * @param array $acl_realm
    */
-  static public function build_access($mixed_app_id, $acl_user_id = NULL, $acl_group_ids = NULL, $acl_domain = NULL, $acl_realm = NULL, $a_slaves = NULL) {
+  public static function build_access($mixed_app_id, $acl_user_id = NULL, $acl_group_ids = NULL, $acl_domain = NULL, $acl_realm = NULL, $a_slaves = NULL) {
     $a_query = array();
 
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = '{mediamosa_acl_name}.acl_name_id';
@@ -398,7 +398,7 @@ class mediamosa_acl {
    * Internal function to check autorisation
    * based on ownership.
    */
-  static public function owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
+  public static function owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
     assert(is_bool($is_app_admin));
     assert(!is_array($app_id));
 
@@ -435,7 +435,7 @@ class mediamosa_acl {
    * @param boolean $is_app_admin
    *  TRUE or FALSE.
    */
-  static public function owner_check_ext($acl_type, $object_id, $app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
+  public static function owner_check_ext($acl_type, $object_id, $app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
     try {
       mediamosa_acl::owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin);
     }
@@ -472,7 +472,7 @@ class mediamosa_acl {
    *  Global switch for app_admin.
    */
 
-  static public function owner_check_collection_assign($app_id, $user_id, array $asset, array $collection, $is_app_admin = FALSE) {
+  public static function owner_check_collection_assign($app_id, $user_id, array $asset, array $collection, $is_app_admin = FALSE) {
     // If the collection has public assign rights, then allow it
     if ($collection[mediamosa_collection_db::PUBLIC_ASSIGN] == mediamosa_collection_db::PUBLIC_ASSIGN_TRUE) {
 
@@ -496,7 +496,7 @@ class mediamosa_acl {
    * @param integer $app_id
    * @param boolean $is_app_admin
    */
-  static public function app_admin_check($app_id, $object_app_id, $is_app_admin) {
+  public static function app_admin_check($app_id, $object_app_id, $is_app_admin) {
     assert(is_bool($is_app_admin));
 
     // We do not allow inter app changes.
@@ -524,7 +524,7 @@ class mediamosa_acl {
    *
    *  @return array($is_protected, $rights_set_user_usergroup, $rights_set_domain_realm)
    */
-  static public function is_protected_get($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
+  public static function is_protected_get($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $owner_id = $object['owner_id'];
@@ -617,7 +617,7 @@ class mediamosa_acl {
    *  For future expansion
    * @param array $is_app_admin
    */
-  static public function rights_set($app_id, $user_id, $acl_type, array $object, array $app_ids, array $acl_user_ids, array $acl_group_ids, array $acl_domains, array $acl_realms, $replace = TRUE, array $rights = array(mediamosa_acl::RIGHT_ACCESS), $is_app_admin = FALSE) {
+  public static function rights_set($app_id, $user_id, $acl_type, array $object, array $app_ids, array $acl_user_ids, array $acl_group_ids, array $acl_domains, array $acl_realms, $replace = TRUE, array $rights = array(mediamosa_acl::RIGHT_ACCESS), $is_app_admin = FALSE) {
     assert(count($rights));
     assert($acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE || $acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_COLLECTION); // media files for now
 
@@ -923,7 +923,7 @@ class mediamosa_acl {
    * @param array $object
    * @param boolean $is_app_admin
    */
-  static public function rights_clear($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
+  public static function rights_clear($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $owner_id = $object["owner_id"];
@@ -1030,7 +1030,7 @@ class mediamosa_acl {
    * @param boolean $is_app_admin
    * @return array
    */
-  static public function rights_get($app_id, $user_id, $acl_type, $object, $is_app_admin = FALSE) {
+  public static function rights_get($app_id, $user_id, $acl_type, $object, $is_app_admin = FALSE) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $owner_id = $object['owner_id'];
@@ -1148,7 +1148,7 @@ class mediamosa_acl {
    * @param string $acl_type_dest
    * @param string $acl_id_dest
    */
-  static public function replace_obj_to_obj($acl_type_source, $acl_id_source, $acl_type_dest, $acl_id_dest) {
+  public static function replace_obj_to_obj($acl_type_source, $acl_id_source, $acl_type_dest, $acl_id_dest) {
 
     // We replace, so remove any existing rights 1st.
     mediamosa_db::db_query("DELETE FROM {mediamosa_acl_object} WHERE acl_object_type=:acl_object_type AND acl_object_id=:acl_object_id", array(
@@ -1235,7 +1235,7 @@ class mediamosa_acl {
    * @param string $mediafile_id_src
    * @param string $mediafile_id_dest
    */
-  static public function replace_mediafile_to_mediafile($mediafile_id_src, $mediafile_id_dest) {
+  public static function replace_mediafile_to_mediafile($mediafile_id_src, $mediafile_id_dest) {
     return mediamosa_acl::replace_obj_to_obj(mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile_id_src, mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile_id_dest);
   }
 
@@ -1260,7 +1260,7 @@ class mediamosa_acl {
    * @param boolean $do_master_slave_null
    * @param string $app_id_table_prefix
    */
-  static public function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  public static function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     if (empty($slaves)) {
@@ -1623,7 +1623,7 @@ class mediamosa_acl {
    * @return array
    *  returns the array with asset_id(s) on which we have access on
    */
-  static public function access_check_assets($asset_ids, array $app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
+  public static function access_check_assets($asset_ids, array $app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
 
     $query = array();
 
@@ -1661,7 +1661,7 @@ class mediamosa_acl {
    *
    * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
+  public static function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;
@@ -1744,7 +1744,7 @@ class mediamosa_acl {
   /**
    * Check if the object has a valid slave record when it's a foreign object
    */
-  static public function read_single_object($type, $id, array $app_ids) {
+  public static function read_single_object($type, $id, array $app_ids) {
 
     switch ($type) {
       case mediamosa_acl::ACL_TYPE_ASSET:

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -55,7 +55,7 @@ class mediamosa_node {
   /**
    * Get all node type of mediamosa.
    */
-  static public function get_all_node_types() {
+  public static function get_all_node_types() {
     return array_keys(mediamosa_node_info());
   }
 
@@ -65,7 +65,7 @@ class mediamosa_node {
    * @param $type
    * @param $title
    */
-  static public function create_basic_node($type, $title) {
+  public static function create_basic_node($type, $title) {
 
     $node = new stdClass();
     $node->uid = 1; // Admin
@@ -86,7 +86,7 @@ class mediamosa_node {
    * @param array $form
    * @param array $form_state
    */
-  static public function common_form(&$form, &$form_state) {
+  public static function common_form(&$form, &$form_state) {
     $form['revision_information']['revision']['#default_value'] = '1';
     $form['revision_information']['log']['#default_value'] = ' ';
 
@@ -122,7 +122,7 @@ class mediamosa_node {
    * @param string $name
    * @param object $node
    */
-  static public function default_value($name, $node, $default = '') {
+  public static function default_value($name, $node, $default = '') {
     return isset($node->{$name}) ? $node->{$name} : $default;
   }
 
@@ -131,7 +131,7 @@ class mediamosa_node {
    *
    * @param $node
    */
-  static public function get_fields($node) {
+  public static function get_fields($node) {
 
     switch ($node->type) {
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -35,7 +35,7 @@ class mediamosa_tool_params {
   /**
    * Get tool_param listing.
    */
-  static public function search() {
+  public static function search() {
     return mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tm')
       ->fields('tm')
       ->execute();
@@ -47,7 +47,7 @@ class mediamosa_tool_params {
    * @param $tool
    * @param $nice_parameter
    */
-  static public function get_by_tool($tool, $nice_parameter = NULL) {
+  public static function get_by_tool($tool, $nice_parameter = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tm')->fields('tm');
 
@@ -72,7 +72,7 @@ class mediamosa_tool_params {
    * @param mixed $value
    *  The value to check.
    */
-  static public function check_mapping($tool, $nice_parameter, $value) {
+  public static function check_mapping($tool, $nice_parameter, $value) {
 
     // Get the mapping param.
     $a_transcode_mapping = self::get_by_tool($tool, $nice_parameter);

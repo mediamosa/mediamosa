@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -54,7 +54,7 @@ class mediamosa_acl_app_master_slave {
    *  See mediamosa_acl::ACL_TYPE_*
    * @return string
    */
-  static public function join_acl_app_master_slave_get($acl_type) {
+  public static function join_acl_app_master_slave_get($acl_type) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
@@ -211,7 +211,7 @@ class mediamosa_acl_app_master_slave {
    * @return integer
    *  returns master app_id.
    */
-  static public function master_get($app_id_slave, $acl_object_type, $acl_object_id) {
+  public static function master_get($app_id_slave, $acl_object_type, $acl_object_id) {
 
     static $a_app_id_masters = array();
 

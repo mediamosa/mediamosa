@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -47,7 +47,7 @@ class mediamosa_response_connector extends mediamosa_response {
    * @param $params
    *  GET/POST parameters.
    */
-  static public function static_do_restcall($uri, $method = 'GET', array $params = array()) {
+  public static function static_do_restcall($uri, $method = 'GET', array $params = array()) {
 
     // Just to save time.
     $app_access = &drupal_static(__CLASS__ . '::' . __FUNCTION__, array());
@@ -101,7 +101,7 @@ class mediamosa_response_connector extends mediamosa_response {
    * @param array $data
    *  Array name => value.
    */
-  static public function static_do_restcall_drupal($uri, $method = 'GET', array $params = array()) {
+  public static function static_do_restcall_drupal($uri, $method = 'GET', array $params = array()) {
 
     // Call REST response class to generate output.
     $result = self::static_do_restcall($uri, $method, $params);
@@ -117,7 +117,7 @@ class mediamosa_response_connector extends mediamosa_response {
   /**
    * Test if the result is okay. (empty result is not okay).
    */
-  static public function static_result_okay($result) {
+  public static function static_result_okay($result) {
     return (!empty($result['header']['request_result_id']) && (int) $result['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY) ? TRUE : FALSE;
   }
 

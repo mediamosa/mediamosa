@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -41,7 +41,7 @@ class mediamosa_asset_metadata_property_group {
    * @param integer $property_group_id (unique)
    * @return array
    */
-  static public function property_group_row_get($property_group_id) {
+  public static function property_group_row_get($property_group_id) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_id = :propgroup_id',
       array(
@@ -58,7 +58,7 @@ class mediamosa_asset_metadata_property_group {
    * @param string $property_group_name
    * @return array
    */
-  static public function property_group_row_get_with_name($property_group_name) {
+  public static function property_group_row_get_with_name($property_group_name) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_name = :propgroup_name',
       array(
@@ -75,7 +75,7 @@ class mediamosa_asset_metadata_property_group {
    * @param integer $app_id
    * @return array
    */
-  static public function property_group_row_get_with_appid($app_id) {
+  public static function property_group_row_get_with_appid($app_id) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_id = :propgroup_id',
       array(
@@ -94,7 +94,7 @@ class mediamosa_asset_metadata_property_group {
    * @return integer
    *  The new ID of the object.
    */
-  static public function property_group_create($name) {
+  public static function property_group_create($name) {
     $fields = array(
       mediamosa_asset_metadata_property_group_db::NAME => $name,
     );
@@ -117,7 +117,7 @@ class mediamosa_asset_metadata_property_group {
    * @return integer
    *  The new ID of the object.
    */
-  static public function property_group_create_with_appid($app_id) {
+  public static function property_group_create_with_appid($app_id) {
     return mediamosa_asset_metadata_property_group::property_group_create(self::APP_PREFIX . (int) $app_id);
   }
 
@@ -129,7 +129,7 @@ class mediamosa_asset_metadata_property_group {
    * @return boolean
    *  TRUE / FALSE
    */
-  static public function property_group_installed($property_group_name) {
+  public static function property_group_installed($property_group_name) {
     return mediamosa_db::db_exists(
       mediamosa_asset_metadata_property_group_db::TABLE_NAME,
       array(mediamosa_asset_metadata_property_group_db::NAME => $property_group_name)
@@ -149,7 +149,7 @@ class mediamosa_asset_metadata_property_group {
    *   - is_hidden: hide metadata when generating output.
    *
    */
-  static public function property_create($property_group_id, $property_name, $type, array $options = array()) {
+  public static function property_create($property_group_id, $property_name, $type, array $options = array()) {
     // Default options.
     $options += array(
       'min_occurences' => 0,
@@ -184,7 +184,7 @@ class mediamosa_asset_metadata_property_group {
    *
    * @param string $property_name
    */
-  static public function property_group_delete($property_name) {
+  public static function property_group_delete($property_name) {
 
     // Get the group.
     $property_group = self::property_group_row_get_with_name($property_name);

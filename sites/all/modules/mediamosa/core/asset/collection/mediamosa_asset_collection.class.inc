@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -43,7 +43,7 @@ class mediamosa_asset_collection {
    *  In combination with asset_id, only one link might be deleted.
    * @return boolean
    */
-  static public function delete($asset_id = FALSE, $coll_id = FALSE) {
+  public static function delete($asset_id = FALSE, $coll_id = FALSE) {
 
     if (!$asset_id && !$coll_id) {
       // When no values are provided, none will be deleted.
@@ -104,7 +104,7 @@ class mediamosa_asset_collection {
    * @param $asset_id
    *  The asset.
    */
-  static public function delete_asset_from_all_collections($app_id, $user_id, $is_app_admin, $asset_id) {
+  public static function delete_asset_from_all_collections($app_id, $user_id, $is_app_admin, $asset_id) {
 
     // Asset must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
@@ -152,7 +152,7 @@ class mediamosa_asset_collection {
    * @param array $fields (collection fields)
    *  [alias] => field
    */
-  static public function get_by_asset_ids(array $asset_ids, array $fields = array()) {
+  public static function get_by_asset_ids(array $asset_ids, array $fields = array()) {
 
     if (empty($asset_ids)) {
       return array();
@@ -188,7 +188,7 @@ class mediamosa_asset_collection {
    * @param array $coll_ids
    *  The collection ids.
    */
-  static public function get_asset_ids_by_coll_ids(array $coll_ids, array $fields = array(mediamosa_asset_collection_db::ASSET_ID)) {
+  public static function get_asset_ids_by_coll_ids(array $coll_ids, array $fields = array(mediamosa_asset_collection_db::ASSET_ID)) {
     // Build query.
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
     $query->fields('ac', $fields);
@@ -212,7 +212,7 @@ class mediamosa_asset_collection {
    * @param string $coll_id
    *  The coll ID.
    */
-  static public function create($app_id, $user_id, $is_app_admin, $asset_id, $coll_id) {
+  public static function create($app_id, $user_id, $is_app_admin, $asset_id, $coll_id) {
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
@@ -257,7 +257,7 @@ class mediamosa_asset_collection {
    * @param string $asset_id
    *  The asset ID.
    */
-  static public function count_collections($asset_id) {
+  public static function count_collections($asset_id) {
 
     // Asset must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
@@ -274,7 +274,7 @@ class mediamosa_asset_collection {
    *
    * @param string $asset_id
    */
-  static public function find($asset_id) {
+  public static function find($asset_id) {
 
     // return a list of collections.
     $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
@@ -289,7 +289,7 @@ class mediamosa_asset_collection {
    *
    * @param $asset_id
    */
-  static public function get_collections($asset_id) {
+  public static function get_collections($asset_id) {
     $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
     $query->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id');
     $query->fields('c');

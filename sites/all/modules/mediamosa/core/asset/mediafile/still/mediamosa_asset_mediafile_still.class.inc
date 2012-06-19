@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -65,7 +65,7 @@ class mediamosa_asset_mediafile_still {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_asset_mediafile_still');
   }
 
@@ -78,7 +78,7 @@ class mediamosa_asset_mediafile_still {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'mediamosa_asset_mediafile_still');
   }
 
@@ -89,7 +89,7 @@ class mediamosa_asset_mediafile_still {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_debug($message, array $variables = array()) {
+  public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'mediamosa_asset_mediafile_still');
   }
 
@@ -100,7 +100,7 @@ class mediamosa_asset_mediafile_still {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_debug_high($message, array $variables = array()) {
+  public static function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'mediamosa_asset_mediafile_still');
   }
 
@@ -109,7 +109,7 @@ class mediamosa_asset_mediafile_still {
    *
    * @return array $types
    */
-  static public function get_types() {
+  public static function get_types() {
     // Assign usefull values for the third index of getimagesize() function.
     $types = array(
       1 => 'GIF',
@@ -143,7 +143,7 @@ class mediamosa_asset_mediafile_still {
    * @return boolean
    *   FALSE, in case of error, TRUE, in case of success, $still_id_new, in case of $create_new_still == TRUE
    */
-  static public function create_watermark($still_id, $app_id, $still_parameters, $create_new_still = FALSE) {
+  public static function create_watermark($still_id, $app_id, $still_parameters, $create_new_still = FALSE) {
 
     // If there isn't watermark_id, then we don't watermarking the still image.
     if (empty($still_parameters[self::WATERMARK_ID])) {
@@ -296,7 +296,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $mediafile_id_source
    * @param string $tag
    */
-  static public function create($asset_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
+  public static function create($asset_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
     $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
@@ -440,7 +440,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $still_id
    * @param integer $order
    */
-  static public function set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order) {
+  public static function set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order) {
     mediamosa_watchdog::log_mediafile(
       $mediafile_id,
       "Still order: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id; order = @order;",
@@ -515,7 +515,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $asset_id
    * @return array
    */
-  static public function find_asset_all_still($asset_id) {
+  public static function find_asset_all_still($asset_id) {
     $still_ids = mediamosa_db::db_query(
       "SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
       WHERE #asset_id = :asset_id AND #is_still = :is_still_true",
@@ -537,7 +537,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $asset_id
    * @return string
    */
-  static public function find_default($asset_id) {
+  public static function find_default($asset_id) {
 
     // Try default 1st.
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
@@ -604,7 +604,7 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $still_id
    */
-  static public function check($still_id) {
+  public static function check($still_id) {
     // Check if still file exists.
     $filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
     if (!file_exists($filename)) {
@@ -633,7 +633,7 @@ class mediamosa_asset_mediafile_still {
    * @throws mediamosa_exception_error()
    *   mediamosa_error::ERRORCODE_CREATING_DERIVATIVE
    */
-  static public function image_style_create_derivative($mediafile_id, $style_id) {
+  public static function image_style_create_derivative($mediafile_id, $style_id) {
     // The original still.
     $source_still = mediamosa_configuration_storage::data_still_get_file($mediafile_id);
     if (mediamosa_io::file_exists($source_still)) {
@@ -689,7 +689,7 @@ class mediamosa_asset_mediafile_still {
    * @param $still_id
    *  Remove specific still.
    */
-  static public function delete($asset_id, $mediafile_id = '', $still_id = '') {
+  public static function delete($asset_id, $mediafile_id = '', $still_id = '') {
     // Get the mediafile stills we need to remove.
     if ($still_id != '') {
       // Get specific still.
@@ -905,7 +905,7 @@ class mediamosa_asset_mediafile_still {
    * Remove the style files of an specific style.
    *
    */
-  static public function delete_files($app_id) {
+  public static function delete_files($app_id) {
     // Get media path, remove the symlinks.
     $media_app_path = mediamosa_configuration_storage::media_get_path($app_id);
 
@@ -929,7 +929,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $still_id
    *  The still ID.
    */
-  static public function set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id) {
+  public static function set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id) {
     mediamosa_watchdog::log_mediafile(
       $mediafile_id,
       'Setting default still: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id',
@@ -1003,7 +1003,7 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $still_id
    */
-  static public function remove_permanent_link($app_id, $still_id) {
+  public static function remove_permanent_link($app_id, $still_id) {
     // Remove permanent stills.
     mediamosa_io::exec(
       strtr(
@@ -1025,7 +1025,7 @@ class mediamosa_asset_mediafile_still {
    *         Will throw mediamosa_exception_error_is_unappropriate when your
    *         still link is not allowed.
    */
-  static public function is_still_permanent($still_id, $is_app_admin = FALSE) {
+  public static function is_still_permanent($still_id, $is_app_admin = FALSE) {
     // Protected mediafiles (stills) can not be permanent.
     try {
       return !mediamosa_asset_mediafile::is_mediafile_protected($still_id, $is_app_admin);

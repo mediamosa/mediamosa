@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -39,7 +39,7 @@ class mediamosa_mimetype {
    * @return
    *   Returns the found mimetype or application/octet-stream.
    */
-  static public function extension2mimetype($extension) {
+  public static function extension2mimetype($extension) {
     // Re-use the Drupal mimetype library.
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();
@@ -56,7 +56,7 @@ class mediamosa_mimetype {
    *
    * @param $mimetype
    */
-  static public function mimetype2extension($mimetype) {
+  public static function mimetype2extension($mimetype) {
     // Re-use the Drupal mimetype library.
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();

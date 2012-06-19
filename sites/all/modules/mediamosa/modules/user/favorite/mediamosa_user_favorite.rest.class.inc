@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -178,7 +178,7 @@ class mediamosa_rest_call_user_favorite_search {
    * get_object function is special. It can be used to supply the REST interface
    * with the correct class to create.
    */
-  static public function get_object_rest_call($a_rest_call, $default_param_values = array()) {
+  public static function get_object_rest_call($a_rest_call, $default_param_values = array()) {
     // Get the value.
     $fav_type = (isset($default_param_values[self::FAV_TYPE]) ? $default_param_values[self::FAV_TYPE] : mediamosa_rest_call::get_param_value_global(self::FAV_TYPE));
 

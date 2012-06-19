@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -32,7 +32,7 @@
 class mediamosa_asset_metadata_property {
 
   // ------------------------------------------------------------------ Static Function.
-  static public function property_list($app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_settings::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  public static function property_list($app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_settings::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Make sure these are used.
     assert(in_array($order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
@@ -90,7 +90,7 @@ class mediamosa_asset_metadata_property {
    * @return
    *  The new prop_id.
    */
-  static public function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE) {
+  public static function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE) {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
@@ -157,7 +157,7 @@ class mediamosa_asset_metadata_property {
    * @param string $name
    * @param string $delete
    */
-  static public function property_delete($app_id, $name, $delete) {
+  public static function property_delete($app_id, $name, $delete) {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
@@ -204,7 +204,7 @@ class mediamosa_asset_metadata_property {
    * @param integer $prop_id
    * @return array
    */
-  static public function property_get_row($prop_id) {
+  public static function property_get_row($prop_id) {
     return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
       ->fields('amp')
       ->condition(mediamosa_asset_metadata_property_db::ID, $prop_id, '=')
@@ -220,7 +220,7 @@ class mediamosa_asset_metadata_property {
    *  The ID of the propertygroup.
    * @return array
    */
-  static public function property_get_row_with_name($name, $propgroup_id) {
+  public static function property_get_row_with_name($name, $propgroup_id) {
     return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
       ->fields('amp')
       ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $propgroup_id, '=')
@@ -236,7 +236,7 @@ class mediamosa_asset_metadata_property {
    *
    * @return array
    */
-  static public function get_metadata_properties(array $metadata_property_groups = array(), $get_all_apps = FALSE) {
+  public static function get_metadata_properties(array $metadata_property_groups = array(), $get_all_apps = FALSE) {
 
     // Caching.
     static $metadata_properties = array();
@@ -297,7 +297,7 @@ class mediamosa_asset_metadata_property {
    *
    * @return array
    */
-  static public function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array()) {
+  public static function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array()) {
 
     // Get all metadata property groups.
     if (count($metadata_property_groups) == 0) {
@@ -320,7 +320,7 @@ class mediamosa_asset_metadata_property {
   /**
    * Get all metadata.
    */
-  static public function get_all_metadata() {
+  public static function get_all_metadata() {
 
     // Caching.
     static $all_metadata_properties = array();

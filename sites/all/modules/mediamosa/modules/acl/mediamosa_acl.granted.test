@@ -5,7 +5,7 @@
  * MediaMosa is a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://www.vpcore.nl)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -34,7 +34,7 @@ class MediaMosaTestCaseAclGrantedJobTest extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
-  static public function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => 'ACL - Extended tests on granted flag.',
       'description' => 'Extended test on the granted flag.',

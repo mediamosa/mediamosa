@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -44,7 +44,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_automatedsimpletest');
   }
 
@@ -55,7 +55,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_debug($message, array $variables = array()) {
+  public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'mediamosa_automatedsimpletest');
   }
 
@@ -63,7 +63,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * Return the amount of seconds before a test may run again if the same test
    * is still in running mode.
    */
-  static public function timeout_test_run() {
+  public static function timeout_test_run() {
     // Default is 3 minutes before we consider test timed-out.
     return variable_get('mediamosa_automatedsimpletest_timeout_tests', 360);
   }
@@ -74,7 +74,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * there for their class is not loaded, we will need
    * to report this.
    */
-  static public function get_default_tests() {
+  public static function get_default_tests() {
     $simpletests = array(
       mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => array(),
       mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => array(),
@@ -109,7 +109,7 @@ class mediamosa_maintenance_automatedsimpletest {
   /**
    * Returns TRUE / FALSE if we can run a test from the queue.
    */
-  static public function may_run() {
+  public static function may_run() {
     // Variable is set by the REST call that is running the test.
     $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running');
 
@@ -228,7 +228,7 @@ class mediamosa_maintenance_automatedsimpletest {
   /**
    * Fill the queue with tests.
    */
-  static public function fill_queue() {
+  public static function fill_queue() {
 
     // Get the current queue.
     $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
@@ -292,7 +292,7 @@ class mediamosa_maintenance_automatedsimpletest {
   /**
    * Run the tests one by one.
    */
-  static public function run_simple_tests() {
+  public static function run_simple_tests() {
 
     // We are still running something (or we are switched off).
     if (!self::may_run()) {
@@ -363,7 +363,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * @param string $class_name
    * @param array $info
    */
-  static public function run_simple_test($run, $class_name, array $info) {
+  public static function run_simple_test($run, $class_name, array $info) {
 
     // log start.
     mediamosa_debug::log_high('Starting unit test @class_name.', array('@class_name' => $class_name));
@@ -432,7 +432,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * @param string $uri
    *  If you need to change the uri to trigger.
    */
-  static public function trigger_simpletests() {
+  public static function trigger_simpletests() {
 
     // Trigger.
     mediamosa_http::do_internal_call_cron('internal/cron/simpletests', TRUE);

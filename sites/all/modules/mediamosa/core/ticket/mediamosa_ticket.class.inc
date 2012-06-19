@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -48,7 +48,7 @@ class mediamosa_ticket {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'ticket');
   }
 
@@ -61,7 +61,7 @@ class mediamosa_ticket {
    * @param string $user_id
    * @param string $group_id
    */
-  static public function create_for_upload($app_id, $mediafile_id, $user_id, $group_id = '') {
+  public static function create_for_upload($app_id, $mediafile_id, $user_id, $group_id = '') {
     // Mediafile must exist.
     $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
@@ -86,7 +86,7 @@ class mediamosa_ticket {
    * @param string $group_id
    * @param datetime $issued
    */
-  static public function create($app_id, $ticket_type, $owner_id, $mediafile_id, $ticket_id = NULL, $group_id = NULL, $issued = NULL) {
+  public static function create($app_id, $ticket_type, $owner_id, $mediafile_id, $ticket_id = NULL, $group_id = NULL, $issued = NULL) {
     if (!isset($ticket_id)) {
       $ticket_id = mediamosa_db::uuid($app_id);
     }
@@ -135,7 +135,7 @@ class mediamosa_ticket {
    * @param string $still_id
    *  Optional still_id.
    */
-  static public function process_play_ticket($ticket_id, $mediafile_ext, $response_type, $app_id, $user_id, $still_id = FALSE) {
+  public static function process_play_ticket($ticket_id, $mediafile_ext, $response_type, $app_id, $user_id, $still_id = FALSE) {
     // Not set? Set default.
     if (!isset($response_type)) {
       $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
@@ -257,7 +257,7 @@ class mediamosa_ticket {
   /**
    * Run at fixed intervals.
    */
-  static public function ticket_cleanup() {
+  public static function ticket_cleanup() {
 
     if (!mediamosa_configuration_storage::is_mount_setup()) {
       self::log('Can not run clean up expired tickets; mount point not setup, need to specify the linux or windows mount point in mediamosa configuration.');
@@ -381,7 +381,7 @@ class mediamosa_ticket {
    * @return
    *   The mediafile ID or FALSE.
    */
-  static public function get_mediafile_id($ticket_id) {
+  public static function get_mediafile_id($ticket_id) {
       // Convert $ticket_id to $mediafile_id.
       return mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't')
         ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID))
@@ -399,7 +399,7 @@ class mediamosa_ticket {
    * @param string $ticket_type
    *  Matching ticket type.
    */
-  static public function get_valid($ticket_id, $ticket_type) {
+  public static function get_valid($ticket_id, $ticket_type) {
 
     // Get the current time.
     $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
@@ -445,7 +445,7 @@ class mediamosa_ticket {
    *
    * @param string $ticket_id
    */
-  static public function get_valid_upload($ticket_id) {
+  public static function get_valid_upload($ticket_id) {
     return self::get_valid($ticket_id, mediamosa_ticket_db::TICKET_TYPE_UPLOAD);
   }
 
@@ -455,7 +455,7 @@ class mediamosa_ticket {
    *
    * @param $ticket_id
    */
-  static public function delete($ticket_id) {
+  public static function delete($ticket_id) {
 
     // Delete it.
     mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME)

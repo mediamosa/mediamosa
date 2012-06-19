@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -669,7 +669,7 @@ abstract class mediamosa_rest_call {
    *
    * @param string $param
    */
-  static public function get_param_value_global($param) {
+  public static function get_param_value_global($param) {
     // Is mediamosa_params is set, we take priority on those.
     if (isset($GLOBALS['mediamosa_params'])) {
       // If for any reason mediamosa_params is in _REQUEST, then it was supplied

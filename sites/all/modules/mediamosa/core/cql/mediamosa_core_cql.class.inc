@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -60,7 +60,7 @@ class mediamosa_core_cql {
    *  Extra array to translate name.
    */
 
-  static public function convert_searchparam_to_cql($name, $match, array $a_value, $type, array $a_translate_to = array()) {
+  public static function convert_searchparam_to_cql($name, $match, array $a_value, $type, array $a_translate_to = array()) {
     $a_or = array();
 
     if (isset($a_translate_to[$name])) {
@@ -134,7 +134,7 @@ class mediamosa_core_cql {
    * @param boolean $cql_store_stats
    * @param array $app_ids
    */
-  static public function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
+  public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
@@ -148,7 +148,7 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @return boolean
    */
-  static public function verify_asset($str_cql, array $app_ids, &$error_text) {
+  public static function verify_asset($str_cql, array $app_ids, &$error_text) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
@@ -165,7 +165,7 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @param array $app_ids
    */
-  static public function parse_collection($str_cql, array $app_ids) {
+  public static function parse_collection($str_cql, array $app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_collection_cql_context($app_ids);
@@ -179,7 +179,7 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @return boolean
    */
-  static public function verify_collection($str_cql, $app_ids, &$error_text) {
+  public static function verify_collection($str_cql, $app_ids, &$error_text) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_collection_cql_context($app_ids);
@@ -197,7 +197,7 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @param array $app_ids
    */
-  static public function parse_job($str_cql, array $app_ids) {
+  public static function parse_job($str_cql, array $app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_job_cql_context($app_ids);
@@ -211,7 +211,7 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @return boolean
    */
-  static public function verify_job($str_cql, $app_ids, &$error_text) {
+  public static function verify_job($str_cql, $app_ids, &$error_text) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_job_cql_context($app_ids);
@@ -229,7 +229,7 @@ class mediamosa_core_cql {
    * @param array $var_setup
    * @param array $search
    */
-  static public function get_var_setup_search(array $var_setup, array $search) {
+  public static function get_var_setup_search(array $var_setup, array $search) {
 
     foreach ($search as $param => $type) {
       $var_setup[mediamosa_rest_call::VARS][$param] = array(
@@ -254,7 +254,7 @@ class mediamosa_core_cql {
    *
    * @param array $a_var_setup
    */
-  static public function get_var_setup_search_asset(array $app_ids, array $var_setup, array $search) {
+  public static function get_var_setup_search_asset(array $app_ids, array $var_setup, array $search) {
 
     // Enrich with normal search.
     $var_setup = self::get_var_setup_search($var_setup, $search);

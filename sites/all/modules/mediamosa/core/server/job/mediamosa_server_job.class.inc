@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -42,7 +42,7 @@ class mediamosa_server_job {
    * @param integer $job_id
    *  The Job ID.
    */
-  static public function delete_by_jobid($job_id) {
+  public static function delete_by_jobid($job_id) {
     // Remove link.
     mediamosa_db::db_delete(mediamosa_server_job_db::TABLE_NAME)
       ->condition(mediamosa_server_job_db::JOB_ID, $job_id)

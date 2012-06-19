@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -38,7 +38,7 @@ class mediamosa_node_revision {
    * @param $nid
    * @param $vid
    */
-  static public function get($nid, $vid) {
+  public static function get($nid, $vid) {
     return mediamosa_db::db_select(mediamosa_node_revision_db::TABLE_NAME, 'nr')
       ->fields('nr')
       ->condition('nid', $nid)
@@ -51,7 +51,7 @@ class mediamosa_node_revision {
    * Load the nodes from the revision table.
    * @param object $nodes
    */
-  static public function load(&$nodes) {
+  public static function load(&$nodes) {
     // Gather all vids.
     $nid = $vids = array();
     foreach ($nodes as $node) {
@@ -119,7 +119,7 @@ class mediamosa_node_revision {
    * @param integer $vid
    * @param array $revision_data
    */
-  static public function insert($nid, $vid, array $revision_data) {
+  public static function insert($nid, $vid, array $revision_data) {
 
     mediamosa_db::db_insert(mediamosa_node_revision_db::TABLE_NAME)
       ->fields(array(
@@ -140,7 +140,7 @@ class mediamosa_node_revision {
    * @param array $names
    *  The $names of the object in $node we want to store.
    */
-  static public function insert_ex($node, $table_name, array $names) {
+  public static function insert_ex($node, $table_name, array $names) {
     // Collect the data we want to insert.
     $fields = array();
     foreach ($names as $name) {
@@ -209,7 +209,7 @@ class mediamosa_node_revision {
    * @param $vid
    * @param $revision_data
    */
-  static public function update($nid, $vid, array $revision_data) {
+  public static function update($nid, $vid, array $revision_data) {
 
     mediamosa_db::db_update(mediamosa_node_revision_db::TABLE_NAME)
       ->fields(array(
@@ -230,7 +230,7 @@ class mediamosa_node_revision {
    * @param array names
    *  The names of the fields in $node we want to store.
    */
-  static public function update_ex($node, $table_name, array $names) {
+  public static function update_ex($node, $table_name, array $names) {
 
     // Get the current revision (if any).
     $revision = self::get($node->nid, $node->vid);
@@ -280,7 +280,7 @@ class mediamosa_node_revision {
    * Delete the revisions of this node.
    * @param $nid
    */
-  static public function delete($node) {
+  public static function delete($node) {
     // Remove revision.
     mediamosa_db::db_delete(mediamosa_node_revision_db::TABLE_NAME)
       ->condition(mediamosa_node_revision_db::NID, $node->nid)
@@ -291,7 +291,7 @@ class mediamosa_node_revision {
    * Delete the revisions of this node.
    * @param $nid
    */
-  static public function delete_revision($node) {
+  public static function delete_revision($node) {
 
     // Remove revision.
     mediamosa_db::db_delete(mediamosa_node_revision_db::TABLE_NAME)
@@ -303,7 +303,7 @@ class mediamosa_node_revision {
    * Delete the revisions of this node and from parent table.
    * @param $nid
    */
-  static public function delete_ex($node, $table_name = NULL) {
+  public static function delete_ex($node, $table_name = NULL) {
     // Not all types have child tables.
     if (isset($table_name)) {
       // Remove from main table.

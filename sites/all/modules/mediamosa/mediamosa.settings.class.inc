@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -285,7 +285,7 @@ class mediamosa_settings {
    * @return
    *   Returns TRUE when ffmpeg option -padtop can not be used by ffmpeg.
    */
-  static public function get_ffmpeg_pad($set_value = NULL) {
+  public static function get_ffmpeg_pad($set_value = NULL) {
     // FFmpeg.
     static $mediamosa_ffmpeg_pad = NULL;
 
@@ -308,7 +308,7 @@ class mediamosa_settings {
   /**
    * Returns the path where the lua scripts are.
    */
-  static public function lua_base_get() {
+  public static function lua_base_get() {
     // LUA_BASE.
     $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa');
     return $path . '/lib/lua/';
@@ -317,7 +317,7 @@ class mediamosa_settings {
   /**
    * Return the filename of the transcode  lua file.
    */
-  static public function ffmpeg_transcode_file() {
+  public static function ffmpeg_transcode_file() {
     // FFMPEG_TRANSCODE_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
@@ -325,7 +325,7 @@ class mediamosa_settings {
   /**
    * Return the filename of the windows transcode lha file.
    */
-  static public function windows_transcode_file() {
+  public static function windows_transcode_file() {
     // WINDOWS_TRANSCODE_FILE.
     return 'start /min c:\lua\lua5.1 c:\lua\vpx-transcode-wmv.lua';
   }
@@ -333,7 +333,7 @@ class mediamosa_settings {
   /**
    * Return the filename of the analyse lha file.
    */
-  static public function analyse_file() {
+  public static function analyse_file() {
     // ANALYSE_FILE.
     return self::lua_base_get() . 'vpx-analyse';
   }
@@ -341,7 +341,7 @@ class mediamosa_settings {
   /**
    * Return the filename of the transcode lha file.
    */
-  static public function still_file() {
+  public static function still_file() {
     // STILL_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
@@ -350,7 +350,7 @@ class mediamosa_settings {
    * Returns the number of items per page in admin listings, like client apps
    * listing.
    */
-  static public function maintenance_items_per_page() {
+  public static function maintenance_items_per_page() {
     return variable_get('mediamosa_maintenance_items_per_page', self::MAINTENANCE_ITEMS_PER_PAGE);
   }
 
@@ -359,7 +359,7 @@ class mediamosa_settings {
    *
    * @param string $asset_id
    */
-  static public function get_url_asset($asset_id) {
+  public static function get_url_asset($asset_id) {
     return strtr(self::URL_ASSET, array('@asset_id' => $asset_id));
   }
 
@@ -368,7 +368,7 @@ class mediamosa_settings {
    *
    * @param string $coll_id
    */
-  static public function get_url_collection($coll_id) {
+  public static function get_url_collection($coll_id) {
     return strtr(self::URL_COLLECTION, array('@coll_id' => $coll_id));
   }
 }

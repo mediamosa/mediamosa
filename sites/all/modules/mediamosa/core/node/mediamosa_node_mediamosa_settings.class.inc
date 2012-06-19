@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -37,7 +37,7 @@ class mediamosa_node_mediamosa_settings {
    * @param array $form
    * @param array $names
    */
-  static public function collect_variable_names_from_form(array $form, array &$names) {
+  public static function collect_variable_names_from_form(array $form, array &$names) {
 
     if (!is_array($form)) {
       return;
@@ -78,7 +78,7 @@ class mediamosa_node_mediamosa_settings {
   /**
    * Return the field names use in the settings variables.
    */
-  static public function get_fields() {
+  public static function get_fields() {
     // Get the settings form.
     $form = module_invoke_all('mediamosa_configuration_collect');
 
@@ -94,7 +94,7 @@ class mediamosa_node_mediamosa_settings {
   /**
    * Return the node with settings. If non is found, it will create a dummy.
    */
-  static public function get_node_settings() {
+  public static function get_node_settings() {
 
     // I just need the nid, so i can load the node.
     $nid = mediamosa_db::db_select('node', 'n')

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -36,7 +36,7 @@ class mediamosa_error extends mediamosa_sdk {
    *
    * @return array
    */
-  static public function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC, $errorcode = 0) {
+  public static function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC, $errorcode = 0) {
     static $codes = NULL;
 
     if (!isset($codes[$order_by][$order_direction])) {
@@ -67,7 +67,7 @@ class mediamosa_error extends mediamosa_sdk {
    * @param integer $code
    * @return array
    */
-  static public function error_code_find($errorcode, $tags = array(), $fail = FALSE) {
+  public static function error_code_find($errorcode, $tags = array(), $fail = FALSE) {
 
     // Get the current listing.
     $code = self::error_code_list(mediamosa_error_db::CODE, mediamosa_type::ORDER_DIRECTION_ASC, $errorcode);
@@ -98,7 +98,7 @@ class mediamosa_error extends mediamosa_sdk {
    * @param integer $errorcode
    * @return array
    */
-  static public function error_code_find_description($errorcode, $tags = array()) {
+  public static function error_code_find_description($errorcode, $tags = array()) {
     $code = self::error_code_find($errorcode, $tags);
 
     return ($code ? $code[mediamosa_error_db::MESSAGE] : 'Description not available.');
@@ -109,7 +109,7 @@ class mediamosa_error extends mediamosa_sdk {
    *
    * @param integer $id
    */
-  static public function get($id) {
+  public static function get($id) {
     return mediamosa_db::db_select(mediamosa_error_db::TABLE_NAME, 'e')
       ->fields('e')
       ->condition(mediamosa_error_db::ID, $id)

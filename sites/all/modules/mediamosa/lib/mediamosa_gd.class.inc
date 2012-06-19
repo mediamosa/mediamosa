@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -42,7 +42,7 @@ class mediamosa_gd {
    * @param integer $b2
    * @return integer Difference in color
    */
-  static public function lumdiff($r1, $g1, $b1, $r2, $g2, $b2) {
+  public static function lumdiff($r1, $g1, $b1, $r2, $g2, $b2) {
       $l1 = 0.2126 * pow($r1/255, 2.2) +
             0.7152 * pow($g1/255, 2.2) +
             0.0722 * pow($b1/255, 2.2);
@@ -69,7 +69,7 @@ class mediamosa_gd {
    * @param $g2
    * @param $b2
    */
-  static public function coldiff($r1, $g1, $b1, $r2, $g2, $b2) {
+  public static function coldiff($r1, $g1, $b1, $r2, $g2, $b2) {
     return max($r1, $r2) - min($r1, $r2) + max($g1, $g2) - min($g1, $g2) + max($b1, $b2) - min($b1, $b2);
   }
 
@@ -84,7 +84,7 @@ class mediamosa_gd {
    * @param integer $b2
    * @return integer Difference in color
    */
-  static public function pythdiff($r1, $g1, $b1, $r2, $g2, $b2) {
+  public static function pythdiff($r1, $g1, $b1, $r2, $g2, $b2) {
       $rd = $r1 - $r2;
       $gd = $g1 - $g2;
       $bd = $b1 - $b2;
@@ -103,7 +103,7 @@ class mediamosa_gd {
    * @param integer $B2
    * @return integer Difference in color
    */
-  static public function brghtdiff($r1, $g1, $b1, $r2, $g2, $b2) {
+  public static function brghtdiff($r1, $g1, $b1, $r2, $g2, $b2) {
       $br1 = (299 * $r1 + 587 * $g1 + 114 * $b1) / 1000;
       $br2 = (299 * $r2 + 587 * $g2 + 114 * $b2) / 1000;
 
@@ -116,7 +116,7 @@ class mediamosa_gd {
    * @param string $hexcolor Hexidecimal color
    * @return array RGB color
    */
-  static public function hex2rgb($hexcolor = "") {
+  public static function hex2rgb($hexcolor = "") {
     $rgb = array();
     $rgb['red'] = hexdec(mediamosa_unicode::substr($hexcolor, 0, 2));
     $rgb['green'] = hexdec(mediamosa_unicode::substr($hexcolor, 2, 2));
@@ -131,7 +131,7 @@ class mediamosa_gd {
    * @param array $rgb Color values
    * @return string RGB value converted to hexidecimal
    */
-  static public function rgb2hex($rgb = array()) {
+  public static function rgb2hex($rgb = array()) {
     return mediamosa_unicode::substr('0' . dechex($rgb['red']), -2) . mediamosa_unicode::substr('0' . dechex($rgb['green']), -2) . mediamosa_unicode::substr('0' . dechex($rgb['blue']), -2);
   }
 
@@ -162,7 +162,7 @@ class mediamosa_gd {
    *  identically to imagecopy() for pallete images, while it implements alpha
    *  transparency for true colour images.
    */
-  static public function imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
+  public static function imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
     if (!function_exists('imagecopymerge')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -188,7 +188,7 @@ class mediamosa_gd {
    *  information in the APP13 marker. You can use the iptcparse() function to
    *  parse the binary APP13 marker into something readable.
    */
-  static public function getimagesize($filename, array &$imageinfo = array()) {
+  public static function getimagesize($filename, array &$imageinfo = array()) {
     if (!function_exists('getimagesize')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -207,7 +207,7 @@ class mediamosa_gd {
    * @return resource
    *  Image resource identifier on success, FALSE on errors.
    */
-  static public function imagecreatefromjpeg($filename) {
+  public static function imagecreatefromjpeg($filename) {
     if (!function_exists('imagecreatefromjpeg')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -226,7 +226,7 @@ class mediamosa_gd {
    * @return resource
    *  Image resource identifier on success, FALSE on errors.
    */
-  static public function imagecreatefrompng($filename) {
+  public static function imagecreatefrompng($filename) {
     if (!function_exists('imagecreatefrompng')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -244,7 +244,7 @@ class mediamosa_gd {
    * @return int
    *  Return the width of the image or false on errors.
    */
-  static public function imagesx($image) {
+  public static function imagesx($image) {
     if (!function_exists('imagesx')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -262,7 +262,7 @@ class mediamosa_gd {
    * @return int
    *  Return the height of the image or false on errors.
    */
-  static public function imagesy($image) {
+  public static function imagesy($image) {
     if (!function_exists('imagesy')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -284,7 +284,7 @@ class mediamosa_gd {
    * @return int
    *  The index of the color.
    */
-  static public function imagecolorat($image, $x, $y) {
+  public static function imagecolorat($image, $x, $y) {
     if (!function_exists('imagecolorat')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
@@ -329,7 +329,7 @@ class mediamosa_gd {
    * </p>
    * @return bool Returns true on success or false on failure.
    */
-  static public function imagejpeg($image, $filename = NULL, $quality = NULL) {
+  public static function imagejpeg($image, $filename = NULL, $quality = NULL) {
     imagejpeg($image, $filename, $quality);
   }
 
@@ -357,7 +357,7 @@ class mediamosa_gd {
    * </p>
    * @return bool Returns true on success or false on failure.
    */
-  static public function imagepng($image, $filename = NULL, $quality = NULL, $filters = NULL) {
+  public static function imagepng($image, $filename = NULL, $quality = NULL, $filters = NULL) {
     imagepng($image, $filename, $quality, $filters);
   }
 }

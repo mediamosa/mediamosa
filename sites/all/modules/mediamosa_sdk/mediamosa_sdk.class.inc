@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -336,7 +336,7 @@ class mediamosa_sdk {
   /**
    * Return the base URL for the SDK menu/URL.
    */
-  static public function get_base_url() {
+  public static function get_base_url() {
     return module_exists('mediamosa_maintenance') ? 'admin/mediamosa/config' : 'admin/config';
   }
 
@@ -346,7 +346,7 @@ class mediamosa_sdk {
    *
    * @param string $type
    */
-  static public function typeAlias2Type($type) {
+  public static function typeAlias2Type($type) {
 
     switch ($type) {
       case self::TYPE_SUPPLEMENT_ID:
@@ -399,7 +399,7 @@ class mediamosa_sdk {
    *
    * @return array
    */
-  static public function parse_version($version) {
+  public static function parse_version($version) {
     list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", $version, 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
       'major' => $major,
@@ -415,7 +415,7 @@ class mediamosa_sdk {
    *
    * @param string $datestamp (YYYY-MM-DD 00:00:00)
    */
-  static public function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+  public static function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date(strtotime($datestamp), $type, $format, $timezone, $langcode);
   }
 }

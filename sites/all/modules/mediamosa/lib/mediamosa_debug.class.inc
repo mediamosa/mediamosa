@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -37,7 +37,7 @@ class mediamosa_debug {
    * @param array $variables
    * @param string $type
    */
-  static public function log($message, array $variables = array(), $type = 'debug', $link = NULL) {
+  public static function log($message, array $variables = array(), $type = 'debug', $link = NULL) {
     if (self::is_debug_normal()) {
       mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type, $link);
     }
@@ -50,7 +50,7 @@ class mediamosa_debug {
    * @param string $severity
    * @param string $type
    */
-  static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
+  public static function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     if (self::is_debug_normal()) {
       mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
     }
@@ -59,7 +59,7 @@ class mediamosa_debug {
   /**
    * Log asset ids.
    */
-  static public function log_asset($asset_id, $message, array $variables = array(), $type = NULL) {
+  public static function log_asset($asset_id, $message, array $variables = array(), $type = NULL) {
     if (self::is_debug_normal()) {
       mediamosa_watchdog::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
     }
@@ -68,7 +68,7 @@ class mediamosa_debug {
   /**
    * Log mediafile ids.
    */
-  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $type = NULL) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $type = NULL) {
     if (self::is_debug_normal()) {
       mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, WATCHDOG_DEBUG, $type);
     }
@@ -81,7 +81,7 @@ class mediamosa_debug {
    * @param array $variables
    * @param string $type
    */
-  static public function log_high($message, array $variables = array(), $type = NULL) {
+  public static function log_high($message, array $variables = array(), $type = NULL) {
     if (self::is_debug_high()) {
       mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type);
     }
@@ -90,7 +90,7 @@ class mediamosa_debug {
   /**
    * High debug logger, log asset ids.
    */
-  static public function log_high_asset($asset_id, $message, array $variables = array(), $type = NULL) {
+  public static function log_high_asset($asset_id, $message, array $variables = array(), $type = NULL) {
     if (self::is_debug_high()) {
       mediamosa_watchdog::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
     }
@@ -99,7 +99,7 @@ class mediamosa_debug {
   /**
    * High debug logger, log mediafile ids.
    */
-  static public function log_high_mediafile($mediafile_id, $message, array $variables = array(), $asset_id, $type = NULL) {
+  public static function log_high_mediafile($mediafile_id, $message, array $variables = array(), $asset_id, $type = NULL) {
     if (self::is_debug_high()) {
       mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, WATCHDOG_DEBUG, $type);
     }
@@ -108,7 +108,7 @@ class mediamosa_debug {
   /**
    * Log without logging to the database, go to php.log instead.
    */
-  static public function error_log($message, $file = NULL, $line = NULL) {
+  public static function error_log($message, $file = NULL, $line = NULL) {
 
     if (empty($file)) {
       $caller = _drupal_get_last_caller(debug_backtrace());
@@ -122,28 +122,28 @@ class mediamosa_debug {
   /**
    * Returns TRUE / FALSE to indicate debug mode ON / OFF.
    */
-  static public function is_debug() {
+  public static function is_debug() {
     return (variable_get('mediamosa_debug_level', 0) > 0);
   }
 
   /**
    * Returns TRUE / FALSE to indicate normal debug.
    */
-  static public function is_debug_normal() {
+  public static function is_debug_normal() {
     return (variable_get('mediamosa_debug_level', 0) >= 5);
   }
 
   /**
    * Returns TRUE / FALSE to indicate debug mode for logging.
    */
-  static public function is_debug_high() {
+  public static function is_debug_high() {
     return (variable_get('mediamosa_debug_level', 0) >= 10);
   }
 
   /**
    * Log the query string for a db_query result object..
    */
-  static public function log_query_string($query_object) {
+  public static function log_query_string($query_object) {
     mediamosa_watchdog::log($query_object->queryString, array(), WATCHDOG_INFO, 'DB query');
   }
 }

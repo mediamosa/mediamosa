@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -42,7 +42,7 @@ class mediamosa_node_mediamosa_app {
    * @return array
    *  An array with all the profile Ids
    */
-  static public function app_get_transcode_profiles() {
+  public static function app_get_transcode_profiles() {
     $result = mediamosa_transcode_profile::get_all(array(mediamosa_transcode_profile_db::ID, mediamosa_transcode_profile_db::PROFILE));
 
     $output = array();

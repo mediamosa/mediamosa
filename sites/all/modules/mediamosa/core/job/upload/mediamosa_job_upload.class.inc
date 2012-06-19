@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -35,7 +35,7 @@ class mediamosa_job_upload {
    *
    * @param integer $job_id
    */
-  static public function get($job_id) {
+  public static function get($job_id) {
     return mediamosa_db::db_select(mediamosa_job_upload_db::TABLE_NAME, 'ju')
       ->fields('ju')
       ->condition(mediamosa_job_upload_db::JOB_ID, $job_id)
@@ -43,7 +43,7 @@ class mediamosa_job_upload {
       ->fetchAssoc();
   }
 
-  static public function in_progress($mediafile_id, $job_id) {
+  public static function in_progress($mediafile_id, $job_id) {
     $a_statuses = array(
       mediamosa_job_db::JOB_STATUS_WAITING,
       mediamosa_job_db::JOB_STATUS_INPROGRESS,
@@ -77,7 +77,7 @@ class mediamosa_job_upload {
    * @param bool $retranscode
    * @param bool $create_still
    */
-  static public function create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode = FALSE, $create_still = FALSE) {
+  public static function create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode = FALSE, $create_still = FALSE) {
 
     // If already upload job is here, then dont add it.
     if (self::in_progress($mediafile_id, $job_id)) {

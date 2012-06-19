@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -61,7 +61,7 @@ class mediamosa_type {
    *  Internal boolean for array loops, leave as is
    * @return new param value
    */
-  static public function check($param, $param_type, $mixed_param_value, $is_required = FALSE, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
+  public static function check($param, $param_type, $mixed_param_value, $is_required = FALSE, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
 
     // If its an array, then walk through the array and check item for item by recalling ourselfs.
     if (is_array($mixed_param_value)) {
@@ -551,7 +551,7 @@ class mediamosa_type {
    * Considered success when returning.
    * Returns the same value, use it for future changes.
    */
-  static private function int_range($param, $int_val, $min_value, $max_value) {
+  private static function int_range($param, $int_val, $min_value, $max_value) {
     // Must be int type.
     assert(is_int($int_val));
 
@@ -586,7 +586,7 @@ class mediamosa_type {
    * @return
    *  Returns the same value, use it for future changes.
    */
-  static private function string_range($param, $string_val, $min_length, $max_length) {
+  private static function string_range($param, $string_val, $min_length, $max_length) {
     // Must be string type.
     assert(is_string($string_val));
 

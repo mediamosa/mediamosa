@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -70,7 +70,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $response_type
    * @param array $mediafile_ext
    */
-  static public function get_media_server($response_type, array $mediafile_ext = array()) {
+  public static function get_media_server($response_type, array $mediafile_ext = array()) {
 
     switch ($response_type) {
       case self::RESPONSE_STILL:
@@ -238,7 +238,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $ticket
    * @param integer $app_id
    */
-  static public function create_response_still($ticket, $app_id) {
+  public static function create_response_still($ticket, $app_id) {
     return self::create_response(self::RESPONSE_STILL, $app_id, $ticket);
   }
 
@@ -254,7 +254,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $mediafile_group_id
    * @param array $stills
    */
-  static public function create_response_1x_to_2x($asset_id, $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
+  public static function create_response_1x_to_2x($asset_id, $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
@@ -325,7 +325,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param $stills
    *  Array stills.
    */
-  static public function create_response(
+  public static function create_response(
     $response_type,
     $app_id,
     $ticket,
@@ -716,7 +716,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param $profile_id
    * @param $original_mediafile_id
    */
-  static public function get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id = NULL) {
+  public static function get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id = NULL) {
 
     // No original mediafile?
     if (!isset($original_mediafile_id)) {
@@ -749,7 +749,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param $asset_id
    * @param $tag
    */
-  static public function get_mediafile_id_on_tag($asset_id, $tag) {
+  public static function get_mediafile_id_on_tag($asset_id, $tag) {
     return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
       ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
       ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)

@@ -1,6 +1,3 @@
-
-
-
 MediaMosa 3.2.x-dev (build 1858)
 --------------------------------
 - Extended the logging for REST calls and added filtering to log for specific
@@ -16,6 +13,12 @@ MediaMosa 3.2.x-dev (build 1858)
   transcode jobs.
 - Fixed notices when asset search was called with is_oai = TRUE and assets where
   included which where deleted.
+- Changed copyright to 2012.
+- Changed 'static public function' to Drupal standard 'public static function'.
+- Changed 'static private function' to Drupal standard 'private static
+  function'.
+- Changed 'static protected function' to Drupal standard 'protected static
+  function'.
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -43,7 +43,7 @@ class mediamosa_ftp_batch_asset {
    * @param integer $limit
    *  The limit of items in the result set.
    */
-  static public function get_asset_relations($app_id, $batch_id, $offset, $limit) {
+  public static function get_asset_relations($app_id, $batch_id, $offset, $limit) {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'asset_id';
@@ -77,7 +77,7 @@ class mediamosa_ftp_batch_asset {
    * @param integer $batch_id
    *  The batch ID.
    */
-  static public function add_asset_relation($app_id, array $asset_ids, $batch_id) {
+  public static function add_asset_relation($app_id, array $asset_ids, $batch_id) {
 
     // Make sure all assets exist.
     foreach ($asset_ids as $asset_id) {
@@ -111,7 +111,7 @@ class mediamosa_ftp_batch_asset {
    * @param integer $batch_id
    *  ID of batch to delete.
    */
-  static public function remove_asset_relation($batch_id) {
+  public static function remove_asset_relation($batch_id) {
 
     // Delete batch asset relations.
     mediamosa_db::db_query(
@@ -129,7 +129,7 @@ class mediamosa_ftp_batch_asset {
    *
    * @param string $asset_id
    */
-  static public function get_batch_relation($asset_id) {
+  public static function get_batch_relation($asset_id) {
     return mediamosa_db::db_select(mediamosa_ftp_batch_asset_db::TABLE_NAME, 'ftp')
       ->fields('ftp', array(mediamosa_ftp_batch_asset_db::BATCH_ID))
       ->condition(mediamosa_ftp_batch_asset_db::ASSET_ID, $asset_id)

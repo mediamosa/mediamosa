@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -265,7 +265,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const ALIAS_AUT_REALM = 'aut_realm';
 
   // ------------------------------------------------------------------ Public Functions.
-  static public function get_search_params() {
+  public static function get_search_params() {
     return array(
       'asset_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
       'owner_id' => mediamosa_sdk::TYPE_SEARCH_STRING,

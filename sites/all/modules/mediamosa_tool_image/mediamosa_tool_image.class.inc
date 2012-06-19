@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -54,7 +54,7 @@ class mediamosa_tool_image {
    *
    * @param string $mime_type
    */
-  static public function is_supported($mime_type) {
+  public static function is_supported($mime_type) {
     return preg_match('#^image\/.+#', $mime_type);
   }
 
@@ -68,7 +68,7 @@ class mediamosa_tool_image {
    * @param string $jobserver_job_id
    * @param string $mediafile_id_source
    */
-  static public function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
+  public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
 
     $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
     $job_server = mediamosa_job_server::get($jobserver_job_id);
@@ -113,7 +113,7 @@ class mediamosa_tool_image {
    *
    * @param array $options
    */
-  static public function get_transcode_exec($options) {
+  public static function get_transcode_exec($options) {
 
     // Build the values.
     $execution_string_options = array(

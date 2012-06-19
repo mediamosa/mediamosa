@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -43,7 +43,7 @@ class mediamosa_job_server {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'job server');
   }
 
@@ -56,7 +56,7 @@ class mediamosa_job_server {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job server');
   }
 
@@ -66,7 +66,7 @@ class mediamosa_job_server {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug($message, array $variables = array()) {
+  public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'job_server');
   }
 
@@ -78,7 +78,7 @@ class mediamosa_job_server {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL) {
+  public static function log_debug_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL) {
     mediamosa_debug::log_mediafile($mediafile_id, $message, $variables, $asset_id, 'job_server');
   }
 
@@ -88,7 +88,7 @@ class mediamosa_job_server {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug_high($message, array $variables = array()) {
+  public static function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'job_server');
   }
 
@@ -98,7 +98,7 @@ class mediamosa_job_server {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug_high_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL) {
+  public static function log_debug_high_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL) {
     mediamosa_debug::log_high_mediafile($mediafile_id, $message, $variables, $asset_id, 'job_server');
   }
 
@@ -107,7 +107,7 @@ class mediamosa_job_server {
    *
    * Will timeout on itself after 2 minutes.
    */
-  static public function run_parse_queue() {
+  public static function run_parse_queue() {
 
     // Trigger from sandbox, run once, and done.
     if (mediamosa::in_simpletest_sandbox()) {
@@ -181,7 +181,7 @@ class mediamosa_job_server {
    * 2. For all jobs with status WAITING, the job is started.
    * 3. For all running jobs de status is updated.
    */
-  static public function parse_queue() {
+  public static function parse_queue() {
     // Retrieve all jobs of this server.
     $job_server_jobs = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
@@ -209,7 +209,7 @@ class mediamosa_job_server {
    * @param $job_id
    * @param $mediafile_id_src
    */
-  static public function create_job_analyse($job_id, $mediafile_id_src) {
+  public static function create_job_analyse($job_id, $mediafile_id_src) {
     // Set job type.
     $job_type = mediamosa_job_server_db::JOB_TYPE_ANALYSE;
 
@@ -235,7 +235,7 @@ class mediamosa_job_server {
    *
    * @param $job_id
    */
-  static public function create_job_transcode($job_id, $mediafile_id_src, $tool, $file_extension, $command) {
+  public static function create_job_transcode($job_id, $mediafile_id_src, $tool, $file_extension, $command) {
     // Set job type.
     $job_type = mediamosa_job_server_db::JOB_TYPE_TRANSCODE;
 
@@ -263,7 +263,7 @@ class mediamosa_job_server {
    *
    * @param $job_id
    */
-  static public function create_job_still($job_id, $mediafile_id_src, $frametime, $size, $h_padding, $v_padding, $blackstill_check, array $a_still_parameters) {
+  public static function create_job_still($job_id, $mediafile_id_src, $frametime, $size, $h_padding, $v_padding, $blackstill_check, array $a_still_parameters) {
     // Set job type.
     $job_type = mediamosa_job_server_db::JOB_TYPE_STILL;
 
@@ -294,7 +294,7 @@ class mediamosa_job_server {
    *
    * @param $job_id
    */
-  static public function create_job($job_id, $job_type, $mediafile_id_src) {
+  public static function create_job($job_id, $job_type, $mediafile_id_src) {
 
     // Get the job_server_job, make sure its not already created.
     $job_server_job = mediamosa_job_server::get_with_jobid($job_id);
@@ -324,7 +324,7 @@ class mediamosa_job_server {
   /**
    * Start the job.
    */
-  static public function waiting_job_start($job_server_job) {
+  public static function waiting_job_start($job_server_job) {
 
     // FIXME:
     // Check if jobs module is enable has been removed.
@@ -457,7 +457,7 @@ class mediamosa_job_server {
    * 2. When transcode or still job is done, files will be moved to the
    *    correct location.
    */
-  static public function running_job_update($job_server_job) {
+  public static function running_job_update($job_server_job) {
 
     // Job ID.
     $job_id = $job_server_job[mediamosa_job_server_db::JOB_ID];
@@ -565,7 +565,7 @@ class mediamosa_job_server {
    *
    * This function may only be called from jobserver (via internal).
    */
-  static public function search() {
+  public static function search() {
     $query = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js');
     $query->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', 'js.jobserver_job_id = jsa.jobserver_job_id');
     $query->fields('js');
@@ -580,7 +580,7 @@ class mediamosa_job_server {
    *
    * @param integer $job_id
    */
-  static public function get($jobserver_job_id) {
+  public static function get($jobserver_job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
       ->condition(mediamosa_job_server_db::ID, $jobserver_job_id)
@@ -594,7 +594,7 @@ class mediamosa_job_server {
    *
    * @param integer $job_id
    */
-  static public function get_with_jobid($job_id) {
+  public static function get_with_jobid($job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
@@ -611,7 +611,7 @@ class mediamosa_job_server {
    * @param $progress
    * @param $error_description
    */
-  static public function set_job_status($job_id, $job_status, $progress, $error_description = '', $a_error_description_args = array()) {
+  public static function set_job_status($job_id, $job_status, $progress, $error_description = '', $a_error_description_args = array()) {
 
     // Set args in description.
     if (!empty($a_error_description_args)) {
@@ -663,7 +663,7 @@ class mediamosa_job_server {
    * @return string
    *  Link to an asset.
    */
-  static public function get_asset_link($job_id) {
+  public static function get_asset_link($job_id) {
 
     // Get the job.
     $a_jobserver_job = mediamosa_job::get($job_id);
@@ -684,7 +684,7 @@ class mediamosa_job_server {
    * @param string $mediafile_src
    * @param $job_id
    */
-  static public function get_analyse_string($mediafile_id, $job_id) {
+  public static function get_analyse_string($mediafile_id, $job_id) {
 
     // Get the job.
     $job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
@@ -734,7 +734,7 @@ class mediamosa_job_server {
    * @param string $jobserver_job_id
    * @param string $mediafile_id
    */
-  static public function get_transcode_exec($jobserver_job_id, $mediafile_id) {
+  public static function get_transcode_exec($jobserver_job_id, $mediafile_id) {
 
     // Get it.
     $job_server_transcode = mediamosa_job_server_transcode::get($jobserver_job_id);
@@ -834,7 +834,7 @@ class mediamosa_job_server {
    * @return string
    *  The execution string
    */
-  static public function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
+  public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
 
     // Get the mime-type.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id_source, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -857,7 +857,7 @@ class mediamosa_job_server {
    * @param $filename
    * @param $orig
    */
-  static public function get_status_contents($filename, $orig = FALSE) {
+  public static function get_status_contents($filename, $orig = FALSE) {
     $statusfile = mediamosa_configuration_storage::status_file_location_get($filename);
 
     if (!mediamosa_io::file_exists($statusfile)) {
@@ -925,7 +925,7 @@ class mediamosa_job_server {
    * @return string
    *  Contains the error message
    */
-  static public function store_new_still($job_id, $mediafile_id_src) {
+  public static function store_new_still($job_id, $mediafile_id_src) {
 
     $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
 
@@ -1005,7 +1005,7 @@ class mediamosa_job_server {
    * @param $filename
    * @param $orig
    */
-  static public function store_new_mediafile($job_id, $old_filename) {
+  public static function store_new_mediafile($job_id, $old_filename) {
 
     // Generate the filename.
     $new_filename = mediamosa_db::uuid(rand(1, 9999));
@@ -1074,7 +1074,7 @@ class mediamosa_job_server {
    * @param integer $job_id
    * @param bool $killjob
    */
-  static public function delete_job($job_id, $killjob = FALSE) {
+  public static function delete_job($job_id, $killjob = FALSE) {
 
     // Get the job.
     $jobserver_job = self::get_with_jobid($job_id);

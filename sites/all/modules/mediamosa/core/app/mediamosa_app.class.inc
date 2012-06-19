@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -36,7 +36,7 @@ class mediamosa_app {
    * @param string $name
    * @return array
    */
-  static public function get_by_appid($app_id) {
+  public static function get_by_appid($app_id) {
     static $apps = array();
 
     // Any cache?
@@ -60,7 +60,7 @@ class mediamosa_app {
    * @param string $name
    * @return array
    */
-  static public function get_by_appids(array $a_app_id, array $a_fields = array()) {
+  public static function get_by_appids(array $a_app_id, array $a_fields = array()) {
 
     $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
 
@@ -84,7 +84,7 @@ class mediamosa_app {
    * @param string $name
    * @return array
    */
-  static public function get_by_nid($nid, $a_fields = array()) {
+  public static function get_by_nid($nid, $a_fields = array()) {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
       ->fields('app', $a_fields)
       ->condition(mediamosa_app_db::NID, $nid)
@@ -98,7 +98,7 @@ class mediamosa_app {
    * @param string $oauth_consumer_key
    * @return array
    */
-  static public function get_by_oauth_consumer_key($oauth_consumer_key, $fields = array()) {
+  public static function get_by_oauth_consumer_key($oauth_consumer_key, $fields = array()) {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
       ->fields('app', $fields)
       ->condition(mediamosa_app_db::OAUTH_CONSUMER_KEY, $oauth_consumer_key)
@@ -111,7 +111,7 @@ class mediamosa_app {
    *
    * @return array
    */
-  static public function get_all_apps(array $fields = array(), $order_by = NULL, $order_direction = 'ASC') {
+  public static function get_all_apps(array $fields = array(), $order_by = NULL, $order_direction = 'ASC') {
     $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
 
     if (count($fields)) {
@@ -138,7 +138,7 @@ class mediamosa_app {
    * @param string $name
    * @return array
    */
-  static public function get_by_name($name) {
+  public static function get_by_name($name) {
     return mediamosa_db::db_query(
       "SELECT * FROM {#table_name} WHERE #name = :name",
       array(
@@ -152,7 +152,7 @@ class mediamosa_app {
   /**
    * Update an application. Used for internal code.
    */
-  static public function update($app_id, array $fields = array()) {
+  public static function update($app_id, array $fields = array()) {
 
    // Update.
     return mediamosa_db::db_update(mediamosa_app_db::TABLE_NAME)
@@ -167,7 +167,7 @@ class mediamosa_app {
    * Used to return the owner field in the mediamosa_app table. Now returns all
    * Drupal users that have an permission that allows access to a client app.
    */
-  static public function collect_app_owners() {
+  public static function collect_app_owners() {
     global $user;
 
     // Add the roles of the apps.
@@ -197,7 +197,7 @@ class mediamosa_app {
    * Collect the client apps as app_id => title where the current user has
    * access to.
    */
-  static public function collect_allowed_apps() {
+  public static function collect_allowed_apps() {
     $apps = array();
     foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
       if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA) && !_mediamosa_user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID])) {
@@ -213,7 +213,7 @@ class mediamosa_app {
    *
    * @param integer $app_id
    */
-  static public function get_allowed_master_slave_apps($app_id) {
+  public static function get_allowed_master_slave_apps($app_id) {
     $allowed_apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
       ->fields('app', array(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS))
       ->condition(mediamosa_app_db::APP_ID, $app_id)
@@ -236,7 +236,7 @@ class mediamosa_app {
    * @return string
    *   Still default size.
    */
-  static public function get_still_default_value($app_id) {
+  public static function get_still_default_value($app_id) {
     if (!$app_id) {
       return NULL;
     }
@@ -256,7 +256,7 @@ class mediamosa_app {
    *
    * @param integer $app_id
    */
-  static public function get_still_padding_value($app_id) {
+  public static function get_still_padding_value($app_id) {
     if (!$app_id) {
       return mediamosa_app_db::STILL_PADDING_YES;
     }
@@ -271,7 +271,7 @@ class mediamosa_app {
    *
    * @param integer $app_id
    */
-  static public function get_still_maintain_aspect_ratio_value($app_id) {
+  public static function get_still_maintain_aspect_ratio_value($app_id) {
     if (!$app_id) {
       return mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES;
     }
@@ -283,7 +283,7 @@ class mediamosa_app {
   /**
    * Returns number of apps found in the database.
    */
-  static public function get_number_of_apps() {
+  public static function get_number_of_apps() {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
       ->countQuery()
       ->execute()
@@ -295,7 +295,7 @@ class mediamosa_app {
    *
    * @return array
    */
-  static public function get_all_apps_cached($options = array(), $reset = FALSE) {
+  public static function get_all_apps_cached($options = array(), $reset = FALSE) {
     $apps = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
 
     $options += array(

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -43,7 +43,7 @@ class mediamosa_asset {
    * @return
    *   The processed asset.
    */
-  static public function process_asset_output(array $asset, array $metadata_definitions_fulls) {
+  public static function process_asset_output(array $asset, array $metadata_definitions_fulls) {
     // Clear out these.
     foreach ($metadata_definitions_fulls as $key => $value) {
       $asset[$value['propgroup_name']][$key] = NULL;
@@ -83,7 +83,7 @@ class mediamosa_asset {
    * @return
    *   The found asset or FALSE.
    */
-  static public function get($asset_id, $app_id = NULL) {
+  public static function get($asset_id, $app_id = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a');
@@ -107,7 +107,7 @@ class mediamosa_asset {
    *   An associative array:
    *     - The key is asset ID with asset as data.
    */
-  static public function getAllAssoc(array $asset_ids, array $fields = array()) {
+  public static function getAllAssoc(array $asset_ids, array $fields = array()) {
     // Return the assets.
     return mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
       ->fields('a', $fields)
@@ -125,7 +125,7 @@ class mediamosa_asset {
    * @return
    *   Will return FALSE when no jobs where deleted.
    */
-  static public function delete_jobs($asset_id) {
+  public static function delete_jobs($asset_id) {
     return mediamosa_job::delete_job_by_asset($asset_id);
   }
 
@@ -140,7 +140,7 @@ class mediamosa_asset {
    *
    * Note: does not return boolean, will throw exception when failure.
    */
-  static public function delete($asset_id, $cascade = TRUE) {
+  public static function delete($asset_id, $cascade = TRUE) {
 
     // Start transaction.
     $transaction = mediamosa_db::db_transaction();
@@ -313,7 +313,7 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-  static public function update_asset_info_with_mediafileid($mediafile_id) {
+  public static function update_asset_info_with_mediafileid($mediafile_id) {
     $asset_id = mediamosa_asset_mediafile::get_my_parent_assetid($mediafile_id);
     if ($asset_id) {
       self::update_asset_info($asset_id);
@@ -325,7 +325,7 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-  static public function update_asset_info($asset_id) {
+  public static function update_asset_info($asset_id) {
 
     // Find the length of the first mediafile.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
@@ -371,7 +371,7 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-  static public function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
+  public static function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
     $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
@@ -435,7 +435,7 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-  static public function update_asset_info_is_external($asset_id, $do_reindex = TRUE) {
+  public static function update_asset_info_is_external($asset_id, $do_reindex = TRUE) {
 
     $mediafile = mediamosa_db::db_query_range(
       "SELECT #uri, #filename FROM {#mediamosa_asset_mediafile} WHERE #is_original_file = :TRUE AND #asset_id = :asset_id",
@@ -502,7 +502,7 @@ class mediamosa_asset {
    * @param $view_hidden_metadata
    *   Show hidden metadata.
    */
-  static public function asset_collect(
+  public static function asset_collect(
     array $asset_ids,
     array $app_ids,
     $acl_user_id,
@@ -713,7 +713,7 @@ class mediamosa_asset {
    * @param $view_hidden_metadata
    *   Show hidden metadata,
    */
-  static public function enrich_response_asset(
+  public static function enrich_response_asset(
     array $items,
     array $asset_ids,
     array $app_ids,
@@ -974,7 +974,7 @@ class mediamosa_asset {
    *
    * @param array $items
    */
-  static public function enrich_response_has_streamable_mediafiles($mediafiles) {
+  public static function enrich_response_has_streamable_mediafiles($mediafiles) {
     $has_streamable_mediafiles = FALSE;
 
     // Empty? Then no streamable media.
@@ -1005,7 +1005,7 @@ class mediamosa_asset {
    * @param string $asset_id
    *
    */
-  static public function update_asset_timestamps($asset_id) {
+  public static function update_asset_timestamps($asset_id) {
     // Get the NOW date.
     $now = mediamosa_datetime::utc_current_timestamp_now();
 
@@ -1041,7 +1041,7 @@ class mediamosa_asset {
    *
    * @param $asset_id
    */
-  static public function asset_viewed($asset_id) {
+  public static function asset_viewed($asset_id) {
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset} SET #viewed = #viewed + 1 WHERE #asset_id = :asset_id',
       array(
@@ -1060,7 +1060,7 @@ class mediamosa_asset {
    *
    * @param $asset_id
    */
-  static public function asset_played($asset_id) {
+  public static function asset_played($asset_id) {
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset} SET #played = #played + 1 WHERE #asset_id = :asset_id',
       array(
@@ -1080,7 +1080,7 @@ class mediamosa_asset {
    * @param string $user_id
    * @param bool $is_app_admin
    */
-  static public function is_unappropriate($asset_id, array $app_ids, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
+  public static function is_unappropriate($asset_id, array $app_ids, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
 
     $asset = self::get($asset_id);
     if (!$asset) {
@@ -1124,7 +1124,7 @@ class mediamosa_asset {
    * @param $parent_id (deprecated)
    *  The parent ID.
    */
-  static public function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $parent_id = NULL) {
+  public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $parent_id = NULL) {
 
     // maak een uniek asset_id aan
     $asset_id = mediamosa_db::uuid($app_id);
@@ -1187,7 +1187,7 @@ class mediamosa_asset {
    * @param bool $is_unappropriate
    *  Is unappropriate flag.
    */
-  static public function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL, $reference_id = NULL) {
+  public static function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL, $reference_id = NULL) {
 
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
@@ -1303,7 +1303,7 @@ class mediamosa_asset {
    *
    * @param $asset_id
    */
-  static public function must_exists($asset_id, $do_parent = FALSE) {
+  public static function must_exists($asset_id, $do_parent = FALSE) {
     // Asset must exist.
     return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
   }
@@ -1311,7 +1311,7 @@ class mediamosa_asset {
   /**
    * Clean up assets which have no mediafiles and no children assets.
    */
-  static public function do_garbage_cleanup() {
+  public static function do_garbage_cleanup() {
     $result = mediamosa_db::db_query(
       'SELECT #asset_id FROM {#mediamosa_asset} AS a WHERE
         (SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am WHERE am.#asset_id = a.#asset_id) = 0 AND
@@ -1340,7 +1340,7 @@ class mediamosa_asset {
    * @return
    *  Returns FALSE if asset does not exists.
    */
-  static public function get_asset_for_index($asset_id) {
+  public static function get_asset_for_index($asset_id) {
 
     // Get asset.
     $result['asset'] = self::get($asset_id);
@@ -1384,7 +1384,7 @@ class mediamosa_asset {
    * @param string $search_index_type
    *  @see mediamosa_settings::search_index_type_*
    */
-  static public function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
+  public static function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
     mediamosa_search::asset_reindex($asset_ids, $search_index_type);
   }
 
@@ -1394,7 +1394,7 @@ class mediamosa_asset {
    * @param array $asset_ids
    *  The assets to remove.
    */
-  static public function mediamosa_asset_delete(array $asset_ids) {
+  public static function mediamosa_asset_delete(array $asset_ids) {
     mediamosa_search::asset_delete($asset_ids);
   }
 }

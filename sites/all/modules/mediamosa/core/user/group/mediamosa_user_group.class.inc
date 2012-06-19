@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -39,7 +39,7 @@ class mediamosa_user_group {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function get($group_id, $app_id, array $a_fields = NULL) {
+  public static function get($group_id, $app_id, array $a_fields = NULL) {
     return mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g')
       ->fields('g', $a_fields)
       ->condition(mediamosa_user_group_db::ID, $group_id)
@@ -56,7 +56,7 @@ class mediamosa_user_group {
    * @param string $group_id
    *  Group ID.
    */
-  static public function get_user_group_quota($app_id, $group_id) {
+  public static function get_user_group_quota($app_id, $group_id) {
     $total = mediamosa_db::db_query(
       'SELECT COUNT(*) AS total FROM
        (
@@ -127,7 +127,7 @@ class mediamosa_user_group {
    * @param integer $quotum
    *  The quotum.
    */
-  static public function create($app_id, $group_id, $quotum) {
+  public static function create($app_id, $group_id, $quotum) {
     $a_fields = array(
       mediamosa_user_group_db::APP_ID => $app_id,
       mediamosa_user_group_db::ID => $group_id,
@@ -151,7 +151,7 @@ class mediamosa_user_group {
    * @param string $group_id
    *  The Group ID.
    */
-  static public function delete($app_id, $group_id) {
+  public static function delete($app_id, $group_id) {
 
     // Please note that group cannot be deleted while it contains users.
     // In case such operation become allowed one day we need to mimic code from
@@ -179,7 +179,7 @@ class mediamosa_user_group {
    * @param integer $quotum
    *  Quotum to change.
    */
-  static public function update($app_id, $group_id, $quotum) {
+  public static function update($app_id, $group_id, $quotum) {
 
     // Fields to set.
     $a_fields = array(

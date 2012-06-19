@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -38,7 +38,7 @@ class mediamosa_io {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array()) {
+  public static function log($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'mediamosa_io');
   }
 
@@ -57,7 +57,7 @@ class mediamosa_io {
    * @param int $mode
    *  Default mode value for created directory, defaults to mode 0775.
    */
-  static public function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
+  public static function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
     // Log it.
     mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
 
@@ -99,7 +99,7 @@ class mediamosa_io {
    * @param string $filename
    *  The file to delete.
    */
-  static public function unlink($filename) {
+  public static function unlink($filename) {
     if (!file_exists($filename)) {
       return TRUE;
     }
@@ -113,7 +113,7 @@ class mediamosa_io {
    * @param string $dir
    * @param string $style
    */
-  static public function delete_style_directory($dir, $style = NULL) {
+  public static function delete_style_directory($dir, $style = NULL) {
     if (!is_dir($dir)) {
       return;
     }
@@ -152,13 +152,13 @@ class mediamosa_io {
   /**
    * Clears file status cache.
    */
-  static public function clearstatcache() {
+  public static function clearstatcache() {
     clearstatcache();
   }
   /**
    * Gets file size.
    */
-  static public function filesize($filename) {
+  public static function filesize($filename) {
     // Filesize needs clear cache.
     self::clearstatcache();
 
@@ -170,7 +170,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function get_base_filename($filename) {
+  public static function get_base_filename($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
 
     return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
@@ -181,7 +181,7 @@ class mediamosa_io {
    *
    * @param $filename
    */
-  static public function get_ext($filename) {
+  public static function get_ext($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
 
     return $last_dot === FALSE && ($last_dot + 1) != mediamosa_unicode::strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
@@ -192,7 +192,7 @@ class mediamosa_io {
    *
    * @param $path
    */
-  static public function dirname($path) {
+  public static function dirname($path) {
     return dirname($path);
   }
 
@@ -207,7 +207,7 @@ class mediamosa_io {
    * @return
    *   Returns the base name of the given path.
    */
-  static public function basename($path, $suffix = '') {
+  public static function basename($path, $suffix = '') {
     return basename($path);
   }
 
@@ -219,7 +219,7 @@ class mediamosa_io {
    *
    * @return bool
    */
-  static public function rename($old_name, $new_name) {
+  public static function rename($old_name, $new_name) {
     $success = FALSE;
     $message = 'cause unknown';
     try {
@@ -248,7 +248,7 @@ class mediamosa_io {
    *
    * @param $str
    */
-  static public function exec($command, array &$output = NULL, &$return_var = NULL) {
+  public static function exec($command, array &$output = NULL, &$return_var = NULL) {
     self::log("Executing command '@command'.", array('@command' => $command));
     return exec($command, $output, $return_val);
   }
@@ -258,7 +258,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function file_exists($filename, $do_sleep = FALSE) {
+  public static function file_exists($filename, $do_sleep = FALSE) {
     // File exists needs clear cache.
     self::clearstatcache();
 
@@ -276,7 +276,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function is_link($filename) {
+  public static function is_link($filename) {
     return is_link($filename);
   }
 
@@ -285,14 +285,14 @@ class mediamosa_io {
    *
    * @param string $path
    */
-  static public function is_dir($path) {
+  public static function is_dir($path) {
     return is_dir($path);
   }
 
   /**
    * Converts absolute symlink target->link to relative link.
    */
-  static public function symlink_absolute2relative($target, $link) {
+  public static function symlink_absolute2relative($target, $link) {
     // Check if absolute, link and target needs to absolute for this to work.
     if (mediamosa_unicode::substr($target, 0, 1) == DIRECTORY_SEPARATOR && mediamosa_unicode::substr($link, 0, 1) == DIRECTORY_SEPARATOR) {
       // Remove double slashes.
@@ -344,7 +344,7 @@ class mediamosa_io {
    * @param string $link
    *  Link to file to create.
    */
-  static public function symlink($target, $link, $make_relative = TRUE) {
+  public static function symlink($target, $link, $make_relative = TRUE) {
     if ($make_relative) {
       // Make symlinks targets relative.
       $target = self::symlink_absolute2relative($target, $link);
@@ -359,7 +359,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function is_readable($filename) {
+  public static function is_readable($filename) {
     return is_readable($filename);
   }
 
@@ -369,7 +369,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function is_writable($filename) {
+  public static function is_writable($filename) {
     return is_writable($filename);
   }
 
@@ -378,7 +378,7 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function is_file($filename) {
+  public static function is_file($filename) {
     return is_file($filename);
   }
 
@@ -393,7 +393,7 @@ class mediamosa_io {
    *  If present, the access time of the given filename is set to the value of atime.
    *  Otherwise, it is set to time.
    */
-  static public function touch($filename, $time = NULL, $atime = NULL) {
+  public static function touch($filename, $time = NULL, $atime = NULL) {
     if (!isset($time)) {
       $time = time();
     }
@@ -407,7 +407,7 @@ class mediamosa_io {
    * @param string $source
    * @param string $dest
    */
-  static public function copy($source, $dest) {
+  public static function copy($source, $dest) {
     return @copy($source, $dest);
   }
 
@@ -417,7 +417,7 @@ class mediamosa_io {
    * @param string $source
    * @param string $dest
    */
-  static public function move($source, $dest) {
+  public static function move($source, $dest) {
     @rename($source, $dest);
 
     //self::unlink($source);
@@ -431,7 +431,7 @@ class mediamosa_io {
    * @param options
    * @param depth
    */
-  static public function file_scan_directory($dir, $mask, $options = array(), $depth = 0) {
+  public static function file_scan_directory($dir, $mask, $options = array(), $depth = 0) {
     return file_scan_directory($dir, $mask, $options, $depth);
   }
 
@@ -440,7 +440,7 @@ class mediamosa_io {
    *
    * @param filename
    */
-  static public function file_get_contents($filename) {
+  public static function file_get_contents($filename) {
     return file_get_contents($filename);
   }
 
@@ -449,7 +449,7 @@ class mediamosa_io {
    *
    * @param string $directory
    */
-  static public function disk_free_space($directory) {
+  public static function disk_free_space($directory) {
     return disk_free_space($directory);
   }
 
@@ -458,7 +458,7 @@ class mediamosa_io {
    *
    * @param string $directory
    */
-  static public function disk_total_space($directory) {
+  public static function disk_total_space($directory) {
     return disk_total_space($directory);
   }
 
@@ -476,7 +476,7 @@ class mediamosa_io {
    *  will use exit(0) as indication that it was run. Some use exit(1) or higher
    *  as exit value.
    */
-  static public function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
+  public static function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
     $exec_output = array();
     $ret_val = 0;
     exec($command . ' 2>/dev/null', $exec_output, $ret_val);
@@ -497,7 +497,7 @@ class mediamosa_io {
   /**
    * Calculate the space used by a directory.
    */
-  static public function disk_usage($directory, $recursive = FALSE) {
+  public static function disk_usage($directory, $recursive = FALSE) {
     if (is_file($directory)) {
       return filesize($directory);
     }
@@ -527,7 +527,7 @@ class mediamosa_io {
   /**
    * Calculate the space used by a directory.
    */
-  static public function disk_usage_recursive($directory) {
+  public static function disk_usage_recursive($directory) {
     return self::disk_usage($directory, TRUE);
   }
 
@@ -540,7 +540,7 @@ class mediamosa_io {
    *  In case this function cannot determine a mime-type,
    *  $default is returned.
    */
-  static public function get_mimetype($filename) {
+  public static function get_mimetype($filename) {
     $type = NULL;
 
     // First try the finfo_file() function.
@@ -574,7 +574,7 @@ class mediamosa_io {
    *
    * @see file_get_content_headers()
    */
-  static public function file_get_content_headers($filename, $mimetype) {
+  public static function file_get_content_headers($filename, $mimetype) {
     $content_length = filesize($filename);
     $last_modified = filemtime($filename);
     $filename = mime_header_encode($filename);
@@ -611,7 +611,7 @@ class mediamosa_io {
    * @param $headers
    *   An array of HTTP headers to send along with file.
    */
-  static public function file_transfer($file, $headers) {
+  public static function file_transfer($file, $headers) {
     if (ob_get_level()) {
       ob_end_clean();
     }

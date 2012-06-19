@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -38,7 +38,7 @@ class mediamosa_acl_object {
    *  See mediamosa_acl::ACL_TYPE_*
    * @return string
    */
-  static public function join_acl_object_get($acl_type) {
+  public static function join_acl_object_get($acl_type) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
@@ -73,7 +73,7 @@ class mediamosa_acl_object {
    * @param $acl_type
    * @param $acl_id
    */
-  static public function delete($acl_type, $acl_id) {
+  public static function delete($acl_type, $acl_id) {
 
     // Delete all connections.
     mediamosa_db::db_delete(mediamosa_acl_object_db::TABLE_NAME)
@@ -91,7 +91,7 @@ class mediamosa_acl_object {
    * @param $acl_id
    * @param $rights (reserved)
    */
-  static public function link_to_object($acl_object_id, $acl_type, $acl_object_type, $acl_id, array $rights = array(mediamosa_acl::RIGHT_ACCESS)) {
+  public static function link_to_object($acl_object_id, $acl_type, $acl_object_type, $acl_id, array $rights = array(mediamosa_acl::RIGHT_ACCESS)) {
     // NOT master-slave safe.
     try {
       mediamosa_db::db_insert(mediamosa_acl_object_db::TABLE_NAME)
@@ -112,7 +112,7 @@ class mediamosa_acl_object {
   /**
    * Get the acl information for given asset.
    */
-  static public function get_for_asset($asset_id) {
+  public static function get_for_asset($asset_id) {
 
     // Collection of acl rules on asset/mediafiles.
     $asset_acl_info = array(

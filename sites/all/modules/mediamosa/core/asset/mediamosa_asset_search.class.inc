@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -86,7 +86,7 @@ class mediamosa_asset_search {
    * @param integer $offset
    *  Offset within the result rows.
    */
-  static public function asset_search(
+  public static function asset_search(
     array $a_app_ids,
     $cql = NULL,
     $cql_store_stats = FALSE,

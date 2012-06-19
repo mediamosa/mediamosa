@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -41,7 +41,7 @@ class mediamosa_ftp_batch {
    * @param unknown_type $limit
    *  Limit of items in the result list.
    */
-  static public function search($app_id, $offset, $limit) {
+  public static function search($app_id, $offset, $limit) {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'batch_id';
@@ -79,7 +79,7 @@ class mediamosa_ftp_batch {
    * @return array
    *  The found batch or FALSE.
    */
-  static public function get($batch_id) {
+  public static function get($batch_id) {
 
     // Get the batch.
     return mediamosa_db::db_query(
@@ -105,7 +105,7 @@ class mediamosa_ftp_batch {
    * @return integer
    *  Returns the created batch ID.
    */
-  static public function create($app_id, $owner_id, $group_id) {
+  public static function create($app_id, $owner_id, $group_id) {
 
     $a_fields = array(
       mediamosa_ftp_batch_db::APP_ID => $app_id,
@@ -142,7 +142,7 @@ class mediamosa_ftp_batch {
    *  Email address.
    * @param $email_contents
    */
-  static public function update($app_id, $batch_id, $owner_id, $group_id, $vuf, $started, $finished, $email_address, $email_contents) {
+  public static function update($app_id, $batch_id, $owner_id, $group_id, $vuf, $started, $finished, $email_address, $email_contents) {
 
     $a_fields = array(
       mediamosa_ftp_batch_db::OWNER_ID => $owner_id,
@@ -168,7 +168,7 @@ class mediamosa_ftp_batch {
    * @param integer $batch_id
    *  ID of batch to delete.
    */
-  static public function delete($batch_id) {
+  public static function delete($batch_id) {
 
     // Remove relations between this batch and his assets.
     mediamosa_ftp_batch_asset::remove_asset_relation($batch_id);

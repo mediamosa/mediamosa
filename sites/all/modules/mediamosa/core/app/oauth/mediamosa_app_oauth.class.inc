@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -69,7 +69,7 @@ class mediamosa_app_oauth {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'oauth');
   }
 
@@ -78,7 +78,7 @@ class mediamosa_app_oauth {
    *
    * @return OAuthServer $oauth_server.
    */
-  static public function create_server() {
+  public static function create_server() {
     // oAuth server.
     $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
 
@@ -102,7 +102,7 @@ class mediamosa_app_oauth {
    *
    * @return $nonce
    */
-  static public function get_nonce($nonce, $timestamp, $token) {
+  public static function get_nonce($nonce, $timestamp, $token) {
     $query = db_select(mediamosa_app_oauth_nonce_db::TABLE_NAME, 'nonce');
 
     $query->fields('nonce', array(mediamosa_app_oauth_nonce_db::NONCE));
@@ -129,7 +129,7 @@ class mediamosa_app_oauth {
    *
    * @return $token
    */
-  static public function get_token($token_key) {
+  public static function get_token($token_key) {
     $query = db_select(mediamosa_app_oauth_token_db::TABLE_NAME, 'token');
 
     $query->fields('token', array());
@@ -155,7 +155,7 @@ class mediamosa_app_oauth {
    * @param $timestamp
    * @param $token
    */
-  static public function save_nonce($nonce, $timestamp, $token) {
+  public static function save_nonce($nonce, $timestamp, $token) {
     mediamosa_db::db_insert(mediamosa_app_oauth_nonce_db::TABLE_NAME)
     ->fields(array(
       mediamosa_app_oauth_nonce_db::NONCE => $nonce,
@@ -170,7 +170,7 @@ class mediamosa_app_oauth {
    *
    * @param $parameters
    */
-  static public function save_token($parameters) {
+  public static function save_token($parameters) {
     $time = time();
     $parameters += array(
       mediamosa_app_oauth_token_db::CREATED => $time,
@@ -189,7 +189,7 @@ class mediamosa_app_oauth {
    * @param string $token_key
    * @param $parameters
    */
-  static public function update_token($token_key, $parameters) {
+  public static function update_token($token_key, $parameters) {
     $time = time();
     $parameters += array(
       mediamosa_app_oauth_token_db::CHANGED => $time,
@@ -206,7 +206,7 @@ class mediamosa_app_oauth {
    *
    * @param string $token_key
    */
-  static public function delete_token($token_key) {
+  public static function delete_token($token_key) {
     $num_deleted = db_delete(mediamosa_app_oauth_token_db::TABLE_NAME)
       ->condition(mediamosa_app_oauth_token_db::TOKEN_KEY, $token_key)
       ->execute();
@@ -215,7 +215,7 @@ class mediamosa_app_oauth {
   /**
    * Clean up the token table.
    */
-  static public function clean_up_token() {
+  public static function clean_up_token() {
     mediamosa_db::db_query("
       DELETE FROM {#mediamosa_app_token}
       WHERE #expires != 0 AND #expires <= :expires
@@ -229,7 +229,7 @@ class mediamosa_app_oauth {
   /**
    * Clean up the nonce table.
    */
-  static public function clean_up_nonce() {
+  public static function clean_up_nonce() {
     mediamosa_db::db_query("
       DELETE FROM {#mediamosa_app_nonce}
       WHERE #timestamp < :timestamp
@@ -243,7 +243,7 @@ class mediamosa_app_oauth {
   /**
    * Clean up the token and the nonce table.
    */
-  static public function clean_up() {
+  public static function clean_up() {
     self::clean_up_token();
     self::clean_up_nonce();
   }

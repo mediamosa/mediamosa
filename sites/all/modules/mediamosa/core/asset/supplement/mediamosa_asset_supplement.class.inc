@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -39,7 +39,7 @@ class mediamosa_asset_supplement {
    *
    * @param string $supplement_id
    */
-  static public function get($supplement_id) {
+  public static function get($supplement_id) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_supplement_db::TABLE_NAME, 'aas');
     $query->fields('aas');
@@ -52,7 +52,7 @@ class mediamosa_asset_supplement {
    *
    * @param string $asset_id
    */
-  static public function get_all_with_assetid($asset_id) {
+  public static function get_all_with_assetid($asset_id) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_supplement_db::TABLE_NAME, 'aas');
     $query->fields('aas');
@@ -70,7 +70,7 @@ class mediamosa_asset_supplement {
    * @param string $user_id
    *  The user ID must be owner of the asset to add supplement.
    */
-  static public function create($app_id, $asset_id, $user_id) {
+  public static function create($app_id, $asset_id, $user_id) {
 
     // Asset must exist to be deleted.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
@@ -123,7 +123,7 @@ class mediamosa_asset_supplement {
    * @param string $oai_schemalocation
    * @param string $supplement
    */
-  static public function update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement) {
+  public static function update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement) {
 
     // Supplement must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ID => $supplement_id));
@@ -176,7 +176,7 @@ class mediamosa_asset_supplement {
    * @param string $supplement_id
    *  The supplement ID.
    */
-  static public function delete($app_id, $user_id, $supplement_id) {
+  public static function delete($app_id, $user_id, $supplement_id) {
 
     // Supplement must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ID => $supplement_id));

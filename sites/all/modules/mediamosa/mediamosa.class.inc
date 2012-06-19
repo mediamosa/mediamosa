@@ -1,11 +1,9 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -136,7 +134,7 @@ class mediamosa {
 
   // --------------------------------------------------------- Static Functions.
   // Check if we will log rest calls to log().
-  static public function is_log_rest() {
+  public static function is_log_rest() {
     return variable_get('mediamosa_watchdog_rest', FALSE);
   }
 
@@ -162,12 +160,12 @@ class mediamosa {
   }
 
   // Drupal usage for getting the current URI.
-  static public function get_request_uri() {
+  public static function get_request_uri() {
     return trim(implode('/', arg()), '/');
   }
 
   // Return the request_uri var, which can be /rest/?foo=foo
-  static public function request_uri() {
+  public static function request_uri() {
     return request_uri(); // To Drupal mapped.
   }
 
@@ -177,7 +175,7 @@ class mediamosa {
    * @return object
    *  The core object.
    */
-  static public function get($new_mediamosa_response = NULL) {
+  public static function get($new_mediamosa_response = NULL) {
     static $mediamosa_response = NULL;
 
     if (isset($new_mediamosa_response)) {
@@ -211,7 +209,7 @@ class mediamosa {
    * V3 changes on v2 and lower; aut_* variables in output are now prefixed
    * with acl_*.
    */
-  static public function is_v3_output() {
+  public static function is_v3_output() {
     // Get the active version of current environment.
     $env_active_version = self::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
     return ($env_active_version[mediamosa_version::MAJOR] >= 3);
@@ -222,7 +220,7 @@ class mediamosa {
    *
    * Warning: v4 output is still experimental.
    */
-  static public function is_v4_output() {
+  public static function is_v4_output() {
     // Get the active version of current environment.
     $env_active_version = self::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
     return ($env_active_version[mediamosa_version::MAJOR] >= 4);
@@ -233,7 +231,7 @@ class mediamosa {
    *
    * @param string $name
    */
-  static public function get_environment_setting($name) {
+  public static function get_environment_setting($name) {
     switch ($name) {
       case self::ENV_APP_ID:
         return self::get_environment_app_id();
@@ -254,7 +252,7 @@ class mediamosa {
    *
    * @param array $app_ids
    */
-  static public function set_environment_app_ids(array $app_ids) {
+  public static function set_environment_app_ids(array $app_ids) {
     $app_id = reset($app_ids);
 
     // Make sure 1st app is 0.
@@ -269,14 +267,14 @@ class mediamosa {
   /**
    * Returns the main app_id of the current session.
    */
-  static public function get_environment_app_id() {
+  public static function get_environment_app_id() {
     return self::$environment[self::ENV_APP_ID];
   }
 
   /**
    * Returns all app_ids of the current session.
    */
-  static public function get_environment_app_ids() {
+  public static function get_environment_app_ids() {
     return self::$environment[self::ENV_APP_IDS];
   }
 
@@ -284,7 +282,7 @@ class mediamosa {
    * Returns the timezone of the current session. Is by default
    * Europe/Amsterdam.
    */
-  static public function get_environment_timezone() {
+  public static function get_environment_timezone() {
     return self::$environment[self::ENV_TIMEZONE];
   }
 
@@ -293,14 +291,14 @@ class mediamosa {
    *
    * @param string $utc_date
    */
-  static public function utcdate2appdate($utc_date) {
+  public static function utcdate2appdate($utc_date) {
     return mediamosa_datetime::utc_date2app_date($utc_date, self::get_environment_timezone());
   }
 
   /**
    * Return the current defined installation id.
    */
-  static public function get_server_id() {
+  public static function get_server_id() {
     return mediamosa::variable_get('mediamosa_installation_id', 'default');
   }
 
@@ -315,7 +313,7 @@ class mediamosa {
    * @param array $caller
    * @return boolean
    */
-  static public function mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller = NULL) {
+  public static function mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller = NULL) {
     assert(isset($context));
     assert(isset($line));
     assert(isset($filename));
@@ -376,7 +374,7 @@ class mediamosa {
   /**
    * Returns the last php error that was handled by our error handler.
    */
-  static public function last_php_error() {
+  public static function last_php_error() {
 
     // If no last error, then return FALSE.
     return !isset(self::$last_php_error) ? FALSE : self::$last_php_error;
@@ -387,7 +385,7 @@ class mediamosa {
    * Currently just returns 'message' value, but might return more in future.
    * Intended for usage inside exception messages, like 'reason' for failure.
    */
-  static public function last_php_error_message() {
+  public static function last_php_error_message() {
 
     // If no last error, then return 'unknown' text.
     return isset(self::$last_php_error) ? self::$last_php_error['message'] : 'unknown';
@@ -397,7 +395,7 @@ class mediamosa {
    * Is the Drupal Interface enabled?
    * @return bool
    */
-  static public function is_admin_enabled() {
+  public static function is_admin_enabled() {
     return mediamosa::variable_get('mediamosa_admin', FALSE);
   }
 
@@ -406,7 +404,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_enabled() {
+  public static function is_app_enabled() {
     return (self::is_app_app_enabled() || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
   }
 
@@ -415,7 +413,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_restricted_openapi() {
+  public static function is_app_restricted_openapi() {
     return self::is_app_openapi_enabled() && !self::is_app_app_enabled() && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
   }
 
@@ -427,7 +425,7 @@ class mediamosa {
    * FALSE when disabled by header.
    *
    */
-  static public function in_simpletest_sandbox_enable_app() {
+  public static function in_simpletest_sandbox_enable_app() {
     // The name of the http var.
     $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
 
@@ -440,7 +438,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_app_enabled() {
+  public static function is_app_app_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
       return mediamosa::variable_get('mediamosa_app', FALSE);
     }
@@ -454,7 +452,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_download_enabled() {
+  public static function is_app_download_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
       return mediamosa::variable_get('mediamosa_app_download', FALSE);
     }
@@ -468,7 +466,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_upload_enabled() {
+  public static function is_app_upload_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
       return mediamosa::variable_get('mediamosa_app_upload', FALSE);
     }
@@ -482,7 +480,7 @@ class mediamosa {
    *
    * @return bool
    */
-  static public function is_app_openapi_enabled() {
+  public static function is_app_openapi_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
       return mediamosa::variable_get('mediamosa_app_openapi', FALSE);
     }
@@ -497,7 +495,7 @@ class mediamosa {
    * @param string $message
    *  Message for the user.
    */
-  static public function exit_503($message) {
+  public static function exit_503($message) {
     drupal_maintenance_theme();
     drupal_add_http_header('Status', '503 Service unavailable');
     drupal_set_title(t('Site offline'));
@@ -512,7 +510,7 @@ class mediamosa {
    * @param string $message
    *  Message for the user.
    */
-  static public function exit_404($message) {
+  public static function exit_404($message) {
     drupal_maintenance_theme();
     drupal_add_http_header('Status', '404 Page not found');
     drupal_set_title(t('Page not found'));
@@ -537,7 +535,7 @@ class mediamosa {
    * @return string.
    *  Formatted string.
    */
-  static public function t($string, $args = array(), $langcode = FALSE) {
+  public static function t($string, $args = array(), $langcode = FALSE) {
     assert($langcode || $langcode === FALSE);
     assert(is_array($args));
 
@@ -570,7 +568,7 @@ class mediamosa {
   /**
    * Returns TRUE or FALSE if we are inside a sandbox.
    */
-  static public function in_simpletest_sandbox() {
+  public static function in_simpletest_sandbox() {
     $test_info = &$GLOBALS['drupal_test_info'];
     return (!empty($test_info['test_run_id']) ? TRUE : FALSE);
   }
@@ -579,7 +577,7 @@ class mediamosa {
    * If the REST call was called inside an simpletest, then error_log() will
    * be lost. Setup error log so we log in the simpletest.
    */
-  static protected function setup_simpletest() {
+  protected static function setup_simpletest() {
     if (!self::in_simpletest_sandbox()) {
       return;
     }
@@ -596,21 +594,21 @@ class mediamosa {
    * Wrapper around the drupal_http_request function.
    * See drupal functions for details.
    */
-  static public function drupal_http_request($url, array $options = array()) {
+  public static function drupal_http_request($url, array $options = array()) {
     return drupal_http_request($url, $options);
   }
 
   /**
    * Wrapper around variable_get().
    */
-  static public function variable_get($name, $default = NULL) {
+  public static function variable_get($name, $default = NULL) {
     return variable_get($name, $default);
   }
 
   /**
    * Wrapper around variable_set().
    */
-  static public function variable_set($name, $value) {
+  public static function variable_set($name, $value) {
     variable_set($name, $value);
   }
 
@@ -618,7 +616,7 @@ class mediamosa {
    * Wrapper around the drupal_goto function.
    * See drupal functions for details.
    */
-  static public function drupal_goto($path = '', $query = NULL, $fragment = NULL, $http_response_code = 302) {
+  public static function drupal_goto($path = '', $query = NULL, $fragment = NULL, $http_response_code = 302) {
     return drupal_goto($path, $query, $fragment, $http_response_code);
   }
 
@@ -632,7 +630,7 @@ class mediamosa {
    * @param boolean $make_foreignkey
    *   Make foreign keys (TRUE), or not (FALSE). Default TRUE.
    */
-  static public function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
+  public static function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
     try {
       $schema = drupal_get_schema_unprocessed($module);
       _drupal_schema_initialize($schema, $module, FALSE);
@@ -661,14 +659,14 @@ class mediamosa {
   /**
    * Wrapper around drupal_uninstall_schema()
    */
-  static public function drupal_uninstall_schema($module) {
+  public static function drupal_uninstall_schema($module) {
     return drupal_uninstall_schema($module);
   }
 
   /**
    * Enable db logging for timed queries.
    */
-  static public function enable_db_logging($name) {
+  public static function enable_db_logging($name) {
     $previous_db_logging = self::$is_db_logging;
     self::log('DB logging starting.', array(), WATCHDOG_DEBUG, $name);
     self::$is_db_logging = $name;
@@ -681,7 +679,7 @@ class mediamosa {
   /**
    * Enable db logging for timed queries.
    */
-  static public function disable_db_logging($name) {
+  public static function disable_db_logging($name) {
     if (self::$is_db_logging !== FALSE) {
       self::log('DB logging ending, time; #time, total queries; #num_of_queries, slow queries; #num_of_slow_queries.', array('#time' => round(microtime(TRUE) - self::$total_query_time[self::$is_db_logging], 4), '#num_of_queries' => self::$num_of_queries[self::$is_db_logging], '#num_of_slow_queries' => self::$num_of_slow_queries[self::$is_db_logging]), WATCHDOG_DEBUG, self::$is_db_logging);
 
@@ -696,7 +694,7 @@ class mediamosa {
   /**
    * Enable db logging for timed queries.
    */
-  static public function is_db_logging() {
+  public static function is_db_logging() {
     return self::$is_db_logging;
   }
 
@@ -706,7 +704,7 @@ class mediamosa {
    * the password from a internal REST call, we still consider this
    * good protection.
    */
-  static public function get_internal_password() {
+  public static function get_internal_password() {
     $passwrd = self::variable_get('mediamosa_internal_password', NULL);
 
     if (isset($passwrd)) {
@@ -729,7 +727,7 @@ class mediamosa {
   /**
    * Test if we are running on windows.
    */
-  static public function is_windows_platform() {
+  public static function is_windows_platform() {
     return (mediamosa_unicode::substr(PHP_OS, 0, 3) == 'WIN');
   }
 }

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -48,7 +48,7 @@ class mediamosa_webservice_app {
    *  Application ID.
    * @return bool
    */
-  static public function webservice_is_active($handle, array $a_app_ids = array()) {
+  public static function webservice_is_active($handle, array $a_app_ids = array()) {
     if (!empty($a_app_ids)) {
       $result = mediamosa_db::db_query(
         'SELECT wa.#wa_status AS wa_status, w.#w_status AS w_status
@@ -104,7 +104,7 @@ class mediamosa_webservice_app {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function webservice_must_be_active($handle, array $a_app_ids = array()) {
+  public static function webservice_must_be_active($handle, array $a_app_ids = array()) {
     if (!self::webservice_is_active($handle, $a_app_ids)) {
       throw new mediamosa_exception_error_webservice_disabled();
     }
@@ -116,7 +116,7 @@ class mediamosa_webservice_app {
    * @param integer $app_id
    * @param string $handle
    */
-  static public function webservice_status($app_id, $handle, $status) {
+  public static function webservice_status($app_id, $handle, $status) {
 
     // get all possible handles.
     $handles = mediamosa_webservice::get_all_handles();
@@ -161,7 +161,7 @@ class mediamosa_webservice_app {
   /**
    * Return enabled/disabled statussem of webservices of each app.
    */
-  static public function webservice_get_all_status($app_ids = array()) {
+  public static function webservice_get_all_status($app_ids = array()) {
     $query = mediamosa_db::db_select(mediamosa_webservice_app_db::TABLE_NAME, 'w')
       ->fields('w');
 
@@ -185,7 +185,7 @@ class mediamosa_webservice_app {
    * Remove all handles from this app_id. Provide 0 for all globals.
    * @param integer $app_id
    */
-  static public function remove_all($app_id) {
+  public static function remove_all($app_id) {
     mediamosa_db::db_delete(mediamosa_webservice_db::TABLE_NAME)
       ->condition(mediamosa_webservice_app_db::APP_ID, $app_id)
       ->execute();

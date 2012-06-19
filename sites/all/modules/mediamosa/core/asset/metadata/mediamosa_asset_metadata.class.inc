@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -56,7 +56,7 @@ class mediamosa_asset_metadata {
    * @param integer $limit
    *  Maximum number of rows in result.
    */
-  static public function tagcount($app_id, $prop_id, $offset, $limit) {
+  public static function tagcount($app_id, $prop_id, $offset, $limit) {
 
     // FIXME test if prop_id exists.
 
@@ -93,7 +93,7 @@ class mediamosa_asset_metadata {
    * @param $action
    *  The action; append, replace, update.
    */
-  static public function metadata_create($asset_id, array $a_metadata_definitions_full, array $params, $action) {
+  public static function metadata_create($asset_id, array $a_metadata_definitions_full, array $params, $action) {
     $values_set = array();
 
     // Transaction in.
@@ -212,7 +212,7 @@ class mediamosa_asset_metadata {
    *
    * @param $asset_id
    */
-  static public function metadata_get($asset_id) {
+  public static function metadata_get($asset_id) {
     $result = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_asset_metadata} AS am
        JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id

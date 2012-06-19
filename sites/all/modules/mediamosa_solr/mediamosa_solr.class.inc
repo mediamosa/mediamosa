@@ -66,7 +66,7 @@ class mediamosa_solr {
   const ACL_PLAYRESTRICTION = 'playrestriction';
 
   // ---------------------------------------------------------------- Functions.
-  static public function asset_search($parameters) {
+  public static function asset_search($parameters) {
 
     // Make sure its unique.
     $parameters['app_ids'] = array_unique($parameters['app_ids']);
@@ -215,7 +215,7 @@ class mediamosa_solr {
   /**
    * Our solr version of mediamosa_acl::build_access_where().
    */
-  static public function build_access_where(&$solr_query, $acl_type, $object_id, array $master_app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $granted = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  public static function build_access_where(&$solr_query, $acl_type, $object_id, array $master_app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $granted = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
 
     // Only supports mediamosa_acl::ACL_TYPE_MEDIAFILE.
     if ($acl_type != mediamosa_acl::ACL_TYPE_MEDIAFILE) {
@@ -359,7 +359,7 @@ class mediamosa_solr {
    * @return array
    *  returns the array with asset_id(s) on which we have access on
    */
-  static public function access_check_assets(array $parameters) {
+  public static function access_check_assets(array $parameters) {
 
     $asset_ids = array();
 
@@ -392,7 +392,7 @@ class mediamosa_solr {
   /**
    * Instant update on metadata?
    */
-  static public function settingInstantlyMetadata() {
+  public static function settingInstantlyMetadata() {
     return variable_get('mediamosa_solr_metadata_instantly', TRUE);
   }
 
@@ -400,56 +400,56 @@ class mediamosa_solr {
   /**
    * Instant update on asset update?
    */
-  static public function settingInstantlyAssetCreate() {
+  public static function settingInstantlyAssetCreate() {
     return variable_get('mediamosa_solr_asset_create_instantly', TRUE);
   }
 
   /**
    * Instant update on asset update?
    */
-  static public function settingInstantlyAssetUpdate() {
+  public static function settingInstantlyAssetUpdate() {
     return variable_get('mediamosa_solr_asset_update_instantly', TRUE);
   }
 
   /**
    * Instant update on mediafile update?
    */
-  static public function settingInstantlyMediafileUpdate() {
+  public static function settingInstantlyMediafileUpdate() {
     return variable_get('mediamosa_solr_mediafile_update_instantly', TRUE);
   }
 
   /**
    * Instant update on normalize asset?
    */
-  static public function settingInstantlyAssetNormalize() {
+  public static function settingInstantlyAssetNormalize() {
     return self::settingInstantlyAssetUpdate(); // The same setting for now.
   }
 
   /**
    * Instant update on normalize asset?
    */
-  static public function settingInstantlyUserFav() {
+  public static function settingInstantlyUserFav() {
     return variable_get('mediamosa_solr_user_fav_instantly', TRUE);
   }
 
   /**
    * Instant update on normalize asset?
    */
-  static public function settingInstantlyMasterSlave() {
+  public static function settingInstantlyMasterSlave() {
     return variable_get('mediamosa_solr_master_slave_instantly', TRUE);
   }
 
   /**
    * Instant update on ACL rules?
    */
-  static public function settingInstantlyACL() {
+  public static function settingInstantlyACL() {
     return variable_get('mediamosa_solr_acl_instantly', TRUE);
   }
 
   /**
    * Instant update on asset collection relations?
    */
-  static public function settingInstantlyAssetCollection() {
+  public static function settingInstantlyAssetCollection() {
     return variable_get('mediamosa_solr_assetcollection_instantly', TRUE);
   }
 
@@ -461,7 +461,7 @@ class mediamosa_solr {
    * @param string $severity
    * @param string $link
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
     mediamosa_watchdog::log($message, $variables, $severity, 'Solr');
   }
 
@@ -470,7 +470,7 @@ class mediamosa_solr {
    *
    * @param string $asset_id
    */
-  static public function queue_assets(array $asset_ids) {
+  public static function queue_assets(array $asset_ids) {
 
     foreach ($asset_ids as $asset_id) {
       try {
@@ -503,7 +503,7 @@ class mediamosa_solr {
    *
    * @param string $asset_id
    */
-  static public function delete_assets(array $asset_ids) {
+  public static function delete_assets(array $asset_ids) {
 
     foreach ($asset_ids as $asset_id) {
       try {
@@ -523,7 +523,7 @@ class mediamosa_solr {
    *
    * @param string $asset_id
    */
-  static public function insert_assets(array $asset_ids) {
+  public static function insert_assets(array $asset_ids) {
 
     $documents = array();
     foreach ($asset_ids as $asset_id) {
@@ -562,7 +562,7 @@ class mediamosa_solr {
   /**
    * Return the count of the number of queued assets.
    */
-  static public function queue_get_count() {
+  public static function queue_get_count() {
     return mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')->countQuery()->execute()->fetchField();
   }
 
@@ -571,7 +571,7 @@ class mediamosa_solr {
    *
    * Will reindex the solr database as much as its allowed during this call.
    */
-  static public function process_queue() {
+  public static function process_queue() {
 
     $mediamosa_solr_enable_queue = variable_get('mediamosa_solr_enable_queue', TRUE);
     if (empty($mediamosa_solr_enable_queue)) {
@@ -678,7 +678,7 @@ class mediamosa_solr {
    *
    * @throws mediamosa_solr_exception
    */
-  static public function purge_solr_index() {
+  public static function purge_solr_index() {
     // Now purge, don't commit yet.
     self::deleteByQuery('*:*');
 
@@ -694,7 +694,7 @@ class mediamosa_solr {
    * @return
    *  Returns the Solr Response object.
    */
-  static public function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'POST') {
+  public static function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'POST') {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query, $offset, $limit, $params, $method));
   }
@@ -707,7 +707,7 @@ class mediamosa_solr {
    * @return
    *  Returns the Solr Response object.
    */
-  static public function deleteByQuery($query) {
+  public static function deleteByQuery($query) {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->deleteByQuery($query));
@@ -716,7 +716,7 @@ class mediamosa_solr {
   /**
    * All must be commited.
    */
-  static public function commit() {
+  public static function commit() {
     try {
       $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
       $mediamosa_apache_solr_service->commit();
@@ -732,7 +732,7 @@ class mediamosa_solr {
    * @param $app_ids
    *   The app_ids used for deleting the documents.
    */
-  static public function delete_simpletest_documents(array $app_ids = array()) {
+  public static function delete_simpletest_documents(array $app_ids = array()) {
     try {
       if (empty($app_ids)) {
         $solr_response = self::search('app_id:[' . (mediamosa_settings::APP_ID_MAX + 1) . ' TO *]');
@@ -780,7 +780,7 @@ class mediamosa_solr {
   /**
    * Delete one asset with data.
    */
-  static public function delete_asset_document($asset_id, $commit = TRUE) {
+  public static function delete_asset_document($asset_id, $commit = TRUE) {
     self::deleteByQuery('asset_id:' . mediamosa_solr_apache_solr_service::phrase($asset_id));
 
     if ($commit) {
@@ -791,7 +791,7 @@ class mediamosa_solr {
   /**
    * Insert one asset with data.
    */
-  static public function create_asset_document($asset_id) {
+  public static function create_asset_document($asset_id) {
 
     // Get all the data needed for indexing.
     $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id);
@@ -1150,7 +1150,7 @@ class mediamosa_solr {
    *
    * @param array $documents
    */
-  static public function commit_documents(array $documents, $optimize = FALSE) {
+  public static function commit_documents(array $documents, $optimize = FALSE) {
     if (!empty($documents['documents'])) {
 
       // Get the service object.
@@ -1180,7 +1180,7 @@ class mediamosa_solr {
   /**
    * Do a optimize call.
    */
-  static public function optimize() {
+  public static function optimize() {
     // Get the service object.
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
@@ -1201,7 +1201,7 @@ class mediamosa_solr {
    * @return
    *   Return the created where string.
    */
-  static public function where($where, $glue = ' AND ', $previous_glue = ' AND ') {
+  public static function where($where, $glue = ' AND ', $previous_glue = ' AND ') {
     if (!is_array($where)) {
       return $where;
     }
@@ -1233,7 +1233,7 @@ class mediamosa_solr {
   /**
    * Returns TRUE/FALSE to indicate we are active for updates etc.
    */
-  static public function is_enabled() {
+  public static function is_enabled() {
     return variable_get('mediamosa_search_engine', 'mediamosa_search') == 'mediamosa_solr';
   }
 }

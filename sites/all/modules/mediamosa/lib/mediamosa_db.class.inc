@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -62,7 +62,7 @@ class mediamosa_db {
    * @return DeleteQuery
    *   A new DeleteQuery object for this connection.
    */
-  static public function db_delete(/* $table, $options = NULL*/) {
+  public static function db_delete(/* $table, $options = NULL*/) {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -81,7 +81,7 @@ class mediamosa_db {
    *
    * Warning: MySQL specific.
    */
-  static public function db_found_rows() {
+  public static function db_found_rows() {
     return mediamosa_db::db_query('SELECT found_rows()')->fetchField();
   }
 
@@ -91,7 +91,7 @@ class mediamosa_db {
    * @param integer $add
    *  Number to increase, use 0 to retrieve.
    */
-  static public function query_count($add = 0) {
+  public static function query_count($add = 0) {
     static $queries = 0;
 
     $queries += $add;
@@ -111,7 +111,7 @@ class mediamosa_db {
    * @return result
    *  DB result set object.
    */
-  static private function query($func = 'db_query', array $args = array()) {
+  private static function query($func = 'db_query', array $args = array()) {
 
     // Increase query count.
     self::query_count(1);
@@ -219,7 +219,7 @@ class mediamosa_db {
    *
    * @see DatabaseConnection::defaultOptions()
    */
-  static public function db_query_range(/* $query, $from, $count, array $args = array(), array $options = array()*/) {
+  public static function db_query_range(/* $query, $from, $count, array $args = array(), array $options = array()*/) {
     $args = func_get_args();
     return self::query('db_query_range', $args);
   }
@@ -231,7 +231,7 @@ class mediamosa_db {
    * @return DatabaseStatementInterface
    *   A prepared statement object, already executed.
    */
-  static public function db_query(/* $query, $args = array(), $options = array()*/) {
+  public static function db_query(/* $query, $args = array(), $options = array()*/) {
     $args = func_get_args();
 
     /**
@@ -312,7 +312,7 @@ class mediamosa_db {
    * @return
    *   The name of the temporary table.
    */
-  static public function db_query_temporary(/* $query, array $args = array(), array $options = array()*/) {
+  public static function db_query_temporary(/* $query, array $args = array(), array $options = array()*/) {
     $args = func_get_args();
     return self::query('db_query_temporary', $args);
   }
@@ -331,7 +331,7 @@ class mediamosa_db {
    * @return SelectQuery
    *   A new SelectQuery object for this connection.
    */
-  static public function db_select(/* $table, $alias = NULL, array $options = array()*/) {
+  public static function db_select(/* $table, $alias = NULL, array $options = array()*/) {
     // Increase query count.
     self::query_count(1);
 
@@ -366,7 +366,7 @@ class mediamosa_db {
    * @return InsertQuery
    *   A new InsertQuery object for this connection.
    */
-  static public function db_insert(/* $table, array $options = array()*/) {
+  public static function db_insert(/* $table, array $options = array()*/) {
     // Increase query count.
     self::query_count(1);
 
@@ -390,7 +390,7 @@ class mediamosa_db {
    * @return array
    *
    */
-  static public function db_insert_enrich(array $fields) {
+  public static function db_insert_enrich(array $fields) {
     $fields[mediamosa_db::CREATED] = mediamosa_datetime::utc_current_timestamp_now();
     $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
     return $fields;
@@ -407,7 +407,7 @@ class mediamosa_db {
    * @return UpdateQuery
    *   A new UpdateQuery object for this connection.
    */
-  static public function db_update(/* $table, array $options = array()*/) {
+  public static function db_update(/* $table, array $options = array()*/) {
     // Increase query count.
     self::query_count(1);
 
@@ -431,7 +431,7 @@ class mediamosa_db {
    * @return array
    *
    */
-  static public function db_update_enrich(array $fields) {
+  public static function db_update_enrich(array $fields) {
     $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
     return $fields;
   }
@@ -441,7 +441,7 @@ class mediamosa_db {
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For
    * now we will use PDO::quote.
    */
-  static public function escape_string($mixed_string, $glue = ',') {
+  public static function escape_string($mixed_string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm
     // than calling the getconnection for PDO and using quote...
     // But \' must be escaped as '' in the PDO layer, quote seems to
@@ -465,7 +465,7 @@ class mediamosa_db {
    * we will use PDO::quote.
    * Will return string 'quoted' like PDO.
    */
-  static public function escape_string_quoted($string, $glue = ',') {
+  public static function escape_string_quoted($string, $glue = ',') {
     // Assert when array is given here.
     assert(!is_array($string));
 
@@ -484,7 +484,7 @@ class mediamosa_db {
    * @param string $str_like
    * @return string
    */
-  static public function escape_string_like($string_like) {
+  public static function escape_string_like($string_like) {
     return self::escape_string(db_like($string_like));
   }
 
@@ -494,7 +494,7 @@ class mediamosa_db {
    * @param string $str_like
    * @return string
    */
-  static public function escape_string_fulltext($string_fulltext) {
+  public static function escape_string_fulltext($string_fulltext) {
     return self::escape_string($string_fulltext);
   }
 
@@ -506,7 +506,7 @@ class mediamosa_db {
    * @return string
    *  previous selected database.
    */
-  static public function db_set_active($key = 'default') {
+  public static function db_set_active($key = 'default') {
     return db_set_active($key);
   }
   /**
@@ -515,7 +515,7 @@ class mediamosa_db {
    * @return string
    *  selected database.
    */
-  static public function db_get_active() {
+  public static function db_get_active() {
     $current_key = db_set_active();
     db_set_active($current_key);
 
@@ -527,7 +527,7 @@ class mediamosa_db {
    *
    * @param $module_name
    */
-  static public function db_install_schema_preprocess($module, $schema) {
+  public static function db_install_schema_preprocess($module, $schema) {
     // Now loop through the fields and replace the varbinary types.
     // We could remove these in the future when drupal supports these types.
     foreach ($schema as $name => $table) {
@@ -551,7 +551,7 @@ class mediamosa_db {
    *
    * @param array $schema
    */
-  static public function db_install_schema_foreign_keys($module_name) {
+  public static function db_install_schema_foreign_keys($module_name) {
     $schema = drupal_get_schema_unprocessed($module_name);
     _drupal_schema_initialize($schema, $module_name, FALSE);
 
@@ -607,7 +607,7 @@ class mediamosa_db {
    * @return integer
    *    returns number of rows.
    */
-  static public function db_count_rows($table_name, array $columns_and = array()) {
+  public static function db_count_rows($table_name, array $columns_and = array()) {
     // Create select object.
     $query = self::db_select($table_name, 'c');
     foreach ($columns_and as $column => $value) {
@@ -632,7 +632,7 @@ class mediamosa_db {
    * @return integer
    *    returns number of rows.
    */
-  static public function db_get_assoc($table_name, array $columns_and = array()) {
+  public static function db_get_assoc($table_name, array $columns_and = array()) {
     // Create select object.
     $query = self::db_select($table_name, 'row');
     $query->fields('row');
@@ -745,7 +745,7 @@ class mediamosa_db {
    * @param string $group_id
    * @return integer
    */
-  static public function db_count_items($table_name, $app_id, $owner_id, $group_id) {
+  public static function db_count_items($table_name, $app_id, $owner_id, $group_id) {
 
     // Create select query.
     $query = mediamosa_db::db_select($table_name, 'tbl');
@@ -765,7 +765,7 @@ class mediamosa_db {
   /**
    * Returns the number of tables in the current database.
    */
-  static public function db_count_tables() {
+  public static function db_count_tables() {
     $tables = db_find_tables('%');
     return count($tables);
   }
@@ -778,7 +778,7 @@ class mediamosa_db {
    * @return array
    *  Array containing columns.
    */
-  static public function db_get_columns($table_name, $schema = NULL) {
+  public static function db_get_columns($table_name, $schema = NULL) {
     global $databases;
     $schema = ($schema ? $schema : $databases['default']['default']['database']);
 
@@ -797,7 +797,7 @@ class mediamosa_db {
    * @return array
    *  Array containing columns.
    */
-  static public function db_get_columns_with_type($table_name, $schema = NULL) {
+  public static function db_get_columns_with_type($table_name, $schema = NULL) {
     global $databases;
     $schema = ($schema ? $schema : $databases['default']['default']['database']);
 
@@ -833,7 +833,7 @@ class mediamosa_db {
  *    throw $e;
  *  }
  */
-  static public function db_transaction($name = NULL, array $options = array()) {
+  public static function db_transaction($name = NULL, array $options = array()) {
     return db_transaction($name, $options);
   }
 
@@ -845,7 +845,7 @@ class mediamosa_db {
    * @return string
    *  The unique ID.
    */
-  static public function uuid($app_id) {
+  public static function uuid($app_id) {
     $hash = sha1(rand() . ':' . $app_id . ':' . uniqid('', TRUE) . ':' . microtime());
 
     // Now convert 16 -> 31 based.
@@ -902,7 +902,7 @@ class mediamosa_db {
    * @param array table
    *  Schema definition.
    */
-  static public function db_create_table($name, array $table) {
+  public static function db_create_table($name, array $table) {
     return db_create_table($name, $table);
   }
 
@@ -912,7 +912,7 @@ class mediamosa_db {
    * @param sting name
    *   Name of the table.
    */
-  static public function db_drop_table($name) {
+  public static function db_drop_table($name) {
     return db_drop_table($name);
   }
 
@@ -925,7 +925,7 @@ class mediamosa_db {
    * @param array $spec
    * @param array $keys_new
    */
-  static public function db_change_field($table, $field, $field_new, array $spec, array $keys_new = array()) {
+  public static function db_change_field($table, $field, $field_new, array $spec, array $keys_new = array()) {
     return db_change_field($table, $field, $field_new, $spec, $keys_new);
   }
 
@@ -938,7 +938,7 @@ class mediamosa_db {
    * @return
    *   TRUE if the given table exists, otherwise FALSE.
    */
-  static public function db_table_exists($table) {
+  public static function db_table_exists($table) {
     return db_table_exists($table);
   }
   /**
@@ -950,7 +950,7 @@ class mediamosa_db {
    * @return
    *   The escaped string.
    */
-   static public function db_like($string) {
+   public static function db_like($string) {
     return db_like($string);
   }
 }

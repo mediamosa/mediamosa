@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -68,7 +68,7 @@ class mediamosa_statistics {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'statistics');
   }
 
@@ -78,7 +78,7 @@ class mediamosa_statistics {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug($message, array $variables = array()) {
+  public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'statistics');
   }
 
@@ -88,7 +88,7 @@ class mediamosa_statistics {
    * @param string $message
    * @param array $variables
    */
-  static public function log_debug_high($message, array $variables = array()) {
+  public static function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'statistics');
   }
 
@@ -102,7 +102,7 @@ class mediamosa_statistics {
    * @param $group_id
    * @param $file_size
    */
-  static public function log_event_file_upload($app_id, $owner_id, $group_id, $file_size) {
+  public static function log_event_file_upload($app_id, $owner_id, $group_id, $file_size) {
     // Data to store.
     $fields = array(
       mediamosa_statistics_file_upload_db::APP_ID => $app_id,
@@ -124,7 +124,7 @@ class mediamosa_statistics {
    * @param array $keywords
    * @param integer $app_id
    */
-  static public function log_event_search_query(array $keywords, $app_id) {
+  public static function log_event_search_query(array $keywords, $app_id) {
     // Is we detect an array, then we are not gonna log it. In this case we
     // are in multi App mode, and we only log during single app mode.
     if (is_array($app_id)) {
@@ -187,7 +187,7 @@ class mediamosa_statistics {
    * @param $year
    * @param $month
    */
-  static public function calculate_used_diskspace($year, $month) {
+  public static function calculate_used_diskspace($year, $month) {
 
     $year = (int) $year;
     $month = (int) $month;
@@ -276,7 +276,7 @@ class mediamosa_statistics {
    * @param string $mediafile_id
    * @param string $job_id
    */
-  static public function insert_job_transcode($mediafile_id, $job_id) {
+  public static function insert_job_transcode($mediafile_id, $job_id) {
     // Get data.
     $job = mediamosa_job::get($job_id);
     $job_transcode = mediamosa_job_transcode::get($job_id);
@@ -305,7 +305,7 @@ class mediamosa_statistics {
    * @param string $mediafile_id
    * @param int $filesize
    */
-  static public function update_job_transcode_filesize($mediafile_id, $filesize) {
+  public static function update_job_transcode_filesize($mediafile_id, $filesize) {
     mediamosa_db::db_update(mediamosa_statistics_job_db::TABLE_NAME)
       ->fields(array(
         mediamosa_statistics_job_db::FILESIZE => $filesize,
@@ -319,7 +319,7 @@ class mediamosa_statistics {
    *
    * @return string $dir
    */
-  static public function get_streaming_path() {
+  public static function get_streaming_path() {
     // Get the path.
     $dir = variable_get('mediamosa_statistics_streaming_log_path', '');
     if (drupal_substr($dir, -1) != '/') {
@@ -332,7 +332,7 @@ class mediamosa_statistics {
   /**
    * Streaming statistics cron REST call.
    */
-  static public function cron() {
+  public static function cron() {
     // Zlib module is necessary to parse the log file.
     if (!function_exists('gzgets')) {
       return;
@@ -352,7 +352,7 @@ class mediamosa_statistics {
    *
    * @return string $file
    */
-  static public function streaming_statistics_get_next_file() {
+  public static function streaming_statistics_get_next_file() {
     $founded_file = NULL;
     $dir = self::get_streaming_path();
 
@@ -386,7 +386,7 @@ class mediamosa_statistics {
    *
    * @param string $file
    */
-  static public function streaming_statistics_file_parser($file) {
+  public static function streaming_statistics_file_parser($file) {
     $timezone = variable_get('mediamosa_statistics_streaming_log_timezone', 'Europe/Amsterdam');
     $dir = self::get_streaming_path();
     $dir_file = $dir . $file;
@@ -459,7 +459,7 @@ class mediamosa_statistics {
    *   Wowza: "\t", Windows media: ' '.
    * @param string $timezone
    */
-  static public function streaming_statistics_line_parser($buffer, $fields, $separator = ' ', $timezone = 'Europe/Amsterdam') {
+  public static function streaming_statistics_line_parser($buffer, $fields, $separator = ' ', $timezone = 'Europe/Amsterdam') {
     // Check first with an easy way for performance purpose.
     if (strpos($buffer, variable_get('mediamosa_statistics_streaming_log_ticket', mediamosa_statistics::LOG_TICKET)) === FALSE) {
       return;
@@ -527,7 +527,7 @@ class mediamosa_statistics {
    * @param string $ticket_id
    * @param array &$query_data
    */
-  static public function get_ticket_data($ticket_id, &$query_data) {
+  public static function get_ticket_data($ticket_id, &$query_data) {
     if ($ticket_id) {
       $query = mediamosa_db::db_select(mediamosa_streaming_ticket_db::TABLE_NAME, 't');
       $query
@@ -555,7 +555,7 @@ class mediamosa_statistics {
    *
    * @param array $query_data
    */
-  static public function streaming_statistics_store($query_data) {
+  public static function streaming_statistics_store($query_data) {
     // Is there a tid and time (this combination is unique)?
     if (isset($query_data['tid']) && $query_data['tid'] && isset($query_data['time']) && $query_data['time']) {
       // Store the information into the mediamosa_statistics_stream_request table.
@@ -620,7 +620,7 @@ class mediamosa_statistics {
    * @param int $app_id
    * @param string $mediafile_id
    */
-  static public function create_streaming_ticket($ticket_id, $ticket_type, $app_id, $mediafile_id) {
+  public static function create_streaming_ticket($ticket_id, $ticket_type, $app_id, $mediafile_id) {
     // Store the play tickets only.
     if ($ticket_type == mediamosa_ticket::TICKET_TYPE_PLAY) {
       // The ticket id should be unique, then just simply store.
@@ -638,7 +638,7 @@ class mediamosa_statistics {
   /**
    * Delete mediamosa_streaming_ticket table rows.
    */
-  static public function delete_streaming_ticket() {
+  public static function delete_streaming_ticket() {
     $num_deleted = mediamosa_db::db_delete(mediamosa_streaming_ticket_db::TABLE_NAME)
       ->condition(mediamosa_streaming_ticket_db::TIMEOUT, mediamosa_datetime::utc_current_timestamp_now(), '<')
       ->execute();

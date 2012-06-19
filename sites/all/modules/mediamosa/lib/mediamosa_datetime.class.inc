@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -48,7 +48,7 @@ class mediamosa_datetime {
    *
    * @see mediamosa_type.inc
    */
-  static public function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_sdk::TYPE_DATETIME, $format = 'Y-m-d H:i:s') {
+  public static function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_sdk::TYPE_DATETIME, $format = 'Y-m-d H:i:s') {
     // Lets be sure its a string.
     assert(is_string($param_value));
 
@@ -125,7 +125,7 @@ class mediamosa_datetime {
    *
    * @return date
    */
-  static public function time_to_rfc_3339($time = NULL) {
+  public static function time_to_rfc_3339($time = NULL) {
     return $time ? gmdate('Y-m-d\TH:i:s\Z', $time) : gmdate('Y-m-d\TH:i:s\Z');
   }
 
@@ -139,7 +139,7 @@ class mediamosa_datetime {
    *
    * @return date
    */
-  static public function time_to_rfc_822($time = NULL) {
+  public static function time_to_rfc_822($time = NULL) {
     return $time ? gmdate('r', $time) : gmdate('r');
   }
 
@@ -153,7 +153,7 @@ class mediamosa_datetime {
    *
    * @return timestamp
    */
-  static public function utc_current_timestamp_now($reset = FALSE) {
+  public static function utc_current_timestamp_now($reset = FALSE) {
     static $utc_timestamp = NULL;
 
     if (isset($utc_timestamp) && !$reset) {
@@ -176,7 +176,7 @@ class mediamosa_datetime {
    *
    * @return timestamp
    */
-  static public function utc_current_timestamp_add_hours($reset = FALSE, $hours = 0) {
+  public static function utc_current_timestamp_add_hours($reset = FALSE, $hours = 0) {
     static $utc_timestamp_add_hours = array();
 
     if (isset($utc_timestamp_add_hours[$hours]) && !$reset) {
@@ -197,7 +197,7 @@ class mediamosa_datetime {
    * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
    * @return timestamp
    */
-  static public function db_current_timestamp_now($reset = FALSE) {
+  public static function db_current_timestamp_now($reset = FALSE) {
     static $now_timestamp = NULL;
 
     if (isset($now_timestamp) && !$reset) {
@@ -217,7 +217,7 @@ class mediamosa_datetime {
    * @param string $app_date
    * @param string $app_timezone
    */
-  static public function app_date2utc_date($app_date, $app_timezone) {
+  public static function app_date2utc_date($app_date, $app_timezone) {
 
     // Walk through array, when array.
     if (is_array($app_date)) {
@@ -262,7 +262,7 @@ class mediamosa_datetime {
    * @param string $app_date
    * @param string $app_timezone
    */
-  static public function time_string2utc_date($app_date, $app_timezone) {
+  public static function time_string2utc_date($app_date, $app_timezone) {
 
     // Walk through array, when array.
     if (is_array($app_date)) {
@@ -301,7 +301,7 @@ class mediamosa_datetime {
    * @param string $utc_date
    * @param integer $app_id
    */
-  static public function utc_date2app_date($utc_date, $app_timezone) {
+  public static function utc_date2app_date($utc_date, $app_timezone) {
 
     // Walk through array, when array.
     if (is_array($utc_date)) {
@@ -341,7 +341,7 @@ class mediamosa_datetime {
   }
 
   // Convert any date into unix timestamp.
-  static public function date2unix($any_date) {
+  public static function date2unix($any_date) {
     // Parse the date, date_parse is new in 5.2.
     $date_parsed = date_parse($any_date);
 

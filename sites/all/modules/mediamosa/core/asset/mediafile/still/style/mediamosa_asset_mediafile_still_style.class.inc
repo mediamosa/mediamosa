@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -41,7 +41,7 @@ class mediamosa_asset_mediafile_still_style {
    * @param $app_id
    *   Application ID.
    */
-  static public function get($style_id, $app_id = NULL, array $fields = array()) {
+  public static function get($style_id, $app_id = NULL, array $fields = array()) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_still_style_db::TABLE_NAME, 'ss');
     $query->fields('ss', $fields);
     $query->condition('ss.' . mediamosa_asset_mediafile_still_style_db::ID, $style_id);
@@ -56,7 +56,7 @@ class mediamosa_asset_mediafile_still_style {
    *
    * @param array $fields
    */
-  static public function insert($fields) {
+  public static function insert($fields) {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_still_style_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
@@ -69,7 +69,7 @@ class mediamosa_asset_mediafile_still_style {
    * @param num $app_id
    * @param array $fields
    */
-  static public function update($style_id, $app_id = NULL, array $fields = array()) {
+  public static function update($style_id, $app_id = NULL, array $fields = array()) {
     $query = mediamosa_db::db_update(mediamosa_asset_mediafile_still_style_db::TABLE_NAME)
       ->fields($fields)
       ->condition(mediamosa_asset_mediafile_still_style_db::ID, $style_id);
@@ -87,7 +87,7 @@ class mediamosa_asset_mediafile_still_style {
    * @param string $style_id
    * @param num $app_id
    */
-  static public function delete($style_id, $app_id = NULL) {
+  public static function delete($style_id, $app_id = NULL) {
     // Remove from our db.
     $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_still_style_db::TABLE_NAME)
       ->condition(mediamosa_asset_mediafile_still_style_db::ID, $style_id);
@@ -105,7 +105,7 @@ class mediamosa_asset_mediafile_still_style {
    * Remove the style files of an specific style.
    *
    */
-  static public function delete_style_files($app_id, $style_id) {
+  public static function delete_style_files($app_id, $style_id) {
     // Remove symlinks of specific style.
     //
     // /media/app_id/[letter]/id[,style][.ext].

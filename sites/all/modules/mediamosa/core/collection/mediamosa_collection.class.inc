@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -37,7 +37,7 @@ class mediamosa_collection {
    * @param string $coll_id
    * @return boolean
    */
-  static public function delete($coll_id) {
+  public static function delete($coll_id) {
     $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);
     $query->condition(mediamosa_collection_db::ID, $coll_id);
     return $query->execute() ? TRUE : FALSE;
@@ -50,7 +50,7 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function must_exists($coll_id) {
+  public static function must_exists($coll_id) {
     return mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
   }
 
@@ -61,7 +61,7 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function count_assets_in_collection($app_ids, $coll_id, $hide_empty_assets = FALSE) {
+  public static function count_assets_in_collection($app_ids, $coll_id, $hide_empty_assets = FALSE) {
 
     // Now search.
     $collection = mediamosa_collection_search::collection_search(
@@ -89,7 +89,7 @@ class mediamosa_collection {
    *
    * @param array $a_coll_ids
    */
-  static public function getAllAssoc(array $coll_ids) {
+  public static function getAllAssoc(array $coll_ids) {
 
     // No coll_ids? Return FALSE.
     if (empty($coll_ids)) {
@@ -107,7 +107,7 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function get($coll_id, $app_id = NULL) {
+  public static function get($coll_id, $app_id = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
     $query->fields('c');
@@ -125,7 +125,7 @@ class mediamosa_collection {
    *
    * @param $fields
    */
-  static public function getAll($fields = array(), $order_by = mediamosa_collection_db::TITLE, $order_direction = mediamosa_db::ORDER_DIRECTION_ASC) {
+  public static function getAll($fields = array(), $order_by = mediamosa_collection_db::TITLE, $order_direction = mediamosa_db::ORDER_DIRECTION_ASC) {
     return mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
       ->fields('c', $fields)
       ->orderBy($order_by, $order_direction)
@@ -135,7 +135,7 @@ class mediamosa_collection {
   /**
    * Create a collection.
    */
-  static public function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
+  public static function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // New ID.
     $coll_id = mediamosa_db::uuid($app_id);
@@ -201,7 +201,7 @@ class mediamosa_collection {
    * @param bool $public_assign
    * @param bool $is_unappropriate
    */
-  static public function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
+  public static function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // Required.
     $fields = array();

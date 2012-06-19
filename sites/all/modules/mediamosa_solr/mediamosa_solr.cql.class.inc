@@ -446,7 +446,7 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
    * @param string $str_cql
    * @param array $app_ids
    */
-  static public function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
+  public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_solr_asset_cql_context($app_ids);

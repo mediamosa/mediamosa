@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -39,7 +39,7 @@ class mediamosa_asset_mediafile_upload {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'asset_mediafile_upload');
   }
 
@@ -51,7 +51,7 @@ class mediamosa_asset_mediafile_upload {
    * 1.x: vpx_upload_handle_file
    *
    */
-  static public function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
+  public static function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
     // Set to false.
     $is_app_admin = FALSE;
 
@@ -180,7 +180,7 @@ class mediamosa_asset_mediafile_upload {
    * @param boolean $default
    * @param array $still_parameters
    */
-  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array(), $frametime = NULL) {
+  public static function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array(), $frametime = NULL) {
 
     // Set to false.
     $is_app_admin = FALSE;
@@ -280,7 +280,7 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Enrich completed url based on success.
    */
-  static public function enrich_completed_url($completed_url, $ticket_id, $success) {
+  public static function enrich_completed_url($completed_url, $ticket_id, $success) {
     // (re)build the completed_url based on success.
     if (!empty($completed_url)) {
       $http_query = array();
@@ -329,7 +329,7 @@ class mediamosa_asset_mediafile_upload {
    * @param integer $job_id
    *  Job ID.
    */
-  static protected function handle_upload_put($filename, $job_id = 0) {
+  protected static function handle_upload_put($filename, $job_id = 0) {
     $filename_after_upload = NULL;
 
     // If mediafile exists, rename it.
@@ -407,7 +407,7 @@ class mediamosa_asset_mediafile_upload {
    * @return int $written_bytes
    *   Number of the written bytes.
    */
-  static public function handle_upload_post($filename) {
+  public static function handle_upload_post($filename) {
     $filename_after_upload = NULL;
 
     // If mediafile exists, rename it.
@@ -460,7 +460,7 @@ class mediamosa_asset_mediafile_upload {
    *
    * @param string $id
    */
-  static public function get_uploadprogress($id, $server_id) {
+  public static function get_uploadprogress($id, $server_id) {
 
     // Get the selected server type.
     $server_upload = FALSE;

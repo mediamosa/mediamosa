@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -41,7 +41,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get($mediafile_id, $app_id = NULL, array $fields = array(), $is_still = NULL) {
+  public static function get($mediafile_id, $app_id = NULL, array $fields = array(), $is_still = NULL) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', $fields);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
@@ -59,7 +59,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get_asset_id($mediafile_id) {
+  public static function get_asset_id($mediafile_id) {
     $mediafile = self::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID));
     return empty($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]) ? FALSE : $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
   }
@@ -72,7 +72,7 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafiles
    */
-  static public function get_by_asset_id($asset_id, $fields = array(), $options = array()) {
+  public static function get_by_asset_id($asset_id, $fields = array(), $options = array()) {
 
     $options += array(
       'get_originals_only' => FALSE,
@@ -104,7 +104,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get_my_parent_assetid($mediafile_id) {
+  public static function get_my_parent_assetid($mediafile_id) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
@@ -119,7 +119,7 @@ class mediamosa_asset_mediafile {
    * @return string
    *   Size of the mediafile, or FALSE.
    */
-  static public function get_size($mediafile_id) {
+  public static function get_size($mediafile_id) {
     $width = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'width');
     if (!$width) {
       return FALSE;
@@ -141,7 +141,7 @@ class mediamosa_asset_mediafile {
    * @return string
    *   Mimetype of the mediafile, or FALSE.
    */
-  static public function get_mimetype($mediafile_id) {
+  public static function get_mimetype($mediafile_id) {
     return mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'mime_type');
   }
 
@@ -150,7 +150,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function must_exists($mediafile_id, $app_id = NULL) {
+  public static function must_exists($mediafile_id, $app_id = NULL) {
     if (isset($app_id)) {
       return mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::APP_ID => $app_id, mediamosa_asset_mediafile_db::ID => $mediafile_id));
     }
@@ -163,7 +163,7 @@ class mediamosa_asset_mediafile {
    *
    * @param mixed $mediafile_id
    */
-  static public function delete($mixed_mediafile_id) {
+  public static function delete($mixed_mediafile_id) {
     $mediafile_ids = is_array($mixed_mediafile_id) ? $mixed_mediafile_id : (empty($mixed_mediafile_id) ? array() : array($mixed_mediafile_id));
 
     // must have something.
@@ -211,7 +211,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $asset_id
    */
-  static public function delete_transcoded_unoriginal_mediafiles($asset_id, $mediafile_id) {
+  public static function delete_transcoded_unoriginal_mediafiles($asset_id, $mediafile_id) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
     $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
@@ -239,7 +239,7 @@ class mediamosa_asset_mediafile {
    *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile(
+  public static function enrich_response_mediafile(
     array $mediafile_ids,
     $mixed_app_id,
     $is_oai,
@@ -492,7 +492,7 @@ class mediamosa_asset_mediafile {
    * @param string $tag
    * @param boolean $is_still
    */
-  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
+  public static function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
 
     assert($asset_id !== FALSE);
 
@@ -541,7 +541,7 @@ class mediamosa_asset_mediafile {
    *
    * @param $asset_id
    */
-  static public function get_all_transcoded($asset_id) {
+  public static function get_all_transcoded($asset_id) {
     // FIXME: just wondering if it must be asset_root_id here.
     return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME)
       ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
@@ -560,7 +560,7 @@ class mediamosa_asset_mediafile {
    * @param $app_id
    * @param $mediafile_id
    */
-  static public function analyse($app_id, $mediafile_id) {
+  public static function analyse($app_id, $mediafile_id) {
 
     // Remove all metadata.
     // FIXME: why now? (also done when we insert it)
@@ -598,7 +598,7 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    */
-  static public function is_original(array $mediafile) {
+  public static function is_original(array $mediafile) {
     // FIXME: will need to convert into mediafile_id_source.
     return ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
   }
@@ -608,7 +608,7 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    */
-  static public function is_still(array $mediafile) {
+  public static function is_still(array $mediafile) {
     return ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE);
   }
 
@@ -621,7 +621,7 @@ class mediamosa_asset_mediafile {
    * @param string $type
    * @param array $fields
    */
-  static public function update($app_id, $mediafile_id, $user_id, array $fields) {
+  public static function update($app_id, $mediafile_id, $user_id, array $fields) {
     // Cant mix input of uri/filename/is_downloadable.
     if (isset($fields[mediamosa_asset_mediafile_db::URI]) && (isset($fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
@@ -671,7 +671,7 @@ class mediamosa_asset_mediafile {
    * @param mediafile_id
    * @param mediafile_dest
    */
-  static public function update_mediafile_id($mediafile_id, $mediafile_dest) {
+  public static function update_mediafile_id($mediafile_id, $mediafile_dest) {
     $fields = array(
       mediamosa_asset_mediafile_db::ID => $mediafile_dest,
     );
@@ -690,7 +690,7 @@ class mediamosa_asset_mediafile {
    * @param new_original
    *   This is the mediafile_id of new original mediafile.
    */
-  static public function set_new_original($mediafile_id, $new_original) {
+  public static function set_new_original($mediafile_id, $new_original) {
     // All mediafile_id_source in the asset are changed to new original mediafile id now.
     $fields = array(
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $new_original,
@@ -727,7 +727,7 @@ class mediamosa_asset_mediafile {
    * @param array $fields
    *  Optional fields. See mediamosa_asset_mediafile_db.
    */
-  static public function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
+  public static function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
     // Is original with mediafile_id_source combo.
     assert(
       (
@@ -776,7 +776,7 @@ class mediamosa_asset_mediafile {
    * @param string $search_index_type
    *  @see mediamosa_settings::search_index_type_*
    */
-  static public function mediamosa_asset_reindex(array $mediafile_ids, $search_index_type) {
+  public static function mediamosa_asset_reindex(array $mediafile_ids, $search_index_type) {
     $asset_ids = array();
 
     foreach ($mediafile_ids as $mediafile_id) {
@@ -802,7 +802,7 @@ class mediamosa_asset_mediafile {
    * @throws exception when asset or mediafiles where not found or access
    *         denied.
    */
-  static public function is_mediafile_protected($mediafile_id, $is_app_admin = FALSE) {
+  public static function is_mediafile_protected($mediafile_id, $is_app_admin = FALSE) {
 
     // Conditions;
     // Mediafile may not be protected.
@@ -853,7 +853,7 @@ class mediamosa_asset_mediafile {
    * @return
    *   The file extension (e.g. 'jpeg') without the dot.
    */
-  static public function get_file_extension($mediafile_id) {
+  public static function get_file_extension($mediafile_id) {
     // Get mime-type, and match it to a file-ext.
     return mediamosa_mimetype::mimetype2extension(mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE));
   }

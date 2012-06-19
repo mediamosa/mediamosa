@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -40,7 +40,7 @@ class mediamosa_acl_name {
    * @param integer $acl_group_id
    * @return array
    */
-  static public function get($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
+  public static function get($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
 
     $query = mediamosa_db::db_select(mediamosa_acl_name_db::TABLE_NAME, 'an');
     $query->fields('an', array(mediamosa_acl_name_db::ID));
@@ -64,7 +64,7 @@ class mediamosa_acl_name {
    * @param string $acl_name
    * @param integer $acl_group_id
    */
-  static public function delete($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
+  public static function delete($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
     $a_acl_name = self::get($app_id, $acl_type, $acl_name, $acl_group_id);
     if (!$a_acl_name) {
       throw new mediamosa_exception_error_acl_name_not_found(array('@hostname' => $acl_name));

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -33,7 +33,7 @@ class mediamosa_watchdog {
   /**
    * Our wrapper around the drupal watchdog.
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $link = NULL) {
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $link = NULL) {
     static $logging = FALSE;
 
     // Prevent loops when we are calling ourselfs because of errors.
@@ -50,7 +50,7 @@ class mediamosa_watchdog {
   /**
    * Log asset ids.
    */
-  static public function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $mediafile_id = '') {
+  public static function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $mediafile_id = '') {
     // Unique id for identifing the watchdog id.
     $link = mediamosa_db::uuid(0);
 
@@ -84,7 +84,7 @@ class mediamosa_watchdog {
   /**
    * Log mediafile ids.
    */
-  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE, $type = NULL) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE, $type = NULL) {
     // Need to know.
     assert(!empty($mediafile_id));
 
@@ -108,7 +108,7 @@ class mediamosa_watchdog {
    * @param string $severity
    * @param string $type
    */
-  static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
+  public static function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     self::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
   }
 
@@ -120,7 +120,7 @@ class mediamosa_watchdog {
    * @param string $query
    *  Your message, Best to keep as the query.
    */
-  static public function log_db($f_time, $query) {
+  public static function log_db($f_time, $query) {
     $name = self::is_db_logging();
     if (!$name) {
       return;
@@ -137,7 +137,7 @@ class mediamosa_watchdog {
   /**
    * Log the query string for a db_query result object..
    */
-  static public function log_query_string($query_object) {
+  public static function log_query_string($query_object) {
     self::log($query_object->queryString, array(), WATCHDOG_INFO, 'DB query');
   }
 }

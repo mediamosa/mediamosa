@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -35,7 +35,7 @@ class mediamosa_job_transcode {
    * @param integer $job_id
    *  The job ID.
    */
-  static public function get($job_id) {
+  public static function get($job_id) {
     return mediamosa_db::db_select(mediamosa_job_transcode_db::TABLE_NAME, 'jt')
       ->fields('jt')
       ->condition(mediamosa_job_transcode_db::JOB_ID, $job_id)
@@ -71,7 +71,7 @@ class mediamosa_job_transcode {
    * @param string $mediafile_id
    *  The mediafile ID.
    */
-  static public function create($app_id, $job_id, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $mediafile_id = NULL) {
+  public static function create($app_id, $job_id, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $mediafile_id = NULL) {
 
     // Get the default transcode profile settings when not supplied.
     if (empty($profile_id) && $tool == '') {
@@ -176,7 +176,7 @@ class mediamosa_job_transcode {
    * @param string $file_extension
    * @param string $command
    */
-  static public function create_tool_transcode($job_id, $tool, $file_extension, $command) {
+  public static function create_tool_transcode($job_id, $tool, $file_extension, $command) {
     $profile_id = 0;
     $completed_transcoding_url = '';
 

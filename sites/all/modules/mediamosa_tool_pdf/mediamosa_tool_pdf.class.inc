@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -60,7 +60,7 @@ class mediamosa_tool_pdf {
    *
    * @param string $mime_type
    */
-  static public function is_supported($mime_type) {
+  public static function is_supported($mime_type) {
     return in_array($mime_type, array(self::MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF));
   }
 
@@ -73,7 +73,7 @@ class mediamosa_tool_pdf {
    *
    * @param array $options
    */
-  static public function get_transcode_exec($options) {
+  public static function get_transcode_exec($options) {
 
     if ($options['file_extension'] == 'swf') {
       // Build the values.

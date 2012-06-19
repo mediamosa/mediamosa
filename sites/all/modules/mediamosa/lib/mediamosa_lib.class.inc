@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -44,7 +44,7 @@ class mediamosa_lib {
    *
    * @param string $name
    */
-  static public function purge_session($name) {
+  public static function purge_session($name) {
     if (!empty($_SESSION[$name])) {
       unset($_SESSION[$name]);
     }
@@ -57,7 +57,7 @@ class mediamosa_lib {
    * @param string $str
    * @return boolean
    */
-  static public function boolstr2bool($str) {
+  public static function boolstr2bool($str) {
     if (is_bool($str)) {
       return $str;
     }
@@ -73,7 +73,7 @@ class mediamosa_lib {
    * @param boolean $boolean
    * @return string
    */
-  static public function bool2boolstr($boolean) {
+  public static function bool2boolstr($boolean) {
     return $boolean ? 'TRUE' : 'FALSE';
   }
 
@@ -82,7 +82,7 @@ class mediamosa_lib {
    * @param string order direction
    * @return string CQL order direction
    */
-  static public function order_direction2cql($order_direction) {
+  public static function order_direction2cql($order_direction) {
     return drupal_strtolower($order_direction) == 'desc' ? '/sort.descending' : '';
   }
 
@@ -100,7 +100,7 @@ class mediamosa_lib {
    * @param $name_value_seperator
    *  Name value sperator.
    */
-  static public function create_named_array($string, $pair_seperator = ';', $name_value_seperator = ':') {
+  public static function create_named_array($string, $pair_seperator = ';', $name_value_seperator = ':') {
     $a_result = array();
 
     if (!mediamosa_unicode::strlen($string)) {
@@ -123,7 +123,7 @@ class mediamosa_lib {
    * number of seconds since 01-01-1970.
    *
    */
-  static public function iso8601date_to_unix($iso8601_date_str) {
+  public static function iso8601date_to_unix($iso8601_date_str) {
     $a_value = preg_split("/[-:\\s]/", $iso8601_date_str);
     $a_value[0] = (int) $a_value[0];
     $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int) $a_value[1] : 1;// MM
@@ -155,7 +155,7 @@ class mediamosa_lib {
    * @deprecated: Stop using this function, as it will be removed in the future.
    *              Instead use the SimpleXML object directly.
    */
-  static public function simplexml2array($xml) {
+  public static function simplexml2array($xml) {
     if (is_object($xml) && get_class($xml) == 'mediamosa_connector_response') {
       return self::simplexml2array($xml->get());
     }
@@ -197,7 +197,7 @@ class mediamosa_lib {
    * @deprecated: Stop using this function, as it will be removed in the future.
    *              Instead use the SimpleXML object directly.
    */
-  static public function responsexml2array($xml) {
+  public static function responsexml2array($xml) {
     if (!$xml) {
       return $xml;
     }
@@ -238,7 +238,7 @@ class mediamosa_lib {
    * @param string $asset_id
    * @param string $text (should be wrapped with t())
    */
-  static public function l_asset($asset_id, $text = '') {
+  public static function l_asset($asset_id, $text = '') {
     $text = empty($text) ? $asset_id : $text;
     return l($text, mediamosa_settings::get_url_asset($asset_id));
   }
@@ -249,7 +249,7 @@ class mediamosa_lib {
    * @param string $coll_id
    * @param string $text
    */
-  static public function l_collection($coll_id, $text = '') {
+  public static function l_collection($coll_id, $text = '') {
     $text = empty($text) ? $coll_id : $text;
     return l($text, mediamosa_settings::get_url_collection($coll_id));
   }
@@ -258,7 +258,7 @@ class mediamosa_lib {
    * Adds English ordinal suffix to numbers.
    * @param integer $value
    */
-  static public function ordinal($value) {
+  public static function ordinal($value) {
 
     if ($value % 100 > 10 && $value % 100 < 14) {
       return $value . 'th';
@@ -293,7 +293,7 @@ class mediamosa_lib {
    * @return string
    *   Differences.
    */
-  static public function make_diff($old, $new) {
+  public static function make_diff($old, $new) {
     $old = explode("\n", $old);
     $new = explode("\n", $new);
 

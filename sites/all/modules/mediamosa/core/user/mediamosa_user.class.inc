@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -45,7 +45,7 @@ class mediamosa_user {
    * @return
    *  array with info about particular user if found, FALSE otherwise.
    */
-  static public function get($user_id, $app_id, $with_groups = TRUE) {
+  public static function get($user_id, $app_id, $with_groups = TRUE) {
     $user_info = mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
       ->fields('u')
       ->condition(mediamosa_user_db::NAME, $user_id)
@@ -74,7 +74,7 @@ class mediamosa_user {
    * @return
    *  array with group IDs.
    */
-  static public function get_groups($app_id, $user_id, $serialize_keys = FALSE) {
+  public static function get_groups($app_id, $user_id, $serialize_keys = FALSE) {
 
   /* We're building SQL like
    SELECT g.group_key, g.group_id FROM mediamosa_user AS u
@@ -112,7 +112,7 @@ class mediamosa_user {
    * @param string $group_id
    *  A particular Group ID to include user to.
    */
-  static public function add_group_by_key($app_id, $user_key, $group_id) {
+  public static function add_group_by_key($app_id, $user_key, $group_id) {
     $query = mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g');
     $query->addField('g', mediamosa_user_group_db::KEY);
     $query->condition(mediamosa_user_group_db::ID, $group_id);
@@ -150,7 +150,7 @@ class mediamosa_user {
    * @param array $group_ids
    *  Group ID.
    */
-  static public function update($app_id, $user_id, $quotum, $group_ids) {
+  public static function update($app_id, $user_id, $quotum, $group_ids) {
 
     if (isset($quotum)) {
       $user_key = mediamosa_user::key($app_id, $user_id);
@@ -189,7 +189,7 @@ class mediamosa_user {
    * @param string $user_id
    *  User ID.
    */
-  static public function delete($app_id, $user_id) {
+  public static function delete($app_id, $user_id) {
 
     $user_key = mediamosa_user::key($app_id, $user_id);
 
@@ -224,7 +224,7 @@ class mediamosa_user {
    * @param array $group_ids
    *  Group IDs.
    */
-  static public function create($app_id, $user_id, $quotum, $group_ids) {
+  public static function create($app_id, $user_id, $quotum, $group_ids) {
 
     // Values to insert.
     $fields = array(
@@ -259,7 +259,7 @@ class mediamosa_user {
    * @param string $user_id
    * @param string $group_id
    */
-  static public function get_quota($app_id, $user_id = '', $group_id = '') {
+  public static function get_quota($app_id, $user_id = '', $group_id = '') {
 
     return mediamosa_db::db_query(
       'SELECT app.#quota * 1024 AS app_quota_mb, g.#quotum AS group_quota_mb, u.#quotum AS owner_quota_mb FROM {#mediamosa_app} AS app
@@ -333,7 +333,7 @@ class mediamosa_user {
    *
    * @param bool $return_free
    */
-  static public function check_user_quota($app_id, $user_id = '', $group_id = '', $return_free = FALSE) {
+  public static function check_user_quota($app_id, $user_id = '', $group_id = '', $return_free = FALSE) {
 
     // Quota is reported in MB.
     $a_quota = self::get_quota($app_id, $user_id, $group_id);
@@ -376,7 +376,7 @@ class mediamosa_user {
    * @param string $group_id
    *  The group ID.
    */
-  static public function must_have_user_quota($app_id, $user_id = '', $group_id = '') {
+  public static function must_have_user_quota($app_id, $user_id = '', $group_id = '') {
     if (!self::check_user_quota($app_id, $user_id, $group_id)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NOT_ENOUGH_FREE_QUOTA);
     }
@@ -390,7 +390,7 @@ class mediamosa_user {
    * @param string $user_id
    *  User / Owner ID.
    */
-  static public function get_user_quota($app_id, $user_id) {
+  public static function get_user_quota($app_id, $user_id) {
 
     $total = mediamosa_db::db_query(
       'SELECT COUNT(*) AS total FROM
@@ -532,7 +532,7 @@ class mediamosa_user {
    * @return integer
    *  key value if user exists.
    */
-  static public function key($app_id, $user_id) {
+  public static function key($app_id, $user_id) {
     $user_key = mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
       ->fields('u', array(mediamosa_user_db::KEY))
       ->condition(mediamosa_user_db::NAME, $user_id)
@@ -554,7 +554,7 @@ class mediamosa_user {
    *
    * @return string with group ID. Empty string if user is not a member of any.
    */
-  static public function get_primary_group($app_id, $user_id) {
+  public static function get_primary_group($app_id, $user_id) {
     $group_ids = mediamosa_user::get_groups($app_id, $user_id);
 
     if (empty($group_ids)) {

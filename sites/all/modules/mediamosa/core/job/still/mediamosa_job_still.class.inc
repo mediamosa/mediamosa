@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -35,7 +35,7 @@ class mediamosa_job_still {
    * @param integer $job_id
    *  The job ID.
    */
-  static public function get($job_id, $fields = array()) {
+  public static function get($job_id, $fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_still_db::TABLE_NAME, 'js')
       ->fields('js', $fields)
       ->condition(mediamosa_job_still_db::JOB_ID, $job_id)
@@ -51,7 +51,7 @@ class mediamosa_job_still {
    * @param integer $job_id
    * @param array $a_still_parameters
    */
-  static public function create($job_id, array $a_still_parameters) {
+  public static function create($job_id, array $a_still_parameters) {
 
     $a_still_parameters += array(
       mediamosa_asset_mediafile_metadata::STILL_TYPE => NULL,

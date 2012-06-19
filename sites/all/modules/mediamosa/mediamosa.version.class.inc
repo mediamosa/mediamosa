@@ -3,7 +3,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -75,7 +75,7 @@ class mediamosa_version {
    * @param string $version
    * @return array
    */
-  static public function get_version($version) {
+  public static function get_version($version) {
     list($major, $minor, $release) = preg_split("/[.:]+/", $version, 3) + array(0 => 1, 1 => 0, 2 => 0);
     return array(
       self::MAJOR => (int) $major,
@@ -90,7 +90,7 @@ class mediamosa_version {
    *
    * @return array
    */
-  static public function get_current_version($return_full = FALSE) {
+  public static function get_current_version($return_full = FALSE) {
     list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
       self::MAJOR => $major,
@@ -108,7 +108,7 @@ class mediamosa_version {
    *  Include the build and changeset.
    * @return string
    */
-  static public function get_current_version_str($return_full = FALSE) {
+  public static function get_current_version_str($return_full = FALSE) {
     $version = self::get_current_version($return_full);
     return $version[self::MAJOR] . '.' . $version[self::MINOR] . '.' . $version[self::RELEASE] . ($return_full ? ' (build ' . $version[self::BUILD] . ') ' . $version[self::INFO] : '');
   }

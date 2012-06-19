@@ -80,7 +80,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * (sometimes).
    */
 
-  static public function filterDelimeters($value) {
+  public static function filterDelimeters($value) {
     return str_replace(array('_'), '', $value);
   }
 
@@ -89,7 +89,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *
    * @param $value
    */
-  static public function escapeForFunction($value) {
+  public static function escapeForFunction($value) {
     return self::escape($value);
   }
 
@@ -101,7 +101,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * @param string $value
    * @return string
    */
-  static public function escapeForSpace($value) {
+  public static function escapeForSpace($value) {
     $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\\)/';
     $replace = '\\\$1';
 
@@ -111,7 +111,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Return the url for the solr servlet.
    */
-  static public function mediamosaGetUrl() {
+  public static function mediamosaGetUrl() {
     $url = variable_get('mediamosa_solr_url', self::MEDIAMOSA_SOLR_DEFAULT_SCHEME . '://' . self::MEDIAMOSA_SOLR_DEFAULT_HOST . '/');
 
     // Parse the url into parts.
@@ -137,7 +137,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Sets the URL in Drupal variable.
    */
-  static public function mediamosaSetUrl($url) {
+  public static function mediamosaSetUrl($url) {
     // Parse the url into parts.
     $parse_url = parse_url($url);
 
@@ -161,7 +161,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Return the host for the solr servlet.
    */
-  static public function mediamosaGetHost($url = NULL) {
+  public static function mediamosaGetHost($url = NULL) {
     $url =  isset($url) ? $url : self::mediamosaGetUrl();
 
     // Parse.
@@ -171,7 +171,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Return the port for the solr servlet.
    */
-  static public function mediamosaGetPort($url = NULL) {
+  public static function mediamosaGetPort($url = NULL) {
     $url = isset($url) ? $url : self::mediamosaGetUrl();
 
     // Get me the port.
@@ -184,7 +184,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Return the path for the solr servlet.
    */
-  static public function mediamosaGetPath($url = NULL) {
+  public static function mediamosaGetPath($url = NULL) {
     $url = isset($url) ? $url : self::mediamosaGetUrl();
 
     // Get me the path.
@@ -205,7 +205,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *
    * @throws mediamosa_solr_exception
    */
-  static public function mediamosaGetSolrObject($url = NULL, $reset = FALSE) {
+  public static function mediamosaGetSolrObject($url = NULL, $reset = FALSE) {
     $mediamosa_apache_solr_service = &drupal_static(__FUNCTION__);
 
     $url = !empty($url) ? $url : self::mediamosaGetUrl();
@@ -238,7 +238,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *
    * @throws mediamosa_solr_exception (when $fatal == TRUE)
    */
-  static public function mediamosaPing($url = NULL, $fatal = FALSE) {
+  public static function mediamosaPing($url = NULL, $fatal = FALSE) {
     // Get the solr connection.
     try {
       self::mediamosaGetSolrObject($url);

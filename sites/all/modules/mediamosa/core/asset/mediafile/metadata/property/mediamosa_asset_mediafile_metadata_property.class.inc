@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -33,7 +33,7 @@ class mediamosa_asset_mediafile_metadata_property {
    * Get the property id.
    * @return int
    */
-  static public function get_property_id_cache($prop_name, $type, $reset = FALSE) {
+  public static function get_property_id_cache($prop_name, $type, $reset = FALSE) {
     static $prop_ids = NULL;
 
     if (is_null($prop_ids) || $reset) {
@@ -65,7 +65,7 @@ class mediamosa_asset_mediafile_metadata_property {
    *
    * @return int
    */
-  static public function get_property_id($prop_name, $prop_type) {
+  public static function get_property_id($prop_name, $prop_type) {
     // Get the property id, if exists.
     $prop_id = self::get_property_id_cache($prop_name, $prop_type);
 
@@ -109,21 +109,21 @@ class mediamosa_asset_mediafile_metadata_property {
   /**
    * Get the property id - CHAR.
    */
-  static public function get_property_id_char($prop_name) {
+  public static function get_property_id_char($prop_name) {
     return self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
   }
 
   /**
    * Get the property id - INT.
    */
-  static public function get_property_id_int($prop_name) {
+  public static function get_property_id_int($prop_name) {
     return self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
   }
 
   /**
    * Get the property id - DATETIME.
    */
-  static public function get_property_id_datetime($prop_name) {
+  public static function get_property_id_datetime($prop_name) {
     return self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
   }
 
@@ -135,7 +135,7 @@ class mediamosa_asset_mediafile_metadata_property {
    * @return
    *   Returns single array(prop_name, type)
    */
-  static public function get_property($prop_id, $reset = FALSE) {
+  public static function get_property($prop_id, $reset = FALSE) {
     static $props = NULL;
 
     if (is_null($props) || $reset) {

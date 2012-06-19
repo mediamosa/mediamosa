@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -38,7 +38,7 @@ class mediamosa_tool_mapping {
    * @param string $tool
    * @param array $fields
    */
-  static public function get($tool, array $fields = array()) {
+  public static function get($tool, array $fields = array()) {
     $query = mediamosa_db::db_select(mediamosa_tool_mapping_db::TABLE_NAME, 'tm');
     $query
       ->condition('tm.' . mediamosa_tool_mapping_db::TOOL, $tool)
@@ -53,7 +53,7 @@ class mediamosa_tool_mapping {
    *
    * @param array $fields
    */
-  static public function get_all(array $fields = array()) {
+  public static function get_all(array $fields = array()) {
     $query = mediamosa_db::db_select(mediamosa_tool_mapping_db::TABLE_NAME, 'tm');
     $query
       ->fields('tm', $fields);
@@ -65,7 +65,7 @@ class mediamosa_tool_mapping {
   /**
    * Get asset metadata in special output format for tool mapping.
    */
-  static public function get_asset_metadata_display_name($prop_id) {
+  public static function get_asset_metadata_display_name($prop_id) {
     $metadata_property = mediamosa_asset_metadata_property::property_get_row($prop_id);
     $metadata_property_group = mediamosa_asset_metadata_property_group::property_group_row_get($metadata_property[mediamosa_asset_metadata_property_db::PROPGROUP_ID]);
 
@@ -103,7 +103,7 @@ class mediamosa_tool_mapping {
    * @param string $separator
    *   The separator for the command.
    */
-  static public function tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator) {
+  public static function tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator) {
     foreach (mediamosa_tool_mapping::get($tool_id) as $record) {
       $property = mediamosa_asset_metadata_property::property_get_row($record[mediamosa_tool_mapping_db::PROP_ID]);
 

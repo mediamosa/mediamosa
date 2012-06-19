@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -45,7 +45,7 @@ class mediamosa_job_server_still {
    * @param integer $job_id
    * @param string $base_filename
    */
-  static public function still_validate($job_id, $base_filename) {
+  public static function still_validate($job_id, $base_filename) {
     // Retrieve the job settings
     $result_row = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_job_server_still} AS jsj
