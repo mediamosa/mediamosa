@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
@@ -106,13 +104,13 @@ class MediaMosaAclSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Getting rights on mediafile.
-    $a_xml = $this->getMediafileAcl($mediafile_id, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $a_xml = $this->getMediafileAcl($mediafile_id, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // To first Ega.
     $this->toEga_2();
 
     // Getting rights on mediafile.
-    $a_xml_2 = $this->getMediafileAcl($mediafile_id_2, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     //
     // Now make mediafile (app 1) a slave of app 2.
@@ -123,10 +121,10 @@ class MediaMosaAclSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Set mediafile acl.
-    $a_parameters = array(
+    $parameters = array(
       'acl_app' => $app_id_2,
     );
-    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $parameters);
 
     //
     // Get the mediafiles.
@@ -143,10 +141,10 @@ class MediaMosaAclSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     // Somebody else, not allowed.
 
     // Getting rights on mediafile.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_collection_get_rights::USER_ID => 'santaclaus',
     );
-    $a_xml = $this->getMediafileAcl($mediafile_id, $a_parameters, 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $a_xml = $this->getMediafileAcl($mediafile_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Other application, not master/slave, not allowed.
 
@@ -154,7 +152,7 @@ class MediaMosaAclSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_3();
 
     // Getting rights on mediafile.
-    $a_xml = $this->getMediafileAcl($mediafile_id, array(), 'Get ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $a_xml = $this->getMediafileAcl($mediafile_id, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Application 2 with master/slave, allowed.
 
@@ -173,10 +171,10 @@ class MediaMosaAclSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Set mediafile acl.
-    $a_parameters = array(
+    $parameters = array(
       'acl_app' => $app_id_3,
     );
-    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $parameters);
 
     // Application 3 with master/slave, allowed.
 

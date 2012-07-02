@@ -34,7 +34,7 @@
  * REST calls.
  */
 class MediaMosaTestCaseEga extends MediaMosaTestCase {
-  // ------------------------------------------------------------------ Members.
+  // --------------------------------------------------------------------- Vars.
   protected $a_app = NULL;
   protected $a_app_2 = NULL;
   protected $a_app_3 = NULL;
@@ -52,6 +52,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // TRUE/FALSE setting that allows the default server settings instead of the
   // current server settings to be copied into our test environment.
   protected $default_servers = FALSE; // FALSE: use the current server setup.
+
+  // -------------------------------------------------------------- Constructor.
+  function __construct($test_id = NULL) {
+    parent::__construct($test_id);
+    $this->skipClasses[__CLASS__] = TRUE;
+  }
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -1744,9 +1750,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Get the AUT/ACL settings on mediafile.
+   * Get the ACL settings on mediafile.
    */
-  protected function getMediafileAcl($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getMediafileAcl($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_mediafile_get_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -1764,7 +1770,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr(
         "@description: @mediafile_id, got result @result (@result_description)",
         array(
-          '@description' => $description,
+          '@description' => 'Get ACL on mediafile',
           '@mediafile_id' => $mediafile_id,
           '@result' => (string) $response['xml']->header->request_result_id,
           '@result_description' => (string) $response['xml']->header->request_result_description

@@ -12,6 +12,7 @@ files[] = mediamosa_acl.ega.test
 files[] = mediamosa_acl.granted.test
 files[] = mediamosa_acl.group.test
 files[] = mediamosa_acl.group_masterslave.test
+files[] = mediamosa_acl.inherits.test
 files[] = mediamosa_acl.masterslave.test
 files[] = mediamosa_acl.mediafiles.test
 files[] = mediamosa_acl.owner.test

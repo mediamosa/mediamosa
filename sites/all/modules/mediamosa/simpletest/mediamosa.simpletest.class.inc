@@ -69,6 +69,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   const SIMPLETEST_USER_ID = 'Simpletest user id';
   const SIMPLETEST_GROUP_ID = 'Simpletest test group';
 
+  // -------------------------------------------------------------- Constructor.
+  function __construct($test_id = NULL) {
+    parent::__construct($test_id);
+    $this->skipClasses[__CLASS__] = TRUE;
+  }
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Clean up tables, copy of simpletest_clean_environment without the
    * drupal messages.
@@ -115,8 +122,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       throw $e;
     }
   }
-
-  // ------------------------------------------------------------------ Functions (protected)
 
   /**
    * Implements setUp().
@@ -224,7 +229,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     foreach ($tables as $table) {
       // Make sure we drop correct; tables MUST start with simpletest.
       if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
-        list($tmp, $name) = explode('mediamosa_', $table, 2);
+        list(, $name) = explode('mediamosa_', $table, 2);
 
         // If the drop fails then we consider that its already dropped.
         try {
@@ -257,7 +262,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Dump the log.
     $result = db_query('SELECT * FROM {watchdog}');
 
-    $texts[] = 'Dumping contents of watchdog';
+    $texts = array('Dumping contents of watchdog');
 
     foreach ($result as $log_item) {
       $items = empty($log_item->variables) ? array() : unserialize($log_item->variables);
@@ -265,7 +270,28 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // In verbose mode only.
-    $this->verbose(implode("<br />", $texts), 'watchdog dump');
+    $this->verbose(implode('<br />', $texts), 'watchdog dump');
+  }
+
+  /**
+   * Fire an assertion that is always positive.
+   *
+   * @param $message
+   *   The message to display along with the assertion.
+   * @param $group
+   *   The type of assertion - examples are "Browser", "PHP".
+   * @param $caller
+   *   By default, the assert comes from a function whose name starts with
+   *   'test'. Instead, you can specify where this assert originates from
+   *   by passing in an associative array as $caller. Key 'file' is
+   *   the name of the source file, 'line' is the line number and 'function'
+   *   is the caller function itself.
+   *
+   * @return
+   *   TRUE.
+   */
+  protected function pass($message = NULL, $group = 'Other', array $caller = NULL) {
+    return $this->assert(TRUE, $message, $group, $caller);
   }
 
   /**
@@ -273,8 +299,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param mixed $data
    */
-  public function var_export($data, $group = 'Other') {
-    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
+  public function var_export($data, $group = 'Other', array $caller = NULL) {
+    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group, $caller);
   }
 
   /**
@@ -282,8 +308,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param mixed $data
    */
-  public function var_export_verbose($data, $group = 'Other') {
-    $this->verbose(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
+  public function var_export_verbose($data) {
+    $this->verbose(highlight_string('<?php ' . var_export($data, TRUE), TRUE));
   }
 
   /**
@@ -291,8 +317,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param mixed $data
    */
-  public function var_export_fail($data, $group = 'Other') {
-    $this->fail(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
+  public function var_export_fail($data, $group = 'Other', array $caller = NULL) {
+    $this->fail(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group, $caller);
   }
 
   /**

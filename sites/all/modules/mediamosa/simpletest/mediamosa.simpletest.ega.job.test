@@ -34,7 +34,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'SimpleTest - Job server environment.',
@@ -43,7 +43,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
   }
 
-  // ------------------------------------------------------------------ Test still delete.
+  // -------------------------------------------------------- Test still delete.
   public function testStillDelete() {
 
     //

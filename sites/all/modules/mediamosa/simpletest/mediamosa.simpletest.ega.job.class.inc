@@ -30,10 +30,15 @@
   */
 
 class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
-  // ------------------------------------------------------------------ Members.
+  // --------------------------------------------------------------------- Vars.
 
+  // -------------------------------------------------------------- Constructor.
+  function __construct($test_id = NULL) {
+    parent::__construct($test_id);
+    $this->skipClasses[__CLASS__] = TRUE;
+  }
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Implements setUp().
    */
