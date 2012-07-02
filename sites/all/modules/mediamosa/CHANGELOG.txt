@@ -1,4 +1,4 @@
-MediaMosa 3.2.x-dev (build 1862)
+MediaMosa 3.2.x-dev (build 1880)
 --------------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
@@ -19,6 +19,16 @@ MediaMosa 3.2.x-dev (build 1862)
   function'.
 - Changed 'static protected function' to Drupal standard 'protected static
   function'.
+- MediaMosa Simpletests will now correctly display where the assert, passes and
+  fails messages where triggered, instead of the inherited class.
+- Added Simpletest to test ACL inherit/copy function.
+- Removed core hacks from bootstrap.inc. See
+  sites/all/modules/mediamosa/patch/README.txt for original patch notes in case
+  your installation requires the patch.
+- Fixed 3 more notices for php 5.4.
+- Added a post_transcode hook for tools.
+- Issue #56 (github) by Bigon: Mediamosa shouldn't hardcode path other modules.
+
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
@@ -55,7 +65,8 @@ MediaMosa 3.2.0 (build 1840)
 MediaMosa 3.1.1 (build 1830)
 ----------------------------
 - Updated Rubik and Tao theme.
-- Disabled db schema check on Status page (forum: after-install-php-error-main-page).
+- Disabled db schema check on Status page (forum:
+  after-install-php-error-main-page).
 - Disabled CQL search test with unequal searches for SOLR.
 - Fixed CQL search with unequal searches (<>) on properties.
 - Fixes upgrade path reported by (forum: "error-while-upgrading-31")
@@ -69,7 +80,8 @@ MediaMosa 3.1.0 (build 1820)
 - Fix error when using sortBy in CQL in the asset browser tool.
 - Fixed debug info block in MediaMosa SDK.
 - Solr update: unittest to work with parent solr url, updated documentation.
-- Forum issue by DZenker: Added .webm as a extention to ticket links for webm videos.
+- Forum issue by DZenker: Added .webm as a extention to ticket links for webm
+  videos.
 - Fixed mkdir to make sure all directories have the correct mode (755).
 
 MediaMosa 3.1.0-rc2 (build 1810)
@@ -89,8 +101,10 @@ MediaMosa 3.1.0-rc1 (build 1805)
 - Major rewrite permanent stills.
 - Removed coder and devel module.
 - Regular file names have mode 644.
-- Fix for watermark unit test; Rest call did not match correctly with uri in Simpletest.
-- Ticket #429: Rollback. Turned off new version 3 output, REST call return format is now compatible with version 2.
+- Fix for watermark unit test; Rest call did not match correctly with uri in
+  Simpletest.
+- Ticket #429: Rollback. Turned off new version 3 output, REST call return
+  format is now compatible with version 2.
 - Fix for Timezone unittest conflict in simple setup.
 - Ticket #500, Commented out unit tests code.
 - Added a mediamosa_metadata_info hook, to allow more metadataformats.
@@ -100,7 +114,8 @@ MediaMosa 3.0.7 (build 1790)
 - Fixed default timezone for new client applications (forum issue).
 - Fixed links on first page of install profile (forum issue).
 - Fixed PHP log error with server definition forms (forum issue).
-- Fixed function for re-analyse and re-transcode mediafiles in admin (ticket #391).
+- Fixed function for re-analyse and re-transcode mediafiles in admin (ticket
+  #391).
 - Added optional performance parameter for collection search.
 
 MediaMosa 3.0.6 (build 1780)
@@ -129,7 +144,8 @@ MediaMosa 3.0.5 (build 1775)
   (see ticket #270).
 - Solr fix for missing T (terminator) in date stamps, fixed in CQL class of solr
   instead of the main CQL class.
-- Fixed missing renames on 'aut' to 'acl', causing problems for Solr ACL indexing.
+- Fixed missing renames on 'aut' to 'acl', causing problems for Solr ACL
+  indexing.
 
 MediaMosa 3.0.4 (build 1736)
 ----------------------------
@@ -1166,7 +1182,8 @@ MediaMosa 2.1.0
 - /collection/{id}/asset doesn't exist (See MediaMosa ticket #245).
 - Version does not exists. (See MediaMosa ticket #246).
 - /asset/{id}/collection/count is broken (See MediaMosa ticket #249).
-- 'acl_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
+- 'acl_realm' parameter op een /asset call gaat fout (See MediaMosa ticket
+  #252).
 - /autorisation_group?limit=10 broken (See MediaMosa ticket #253).
 - Assets of other apps visible (See MediaMosa ticket #254).
 - /asset owner_id does not work (See
