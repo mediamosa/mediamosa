@@ -142,7 +142,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param $fps
    * @param $bitrate
    */
-  function calculate_bpp($width, $height, $fps, $bitrate) {
+  static function calculate_bpp($width, $height, $fps, $bitrate) {
     $result = '';
     if ($width != '' && $height != '' && $fps != '' && $bitrate != '') {
       $result = round((($bitrate * 1000) / ($fps * $width * $height)), 2);

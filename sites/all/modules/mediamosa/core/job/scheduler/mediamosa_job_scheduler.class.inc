@@ -340,7 +340,7 @@ class mediamosa_job_scheduler {
    *
    * @param $job_id
    */
-  function get_transcodejob_info($job_id) {
+  static function get_transcodejob_info($job_id) {
     $result = array();
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');

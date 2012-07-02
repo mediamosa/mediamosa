@@ -388,7 +388,7 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
    * @param OAuthConsumer $consumer
    *   The service consumer information.
    */
-  function new_access_token($token_old, $consumer) {
+  function new_access_token($token_old, $consumer, $verifier = NULL) {
     if (!$token_old) {
       throw new OAuthException('Invalid request token');
     }

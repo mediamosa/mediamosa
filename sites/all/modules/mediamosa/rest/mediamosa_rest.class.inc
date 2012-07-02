@@ -243,7 +243,7 @@ class mediamosa_rest {
    *    Test if the interface matches the interface of the REST call. E.g. test
    *    if an upload REST call is called from the upload interface, else skip.
    */
-  public function get_rest_calls($limit = 0, $offset = 0, array $options = array()) {
+  public static function get_rest_calls($limit = 0, $offset = 0, array $options = array()) {
 
     $options += array(
       'key' => mediamosa_rest_call::METHOD,
