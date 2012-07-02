@@ -245,7 +245,7 @@ class mediamosa_job_scheduler {
 
     for ($i = 0; $i < $response_data->header->item_count; $i++) {
       // Get current status.
-      $a_job = mediamosa_job::get($response_data->items->item[$i]->job_id);
+      $a_job = mediamosa_job::get((string) $response_data->items->item[$i]->job_id);
 
       $fields = array(
         mediamosa_job_db::JOB_STATUS => $response_data->items->item[$i]->status,
@@ -269,21 +269,21 @@ class mediamosa_job_scheduler {
       // Update.
       mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
         ->fields($fields)
-        ->condition(mediamosa_job_db::ID, $response_data->items->item[$i]->job_id)
+        ->condition(mediamosa_job_db::ID, (string) $response_data->items->item[$i]->job_id)
         ->execute();
 
       // Trigger url.
-      mediamosa_job::notify_transcoding($a_job[mediamosa_job_db::JOB_STATUS], $response_data->items->item[$i]->status, $response_data->items->item[$i]->job_id);
+      mediamosa_job::notify_transcoding($a_job[mediamosa_job_db::JOB_STATUS], (string) $response_data->items->item[$i]->status, (string) $response_data->items->item[$i]->job_id);
 
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED ||
           $response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FAILED ||
           $response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_CANCELLED) {
 
         // Remove link between server and job.
-        mediamosa_server_job::delete_by_jobid($response_data->items->item[$i]->job_id);
+        mediamosa_server_job::delete_by_jobid((string) $response_data->items->item[$i]->job_id);
 
         // Remove job on jobserver.
-        self::remove_job_on_server($uri, $response_data->items->item[$i]->job_id);
+        self::remove_job_on_server($uri, (string) $response_data->items->item[$i]->job_id);
       }
 
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED) {
@@ -292,18 +292,18 @@ class mediamosa_job_scheduler {
             // Statistics.
             mediamosa_statistics::insert_job_transcode($response_data->items->item[$i]->mediafile_dest, $a_job[mediamosa_job_db::ID]);
             // If the transcode job is completed, add it to the mediafile.
-            self::parse_finished_transcode($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_src, $response_data->items->item[$i]->mediafile_dest);
+            self::parse_finished_transcode((string) $response_data->items->item[$i]->job_id, (string) $response_data->items->item[$i]->mediafile_src, (string) $response_data->items->item[$i]->mediafile_dest);
             break;
 
           case mediamosa_job_db::JOB_TYPE_ANALYSE:
             // If the analyse job is completed, add it to the technical metadata.
-            mediamosa_asset_mediafile_metadata::store_analyse($response_data->items->item[$i]->job_id, explode("\n" , $response_data->items->item[$i]->analyse_result));
+            mediamosa_asset_mediafile_metadata::store_analyse((string) $response_data->items->item[$i]->job_id, explode("\n" , (string) $response_data->items->item[$i]->analyse_result));
             break;
 
           case mediamosa_job_db::JOB_TYPE_STILL:
             // If the still job is completed, add the still to db.
             // We serialize it, because of the multiple stills
-            self::add_still_to_db($response_data->items->item[$i]->job_id, unserialize($response_data->items->item[$i]->mediafile_dest));
+            self::add_still_to_db((string) $response_data->items->item[$i]->job_id, unserialize((string) $response_data->items->item[$i]->mediafile_dest));
             break;
         }
       }
@@ -313,7 +313,7 @@ class mediamosa_job_scheduler {
         switch ($response_data->items->item[$i]->job_type) {
           case mediamosa_job_db::JOB_TYPE_TRANSCODE:
             // if transcode has failed.
-            self::parse_failed_transcode($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_dest);
+            self::parse_failed_transcode((string) $response_data->items->item[$i]->job_id, (string) $response_data->items->item[$i]->mediafile_dest);
             break;
         }
       }
@@ -557,6 +557,11 @@ class mediamosa_job_scheduler {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
+
+    // Perform a post transcode, if supported.
+    if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_transcode')) {
+      call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_transcode'), $job_info['asset_id'], $job_info['mediafile_id'], $mediafile_id_dest, $job_info['file_extension']);
+    }
 
     // Get mediafile.
     $a_mediafile = mediamosa_asset_mediafile::get($job_info['mediafile_id']);
