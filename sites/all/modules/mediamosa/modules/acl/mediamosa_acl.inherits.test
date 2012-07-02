@@ -1,0 +1,182 @@
+<?php
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for ACL.
+  */
+class MediaMosaAclInheritsTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'ACL - Inherits',
+      'description' => 'Test the ACL inherits functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * Replace ACL from one mediafile to the other.
+   *
+   * @param string $mediafile_id_1
+   *   The original.
+   * @param string $mediafile_id_2
+   *   The destination.
+   */
+  protected function replaceMediafileACLWithMediafileACL($mediafile_id_1, $mediafile_id_2) {
+    // Get the state before replace.
+    $acl_source_pre = $this->getMediafileAcl($mediafile_id_1, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $acl_dest_pre = $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Output.
+    $this->var_export_verbose($acl_source_pre, 'pre-replace');
+    $this->var_export_verbose($acl_dest_pre, 'pre-replace');
+
+    // Now copy & replace acl.
+    mediamosa_acl::replace_mediafile_to_mediafile($mediafile_id_1, $mediafile_id_2);
+
+    // Get ACL after the replace.
+    $acl_source_post = $this->getMediafileAcl($mediafile_id_1, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $acl_dest_post = $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Output.
+    $this->var_export_verbose($acl_source_post, 'post-replace');
+    $this->var_export_verbose($acl_dest_post, 'post-replace');
+
+    // Test the results.
+    $this->aclEqual($acl_source_pre, $acl_source_post);
+    $this->aclEqual($acl_source_post, $acl_dest_post);
+
+    // Check if the is_protected is the same.
+    $mediafile_1 = $this->getMediafile($mediafile_id_1);
+    $mediafile_2 = $this->getMediafile($mediafile_id_2);
+
+    // Must be the same.
+    $this->assertTrue($mediafile_1[mediamosa_asset_mediafile_db::IS_PROTECTED] == $mediafile_2[mediamosa_asset_mediafile_db::IS_PROTECTED], 'Is protected value is the same.');
+  }
+
+  /**
+   * Compare 2 ACL results.
+   *
+   * @param array $acl_source
+   *   The items array from acl get call.
+   * @param array $acl_dest
+   *   The items array from acl get call.
+   */
+  protected function aclEqual(array $acl_source, array $acl_dest) {
+    // Both empty?
+    if (empty($acl_source['items']) && empty($acl_dest['items'])) {
+      $this->Pass('ACL copy success');
+      return;
+    }
+
+    // One empty, other not?
+    if ( (empty($acl_source['items']) && !empty($acl_dest['items'])) || (!empty($acl_source['items']) && empty($acl_dest['items'])) ) {
+      $this->Fail('ACL copy success');
+      return;
+    }
+
+    $data_source = $acl_source['items']['item'];
+    $data_dest = $acl_dest['items']['item'];
+
+    // Both have data.
+    foreach ($data_source as $acls) {
+      foreach ($acls as $type => $value) {
+        // Find it in destination and unset it.
+        foreach ($data_dest as $key => $acls_dest) {
+          foreach ($acls_dest as $type_dest => $value_dest) {
+            if ($type == $type_dest && $value == $value_dest) {
+              unset($data_dest[$key][$type_dest]);
+              if (empty($data_dest[$key])) {
+                unset($data_dest[$key]);
+              }
+              break 2;
+            }
+          }
+        }
+      }
+    }
+
+    // At the end, it needs to be empty.
+    if (empty($data_dest)) {
+      $this->pass('ACL copy success');
+      return;
+    }
+
+    $this->var_export($data_source);
+    $this->var_export($data_dest);
+
+    $this->fail('ACL copy success');
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testAclInherits() {
+    // Create 2 assets.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // And 2 mediafiles.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    // Copy & replace & test.
+    $this->replaceMediafileACLWithMediafileACL($mediafile_id_1, $mediafile_id_2);
+
+    // Create ACL on dest. Should clear the ACL on dest, as source has no ACL.
+    $this->setMediafileAcl($mediafile_id_2, array('acl_user' => 'johndoe'));
+
+    // Should not be empty.
+    $acl_dest_post = $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(!empty($acl_dest_post['items']), 'Has ACL');
+
+    // Copy & replace & test.
+    $this->replaceMediafileACLWithMediafileACL($mediafile_id_1, $mediafile_id_2);
+
+    // Should be empty.
+    $acl_dest_post = $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(empty($acl_dest_post['items']), 'Has no ACL');
+
+    // Set realm.
+    $this->setMediafileAcl($mediafile_id_1,  array('acl_realm' => array('foo@fooland.com'), 'acl_domain' => array('fooland.boo'), 'acl_user' => array('john doe'), 'acl_group' => array('john doe')));
+
+    // Copy & replace & test.
+    $this->replaceMediafileACLWithMediafileACL($mediafile_id_1, $mediafile_id_2);
+
+    // Delete ACL from mediafile 1.
+    $this->deleteMediafileAcl($mediafile_id_1);
+
+    // Should be empty.
+    $acl_dest_post = $this->getMediafileAcl($mediafile_id_1, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(empty($acl_dest_post['items']), 'Has no ACL');
+
+    // Copy & replace & test.
+    $this->replaceMediafileACLWithMediafileACL($mediafile_id_1, $mediafile_id_2);
+
+    // Should be empty.
+    $acl_dest_post = $this->getMediafileAcl($mediafile_id_2, array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->assertTrue(empty($acl_dest_post['items']), 'Has no ACL');
+  }
+}
