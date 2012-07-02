@@ -8,14 +8,19 @@ MediaMosa.
 
 - bootstrap.patch;
 
-  Cookie domain
+  -- Cookie domain --
   This patch is required for the cookie domain fix and the fix on simpletest.
   The cookie domain fix will fix problems on the 'www.' subdomain usage of
   Drupal. Patch will allow you to use cookies on different subdomains.
+  For testing the patch, include the following line in the mediamosa.info file;
 
-  Simpletest loadbalancer problem;
+  files[] = patch/mediamosa_cookie_domain.test
+
+
+  -- Simpletest loadbalancer problem; --
   Drupal 7 has problems when running simpletest on loadbalancers while tests can
   do HTTP requests inside a simpletest. When during the HTTP request inside the
   test is quering the loadbalancer, the other server might be chosen and
   resulting in a 403 (forbidden) http error. Other problems will occur on some
   tests which will do request on different REST interfaces on different servers.
+
