@@ -53,10 +53,10 @@ class mediamosa_settings {
   const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
 
   // Path to icon.
-  const PATH_ICON = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo-16x16.png';
+  const PATH_ICON = '/lib/misc/mediamosa-logo-16x16.png';
 
   // Path to logo.
-  const PATH_LOGO = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo.png';
+  const PATH_LOGO = '/lib/misc/mediamosa-logo.png';
 
 
   // Atom fields.
@@ -144,9 +144,6 @@ class mediamosa_settings {
   // stills are resampled. Lower sizes is faster but less accurate.
   const STILL_RESAMPLE_WIDTH = 150;
   const STILL_RESAMPLE_HEIGHT = 150;
-
-  // Still REST call.
-  const STILL_REST_TEST_IMAGE = 'sites/all/modules/mediamosa/lib/misc/1px.png';
 
   // Media cache max time: 60*60*24*30 = 2592000 sec (30 days).
   const MEDIA_CACHE_SECOND = 2592000;

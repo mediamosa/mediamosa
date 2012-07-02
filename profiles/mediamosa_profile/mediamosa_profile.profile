@@ -41,7 +41,7 @@ define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
  * Retrieve the version.
  */
 function _mediamosa_profile_get_version() {
-  $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.class.inc');
+  $inc = include_once (DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa') . '/mediamosa.version.class.inc');
 
   // Try to include the settings file.
   return $inc ? mediamosa_version::get_current_version_str(TRUE) : '';

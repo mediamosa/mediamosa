@@ -792,7 +792,7 @@ class mediamosa_response extends mediamosa {
     $xml_element->addAttribute('version', mediamosa_settings::ATOM_GENERATOR_VERSION);
 
     // Icon.
-    $xml_element = $xml_response->addChild('icon', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_ICON);
+    $xml_element = $xml_response->addChild('icon', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . drupal_get_path('module', 'mediamosa') . mediamosa_settings::PATH_ICON);
 
     // Id.
     $xml_element = $xml_response->addChild('id', mediamosa_settings::ATOM_ID);
@@ -802,7 +802,7 @@ class mediamosa_response extends mediamosa {
     $xml_element->addAttribute('href', $base_url);
 
     // Logo.
-    $xml_element = $xml_response->addChild('logo', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO);
+    $xml_element = $xml_response->addChild('logo', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . drupal_get_path('module', 'mediamosa') . mediamosa_settings::PATH_LOGO);
 
     // Subtitle.
     $xml_element = $xml_response->addChild('subtitle', mediamosa_settings::ATOM_SUBTITLE);
@@ -976,7 +976,7 @@ class mediamosa_response extends mediamosa {
       'lastBuildDate' => mediamosa_datetime::time_to_rfc_822(),
       'generator' => mediamosa_settings::RSS_GENERATOR,
       'image' => array(
-        'url' => $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO,
+        'url' => $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . drupal_get_path('module', 'mediamosa') . mediamosa_settings::PATH_LOGO,
       ),
     );
 

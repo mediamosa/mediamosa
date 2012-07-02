@@ -38,7 +38,7 @@ if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update') {
 }
 
 // Needed for mediamosa_error.class.inc.
-require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa_sdk/mediamosa_sdk.class.inc';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa_sdk') . '/mediamosa_sdk.class.inc';
 
 require_once 'mediamosa_error.class.inc';
 
