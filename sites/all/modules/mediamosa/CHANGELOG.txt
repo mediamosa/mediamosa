@@ -28,7 +28,6 @@ MediaMosa 3.2.2 (build 1884)
 - Added a post_transcode hook for tools.
 - Issue #56 (github) by Bigon: Mediamosa shouldn't hardcode path other modules.
 
-
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
 - Added play restriction ACL; media that does meet play restriction rules (when
