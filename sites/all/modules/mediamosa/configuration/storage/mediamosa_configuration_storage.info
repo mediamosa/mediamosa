@@ -3,7 +3,7 @@
 name = "Storage"
 description = "The storage and mount settings."
 package = "MediaMosa - Maintenance - Configuration"
-version = 7.x-3.x
+version = 7.x-3.2.2
 core = 7.x
 
 ; Dependencies (module names)
