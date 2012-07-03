@@ -1,4 +1,4 @@
-MediaMosa 3.2.2 (build 1882)
+MediaMosa 3.2.2 (build 1884)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
