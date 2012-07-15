@@ -1,5 +1,7 @@
 MediaMosa 3.2.x-dev (build 1884)
 --------------------------------
+- Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
+  standards.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------
@@ -10,7 +12,7 @@ MediaMosa 3.2.2 (build 1884)
   no application ID was available or set.
 - Fixed: Fixing problem with 1.7 migration module; PDO exception with NULL value
   for metadata name (caused by uppercase name).
-- Upgraded to Drupal 7.14
+- Upgraded to Drupal 7.14.
 - Partial rewrite on ratio calculation function for preventing hangs during
   transcode jobs.
 - Fixed notices when asset search was called with is_oai = TRUE and assets where
