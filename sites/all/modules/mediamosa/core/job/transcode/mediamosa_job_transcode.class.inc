@@ -52,8 +52,6 @@ class mediamosa_job_transcode {
    * When the tool is windows, a extra job is created for transcoding to
    * raw format.
    *
-   * 1.x: _vpx_jobs_create_new_job_transcode
-   *
    * @param integer $app_id
    *  The application ID.
    * @param integer $job_id
@@ -145,7 +143,7 @@ class mediamosa_job_transcode {
     }
 
     // Now create the transcode job.
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_transcode_db::JOB_ID => $job_id,
       mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $profile_id,
       mediamosa_job_transcode_db::TOOL => $tool,
@@ -155,11 +153,11 @@ class mediamosa_job_transcode {
     );
 
     // Add changed/created values.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     // See if the tool is windows. If so, we need to create a raw job.

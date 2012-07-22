@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Contains mediamosa_job_server.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,12 +27,9 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The job server module.
-  */
-
-
+/**
+ * Represents a job server.
+ */
 class mediamosa_job_server {
 
   /**
@@ -171,6 +171,7 @@ class mediamosa_job_server {
     // Log it.
     self::log_debug('Ending parse queue job server');
   }
+
   /**
    * Parse the queue jobs.
    *
@@ -292,7 +293,8 @@ class mediamosa_job_server {
   /**
    * Create a job server job.
    *
-   * @param $job_id
+   * @param integer $job_id
+   *   The job ID.
    */
   public static function create_job($job_id, $job_type, $mediafile_id_src) {
 
@@ -746,7 +748,7 @@ class mediamosa_job_server {
 
     $tool = $job_server_transcode[mediamosa_job_server_transcode_db::TOOL];
     $file_extension = $job_server_transcode[mediamosa_job_server_transcode_db::FILE_EXTENSION];
-    $parameter_list = $job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
+    $command = $job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
 
     // Mime type.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -755,14 +757,19 @@ class mediamosa_job_server {
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Create parameter string from the command.
-    $parameter_string = '';
-    $pairs = explode(';', $parameter_list);
-    foreach ($pairs as $pair) {
-      $parameter_string .= preg_replace('/:/', ' ', $pair, 1) . ' ';
+    $commands = mediamosa_transcode_profile::commandToArray($command);
+
+    // Build the parameter string.
+    $parameters = array();
+    foreach ($commands as $name => $value) {
+      if ($value == mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH) {
+        $value = '';
+      }
+      $parameters[] = $name . ' ' . $value;
     }
 
-    // Replace the one parameter placeholder.
-    $parameter_string = str_replace(mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH, '', $parameter_string);
+    // Rebuild.
+    $parameter_string = implode(' ', $parameters);
 
     // Empty.
     $execution_string = '';
@@ -773,7 +780,7 @@ class mediamosa_job_server {
       case 'ffmpeg':
         $parameter_string = trim($parameter_string);
         if (!empty($parameter_string)) {
-          $parameter_string = "'" . $parameter_string . "'";
+          $parameter_string = escapeshellarg($parameter_string);
         }
 
         $execution_string = sprintf('%s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $file_extension, $parameter_string);
@@ -785,8 +792,8 @@ class mediamosa_job_server {
 
         // FIXME:
         // This code here is first attempt to rewrite the jobs module in more
-        // flexible one. In future ::generate_transcode() is called directly and jobs
-        // will no longer worry about exec strings.
+        // flexible one. In future ::generate_transcode() is called directly and
+        // jobs will no longer worry about exec strings.
         // Will start moving all ffmpeg code out of core into ffmpeg tool very
         // soon.
 
@@ -809,7 +816,7 @@ class mediamosa_job_server {
             'location_source_file' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
           );
 
-          // php 5.2.3 or higher
+          // PHP 5.2.3 or higher
           $execution_string = call_user_func($class_name . '::get_transcode_exec', $args);
         }
     }
@@ -865,7 +872,8 @@ class mediamosa_job_server {
       return array();
     }
 
-    $result = $lines = array();
+    $result = array();
+    $lines = array();
 
     // Set default.
     $result += array(
@@ -919,11 +927,11 @@ class mediamosa_job_server {
    * Check the created still and save it if everything is ok.
    *
    * @param string $job_id
-   *  Current job id.
+   *   Current job id.
    * @param string $mediafile_id_src
-   *  Contains a file path to the mediafile
+   *   Contains a file path to the mediafile
    * @return string
-   *  Contains the error message
+   *   Contains the error message
    */
   public static function store_new_still($job_id, $mediafile_id_src) {
 

@@ -38,7 +38,7 @@ function mediamosa_transcode_profile_load(&$nodes) {
   $nodes = mediamosa_node_revision::load($nodes);
 
   foreach ($nodes as $key => $node) {
-    $nodes[$key]->commands = empty($node->{mediamosa_transcode_profile_db::COMMAND}) ? array() : mediamosa_lib::create_named_array($node->{mediamosa_transcode_profile_db::COMMAND});
+    $nodes[$key]->commands = empty($node->{mediamosa_transcode_profile_db::COMMAND}) ? array() : mediamosa_transcode_profile::commandToArray($node->{mediamosa_transcode_profile_db::COMMAND});
   }
 
   return $nodes;
@@ -47,7 +47,8 @@ function mediamosa_transcode_profile_load(&$nodes) {
 /**
  * Store command string.
  *
- * @param $commands
+ * @param object $node
+ *   The node to process the input.
  */
 function _mediamosa_transcode_profile_do_command($node) {
 
@@ -66,18 +67,19 @@ function _mediamosa_transcode_profile_do_command($node) {
 
       // Gather all set options
       if ($value != '') {
-        $commands[] = $command . ':' . $value;
+        $commands[$command] = $value;
       }
     }
   }
 
   // If no options where found and we have already command in our node, then
-  // use the given command instead.
+  // use the found command instead.
   if (empty($commands) && !empty($node->{mediamosa_transcode_profile_db::COMMAND})) {
     return $node->{mediamosa_transcode_profile_db::COMMAND};
   }
 
-  return implode(';', $commands);
+  // Convert to string.
+  return mediamosa_transcode_profile::arrayToCommand($commands);
 }
 
 /**

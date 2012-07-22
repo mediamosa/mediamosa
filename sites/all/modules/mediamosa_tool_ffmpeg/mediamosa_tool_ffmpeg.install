@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * FFmpeg tool installer.
+ */
+
+/**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
@@ -22,55 +27,53 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * FFmpeg tool installer.
-  */
-
 /**
  * Implements hook_install().
  */
 function mediamosa_tool_ffmpeg_install() {
   // Tool params.
+  //
+  // Get translate function.
+  $t = get_t();
 
-  $a_default_params = array(
+  $default_params = array(
     array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
-    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv','wmv','mp4','avi','ogg','webm'), NULL, 'FALSE', NULL),
-    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame','wma','pcm_s16le','libfaac','libvorbis'), NULL, 'FALSE', t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
-    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000','64000','128000','192000','256000','512000'), '64000', 'FALSE', t('Set the audio bitrate in bit/s@default')),
-    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050','44100'), '44100', 'FALSE', t('Set the audio sampling frequency@default')),
-    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', t('The allowed value is between 0 and 2@default')),
+    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv', 'wmv', 'mp4', 'avi', 'ogg', 'webm'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'wma', 'pcm_s16le', 'libfaac', 'libvorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000', '64000', '128000', '192000', '256000', '512000'), '64000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
+    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050', '44100'), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
+    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
 
-    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo','flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
+    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo', 'flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', $t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
     array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', 'The -vpre option is an preset option of ffmpeg used till version 0.8 for libx264 and later used only for libvpx, it is recommended that you use -profile and -preset for libx264.'),
     array('ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array('', 'main', 'baseline', 'ipod320', 'ipod640'), NULL, 'FALSE', NULL),
     array('ffmpeg', 'x264_profile', '-profile', NULL, NULL, array('', 'baseline', 'main', 'high'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
     array('ffmpeg', 'x264_preset', '-preset', NULL, NULL, array('', 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
-    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('','1','2'), NULL, 'FALSE', t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
-    array('ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', t('Set the video bitrate in bit/s@default')),
-    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', t('Set frame rate (Hz value, fraction or abbereviation@default')),
-    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', t('Maximum video quantizer scale (VBR)@default')),
-    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', t('Duration of the video.')),
+    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('', '1', '2'), NULL, 'FALSE', $t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
+    array('ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', $t('Set the video bitrate in bit/s@default')),
+    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', $t('Set frame rate (Hz value, fraction or abbereviation@default')),
+    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', $t('Maximum video quantizer scale (VBR)@default')),
+    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', $t('Duration of the video.')),
     array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
-    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080', '480x320','480x270','480x360', '640x390', '640x360', '854x480'), '640x390', 'FALSE', t('Set frame size using format WIDTHxHEIGHT@default')),
-    array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', t('Aspect ratio')),
-    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force maintain the original video aspect ratio or not@default')),
-    array('ffmpeg', 'padding', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force padding, if aspect ratio is maintained@default')),
+    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96', '176x144', '352x288', '704x576', '160x120', '320x240', '640x480', '800x600', '1024x768', '1600x1200', '2048x1536', '1280x1024', '2560x2048', '5120x4096', '852x480', '1366x768', '1600x1024', '1920x1200', '2560x1600', '3200x2048', '3840x2400', '6400x4096', '7680x4800', '320x200', '640x350', '852x480', '1280x720', '1920x1080', '480x320', '480x270', '480x360', '640x390', '640x360', '854x480'), '640x390', 'FALSE', $t('Set frame size using format WIDTHxHEIGHT@default')),
+    array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', $t('Aspect ratio')),
+    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force maintain the original video aspect ratio or not@default')),
+    array('ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
   );
 
   // Insert default mappings as nodes.
-  foreach ($a_default_params as $a_default_param) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
+  foreach ($default_params as $default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
 
-    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
-    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
-    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
-    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
-    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
-    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
-    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
-    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
-    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
+    $node->{mediamosa_tool_params_db::TOOL} = $default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
 
     $node = node_save($node);
   }
@@ -84,25 +87,30 @@ function mediamosa_tool_ffmpeg_install() {
     array('flash 400x240', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:500000;size:400x240;maintain_aspect_ratio:yes'),
     array('flash 480x270', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:128000;audiosamplingrate:22050;videocodec:flv;videobitrate:800000;size:480x270;maintain_aspect_ratio:yes'),
 
-    // old 3gp mobile phones format.
-    // resource used: http://goinggnu.wordpress.com/2007/02/13/convert-avi-to-3gp-using-ffmpeg/
-    // ffmpeg -i inputfile.mpg -s qcif -vcodec h263 -acodec aac -ac 1 -ar 8000 -r 25 -ab 32 -y outputfile.3gp
+    // Old 3gp mobile phones format.
+    // Resource used:
+    // http://goinggnu.wordpress.com/2007/02/13/convert-avi-to-3gp-using-ffmpeg/
+    // Expected cmd
+    // ffmpeg -i inputfile.mpg -s qcif -vcodec h263 -acodec aac -ac 1 -ar 8000
+    // -r 25 -ab 32 -y outputfile.3gp
     array('3gp mobile format', 'FALSE', 'ffmpeg', '3gp', 'audiocodec:libfaac;audiobitrate:32000;audiosamplingrate:110025;audiochannels:1;videocodec:h263;videobitrate:56000;fps:25;size:176x144'),
-    // libx264
 
-    // a baseline h264 transcode, without size.
+    // libx264
+    //
+    // A baseline h264 transcode, without size.
     array('mp4 h264 (baseline, slow 2 pass), ffmpeg < 0.7.7', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
 
-    // a baseline h264 transcode, without size.
+    // A baseline h264 transcode, without size.
     array('mp4 h264 (baseline, ffmpeg > 0.7.7)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
 
-    // based on android h264 recommendations: http://developer.android.com/guide/appendix/media-formats.html.
+    // Based on android h264 recommendations:
+    // http://developer.android.com/guide/appendix/media-formats.html.
     array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
     array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
     array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
     array('mp4 h264 HD (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
-    // same as before but now with default profile.
+    // Same as before but now with default profile.
     array('mp4 h264 low quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
     array('mp4 h264 medium quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
     array('mp4 h264 high quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
@@ -110,7 +118,7 @@ function mediamosa_tool_ffmpeg_install() {
     array('mp4 h264 HD - 4kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:4000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
 
     // h264 lossless profiles.
-
+    //
     // mpeg4, default profile, as this profile will work on ffmpeg 0.7 ad 0.9.
     array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
 
@@ -137,9 +145,9 @@ function mediamosa_tool_ffmpeg_install() {
     $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
     $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
     $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
-    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = mediamosa_transcode_profile::convertOldCommand2NewCommand($default_profile[4]);
 
-    $node = node_save($node);
+    node_save($node);
   }
 }
 
@@ -155,7 +163,9 @@ function mediamosa_tool_ffmpeg_uninstall() {
  */
 function mediamosa_tool_ffmpeg_update_7000() {
   // Rebuild the registry, added new class.
-  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry}');
+  // Clear it too.
+  db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 }

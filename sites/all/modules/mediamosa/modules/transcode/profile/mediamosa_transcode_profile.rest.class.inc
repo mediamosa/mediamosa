@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Transcode profile REST calls.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,59 +28,48 @@
  */
 
 /**
- * @file
- * Transcode profile REST calls.
- */
-
-
-/**
  * URI: /transcode/profile
  *      /video/transcode_profiles (deprecated)
  *      /transcode/profiles (deprecated)
  * Method: GET
- *
- * 1.x: _transcoding_profiles_get_transcode_list.
- *
  */
 class mediamosa_rest_call_transcode_profile_search extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
-  // Rest vars;
-
-  // ------------------------------------------------------------------ Var Setup.
+  // ------------------------------------------------------------------- Consts.
+  // ---------------------------------------------------------------- Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
     // Get the listing.
-    $a_transcode_profiles = mediamosa_transcode_profile::search($app_id);
+    $transcode_profiles = mediamosa_transcode_profile::search($app_id);
 
-    foreach ($a_transcode_profiles as $a_transcode_profile) {
-      $a_item = array();
-      $a_item['profile_id'] = $a_transcode_profile[mediamosa_transcode_profile_db::ID];
-      $a_item[mediamosa_transcode_profile_db::PROFILE] = $a_transcode_profile[mediamosa_transcode_profile_db::PROFILE];
-      $a_item['default'] = $a_transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
-      $a_item['global'] = $a_transcode_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
+    foreach ($transcode_profiles as $transcode_profile) {
+      $item = array();
+      $item['profile_id'] = $transcode_profile[mediamosa_transcode_profile_db::ID];
+      $item[mediamosa_transcode_profile_db::PROFILE] = $transcode_profile[mediamosa_transcode_profile_db::PROFILE];
+      $item['default'] = $transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
+      $item['global'] = $transcode_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
 
       // UTC -> App timezone.
-      if (isset($a_item[mediamosa_transcode_profile_db::CREATED])) {
-        $a_item[mediamosa_transcode_profile_db::CREATED] = mediamosa::utcdate2appdate($a_item[mediamosa_transcode_profile_db::CREATED]);
+      if (isset($item[mediamosa_transcode_profile_db::CREATED])) {
+        $item[mediamosa_transcode_profile_db::CREATED] = mediamosa::utcdate2appdate($item[mediamosa_transcode_profile_db::CREATED]);
       }
-      if (isset($a_item[mediamosa_transcode_profile_db::CHANGED])) {
-        $a_item[mediamosa_transcode_profile_db::CHANGED] = mediamosa::utcdate2appdate($a_item[mediamosa_transcode_profile_db::CHANGED]);
+      if (isset($item[mediamosa_transcode_profile_db::CHANGED])) {
+        $item[mediamosa_transcode_profile_db::CHANGED] = mediamosa::utcdate2appdate($item[mediamosa_transcode_profile_db::CHANGED]);
       }
 
-      $o_mediamosa->add_item($a_item);
+      $mediamosa->add_item($item);
     }
   }
 }
@@ -85,9 +77,6 @@ class mediamosa_rest_call_transcode_profile_search extends mediamosa_rest_call {
 /**
  * URI: /transcode/profile/$profile_id
  * Method: GET
- *
- * 1.x: _transcoding_profiles_get_transcode.
- *
  */
 class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -96,9 +85,9 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -109,12 +98,12 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
@@ -123,23 +112,23 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
     $profile_id = $this->get_param_value(self::PROFILE_ID);
 
     // Get the listing.
-    $a_profile = mediamosa_transcode_profile::get($profile_id, $app_id);
+    $profile = mediamosa_transcode_profile::get($profile_id, $app_id);
 
     // Add when found.
-    if ($a_profile) {
+    if ($profile) {
       $transcode = array();
-      $transcode['profile_id'] = $a_profile[mediamosa_transcode_profile_db::ID];
-      $transcode['profile_name'] = $a_profile[mediamosa_transcode_profile_db::PROFILE];
-      $transcode['default'] = $a_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
-      $transcode['global'] = $a_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
-      $transcode['file_extension'] = $a_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
-      $transcode['created'] = mediamosa::utcdate2appdate($a_profile[mediamosa_transcode_profile_db::CREATED]);
-      $transcode['changed'] = mediamosa::utcdate2appdate($a_profile[mediamosa_transcode_profile_db::CHANGED]);
-      $transcode['version'] = $a_profile[mediamosa_transcode_profile_db::VERSION];
-      $transcode['command'] = $a_profile[mediamosa_transcode_profile_db::COMMAND];
-      $transcode['tool'] = $a_profile[mediamosa_transcode_profile_db::TOOL];
+      $transcode['profile_id'] = $profile[mediamosa_transcode_profile_db::ID];
+      $transcode['profile_name'] = $profile[mediamosa_transcode_profile_db::PROFILE];
+      $transcode['default'] = $profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
+      $transcode['global'] = $profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
+      $transcode['file_extension'] = $profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
+      $transcode['created'] = mediamosa::utcdate2appdate($profile[mediamosa_transcode_profile_db::CREATED]);
+      $transcode['changed'] = mediamosa::utcdate2appdate($profile[mediamosa_transcode_profile_db::CHANGED]);
+      $transcode['version'] = $profile[mediamosa_transcode_profile_db::VERSION];
+      $transcode['command'] = $profile[mediamosa_transcode_profile_db::COMMAND];
+      $transcode['tool'] = $profile[mediamosa_transcode_profile_db::TOOL];
 
-      $o_mediamosa->add_item($transcode);
+      $mediamosa->add_item($transcode);
     }
   }
 }
@@ -147,9 +136,6 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
 /**
  * URI: /transcode/profile/create
  * Method: POST
- *
- * 1.x: _transcoding_profiles_create_transcode.
- *
  */
 class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -163,9 +149,9 @@ class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::NAME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
@@ -204,12 +190,12 @@ class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
@@ -231,16 +217,13 @@ class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
     $profile_id = mediamosa_transcode_profile::create($app_id, $name, $version, $default, $tool, $file_extension, $command);
 
     // Add to response.
-    $o_mediamosa->add_item(array('profile_id' => $profile_id));
+    $mediamosa->add_item(array('profile_id' => $profile_id));
   }
 }
 
 /**
  * URI: /transcode/profile/$profile_id
  * Method: POST
- *
- * 1.x: _transcoding_profiles_update_transcode.
- *
  */
 class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -256,9 +239,9 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -303,27 +286,28 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
+   *   The variable description of the REST call.
    */
-  protected function process_rest_args(array $a_var_setup) {
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+  protected function process_rest_args(array $var_setup) {
+    $var_setup = parent::process_rest_args($var_setup);
     $replace = $this->get_param_value(self::REPLACE_);
 
     if ($replace) {
-      $a_var_setup[self::VARS][self::NAME][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
-      $a_var_setup[self::VARS][self::TOOL][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
-      $a_var_setup[self::VARS][self::VERSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
-      $a_var_setup[self::VARS][self::FILE_EXTENSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
-      $a_var_setup[self::VARS][self::COMMAND][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::NAME][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::TOOL][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::VERSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::FILE_EXTENSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $var_setup[self::VARS][self::COMMAND][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -358,8 +342,6 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
 /**
  * URI: /transcode/profile/$profile_id/delete
  * Method: POST
- *
- * 1.x: _transcoding_profiles_delete_transcode.
  */
 class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -368,9 +350,9 @@ class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -381,18 +363,16 @@ class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
-
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Get Profile ID.
     $profile_id = $this->get_param_value(self::PROFILE_ID);
@@ -401,6 +381,6 @@ class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
     mediamosa_transcode_profile::delete($app_id, $profile_id);
 
     // Set Ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

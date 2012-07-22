@@ -55,19 +55,19 @@ class mediamosa_server {
     // Get all enabled transcode servers (ON / CLOSE).
     $servers = self::get_enabled_job_processor();
 
-    $a_triggered = array();
+    $triggered = array();
     foreach ($servers as $server) {
 
       // Get URL.
       $url = mediamosa_http::uri2url($server[mediamosa_server_db::SERVER_URI]) . $call;
 
       // Prevent multiple triggers if url is on more than one server.
-      if (in_array($url, $a_triggered)) {
+      if (in_array($url, $triggered)) {
         continue;
       }
 
       // Mark triggered.
-      $a_triggered[] = $url;
+      $triggered[] = $url;
 
       // Log it.
       mediamosa_debug::log('Triggering job server @ @uri', array('@uri' => $url));
@@ -135,7 +135,7 @@ class mediamosa_server {
     $result = array();
     foreach ($servers as $server) {
 
-      $uri = mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI]);
+      $uri = mediamosa_http::expectHTTP($server[mediamosa_server_db::SERVER_URI]);
 
       $response = mediamosa_http::do_internal_call($uri, 'server/status?include_status=TRUE');
       if ($response->code != '200') {
@@ -168,7 +168,7 @@ class mediamosa_server {
   public static function cleanup_simpletest_enabled_servers($server_types = array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD, mediamosa_server_db::SERVER_TYPE_STILL, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR, mediamosa_server_db::SERVER_TYPE_UPLOAD)) {
     $servers = mediamosa_server::get_enabled($server_types);
     foreach ($servers as $server) {
-      $uri = mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI]);
+      $uri = mediamosa_http::expectHTTP($server[mediamosa_server_db::SERVER_URI]);
 
       // FIXME: need fix for uri.
       mediamosa_http::do_head_internal_call($uri . 'internal/simpletest/cleanup');

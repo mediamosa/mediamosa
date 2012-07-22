@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The MediaMosa App class.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The MediaMosa App class.
- */
 class mediamosa_app {
   // ------------------------------------------------------------------ Static Function.
   /**
@@ -207,7 +206,7 @@ class mediamosa_app {
     }
     return $apps;
   }
-  
+
   /**
    * return an array of all apps that are allowed to master/slave this app.
    *
@@ -232,13 +231,14 @@ class mediamosa_app {
    * Return the default value of the still, depending of the application id.
    *
    * @param integer $app_id
+   *   The application ID.
    *
-   * @return string
-   *   Still default size.
+   * @return string|boolean
+   *   Still default size or FALSE.
    */
   public static function get_still_default_value($app_id) {
     if (!$app_id) {
-      return NULL;
+      return FALSE;
     }
 
     // Get the default size of still of application.
@@ -248,7 +248,7 @@ class mediamosa_app {
       return $app[mediamosa_app_db::STILL_DEFAULT_SIZE];
     }
 
-    return NULL;
+    return FALSE;
   }
 
   /**

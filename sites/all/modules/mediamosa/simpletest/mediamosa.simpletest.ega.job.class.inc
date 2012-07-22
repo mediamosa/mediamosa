@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Simpletest sandbox base for testing job server / processor.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,16 +27,13 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Simpletest sandbox base for testing job server / processor.
-  */
-
 class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
   // --------------------------------------------------------------------- Vars.
-
   // -------------------------------------------------------------- Constructor.
-  function __construct($test_id = NULL) {
+  /**
+   * Implement contructor.
+   */
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
     $this->skipClasses[__CLASS__] = TRUE;
   }
@@ -87,6 +87,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
   /**
    * Create still.
+   *
    * Based on REST call /mediafile/$mediafile_id/still/create (POST)
    */
   protected function createMediafileStill($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -103,18 +104,18 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
     // Check response.
     $this->assertTrue(
-      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      in_array((string) $response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr(
         "Started still job for mediafile ID: @mediafile_id, got result @result (@result_description)",
         array(
           '@mediafile_id' => $mediafile_id,
-          '@result' => (string)$response['xml']->header->request_result_id,
-          '@result_description' => (string) $response['xml']->header->request_result_description
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
         )
       )
     );
 
-    if ((string)$response['xml']->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
+    if ((string) $response['xml']->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
       return FALSE;
     }
 
@@ -130,6 +131,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
   /**
    * Create transcode.
+   *
    * Based on REST call /mediafile/$mediafile_id/transcode (POST)
    */
   protected function createMediafileTranscode($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -152,7 +154,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
         array(
           '@mediafile_id' => $mediafile_id,
           '@result' => (string) $response['xml']->header->request_result_id,
-          '@result_description' => (string) $response['xml']->header->request_result_description
+          '@result_description' => (string) $response['xml']->header->request_result_description,
         )
       )
     );
@@ -169,6 +171,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
   /**
    * Create retranscode.
+   *
    * Based on REST call /mediafile/$mediafile_id/retranscode (POST)
    */
   protected function createMediafileRetranscode($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -185,13 +188,13 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
     // Check response.
     $this->assertTrue(
-      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      in_array((string) $response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr(
         "Started retranscode job for mediafile ID: @mediafile_id, got result @result (@result_description)",
         array(
           '@mediafile_id' => $mediafile_id,
-          '@result' => (string)$response['xml']->header->request_result_id,
-          '@result_description' => (string) $response['xml']->header->request_result_description
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
         )
       )
     );
@@ -229,7 +232,8 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    $max_runs = 12; // Keep in mind that with less slots, this needs to be 12.
+    // Keep in mind that with less slots, this needs to be 12.
+    $max_runs = 12;
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.
@@ -243,14 +247,21 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
       // Check if the jobs are all done.
       foreach ($a_jobs as $a_job) {
-        if (!in_array($a_job[mediamosa_job_db::JOB_STATUS], array(mediamosa_job_db::JOB_STATUS_FINISHED, mediamosa_job_db::JOB_STATUS_FAILED, mediamosa_job_db::JOB_STATUS_CANCELLED))) {
+        if (!in_array($a_job[mediamosa_job_db::JOB_STATUS],
+          array(
+            mediamosa_job_db::JOB_STATUS_FINISHED,
+            mediamosa_job_db::JOB_STATUS_FAILED,
+            mediamosa_job_db::JOB_STATUS_CANCELLED,
+          )
+        )) {
           $running_jobs++;
         }
       }
 
       if ($running_jobs) {
         $this->pass(strtr('Found @running running jobs, waiting for next cycle.', array('@running' => $running_jobs)));
-        Sleep(5); // Wait 5 seconds.
+        // Wait 5 seconds.
+        Sleep(5);
       }
       else {
         $this->pass(strtr('No more running jobs found, exiting job cycle.', array('@running' => $running_jobs)));

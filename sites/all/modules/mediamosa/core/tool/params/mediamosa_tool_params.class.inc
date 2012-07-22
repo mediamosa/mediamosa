@@ -1,5 +1,11 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The tools parameter implementation.
+ *
+ * The tools parameters class handles the command parameters and mapping for
+ * the tool.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -23,15 +29,9 @@
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
-
- /**
-  * @file
-  * Tool functions.
-  */
-
 class mediamosa_tool_params {
 
-  // ------------------------------------------------------------------ Static Functions.
+  // ------------------------------------------------------- Functions (static).
   /**
    * Get tool_param listing.
    */
@@ -44,16 +44,19 @@ class mediamosa_tool_params {
   /**
    * Get a specific tool parameter.
    *
-   * @param $tool
-   * @param $nice_parameter
+   * @param string $tool
+   *   The name of the tool.
+   * @param string $nice_parameter
+   *   The parameter name but more readable (nice).
    */
-  public static function get_by_tool($tool, $nice_parameter = NULL) {
+  public static function get_by_tool($tool, $nice_parameter = '') {
 
-    $query = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tm')->fields('tm');
+    $query = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tp')->fields('tp');
 
     if ($nice_parameter) {
-      $query->condition(mediamosa_tool_params_db::NICE_PARAMETER, $nice_parameter);
-      return $query->condition(mediamosa_tool_params_db::TOOL, $tool)
+      return $query
+        ->condition(mediamosa_tool_params_db::NICE_PARAMETER, $nice_parameter)
+        ->condition(mediamosa_tool_params_db::TOOL, $tool)
         ->execute()
         ->fetchAssoc();
     }
@@ -66,43 +69,65 @@ class mediamosa_tool_params {
    * Check value against tools parameter settings.
    *
    * @param string $tool
-   *  Tool used.
+   *   Tool used.
    * @param string $nice_parameter
-   *  The param to check.
+   *   The param to check.
    * @param mixed $value
-   *  The value to check.
+   *   The value to check.
+   *
+   * @throws mediamosa_exception_error().
    */
   public static function check_mapping($tool, $nice_parameter, $value) {
 
     // Get the mapping param.
-    $a_transcode_mapping = self::get_by_tool($tool, $nice_parameter);
+    $transcode_mapping = self::get_by_tool($tool, $nice_parameter);
 
-    if (!$a_transcode_mapping) {
+    if (!$transcode_mapping) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FOUND, array('@key' => $nice_parameter));
     }
 
     // Check if value is in range and right type.
-    if (!is_null($a_transcode_mapping[mediamosa_tool_params_db::MIN_VALUE]) || !is_null($a_transcode_mapping[mediamosa_tool_params_db::MAX_VALUE])) {
+    if (!is_null($transcode_mapping[mediamosa_tool_params_db::MIN_VALUE]) || !is_null($transcode_mapping[mediamosa_tool_params_db::MAX_VALUE])) {
       if (!is_numeric($value)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@value' => $value));
       }
 
-      if (!is_null($a_transcode_mapping[mediamosa_tool_params_db::MIN_VALUE])) {
-        if ($a_transcode_mapping[mediamosa_tool_params_db::MIN_VALUE] > $value) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@min_value' => $a_transcode_mapping[mediamosa_tool_params_db::MIN_VALUE], '@value' => $value));
+      if (!is_null($transcode_mapping[mediamosa_tool_params_db::MIN_VALUE])) {
+        if ($transcode_mapping[mediamosa_tool_params_db::MIN_VALUE] > $value) {
+          throw new mediamosa_exception_error(
+            mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT,
+            array(
+              '@key' => $nice_parameter,
+              '@min_value' => $transcode_mapping[mediamosa_tool_params_db::MIN_VALUE],
+              '@value' => $value,
+            )
+          );
         }
 
-        if ($a_transcode_mapping[mediamosa_tool_params_db::MAX_VALUE] < $value) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@max_value' => $a_transcode_mapping[mediamosa_tool_params_db::MAX_VALUE], '@value' => $value));
+        if ($transcode_mapping[mediamosa_tool_params_db::MAX_VALUE] < $value) {
+          throw new mediamosa_exception_error(
+            mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT,
+            array(
+              '@key' => $nice_parameter,
+              '@max_value' => $transcode_mapping[mediamosa_tool_params_db::MAX_VALUE],
+              '@value' => $value,
+            )
+          );
         }
       }
     }
 
     // If allowed values is set, then make sure its one of them.
-    if (!empty($a_transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE])) {
-      $a_allowed_values = unserialize($a_transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE]);
-      if (!in_array($value, $a_allowed_values)) {
-        return new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_WRONG_VALUE, array('@key' => $nice_parameter, '@value' => $value));
+    if (!empty($transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE])) {
+      $allowed_values = unserialize($transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE]);
+      if (!in_array($value, $allowed_values)) {
+        return new mediamosa_exception_error(
+          mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_WRONG_VALUE,
+          array(
+            '@key' => $nice_parameter,
+            '@value' => $value,
+          )
+        );
       }
     }
   }

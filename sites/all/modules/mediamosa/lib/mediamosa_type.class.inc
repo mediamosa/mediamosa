@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The mediamosa TYPE class.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,11 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The mediamosa TYPE class.
- */
-
 class mediamosa_type {
 
   // ------------------------------------------------------------------ Consts.
@@ -43,23 +41,29 @@ class mediamosa_type {
 
   const ISO_639_3_LENGTH = 3;
 
-  // ------------------------------------------------------------------ Static Functions.
+  // --------------------------------------------------------- Static Functions.
   /**
    * Check the input based on type.
+   *
    * Will throw exception if not met with conditions.
+   *
    * Note: You must accept the value returned as the new value for this param.
    *
    * @param string $param
-   *  name of param.
+   *   Name of param.
    * @param string $param_type
-   *  Type of the param, see TYPE_* list.
+   *   Type of the param, see TYPE_* list.
    * @param mixed $mixed_param_value
-   *  Either string or array (with strings)
+   *   Either string or array (with strings)
    * @param boolean $is_required
-   *  Supplied value must be provided
+   *   Supplied value must be provided
    * @param boolean $toplevel
-   *  Internal boolean for array loops, leave as is
-   * @return new param value
+   *   Internal boolean for array loops, leave as is.
+   *
+   * @return mixed
+   *   The process parameter value.
+   *
+   * @throws mediamosa_exception_error().
    */
   public static function check($param, $param_type, $mixed_param_value, $is_required = FALSE, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
 
@@ -91,13 +95,14 @@ class mediamosa_type {
     // Now based on type, check contents when needed.
     switch ($param_type) {
       case mediamosa_sdk::TYPE_LANGUAGE_CODE_ISO_639_3:
+        // Must be 3 chars len.
         if (drupal_strlen($mixed_param_value) != self::ISO_639_3_LENGTH) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        // TODO Fix this.
-        // In this solution, we suppose, the ISO 639 1 is subset of ISO 639 3, and the first characters are same.
-        $mixed_param_value = (string)mediamosa_unicode::strtolower($mixed_param_value);
+        // Make lowercase.
+        $mixed_param_value = (string) mediamosa_unicode::strtolower($mixed_param_value);
+
         // Eg. "eng" => "en" and "eg".
         $lang1 = $mixed_param_value{0} . $mixed_param_value{1};
         $lang2 = $mixed_param_value{0} . $mixed_param_value{2};
@@ -105,9 +110,9 @@ class mediamosa_type {
         // ISO 639-1.
         $language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
 
-        $lang1_in_array = in_array(mediamosa_unicode::strtolower($lang1), $language_codes);
-        $lang2_in_array = in_array(mediamosa_unicode::strtolower($lang2), $language_codes);
-        if (!$lang1_in_array && !$lang1_in_array) {
+        $lang1_in_array = in_array($lang1, $language_codes);
+        $lang2_in_array = in_array($lang2, $language_codes);
+        if (!$lang1_in_array && !$lang2_in_array) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
@@ -225,23 +230,9 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_COMMAND:
-        // Eg. "-b", "-ar"
-        $mapping_name = "[-a-zA-Z_]+";
-
-        // Eg. "176", "black", "<switch>"
-        $mapping_sub_value = "[a-zA-Z0-9_<>]+";
-
-        // Eg. "pad=176:144:0:6:black", "crop=23:34:64:62"
-        $mapping_sub_line = "([a-zA-Z0-9_<>]+=$mapping_sub_value(:$mapping_sub_value+)*)";
-
-        // Eg. "200000", "22050", "176x132", "'pad=176:144:0:6:black,crop=0:4:1280:540'"
-        $mapping_value = "([a-zA-Z0-9._<>]+|(\'$mapping_sub_line+(,$mapping_sub_line)*\')+)";
-
-        // Eg. "-b:200000;-ar:22050;-s:176x132;-vf:'pad=176:144:0:6:black,crop=0:4:1280:540,scale=1280:656'"
-        if (preg_match("/^(($mapping_name:$mapping_value){0,1}|$mapping_name:$mapping_value(;$mapping_name:$mapping_value)*)$/", $mixed_param_value) !== 1) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
+        // Because TYPE_COMMAND is now a http query string, and we don't know
+        // if the contents is valid. The old check was based on name:value
+        // paired string which was broken as concept.
         $checked_param_value = (string) $mixed_param_value;
         break;
 
@@ -285,12 +276,12 @@ class mediamosa_type {
         if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
-      // FIXME: MediaMosa 1.x doesnt check the input here...
+
       case mediamosa_sdk::TYPE_SUPPLEMENT_ID:
       case mediamosa_sdk::TYPE_USER_ID:
       case mediamosa_sdk::TYPE_GROUP_ID:
       case mediamosa_sdk::TYPE_ASSET_ID:
-      case mediamosa_sdk::TYPE_MEDIAFILE_ID: // might contain , for style info in /media calls.
+      case mediamosa_sdk::TYPE_MEDIAFILE_ID:
       case mediamosa_sdk::TYPE_COLLECTION_ID:
       case mediamosa_sdk::TYPE_BATCH_ID:
         $checked_param_value = (string) $mixed_param_value;
@@ -332,12 +323,11 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_XML_OAI:
-        // FIXME: dont like the 1.x way we prefix the XML declaration to the XML... XML declaration is required in XML....
         try {
           set_error_handler('mask_xml_errors');
 
-          $o_dom_document = new DOMDocument();
-          if (!$o_dom_document->loadXML('<?xml version="1.0"?>' . $mixed_param_value)) {
+          $dom_document = new DOMDocument();
+          if (!$dom_document->loadXML('<?xml version="1.0"?>' . $mixed_param_value)) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
           }
 

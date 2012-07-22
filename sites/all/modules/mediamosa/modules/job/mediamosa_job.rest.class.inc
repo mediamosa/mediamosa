@@ -34,9 +34,6 @@
  * Method: POST
  *
  * Internal only.
- *
- * 1.x: vpx_jobs_set_job_status
- *
  */
 class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -189,10 +186,6 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
 /**
  * URI: /mediafile/$mediafile_id/analyse
  * Method: POST
- *
- *
- * 1.x: vpx_jobs_analyse_mediafile
- *
  */
 class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -278,9 +271,6 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
  * Method: POST
  *
  * Internal only.
- *
- * 1.x: vpx_jobs_set_upload_progress
- *
  */
 class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -337,9 +327,6 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
  * Method: POST
  *
  * Internal only.
- *
- * 1.x: vpx_jobscheduler_create_new_job
- *
  */
 class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -666,9 +653,6 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
  * Method: GET
  *
  * Return list of jobs based on user as owner.
- *
- * 1.x: vpx_jobscheduler_get_user_job_list
- *
  */
 class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -844,9 +828,6 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
  * Method: GET
  *
  * Return list of jobs based on mediafile_id
- *
- * 1.x: vpx_jobscheduler_get_mediafile_job_list
- *
  */
 class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -926,9 +907,6 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
  * Method: GET
  *
  * Return list of jobs based on job_id
- *
- * 1.x: vpx_jobscheduler_get_job_details
- *
  */
 class mediamosa_rest_call_job_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -1007,9 +985,6 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
  * Method: POST
  *
  * Create a transcode job.
- *
- * 1.x: vpx_jobscheduler_create_new_transcode_job
- *
  */
 class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_create {
   // ------------------------------------------------------------------- Consts.
@@ -1223,7 +1198,6 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  * is that mediafile_id comes from the URI, which is not a problem for the
  * MediaMosa REST interface. Doesn't matter if mediafile_id comes from
  * URI / GET / POST.
- *
  */
 class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_call_job_create_still {
   // ------------------------------------------------------------------- Consts.

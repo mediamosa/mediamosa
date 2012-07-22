@@ -12,3 +12,4 @@ dependencies[] = mediamosa_server
 
 ; Used files.
 files[] = mediamosa_tool_ffmpeg.class.inc
+files[] = mediamosa_tool_ffmpeg.test

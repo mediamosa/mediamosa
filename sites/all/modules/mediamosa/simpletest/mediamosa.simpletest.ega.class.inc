@@ -208,12 +208,34 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Add mediafile_id to clean up.
-   * @param $mediafile_id
+   *
+   * @param string $mediafile_id
+   *   The mediafile to cleanup.
    */
   protected function addToCleanUp($mediafile_id) {
     if (empty($this->mediafiles_cleanup[$mediafile_id])) {
       // Add to clean up.
       $this->mediafiles_cleanup[$mediafile_id] = $mediafile_id;
+    }
+  }
+
+  /**
+   * Add mediafile_id to clean up.
+   *
+   * @param array $mediafiles
+   *   Array of mediafiles to cleanup.
+   */
+  protected function addMediafilesToCleanUp(array $mediafiles) {
+    // Add mediafile clean up.
+    foreach ($mediafiles as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
     }
   }
 

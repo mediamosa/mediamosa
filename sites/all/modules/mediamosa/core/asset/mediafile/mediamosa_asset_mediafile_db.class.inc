@@ -32,12 +32,12 @@
 class mediamosa_asset_mediafile_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_mediafile'; // 1.x name mediafile
+  const TABLE_NAME = 'mediamosa_asset_mediafile';
 
   // Database fields;
   const ID = 'mediafile_id';
   const ASSET_ID = 'asset_id';
-  const MEDIAFILE_ID_SOURCE = 'mediafile_id_source'; // 1.x name: mediafile_source.
+  const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const TAG = 'tag';
   const TAG_LENGTH = 32;
   const APP_ID = 'app_id';
@@ -71,7 +71,7 @@ class mediamosa_asset_mediafile_db {
   const IS_PROTECTED = 'is_protected';
   const IS_PROTECTED_FALSE = 'FALSE';
   const IS_PROTECTED_USER_USERGROUP = 'USER_USERGROUP';
-  Const IS_PROTECTED_DOMAIN_REALM = 'DOMAIN_REALM';
+  const IS_PROTECTED_DOMAIN_REALM = 'DOMAIN_REALM';
   const IS_PROTECTED_TRUE = 'TRUE';
   const CREATED = 'created';
   const CHANGED = 'changed';

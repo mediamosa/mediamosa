@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * Unittests to test funcions from the lib.
+ */
+
+/**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
@@ -22,27 +27,44 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Unittests to test funcions from the lib.
-  */
 class MediaMosaMkdir extends MediaMosaTestCase {
-
   // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
   public static function getInfo() {
     return array(
-      'name' => 'MediaMosa - recursive mkdir tests',
+      'name' => 'MediaMosa - mkdir()',
       'description' => 'Test if mkdir recursively correctly sets the chmod of the dirs.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  /**
+   * Ending the test.
+   */
+  protected function tearDown() {
+    // Determine test sannas dir.
+    $sannas = mediamosa_configuration_storage::mount_point_get(TRUE);
+
+    drupal_rmdir($sannas . 'foo');
+    drupal_rmdir($sannas . 'bar' . DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($sannas . 'bar');
+    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar');
+    drupal_rmdir($sannas . 'baz');
+
+    parent::teardown();
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test the mkdir() function.
+   */
   public function testMkdir() {
 
-    // determine test sannas dir
+    // Determine test sannas dir.
     $sannas = mediamosa_configuration_storage::mount_point_get(TRUE);
 
     // Call mkdir.
@@ -53,16 +75,16 @@ class MediaMosaMkdir extends MediaMosaTestCase {
     $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('foo'): $perms");
 
     // Call mkdir with 2 levels deep.
-    $path = $sannas . 'bar'. DIRECTORY_SEPARATOR . 'foo';
+    $path = $sannas . 'bar' . DIRECTORY_SEPARATOR . 'foo';
 
     mediamosa_io::mkdir($path, TRUE, 0775);
     $perms = substr(sprintf('%o', fileperms($path)), -4);
     $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('bar/foo'): $perms");
     $perms = substr(sprintf('%o', fileperms($sannas . 'bar')), -4);
     $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('bar/foo'): $perms");
-    
+
     // Call mkdir with 3 levels deep.
-    $path = $sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar'. DIRECTORY_SEPARATOR . 'foo';
+    $path = $sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo';
 
     mediamosa_io::mkdir($path, TRUE, 0775);
     $perms = substr(sprintf('%o', fileperms($path)), -4);
@@ -72,19 +94,96 @@ class MediaMosaMkdir extends MediaMosaTestCase {
     $perms = substr(sprintf('%o', fileperms($sannas . 'baz')), -4);
     $this->assertEqual($perms, '0775', "Testing chmod rights of baz after mkdir('baz/bar/foo'): $perms");
   }
+}
 
-  
-  protected function tearDown() {
-    // determine test sannas dir
-    $sannas = mediamosa_configuration_storage::mount_point_get(TRUE);
+class MediaMosaTypeValidation extends MediaMosaTestCase {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa - Type validation',
+      'description' => 'Test for type validation layer.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
+    );
+  }
 
-    drupal_rmdir($sannas . 'foo');
-    drupal_rmdir($sannas . 'bar'. DIRECTORY_SEPARATOR . 'foo');
-    drupal_rmdir($sannas . 'bar');
-    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar'. DIRECTORY_SEPARATOR . 'foo');
-    drupal_rmdir($sannas . 'baz' . DIRECTORY_SEPARATOR . 'bar');
-    drupal_rmdir($sannas . 'baz');
+  /**
+   * Check the input based on type.
+   *
+   * Will throw exception if not met with conditions.
+   *
+   * @param string $param
+   *   Name of param.
+   * @param string $param_type
+   *   Type of the param, see TYPE_* list.
+   * @param mixed $mixed_param_value
+   *   Either string or array (with strings)
+   * @param boolean $is_required
+   *   Supplied value must be provided
+   *
+   * @return mixed
+   *   The process parameter value or FALSE.
+   */
+  protected function check($param, $param_type, $mixed_param_value, $is_required = FALSE, $range_start = NULL, $range_end = NULL, $allowed_values = NULL) {
+    try {
+      return mediamosa_type::check($param, $param_type, $mixed_param_value, $is_required, $range_start, $range_end, $allowed_values);
+    }
+    catch (Exception $e) {
+      // Get caller function.
+      $caller = $this->getAssertionCall();
 
-    parent::teardown();
+      $this->fail(
+        t('@message in (line @line of @file).',
+          array(
+            '@message' => $e->getMessage(),
+            '@line' => $caller['line'],
+            '@file' => $caller['file'],
+          )
+        ),
+        'Exception'
+      );
+    }
+
+    return FALSE;
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test our type library validation.
+   */
+  public function testTypeLib() {
+    // This command fails on 3.2.1, which it should not.
+    $commands = array('-aspect' => '16:9');
+
+    // Validate.
+    $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
+
+    // This command fails on 3.2.1, which it should not.
+    $commands = array('-acodec' => 'libfaac', '-aspect' => '16:9');
+
+    // Validate.
+    $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
+
+    // This command fails on 3.2.1, which it should not.
+    $commands = array(
+      '-acodec' => 'libfaac',
+      '-ab' => '256000',
+      '-ar' => '44100',
+      '-ac' => '2',
+      '-vcodec' => 'libx264',
+      '-vpre' => 'main',
+      '-profile' => 'main',
+      '-pass' => '2',
+      '-b' => '1200000',
+      '-aspect' => '16:9',
+      '-s' => '640x360',
+      '-vf' => "'pad=640:360:0:0:black'",
+    );
+
+    // Validate.
+    $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
   }
 }

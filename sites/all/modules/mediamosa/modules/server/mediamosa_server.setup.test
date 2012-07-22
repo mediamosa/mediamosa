@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Test if the server is setup as expected.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,16 +27,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Test if the server is setup as expected.
-  */
-
-
- /**
-  * @file
-  * CQL test file.
-  */
+/**
+ * @file
+ * CQL test file.
+ */
 class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
@@ -55,7 +52,8 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Get the server status list.
     // get_status_enabled_job_processor also tests if all job servers return 200 and valid XML.
     $server_statuses = mediamosa_server::get_status_enabled_job_processor();
-    $server_hosts = $server_ids = array();
+    $server_hosts = array();
+    $server_ids = array();
 
     foreach ($server_statuses as $server_status) {
       $this->pass(strtr('Found job server, type: @type, host: @uri, mediamosa_installation_id: @server_id.',
@@ -87,7 +85,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $url = mediamosa_http::expectHTTP($enabled_server[mediamosa_server_db::SERVER_URI]);
 
             $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url . 'version')));
             $response = mediamosa_http::drupal_http_request($url . 'version', array('method' => 'GET'));
@@ -95,7 +93,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
 
-            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $url = mediamosa_http::expectHTTP($enabled_server[mediamosa_server_db::SERVER_URI]);
             $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $url)));
 
             // Rebuild.

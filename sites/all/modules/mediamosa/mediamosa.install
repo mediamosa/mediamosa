@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Install, update, and uninstall functions for the mediamosa module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -22,11 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
- * @file
- * Main core installer.
  */
 
 // Node types.
@@ -3348,4 +3346,124 @@ function mediamosa_update_7135() {
       )
     );
   }
+}
+
+/**
+ * Convert current profile commands to new format.
+ */
+function mediamosa_update_7136() {
+
+  // Get all commands to convert.
+  $nids = db_select('mediamosa_transcode_profile', 'tp')
+    ->fields('tp', array('nid'))
+    ->execute()
+    ->fetchCol();
+
+  // Now loop through the transcode profile nodes and convert them.
+  foreach ($nids as $nid) {
+
+    // Load the profile node.
+    $node = node_load($nid);
+
+    if ($node->command !== '') {
+      // Convert.
+      $node->command = mediamosa_transcode_profile::convertOldCommand2NewCommand($node->command);
+
+      // Save the node again.
+      node_save($node);
+    }
+  }
+}
+
+/**
+ * Helper function for converting command values in tables.
+ *
+ * @param string $table_name
+ *   The name of the table to convert. Must contain the 'command' column.
+ * @param string $id_name
+ *   The name of the ID (primary/unique) field of the table.
+ */
+function _mediamosa_update_helper_convert_command($table_name, $id_name) {
+  // Will use variable to store position, in case we timeout.
+  $start = variable_get('mediamosa_update_command_' . $table_name, 0);
+  $length = 100;
+
+  while (TRUE) {
+    $commands = db_select($table_name, 'tbl')
+      ->fields('tbl', array($id_name, 'command'))
+      ->condition('command', '', '!=')
+      ->isNotNull('command')
+      ->range($start, $length)
+      ->execute();
+
+    // Done?
+    if (!$commands->rowCount()) {
+      break;
+    }
+
+    // Loop through the found commands and convert them.
+    foreach ($commands->fetchAllKeyed() as $id_value => $command) {
+      // In the new format, : is encoded to %3A, so if we find one, then we know
+      // its not coverted.
+      if (strpos($command, ':') === FALSE) {
+        // Did not find ':', so its already converted.
+        continue;
+      }
+
+      // Convert and update.
+      db_update($table_name)
+        ->fields(array(
+          'command' => mediamosa_transcode_profile::convertOldCommand2NewCommand($command),
+        ))
+        ->condition($id_name, $id_value)
+        ->execute();
+    }
+
+    // Next set.
+    $start += $length;
+
+    // In case we timeout.
+    variable_get('mediamosa_update_command_' . $table_name, $start);
+  }
+
+  // Done, remove variable.
+  variable_del('mediamosa_update_command_' . $table_name);
+}
+
+/**
+ * Convert all profile command-line strings for mediamosa_job_server_transcode
+ * table to new format.
+ *
+ * This can take a few minutes depending on the size of your database. You can
+ * restart the update when needed, it will continue where it was.
+ */
+function mediamosa_update_7137() {
+  // Update job_server_transcode.
+  _mediamosa_update_helper_convert_command('mediamosa_job_server_transcode', 'jobserver_job_id');
+}
+
+/**
+ * Convert all profile command-line strings for mediamosa_job_transcode table
+ * to new format.
+ *
+ * This can take a few minutes depending on the size of your database. You can
+ * restart the update when needed, it will continue where it was.
+ */
+function mediamosa_update_7138() {
+
+  // Update job_server_transcode.
+  _mediamosa_update_helper_convert_command('mediamosa_job_transcode', 'transcode_job_id');
+}
+
+/**
+ * Convert all profile command-line strings for mediamosa_asset_mediafile table
+ * to new format.
+ *
+ * This can take a few minutes depending on the size of your database. You can
+ * restart the update when needed, it will continue where it was.
+ */
+function mediamosa_update_7139() {
+
+  // Update job_server_transcode.
+  _mediamosa_update_helper_convert_command('mediamosa_asset_mediafile', 'mediafile_id');
 }

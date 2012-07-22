@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The default simpletest class.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,11 +28,6 @@
  */
 
 /**
- * @file
- * The default simpletest class.
- */
-
-/**
  * Defines for the groups.
  * MEDIAMOSA_TEST_GROUP_
  */
@@ -43,6 +41,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL', 'MediaMosa Authorization');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY', 'MediaMosa Library');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OAUTH', 'MediaMosa oAuth');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OEMBED', 'MediaMosa oEmbed');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI', 'MediaMosa OpenAPI');
@@ -51,6 +50,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest P
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL', 'MediaMosa Stills');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE', 'MediaMosa Storage');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS', 'MediaMosa Tools');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER', 'MediaMosa User / Groups');
 
 /**

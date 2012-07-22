@@ -36,8 +36,6 @@
  *
  * Internal only.
  *
- * 1.x: vpx_jobserver_get_jobs_status
- *
  */
 class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -70,9 +68,6 @@ class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
  * Method: POST
  *
  * Internal only.
- *
- * 1.x: vpx_jobserver_add_job
- *
  */
 class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -324,9 +319,6 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
  * Method: POST
  *
  * Internal only.
- *
- * 1.x: vpx_jobserver_remove_job_on_server
- *
  */
 class mediamosa_rest_call_jobserver_job_delete extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -359,15 +351,11 @@ class mediamosa_rest_call_jobserver_job_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
-
+    // Collect parameter values.
     $job_id = $this->get_param_value(self::JOB_ID);
     $killjob = $this->get_param_value(self::KILLJOB);
 
+    // Kill the job.
     mediamosa_job_server::delete_job($job_id, $killjob);
-
   }
 }

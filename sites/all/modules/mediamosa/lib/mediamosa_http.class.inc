@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * HTTP related functions.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,8 +28,7 @@
  */
 
 /**
- * @file
- * HTTP related functions.
+ * Represents the HTTP helper class.
  */
 class mediamosa_http {
 
@@ -38,7 +40,21 @@ class mediamosa_http {
   /**
    * Parse a URL and return its components.
    *
+   * Version differs from parse_url(), as it will make sure all keys are set.
+   *
    * @param string $url
+   *   The url to parse.
+   *
+   * @return array
+   *   An associative array is returned with keys;
+   *   - scheme - e.g. http
+   *   - host
+   *   - port
+   *   - user
+   *   - pass
+   *   - path
+   *   - query - after the question mark ?
+   *   - fragment - after the hashmark #
    */
   public static function parse_url($url) {
     $urls = parse_url($url);
@@ -68,11 +84,12 @@ class mediamosa_http {
   /**
    * Opposite of parse_url.
    *
-   * @param $urls
-   * @param $return_parts
+   * @param array $urls
+   *   The array returned by parse_url()
+   * @param string $return_parts
    *  Return the array with host and uri.
    */
-  public static function build_url($urls, $return_parts = FALSE) {
+  public static function build_url(array $urls, $return_parts = FALSE) {
     // We expect these.
     assert(in_array($urls['scheme'], array('ftp', 'http', 'https')));
 
@@ -142,12 +159,16 @@ class mediamosa_http {
   }
 
   /**
-   * Make sure our URL starts with 'http://' or 'https://'.
+   * Fix our URL to start with 'http://' when missing http schema.
    *
-   * @param unknown_type $url
+   * @param string $url
+   *   The url to check for http / https.
+   *
+   * @return string
+   *   URL including http schema.
    */
-  public static function expect_url($url) {
-    return ( (substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
+  public static function expectHTTP($url) {
+    return ( (drupal_substr($url, 0, 7) != 'http://' && drupal_substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
   }
 
   /**

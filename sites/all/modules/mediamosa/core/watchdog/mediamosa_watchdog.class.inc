@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Log class for MediaMosa.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,14 +27,36 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Log class for MediaMosa.
- */
-
 class mediamosa_watchdog {
   /**
    * Our wrapper around the drupal watchdog.
+   *
+   * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
+   * @param array $variables
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
+   * @param string $type
+   *   (Optional) The category to which this message belongs. Can be any string,
+   *   but the general practice is to use the name of the module calling
+   *   watchdog().
+   * @param string $link
+   *   (Optional) A link to associate with the message.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $link = NULL) {
     static $logging = FALSE;
@@ -40,7 +65,7 @@ class mediamosa_watchdog {
     if (!$logging) {
       $logging = TRUE;
 
-      // We'll use the drupal watchdog.
+      // Use the Drupal watchdog.
       watchdog('MediaMosa' . (empty($type) ? '' : ' - ' . $type), $message, $variables, $severity, $link);
     }
 
@@ -48,23 +73,53 @@ class mediamosa_watchdog {
   }
 
   /**
-   * Log asset ids.
+   * Logs for specific asset.
+   *
+   * @param string $asset_id
+   *   The ID of the asset that is associated with the message.
+   * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
+   * @param array $variables
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
+   * @param string $type
+   *   (Optional) The category to which this message belongs. Can be any string,
+   *   but the general practice is to use the name of the module calling
+   *   watchdog().
+   * @param string $mediafile_id
+   *   (Optional) The ID of the mediafile.
    */
   public static function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $mediafile_id = '') {
-    // Unique id for identifing the watchdog id.
+    // Unique ID for identifing the watchdog id.
     $link = mediamosa_db::uuid(0);
 
     // Logging the message.
     self::log($message, $variables, $severity, $type, $link);
 
-    // Get the watchdog id.
-    $query = mediamosa_db::db_select('watchdog', 'w')
+    // Get the watchdog ID.
+    $wid = mediamosa_db::db_select('watchdog', 'w')
       ->fields('w', array('wid'))
-      ->condition('w.link', mediamosa_db::db_like($link), 'LIKE');
-    $wid = $query->execute()->fetchField();
+      ->condition('w.link', mediamosa_db::db_like($link), 'LIKE')
+      ->execute()
+      ->fetchField();
 
-    // Cleant the link of watchdog.
-    $num_updated = mediamosa_db::db_update('watchdog')
+    // Clear the link of watchdog entry.
+    mediamosa_db::db_update('watchdog')
       ->fields(array(
         'link' => '',
       ))
@@ -82,31 +137,74 @@ class mediamosa_watchdog {
   }
 
   /**
-   * Log mediafile ids.
+   * Logs for specific mediafile.
+   *
+   * @param string $mediafile_id
+   *   The ID of the mediafile that is associated with the message.
+   * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
+   * @param array $variables
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
+   * @param string $asset_id
+   *   (Optional) The ID of the asset. Provide when available.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
+   * @param string $type
+   *   (Optional) The category to which this message belongs. Can be any string,
+   *   but the general practice is to use the name of the module calling
+   *   watchdog().
    */
-  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE, $type = NULL) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = '', $severity = WATCHDOG_NOTICE, $type = NULL) {
     // Need to know.
     assert(!empty($mediafile_id));
 
-    // Fill the asset id.
-    if (!$asset_id && $mediafile_id) {
-      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
+    // Get the asset id.
+    if (empty($asset_id) && !empty($mediafile_id)) {
+      $asset_id = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
         ->fields('am', array(mediamosa_asset_mediafile_db::ASSET_ID))
-        ->condition('am.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
-
-      $asset_id = $query->execute()->fetchField();
+        ->condition('am.' . mediamosa_asset_mediafile_db::ID, $mediafile_id)
+        ->execute()
+        ->fetchField();
     }
 
-    // Logging the message and insert the asset_id.
+    // Logging the message.
     return self::log_asset($asset_id, $message, $variables, $severity, $type, $mediafile_id);
   }
 
   /**
-   * Gives pretty log entries.
+   * Export data to log.
    *
-   * @param any $data
-   * @param string $severity
+   * @param mixed $data
+   *   Any data to export to log.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
    * @param string $type
+   *   (Optional) The category to which this message belongs. Can be any string,
+   *   but the general practice is to use the name of the module calling
+   *   watchdog().
    */
   public static function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     self::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
@@ -116,9 +214,9 @@ class mediamosa_watchdog {
    * Log an DB Query timing.
    *
    * @param time $f_time
-   *  The total time the query took in 0.000 format.
+   *   The total time the query took in 0.000 format.
    * @param string $query
-   *  Your message, Best to keep as the query.
+   *   Your message, Best to keep as the query.
    */
   public static function log_db($f_time, $query) {
     $name = self::is_db_logging();
@@ -128,16 +226,19 @@ class mediamosa_watchdog {
     // Only log stuff that takes longer than 1 second.
     if ($f_time > 1) {
       self::$num_of_slow_queries[$name]++;
-      self::log_debug('Query timing, #times, "#query".', array('#time' => $f_time, '#query' => $query), $name);
+      self::log_debug('Query timing, #time, "#query".', array('#time' => $f_time, '#query' => $query), $name);
     }
 
     self::$num_of_queries[$name]++;
   }
 
   /**
-   * Log the query string for a db_query result object..
+   * Log the query string for a db_query result object.
+   *
+   * @param DatabaseStatementInterface $statement
+   *   A database query result resource
    */
-  public static function log_query_string($query_object) {
-    self::log($query_object->queryString, array(), WATCHDOG_INFO, 'DB query');
+  public static function log_query_string(DatabaseStatementInterface $statement) {
+    self::log($statement->getQueryString(), array(), WATCHDOG_INFO, 'DB query');
   }
 }

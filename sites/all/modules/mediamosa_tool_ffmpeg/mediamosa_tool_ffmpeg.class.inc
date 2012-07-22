@@ -44,6 +44,90 @@ class mediamosa_tool_ffmpeg {
    */
   const BLACK_STILL_INTERVAL = 30;
 
+  // ------------------------------------------------------- Functions (static).
+  /**
+   * Test if ffmpeg uses -padtop or -vf=pad function in this version.
+   *
+   * @param $set_value
+   *   Force the value, used during unit testing.
+   *
+   * @return
+   *   Returns TRUE when ffmpeg option -padtop can not be used by ffmpeg and you
+   *   must use the -vf (video filter) option.
+   */
+  public static function useVideoFilter($set_value = NULL) {
+    static $useVideoFilter = NULL;
+
+    // Force the value?
+    if (isset($set_value)) {
+      $useVideoFilter = $set_value;
+    }
+
+    if (!isset($useVideoFilter)) {
+      $ffmpeg_response = exec('ffmpeg -padtop 0 2>&1');
+      $useVideoFilter = strpos($ffmpeg_response, 'vf=pad') !== FALSE;
+      if (!$useVideoFilter) {
+        $useVideoFilter = (strpos(drupal_strtolower($ffmpeg_response), 'failed') !== FALSE);
+      }
+    }
+
+    return $useVideoFilter;
+  }
+
+  /**
+   * Calculate the aspect ratio.
+   *
+   * Can return cmd line option in ffmpeg when needed.
+   *
+   * @param integer $source_width
+   *   Width of source.
+   * @param integer $source_height
+   *   Height of source.
+   * @param string $target_size
+   *   The size of the target in WIDTHxHEIGHT format.
+   * @param integer $h_padding
+   *   Horizontal padding.
+   * @param integer $v_padding
+   *   Vertical padding.
+   * @param boolean $use_padding
+   *   Use padding parameters.
+   *
+   * @return array|FALSE
+   *   Returns commands array or FALSE when failure.
+   */
+  public static function calcAspectRatio($source_width, $source_height, $target_size, $h_padding = NULL, $v_padding = NULL, $use_padding = TRUE) {
+
+    // Calculate ratio.
+    $aspect_ratio = mediamosa_gd::calcAspectRatio($source_width, $source_height, $target_size, $h_padding, $v_padding, $use_padding);
+    if (!$aspect_ratio) {
+      return FALSE;
+    }
+
+    // Does current ffmpeg use new videofilter (-vf)?
+    if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
+      return array(
+        '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
+        '-padtop' => (int) $aspect_ratio['h_padding'],
+        '-padbottom' => (int) $aspect_ratio['h_padding'],
+        '-padleft' => $aspect_ratio['v_padding'],
+        '-padright' => $aspect_ratio['v_padding'],
+      );
+    }
+
+    return array(
+      '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
+      '-vf' => strtr(
+        "'pad=@width:@height:@v_padding:@h_padding:black'",
+        array(
+          '@width' => $aspect_ratio['width'] + ($aspect_ratio['v_padding'] * 2),
+          '@height' => $aspect_ratio['height'] + ($aspect_ratio['h_padding'] * 2),
+          '@v_padding' => $aspect_ratio['v_padding'],
+          '@h_padding' => $aspect_ratio['h_padding'],
+        )
+      )
+    );
+  }
+
   /**
    * Get the exec string for generating a still.
    *
@@ -334,7 +418,7 @@ class mediamosa_tool_ffmpeg {
               fclose($fh);
 
               // This version is creating stills for the original video
-              if (mediamosa_settings::get_ffmpeg_pad()) {
+              if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
                 $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
               else {
@@ -403,7 +487,7 @@ class mediamosa_tool_ffmpeg {
       ->execute();
 
     // Combine the string (only for linux, windows does not generate stills).
-    if (mediamosa_settings::get_ffmpeg_pad()) {
+    if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
       $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $size, $h_padding, $h_padding, $v_padding, $v_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);

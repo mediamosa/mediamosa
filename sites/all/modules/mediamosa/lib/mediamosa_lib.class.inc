@@ -101,21 +101,22 @@ class mediamosa_lib {
    *  Name value sperator.
    */
   public static function create_named_array($string, $pair_seperator = ';', $name_value_seperator = ':') {
-    $a_result = array();
+    $result = array();
 
-    if (!mediamosa_unicode::strlen($string)) {
+    // If empty string, then return empty array.
+    if ($string === '') {
       return array();
     }
 
-    $a_pairs = explode($pair_seperator, $string);
-    foreach ($a_pairs as $pair) {
+    $pairs = explode($pair_seperator, $string);
+    foreach ($pairs as $pair) {
       if (mediamosa_unicode::strpos($pair, $name_value_seperator) !== FALSE) {
         list($name, $value) = explode($name_value_seperator, $pair, 2);
-        $a_result[$name] = $value;
+        $result[$name] = $value;
       }
     }
 
-    return $a_result;
+    return $result;
   }
 
   /*

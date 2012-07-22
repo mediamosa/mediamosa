@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * The job handler server.
+ */
+
+/**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
@@ -22,53 +27,96 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The job handler server.
-  */
 class mediamosa_job_scheduler {
-
   /**
    * Log message.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable by not
+   *   concatenating dynamic values into it! Variables in the message should be
+   *   added by using placeholder strings alongside the variables argument to
+   *   declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or NULL if
+   *   message is already translated or not possible to translate.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   RFC 3164.
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'job scheduler');
   }
 
   /**
-   * Log mediafile ids.
+   * Logs for a specific MediaFile.
    *
    * @param string $mediafile_id
-   * @param string $asset_id
+   *   The MediaFile ID.
    * @param string $message
+   *   The message to store in the log. Keep $message translatable by not
+   *   concatenating dynamic values into it! Variables in the message should be
+   *   added by using placeholder strings alongside the variables argument to
+   *   declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or NULL if
+   *   message is already translated or not possible to translate.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   RFC 3164:
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
    */
-  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+  public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = '', $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job scheduler');
   }
 
   /**
-   * Log message (low prio, is only logged when mediamosa_debug is lvl 5 or higher).
+   * Log debug message.
+   *
+   * Will only when normal debug level is on.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable by not
+   *   concatenating dynamic values into it! Variables in the message should be
+   *   added by using placeholder strings alongside the variables argument to
+   *   declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
    */
   public static function log_debug($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'job_scheduler');
   }
 
   /**
-   * Log message (High prio, is only logged when mediamosa_debug is lvl 10 or higher).
+   * Log debug message.
+   *
+   * Will only log message when high debug level is on.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable by not
+   *   concatenating dynamic values into it! Variables in the message should be
+   *   added by using placeholder strings alongside the variables argument to
+   *   declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
    */
   public static function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'job_scheduler');
@@ -106,7 +154,6 @@ class mediamosa_job_scheduler {
    * Trigger every minute.
    *
    * Will timeout on itself after 2 minutes.
-   *
    */
   public static function run_parse_queue() {
     // Triggert from sandbox, run once, and done.
@@ -118,16 +165,18 @@ class mediamosa_job_scheduler {
 
     $run_last = variable_get('mediamosa_jobscheduler_cron_last', NULL);
 
-    // may run? (0 - 60 seconds)
+    // May run? (0 - 60 seconds).
     if (round(REQUEST_TIME - $run_last) < 60) {
-      return; // Still running.
+      // Still running.
+      return;
     }
 
     // A period of 60 to 120 seconds we wait till its killed (or done running).
     $run_last = variable_get('mediamosa_jobstatus_cron_running', NULL);
     if (round(REQUEST_TIME - $run_last) < 120) {
       self::log('run_parse_queue() in safety timeout zone.');
-      return; // In timeout zone.
+      // In timeout zone.
+      return;
     }
 
     // If we get here then we can go.
@@ -150,7 +199,7 @@ class mediamosa_job_scheduler {
         self::parse_queue();
       }
       catch (mediamosa_exception $e) {
-        // ignore, its logged
+        // ignore, its logged.
       }
       // Now take the time it took, and subtrac that from 10.
       $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
@@ -167,44 +216,32 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * This function is the heart of the handler system. It must be
-   * called at regular intervals, like every 1 minute.
-   * It will cleanup, run and update jobs.
+   * This function is the heart of the handler system.
+   *
+   * It must be called at regular intervals, best every 1 minute. It will
+   * cleanup, run and update jobs.
    */
   public static function parse_queue() {
 
-    // Log start point.
+    // Log starting.
     self::log_debug('Start parse queue job scheduler');
 
-    /**
-     * Get all servers for their status and process the result.
-     */
+    // Get all servers for their status and process the result.
     self::check_status_all_servers();
 
-    /**
-     * Start new jobs when slots are available.
-     */
+    // Start new jobs when slots are available.
     self::start_new_jobs();
 
-    /**
-     * Remove any timedout upload jobs.
-     */
+    // Remove any timedout upload jobs.
     self::check_upload_timeout();
 
-
-    /**
-     * Remove any timedout transcode jobs.
-     */
+    // Remove any timedout transcode jobs.
     self::check_transcode_timeout();
 
-
-    /**
-     * Put server that are set on close, on off when they have done all jobs.
-     */
+    // Put server that are set on close, on off when they have done all jobs.
     self::check_server_on_status_close();
 
-
-    // Log end point.
+    // Log ending.
     self::log_debug('Ending parse queue job scheduler');
   }
 
@@ -221,9 +258,9 @@ class mediamosa_job_scheduler {
 
   /**
    * With A REST call we'll retrieve the status of the jobs.
-   * And we'll process the jobs.
    *
-   * @param $uri
+   * @param string $uri
+   *   The URI of the job server.
    */
   public static function update_server_job_status($uri) {
 
@@ -239,13 +276,20 @@ class mediamosa_job_scheduler {
     }
     catch (Exception $e) {
       mediamosa_debug::log_export($response->data);
-      self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      self::log(
+        'Parse XML: @msg (@resp)',
+        array(
+          '@msg' => $e->getMessage(),
+          '@resp' => print_r($response->data, TRUE),
+        ),
+        WATCHDOG_ERROR
+      );
       return;
     }
 
     for ($i = 0; $i < $response_data->header->item_count; $i++) {
       // Get current status.
-      $a_job = mediamosa_job::get((string) $response_data->items->item[$i]->job_id);
+      $job = mediamosa_job::get((string) $response_data->items->item[$i]->job_id);
 
       $fields = array(
         mediamosa_job_db::JOB_STATUS => $response_data->items->item[$i]->status,
@@ -273,7 +317,7 @@ class mediamosa_job_scheduler {
         ->execute();
 
       // Trigger url.
-      mediamosa_job::notify_transcoding($a_job[mediamosa_job_db::JOB_STATUS], (string) $response_data->items->item[$i]->status, (string) $response_data->items->item[$i]->job_id);
+      mediamosa_job::notify_transcoding($job[mediamosa_job_db::JOB_STATUS], (string) $response_data->items->item[$i]->status, (string) $response_data->items->item[$i]->job_id);
 
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED ||
           $response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FAILED ||
@@ -290,19 +334,23 @@ class mediamosa_job_scheduler {
         switch ($response_data->items->item[$i]->job_type) {
           case mediamosa_job_db::JOB_TYPE_TRANSCODE:
             // Statistics.
-            mediamosa_statistics::insert_job_transcode($response_data->items->item[$i]->mediafile_dest, $a_job[mediamosa_job_db::ID]);
+            mediamosa_statistics::insert_job_transcode($response_data->items->item[$i]->mediafile_dest, $job[mediamosa_job_db::ID]);
             // If the transcode job is completed, add it to the mediafile.
             self::parse_finished_transcode((string) $response_data->items->item[$i]->job_id, (string) $response_data->items->item[$i]->mediafile_src, (string) $response_data->items->item[$i]->mediafile_dest);
             break;
 
           case mediamosa_job_db::JOB_TYPE_ANALYSE:
-            // If the analyse job is completed, add it to the technical metadata.
-            mediamosa_asset_mediafile_metadata::store_analyse((string) $response_data->items->item[$i]->job_id, explode("\n" , (string) $response_data->items->item[$i]->analyse_result));
+            // If the analyse job is completed, add it to the technical
+            // metadata.
+            mediamosa_asset_mediafile_metadata::store_analyse(
+              (string) $response_data->items->item[$i]->job_id,
+              explode("\n", (string) $response_data->items->item[$i]->analyse_result)
+            );
             break;
 
           case mediamosa_job_db::JOB_TYPE_STILL:
             // If the still job is completed, add the still to db.
-            // We serialize it, because of the multiple stills
+            // We serialize it, because of the multiple stills.
             self::add_still_to_db((string) $response_data->items->item[$i]->job_id, unserialize((string) $response_data->items->item[$i]->mediafile_dest));
             break;
         }
@@ -312,8 +360,8 @@ class mediamosa_job_scheduler {
 
         switch ($response_data->items->item[$i]->job_type) {
           case mediamosa_job_db::JOB_TYPE_TRANSCODE:
-            // if transcode has failed.
-            self::parse_failed_transcode((string) $response_data->items->item[$i]->job_id, (string) $response_data->items->item[$i]->mediafile_dest);
+            // When transcode has failed.
+            self::parse_failed_transcode((string) $response_data->items->item[$i]->job_id);
             break;
         }
       }
@@ -324,10 +372,12 @@ class mediamosa_job_scheduler {
    * Send a delete on server to remove job.
    *
    * @param string $uri
+   *   The job server URI.
    * @param integer $job_id
+   *   The job ID.
    */
   public static function remove_job_on_server($uri, $job_id) {
-
+    // Build the rest URL.
     $rest_url = strtr('server/@job_id/delete', array('@job_id' => $job_id));
 
     // Call URL.
@@ -335,36 +385,51 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Get the informatiob of transcode job plus
-   * related info.
+   * Get the information of transcode job and related info.
    *
-   * @param $job_id
+   * @param integer $job_id
+   *   The job ID.
    */
-  static function get_transcodejob_info($job_id) {
+  public static function get_transcodejob_info($job_id) {
     $result = array();
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', 'mf.asset_id = j.asset_id');
     $query->join(mediamosa_job_transcode_db::TABLE_NAME, 'jt', 'jt.job_id = j.job_id');
-    $query->fields('j', array(mediamosa_job_db::ASSET_ID, mediamosa_job_db::JOB_TYPE, mediamosa_job_db::OWNER_ID, mediamosa_job_db::APP_ID));
-    $query->fields('mf', array(mediamosa_asset_mediafile_db::FILENAME, mediamosa_asset_mediafile_db::ID));
-    $query->fields('jt', array(mediamosa_job_transcode_db::TOOL, mediamosa_job_transcode_db::COMMAND, mediamosa_job_transcode_db::FILE_EXTENSION, mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID));
-    $query->condition('j.' . mediamosa_job_db::ID, $job_id);
-    $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
-    $result_row = $query->execute()->fetchAssoc();
+    $job_transcode = $query
+      ->fields('j', array(
+        mediamosa_job_db::ASSET_ID,
+        mediamosa_job_db::JOB_TYPE,
+        mediamosa_job_db::OWNER_ID,
+        mediamosa_job_db::APP_ID,
+      ))
+      ->fields('mf', array(
+        mediamosa_asset_mediafile_db::FILENAME,
+        mediamosa_asset_mediafile_db::ID,
+      ))
+      ->fields('jt', array(
+        mediamosa_job_transcode_db::TOOL,
+        mediamosa_job_transcode_db::COMMAND,
+        mediamosa_job_transcode_db::FILE_EXTENSION,
+        mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID,
+      ))
+      ->condition('j.' . mediamosa_job_db::ID, $job_id)
+      ->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE)
+      ->execute()
+      ->fetchAssoc();
 
-    if ($result_row) {
-      $new_filename = mediamosa_io::get_base_filename($result_row[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $result_row[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+    if ($job_transcode) {
+      $new_filename = mediamosa_io::get_base_filename($job_transcode[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
       $result = array(
-        'asset_id' => $result_row[mediamosa_job_db::ASSET_ID],
-        'owner' => $result_row[mediamosa_job_db::OWNER_ID],
-        'app_id' => $result_row[mediamosa_job_db::APP_ID],
+        'asset_id' => $job_transcode[mediamosa_job_db::ASSET_ID],
+        'owner' => $job_transcode[mediamosa_job_db::OWNER_ID],
+        'app_id' => $job_transcode[mediamosa_job_db::APP_ID],
         'filename' => $new_filename,
-        'transcode_profile_id' => $result_row[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],
-        'tool' => $result_row[mediamosa_job_transcode_db::TOOL],
-        'file_extension' => $result_row[mediamosa_asset_mediafile_db::FILE_EXTENSION],
-        'command' => $result_row[mediamosa_job_transcode_db::COMMAND],
-        'mediafile_id' => $result_row[mediamosa_asset_mediafile_db::ID]
+        'transcode_profile_id' => $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],
+        'tool' => $job_transcode[mediamosa_job_transcode_db::TOOL],
+        'file_extension' => $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION],
+        'command' => $job_transcode[mediamosa_job_transcode_db::COMMAND],
+        'mediafile_id' => $job_transcode[mediamosa_asset_mediafile_db::ID],
       );
     }
     else {
@@ -379,8 +444,11 @@ class mediamosa_job_scheduler {
    * Create WMV job.
    *
    * @param integer $job_id
-   * @param $asset_id
-   * @param $mediafile_id
+   *   The job ID.
+   * @param string $asset_id
+   *   The asset ID.
+   * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function create_wmv_job($job_id, $asset_id, $mediafile_id) {
 
@@ -388,18 +456,17 @@ class mediamosa_job_scheduler {
     self::log_mediafile($mediafile_id, 'Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id), $asset_id);
 
     // Get all info.
-    $a_job_ext = mediamosa_job::get_job_ext($job_id);
-    if (!$a_job_ext) {
-      // FIXME: better throw exception?
+    $job_ext = mediamosa_job::get_job_ext($job_id);
+    if (!$job_ext) {
       $command = '';
       $owner = '';
       $app_id = 0;
       self::log_mediafile($mediafile_id, 'A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), $asset_id, WATCHDOG_EMERGENCY);
     }
     else {
-      $command = $a_job_ext[mediamosa_job_transcode_db::COMMAND];
-      $owner = $a_job_ext[mediamosa_job_db::OWNER_ID];
-      $app_id = $a_job_ext[mediamosa_job_db::APP_ID];
+      $command = $job_ext[mediamosa_job_transcode_db::COMMAND];
+      $owner = $job_ext[mediamosa_job_db::OWNER_ID];
+      $app_id = $job_ext[mediamosa_job_db::APP_ID];
     }
 
     // Must have user_quota.
@@ -426,11 +493,16 @@ class mediamosa_job_scheduler {
       ->fields($fields)
       ->execute();
 
+    // Add internal_previous_job value to the command string.
+    $commands = mediamosa_transcode_profile::commandToArray($command);
+    $commands['internal_previous_job'] = $job_id;
+    $command = mediamosa_transcode_profile::arrayToCommand($commands);
+
     // Now create the transcode job.
     $fields = array(
       mediamosa_job_transcode_db::JOB_ID => $job_id_new,
       mediamosa_job_transcode_db::TOOL => mediamosa_job::JOBWINDOWS_TOOL,
-      mediamosa_job_transcode_db::COMMAND => $command . ';internal_previous_job:' . $job_id,
+      mediamosa_job_transcode_db::COMMAND => $command,
       mediamosa_job_transcode_db::FILE_EXTENSION => 'wmv',
     );
 
@@ -444,17 +516,18 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Remove the raw avi file for wmv transcode
+   * Remove the raw avi file for wmv transcode.
    *
    * @param integer $job_id
+   *   The job ID.
    */
   public static function wmv_remove_raw_file($job_id) {
 
     // Get the job.
-    $a_job = mediamosa_job::get($job_id);
+    $job = mediamosa_job::get($job_id);
 
     // Get the mediafile ID.
-    $mediafile_id = $a_job[mediamosa_job_db::MEDIAFILE_ID];
+    $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_ID];
 
     if ($mediafile_id) {
       // Delete the mediafile.
@@ -462,7 +535,7 @@ class mediamosa_job_scheduler {
 
       self::log_mediafile($mediafile_id, "Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), NULL, WATCHDOG_NOTICE);
     }
-    else{
+    else {
       self::log("Job @job_id not found, can't delete temp mediafile.", array('@job_id' => $job_id), NULL, WATCHDOG_ERROR);
     }
   }
@@ -472,8 +545,11 @@ class mediamosa_job_scheduler {
    * Called when transcode was successfully finished.
    *
    * @param integer $job_id
+   *   The job ID.
    * @param string $mediafile_id_src
+   *   The mediafile ID of the source.
    * @param string $mediafile_id_dest
+   *   The mediafile ID of the destination.
    */
   public static function parse_finished_transcode($job_id, $mediafile_id_src, $mediafile_id_dest) {
 
@@ -481,13 +557,14 @@ class mediamosa_job_scheduler {
     $job_info = self::get_transcodejob_info($job_id);
 
     // Is the original job id found?
-    $command_parameters = mediamosa_lib::create_named_array($job_info['command'], ';', ':');
-    $original_job_id = isset($command_parameters['internal_previous_job']) ? $command_parameters['internal_previous_job'] : 0;
+    $commands = mediamosa_transcode_profile::commandToArray($job_info['command']);
+    $original_job_id = empty($commands['internal_previous_job']) ? 0 : $commands['internal_previous_job'];
     if ($original_job_id > 0) {
       // Check if extension requires extra job, e.g. windows transcoding.
       if ($job_info['file_extension'] == mediamosa_job::JOBRAW_FILE_EXTENSION) {
-        // 1st pass: the raw intermediate has been created, now convert it to wmv
-
+        // 1st pass:
+        // The raw intermediate has been created, now convert it to  wmv.
+        //
         // NOTE should *not* be converted to api call: the API sets
         // ownership, and we do not want this intermediate result to
         // influence quota &c.
@@ -514,12 +591,14 @@ class mediamosa_job_scheduler {
         // Set progress.
         mediamosa_job::set_progress($original_job_id, '0.666', FALSE);
 
-        // bail out: the mediafile record for the intermediate result
-        // has been created; we don't want any further action here.
+        // Bail out: the mediafile record for the intermediate result has been
+        // created; we don't want any further action here.
         return;
       }
       else {
-        // 2nd pass: the raw intermediate has been converted to wmv, now delete the intermediate
+        // 2nd pass:
+        // The raw intermediate has been converted to wmv, now delete the
+        // intermediate.
         self::wmv_remove_raw_file($job_id);
 
         // Current status.
@@ -564,28 +643,30 @@ class mediamosa_job_scheduler {
     }
 
     // Get mediafile.
-    $a_mediafile = mediamosa_asset_mediafile::get($job_info['mediafile_id']);
+    $mediafile = mediamosa_asset_mediafile::get($job_info['mediafile_id']);
 
-    if ($a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE) {
+    if ($mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE) {
       mediamosa_acl::replace_mediafile_to_mediafile($job_info['mediafile_id'], $mediafile_id_dest);
     }
 
     // Analyse the mediafile.
-    $analyse_result = mediamosa_asset_mediafile::analyse($job_info["app_id"], (string)$mediafile_id_dest);
+    $analyse_result = mediamosa_asset_mediafile::analyse($job_info['app_id'], (string) $mediafile_id_dest);
     assert(is_array($analyse_result));
 
     // Store it.
-    mediamosa_asset_mediafile_metadata::store_analyse_without_job($job_id, $analyse_result, (string)$mediafile_id_dest);
+    mediamosa_asset_mediafile_metadata::store_analyse_without_job($job_id, $analyse_result, (string) $mediafile_id_dest);
   }
 
   /**
    * Process the data from a still job.
    *
-   * @param $job_id
-   * @param $filenames
+   * @param integer $job_id
+   *   The job ID.
+   * @param array $filenames
+   *   The filenames of the stills.
    */
   public static function add_still_to_db($job_id, $filenames) {
-    // Scene changes
+    // Scene changes.
     $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
     $my_file = $destination_path . $job_id . '_scene.txt';
 
@@ -602,20 +683,26 @@ class mediamosa_job_scheduler {
     }
 
     // Get job.
-    $a_job = mediamosa_job::get($job_id);
-    $asset_id = $a_job['asset_id'];
-    $still_parameters = unserialize($a_job['still_parameters']);
+    $job = mediamosa_job::get($job_id);
+    $asset_id = $job['asset_id'];
+    $still_parameters = unserialize($job['still_parameters']);
 
-    // Get Asset.
-    $a_asset = mediamosa_asset::get($asset_id);
-
-    self::log_mediafile($a_job['mediafile_id'], 'Start creation DB multiple still, e.g. @filename, job: @job_id, still_parameters: @still_parameters', array('@filename' => $filenames[0], '@job_id' => (string)$job_id, '@still_parameters' => print_r($still_parameters, TRUE)), $asset_id);
+    self::log_mediafile(
+      $job['mediafile_id'],
+      'Start creation DB multiple still, e.g. @filename, job: @job_id, still_parameters: @still_parameters',
+      array(
+        '@filename' => $filenames[0],
+        '@job_id' => (string) $job_id,
+        '@still_parameters' => print_r($still_parameters, TRUE),
+      ),
+      $asset_id
+    );
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
-    // And deleting with asset_id is definetly not a good idea, while we have multiple stills per mediafile
-    // _media_management_delete_still($asset_id);
-
+    // And deleting with asset_id is definetly not a good idea, while we have
+    // multiple stills per mediafile _media_management_delete_still($asset_id);
+    //
     // Add record to the mediafile metadata table.
     if (is_array($filenames)) {
       $frametime = $still_parameters['frametime'];
@@ -631,7 +718,7 @@ class mediamosa_job_scheduler {
       }
       $i = 0;
       foreach ($filenames as $filename) {
-        mediamosa_asset_mediafile_still::create($asset_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
+        mediamosa_asset_mediafile_still::create($asset_id, $filename, $job['app_id'], $job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $job['mediafile_id'], $tag);
         $order++;
         if (isset($second) && is_numeric($second)) {
           $sec += $second;
@@ -649,24 +736,24 @@ class mediamosa_job_scheduler {
    * Called when transcode failed or was canceled.
    *
    * @param integer $job_id
-   * @param string $mediafile_id_dest
+   *   The job ID.
    */
-  public static function parse_failed_transcode($job_id, $mediafile_id_dest) {
-    // haal de asset id en original filename op basis van een job op
-    $a_job_info = self::get_transcodejob_info($job_id);
+  public static function parse_failed_transcode($job_id) {
+    // Get the transcode job.
+    $job_info = self::get_transcodejob_info($job_id);
 
-    // controleer of de vorige job_id naar boven is te halen.
-    $command_parameters = mediamosa_lib::create_named_array($a_job_info["command"], ";", ":");
-    $original_job_id = empty($command_parameters['internal_previous_job']) ? 0 : $command_parameters['internal_previous_job'];
+    // Try to find the previous job ID.
+    $commands = mediamosa_transcode_profile::commandToArray($job_info['command']);
+    $original_job_id = empty($commands['internal_previous_job']) ? 0 : $commands['internal_previous_job'];
     if ($original_job_id > 0) {
-      if ($a_job_info[mediamosa_job_transcode_db::FILE_EXTENSION] != mediamosa_job::JOBRAW_FILE_EXTENSION) {
+      if ($job_info[mediamosa_job_transcode_db::FILE_EXTENSION] != mediamosa_job::JOBRAW_FILE_EXTENSION) {
 
-        // Remove the raw file
+        // Remove the raw file.
         self::wmv_remove_raw_file($job_id);
 
         // Get original.
-        $a_job_original = mediamosa_job::get($job_id);
-        $status = $a_job_original[mediamosa_job_db::JOB_STATUS];
+        $job_original = mediamosa_job::get($job_id);
+        $status = $job_original[mediamosa_job_db::JOB_STATUS];
 
         // Set failed.
         mediamosa_job::set_progress($original_job_id, '1.000', FALSE, mediamosa_job_db::JOB_STATUS_FAILED);
@@ -725,7 +812,8 @@ class mediamosa_job_scheduler {
         $job_info = self::fetch_single_available_job($server_job[mediamosa_server_db::NID]);
 
         if (empty($job_info)) {
-          break; // no more for this server.
+          // No more for this server.
+          break;
         }
 
         if (mediamosa_job::is_valid_job($job_info[mediamosa_job_db::ID], $job_info[mediamosa_job_db::JOB_TYPE], $job_info[mediamosa_job_db::MEDIAFILE_ID])) {
@@ -742,38 +830,54 @@ class mediamosa_job_scheduler {
 
   /**
    * Start 1 job on server.
-   * Based on job type extra information is gathered.
-   * Then with REST the job is send.
-   * At the end the job is attached to the mediamosa_server_job.
    *
-   * @param $job_id
-   * @param $job_type
-   * @param $server_id
-   * @param $uri
-   * @param $mediafile_id
-   * @param $mediafile_dest
+   * Based on job type extra information is gathered. Using the RESTful
+   * interface of the server, the job is send. At the end the job is attached to
+   * the mediamosa_server_job.
+   *
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $job_type
+   *   The job type, see mediamosa_job_db::JOB_TYPE_*.
+   * @param string $server_id
+   *   The ID of the server.
+   * @param string $uri
+   *   The URI of the server.
+   * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
-    self::log_mediafile($mediafile_id, 'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
+    self::log_mediafile(
+      $mediafile_id,
+      'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id',
+      array(
+        '@job_id' => $job_id,
+        '@job_type' => $job_type,
+        '@server_id' => $server_id,
+        '@mediamosa_id' => $mediafile_id,
+      )
+    );
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
         $errorcode = self::start_server_transcode_job($job_id, $uri, $mediafile_id);
         break;
+
       case mediamosa_job_db::JOB_TYPE_STILL:
         $errorcode = self::start_server_still_job($job_id, $uri, $mediafile_id);
         break;
+
       case mediamosa_job_db::JOB_TYPE_ANALYSE:
         $errorcode = self::start_server_analyse_job($job_id, $uri, $mediafile_id);
         break;
     }
 
     if ($job_type == mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE) {
-        self::start_server_delete_job($job_id, $mediafile_id);
-        self::log_mediafile($mediafile_id, 'Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
+      self::start_server_delete_job($job_id, $mediafile_id);
+      self::log_mediafile($mediafile_id, 'Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
     }
     else {
-      // if okay update the database with the job info
+      // If okay update the database with the job info.
       if ($errorcode == mediamosa_error::ERRORCODE_OKAY) {
 
         // Check if job still exists
@@ -792,14 +896,38 @@ class mediamosa_job_scheduler {
             ->fields($fields)
             ->execute();
 
-          self::log_mediafile($mediafile_id, 'Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
+          self::log_mediafile(
+            $mediafile_id,
+            'Sending @job_type (ID: @job_id) to server @uri.',
+            array(
+              '@job_type' => $job_type,
+              '@job_id' => $job_id,
+              '@uri' => $uri,
+            )
+          );
         }
         else {
-          self::log_mediafile($mediafile_id, 'Making @job_type server job has stoped, job @job_id was deleted during the process.', array('@job_type' => $job_type, '@job_id' => $job_id));
+          self::log_mediafile(
+            $mediafile_id,
+            'Making @job_type server job has stoped, job @job_id was deleted during the process.',
+            array(
+              '@job_type' => $job_type,
+              '@job_id' => $job_id,
+            )
+          );
         }
       }
       else {
-        self::log_mediafile($mediafile_id, 'Error (@errorcode) was reponsed during sending @job_type (ID: @job_id) to server @uri.', array('@errorcode' => $errorcode, '@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
+        self::log_mediafile(
+          $mediafile_id,
+          'Error (@errorcode) was reponsed during sending @job_type (ID: @job_id) to server @uri.',
+          array(
+            '@errorcode' => $errorcode,
+            '@job_type' => $job_type,
+            '@job_id' => $job_id,
+            '@uri' => $uri,
+          )
+        );
       }
     }
   }
@@ -808,21 +936,26 @@ class mediamosa_job_scheduler {
    * Start transcode job by REST call.
    *
    * @param integer $job_id
+   *   The job ID.
    * @param string $uri
+   *   The job server uri.
    * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function start_server_transcode_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_TRANSCODE, $mediafile_id);
 
-    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&tool=%s&file_extension=%s&command=%s',
-      $job_id,
-      mediamosa_job_db::JOB_TYPE_TRANSCODE,
-      $mediafile_id,
-      $job_parameters['tool'],
-      $job_parameters['file_extension'],
-      $job_parameters['command']
+    // GET parameters.
+    $query_data = array(
+      'job_id' => $job_id,
+      'job_type' => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+      'mediafile_src' => $mediafile_id,
+      'tool' => $job_parameters['tool'],
+      'file_extension' => $job_parameters['file_extension'],
+      'command' => $job_parameters['command'],
     );
+    $rest_url = 'server/jobstart?' . http_build_query($query_data);
 
     // Log call.
     self::log_mediafile($mediafile_id, 'Start job:' . $rest_url);
@@ -835,13 +968,30 @@ class mediamosa_job_scheduler {
         $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
-        self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
+        self::log_mediafile(
+          $mediafile_id,
+          'Parse XML: @message (@data)',
+          array(
+            '@message' => $e->getMessage(),
+            '@data' => print_r($response->data, TRUE),
+          ),
+          '',
+          WATCHDOG_ERROR
+        );
       }
 
       return (int) $simple_xml_response->header->request_result_id;
     }
 
-    self::log_mediafile($mediafile_id, 'errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
+    self::log_mediafile(
+      $mediafile_id,
+      'errorcode @response with url @rest_url (@header)',
+      array(
+        '@response' => $response->code,
+        '@rest_url' => $rest_url,
+        '@header' => var_export($response->header, TRUE),
+      )
+    );
     return $response->code;
   }
 
@@ -849,19 +999,24 @@ class mediamosa_job_scheduler {
    * Start analyse job by REST call.
    *
    * @param integer $job_id
+   *   The job ID.
    * @param string $uri
+   *   The job server URI.
    * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function start_server_analyse_job($job_id, $uri, $mediafile_id) {
 
     // Delete metadata.
     mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
 
-    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s',
-      $job_id,
-      mediamosa_job_db::JOB_TYPE_ANALYSE,
-      $mediafile_id
+    // GET parameters.
+    $query_data = array(
+      'job_id' => $job_id,
+      'job_type' => mediamosa_job_db::JOB_TYPE_ANALYSE,
+      'mediafile_src' => $mediafile_id,
     );
+    $rest_url = 'server/jobstart?' . http_build_query($query_data);
 
     // Log call.
     self::log_mediafile($mediafile_id, 'Start job:' . $rest_url);
@@ -874,18 +1029,44 @@ class mediamosa_job_scheduler {
         $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
-        self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
+        self::log_mediafile(
+          $mediafile_id,
+          'Parse XML: @message (@data)',
+          array(
+            '@message' => $e->getMessage(),
+            '@data' => print_r($response->data, TRUE),
+          ),
+          '',
+          WATCHDOG_ERROR
+        );
       }
 
       return (int) $simple_xml_response->header->request_result_id;
     }
 
-    self::log_mediafile($mediafile_id, 'errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
+    self::log_mediafile(
+      $mediafile_id,
+      'errorcode @code with url @uri/@rest_url',
+      array(
+        '@code' => $response->code,
+        '@rest_url' => $rest_url,
+        '@uri' => $uri)
+    );
     return $response->code;
   }
 
   /**
-   * Function for starting a still job
+   * Function for starting a still job.
+   *
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $uri
+   *   The uri of the job server.
+   * @param string $mediafile_id
+   *   The ID for the mediafile.
+   *
+   * @return integer
+   *   The HTTP code returned by the job server call.
    */
   public static function start_server_still_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
@@ -909,34 +1090,39 @@ class mediamosa_job_scheduler {
       $actual_duration = mediamosa_unicode::substr($actual_duration, 0, 8);
       @list($uren, $minuten, $seconden) = explode(':', $actual_duration, 3);
       $video_duration = (($uren * 3600) + ($minuten * 60) + $seconden);
-      if ($video_duration < $job_parameters["frametime"]) {
-        // If the video duration is less than still picture time, we decrease the still picture time to half of video duration
-        $job_parameters["frametime"] = ($video_duration >> 1);
+      if ($video_duration < $job_parameters['frametime']) {
+        // If the video duration is less than still picture time, we decrease
+        // the still picture time to half of video duration.
+        $job_parameters['frametime'] = ($video_duration >> 1);
       }
     }
-    // stuur de job naar de job server
-    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s&watermark_id=%s&watermark_dst_x=%s&watermark_dst_y=%s&watermark_pct=%s&watermark_v_align=%s&watermark_h_align=%s',
-      $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
-      $job_parameters['frametime'],
-      $job_parameters['size'],
-      $job_parameters['h_padding'],
-      $job_parameters['v_padding'],
-      $job_parameters['blackstill_check'],
-      $job_parameters['still_parameters']['still_type'],
-      $job_parameters['still_parameters']['still_per_mediafile'],
-      $job_parameters['still_parameters']['still_every_second'],
-      $job_parameters['still_parameters']['start_frame'],
-      $job_parameters['still_parameters']['end_frame'],
-      $video_duration,
-      $fps,
-      $job_parameters['still_parameters']['tag'],
-      $job_parameters['still_parameters']['watermark_id'],
-      $job_parameters['still_parameters']['watermark_dst_x'],
-      $job_parameters['still_parameters']['watermark_dst_y'],
-      $job_parameters['still_parameters']['watermark_pct'],
-      $job_parameters['still_parameters']['watermark_v_align'],
-      $job_parameters['still_parameters']['watermark_h_align']
+
+    // Send the job to the job server.
+    $query_data = array(
+      'job_id' => $job_id,
+      'job_type' => mediamosa_job_db::JOB_TYPE_STILL,
+      'mediafile_src' => $mediafile_id,
+      'frametime' => $job_parameters['frametime'],
+      'size' => $job_parameters['size'],
+      'h_padding' => $job_parameters['h_padding'],
+      'v_padding' => $job_parameters['v_padding'],
+      'blackstill_check' => $job_parameters['blackstill_check'],
+      'still_type' => $job_parameters['still_parameters']['still_type'],
+      'still_per_mediafile' => $job_parameters['still_parameters']['still_per_mediafile'],
+      'still_every_second' => $job_parameters['still_parameters']['still_every_second'],
+      'start_frame' => $job_parameters['still_parameters']['start_frame'],
+      'end_frame' => $job_parameters['still_parameters']['end_frame'],
+      'video_duration' => $video_duration,
+      'fps' => $fps,
+      'tag' => $job_parameters['still_parameters']['tag'],
+      'watermark_id' => $job_parameters['still_parameters']['watermark_id'],
+      'watermark_dst_x' => $job_parameters['still_parameters']['watermark_dst_x'],
+      'watermark_dst_y' => $job_parameters['still_parameters']['watermark_dst_y'],
+      'watermark_pct' => $job_parameters['still_parameters']['watermark_pct'],
+      'watermark_v_align' => $job_parameters['still_parameters']['watermark_v_align'],
+      'watermark_h_align' => $job_parameters['still_parameters']['watermark_h_align']
     );
+    $rest_url = 'server/jobstart?' . http_build_query($query_data);
 
     // Log call.
     self::log_mediafile($mediafile_id, 'Start job:' . $rest_url);
@@ -945,12 +1131,20 @@ class mediamosa_job_scheduler {
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
 
     if ($response->code == '201' || $response->code == '200') {
-
       try {
         $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
-        self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
+        self::log_mediafile(
+          $mediafile_id,
+          'Parse XML: @message (@data)',
+          array(
+            '@message' => $e->getMessage(),
+            '@data' => print_r($response->data, TRUE),
+          ),
+          '',
+          WATCHDOG_ERROR
+        );
       }
 
       return (int) $simple_xml_response->header->request_result_id;
@@ -961,6 +1155,8 @@ class mediamosa_job_scheduler {
   }
 
   /**
+   * Fetch an single available job.
+   *
    * Choose a job that applies to the following rules;
    *  - There are no other jobs working for the same asset (on any server)
    *  - job is not WAITING
@@ -968,7 +1164,8 @@ class mediamosa_job_scheduler {
    *  - Low priority goes first. ?
    *  - Job may not be started on other server.
    *
-   * @param integer $server_id
+   * @param string $server_id
+   *   The server ID.
    */
   public static function fetch_single_available_job($server_id) {
     return mediamosa_db::db_query(
@@ -1033,9 +1230,12 @@ class mediamosa_job_scheduler {
   /**
    * Based on job type, get more information.
    *
-   * @param $job_id
-   * @param $job_type
-   * @param $mediafile_id
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $job_type
+   *   The job type, see mediamosa_job_db::JOB_TYPE_*.
+   * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function get_job_parameters($job_id, $job_type, $mediafile_id) {
     $result = array();
@@ -1045,137 +1245,60 @@ class mediamosa_job_scheduler {
         // Get job transcode.
         $job_transcode = mediamosa_job_transcode::get($job_id);
 
-        $result["profile_id"] = $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID];
-        $result["tool"] = $job_transcode[mediamosa_job_transcode_db::TOOL];
-        $result["file_extension"] = $job_transcode[mediamosa_job_transcode_db::FILE_EXTENSION];
-        $result["command"] = self::map_parameters($job_transcode[mediamosa_job_transcode_db::TOOL], $job_transcode[mediamosa_job_transcode_db::COMMAND], $mediafile_id);
+        $result['profile_id'] = $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID];
+        $result['tool'] = $job_transcode[mediamosa_job_transcode_db::TOOL];
+        $result['file_extension'] = $job_transcode[mediamosa_job_transcode_db::FILE_EXTENSION];
+        $result['command'] = self::map_parameters($job_transcode[mediamosa_job_transcode_db::TOOL], $job_transcode[mediamosa_job_transcode_db::COMMAND], $mediafile_id);
         break;
 
       case mediamosa_job_db::JOB_TYPE_STILL:
         $query_job = mediamosa_job_still::get($job_id);
 
         if ($query_job) {
-          $result["blackstill_check"] = $query_job['blackstill_check'];
-          $result["still_parameters"] = unserialize($query_job['still_parameters']);
-          $result["frametime"] = $result["still_parameters"]['frametime'];
-          $result["h_padding"] = $result["still_parameters"]['h_padding'];
-          $result["v_padding"] = $result["still_parameters"]['v_padding'];
-          $result["tag"] = $result["still_parameters"]['tag'];
+          $result['blackstill_check'] = $query_job['blackstill_check'];
+          $result['still_parameters'] = unserialize($query_job['still_parameters']);
+          $result['frametime'] = $result['still_parameters']['frametime'];
+          $result['h_padding'] = $result['still_parameters']['h_padding'];
+          $result['v_padding'] = $result['still_parameters']['v_padding'];
+          $result['tag'] = $result['still_parameters']['tag'];
 
           $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
           $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
-          // Calculating aspect ratio
-          // Base value
-          $target_size = $result["still_parameters"]['size'];
-          switch ($query_job['size']) {
-            case 'sqcif':
-              $target_size = '128x96';
-              break;
-            case 'qcif':
-              $target_size = '176x144';
-              break;
-            case 'cif':
-              $target_size = '352x288';
-              break;
-            case '4cif':
-              $target_size = '704x576';
-              break;
-            case 'qqvga':
-              $target_size = '160x120';
-              break;
-            case 'qvga':
-              $target_size = '320x240';
-              break;
-            case 'vga':
-              $target_size = '640x480';
-              break;
-            case 'svga':
-              $target_size = '800x600';
-              break;
-            case 'xga':
-              $target_size = '1024x768';
-              break;
-            case 'uxga':
-              $target_size = '1600x1200';
-              break;
-            case 'qxga':
-              $target_size = '2048x1536';
-              break;
-            case 'sxga':
-              $target_size = '1280x1024';
-              break;
-            case 'qsxga':
-              $target_size = '2560x2048';
-              break;
-            case 'hsxga':
-              $target_size = '5120x4096';
-              break;
-            case 'wvga':
-              $target_size = '852x480';
-              break;
-            case 'wxga':
-              $target_size = '1366x768';
-              break;
-            case 'wsxga':
-              $target_size = '1600x1024';
-              break;
-            case 'wuxga':
-              $target_size = '1920x1200';
-              break;
-            case 'woxga':
-              $target_size = '2560x1600';
-              break;
-            case 'wqsxga':
-              $target_size = '3200x2048';
-              break;
-            case 'wquxga':
-              $target_size = '3840x2400';
-              break;
-            case 'whsxga':
-              $target_size = '6400x4096';
-              break;
-            case 'whuxga':
-              $target_size = '7680x4800';
-              break;
-            case 'cga':
-              $target_size = '320x200';
-              break;
-            case 'ega':
-              $target_size = '640x350';
-              break;
-            case 'hd360':
-              $target_size = '640x360';
-              break;
-            case 'hd480':
-              $target_size = '852x480';
-              break;
-            case 'hd720':
-              $target_size = '1280x720';
-              break;
-            case 'hd1080':
-              $target_size = '1920x1080';
-              break;
-            default:
-              // FIXME Unspecified sizes ends up here.
-              // Check the size.
-              $matches = array();
-              preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
-              if (!is_array($matches) || count($matches) != 3) {
+          // Pre-defined ratios.
+          $sizes = array(
+            'sqcif' => '128x96', 'qcif' => '176x144', 'cif' => '352x288', '4cif' => '704x576',
+            'qqvga' => '160x120', 'qvga' => '320x240', 'vga' => '640x480', 'svga' => '800x600',
+            'xga' => '1024x768', 'uxga' => '1600x1200', 'qxga' => '2048x1536', 'sxga' => '1280x1024',
+            'qsxga' => '2560x2048', 'hsxga' => '5120x4096', 'wvga' => '852x480', 'wxga' => '1366x768',
+            'wsxga' => '1600x1024', 'wuxga' => '1920x1200', 'woxga' => '2560x1600',
+            'wqsxga' => '3200x2048', 'wquxga' => '3840x2400', 'whsxga' => '6400x4096',
+            'whuxga' => '7680x4800', 'cga' => '320x200', 'ega' => '640x350', 'hd360' => '640x360',
+            'hd480' => '852x480', 'hd720' => '1280x720', 'hd1080' => '1920x1080',
+          );
+
+          // Find target size.
+          if (isset($sizes[$query_job['size']])) {
+            $target_size = $sizes[$query_job['size']];
+          }
+          else {
+            // Use size of still parameters instead.
+            $target_size = $result['still_parameters']['size'];
+
+            // Check the size.
+            if (preg_match('/(\d+)x(\d+)/', $target_size)) {
+              // If there is a still default size for the client app available,
+              // then use that instead.
+              $target_size = mediamosa_app::get_still_default_value($app_id);
+              if (!$target_size) {
                 // Get the video size.
                 $target_size = mediamosa_asset_mediafile::get_size($mediafile_id);
-
-                // If there is a still default size for the client app, then use that.
-                $still_default_size = mediamosa_app::get_still_default_value($app_id);
-                if ($still_default_size) {
-                  $target_size =  $still_default_size;
-                }
               }
-              break;
+            }
           }
 
           // First get source width and height.
-          $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
+          $metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
             array(
               'prop_name' => mediamosa_asset_mediafile_metadata::WIDTH,
               'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
@@ -1185,18 +1308,18 @@ class mediamosa_job_scheduler {
               'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
             ),
           ));
-          $width = $a_metadata[mediamosa_asset_mediafile_metadata::WIDTH];
-          $height = $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT];
+          $width = $metadata[mediamosa_asset_mediafile_metadata::WIDTH];
+          $height = $metadata[mediamosa_asset_mediafile_metadata::HEIGHT];
           $still_padding = mediamosa_app::get_still_padding_value($app_id);
 
-          // Get the parameter string.
-          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $result['h_padding'], $result['v_padding'], $still_padding == mediamosa_app_db::STILL_PADDING_YES);
+          // Get the parameter settings.
+          $calc_aspect_ratio = mediamosa_gd::calcAspectRatio($width, $height, $target_size, $result['h_padding'], $result['v_padding'], $still_padding == mediamosa_app_db::STILL_PADDING_YES);
 
-          // Set result
-          if ($cmmd) {
-            $result['size'] = $cmmd['width'] . 'x' . $cmmd['height'];
-            $result['h_padding'] = $cmmd['h_padding'];
-            $result['v_padding'] = $cmmd['v_padding'];
+          // Set result.
+          if ($calc_aspect_ratio) {
+            $result['size'] = $calc_aspect_ratio['width'] . 'x' . $calc_aspect_ratio['height'];
+            $result['h_padding'] = $calc_aspect_ratio['h_padding'];
+            $result['v_padding'] = $calc_aspect_ratio['v_padding'];
           }
           else {
             if ($width && $height) {
@@ -1210,8 +1333,8 @@ class mediamosa_job_scheduler {
           }
         }
         else {
-          // Something went wrong in the analyse script
-          // Fall back to the default values
+          // Something went wrong in the analyse script.
+          // Fall back to the default values.
           $result['frametime'] = mediamosa_settings::STILL_DEFAULT_FRAME_TIME;
           $result['size'] = '640x360';
           $result['h_padding'] = 0;
@@ -1232,50 +1355,57 @@ class mediamosa_job_scheduler {
    * Check and map profile parameters.
    *
    * @param string $tool
+   *   Name of the tool.
    * @param string $command
+   *   The command string.
    * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function map_parameters($tool, $command, $mediafile_id) {
-    $command_line = array();
+    // Result commands.
+    $commands_mapped = array();
+
+    // Into array.
+    $commands = mediamosa_transcode_profile::commandToArray($command);
 
     // First determine if we have to alter the aspect ratio.
-    $alter_size_param = FALSE;
-    if (strstr($command, 'maintain_aspect_ratio:yes') !== FALSE && strstr($command, 'size:') !== FALSE) {
-      $alter_size_param = TRUE;
-    }
+    $alter_size_param = (isset($commands['maintain_aspect_ratio']) && $commands['maintain_aspect_ratio'] == 'yes' && isset($commands['size']));
 
     // Get all parameters based on the toolname that can be queried.
+    //
     // Check the given paramters.
-    $result = mediamosa_tool_params::get_by_tool($tool);
-    foreach ($result as $result_row) {
-      if ($result_row[mediamosa_tool_params_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
-        $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
-        $target_size = $a_parameters['size'];// We skip the size here.
+    $tool_params = mediamosa_tool_params::get_by_tool($tool);
+    foreach ($tool_params as $tool_param) {
+      if ($tool_param[mediamosa_tool_params_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
+        // We assume it exists.
+        $target_size = $commands['size'];
       }
       else {
-        $value = self::mapping_value(
-          $result_row[mediamosa_tool_params_db::NICE_PARAMETER],
-          $result_row[mediamosa_tool_params_db::TOOL_PARAMETER],
-          $result_row[mediamosa_tool_params_db::MIN_VALUE],
-          $result_row[mediamosa_tool_params_db::MAX_VALUE],
-          $result_row[mediamosa_tool_params_db::ALLOWED_VALUE],
-          $result_row[mediamosa_tool_params_db::DEFAULT_VALUE],
-          $result_row[mediamosa_tool_params_db::REQUIRED],
-          $result_row[mediamosa_tool_params_db::TYPE_PARAMETER],
-          $command);
+        $mapped = self::mapping_value(
+          $commands,
+          $tool_param[mediamosa_tool_params_db::NICE_PARAMETER],
+          $tool_param[mediamosa_tool_params_db::TOOL_PARAMETER],
+          $tool_param[mediamosa_tool_params_db::MIN_VALUE],
+          $tool_param[mediamosa_tool_params_db::MAX_VALUE],
+          $tool_param[mediamosa_tool_params_db::ALLOWED_VALUE],
+          $tool_param[mediamosa_tool_params_db::DEFAULT_VALUE],
+          $tool_param[mediamosa_tool_params_db::REQUIRED],
+          $tool_param[mediamosa_tool_params_db::TYPE_PARAMETER]
+        );
 
-        if ($value != '') {
-          $command_line[] = $value;
+        // Store it?
+        if (!empty($mapped) && $mapped['value'] !== '') {
+          $commands_mapped[$mapped['name']] = $mapped['value'];
         }
       }
     }
 
-    // Adjust for aspect ratio? makes only sense if size is set, else we
+    // Adjust for aspect ratio? Makes only sense if size is set, else we
     // convert to size same as source (default ffmpeg behaviour).
     if ($alter_size_param) {
 
       // First get source width and height.
-      $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
+      $metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
         array(
           'prop_name' => mediamosa_asset_mediafile_metadata::WIDTH,
           'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
@@ -1286,85 +1416,93 @@ class mediamosa_job_scheduler {
         ),
       ));
 
-      // Determine if padding necessary or not.
-      $use_padding = TRUE;
-      if (strstr($command, 'padding:no') !== FALSE) {
-        $use_padding = FALSE;
-      }
+      // Determine if padding required or not.
+      $use_padding = !(isset($commands['padding']) && $commands['padding'] == 'no');
 
       // Get the parameter string.
-      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $use_padding);
+      $ratio = mediamosa_tool_ffmpeg::calcAspectRatio($metadata[mediamosa_asset_mediafile_metadata::WIDTH], $metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $use_padding);
       if (!empty($ratio)) {
-        $command_line[] = $ratio;
+        $commands_mapped = array_merge($commands_mapped, $ratio);
       }
     }
 
-    return implode(';', $command_line);
+    // Convert from array to string.
+    return mediamosa_transcode_profile::arrayToCommand($commands_mapped);
   }
 
   /**
    * Check the mapping and value.
    *
-   * @param $nice_parameter
-   * @param $tool_parameter
-   * @param $min_value
-   * @param $max_value
-   * @param $allowed_value
-   * @param $default_value
-   * @param $required
-   * @param $type_parameter
-   * @param $command
+   * @param array $commands
+   *   The command line as associated array (name => value).
+   * @param string $nice_parameter
+   *   The easily readable parameter name.
+   * @param string $tool_parameter
+   *   The tool parameter name.
+   * @param integer $min_value
+   *   The minimum value.
+   * @param integer $max_value
+   *   The maximum value.
+   * @param string $allowed_value
+   *   The allowed value serialized string.
+   * @param string $default_value
+   *   The default value when value is not found.
+   * @param string $required
+   *   Either 'TRUE' or 'FALSE'. When 'TRUE' and no value was found, then the
+   *   default value is returned.
+   * @param string $type_parameter
+   *   If needed, the special type of the parameter.
    */
-  public static function mapping_value($nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $type_parameter, $command) {
-    $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
-    $result = "";
+  public static function mapping_value(array $commands, $nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $type_parameter) {
+    $result = array();
 
-    // If the 2 pass encoding parameter doesn't have the value '2', then we skip it. Then we ensure, we have "-pass 2" or nothing.
-    if ($nice_parameter == '2_pass_h264_encoding' && isset($a_parameters['2_pass_h264_encoding']) && $a_parameters['2_pass_h264_encoding'] != '2') {
+    // If the 2 pass encoding parameter doesn't have the value '2', then we skip
+    // it. Then we ensure, we have "-pass 2" or nothing.
+    //
+    // FIXME: ffmpeg related code here.
+    if ($nice_parameter == '2_pass_h264_encoding' && isset($commands['2_pass_h264_encoding']) && $commands['2_pass_h264_encoding'] != '2') {
       return $result;
     }
 
-    foreach ($a_parameters as $name => $value) {
+    foreach ($commands as $name => $value) {
       if ($name == $nice_parameter && $tool_parameter != '') {
 
-        $result = sprintf('%s:%s', $tool_parameter, $value);
+        // To map.
+        $result = array('name' => $tool_parameter, 'value' => $value);
 
         // Switch parameter.
         if ($type_parameter == mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX) {
           if ($value == mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH) {
             return $result;
           }
-          return '';
+          return array();
         }
 
         // Validate values.
-        if ($min_value != NULL) {
-          if ($min_value > $value) {
-            return sprintf('%s:%s', $tool_parameter, $default_value);
-          }
+        if (!is_null($min_value) && $min_value > $value) {
+          return array('name' => $tool_parameter, 'value' => $default_value);
         }
 
-        if ($max_value != NULL) {
-          if ($max_value < $value) {
-            return sprintf('%s:%s', $tool_parameter, $default_value);
-          }
+        if (!is_null($max_value) && $max_value < $value) {
+          return array('name' => $tool_parameter, 'value' => $default_value);
         }
 
-        if ($allowed_value != NULL) {
+        if (!is_null($allowed_value) && $allowed_value !== '') {
           $allowed_values = unserialize($allowed_value);
-          if (!(in_array($value, $allowed_values))) {
-            return sprintf('%s:%s', $tool_parameter, $default_value);
+          if (!in_array($value, $allowed_values)) {
+            return array('name' => $tool_parameter, 'value' => $default_value);
           }
         }
+
         // Done all checks.
         return $result;
       }
     }
 
     // Check if found and not required.
-    if ($result == '') {
+    if (empty($result)) {
       if ($required == 'TRUE') {
-        return sprintf(';%s:%s', $tool_parameter, $default_value);
+        return array('name' => $tool_parameter, 'value' => $default_value);
       }
     }
 
@@ -1372,226 +1510,28 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Calculate the aspect ratio.
+   * Function for starting a delete job.
    *
-   * Can return cmd line option in ffmpeg when needed.
-   *
-   * @param $source_width
-   *   Width of source.
-   * @param $source_height
-   *   Height of source.
-   * @param $target_size
-   *   The size of the target in WIDTHxHEIGHT format.
-   * @param $response_string
-   *   Return as array (FALSE) or as ffmpeg size/padding cmd line option (TRUE).
-   * @param $h_padding
-   *   Horizontal padding.
-   * @param $v_padding
-   *   Vertical padding.
-   * @param $use_padding
-   *   Use padding parameters.
-   *
-   * @return
-   *   $response_string == TRUE:
-   *     Parameter string to use with ffmpeg
-   *   $response_string == FALSE
-   *     Array with aspect info.
-   */
-  public static function calc_aspect_ratio($source_width, $source_height, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $use_padding = TRUE) {
-
-    // Get target width and height, format is 'WIDTHxHEIGHT'.
-    $matches = array();
-    if (!preg_match('/(\d+)x(\d+)/',  $target_size, $matches)) {
-      return ($response_string ? '' : array());
-    }
-
-    // Get the data.
-    $target_width = (int) $matches[1];
-    $target_height = (int) $matches[2];
-
-    // if source is unknown, but target is not, then just return the target size.
-    if ($target_width > 0 && $target_height > 0 && $source_width < 1 && $source_height < 1) {
-      if ($response_string) {
-        if (mediamosa_settings::get_ffmpeg_pad()) {
-          return strtr('-s:@w_targetx@h_target;-padtop:0;-padbottom:0',
-            array(
-              '@w_target' => $target_width,
-              '@h_target' => $target_height,
-            )
-          );
-        }
-
-        return strtr("-s:@w_targetx@h_target;-vf:'pad=@w_target:@h_target:0:0:black'",
-          array(
-            '@w_target' => $target_width,
-            '@h_target' => $target_height,
-          )
-        );
-      }
-
-      // Return as array.
-      return array(
-        'width' => $target_width,
-        'height' => $target_height,
-        'h_padding' => 0,
-        'v_padding' => 0,
-      );
-    }
-
-    // When source is unknown and target is unknown, jump out and decide there.
-    if ($target_width < 1 && $target_height < 1 && $source_width < 1 && $source_height < 1) {
-      return ($response_string ? '' : array());
-    }
-
-    if (isset($h_padding) && is_numeric($h_padding) && $h_padding >= 0 && isset($v_padding) && is_numeric($v_padding) && $v_padding >= 0) {
-      if ($response_string) {
-        if (mediamosa_settings::get_ffmpeg_pad()) {
-          return strtr('-s:@w_targetx@h_target;-padtop:@h_padding;-padbottom:@h_padding;-padleft:@v_padding;-padright:@v_padding',
-            array(
-              '@w_target' => $target_width,
-              '@h_target' => $target_height,
-              '@h_padding' => (int) $h_padding,
-              '@v_padding' => (int) $v_padding,
-            )
-          );
-        }
-
-        return strtr("-s:@w_targetx@h_target;-vf:'pad=@target_width:@target_height:@v_padding:@h_padding:black'",
-          array(
-            '@w_target' => $target_width,
-            '@h_target' => $target_height,
-            '@target_width' => $target_width + ($v_padding * 2),
-            '@target_height' => $target_height + ($h_padding * 2),
-            '@v_padding' => (int) $v_padding,
-            '@h_padding' => (int) $h_padding,
-          )
-        );
-      }
-
-      return array(
-        'width' => $target_width,
-        'height' => $target_height,
-        'h_padding' => (int) $h_padding,
-        'v_padding' => (int) $v_padding,
-      );
-    }
-
-    // Prevent divided by zero problems.
-    if (!$target_width || !$target_height) {
-      return ($response_string ? '' : array());
-    }
-
-    // Calculate ratio.
-    $w_ratio = $source_width / $target_width;
-    $h_ratio = $source_height / $target_height;
-
-    // Depending on ratio difference we choose the calculation.
-    if ($w_ratio > $h_ratio) {
-      // Total size of padding.
-      $padding = $target_height - ($source_height / $w_ratio);
-
-      // Single size of padding (must be even).
-      $padding = ($padding - ($padding % 4)) / 2;
-
-      // Calculate new height.
-      $new_height = floor($target_height - (2 * $padding));
-
-      // Make even.
-      $new_height -= $new_height & 1;
-
-      if ($response_string) {
-        if (mediamosa_settings::get_ffmpeg_pad()) {
-          return strtr("-s:@target_widthx@new_height;-padtop:@padding;-padbottom:@padding",
-            array(
-              '@target_width' => $target_width,
-              '@new_height' => $new_height,
-              '@padding' => $use_padding ? floor($padding) : 0,
-            )
-          );
-        }
-
-        return strtr("-s:@target_widthx@new_height;-vf:'pad=@target_width:@padded_height:0:@padding:black'",
-          array(
-            '@target_width' => $target_width,
-            '@new_height' => $new_height,
-            '@padded_height' => $new_height + (($use_padding ? floor($padding) : 0) * 2),
-            '@padding' => $use_padding ? floor($padding) : 0,
-          )
-        );
-      }
-
-      return array(
-        'width' => $target_width,
-        'height' => $new_height,
-        'h_padding' => $use_padding ? floor($padding) : 0,
-        'v_padding' => 0
-      );
-    }
-
-    // Total size of padding.
-    $padding = $target_width - ($source_width / $h_ratio);
-
-    // Single size of padding (must be even).
-    $padding = ($padding - ($padding % 4)) / 2;
-
-    // Calculate new width for target.
-    $new_width = floor($target_width - (2 * $padding));
-
-    // Make even.
-    $new_width -= $new_width & 1;
-
-    if ($response_string) {
-      if (mediamosa_settings::get_ffmpeg_pad()) {
-        return strtr('-s:@new_widthx@target_height;-padleft:@padding;-padright:@padding',
-          array(
-            '@new_width' => $new_width,
-            '@target_height' => $target_height,
-            '@padding' => $use_padding ? floor($padding) : 0,
-          )
-        );
-      }
-
-      return strtr("-s:@new_widthx@target_height;-vf:'pad=@padded_width:@target_height:@padding:0:black'",
-        array(
-          '@new_width' => $new_width,
-          '@target_height' => $target_height,
-          '@padded_width' => $new_width + (($use_padding ? floor($padding) : 0) * 2),
-          '@padding' => $use_padding ? floor($padding) : 0,
-        )
-      );
-    }
-
-    return array(
-      'width' => $new_width,
-      'height' => $target_height,
-      'h_padding' => 0,
-      'v_padding' => $use_padding ? floor($padding) : 0
-    );
-  }
-
-
-  /**
-   * Function for starting a delete job
-   *
-   * @param $job_id
-   * @param $mediafile_id
-   * @param $testtag
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function start_server_delete_job($job_id, $mediafile_id) {
 
     // Get complete job.
-    $a_job_ext = mediamosa_job::get_job_ext($job_id);
+    $job_ext = mediamosa_job::get_job_ext($job_id);
 
     // Delete mediafile.
     try {
       mediamosa_asset_mediafile::delete($mediafile_id);
 
       // Update status.
-      mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_FINISHED, '1.000');
+      mediamosa_job::update_status($job_ext, mediamosa_job_db::JOB_STATUS_FINISHED, '1.000');
     }
     catch (Exception $e) {
-      // update with error.
-      mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $e->getMessage());
+      // Update with failure.
+      mediamosa_job::update_status($job_ext, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $e->getMessage());
     }
   }
 
@@ -1633,8 +1573,8 @@ class mediamosa_job_scheduler {
       $error_message = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_TRANSCODE_TIMEOUT, array('@timeout' => mediamosa_settings::JOB_TRANSCODE_TIMEOUT));
 
       // Get the status.
-      $a_job = mediamosa_job::get($result_row[mediamosa_job_db::ID], array(mediamosa_job_db::JOB_STATUS));
-      $status = $a_job[mediamosa_job_db::JOB_STATUS];
+      $job = mediamosa_job::get($result_row[mediamosa_job_db::ID], array(mediamosa_job_db::JOB_STATUS));
+      $status = $job[mediamosa_job_db::JOB_STATUS];
       mediamosa_job::set_job_status_failed($result_row[mediamosa_job_db::ID], $error_message, $status);
 
       self::log_mediafile($result_row[mediamosa_job_db::MEDIAFILE_ID], 'Transcode job was deleted because of timeout, job_id: @job_id', array('@job_id' => $result_row[mediamosa_job_db::ID]), $result_row[mediamosa_job_db::ASSET_ID]);
@@ -1673,14 +1613,13 @@ class mediamosa_job_scheduler {
           ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
           '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT,
           ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-          ':error_description' => strtr('JOB changed timeout expired (#JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT))
+          ':error_description' => strtr('JOB changed timeout expired (#JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT)),
         )
     );
   }
 
   /**
-   * Check if there are servers on CLOSE and have no jobs, then
-   * set them on OFF.
+   * Check if there are servers on CLOSE and have no jobs, then set them to OFF.
    */
   public static function check_server_on_status_close() {
 

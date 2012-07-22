@@ -301,6 +301,7 @@ abstract class mediamosa_rest_call {
    */
   private function do_app_authorized() {
     // Run the app_authorized hook. One TRUE is authorized.
+    // @todo: Rewrite module_invoke_all() into own loop, 1st TRUE is ok.
     $results = module_invoke_all('mediamosa_app_authorized');
     $authorized = FALSE;
     foreach ($results as $result) {

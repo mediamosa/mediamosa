@@ -274,35 +274,6 @@ class mediamosa_settings {
 
   // ------------------------------------------------------------------ Functions.
   /**
-   * Test if ffmpeg uses -padtop of vf=pad function in this version.
-   *
-   * @param $set_value
-   *   Force the value, used during unit testing.
-   *
-   * @return
-   *   Returns TRUE when ffmpeg option -padtop can not be used by ffmpeg.
-   */
-  public static function get_ffmpeg_pad($set_value = NULL) {
-    // FFmpeg.
-    static $mediamosa_ffmpeg_pad = NULL;
-
-    // Force the value?
-    if (isset($set_value)) {
-      $mediamosa_ffmpeg_pad = $set_value;
-    }
-
-    if (!isset($mediamosa_ffmpeg_pad)) {
-      $ffmpeg_response = exec('ffmpeg -padtop 0 2>&1');
-      $mediamosa_ffmpeg_pad = (strpos($ffmpeg_response, 'vf=pad') === FALSE);
-      if ($mediamosa_ffmpeg_pad) {
-        $mediamosa_ffmpeg_pad = (strpos(drupal_strtolower($ffmpeg_response), 'failed') === FALSE);
-      }
-    }
-
-    return $mediamosa_ffmpeg_pad;
-  }
-
-  /**
    * Returns the path where the lua scripts are.
    */
   public static function lua_base_get() {

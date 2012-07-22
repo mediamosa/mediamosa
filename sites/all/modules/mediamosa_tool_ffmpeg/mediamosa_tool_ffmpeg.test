@@ -1,0 +1,240 @@
+<?php
+/**
+ * @file
+ * Job tests for ffmpeg related functions.
+ */
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - ffmpeg',
+      'description' => 'Testing the ffmpeg tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * Compare $expecting with $got.
+   *
+   * @param array $expecting
+   *   First data to compare.
+   * @param array $got
+   *   Second data to compare.
+   */
+  protected function compare(array $expecting, array $got) {
+    $this->assertTrue(
+      $expecting === $got,
+      strtr('Calculate ffmpeg params for aspect ratio:<br />Got:<p>@result</p>Expecting:<p>@expecting</p>',
+        array(
+          '@result' => highlight_string(var_export($got, TRUE), TRUE),
+          '@expecting' => highlight_string(var_export($expecting, TRUE), TRUE),
+        )
+      )
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test the aspect ratio functions.
+   */
+  public function testFFMpegCalcAspectRatio() {
+
+    // Basic aspect ratio test.
+    foreach (array(TRUE, FALSE) as $use_video_filter) {
+      // Force the value.
+      mediamosa_tool_ffmpeg::useVideoFilter($use_video_filter);
+      $use_video_filter = mediamosa_tool_ffmpeg::useVideoFilter();
+
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(1024, 576, '640x480');
+      $expecting = !$use_video_filter ? array(
+        '-s' => '640x360',
+        '-padtop' => 60,
+        '-padbottom' => 60,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '640x360', '-vf' => "'pad=640:480:0:60:black'");
+      $this->compare($expecting, $got);
+
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(640, 480, '200x200');
+      $expecting = !$use_video_filter ? array(
+        '-s' => '200x152',
+        '-padtop' => 24,
+        '-padbottom' => 24,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '200x152', '-vf' => "'pad=200:200:0:24:black'");
+      $this->compare($expecting, $got);
+
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(100, 100, '200x300');
+      $expecting = !$use_video_filter ? array(
+        '-s' => '200x200',
+        '-padtop' => 50,
+        '-padbottom' => 50,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '200x200', '-vf' => "'pad=200:300:0:50:black'");
+      $this->compare($expecting, $got);
+
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(100, 100, '300x200');
+      $expecting = !$use_video_filter ? array(
+        '-s' => '200x200',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 50,
+        '-padright' => 50,
+      ) : array('-s' => '200x200', '-vf' => "'pad=300:200:50:0:black'");
+      $this->compare($expecting, $got);
+
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(1920, 1080, '352x288');
+      $expecting = !$use_video_filter ? array(
+        '-s' => '352x198',
+        '-padtop' => 44,
+        '-padbottom' => 44,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '352x198', '-vf' => "'pad=352:286:0:44:black'");
+      $this->compare($expecting, $got);
+
+
+      // With "padding = yes | no".
+      //
+      // Setting padding = yes.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(320, 176, '320x240', NULL, NULL, TRUE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '320x176',
+        '-padtop' => 32,
+        '-padbottom' => 32,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '320x176', '-vf' => "'pad=320:240:0:32:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = no.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(320, 176, '320x240', NULL, NULL, FALSE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '320x176',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '320x176', '-vf' => "'pad=320:176:0:0:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = yes.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(320, 176, '640x480', NULL, NULL, TRUE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '640x352',
+        '-padtop' => 64,
+        '-padbottom' => 64,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '640x352', '-vf' => "'pad=640:480:0:64:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = no.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(320, 176, '640x480', NULL, NULL, FALSE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '640x352',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '640x352', '-vf' => "'pad=640:352:0:0:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = yes.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(1280, 720, '352x288', NULL, NULL, TRUE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '352x200',
+        '-padtop' => 44,
+        '-padbottom' => 44,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '352x200', '-vf' => "'pad=352:288:0:44:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = no.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(1280, 720, '352x288', NULL, NULL, FALSE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '352x200',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '352x200', '-vf' => "'pad=352:200:0:0:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = yes.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(720, 480, '1280x720', NULL, NULL, TRUE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '1080x720',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 100,
+        '-padright' => 100,
+      ) : array('-s' => '1080x720', '-vf' => "'pad=1280:720:100:0:black'");
+      $this->compare($expecting, $got);
+
+      // Setting padding = no.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(720, 480, '1280x720', NULL, NULL, FALSE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '1080x720',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '1080x720', '-vf' => "'pad=1080:720:0:0:black'");
+      $this->compare($expecting, $got);
+
+      // Special cases.
+      //
+      // Wrong target size. Response is string = TRUE.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(720, 480, '', TRUE);
+      $this->assertFalse($got, 'Must return false');
+
+      // Wrong target size. Response is string = FALSE.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(720, 480, '', FALSE);
+      $this->assertFalse($got, 'Must return false');
+
+      // Without source size. Response is string = TRUE.
+      $got = mediamosa_tool_ffmpeg::calcAspectRatio(0, 0, '1280x720', TRUE);
+      $expecting = !$use_video_filter ? array(
+        '-s' => '1280x720',
+        '-padtop' => 0,
+        '-padbottom' => 0,
+        '-padleft' => 0,
+        '-padright' => 0,
+      ) : array('-s' => '1280x720', '-vf' => "'pad=1280:720:0:0:black'");
+      $this->compare($expecting, $got);
+    }
+  }
+}

@@ -43,9 +43,8 @@ function _mediamosa_tool_params_list() {
   drupal_set_breadcrumb($breadcrumb);
 
   $header = array(
-    array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
+    array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER, 'sort' => 'asc'),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL),
-    array('data' => t('Tool params id'), 'field' => 'tp.' . mediamosa_tool_params_db::ID, 'sort' => 'asc'),
     array('data' => t('Tool parameter'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL_PARAMETER),
     array('data' => t('Min value'), 'field' => 'tp.' . mediamosa_tool_params_db::MIN_VALUE),
     array('data' => t('Max value'), 'field' => 'tp.' . mediamosa_tool_params_db::MAX_VALUE),
@@ -78,7 +77,6 @@ function _mediamosa_tool_params_list() {
     $rows[] = array(
       'nice_parameter' => array('data' => l($row[mediamosa_tool_params_db::NICE_PARAMETER], 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID]), 'field' => $row[mediamosa_tool_params_db::NICE_PARAMETER]),
       'tool' => $row[mediamosa_tool_params_db::TOOL],
-      'tool_params_id' => $row[mediamosa_tool_params_db::ID],
       'tool_parameter' => $row[mediamosa_tool_params_db::TOOL_PARAMETER],
       'min_value' => $row[mediamosa_tool_params_db::MIN_VALUE],
       'max_value' => $row[mediamosa_tool_params_db::MAX_VALUE],

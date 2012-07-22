@@ -62,9 +62,17 @@ function mediamosa_tool_pdf_install() {
   // Transcode profile.
 
   $default_profiles = array(
-    array('pdf to swf', 'FALSE', 'pdf', 'swf', strtr('def_viewer:@switch;fonts:@switch;flash_version:9', array(
-      '@switch' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
-    ))),
+    array(
+      'pdf to swf',
+      'FALSE',
+      'pdf',
+      'swf',
+      array(
+        'def_viewer' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+        'fonts' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+        'flash_version' => '9',
+      ),
+    ),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -76,7 +84,7 @@ function mediamosa_tool_pdf_install() {
     $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
     $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
     $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
-    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = mediamosa_transcode_profile::arrayToCommand($default_profile[4]);
 
     $node = node_save($node);
   }

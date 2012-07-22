@@ -31,7 +31,7 @@
 class mediamosa_job_server_transcode_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_job_server_transcode'; // 1.x name jobserver_transcode_job.
+  const TABLE_NAME = 'mediamosa_job_server_transcode';
 
   // Database fields;
   const ID = 'jobserver_job_id';
