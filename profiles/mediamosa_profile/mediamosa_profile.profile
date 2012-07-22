@@ -83,10 +83,6 @@ function mediamosa_profile_install_tasks() {
       'type' => 'form',
       'run' => variable_get('mediamosa_apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
-    'mediamosa_profile_migration_form' => array(
-      'display_name' => st('Migration of your v1.7 database'),
-      'type' => 'form',
-    ),
     'mediamosa_profile_cron_settings_form' => array(
       'display_name' => st('Cron settings'),
       'type' => 'form',
@@ -915,73 +911,11 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   }
 }
 
-/**
- * Information about 1.7 -> 3.x migration.
- * Task callback.
- */
-function mediamosa_profile_migration_form() {
-  $form = array();
-
-  // Add our css.
-  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
-
-  // Get the server name.
-  $server_name = _mediamosa_profile_server_name();
-
-  // Migration.
-
-  $form['migration'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#title' => t('Migrating your 1.7.x database to 3.x'),
-    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 3.x database format. Migrate 1.7.x database from your current 1.7.x MediaMosa installation to 2.x database by following these steps:
-    <ol>
-      <li>Open the <code>/default/settings.php</code> in your new MediaMosa 3.x installation in the <code>sites</code> directory.</li>
-      <li>Insert the content below from the text box and change the settings to match your 1.7.x MySQL setup for the MediaMosa 1.x MySQL user. In the file there is already an commented out version you can edit.</li>
-    </ol><p>You can start the migration process once you have completed the installation. To start the migration, go to MediaMosa home, then click on tab 'Configuration'. Click on the link 'MediaMosa 1.7.x migration tool' to open up the migration tool. The migration tool will pre-check before you can start the migration.</p>
-    <p><b>Important notes:</b></p>
-    <ul>
-      <li>Both databases (1.7.x and 3.x) must be on the same MySQL database server. You can not migrate with 2 servers.</li>
-      <li>Before you migrate, at least do the migration once for testing before planning the final migration to be sure the migration will be successful.</li>
-      <li>All data will be migrated, except for the ticket and jobs tables. The ticket table holds current session for downloading and play tickets of mediafiles. The job tables hold information about running jobs and old jobs. So make sure that your server is no longer running any jobs when you migrate.</li>
-      <li>The 1.7.x database will only be used for reading, nothing will change on your 1.7.x database. However, the 3.x database needs to be clean install for migration to be successful.</li>
-    </ul>"),
-  );
-
-  $form['migration']['settings'] = array(
-    '#markup' => '<p><b>' . t('Migration setup for sites/default/settings.php') . '</b><pre>' . htmlentities("\$databases['mig_memo']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'your_old_database',
-  'username' => 'your_user_name',
-  'password' => 'your_password',
-  'host' => 'localhost'
-);
-\$databases['mig_memo_data']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'your_old_database_data',
-  'username' => 'your_user_name',
-  'password' => 'your_password',
-  'host' => 'localhost'
-);") . '</pre></p>',
-  );
-
-  $form['continue'] = array(
-    '#type' => 'submit',
-    '#value' => t('Continue'),
-  );
-
-  return $form;
-}
-
 function mediamosa_profile_domain_usage_form() {
   $form = array();
 
   // Add our css.
   drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
-
-  // Get the server name.
-  $server_name = _mediamosa_profile_server_name();
 
   $form['domain'] = array(
     '#type' => 'fieldset',

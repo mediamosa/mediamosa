@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Install, update, and uninstall functions for the mediamosa module.
+ */
+
+/**
+ * Implements hook_enable().
+ *
+ * @throws Exception
+ */
+function mediamosa_migration_enable() {
+  throw new Exception("The module 'mediamosa_migration' is no longer supported and can not be enabled.");
+}
+
+/**
+ * Disable the MediaMosa 1.7 migration module (when enabled).
+ */
+function mediamosa_migration_update_7000() {
+  if (module_exists('mediamosa_migration')) {
+    // Disable our module.
+    module_disable(array('mediamosa_migration'));
+
+    return 'The MediaMosa migration module has been disabled, as its no longer supported.';
+  }
+}

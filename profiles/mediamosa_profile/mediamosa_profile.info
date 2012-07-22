@@ -42,7 +42,6 @@ dependencies[] = mediamosa_maintenance_status
 dependencies[] = mediamosa_maintenance_status_component
 dependencies[] = mediamosa_maintenance_status_configuration
 //dependencies[] = mediamosa_maintenance_status_server, Not done yet.
-dependencies[] = mediamosa_migration
 dependencies[] = mediamosa_profile
 dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
