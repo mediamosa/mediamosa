@@ -1,5 +1,9 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Install, update, and uninstall functions for the mediamosa maintenance
+ * automatedsimpletest module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,12 +28,7 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Installer.
- */
-
-include 'mediamosa_maintenance_automatedsimpletest_db.class.inc';
+require_once 'mediamosa_maintenance_automatedsimpletest_db.class.inc';
 
 /**
  * Implements hook_install().
@@ -49,20 +48,20 @@ function mediamosa_maintenance_automatedsimpletest_uninstall() {
 
 /**
  * Implements hook_schema().
- * @return array
  */
 function mediamosa_maintenance_automatedsimpletest_schema() {
+  $schema = array();
   $schema[mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME] = array(
-    'description' => t('Simple storage table for the test results.'),
+    'description' => 'Simple storage table for the test results.',
     'fields' => array(
       mediamosa_maintenance_automatedsimpletest_db::NAME => array(
-        'description' => t('The name or indentifier for the value.'),
+        'description' => 'The name or indentifier for the value.',
         'type' => 'varchar',
         'length' => mediamosa_maintenance_automatedsimpletest_db::NAME_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_maintenance_automatedsimpletest_db::VALUE => array(
-        'description' => t('The value.'),
+        'description' => 'The value.',
         'type' => 'text',
         'not null' => TRUE,
         'size' => 'big',
