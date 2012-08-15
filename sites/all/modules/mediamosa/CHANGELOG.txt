@@ -1,10 +1,10 @@
-MediaMosa 3.2.x-dev (build 1888), xxxx-xx-xx
+MediaMosa 3.2.x-dev (build 1890), xxxx-xx-xx
 --------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
 - Removed mediamosa_migration module for migration of v1.7->3.1.
-- Fixed command parameter validation.
-  - Total rewrite of job command parameter was needed as the old version did not
+- Fixed 'command' parameter validation.
+  * Total rewrite of job command parameter was needed as the old version did not
     have any encoding for the : and ; characters which where used as delimiters.
     Although update hooks are written for the change, we do advice to finish all
     running jobs before upgrading.
@@ -17,12 +17,17 @@ MediaMosa 3.2.x-dev (build 1888), xxxx-xx-xx
     mediamosa_tool_ffmpeg::useVideoFilter().
   * Removed the Transcode parameter ID from the transcode parameter listing and
     made the 'nice' parameter default for ASC sorting.
-  * The ffmpeg parameters now correctly use escapeshellarg() function when build
-    the command line exec.
+  * The ffmpeg parameters now correctly use escapeshellarg() function when
+    building the command line exec.
   * Added conversion update function for existing mediafile and job data to
     convert to new command format.
   * Extended Simpletest mediamosa_job.transcode.test with test for new command
     and does check if transcoding really generates the target file.
+- Replaced include with require_once, triggered error when using contrib 'admin'
+  module.
+- Added missing 'refresh now' link on status page when page was no longer being
+  refresh by CRON.
+
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------
