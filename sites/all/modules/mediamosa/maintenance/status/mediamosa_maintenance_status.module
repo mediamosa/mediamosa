@@ -293,6 +293,8 @@ function _mediamosa_maintenance_status_status() {
           '!cron_settings' => l('Cron maintenance tasks', 'admin/reports/status')
         )
       ) . '</b></p>';
+
+      $last_update[] = t('!refresh_now', array('!refresh_now' => l('refresh now', 'admin/mediamosa/status/status/refresh')));
     }
 
     if ($warning) {
