@@ -5,9 +5,5 @@ sites/*/settings*.php
 sites/*/files
 sites/*/private
 
-# ignore dot files. Will not affected .htaccess, its already added.
+# Ignore any . files or directories.
 .*
-
-# ignore coder and devel module.
-sites/all/modules/devel
-sites/all/modules/coder
