@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Extended on the existing mediamosa_core_cql class.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -22,11 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
- * @file
- * Extended on the existing mediamosa_core_cql class.
  */
 
 class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
@@ -64,43 +62,50 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         }
       }
 
-      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
+      $metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
-      foreach ($a_defs as $name => $a_def) {
-        switch ($a_def['propgroup_name']) {
+      foreach ($metadata_properties as $name => $metadata_property) {
+        switch ($metadata_property['propgroup_name']) {
           case 'qualified_dublin_core':
             $context_set = 'mediamosa:qdc';
             break;
+
           case 'dublin_core':
             $context_set = 'mediamosa:dc';
             break;
+
           case 'czp':
             $context_set = 'mediamosa:czp';
             break;
+
           case 'acl':
           case 'aut':
             $context_set = 'mediamosa:acl';
             break;
+
           default:
-            $context_set = 'mediamosa:' . $a_def['propgroup_name'];
+            $context_set = 'mediamosa:' . $metadata_property['propgroup_name'];
             break;
         }
 
-        switch ($a_def['propdef_type']) {
+        switch ($metadata_property['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             $column = $name . '_vi';
             $sort_column = $name . '_svi';
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             $column = $name . '_vd';
             $sort_column = $name . '_svd';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
+
           default:
             assert(0);
+
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
             $column = $name . '_vc';
             $sort_column = $name . '_svc';
@@ -114,8 +119,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $sort_column,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'unused',
           MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
-          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'], // indication its a asset metadata field.
-//          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN {mediamosa_asset_metadata} AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.asset_id = a.asset_id AND mediamosa_asset_metadata_%s.prop_id = %d', $name, $name, $name, $a_def['propdef_id']),
+          // Indication its an asset metadata field.
+          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $metadata_property['propdef_id'],
         );
       }
     }
@@ -191,7 +196,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     // NULL values allowed.
     $has_null = isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
 
-    $parts_or = $parts = $sub_parts = array();
+    $parts =  array();
+    $sub_parts = array();
 
     // Default is OR.
     $str_sub_parts_glue = ' OR ';
@@ -453,4 +459,3 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
     return $mediamosa_cql->mediamosa_core_parse_cql($str_cql, $cql_store_stats);
   }
 }
-

@@ -52,7 +52,7 @@ class mediamosa_rest_call_solr_process_queue extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     // Reindex what we can.
-    mediamosa_solr::process_queue();
+    mediamosa_solr::processQueue();
 
     // Add info to output.
     $mediamosa->set_result_okay();

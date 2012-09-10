@@ -15,9 +15,11 @@ sudo apt-get install libmysql-java
 
 * obtain Solr from http://lucene.apache.org/solr/
 
-MediaMosa currently works without errors with version 1.4.1 of
-apache-solr. Version 3.5 (latest at the moment of writing) is known to
-have issues.
+MediaMosa works with Solr 1.41 and Solr 3.6. Use must use the solrconfig.xml and
+schema.xml in our module root directory. Defaults xmls (solrconfig.xml and
+schema.xml) are used for version 3.6. Use solrconfig1.41.xml and
+schema1.41.xml for Solr v1.41.
+
 
 for example:
 
@@ -34,7 +36,7 @@ cd apache-solr
   cd mediamosa/solr/conf/
   cp <mediamosa_root>/sites/all/modules/mediamosa_solr/*.xml .
 
-Alternative for the last step: you could man a symlink to the mediamosa source so 
+Alternative for the last step: you could man a symlink to the mediamosa source so
 that this also gets update when MediaMosa gets an update:
 
   ln -s <mediamosa_root>/sites/all/modules/mediamosa_solr/*.xml .
@@ -87,7 +89,7 @@ Use 'Check connection Solr' to verify the connection is ok.
 
 ---- Configuring SOLR to run as daemon (only for jetty!) ---------------
 
-To start as daemon: 
+To start as daemon:
 
 start-stop-daemon -b -m -p /var/run/solrservice.pid --chuid <username> \
   --start --quiet --exec /usr/bin/java -d<path_to_solr>/solr -- \

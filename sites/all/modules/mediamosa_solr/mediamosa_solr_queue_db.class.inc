@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Database file for mediamosa_solr.
+ */
 
 /**
  * MediaMosa is a Full Featured, Webservice Oriented Media Management and
@@ -22,11 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
- * @file
- * Database file for mediamosa_solr.
  */
 
 class mediamosa_solr_queue_db {

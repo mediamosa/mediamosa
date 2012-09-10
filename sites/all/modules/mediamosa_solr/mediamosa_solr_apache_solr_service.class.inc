@@ -59,6 +59,14 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   const MEDIAMOSA_SOLR_DEFAULT_PATH = '/solr/';
   const MEDIAMOSA_SOLR_DEFAULT_SCHEME = 'http';
 
+  // --------------------------------------------------------------------- Vars.
+  /**
+   * The scheme ('http', 'https').
+   *
+   * @var string
+   */
+  protected $_scheme;
+
   // -------------------------------------------------------------- Constructor.
   public function __construct($url = NULL) {
 
@@ -66,7 +74,8 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
       $url = self::mediamosaGetUrl();
     }
 
-    // Split up into host, port and path.
+    // Split up into scheme, host, port and path.
+    $this->_scheme = self::mediamosaGetScheme();
     $host = self::mediamosaGetHost($url);
     $port = self::mediamosaGetPort($url);
     $path = self::mediamosaGetPath($url);
@@ -159,7 +168,29 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   }
 
   /**
-   * Return the host for the solr servlet.
+   * Return the scheme (e.g. http[s]://) for the solr url.
+   *
+   * @param string $url
+   *   (optional) The url of which to extract scheme.
+   *
+   * @return string
+   *   The scheme.
+   */
+  public static function mediamosaGetScheme($url = NULL) {
+    $url =  isset($url) ? $url : self::mediamosaGetUrl();
+
+    // Parse.
+    return parse_url($url, PHP_URL_SCHEME);
+  }
+
+  /**
+   * Return the host for the solr url.
+   *
+   * @param string $url
+   *   (optional) The url of which to extract host.
+   *
+   * @return string
+   *   The host.
    */
   public static function mediamosaGetHost($url = NULL) {
     $url =  isset($url) ? $url : self::mediamosaGetUrl();
@@ -169,7 +200,13 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   }
 
   /**
-   * Return the port for the solr servlet.
+   * Return the port for the solr url.
+   *
+   * @param string $url
+   *   (optional) The url of which to extract port.
+   *
+   * @return integer
+   *   The port.
    */
   public static function mediamosaGetPort($url = NULL) {
     $url = isset($url) ? $url : self::mediamosaGetUrl();
@@ -178,11 +215,17 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     $port = (int) parse_url($url, PHP_URL_PORT);
 
     // Port is optional in the URL.
-    return $port > 0 ? $port : self::MEDIAMOSA_SOLR_DEFAULT_PORT;
+    return $port > 0 ? (int) $port : self::MEDIAMOSA_SOLR_DEFAULT_PORT;
   }
 
   /**
-   * Return the path for the solr servlet.
+   * Return the path for the solr path.
+   *
+   * @param string $url
+   *   (optional) The url of which to extract path.
+   *
+   * @return string
+   *   The path.
    */
   public static function mediamosaGetPath($url = NULL) {
     $url = isset($url) ? $url : self::mediamosaGetUrl();
@@ -200,14 +243,21 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * Will ping the first time if it is created the first time.
    *
    * @param string $url
+   *   (optional) The Solr server URL.
+   * @param boolean $ping
+   *   Ping the server after creating the object.
+   * @param boolean $reset
+   *   Reset the static storage of object.
    *
    * @return mediamosa_solr_apache_solr_service
+   *   The created solr server object.
    *
    * @throws mediamosa_solr_exception
    */
-  public static function mediamosaGetSolrObject($url = NULL, $reset = FALSE) {
+  public static function mediamosaGetSolrObject($url = NULL, $ping = FALSE, $reset = FALSE) {
     $mediamosa_apache_solr_service = &drupal_static(__FUNCTION__);
 
+    // Not provided? Get it.
     $url = !empty($url) ? $url : self::mediamosaGetUrl();
 
     // Put in static for reuse.
@@ -218,11 +268,14 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
         throw new mediamosa_solr_exception('Unable to create Solr object');
       }
 
-      // Ping it, will throw exception when failed.
-      $pinged = $mediamosa_apache_solr_service[$url]->ping() !== FALSE;
+      // Ping the server.
+      if ($ping) {
+        // Ping it, will throw exception when failed.
+        $pinged = $mediamosa_apache_solr_service[$url]->ping() !== FALSE;
 
-      if (!$pinged) {
-        throw new mediamosa_solr_exception('Unable to reach Lucene Solr database');
+        if (!$pinged) {
+          throw new mediamosa_solr_exception('Unable to reach Apache Solr database');
+        }
       }
     }
 
@@ -230,18 +283,24 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     return $mediamosa_apache_solr_service[$url];
   }
 
-
   /**
    * Ping Solr with either given params or use default.
    *
    * @param string $url
+   *   The server URL.
+   * @param boolean $fatal
+   *   Set to TRUE when exeception needs to be thrown when failure.
+   *
+   * @return boolean
+   *   Will return TRUE for success, FALSE for failure. Will only return when
+   *   $fatal is set to FALSE.
    *
    * @throws mediamosa_solr_exception (when $fatal == TRUE)
    */
-  public static function mediamosaPing($url = NULL, $fatal = FALSE) {
-    // Get the solr connection.
+  public static function solrServicePing($url = NULL, $fatal = FALSE) {
+    // Get the solr connection and ping it.
     try {
-      self::mediamosaGetSolrObject($url);
+      self::mediamosaGetSolrObject($url, TRUE);
     }
     catch (Exception $e) {
       if ($fatal) {
@@ -252,5 +311,37 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     }
 
     return TRUE;
+  }
+
+  // ------------------------------ Overruled on base class Apache_Solr_Service.
+  /**
+   * Return a valid http URL.
+   *
+   * Rebuild the URL using the given server's host, port and path and a
+   * provided servlet name.
+   *
+   * @param string $servlet
+   *   The path of the servlet, e.g. 'select', 'update' etc.
+   * @param array $params
+   *   The query parameter array to be processed, e.g. $_GET.
+   *
+   * @return string
+   *   The constructed URL.
+   */
+  protected function _constructUrl($servlet, $params = array()) {
+
+    $queryString = '';
+    if (count($params)) {
+      // Escape all parameters appropriately for inclusion in the query string.
+      $escapedParams = array();
+
+      foreach ($params as $key => $value) {
+        $escapedParams[] = urlencode($key) . '=' . urlencode($value);
+      }
+
+      $queryString = $this->_queryDelimiter . implode($this->_queryStringDelimiter, $escapedParams);
+    }
+
+    return $this->_scheme . '://' . $this->_host . ':' . $this->_port . $this->_path . $servlet . $queryString;
   }
 }

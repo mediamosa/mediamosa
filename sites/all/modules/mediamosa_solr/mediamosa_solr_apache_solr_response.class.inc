@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Wrapper around Apache_Solr_Response.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,12 +27,12 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Wrapper around Apache_Solr_Response.
- */
-
 class mediamosa_solr_apache_solr_response {
+  /**
+   * The decoded json response.
+   *
+   * @var object
+   */
   private $_response = NULL;
 
   // -------------------------------------------------------------- Constructor.
@@ -38,6 +41,12 @@ class mediamosa_solr_apache_solr_response {
   }
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Get the decoded json response.
+   *
+   * @return object
+   *   The decoded json response.
+   */
   public function getResponse() {
     return $this->_response;
   }
@@ -45,6 +54,9 @@ class mediamosa_solr_apache_solr_response {
   /**
    * Get total found rows, is not the number of found rows, but total matched
    * to the query.
+   *
+   * @return integer
+   *   The number of found rows.
    */
   public function getNumFound() {
     return empty($this->_response->response->numFound) ? 0 : (int) $this->_response->response->numFound;
@@ -52,6 +64,9 @@ class mediamosa_solr_apache_solr_response {
 
   /**
    * Get the asset ids.
+   *
+   * @return array
+   *   Array of found asset IDs.
    */
   public function getAssetIds() {
     $asset_ids = array();

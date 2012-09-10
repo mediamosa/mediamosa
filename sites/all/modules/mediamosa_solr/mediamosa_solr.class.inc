@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Our extended classes for Solr connections.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,11 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Our extended classes for Solr connections.
- */
-
 class mediamosa_solr {
 
   // ------------------------------------------------------------------- Consts.
@@ -41,6 +39,9 @@ class mediamosa_solr {
   const VAR_CHAR_SORT_LENGTH = 50;
   // Number of runs we remember the # index during run.
   const TAKE_AVERAGE_LAST_X_MIN = 5;
+
+  // Lock name.
+  const LOCK_NAME_PROCESSING = 'mediamosa_solr_process_queue';
 
   const WHERE_AND = 'AND';
   const WHERE_OR = 'OR';
@@ -141,8 +142,6 @@ class mediamosa_solr {
 
       $order_by = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
       $order_direction = drupal_strtolower($order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION]);
-      $order_type = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE];
-      $order_table = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
       $is_metadata = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] > 0;
     }
 
@@ -309,10 +308,13 @@ class mediamosa_solr {
         }
 
         // 2 cases;
-        // 1. The object is protected only app_id (is_protected == FALSE)
-        //   then only access if app_id == slave_app_id
-        // 2. The object is protected by other rights (is_protected == TRUE)
-        //   then only access if app_id == slave_app_id and rights match with other rights
+        //
+        // 1.
+        // The object is protected only app_id (is_protected == FALSE)
+        // then only access if app_id == slave_app_id
+        // 2.
+        // The object is protected by other rights (is_protected == TRUE)
+        // then only access if app_id == slave_app_id and rights match with other rights
 
         foreach ($master_app_ids as $master_app_id) {
           // Allow any master/slave without ACL rights.
@@ -356,8 +358,9 @@ class mediamosa_solr {
    * @param array $acl_group_ids
    * @param string $acl_domain
    * @param string $acl_realm
+   *
    * @return array
-   *  returns the array with asset_id(s) on which we have access on
+   *   Returns the array with asset_id(s) on which we have access on.
    */
   public static function access_check_assets(array $parameters) {
 
@@ -422,7 +425,8 @@ class mediamosa_solr {
    * Instant update on normalize asset?
    */
   public static function settingInstantlyAssetNormalize() {
-    return self::settingInstantlyAssetUpdate(); // The same setting for now.
+    // The same setting for now.
+    return self::settingInstantlyAssetUpdate();
   }
 
   /**
@@ -462,15 +466,16 @@ class mediamosa_solr {
    * @param string $link
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
-    mediamosa_watchdog::log($message, $variables, $severity, 'Solr');
+    mediamosa_watchdog::log($message, $variables, $severity, 'Solr', $link);
   }
 
   /**
    * Reindex with given asset_ids. Stores it in table, will be reindexed asap.
    *
-   * @param string $asset_id
+   * @param array $asset_ids
+   *   The assets that will be queued Solr index.
    */
-  public static function queue_assets(array $asset_ids) {
+  public static function queueAssets(array $asset_ids) {
 
     foreach ($asset_ids as $asset_id) {
       try {
@@ -484,13 +489,11 @@ class mediamosa_solr {
                   mediamosa_solr_queue_db::ID => $asset_id,
                   mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
               ))
-              ->execute();
-          }
+          ->execute();
+        }
       }
       catch (PDOException $e) {
-        // Ignore, we have no way to lock the table in drupal db layer, so no
-        // select or update will not work here.
-        mediamosa_watchdog::log($e->getMessage());
+        // Ignore.
       }
       catch (Exception $e) {
         mediamosa_watchdog::log($e->getMessage());
@@ -501,16 +504,17 @@ class mediamosa_solr {
   /**
    * Remove the asset(s) from solr.
    *
-   * @param string $asset_id
+   * @param array $asset_ids
+   *   Array of asset_ids to remove from Solr.
    */
-  public static function delete_assets(array $asset_ids) {
+  public static function deleteAssets(array $asset_ids) {
 
     foreach ($asset_ids as $asset_id) {
       try {
-        mediamosa_solr::delete_asset_document($asset_id, FALSE);
+        self::deleteAsset($asset_id, FALSE);
       }
       catch (Exception $e) {
-        mediamosa_watchdog::log('Unable to delete asset from Solr.');
+        mediamosa_watchdog::log('Unable to delete asset (ID:@asset_id) from Solr (@message).', array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
       }
     }
 
@@ -521,17 +525,31 @@ class mediamosa_solr {
   /**
    * Insert asset data without delay.
    *
-   * @param string $asset_id
+   * @param array $asset_ids
+   *   Array of asset IDs.
    */
-  public static function insert_assets(array $asset_ids) {
+  public static function insertAssets(array $asset_ids) {
 
     $documents = array();
     foreach ($asset_ids as $asset_id) {
       try {
-        $document = self::create_asset_document($asset_id);
+        $document = self::createDocumentAsset($asset_id);
         if (empty($document)) {
-          $documents['asset_ids'][] = $asset_id; // So its removed from queue.
-          continue; // Not found.
+          self::log(
+            'Unable to create Solr document with asset, ID: @asset_id in file @file on line @line',
+            array(
+              '@asset_id' => $asset_id,
+              '@file' => __FILE__,
+              '@line' => __LINE__,
+            )
+          );
+
+          // Mark it in indexed table, so we don't keep trying to insert this
+          // asset.
+          $documents['asset_ids'][] = $asset_id;
+
+          // Nothing to do.
+          continue;
         }
 
         // Create the document.
@@ -539,7 +557,7 @@ class mediamosa_solr {
         $documents['asset_ids'][] = $asset_id;
 
         if (count($documents) == self::COMMIT_BULK_PER) {
-          self::commit_documents($documents);
+          self::commitDocuments($documents);
           $documents = array();
         }
       }
@@ -551,7 +569,7 @@ class mediamosa_solr {
 
     // Commit if anything left.
     try {
-      self::commit_documents($documents);
+      self::commitDocuments($documents);
     }
     catch (Exception $e) {
       // Ignore.
@@ -561,8 +579,11 @@ class mediamosa_solr {
 
   /**
    * Return the count of the number of queued assets.
+   *
+   * @return integer
+   *   The number of assets om the queue table.
    */
-  public static function queue_get_count() {
+  public static function queueGetCount() {
     return mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')->countQuery()->execute()->fetchField();
   }
 
@@ -571,41 +592,31 @@ class mediamosa_solr {
    *
    * Will reindex the solr database as much as its allowed during this call.
    */
-  public static function process_queue() {
+  public static function processQueue() {
+
+    // Try to lock exclusive, so it does not run twice.
+    if (!lock_acquire(self::LOCK_NAME_PROCESSING, mediamosa_solr::TIME_TO_PROCESS_QUEUE)) {
+      return;
+    }
 
     $mediamosa_solr_enable_queue = variable_get('mediamosa_solr_enable_queue', TRUE);
-    if (empty($mediamosa_solr_enable_queue)) {
-      // Always Optimize.
-      self::optimize();
-
+    if (!$mediamosa_solr_enable_queue) {
+      // Always Optimize when we have nothing queued.
+      self::optimizeSolr();
       return;
     }
 
     // Number of seconds the reindex is running max.
     $set_time_limit = variable_get('mediamosa_solr_reindex_time_limit', mediamosa_solr::TIME_TO_PROCESS_QUEUE);
 
-    // Get possible current running reindex. Make sure its not running too.
-    $run_last = variable_get('mediamosa_solr_queue_cron_last', NULL);
-
-    // Make sure we don't run the queue process twice.
-    // We will give it enough time to timeout.
-    if ($run_last && round(REQUEST_TIME - $run_last) < (mediamosa_solr::TIME_TO_PROCESS_QUEUE * 3)) {
-      // Only if its running about twice when we expected we should watchdog it.
-      if (round(REQUEST_TIME - $run_last) > (mediamosa_solr::TIME_TO_PROCESS_QUEUE * 2)) {
-        self::log('Unexpected; Solr reindex was still / already running when cron was triggered.');
-      }
-
-      return;
-    }
-
-    // If we get here then we can go.
+    // If we get here then we can start.
     variable_set('mediamosa_solr_queue_cron_last', REQUEST_TIME);
 
     try {
       // 10 seconds more than we think we need.
       set_time_limit($set_time_limit + 10);
 
-      // At where
+      // At when.
       $end_at = REQUEST_TIME + $set_time_limit;
 
       $indexed = 0;
@@ -613,25 +624,27 @@ class mediamosa_solr {
       // Get the now time, as long as we under end_at then continue.
       while (floor(microtime(TRUE)) < $end_at) {
         // Do our stuff until we are done or till we run out of time.
-        $query = mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq');
-        $query->fields('sq', array(mediamosa_solr_queue_db::ID));
-        $query->range(0, self::COMMIT_BULK_PER);
-        $query->orderBy(mediamosa_solr_queue_db::CREATED, 'ASC');
-        $asset_ids = $query->execute()->fetchCol();
+        $asset_ids = mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
+          ->fields('sq', array(mediamosa_solr_queue_db::ID))
+          ->range(0, self::COMMIT_BULK_PER)
+          ->orderBy(mediamosa_solr_queue_db::CREATED, 'ASC')
+          ->execute()
+          ->fetchCol();
 
-        // None left?
+        // Found any assets?
         if (empty($asset_ids)) {
           break;
         }
 
         $documents = array();
         foreach ($asset_ids as $asset_id) {
-          $document = self::create_asset_document($asset_id);
+          $document = self::createDocumentAsset($asset_id);
           if (empty($document)) {
             // Delete from Solr index.
-            self::delete_assets(array($asset_id));
+            self::deleteAssets(array($asset_id));
 
-            $documents['asset_ids'][] = $asset_id; // So its removed from queue.
+            // So its removed from queue.
+            $documents['asset_ids'][] = $asset_id;
             continue; // Not found.
           }
 
@@ -643,25 +656,26 @@ class mediamosa_solr {
         }
 
         // Commit will also remove the asset_ids from the queue.
-        self::commit_documents($documents);
+        self::commitDocuments($documents);
       }
 
       if ($indexed) {
         // Optimize.
-        self::optimize();
+        self::optimizeSolr();
 
         mediamosa_debug::log('Solr index run done, indexed @count assets', array('@count' => $indexed));
       }
     }
     catch (Exception $e) {
-      // Exception, turn off that we are processing.
-      variable_set('mediamosa_solr_queue_cron_last', NULL);
+      // Exception, unlock.
+      lock_release(self::LOCK_NAME_PROCESSING);
+
+      // Set failures.
       variable_set('mediamosa_solr_queue_failures', $e->getMessage());
       throw $e;
     }
 
     // Done.
-    variable_del('mediamosa_solr_queue_cron_last');
     variable_del('mediamosa_solr_queue_failures');
 
     // Save number of indexes for averages calc.
@@ -671,15 +685,16 @@ class mediamosa_solr {
       array_shift($stats);
     }
     variable_set('mediamosa_solr_queue_stats', $stats);
+
+    // Unlock, we are done.
+    lock_release(self::LOCK_NAME_PROCESSING);
   }
 
   /**
-   * Will throw away index in Solr database, be careful with this function!
-   *
-   * @throws mediamosa_solr_exception
+   * Will throw away the full index in the Solr database.
    */
-  public static function purge_solr_index() {
-    // Now purge, don't commit yet.
+  public static function purgeSolr() {
+    // Purge query.
     self::deleteByQuery('*:*');
 
     // Commit.
@@ -689,12 +704,23 @@ class mediamosa_solr {
   /**
    * Do search query.
    *
-   * @param string $query
+	 * @param string $query
+   *   The raw query string.
+	 * @param integer $offset
+   *   The starting offset for result documents.
+	 * @param integer $limit
+   *   The maximum number of result documents to return.
+	 * @param array $params
+   *   The key / value pairs for other query parameters (see Solr
+   *   documentation), use arrays for parameter keys used more than once (e.g.
+   *   facet.field).
+   * @param string $method
+   *   Either POST or GET.
    *
-   * @return
-   *  Returns the Solr Response object.
+   * @return mediamosa_solr_apache_solr_service
+   *   Returns the Solr Response object.
    */
-  public static function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'POST') {
+  public static function search($query, $offset = 0, $limit = 10, array $params = array(), $method = 'POST') {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query, $offset, $limit, $params, $method));
   }
@@ -702,14 +728,17 @@ class mediamosa_solr {
   /**
    * Delete documents based on query. Don't forget to call commit.
    *
-   * @param $query
+   * @param string $query
+   *   The query to select the objects to delete.
    *
-   * @return
-   *  Returns the Solr Response object.
+   * @return mediamosa_solr_apache_solr_response
+   *   Returns the Solr Response object.
    */
   public static function deleteByQuery($query) {
+    // Get the solr object.
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
+    // Now delete the objects.
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->deleteByQuery($query));
   }
 
@@ -722,7 +751,7 @@ class mediamosa_solr {
       $mediamosa_apache_solr_service->commit();
     }
     catch (Exception $e) {
-      self::log($e->getMessage());
+      self::log('Unable to commit Solr, @message', array('@message' => $e->getMessage()));
     }
   }
 
@@ -770,7 +799,7 @@ class mediamosa_solr {
       }
     }
     catch (Exception $e) {
-      // Cant react on exception, we might be in destructor.
+      // Can't react on exception, we might be in destructor.
 
       self::commit();
       return 0;
@@ -779,8 +808,15 @@ class mediamosa_solr {
 
   /**
    * Delete one asset with data.
+   *
+   * @param string $asset_id
+   *   The asset to delete.
+   * @param boolean $commit
+   *   Commit after delete command has been inserted. Is usefull when deleting
+   *   many assets at once.
    */
-  public static function delete_asset_document($asset_id, $commit = TRUE) {
+  public static function deleteAsset($asset_id, $commit = TRUE) {
+    // Delete by asset_id.
     self::deleteByQuery('asset_id:' . mediamosa_solr_apache_solr_service::phrase($asset_id));
 
     if ($commit) {
@@ -789,15 +825,28 @@ class mediamosa_solr {
   }
 
   /**
-   * Insert one asset with data.
+   * Insert one asset with data into Solr.
+   *
+   * @param string $asset_id
+   *   The ID of the asset to insert.
+   *
+   * @return Apache_Solr_Document
+   *   The created solr document.
    */
-  public static function create_asset_document($asset_id) {
+  public static function createDocumentAsset($asset_id) {
 
     // Get all the data needed for indexing.
     $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id);
     if (empty($asset_for_index)) {
       return FALSE;
     }
+
+    // Empty by default.
+    $mf_org_owner = array();
+    $mf_org_group = array();
+    $mf_org_is_protected = array();
+    $app_id_masters = array();
+    $app_id_slaves = array();
 
     // Create empty document object asset;
     $document = new Apache_Solr_Document();
@@ -1000,7 +1049,6 @@ class mediamosa_solr {
               $master_slave_2[] = $acl_object[mediamosa_acl_object_db::ACL_ID];
               $mf_acl_master_slave[] = implode('_', $master_slave_2);
             }
-
           }
           else {
             $mf_acl_master_slave[] = implode('_', $master_slave);
@@ -1149,19 +1197,22 @@ class mediamosa_solr {
    * Commit the collected documents.
    *
    * @param array $documents
+   *   Array of Apache_Solr_Document objects;
+   *   - 'documents'
+   *     Array containing all documents to commit.
+   *   - 'asset_ids'
+   *     Array containing all asset_ids of the documents.
+   * @param boolean $optimize
+   *   Run optimize after commit.
    */
-  public static function commit_documents(array $documents, $optimize = FALSE) {
+  public static function commitDocuments(array $documents, $optimize = FALSE) {
+    // Any documents?
     if (!empty($documents['documents'])) {
-
       // Get the service object.
       $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
-      if (count($documents['documents']) == 1) {
-        $mediamosa_apache_solr_service->addDocument(reset($documents['documents']));
-      }
-      else {
-        $mediamosa_apache_solr_service->addDocuments($documents['documents']);
-      }
+      // Add the documents.
+      $mediamosa_apache_solr_service->addDocuments($documents['documents']);
 
       // Commit the documents.
       $mediamosa_apache_solr_service->commit();
@@ -1174,13 +1225,15 @@ class mediamosa_solr {
     }
 
     // Remove from queue.
-    mediamosa_db::db_delete(mediamosa_solr_queue_db::TABLE_NAME)->condition(mediamosa_solr_queue_db::ID, $documents['asset_ids'], 'IN')->execute();
+    mediamosa_db::db_delete(mediamosa_solr_queue_db::TABLE_NAME)
+      ->condition(mediamosa_solr_queue_db::ID, $documents['asset_ids'], 'IN')
+      ->execute();
   }
 
   /**
-   * Do a optimize call.
+   * Do a Solr optimize call.
    */
-  public static function optimize() {
+  public static function optimizeSolr() {
     // Get the service object.
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
@@ -1191,14 +1244,14 @@ class mediamosa_solr {
   /**
    * Create the WHERE syntax.
    *
-   * @param $where
+   * @param array|string $where
    *   Array that describes the query OR processed string.
-   * @param $glue
+   * @param string $glue
    *   Either ' AND ' or ' OR '.
-   * @param $previous_glue
+   * @param string $previous_glue
    *   The previous used glue to prevent unnessary ( ).
    *
-   * @return
+   * @return string
    *   Return the created where string.
    */
   public static function where($where, $glue = ' AND ', $previous_glue = ' AND ') {
@@ -1233,7 +1286,7 @@ class mediamosa_solr {
   /**
    * Returns TRUE/FALSE to indicate we are active for updates etc.
    */
-  public static function is_enabled() {
+  public static function isEnabled() {
     return variable_get('mediamosa_search_engine', 'mediamosa_search') == 'mediamosa_solr';
   }
 }

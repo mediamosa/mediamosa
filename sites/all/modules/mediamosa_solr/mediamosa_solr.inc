@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * All non-hook functions are here.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,11 +28,6 @@
  */
 
 /**
- * @file
- * All non-hook functions are here.
- */
-
-/**
  * Called when pressed on test button.
  *
  * @param array $form_state
@@ -43,7 +41,7 @@ function _mediamosa_solr_ping_submit($form, &$form_state) {
   $_SESSION['mediamosa_solr_check_connection_save'] = $form_state['values']['mediamosa_solr_check_connection_save'];
   unset($form_state['values']['mediamosa_solr_check_connection_save']);
 
-  if (mediamosa_solr_apache_solr_service::mediamosaPing($mediamosa_solr_url)) {
+  if (mediamosa_solr_apache_solr_service::solrServicePing($mediamosa_solr_url)) {
     if ($check_connection_save) {
       drupal_set_message(t('Connection test successful, URL saved.'));
 
@@ -67,24 +65,26 @@ function _mediamosa_solr_status_generate() {
     return array();
   }
 
-  $ping_success = mediamosa_solr_apache_solr_service::mediamosaPing();
+  // Ping the solr server.
+  $ping_success = mediamosa_solr_apache_solr_service::solrServicePing();
 
+  $results = array();
   if ($ping_success) {
     $results['solr_ping'] = array(
-      'title' => t('Lucene Solr servlet'),
+      'title' => t('Apache Solr servlet'),
       'value' => t('Found'),
       'severity' => _mediamosa_maintenance_status_okerror($ping_success),
     );
   }
   else {
     $results['solr_ping'] = array(
-      'title' => t('Lucene Solr servlet'),
+      'title' => t('Apache Solr servlet'),
       'value' => t('Failed'),
       'severity' => _mediamosa_maintenance_status_okerror($ping_success),
       'description' => t('Unable to reach the Solr servlet, either !disable or check !settings.',
         array(
-          '!disable' => l('disable the Solr module', 'admin/modules'),
-          '!settings' => l('the MediaMosa solr settings', 'admin/mediamosa/config/solr')
+          '!disable' => l(t('disable the Solr module'), 'admin/modules'),
+          '!settings' => l(t('the MediaMosa solr settings'), 'admin/mediamosa/config/solr')
         )
       ),
     );

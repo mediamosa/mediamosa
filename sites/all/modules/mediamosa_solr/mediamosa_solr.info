@@ -1,7 +1,7 @@
 name = "MediaMosa Apache Solr"
 description = "MediaMosa Apache Solr Search Integration."
 package = "MediaMosa - Search"
-version = 7.x-3.0
+version = 7.x-3.5
 core = 7.x
 
 dependencies[] = mediamosa
@@ -9,14 +9,11 @@ dependencies[] = mediamosa
 configure = admin/mediamosa/config/solr
 
 ; Used files.
-files[] = mediamosa_solr.module
-files[] = mediamosa_solr.inc
-files[] = mediamosa_solr.batch.inc
 files[] = mediamosa_solr.class.inc
 files[] = mediamosa_solr.cql.class.inc
 files[] = mediamosa_solr_apache_solr_response.class.inc
 files[] = mediamosa_solr_apache_solr_service.class.inc
-files[] = mediamosa_solr_queue_db.inc
+files[] = mediamosa_solr_queue_db.class.inc
 files[] = mediamosa_solr.exception.inc
 files[] = mediamosa_solr.rest.class.inc
 files[] = tests/mediamosa_solr.test
@@ -37,7 +34,7 @@ files[] = tests/mediamosa_solr.acl.play_restriction.test
 files[] = tests/mediamosa_solr.acl.slave.rights.test
 files[] = tests/mediamosa_solr.acl.test
 
-; Add 3rdparty so classes are autoload by Drupal
+; Add 3rdparty so classes are autoload by Drupal.
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Service.php
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Response.php
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Document.php
