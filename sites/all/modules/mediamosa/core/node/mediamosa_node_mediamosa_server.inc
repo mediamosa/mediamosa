@@ -111,7 +111,7 @@ function _process_server_node(&$node) {
  * Implements hook_update().
  */
 function mediamosa_server_update($node) {
-  if ($node->revision) {
+  if ($node->is_new || !empty($node->revision)) {
     mediamosa_server_insert($node);
   }
   else {
@@ -202,7 +202,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
     mediamosa_server_db::TOOLS => t('Tools'),
     mediamosa_server_db::OBJECT_CODE => t('Object Code'),
   );
-  
+
   switch ($node->{mediamosa_server_db::SERVER_TYPE}) {
     case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
     case mediamosa_server_db::SERVER_TYPE_STILL:

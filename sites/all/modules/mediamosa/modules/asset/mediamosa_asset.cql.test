@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * CQL test file.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * CQL test file.
-  */
 class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -179,22 +178,33 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('created >= "2010-01-01 00:00:00"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
   }
 
-  // Test multiple property cql search.
+  /**
+   * Test multiple properties of cql search.
+   *
+   * - Test '=' operator.
+   * - Test '<>' operator.
+   * - Test combination with NOT.
+   * - Sort testing on text and date.
+   */
   public function testCQLProperties() {
 
     // Turn on SQL, this does not work on SOLR.
     variable_set('mediamosa_search_engine', 'mediamosa_sql');
 
-    // Create assets.
-    $asset_id_1 = $this->createAsset();
+    // Create assets with sleep, so created value is unique.
+
     $asset_id_2 = $this->createAsset();
-    $asset_id_3 = $this->createAsset();
+    sleep(2);
     $asset_id_4 = $this->createAsset();
+    sleep(2);
+    $asset_id_3 = $this->createAsset();
+    sleep(2);
+    $asset_id_1 = $this->createAsset();
 
     // add properties
     $this->createAssetMetadata($asset_id_1,
       array(
-        'title' => 'asset 1',
+        'title' => 'asset 3',
         'publisher' => 'foo',
       )
     );
@@ -206,7 +216,7 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     );
     $this->createAssetMetadata($asset_id_3,
       array(
-        'title' => 'asset 3',
+        'title' => 'asset 1',
         'publisher' => array('foo', 'bar'),
       )
     );
@@ -221,9 +231,129 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->cql_do_search_test_assets_1('dc.publisher = "bar"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
 
-    // In the next 2 tests, asset_id_3 is controversial.
-    $this->cql_do_search_test_assets_1('dc.publisher <> "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    // Next 2 tests will fail under Solr, as NOT does not work the same as in
+    // MySQL.
+    if (variable_get('mediamosa_search_engine') != 'mediamosa_sql') {
+      // In the next 2 tests, asset_id_3 is controversial.
+      $this->cql_do_search_test_assets_1('dc.publisher <> "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
 
-    $this->cql_do_search_test_assets_1('NOT dc.publisher = "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+      $this->cql_do_search_test_assets_1('NOT dc.publisher = "foo"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    }
+
+    // Title ASC sort.
+    $found_ids = $this->cql_do_search_test_assets_1('title = "asset" sortBy title/sort.ascending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->var_export($found_ids);
+    $this->var_export(array($asset_id_3, $asset_id_2, $asset_id_1, $asset_id_4));
+    $this->assertTrue(array($asset_id_3, $asset_id_2, $asset_id_1, $asset_id_4) === $found_ids, 'Title: return in correct ASC order');
+
+    // Title DESC sort.
+    $found_ids = $this->cql_do_search_test_assets_1('title = "asset" sortBy title/sort.descending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->var_export($found_ids);
+    $this->var_export(array($asset_id_4, $asset_id_1, $asset_id_2, $asset_id_3));
+    $this->assertTrue(array($asset_id_4, $asset_id_1, $asset_id_2, $asset_id_3) === $found_ids, 'Title: return in correct DESC order');
+
+    // Created ASC sort.
+    $found_ids = $this->cql_do_search_test_assets_1('title = "asset" sortBy asset_created/sort.ascending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->var_export($found_ids);
+    $this->var_export(array($asset_id_2, $asset_id_4, $asset_id_3, $asset_id_1));
+    $this->assertTrue(array($asset_id_2, $asset_id_4, $asset_id_3, $asset_id_1) === $found_ids, 'Created: return in correct ASC order');
+
+    // Created DESC sort.
+    $found_ids = $this->cql_do_search_test_assets_1('title = "asset" sortBy asset_created/sort.descending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->var_export($found_ids);
+    $this->var_export(array($asset_id_1, $asset_id_3, $asset_id_4, $asset_id_2));
+    $this->assertTrue(array($asset_id_1, $asset_id_3, $asset_id_4, $asset_id_2) === $found_ids, 'Created: return in correct DESC order');
   }
+/*
+  public function testSolr() {
+
+    // Turn on SQL, this does not work on SOLR.
+  //  variable_set('mediamosa_search_engine', 'mediamosa_sql');
+
+    $asset_id_2 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_1 = $this->createAsset();
+
+    // add properties
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'asset 3',
+        'publisher' => 'foo',
+      )
+    );
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'asset 2',
+        'publisher' => 'bar',
+      )
+    );
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'asset 1',
+        'publisher' => array('foo', 'bar'),
+      )
+    );
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'asset 4',
+      )
+    );
+    $this->var_export(array($asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4));
+
+    // must be 2,3,4
+    //
+    // publisher_vc:foo = 1,3
+    // publisher_vc:foo AND -publisher_vc:somethingElse = 1,3
+    // (publisher_vc:foo AND -publisher_vc:somethingElse) AND publisher_vc:foo
+    // (+publisher_vc:foo AND -publisher_vc:somethingElse) AND -publisher_vc:somethingElse = 1,3
+    // -publisher_vc:somethingElse AND publisher_vc:foo = 1,3
+    // publisher_vc:foo NOT publisher_vc:boo = 1,3
+    // (publisher_vc:foo AND publisher_vc:somethingElse) OR (*:* -publisher_vc:foo) = 1,3
+    // (*:* -publisher_vc:foo) = 2,4
+    // (*:* NOT publisher_vc:foo) = 2,4
+    //
+    // -publisher_vc:foo = 2,4
+    // -(publisher_vc:foo AND publisher:*) = 2,4
+    // +publisher_vc:foo NOT publisher_vc:somethingElse = 2,4
+    // +publisher_vc:foo AND -publisher_vc:somethingElse = 2,4
+    // -publisher_vc:somethingElse NOT publisher_vc:foo = 2,4
+    //
+    // publisher_vc:foo NOT publisher_vc:bar = 1
+    // publisher_vc:foo NOT publisher_vc:somethingElse = 1,3
+    //
+    // -publisher_vc:foo OR publisher_vc:somethingElse = niks
+    // (publisher_vc:foo AND publisher_vc:somethingElse) = niks
+    //
+    // -publisher_vc:somethingElse = alles
+    // NOT publisher_vc:somethingElse = alles
+    // (publisher_vc:foo) AND publisher_vc:[* TO *] = 1,3
+    //
+    // -publisher_vc:foo = 2,4
+    // -(publisher_vc:foo AND -publisher_vc:(+"something" +"foo")) = 2,4
+    //
+    // +publisher_vc:foo NOT publisher_vc:[* TO *] = niks
+    // publisher_vc:[* TO *] AND publisher_vc:foo = 1,3
+    // publisher_vc:foo NOT (-publisher_vc:somethingElse) = 1,3
+
+//    $response = mediamosa_solr::search('publisher_vc:(+"something" +"foo")');
+//    $this->var_export($response);
+
+//    $response = mediamosa_solr::search('-(publisher_vc:foo AND publisher_vc:*)');
+//    $this->var_export($response);
+//
+
+//    $response = mediamosa_solr::search('publisher_vc:foo AND _query_:"publisher_vc:foo"');
+//    $this->var_export($response);
+
+    $response = mediamosa_solr::search('-publisher_vc:foo');
+    $this->var_export($response);
+
+//
+    $response = mediamosa_solr::search('-(publisher_vc:foo AND publisher_vc:somethingElse) OR (*:* -publisher_vc:foo)');
+    $this->var_export($response);
+
+//    $response = mediamosa_solr::search('((publisher_vc:foo AND publisher_vc:somethingElse) OR (*:* -publisher_vc:foo))');
+//    $this->var_export($response);
+  }*/
 }

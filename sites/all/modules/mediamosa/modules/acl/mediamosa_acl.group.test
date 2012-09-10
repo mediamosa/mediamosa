@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Unittests for ACL groups.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
-  * @file
-  * Unittests for ACL groups.
-  */
 class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -41,7 +40,51 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test if the same hostname can be put into 2 groups.
+   */
+  function testACLGroup_Hostnames() {
+    // Group name.
+    $groupname_1 = mediamosa_db::uuid(rand(1, 9999)) . '.group';
+    $groupname_2 = mediamosa_db::uuid(rand(1, 9999)) . '.group';
+
+    // Group type.
+    $group_type = mediamosa_acl::ACL_NAME_TYPE_DOMAIN;
+
+    // Create acl groups.
+    $this->createAclGroup($groupname_1, $group_type);
+    $this->createAclGroup($groupname_2, $group_type);
+
+    // Set new hostnames.
+    $hostnames = array(
+      mediamosa_db::uuid(rand(1, 9999)),
+    );
+
+    // Set a single hostname.
+    $single_hostname = $hostnames[0];
+
+    // Create acl hostname.
+    $parameters = array(
+      mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $single_hostname,
+    );
+    $this->createAclHostname($groupname_1, array(), $parameters);
+    $this->createAclHostname($groupname_2, array(), $parameters);
+
+    // Get the acl hostname.
+    $xml = $this->getAclHostname($groupname_1, 5, 0);
+    $this->assertTrue($xml['items']['item'][0]['hostname'] == $single_hostname, 'Found hostname in group.');
+    $xml = $this->getAclHostname($groupname_2, 5, 0);
+    $this->assertTrue($xml['items']['item'][0]['hostname'] == $single_hostname, 'Found hostname in group.');
+
+    $this->assertTrue(mediamosa_acl::is_group_domain('foo.group'), 'Is domain group');
+    $this->assertFalse(mediamosa_acl::is_group_domain('@foo.group'), 'Is not domain group');
+    $this->assertTrue(mediamosa_acl::is_group_realm('@foo.group'), 'Is realm group');
+    $this->assertFalse(mediamosa_acl::is_group_realm('foo.group'), 'Is not realm group');
+    $this->assertFalse(mediamosa_acl::is_group_realm('foo@foo.group'), 'Is not realm group');
+    $this->assertFalse(mediamosa_acl::is_group_domain('foo@foo.group'), 'Is not domain group');
+  }
+
   // Remake of test #668
   function testAcl_Groups() {
 
@@ -57,7 +100,7 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAclGroup($groupname, $group_type);
 
     // Get the acl group.
-    $a_acl_group = $this->getAclGroup($groupname);
+    $acl_group = $this->getAclGroup($groupname);
 
     // Output in 3.0 is different.
     if (mediamosa::variable_get('mediamosa_version_aut', FALSE)) {
@@ -71,11 +114,11 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
 
     // Check the result.
     $this->assertTrue(
-      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM,
+      $acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM,
       t('Acl group type: REALM')
     );
     $this->assertTrue(
-      $a_acl_group[$group_name] == $groupname,
+      $acl_group[$group_name] == $groupname,
       t('Acl group name has the good value')
     );
 
@@ -85,27 +128,27 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     $new_groupname = '@' . mediamosa_db::uuid(rand(1, 9999)) . '_new.group';
 
     // Update the acl group.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_group_update::NEW_GROUPNAME => $new_groupname,
       mediamosa_rest_call_acl_group_update::GROUP_TYPE => mediamosa_acl::ACL_NAME_TYPE_DOMAIN,
     );
-    $response = $this->updateAutGroup($groupname, $a_parameters);
+    $this->updateAutGroup($groupname, $parameters);
 
     // Get the acl group.
-    $a_acl_group = $this->getAclGroup($new_groupname);
+    $acl_group = $this->getAclGroup($new_groupname);
 
     // Check the result.
     $this->assertTrue(
-      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN,
-      t("Aut group type: REALM")
+      $acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN,
+      t('Aut group type: REALM')
     );
     $this->assertTrue(
-      $a_acl_group[$group_name] == $new_groupname,
-      t("Aut group name has the good value")
+      $acl_group[$group_name] == $new_groupname,
+      t('Aut group name has the good value')
     );
 
     // Check hostname related functions.
-
+    //
     // Change the group name to the new one.
     $groupname = $new_groupname;
 
@@ -125,18 +168,18 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     $single_hostname = $hostnames[0];
 
     // Create acl hostname.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $single_hostname,
     );
-    $this->createAclHostname($groupname, array(), $a_parameters);
+    $this->createAclHostname($groupname, array(), $parameters);
 
     // Get the acl hostname.
-    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+    $xml = $this->getAclHostname($groupname, $limit, $offset);
 
     // Check the result.
     $this->assertTrue(
-      $a_xml['items']['item'][0]['hostname'] == $single_hostname,
-      t("Hostname has the good value: @value", array('@value' => $a_xml['items']['item'][0]['hostname']))
+      $xml['items']['item'][0]['hostname'] == $single_hostname,
+      t("Hostname has the good value: @value", array('@value' => $xml['items']['item'][0]['hostname']))
     );
 
     // Add multiple hostnames to an acl group.
@@ -145,14 +188,14 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAclHostname($groupname, $hostnames);
 
     // Get the acl hostname.
-    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+    $xml = $this->getAclHostname($groupname, $limit, $offset);
 
     // Check the result.
     $this->assertTrue(
-      count($a_xml['items']['item']) == count($hostnames),
+      count($xml['items']['item']) == count($hostnames),
       t("Hostname has @count values", array('@count' => count($hostnames)))
     );
-    foreach ($a_xml['items']['item'] as $host) {
+    foreach ($xml['items']['item'] as $host) {
       $this->assertTrue(
         in_array($host['hostname'], $hostnames),
         t("Hostname has the good value: @value", array('@value' => $host['hostname']))
@@ -164,40 +207,38 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     $this->deleteAclGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
 
     // Delete an acl hostname.
-
-    // Delete an acl hostname.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $single_hostname,
     );
-    $this->deleteAclHostname($groupname, array(), $a_parameters);
+    $this->deleteAclHostname($groupname, array(), $parameters);
 
     // Get the acl hostname.
-    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+    $xml = $this->getAclHostname($groupname, $limit, $offset);
 
     // Check the result.
     $this->assertTrue(
-      count($a_xml['items']['item']) == count($hostnames) - 1,
+      count($xml['items']['item']) == count($hostnames) - 1,
       t("Hostname has @count values", array('@count' => count($hostnames) - 1))
     );
 
-    // Deleta acl hostnames.
-
+    // Delete acl hostnames.
     $delete_hostnames = $hostnames;
     $not_deleted = $delete_hostnames[count($delete_hostnames) - 1];
-    unset($delete_hostnames[count($delete_hostnames) - 1]); // all but one
+    // All but one.
+    unset($delete_hostnames[count($delete_hostnames) - 1]);
 
     // Delete an acl hostname.
     $this->deleteAclHostname($groupname, $delete_hostnames);
 
     // Get the acl hostname.
-    $a_xml = $this->getAclHostname($groupname, $limit, $offset);
+    $xml = $this->getAclHostname($groupname, $limit, $offset);
 
     // Check the result.
     $this->assertTrue(
-      count($a_xml['items']['item']) == 1,
+      count($xml['items']['item']) == 1,
       t("Hostname has @count values", array('@count' => 1))
     );
-    foreach ($a_xml['items']['item'] as $host) {
+    foreach ($xml['items']['item'] as $host) {
       $this->assertTrue(
         $host['hostname'] == $not_deleted,
         t("Hostname has the good value: @value", array('@value' => $host['hostname']))
@@ -205,14 +246,14 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     }
 
     // Delete the acl group with delete = cascade.
-
+    //
     // Delete an acl group.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_group_delete::DELETE => 'cascade',
     );
-    $this->deleteAclGroup($groupname, $a_parameters);
+    $this->deleteAclGroup($groupname, $parameters);
 
     // Get the acl hostname.
-    $a_xml = $this->getAclHostname($groupname, $limit, $offset, array(), array(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND));
+    $xml = $this->getAclHostname($groupname, $limit, $offset, array(), array(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND));
   }
 }

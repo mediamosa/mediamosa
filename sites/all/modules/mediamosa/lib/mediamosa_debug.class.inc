@@ -115,9 +115,9 @@ class mediamosa_debug {
    *   NULL if message is already translated or not possible to
    *   translate.
    * @param string $asset_id
-   *   (Optional) The ID of the asset, provide when available.
+   *   (optional) The ID of the asset, provide when available.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    */
@@ -140,7 +140,7 @@ class mediamosa_debug {
    *   NULL if message is already translated or not possible to
    *   translate.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    */
@@ -165,11 +165,11 @@ class mediamosa_debug {
    *   NULL if message is already translated or not possible to
    *   translate.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    * @param string $mediafile_id
-   *   (Optional) The ID of the mediafile.
+   *   (optional) The ID of the mediafile.
    */
   public static function log_high_asset($asset_id, $message, array $variables = array(), $type = NULL, $mediafile_id = '') {
     if (self::is_debug_high()) {
@@ -192,9 +192,9 @@ class mediamosa_debug {
    *   NULL if message is already translated or not possible to
    *   translate.
    * @param string $asset_id
-   *   (Optional) The ID of the asset. Provide when available.
+   *   (optional) The ID of the asset. Provide when available.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    */

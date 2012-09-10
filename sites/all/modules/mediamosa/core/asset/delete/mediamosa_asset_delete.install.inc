@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Install, update, and uninstall functions for the asset delete module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,12 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The installation file of the asset module.
-  */
-
-require_once 'mediamosa_asset_delete.class.inc';
 require_once 'mediamosa_asset_delete_db.class.inc';
 
 /**
@@ -53,8 +50,9 @@ function _mediamosa_asset_delete_uninstall() {
  */
 function mediamosa_asset_delete_schema() {
 
+  $schema = array();
   $schema[mediamosa_asset_delete_db::TABLE_NAME] = array(
-  'description' => 'The asset collection link table.',
+    'description' => 'The asset collection link table.',
     'fields' => array(
       mediamosa_asset_delete_db::ID => array(
         'type' => 'varbinary',
@@ -81,14 +79,14 @@ function mediamosa_asset_delete_schema() {
         'default' => NULL,
       ),
     ),
-    //'primary key' => array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::COLL_ID),
     'indexes' => array(
       'idx_app_videotimestamp' => array(mediamosa_asset_delete_db::APP_ID, mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED),
     ),
-    // Defined as unique and not as primary because drupal will undo the NULL option on coll_id.
+    // Defined as unique and not as primary because drupal will undo the NULL
+    // option on coll_id.
     'unique keys' => array(
       'uni_id_collid' => array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::COLL_ID),
-    )
+    ),
   );
 
   return $schema;

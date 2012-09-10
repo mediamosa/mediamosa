@@ -37,7 +37,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET', 'MediaMosa Assets');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL', 'MediaMosa Assets Search / CQL');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE', 'MediaMosa Asset Mediafiles');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT', 'MediaMosa Asset Supplements');
-define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL', 'MediaMosa Authorization');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL', 'MediaMosa ACL');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
@@ -58,10 +58,18 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER', 'MediaMosa User / Groups');
  */
 class MediaMosaTestCase extends DrupalWebTestCase {
 
-  // file to unlink on teardown.
+  /**
+   * Files to delete with teardown.
+   *
+   * @var array
+   */
   protected $unlinks = array();
 
-  // Change if your test needs different timezone.
+  /**
+   * Change if your test needs different timezone.
+   * 
+   * @var string
+   */
   protected $default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
 
   // ------------------------------------------------------------------ Consts.

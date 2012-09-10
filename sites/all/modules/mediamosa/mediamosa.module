@@ -556,7 +556,7 @@ function mediamosa_mediamosa_configuration_collect() {
   $form['settings_mediamosa']['mediamosa_cron_url_app'] = array(
     '#type' => 'textfield',
     '#title' => t('URL REST for CRON runs'),
-    '#description' => t('The URL or IP Address of the server to apply the call for CRON REST calls. For now its used to trigger update for the status page and where to run the status tests. This must be a MediaMosa REST interface or the admin URL (default http://localhost/), and open from this server, f.e. \'http://app.mediamosa.local\'. <br />Notes: <br /><em>Make sure you only trigger the CRON on one server, prefer where you host the admin interface.</em><br /><em>You must use http:// or other schema in this URL.</em>'),
+    '#description' => t('The URL or IP Address of the server to apply the call for CRON REST calls. For now its used to trigger update for the status page and where to run the status tests. Also external modules, like Solr module, will use this server. This must be a MediaMosa REST interface or the admin URL (default http://localhost/), and open from this server, f.e. \'http://app.mediamosa.local\'. <br />Notes: <br /><em>Make sure you only trigger the CRON on one server, prefer where you host the admin interface.</em><br /><em>You must use http:// or other schema in this URL.</em>'),
     '#required' => TRUE,
     '#default_value' => variable_get('mediamosa_cron_url_app', 'http://localhost'),
   );

@@ -75,6 +75,10 @@ class mediamosa_db {
     return call_user_func_array('db_delete', $args);
   }
 
+  public static function db_truncate($table, array $options = array()) {
+    return db_truncate($table, $options);
+  }
+
   /**
    * Return the number of found rows with SELECT queries using
    * SQL_CALC_FOUND_ROWS (mysql).
@@ -128,7 +132,7 @@ class mediamosa_db {
         $args[4] += array(
           'fetch' => PDO::FETCH_ASSOC,
         );
-        
+
         $query = &$args[0]; // The Query
         $args_cpy = &$args[3];  // The Arguments.
         break;

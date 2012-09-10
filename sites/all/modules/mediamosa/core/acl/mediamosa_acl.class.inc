@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Authorization layer for assets, media functions.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Authorization layer for assets, media functions.
- */
 class mediamosa_acl {
 
   // ------------------------------------------------------------------ Consts.
@@ -35,7 +34,7 @@ class mediamosa_acl {
   const ACL_TYPE_ASSET = 'ASSET';
   const ACL_TYPE_COLLECTION = 'COLLECTION';
 
-// Current rights
+  // Current rights
   const RIGHT_ACCESS = 'ACCESS';
 
   const ACL_NAME_TYPE_DOMAIN = 'DOMAIN';
@@ -43,10 +42,10 @@ class mediamosa_acl {
   const ACL_NAME_TYPE_USER = 'USER';
   const ACL_NAME_TYPE_USER_GROUP = 'USER_GROUP';
 
-// Dummy for old ACL layer.
+  // Dummy for old ACL layer.
   const ACL_NAME_TYPE_APP = 'APP';
 
-// Dummy for result rights, name and PATH
+  // Dummy for result rights, name and PATH.
   const OBJ_LINK_TYPE_APP = 'APP';
   const OBJ_LINK_TYPE_NAME = 'NAME';
   const OBJ_LINK_TYPE_GROUP = 'GROUP';
@@ -68,12 +67,30 @@ class mediamosa_acl {
     return TRUE;
   }
 
-  public static function is_group_domain($s_group_domain) {
-    return (preg_match('/(.*)\.group$/', $s_group_domain) > 0 ? TRUE : FALSE);
+  /**
+   * Test the format of the group domain name.
+   *
+   * @param string $group_domain
+   *   The group domain to check.
+   *
+   * @return boolean
+   *   Returns TRUE when valid group domain.
+   */
+  public static function is_group_domain($group_domain) {
+    return (!self::is_group_realm($group_domain) && preg_match('/^[^.@]+\.group$/', $group_domain) > 0 ? TRUE : FALSE);
   }
 
-  public static function is_group_realm($s_group_realm) {
-    return (preg_match('/@[^.]+\.group$/', $s_group_realm) > 0 ? TRUE : FALSE);
+  /**
+   * Test the format of the group realm name.
+   *
+   * @param string $group_realm
+   *   The realm group to check.
+   *
+   * @return boolean
+   *   Returns TRUE when valid group realm.
+   */
+  public static function is_group_realm($group_realm) {
+    return (preg_match('/^@[^.]+\.group$/', $group_realm) > 0 ? TRUE : FALSE);
   }
 
   // Simple check if input is realm

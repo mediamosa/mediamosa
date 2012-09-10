@@ -352,11 +352,11 @@ class mediamosa_gd {
    * @param resource $image
    *   The image resource.
    * @param string $filename
-   *   (Optional) The path to save the file to. If not set or NULL, the raw
+   *   (optional) The path to save the file to. If not set or NULL, the raw
    *   image stream will be outputted directly. NULL is invalid if the quality
    *   and filters arguments are not used.
    * @param integer $quality
-   *   (Optional) Compression level: from 0 (no compression) to 9.
+   *   (optional) Compression level: from 0 (no compression) to 9.
    *
    * @return bool
    *   Returns TRUE on success or FALSE on failure.
@@ -371,11 +371,11 @@ class mediamosa_gd {
    * @param resource $image
    *   The image resource.
    * @param string $filename
-   *   (Optional) The path to save the file to. If not set or NULL, the raw
+   *   (optional) The path to save the file to. If not set or NULL, the raw
    *   image stream will be outputted directly. NULL is invalid if the quality
    *   and filters arguments are not used.
    * @param integer $quality
-   *   (Optional) Compression level: from 0 (no compression) to 9.
+   *   (optional) Compression level: from 0 (no compression) to 9.
    * @param integer $filters
    *   Allows reducing the PNG file size. It is a bitmask field which may be
    *   set to any combination of the PNG_FILTER_XXX constants. PNG_NO_FILTER or

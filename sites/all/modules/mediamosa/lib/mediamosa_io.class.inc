@@ -481,13 +481,13 @@ class mediamosa_io {
     $ret_val = 0;
     exec($command . ' 2>/dev/null', $exec_output, $ret_val);
 
+    if (empty($exec_output)) {
+      // Maybe stderr gave something back.
+      exec($command . ' 2>&1', $exec_output);
+    }
+
     // If ret_val is ok, then check if $exec_output is empty.
     if (in_array($ret_val, $allowed_ret_values)) {
-      if (empty($exec_output)) {
-        // Maybe stderr gave something back.
-        exec($command . ' 2>&1', $exec_output);
-      }
-
       return TRUE;
     }
 

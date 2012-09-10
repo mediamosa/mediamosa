@@ -52,11 +52,11 @@ class mediamosa_watchdog {
    *   - WATCHDOG_INFO: Informational messages.
    *   - WATCHDOG_DEBUG: Debug-level messages.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    * @param string $link
-   *   (Optional) A link to associate with the message.
+   *   (optional) A link to associate with the message.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $link = NULL) {
     static $logging = FALSE;
@@ -98,11 +98,11 @@ class mediamosa_watchdog {
    *   - WATCHDOG_INFO: Informational messages.
    *   - WATCHDOG_DEBUG: Debug-level messages.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    * @param string $mediafile_id
-   *   (Optional) The ID of the mediafile.
+   *   (optional) The ID of the mediafile.
    */
   public static function log_asset($asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL, $mediafile_id = '') {
     // Unique ID for identifing the watchdog id.
@@ -151,7 +151,7 @@ class mediamosa_watchdog {
    *   NULL if message is already translated or not possible to
    *   translate.
    * @param string $asset_id
-   *   (Optional) The ID of the asset. Provide when available.
+   *   (optional) The ID of the asset. Provide when available.
    * @param integer $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
@@ -164,7 +164,7 @@ class mediamosa_watchdog {
    *   - WATCHDOG_INFO: Informational messages.
    *   - WATCHDOG_DEBUG: Debug-level messages.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    */
@@ -202,7 +202,7 @@ class mediamosa_watchdog {
    *   - WATCHDOG_INFO: Informational messages.
    *   - WATCHDOG_DEBUG: Debug-level messages.
    * @param string $type
-   *   (Optional) The category to which this message belongs. Can be any string,
+   *   (optional) The category to which this message belongs. Can be any string,
    *   but the general practice is to use the name of the module calling
    *   watchdog().
    */

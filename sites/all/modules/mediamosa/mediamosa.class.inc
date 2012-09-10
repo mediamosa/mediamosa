@@ -626,7 +626,7 @@ class mediamosa {
    * @param string $module
    *   Module name.
    * @param string $table_prefix
-   *   Prefix of the tables. Default empty string.
+   *   (optional) Prefix of the tables.
    * @param boolean $make_foreignkey
    *   Make foreign keys (TRUE), or not (FALSE). Default TRUE.
    */

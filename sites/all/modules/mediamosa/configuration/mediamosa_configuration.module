@@ -112,7 +112,7 @@ function _mediamosa_configuration_form() {
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   drupal_set_breadcrumb($breadcrumb);
-  
+
   // Build the settings form and enrich it with our settings collect hook.
   $form = system_settings_form(module_invoke_all('mediamosa_configuration_collect'));
 
@@ -137,7 +137,7 @@ function _mediamosa_configuration_form() {
 
   // Now add weights.
   $weight = -count($titles);
-  foreach ($titles as $title => $name) {
+  foreach ($titles as $name) {
     $form[$name]['#weight'] = $weight++;
   }
 
@@ -167,7 +167,7 @@ function _mediamosa_configuration_form_submit($form, $form_state) {
   if (!user_access(mediamosa_permission::ACCESS_CONFIG_GLOBAL)) {
     return FALSE;
   }
-  
+
   // Now call our (optional) submit hooks, remember that variables are saved
   // automaticly.
   module_invoke_all('mediamosa_configuration_submit', $form, $form_state);

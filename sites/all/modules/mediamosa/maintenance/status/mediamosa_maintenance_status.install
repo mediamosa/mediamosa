@@ -1,5 +1,9 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Install, update, and uninstall functions for the mediamosa maitenance status
+ * module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,17 +29,12 @@
  */
 
 /**
- * @file
- * Installer for status page.
- */
-
-/**
  * Remove the old status array.
  */
 function mediamosa_maintenance_status_update_7000() {
   db_query("DELETE FROM {mediamosa_maintenance_status} WHERE name = 'test_results'");
 
-  // ok reset.
+  // Ok reset.
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES);
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_3_HOURS);
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_DAILY);
@@ -55,7 +54,7 @@ function mediamosa_maintenance_status_update_7001() {
   variable_del('mediamosa_status_run_tests');
   variable_del('mediamosa_maintenance_status_queue');
 
-  // clear the cache.
+  // Clear the cache.
   drupal_flush_all_caches();
 
   // Rebuild stuff.
