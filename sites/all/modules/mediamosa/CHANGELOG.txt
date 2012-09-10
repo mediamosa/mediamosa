@@ -1,8 +1,8 @@
-MediaMosa 3.2.x-dev (build 1890), xxxx-xx-xx
+MediaMosa 3.4.x-dev (build 1900), xxxx-xx-xx
 --------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
-- Removed mediamosa_migration module for migration of v1.7->3.1.
+- Removed mediamosa_migration module for migration of v1.7->v3.2.
 - Fixed 'command' parameter validation.
   * Total rewrite of job command parameter was needed as the old version did not
     have any encoding for the : and ; characters which where used as delimiters.
@@ -27,7 +27,18 @@ MediaMosa 3.2.x-dev (build 1890), xxxx-xx-xx
   module.
 - Added missing 'refresh now' link on status page when page was no longer being
   refresh by CRON.
-
+- Some rewrites on the MediaMosa Solr module;
+  * MediaMosa Solr module will no longer ping the server every time the Solr
+    object is created.
+  * Upgraded 3rd party SolrPhpClient library to r60 (from r22).
+  * Fixed: The URL to the Solr server can now use a https connection. This fix
+           has not altered the 3rd party library.
+  * MediaMosa now supports Solr 3.6. See schema's in root of MediaMosa Solr
+    module.
+- Improved ffmpeg and lua detection and error display on status page(s).
+- Fixed validation checks for group realms and group domains. Group domain names
+  could falsely validate when it was formatted as group realm.
+- Fixed node creation for server, issue caused by Drupal upgrade.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------
