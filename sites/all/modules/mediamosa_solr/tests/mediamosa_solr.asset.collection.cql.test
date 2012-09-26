@@ -85,7 +85,7 @@ class MediaMosaSolrAssetCollectionCQLTestCaseEga extends MediaMosaAssetCollectio
   /**
    * Implements tearDown().
    *
-   * Any changes; see other classes(!)
+   * Any changes; see other classes.
    */
   protected function tearDown() {
 
@@ -125,6 +125,6 @@ class MediaMosaSolrAssetCollectionCQLTestCaseEga extends MediaMosaAssetCollectio
    *       maste foor : m*r will match?
    */
   public function engine_fulltext_wildcard_indexes_lines() {
-    return FALSE;
+    return TRUE;
   }
 }

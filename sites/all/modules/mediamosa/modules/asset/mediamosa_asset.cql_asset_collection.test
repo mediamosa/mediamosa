@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * CQL on asset and collection test file.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * CQL on asset and collection test file.
-  */
 class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -134,7 +133,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Escapes.
-    $a_escape = array(
+    $escapes = array(
       '*' => '%',
       '\**' => '*%',
       '*\**' => '%*%',
@@ -149,7 +148,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
       );
 
     $cql = new mediamosa_asset_cql_context($app_id_3);
-    foreach ($a_escape as $from => $to) {
+    foreach ($escapes as $from => $to) {
       $result = $cql->mediamosa_cql_context_sql_escape_like($from);
       $this->assertTrue(
         $result == $to,

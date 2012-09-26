@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * MediaMosa admin code.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -22,22 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
- /**
-  * @file
-  * MediaMosa admin code.
-  */
-
-/**
- * Provide a single block from the administration menu as a page.
- * This function is often a destination for these blocks.
- * For example, 'admin/structure/types' needs to have a destination to be valid
- * in the Drupal menu system, but too much information there might be
- * hidden, so we supply the contents of the block.
- *
- * @return
- *   The output HTML.
  */
 
 /**

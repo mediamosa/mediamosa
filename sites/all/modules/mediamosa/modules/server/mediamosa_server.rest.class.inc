@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * REST calls for mediamosa_server.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,16 +27,11 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * REST calls for mediamosa_server.
-  */
 /**
  * URI: /server/status
  * Method: GET
  *
  * Internal only.
- *
  */
 class mediamosa_rest_call_server_status extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.

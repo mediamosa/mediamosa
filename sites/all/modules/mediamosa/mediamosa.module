@@ -522,11 +522,12 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
  */
 function mediamosa_mediamosa_configuration_collect() {
 
+  $form = array();
   $form['settings_mediamosa'] = array(
     '#type' => 'fieldset',
     '#title' => t('Miscellaneous'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => !isset($_GET['settings_mediamosa']),
   );
 
   // Get all installed search engines.

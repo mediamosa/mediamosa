@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * MediaMosa maintenance status page.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -395,8 +398,8 @@ function _mediamosa_maintenance_status_job() {
 
   $output .= theme('mediamosa_maintenance_table', array('rows' => $results, 'title' => t('Jobhandler')));
 
-  // Get all the job server.
-
+  // Get all the job servers.
+  //
   // Types to check.
   $types = array(
     mediamosa_job_server_db::JOB_TYPE_ANALYSE,
@@ -660,7 +663,6 @@ function _mediamosa_maintenance_status_filter_form_submit($form, &$form_state) {
   }
   //return 'admin/mediamosa/status/job/list/' . $type;
 }
-
 
 /**
  * Build query for job administration filters based on session.

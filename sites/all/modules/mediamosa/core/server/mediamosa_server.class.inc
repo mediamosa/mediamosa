@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The MediaMosa Server module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,11 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Upload server functions.
- */
-
 class mediamosa_server {
   // ------------------------------------------------------------------ Consts.
   /**
@@ -37,7 +35,7 @@ class mediamosa_server {
   const MIME_TYPE_SEPARATOR = '|';
 
   /**
-   * Log for asset_mediafile_uplaod.
+   * Log for the type 'server'.
    *
    * @param string $message
    * @param array $variables
@@ -124,8 +122,8 @@ class mediamosa_server {
   /**
    * Returns status information from all enabled servers.
    *
-   * @param array $server_types (optional)
-   *  The server types to get status from.
+   * @param array $server_types
+   *  (optional) The server types to get status from.
    */
   public static function get_status_enabled(array $server_types = array()) {
 
@@ -134,25 +132,72 @@ class mediamosa_server {
 
     $result = array();
     foreach ($servers as $server) {
+      // Get status.
+      $xml = self::getStatus($server[mediamosa_server_db::SERVER_URI]);
 
-      $uri = mediamosa_http::expectHTTP($server[mediamosa_server_db::SERVER_URI]);
-
-      $response = mediamosa_http::do_internal_call($uri, 'server/status?include_status=TRUE');
-      if ($response->code != '200') {
-        self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
-      }
-
-      if (!empty($response->data)) {
-        $xml = new mediamosa_connector_response($response->data);
-
-        $result[] = array(
-          'enabled_server' => $server,
-          'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array()),
-        );
-      }
+      $result[] = array(
+        'enabled_server' => $server,
+        'status' => $xml ? mediamosa_lib::simplexml2array($xml) : array(),
+      );
     }
 
     return $result;
+  }
+
+  /**
+   * Get the status report of an REST interface.
+   *
+   * Will do an internal REST call to server to retrieve the status report.
+   *
+   * @param string $uri
+   *   The URI of the REST interface.
+   *
+   * @return SimpleXMLElement
+   *   The generated XML report or FALSE.
+   */
+  public static function getStatus($uri) {
+    // Do call.
+    $response = mediamosa_http::do_internal_call($uri, 'server/status?include_status=TRUE');
+    if ($response->code != '200') {
+      self::log('Call to server/status did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+    }
+
+    if (!empty($response->data)) {
+      $xml = new mediamosa_connector_response($response->data);
+
+      if (isset($xml->items->item)) {
+        return $xml->items->item;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Get the version info returned by REST interface.
+   *
+   * @param string $uri
+   *   The URI of the REST interface.
+   *
+   * @return SimpleXMLElement
+   *   The generated XML report or FALSE.
+   */
+  public static function getVersion($uri) {
+    // Do call.
+    $response = mediamosa_http::do_internal_call($uri, 'version');
+    if ($response->code != '200') {
+      self::log('Call to version call did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+    }
+
+    if (!empty($response->data)) {
+      $xml = new mediamosa_connector_response($response->data);
+
+      if (isset($xml->items->item)) {
+        return $xml->items->item;
+      }
+    }
+
+    return FALSE;
   }
 
   /**
@@ -169,6 +214,7 @@ class mediamosa_server {
     $servers = mediamosa_server::get_enabled($server_types);
     foreach ($servers as $server) {
       $uri = mediamosa_http::expectHTTP($server[mediamosa_server_db::SERVER_URI]);
+      $uri = rtrim($uri, '/') . '/';
 
       // FIXME: need fix for uri.
       mediamosa_http::do_head_internal_call($uri . 'internal/simpletest/cleanup');

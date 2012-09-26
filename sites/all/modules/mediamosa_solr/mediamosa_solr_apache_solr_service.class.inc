@@ -88,33 +88,52 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * We use ^ and ~ for delimeters, we need to filter them out for content
    * (sometimes).
    */
-
   public static function filterDelimeters($value) {
     return str_replace(array('_'), '', $value);
   }
 
   /**
-   * Filter and escape our value;
+   * Escape a string value and escape all special chars, including wildcards.
    *
-   * @param $value
-   */
-  public static function escapeForFunction($value) {
-    return self::escape($value);
-  }
-
-  /**
-   * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
+   * Use this function when you concat with wildcard, but the original string
+   * may not have active wildcards.
    *
-   * Added space escape.
+   * e.g.;
+   * escapeForSpace('foo*') . '*';
+   * Will search for items that start with foo* (foo with *).
    *
    * @param string $value
+   *   The value to escape.
+   *
    * @return string
+   *   The escaped string.
    */
   public static function escapeForSpace($value) {
     $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\\)/';
     $replace = '\\\$1';
 
     return preg_replace($pattern, $replace, $value);
+  }
+
+  /**
+   * Escape a string value.
+   *
+   * Escaping a value when using wildcards. When value is an integer or does not
+   * contain wildcards, then use phrase() instead. Will escape spaces.
+   *
+   * @param string $value
+   *   The value to escape.
+   *
+   * @return string
+   *   The escaped string.
+   */
+  public static function escapeForWildcards($value) {
+    $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|:|\\\)/';
+    $replace = '\\\$1';
+
+    // The preg_replace() will need to be converted for wildcards that are
+    // allowed.
+    return str_replace(array('\\*', '\\?'), array('*', '?'), preg_replace($pattern, $replace, $value));
   }
 
   /**

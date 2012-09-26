@@ -172,31 +172,78 @@ class mediamosa_http {
   }
 
   /**
-   * Do a internal REST call.
+   * Convert uri to url.
    *
-   * @param string $uri
-   * @param string $rest_url
-   * @param array $data
-   * @param $method
+   * Simplefix for invalid chars.
+   */
+  public static function uri2url($uri) {
+    $uri = trim($uri, "/ \n\r\t\0");
+    return self::expectHTTP($uri);
+  }
+
+  /**
+   * Do an internal REST call.
+   *
+   * @param string $host
+   *   The host url.
+   * @param string $rest_uri
+   *   The URI of the REST call. Can only be internal REST allowed calls.
+   * @param string $data
+   *   A string containing the request body. Defaults to NULL.
+   * @param string $method
+   *   The HTTP method.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 3.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 30 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
+   * @return object
+   *   An object which can have one or more of the following parameters:
+   *   - request
+   *       A string containing the request body that was sent.
+   *   - code
+   *       An integer containing the response status code, or the error code if
+   *       an error occurred.
+   *   - protocol
+   *       The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+   *   - status_message
+   *       The status message from the response, if a response was received.
+   *   - redirect_code
+   *       If redirected, an integer containing the initial response status code.
+   *   - redirect_url
+   *       If redirected, a string containing the redirection location.
+   *   - error
+   *       If an error occurred, the error message. Otherwise not set.
+   *   - headers
+   *       An array containing the response headers as name/value pairs.
+   *   - data
+   *       A string containing the response body that was received.
    */
   public static function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET, array $options = array()) {
-    // Make lower case.
-    $host = mediamosa_unicode::strtolower($host);
-
     // Make sure it starts with 'http://'.
-    if (mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('https://')) != 'https://') {
-      $host = 'http://' . $host;
-    }
+    $host = self::expectHTTP(mediamosa_unicode::strtolower($host));
 
     $url = strtr(
       '@host/internal/@rest_uri',
       array(
-        '@host' => $host,
-        '@rest_uri' =>  $rest_uri
+        '@host' => trim($host, '/'),
+        '@rest_uri' => $rest_uri,
       )
     );
 
-    $options += array('method' => $method);
+    // Setup defaults.
+    $options += array(
+      'method' => $method,
+    );
 
     if (isset($data)) {
       $options['data'] = $data;
@@ -374,7 +421,7 @@ class mediamosa_http {
       mediamosa_debug::log('Internal CRON call to @url.', array('@url' => $url));
     }
 
-    // Return the triggert url.
+    // Return the triggered url.
     return $result;
   }
 
@@ -410,6 +457,7 @@ class mediamosa_http {
    *       A float representing the maximum number of seconds the function call
    *       may take. The default is 30 seconds. If a timeout occurs, the error
    *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
    * @return
    *   An object which can have one or more of the following parameters:
    *   - request
@@ -668,18 +716,5 @@ class mediamosa_http {
     }
 
     return $result;
-  }
-
-  /**
-   * Port uri to url.
-   * Simplefix, do think it will fix all possible problems.
-   */
-  public static function uri2url($uri) {
-    $uri = trim($uri);
-    if ( (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') && (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('https://')) != 'https://') ){
-      $uri = 'http://' . trim($uri, "/ \n\r\t\0");
-    }
-
-    return $uri;
   }
 }

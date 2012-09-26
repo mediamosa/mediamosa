@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Our DB layer between MediaMosa and Drupal DB.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -22,11 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
- * @file
- * Our DB layer between MediaMosa and Drupal DB.
  */
 
 class mediamosa_db {
@@ -443,7 +441,7 @@ class mediamosa_db {
   /**
    * Escape the value for database
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For
-   * now we will use PDO::quote.
+   * now we will use PDO::quote().
    */
   public static function escape_string($mixed_string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm

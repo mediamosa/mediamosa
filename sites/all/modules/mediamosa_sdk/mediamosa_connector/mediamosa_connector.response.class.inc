@@ -40,6 +40,11 @@ class mediamosa_connector_response {
 
   // --------------------------------------------------------------------- Vars.
   // Store the SimpleXML here.
+  /**
+   * The SimpleXMLElement object.
+   *
+   * @var SimpleXMLElement
+   */
   public $xml = NULL;
 
   // -------------------------------------------------------------- Constructor.
@@ -95,7 +100,6 @@ class mediamosa_connector_response {
     return $this->xml;
   }
 
-
   /**
    * Set the response using the data string.
    *
@@ -108,7 +112,7 @@ class mediamosa_connector_response {
 
     // Some might contain ; parts.
     if (strpos($content_type, ';') !== FALSE) {
-      list($content_type, $other) = explode(';', $content_type, 2);
+      list($content_type, ) = explode(';', $content_type, 2);
     }
 
     // Trim it.
@@ -121,7 +125,8 @@ class mediamosa_connector_response {
         break;
 
       default:
-        assert(0); // So its logged.
+        // So its logged.
+        assert(0);
         break;
     }
   }

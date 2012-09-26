@@ -273,7 +273,10 @@ final class mediamosa_cql_part_search_term {
    * Check a escaped cql search term if it contains any wildcards
    *
    * @param string $str
+   *   The string to test for wildcards.
+   *
    * @return boolean
+   *   Will return TRUE when string contains wildcards.
    */
   final public function mediamosa_cql_contains_wildcards($str = FALSE) {
     $str = ($str === FALSE ? $this->mediamosa_cql_part_str_get() : $str);
@@ -283,8 +286,7 @@ final class mediamosa_cql_part_search_term {
 }
 
 /**
- * boolean is part of cql_part
- *
+ * Boolean is part of cql_part.
  */
 class mediamosa_cql_part_boolean extends mediamosa_cql_modifiers {
 

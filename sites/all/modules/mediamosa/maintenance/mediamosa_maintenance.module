@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The main maintenance module.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -22,11 +25,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
- * @file
- * The main maintenance module.
  */
 
 /**

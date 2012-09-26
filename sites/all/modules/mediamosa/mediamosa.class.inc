@@ -26,15 +26,12 @@
  * @file
  * Main class MediaMosa.
  *
- *
  * Notes;
  * Drupal functions are mapped to this class as statics. This is done to prevent
  * to much core dependency on drupal and change behavor (if required).
  * Exceptions are the db_* (database) functions which are statics in the
  * mediamosa_db class.
- *
  */
-
 class mediamosa {
 
   // --------------------------------------------------------------- Parameters.

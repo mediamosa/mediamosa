@@ -39,6 +39,14 @@ MediaMosa 3.4.x-dev (build 1900), xxxx-xx-xx
 - Fixed validation checks for group realms and group domains. Group domain names
   could falsely validate when it was formatted as group realm.
 - Fixed node creation for server, issue caused by Drupal upgrade.
+- Added schema.xml and solrconfig.xml to mediamosa_solr module for Solr3.6. To
+  use Solr1.41, use the renamed files schema1.41.xml and solrconfig1.41.xml
+  instead. These need to be renamed to schema.xml and solrconfig.xml when using
+  them for Solr1.41.
+- Fixed escaping Solr values; wildcards was sometimes incorrectly escaped.
+- Solr wildcard searching is now the same as MySQL, per text, not per word;
+  't*t' will now match 'the match' and 'no test', instead of only 'no test'.
+
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------

@@ -146,20 +146,19 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     $pos = strrpos($str_index, '.');
     if ($pos !== FALSE) {
-      $str_index = mediamosa_unicode::substr($str_index, $pos + 1); // default context set id
+      $str_index = mediamosa_unicode::substr($str_index, $pos + 1);
     }
 
     $a_relation_modifiers = $cql_part_relation->mediamosa_cql_modifier_get_array();
 
     $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
-    assert($index2column);// use verify 1st so this will not happen
-
     if ($index2column === FALSE) {
       throw new mediamosa_cql_exception('index not found, use verify before you parse the cql string.', CQL_EXCEPTION_SEVERITY_HIGH);
     }
 
     // Solr does not support having.
     $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
+
     // Special case when these keys are used.
     $acl_joins = array(
       'ACL_NAME_USER',
@@ -239,9 +238,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
         $is_case_sensitive = TRUE;
 
-        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == "true" ? "TRUE" : "FALSE");
+        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == 'true' ? 'TRUE' : 'FALSE');
 
-        $bool_is_true = $str_search_term == "TRUE";
+        $bool_is_true = $str_search_term == 'TRUE';
 
         // Lets prevent usage of NOT.
         $bool_is_true = ($str_relation == '<>' ? !$bool_is_true : $bool_is_true);
@@ -265,7 +264,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     switch ($str_relation) {
       case 'bool':
-        $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
+        $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
         break;
 
       case 'all':
@@ -287,25 +286,56 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
             case mediamosa_sdk::TYPE_INT:
             case mediamosa_sdk::TYPE_UINT:
-              $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($word);
+              // Cast to integer, as spaces will break solr.
+              $sub_parts[] = strtr(
+                '@column:@value',
+                array(
+                  '@column' => $str_table_column,
+                  '@value' => (int) trim($word),
+                )
+              );
               break;
 
             default:
               // Remove trailing ^.
               if (mediamosa_unicode::substr($word, 0, 1) == '^' && mediamosa_unicode::substr($word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) != '\^') {
-                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 1, -1));
+                $sub_parts[] = strtr(
+                  '@column:@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 1, -1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($word, 0, 1) == '^') {
                 // Left ancor.
-                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 1)) . '*';
+                $sub_parts[] = strtr(
+                  '@column:@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) != '\^') {
                 // Right ancor.
-                $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 0, -1));
+                $sub_parts[] = strtr(
+                  '@column:*@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 0, -1)),
+                  )
+                );
               }
               else {
                 // No ancor search.
-                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace($word) . '*';
+                $sub_parts[] = strtr(
+                  '@column:*@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($word),
+                  )
+                );
               }
           }
         }
@@ -316,7 +346,14 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_sdk::TYPE_INT:
           case mediamosa_sdk::TYPE_UINT:
-            $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
+            // Cast to integer, as spaces will break solr.
+            $sub_parts[] = strtr(
+              '@column:@value',
+              array(
+                '@column' => $str_table_column,
+                '@value' => (int) $str_search_term,
+              )
+            );
             break;
 
           default:
@@ -327,19 +364,44 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             if ($is_metadata) {
               // Remove trailing ^.
               if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
-                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+                // Add our search.
+                $sub_parts[] = strtr(
+                  '@column:@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1, -1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
                 // Left ancor.
-                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+                $sub_parts[] = strtr(
+                  '@column:@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
                 // Right ancor.
-                $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+                $sub_parts[] = strtr(
+                  '@column:*@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 0, -1)),
+                  )
+                );
               }
               else {
                 // No ancor search.
-                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace('*' . $str_search_term . '*');
+                $sub_parts[] = strtr(
+                  '@column:*@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
+                  )
+                );
               }
             }
             else {
@@ -349,19 +411,43 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
                   $str_search_term = mediamosa_unicode::strtolower($str_search_term);
                 }
 
-                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+                $sub_parts[] = strtr(
+                  '@column:@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1, -1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
                 // Left ancor.
-                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+                $sub_parts[] = strtr(
+                  '@column:@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1)),
+                  )
+                );
               }
               elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
                 // Right ancor.
-                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+                $sub_parts[] = strtr(
+                  '@column:*@value',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 0, -1)),
+                  )
+                );
               }
               else {
                 // No ancor search.
-                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term) . '*';
+                $sub_parts[] = strtr(
+                  '@column:*@value*',
+                  array(
+                    '@column' => $str_table_column_exact,
+                    '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
+                  )
+                );
               }
             }
         }
@@ -369,23 +455,52 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       case '<>':
         $has_not = !$has_not;
-        $sub_parts = array($str_table_column . ':"' . $str_search_term . '"');
+        $sub_parts = strtr(
+          '@column:@value',
+          array(
+            '@column' => $str_table_column_exact,
+            '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
+          )
+        );
         break;
 
       case '>':
-        $sub_parts = array(strtr('@field:{@value TO *}', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr(
+          '@column:{@value TO *}',
+          array(
+            '@column' => $str_table_column,
+            '@value' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
+          )
+        ));
         break;
 
       case '>=':
-        $sub_parts = array(strtr('@field:[@value TO *]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr(
+          '@column:[@value TO *]',
+          array(
+            '@column' => $str_table_column,
+            '@value' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
+          )
+        ));
         break;
 
       case '<':
-        $sub_parts = array(strtr('@field:{* TO @value}', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr(
+          '@column:{* TO @value}',
+          array(
+            '@column' => $str_table_column,
+            '@value' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
+          )
+        ));
         break;
 
       case '<=':
-        $sub_parts = array(strtr('@field:[* TO @value]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr(
+          '@column:[* TO @value]',
+          array(
+            '@column' => $str_table_column,
+            '@value' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term))
+        ));
         break;
 
       case 'within':
@@ -402,16 +517,16 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
         }
 
-        $sub_parts = array(strtr('@field:[@value_1 TO @value_2]', array('@field' => $str_table_column, '@value_1' => mediamosa_solr_apache_solr_service::escape($values[0]), '@value_2' => mediamosa_solr_apache_solr_service::escape($values[1]))));
+        $sub_parts = array(strtr('@column:[@value_1 TO @value_2]', array('@column' => $str_table_column, '@value_1' => mediamosa_solr_apache_solr_service::escape($values[0]), '@value_2' => mediamosa_solr_apache_solr_service::escape($values[1]))));
         break;
 
       // Special cases.
       case 'IS NULL':
-        $sub_parts = array(strtr('-@field:*', array('@field' => $str_table_column)));
+        $sub_parts = array(strtr('-@column:*', array('@column' => $str_table_column)));
         break;
 
       case 'IS NOT NULL':
-        $sub_parts = array(strtr('@field:*', array('@field' => $str_table_column)));
+        $sub_parts = array(strtr('@column:*', array('@column' => $str_table_column)));
         break;
 
     }

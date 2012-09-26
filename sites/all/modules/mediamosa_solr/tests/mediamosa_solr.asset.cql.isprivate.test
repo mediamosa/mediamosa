@@ -125,6 +125,6 @@ class MediaMosaSolrAssetCQLIsPrivateTestCaseEga extends MediaMosaAssetCQLIsPriva
    *       maste foor : m*r will match?
    */
   public function engine_fulltext_wildcard_indexes_lines() {
-    return FALSE;
+    return TRUE;
   }
 }

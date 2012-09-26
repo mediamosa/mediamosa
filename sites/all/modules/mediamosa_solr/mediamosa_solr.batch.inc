@@ -32,7 +32,7 @@
  *
  * Will fill reindex table to use cron to index the metadata.
  */
-function _mediamosa_solr_batch_reindex_start($purge_index) {
+function _mediamosa_solr_batch_reindex_start($purge_solr) {
 
   // Create the batch.
   $batch = array(
@@ -49,7 +49,7 @@ function _mediamosa_solr_batch_reindex_start($purge_index) {
   $batch['operations'][] = array('_mediamosa_solr_batch_disable_queue', array());
 
   if ($purge_solr) {
-    $batch['operations'][] = array('_mediamosa_solr_batch_purge', array());
+    $batch['operations'][] = array('_mediamosa_solr_batch_purge_solr', array());
   }
 
   $batch['operations'][] = array('_mediamosa_solr_batch_queue', array());

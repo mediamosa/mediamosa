@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * The parent main class for MediaMosa CQL.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -24,11 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The parent main class for mediamosa CQL.
-  */
-
 define('MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING', 'use_having');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN', 'column');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT', 'table_for_sort');
@@ -52,7 +50,7 @@ class mediamosa_core_cql {
    *  Name of variable.
    * @param string $match
    *  Match type.
-   * @param array $a_value
+   * @param array $values
    *  Value to compare.
    * @param unknown_type $type
    *  Type of param.
@@ -60,7 +58,7 @@ class mediamosa_core_cql {
    *  Extra array to translate name.
    */
 
-  public static function convert_searchparam_to_cql($name, $match, array $a_value, $type, array $a_translate_to = array()) {
+  public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $a_translate_to = array()) {
     $a_or = array();
 
     if (isset($a_translate_to[$name])) {
@@ -73,19 +71,19 @@ class mediamosa_core_cql {
       case mediamosa_sdk::TYPE_SEARCH_STRING:
         switch ($match) {
           case 'exact':
-            foreach ($a_value as $value) {
+            foreach ($values as $value) {
               $a_or[] = $name . ' == "^' . addslashes($value) . '^"';
             }
             break;
 
           case 'begin':
-            foreach ($a_value as $value) {
+            foreach ($values as $value) {
               $a_or[] = $name . ' == "^' . addslashes($value) . '"';
             }
             break;
 
           case 'contains':
-            foreach ($a_value as $value) {
+            foreach ($values as $value) {
               $a_or[] = $name . ' = "' . addslashes($value) . '"';
             }
             break;
@@ -93,19 +91,19 @@ class mediamosa_core_cql {
         break;
 
       case mediamosa_sdk::TYPE_SEARCH_INT:
-        foreach ($a_value as $value) {
+        foreach ($values as $value) {
           $a_or[] = $name . ' == ' . intval($value);
         }
         break;
 
       case mediamosa_sdk::TYPE_SEARCH_BOOL:
-        foreach ($a_value as $value) {
+        foreach ($values as $value) {
           $a_or[] = $name . ' == "' . addslashes($value) . '"';
         }
         break;
 
       case mediamosa_sdk::TYPE_SEARCH_DATETIME:
-        foreach ($a_value as $value) {
+        foreach ($values as $value) {
           if (strpos($value, '|') === FALSE) {
             $value = mediamosa_datetime::date8601_to_timestamp($value, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
             $a_or[] = $name . ' == "' . addslashes($value) . '"';
@@ -389,10 +387,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
-   * DB Escape a like string correctly
-   *
-   * @param string $str
-   * @return string
+   * DB Escape a like string correctly.
    *
    * Escaped CQL to Escaped SQL;
    *
@@ -407,9 +402,16 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * '%' = '\%' = '\%'
    * '_' = '\_' = '\_'
    * any char = any char
+   *
+   * @param string $str
+   *   The string to escape.
+   *
+   * @return string
+   *   The escaped string.
    */
   public function mediamosa_cql_context_sql_escape_like($str) {
-    $str = (string)$str;// Fix when passing integer.
+    // Fix when passing integer.
+    $str = (string) $str;
 
     $escaped = array();
     for ($x = 0; $x < mediamosa_unicode::strlen($str); $x++) {
@@ -425,9 +427,11 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
           case '_':
             $escaped[] = '\\' . $char;
             break;
+
           case '\'':
             $escaped[] = '\'' . $char;
             break;
+
           default:
             $escaped[] = mediamosa_db::escape_string_like($char);
             break;

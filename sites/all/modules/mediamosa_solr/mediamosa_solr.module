@@ -395,7 +395,7 @@ function _mediamosa_solr_queueer_form_submit($form, &$form_state) {
 
   switch ($form_state['values']['op']) {
     case t('Rebuild index Solr'):
-      _mediamosa_solr_batch_reindex_start((int) $form_state['values']['purge_index']);
+      _mediamosa_solr_batch_reindex_start((int) $form_state['values']['purge_solr']);
       break;
   }
 }

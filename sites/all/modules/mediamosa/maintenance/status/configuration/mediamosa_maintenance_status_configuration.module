@@ -54,7 +54,7 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING', '0.5');
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', 'SVN-r19159');
 
 /**
- * Generate information for the status page.
+ * Generate information for the status page (cached).
  */
 function _mediamosa_maintenance_status_configuration_generate() {
 
@@ -121,15 +121,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'severity' => _mediamosa_maintenance_status_okwarning($php_upload_max_filesize_ok),
   );
 
-  $php_memory_limit = ini_get('memory_limit');
-  $php_memory_limit_ok = drupal_substr($php_memory_limit, 0, -1) >= 128 && in_array(drupal_substr($php_memory_limit, -1), array('M', 'G'));
-
-  $results['php_memory_limit'] = array(
-    'title' => t('PHP memory limit'),
-    'value' => $php_memory_limit_ok ? $php_memory_limit : t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)),
-    'severity' => _mediamosa_maintenance_status_okwarning($php_memory_limit_ok),
-  );
-
   $php_post_max_size = ini_get('post_max_size');
   $php_post_max_size_ok = drupal_substr($php_post_max_size, 0, -1) >= 100 && in_array(drupal_substr($php_post_max_size, -1), array('M', 'G'));
 
@@ -137,6 +128,15 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'title' => t('PHP post maximum size'),
     'value' => $php_post_max_size_ok ? $php_post_max_size : t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)),
     'severity' => _mediamosa_maintenance_status_okwarning($php_post_max_size_ok),
+  );
+
+  $php_memory_limit = ini_get('memory_limit');
+  $php_memory_limit_ok = drupal_substr($php_memory_limit, 0, -1) >= 128 && in_array(drupal_substr($php_memory_limit, -1), array('M', 'G'));
+
+  $results['php_memory_limit'] = array(
+    'title' => t('PHP memory limit'),
+    'value' => $php_memory_limit_ok ? $php_memory_limit : t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)),
+    'severity' => _mediamosa_maintenance_status_okwarning($php_memory_limit_ok),
   );
 
   $php_max_execution_time = get_cfg_var('max_execution_time');
@@ -391,6 +391,18 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'title' => t('MediaMosa version'),
     'value' => mediamosa_version::MEDIAMOSA_VERSION,
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  $url = variable_get('mediamosa_cron_url_app');
+
+  // Retrieve the version of the server.
+  $status = mediamosa_server::getVersion($url);
+
+  $results['cron_server'] = array(
+    'title' => t('Cron server'),
+    'value' => $status->build > 0 ? t('Good') : t('Not found'),
+    'severity' => _mediamosa_maintenance_status_okerror($status->build > 0),
+    'description' => $status->build > 0 ? '' : t('REST interface not found, please check setting for Miscellaneous -> URL REST for CRON setting in the !configuration', array('!configuration' => l(t('MediaMosa configuration, server settings'), 'admin/mediamosa/config/global'))),
   );
 
   // -------------------------------------------------------- Database settings.
@@ -695,7 +707,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_collect_rea
   $results_mediamosa_configuration['job_server'] = array(
     'title' => t('Job scheduler'),
     'value' => empty($value) ? t('Good') : $value,
-    'severity' => empty($value) ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR,
+    'severity' => _mediamosa_maintenance_status_okerror(empty($value)),
     'description' => $description,
   );
 

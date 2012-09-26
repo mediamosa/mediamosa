@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * Unittests for ACL.
+ */
+
+/**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
@@ -22,10 +27,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
-  * @file
-  * Unittests for ACL.
-  */
 class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.

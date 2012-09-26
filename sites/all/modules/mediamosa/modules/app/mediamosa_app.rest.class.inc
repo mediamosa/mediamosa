@@ -1,5 +1,8 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Client Application rest calls.
+ */
 
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
@@ -25,19 +28,10 @@
  */
 
 /**
- * @file
- * App rest calls.
- */
-
-
-/**
  * URI: /preview_profile_id (deprecated)
  *      /transcode/profile/default
  *
  * Method: GET
- *
- * 1.x: transcoding_profiles_get_default_transcode_profile.
- *
  */
 class mediamosa_rest_call_app_get_default_transcode_profile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -67,7 +61,6 @@ class mediamosa_rest_call_app_get_default_transcode_profile extends mediamosa_re
     }
   }
 }
-
 
 /**
  * URI: /app/quota
