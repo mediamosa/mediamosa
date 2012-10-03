@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 1900), xxxx-xx-xx
+MediaMosa 3.3.x-dev (build 1910), xxxx-xx-xx
 --------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
@@ -46,7 +46,7 @@ MediaMosa 3.4.x-dev (build 1900), xxxx-xx-xx
 - Fixed escaping Solr values; wildcards was sometimes incorrectly escaped.
 - Solr wildcard searching is now the same as MySQL, per text, not per word;
   't*t' will now match 'the match' and 'no test', instead of only 'no test'.
-
+- Fixed transcoding failure when option 'vpad' was used for ffmpeg.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------

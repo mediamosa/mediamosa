@@ -117,7 +117,7 @@ class mediamosa_tool_ffmpeg {
     return array(
       '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
       '-vf' => strtr(
-        "'pad=@width:@height:@v_padding:@h_padding:black'",
+        'pad=@width:@height:@v_padding:@h_padding:black',
         array(
           '@width' => $aspect_ratio['width'] + ($aspect_ratio['v_padding'] * 2),
           '@height' => $aspect_ratio['height'] + ($aspect_ratio['h_padding'] * 2),
