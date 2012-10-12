@@ -1,0 +1,41 @@
+<?php
+/**
+ * @file
+ * Installer for Metadata type Asset
+ */
+
+// Include the Metadata class.
+require_once 'mediamosa_metadata_asset.class.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_metadata_asset_install() {
+
+  // Check if the property group already exists. If so, we have a pre-3.0
+  // install where MediaMosa created this group by core code.
+  if (mediamosa_metadata_dc::property_group_installed(mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME)) {
+    return; // Already installed, pre 3.0 install.
+  }
+
+  // Create the property group.
+  $property_group_id = mediamosa_metadata_asset::property_group_create(mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME);
+
+  // The properties to create.
+  $properties = array(
+    array('tag', 'CHAR'),
+  );
+
+  // Create the properties.
+  foreach ($properties as $property) {
+    mediamosa_metadata_asset::property_create($property_group_id, $property[0], $property[1]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_metadata_asset_uninstall() {
+  // Remove it and delete all properties.
+  mediamosa_metadata_asset::property_group_delete(mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME);
+}
