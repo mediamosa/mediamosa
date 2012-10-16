@@ -14,7 +14,7 @@ function mediamosa_metadata_asset_install() {
 
   // Check if the property group already exists. If so, we have a pre-3.0
   // install where MediaMosa created this group by core code.
-  if (mediamosa_metadata_dc::property_group_installed(mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME)) {
+  if (mediamosa_metadata_asset::property_group_installed(mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME)) {
     return; // Already installed, pre 3.0 install.
   }
 
