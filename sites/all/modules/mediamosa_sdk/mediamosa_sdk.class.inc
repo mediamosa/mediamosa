@@ -418,4 +418,54 @@ class mediamosa_sdk {
   public static function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date(strtotime($datestamp), $type, $format, $timezone, $langcode);
   }
+  
+  /**
+  * Returns an encoded metadata tag that can be used to update asset metadata or in CQL strings
+  *
+  * @param mixed $vocabulary 
+  *   Name of the taxonomy vocabulary, either as string or as an array containing
+  *   - a key 'pattern' with a pattern that should not be urlencoded
+  *   - a key 'vars' with an associative array of values that should be urlencoded and need to be replaced in the pattern
+  *   ex. array('pattern' => '{var}*', 'vars' => array('{vars}' => 'foo ')).
+  * @param array $term 
+  *   Terms for each level of the hierarchical taxonomy tree based on the rules as the vocabulary name.
+  *   ex. array(array('pattern' => '*'), array('pattern' => '{var}*', 'vars' => array('{vars}' => 'foo ')), 'bar').
+  */
+  public static function metadata_encode_tag($vocabulary, array $term) {
+    if (is_array($vocabulary)) {
+      if (empty($vocabulary['vars'])) {
+        $vocabulary = $vocabulary['pattern'];
+      }
+      else {
+        foreach ($vocabulary['vars'] as &$text) {
+          $text = urlencode($text);
+        }
+        $vocabulary = strtr($vocabulary['pattern'], $vocabulary['vars']);
+      }
+    }
+    else {
+      $vocabulary = urlencode($vocabulary);
+    }
+    $tag = '0.' . $vocabulary;
+    $level = 1;
+    foreach ($term as $level => $name) {
+      if (is_array($name)) {
+        if (empty($name['vars'])) {
+          $name = $name['pattern'];
+        }
+        else {
+          foreach ($name['vars'] as &$text) {
+            $text = urlencode($text);
+          }
+          $name = strtr($name['pattern'], $name['vars']);
+        }
+      }
+      else {
+        $name = urlencode($name);
+      }
+      $tag .= '|' . $level++ . '.' . $name;
+    }
+    return $tag . '|';
+  }
 }
+
