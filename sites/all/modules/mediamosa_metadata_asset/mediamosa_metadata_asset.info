@@ -1,0 +1,10 @@
+name = MediaMosa Asset Metadata
+description = MediaMosa support for general metadata on assets. <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
+package = MediaMosa - Metadata
+version = 7.x-3.2.2
+core = 7.x
+
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_metadata_asset.class.inc
