@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+MediaMosa SDK 7.x-3.1
+---------------------
+- Added helper function to MediaMosa SDK to encode tag metadata for CQL usage.
+  Used by front-end and back-end.
+
 MediaMosa SDK 7.x-3.0
 ---------------------
 - Introducing mediamosa_connector.response.class.inc as base class for 2.x and
