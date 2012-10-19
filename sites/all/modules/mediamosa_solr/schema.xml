@@ -94,61 +94,27 @@
       -->
     <fieldType name="val_int" class="solr.TrieIntField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
     <fieldType name="val_date" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
+    <!-- A text field that only splits on whitespace for exact matching of words -->
+    <!-- A general text field that has reasonable, generic
+         cross-language defaults: it tokenizes with StandardTokenizer,
+         removes stop words from case-insensitive "stopwords.txt"
+         (empty by default), and down cases.  At query time only, it
+         also applies synonyms. -->
     <fieldType name="val_char" class="solr.TextField" positionIncrementGap="100">
-      <!-- A text field that uses WordDelimiterFilter to enable splitting and matching of
-        words on case-change, alpha numeric boundaries, and non-alphanumeric chars,
-        so that a query of "wifi" or "wi fi" could match a document containing "Wi-Fi".
-        Synonyms and stopwords are customized by external files, and stemming is enabled.
-        Duplicate tokens at the same position (which may result from Stemmed Synonyms or
-        WordDelim parts) are removed.
-        -->
       <analyzer type="index">
-        <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <!-- in this example, we will only use synonyms at query time
         <filter class="solr.SynonymFilterFactory" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
         -->
-        <!-- Case insensitive stop word removal.
-          add enablePositionIncrements=true in both the index and query
-          analyzers to leave a 'gap' for more accurate phrase queries.
-        -->
-        <filter class="solr.StopFilterFactory"
-          ignoreCase="true"
-          words="stopwords.txt"
-          enablePositionIncrements="true"
-        />
-        <filter class="solr.WordDelimiterFilterFactory"
-          generateWordParts="1"
-          generateNumberParts="1"
-          catenateWords="1"
-          catenateNumbers="1"
-          catenateAll="0"
-          splitOnCaseChange="1"
-          preserveOriginal="1"
-        />
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+        <filter class="solr.ReversedWildcardFilterFactory"/>
       </analyzer>
       <analyzer type="query">
-        <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
-        <filter class="solr.StopFilterFactory"
-          ignoreCase="true"
-          words="stopwords.txt"
-          enablePositionIncrements="true"
-        />
-        <filter class="solr.WordDelimiterFilterFactory"
-          generateWordParts="1"
-          generateNumberParts="1"
-          catenateWords="0"
-          catenateNumbers="0"
-          catenateAll="0"
-          splitOnCaseChange="1"
-          preserveOriginal="1"
-        />
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
       </analyzer>
     </fieldType>
 
