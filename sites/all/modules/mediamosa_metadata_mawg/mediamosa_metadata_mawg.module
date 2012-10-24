@@ -1,0 +1,12 @@
+<?php
+/**
+ * @file
+ * MediaMosa support for Metadata type Media Ontology.
+ */
+
+/**
+ * Implements hook_mediamosa_metadata_info().
+ */
+function mediamosa_metadata_mawg_mediamosa_metadata_info() {
+  return mediamosa_metadata_mawg::METADATA_PROPERTY_GROUP_NAME;
+}
