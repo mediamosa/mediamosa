@@ -916,8 +916,17 @@ class mediamosa_job {
         // Job failed.
         $status = $resp['status'];
         $progress = $resp['progress'];
+
+        // generate event upload failed.
+        if (module_exists('rules')) {
+          rules_invoke_event('mediamosa_event_upload_failed', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
+        }
       }
       else {
+        // generate event upload finished.
+        if (module_exists('rules')) {
+          rules_invoke_event('mediamosa_event_upload_finished', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
+        }
         // Start harvesting metadata by tools.
         self::start_harvesting_metadata_by_tool($job_ext);
       }
