@@ -12,7 +12,8 @@ function mediamosa_metadata_dc_mediamosa_metadata_info() {
     mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME => array(
       'title' => t('Dublin Core'),
       'description' => t('MediaMosa support for the metadata format Dublin Core. See !link for more information.', array('!link' => url('http://dublincore.org/'))),
-      'short' => 'dc',
+      'context' => 'dc',
+      'context_full' => 'dublin_core',
     ),
   );
 }

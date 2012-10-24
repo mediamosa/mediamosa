@@ -1048,9 +1048,9 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     );
   }
 }
+
 /**
- * Asset CQL Context class
- *
+ * Asset CQL Context class.
  */
 class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
 
@@ -1065,29 +1065,29 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
     if (!isset($mediamosa_context)) {
       $mediamosa_context = $this->m_a_mediamosa_context;
 
-      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
+      $defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
-      foreach ($a_defs as $name => $a_def) {
-        switch ($a_def['propgroup_name']) {
+      foreach ($defs as $name => $def) {
+        switch ($def['propgroup_name']) {
           case 'qualified_dublin_core':
             $context_set = 'mediamosa:qdc';
             break;
+
           case 'dublin_core':
             $context_set = 'mediamosa:dc';
             break;
-          case 'czp':
-            $context_set = 'mediamosa:czp';
-            break;
+
           case 'acl':
           case 'aut':
             $context_set = 'mediamosa:acl';
             break;
+
           default:
-            $context_set = 'mediamosa:' . $a_def['propgroup_name'];
+            $context_set = 'mediamosa:' . $def['propgroup_name'];
             break;
         }
 
-        switch ($a_def['propdef_type']) {
+        switch ($def['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             $column = 'val_int';
             $type = mediamosa_sdk::TYPE_INT;
@@ -1115,8 +1115,8 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mediamosa_asset_metadata_' . $name,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,
           MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
-          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'],
-          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN {mediamosa_asset_metadata} AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.asset_id = a.asset_id AND mediamosa_asset_metadata_%s.prop_id = %d', $name, $name, $name, $a_def['propdef_id']),
+          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $def['propdef_id'],
+          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN {mediamosa_asset_metadata} AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.asset_id = a.asset_id AND mediamosa_asset_metadata_%s.prop_id = %d', $name, $name, $name, $def['propdef_id']),
         );
       }
     }
@@ -1132,18 +1132,22 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
     MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS => array('mediamosa.title'),
 
     MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES => array(
-     'dc' => 'mediamosa:dc', // Reference
-     'qdc' => 'mediamosa:qdc', // Reference
-     'czp' => 'mediamosa:czp', // Reference
-     'acl' => 'mediamosa:acl', // Reference (1.x)
-     'aut' => 'mediamosa:acl', // Reference (1.x)
-     'vpx:acl' => 'mediamosa:acl', // Reference (1.x)
-     'vpx:aut' => 'mediamosa:acl', // Reference (1.x)
-     'vpx:dc' => 'mediamosa:dc', // Reference (1.x)
-     'vpx:qdc' => 'mediamosa:qdc', // Reference (1.x)
-     'vpx:czp' => 'mediamosa:czp', // Reference (1.x)
-     'vpx' => 'mediamosa', // Reference (1.x)
-     'mediamosa:aut' => 'mediamosa:acl', // Reference (2.x)
+      // References.
+      'dc' => 'mediamosa:dc',
+      'qdc' => 'mediamosa:qdc',
+      'czp' => 'mediamosa:czp',
+      'asset' => 'mediamosa:asset',
+       // References (1.x).
+      'acl' => 'mediamosa:acl',
+      'aut' => 'mediamosa:acl',
+      'vpx:acl' => 'mediamosa:acl',
+      'vpx:aut' => 'mediamosa:acl',
+      'vpx:dc' => 'mediamosa:dc',
+      'vpx:qdc' => 'mediamosa:qdc',
+      'vpx:czp' => 'mediamosa:czp',
+      'vpx' => 'mediamosa',
+       // Reference (2.x).
+      'mediamosa:aut' => 'mediamosa:acl',
     ),
 
     MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(

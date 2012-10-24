@@ -13,7 +13,8 @@ function mediamosa_metadata_czp_mediamosa_metadata_info() {
     mediamosa_metadata_czp::METADATA_PROPERTY_GROUP_NAME => array(
       'title' => t('Content Search Profile'),
       'description' => t('MediaMosa support for the metadata (Dutch) format Content Zoek Profiel (Content Search Profile)'),
-      'short' => 'czp',
+      'context' => 'czp',
+      'context_full' => 'czp',
     ),
   );
 }

@@ -352,7 +352,8 @@ function mediamosa_mediamosa_metadata_info() {
     mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME => array(
       'title' => t('Asset'),
       'description' => t('Internal used metadata for asset.'),
-      'short' => 'asset',
+      'context' => 'asset',
+      'context_full' => 'asset',
     ),
   );
 }

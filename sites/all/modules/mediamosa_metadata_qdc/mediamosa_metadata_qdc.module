@@ -12,7 +12,8 @@ function mediamosa_metadata_qdc_mediamosa_metadata_info() {
     mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME => array(
       'title' => t('Qualified Dublin Core'),
       'description' => t('MediaMosa support for the metadata format Qualified Dublin Core. See !link for more information.', array('!link' => url('http://dublincore.org/documents/2000/07/11/dcmes-qualifiers/'))),
-      'short' => 'qdc',
+      'context' => 'qdc',
+      'context_full' => 'qualified_dublin_core',
     ),
   );
 }
