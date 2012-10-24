@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The function used for asset media metadata property.
  */
-
- /**
-  * @file
-  * The function used for asset media metadata property.
-  */
 
 class mediamosa_asset_metadata_property {
 
@@ -196,7 +171,7 @@ class mediamosa_asset_metadata_property {
     mediamosa_db::db_delete(mediamosa_asset_metadata_property_db::TABLE_NAME)
       ->condition(mediamosa_asset_metadata_property_db::ID, $prop_id, '=')
       ->execute();
-}
+  }
 
   /**
    * Get the asset metadata property from the database.
@@ -290,8 +265,6 @@ class mediamosa_asset_metadata_property {
   /**
    * Get all metadata properties, plus our own based on the app_id
    *
-   * 1.x _media_management_get_metadata_definitions_full
-   *
    * @param mixed $mixed_app_id
    * @param array $metadata_property_groups
    *
@@ -300,9 +273,9 @@ class mediamosa_asset_metadata_property {
   public static function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array()) {
 
     // Get all metadata property groups.
-    if (count($metadata_property_groups) == 0) {
+    if (empty($metadata_property_groups)) {
       foreach (module_implements('mediamosa_metadata_info') as $module) {
-        $metadata_property_groups[] = module_invoke($module, 'mediamosa_metadata_info');
+        $metadata_property_groups = array_merge($metadata_property_groups, array_keys(module_invoke($module, 'mediamosa_metadata_info')));
       }
     }
 

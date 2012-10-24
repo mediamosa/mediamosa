@@ -1,39 +1,15 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
- * MediaMosa support for Metadata type Content Zoek Profiel (Content Search
- * Profile).
+ * MediaMosa support for the (Dutch) Metadata type Content Search Profile.
  */
 
 /**
  * Extend on the metadata property group for future.
  */
 class mediamosa_metadata_czp extends mediamosa_asset_metadata_property_group {
-
+  /**
+   * Define the unique metadata group name.
+   */
   const METADATA_PROPERTY_GROUP_NAME = 'czp';
 }

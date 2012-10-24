@@ -345,6 +345,19 @@ function mediamosa_theme() {
 }
 
 /**
+ * Implements hook_mediamosa_metadata_info().
+ */
+function mediamosa_mediamosa_metadata_info() {
+  return array(
+    mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME => array(
+      'title' => t('Asset'),
+      'description' => t('Internal used metadata for asset.'),
+      'short' => 'asset',
+    ),
+  );
+}
+
+/**
  * Format the MediaMosa version text.
  */
 function theme_mediamosa_version($variables) {

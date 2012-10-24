@@ -92,7 +92,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_metadata_dc',
       'mediamosa_metadata_qdc',
       'mediamosa_metadata_czp',
-      'mediamosa_metadata_asset',
     ), $args));
 
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
