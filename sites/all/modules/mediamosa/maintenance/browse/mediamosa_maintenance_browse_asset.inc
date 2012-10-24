@@ -64,7 +64,7 @@ function mediamosa_browse_asset_filter_form() {
   $session = _mediamosa_browse_asset_session();
 
   // Get all collections.
-  $collections = array_merge(array(0 => ''), mediamosa_collection::getAll(array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))->fetchAllKeyed());
+  $collections = mediamosa_collection::getAll(array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))->fetchAllKeyed();
   foreach ($collections as $coll_id => $name) {
     if (!$coll_id || trim($name) != '') {
       continue;
@@ -92,13 +92,15 @@ function mediamosa_browse_asset_filter_form() {
     '#default_value' => isset($session['operator']) ? $session['operator'] : 'and',
   );
 
-  $form['filters']['coll_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Search within collection'),
-    '#description' => t("Select collection to be searched. Leave empty for all collections."),
-    '#options' => $collections,
-    '#default_value' => isset($session['coll_id']) ? $session['coll_id'] : 0,
-  );
+  if (!empty($collections) && is_array($collections)) {
+    $form['filters']['coll_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Search within collection'),
+      '#description' => t("Select collection to be searched. Leave empty for all collections."),
+      '#options' => $collections,
+      '#default_value' => isset($session['coll_id']) ? $session['coll_id'] : 0,
+    );
+  }
 
   $form['filters']['searchparameters'] = array(
     '#type' => 'fieldset',
