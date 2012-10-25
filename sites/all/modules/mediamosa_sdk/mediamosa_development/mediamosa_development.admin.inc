@@ -61,6 +61,8 @@ class mediamosa_rest_call_dummy {
   const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
 
   const VAR_DEFAULT_VALUE = 'default_value';
+
+  const VERSION = 'version';
 }
 
 /**
@@ -217,7 +219,7 @@ function _mediamosa_development_get_rest_calls() {
     foreach ($rest_calls as $uri => $rest_call) {
       foreach ($rest_call as $method => $rest_call_data) {
         $rest_call_options[$uri . '|' . $method] = $uri . ' [' . $method . ']';
-        $versions[$rest_call_data[mediamosa_rest_call::VERSION]] = t('version @version', array('@version' => $rest_call_data[mediamosa_rest_call::VERSION]));
+        $versions[$rest_call_data[mediamosa_rest_call_dummy::VERSION]] = t('version @version', array('@version' => $rest_call_data[mediamosa_rest_call_dummy::VERSION]));
       }
     }
 
@@ -237,7 +239,7 @@ function _mediamosa_development_get_rest_calls() {
   if ($response && !empty($response['items']['item'])) {
     foreach ($response['items']['item'] as $item) {
       $rest_call_options[$item['uri'] . '|' . $item['method']] = $item['uri'] . ' [' . $item['method'] . ']';
-      $versions[$item[mediamosa_rest_call::VERSION]] = t('version @version', array('@version' => $item[mediamosa_rest_call::VERSION]));
+      $versions[$item[mediamosa_rest_call_dummy::VERSION]] = t('version @version', array('@version' => $item[mediamosa_rest_call_dummy::VERSION]));
     }
   }
 
