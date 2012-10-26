@@ -1,38 +1,15 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for assets.
  */
 
-/**
-  * @file
-  * Unittests for assets.
-  */
 class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Asset - common tests',
@@ -42,7 +19,9 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   // ------------------------------------------------------------------ Tests.
-  // Testing is_empty_asset issues, see: ticket 165.
+  /**
+   * Testing is_empty_asset issues, see: ticket 165.
+   */
   public function testAssetIsEmptyAsset() {
 
     // Create asset.
@@ -51,20 +30,20 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);
 
-    // Create uploadticket
+    // Create uploadticket.
     $ticket = $this->createMediafileUploadTicket($mediafile_id);
 
     // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is TRUE/
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
       t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
-    // Update mediafile
+    // Update mediafile.
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
     );
@@ -73,15 +52,17 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is FALSE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is FALSE/
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 
-  // Testing is_empty_asset issue, see: ticket 167.
+  /**
+   * Testing is_empty_asset issue, see: ticket 167.
+   */
   public function testAssetIsEmptyAsset2() {
 
     // Create an asset.
@@ -90,14 +71,14 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Create mediafile.
     $mediafile_id_empty = $this->createMediafile($asset_id);
 
-    // Create uploadticket
+    // Create uploadticket.
     $ticket = $this->createMediafileUploadTicket($mediafile_id_empty);
 
-    // Get the asset
+    // Get the asset/
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is TRUE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
       t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
@@ -109,30 +90,32 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
     $mediafile_id_with_uri = $this->createMediafile($asset_id, $a_parameters);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is FALSE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 
-  // Testing is_empty_asset issue, see: ticket 166.
+  /**
+   * Testing is_empty_asset issue, see: ticket 166.
+   */
   public function testAssetIsEmptyAsset4() {
 
-    // Create an asset with upload
+    // Create an asset with upload/
     $upload = $this->uploadTestFile();
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is TRUE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
@@ -144,47 +127,47 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
     $mediafile_id_with_uri = $this->createMediafile($asset_id, $a_parameters);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is FALSE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
-    // Now delete the upload, so is_empty_asset still false
+    // Now delete the upload, so is_empty_asset still false/
     self::deleteMediafile($mediafile_id);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is TRUE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
-    // Now delete the uri, so is_empty_asset = true
+    // Now delete the uri, so is_empty_asset = true.
     self::deleteMediafile($mediafile_id_with_uri);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    // Check is_empty_asset field is TRUE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
       strtr("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 
-  // Testing is_empty_asset issue with CQL, see: ticket 180.
+  /**
+   * Testing is_empty_asset issue with CQL, see: ticket 180.
+   */
   public function testAssetIsEmptyAsset3() {
-
-    // Set up.
 
     // Limit.
     $limit = 10;
@@ -208,10 +191,9 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id[4][1] = $this->createMediafile($asset_id[4]);
 
     // Search without CQL.
-
+    //
     // Search assets.
     $a_assets = $this->searchAsset($limit);
-    //$this->var_export($a_assets);
 
     // Check result.
     $this->assertTrue(
@@ -220,7 +202,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Search with is_empty_asset = TRUE.
-
+    //
     // Search assets.
     $a_parameters = array(
       mediamosa_rest_call_asset_search::CQL => '((is_empty_asset==TRUE))',
@@ -234,7 +216,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Search with is_empty_asset = FALSE.
-
+    //
     // Search assets.
     $a_parameters = array(
       mediamosa_rest_call_asset_search::CQL => '((is_empty_asset==FALSE))',
@@ -246,5 +228,63 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
       count($a_assets['items']['item']) == 2,
       t("There are all the assets (2 = @get)", array('@get' => count($a_assets['items']['item'])))
     );
+  }
+
+  /**
+   * Test if the view count is increased.
+   */
+  public function testAssetViewCount() {
+
+    // Create a upload test file with asset and mediafile.
+    $upload = $this->uploadTestFile();
+
+    // Set the parameters.
+    $parameters = array();
+
+    // Get the asset and see if viewed is on 1.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 0, 'No view count.');
+
+    // Get the asset and see if viewed is on 1.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 1, 'Increased view count.');
+
+    // Because of asset/ above, viewed is now 2.
+    //
+    // Turn view count off.
+    $parameters['count_view'] = 'false';
+
+    // Get asset.
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 2, 'View count == 2.');
+
+    // Get asset.
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 2, 'View count == 2.');
+
+    // Turn view count on.
+    $parameters['count_view'] = 'true';
+
+    // Get asset.
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 2, 'View count == 2.');
+
+    // Get asset.
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
+    $this->assertTrue($response['xml']->items->item[0]->viewed == 3, 'View count == 3.');
   }
 }

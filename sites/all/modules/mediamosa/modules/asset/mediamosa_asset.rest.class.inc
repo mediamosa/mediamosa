@@ -739,6 +739,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const TAG = 'tag';
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
+  const COUNT_VIEW = 'count_view';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -808,7 +809,12 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => "View hidden metadata.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
-      )
+        self::COUNT_VIEW => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specifing 'FALSE' will prevent increasing the view count on the asset. Default 'TRUE'.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+      ),
     );
 
     // Include default.
@@ -896,8 +902,10 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       $mediamosa->add_item($item);
     }
 
-    // Increase viewed.
-    mediamosa_asset::asset_viewed($asset_id);
+    if ($this->get_param_value(self::COUNT_VIEW)) {
+      // Increase viewed.
+      mediamosa_asset::asset_viewed($asset_id);
+    }
   }
 }
 
@@ -921,6 +929,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const TAG = 'tag';
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
+  const COUNT_VIEW = 'count_view';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -994,7 +1003,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => "View hidden metadata.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
-      )
+        self::COUNT_VIEW => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specifing 'FALSE' will prevent increasing the view count on the asset. Default 'TRUE'.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+      ),
     );
 
     // Include default.
@@ -1117,8 +1131,10 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         // Add streamable setting on asset.
         $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']) ? 'TRUE' : 'FALSE';
 
-        // Increase viewed.
-        mediamosa_asset::asset_viewed($asset_id);
+        if ($this->get_param_value(self::COUNT_VIEW)) {
+          // Increase viewed.
+          mediamosa_asset::asset_viewed($asset_id);
+        }
 
         // Add to output.
         $mediamosa->add_item($item);

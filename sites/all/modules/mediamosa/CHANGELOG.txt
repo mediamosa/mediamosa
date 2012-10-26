@@ -47,6 +47,10 @@ MediaMosa 3.3.x-dev (build 1910), xxxx-xx-xx
 - Solr wildcard searching is now the same as MySQL, per text, not per word;
   't*t' will now match 'the match' and 'no test', instead of only 'no test'.
 - Fixed transcoding failure when option 'vpad' was used for ffmpeg.
+- Added 'count_view' parameter to turn off counting views on /asset/$asset_id
+  and /assets calls. Extended unit test for new parameter.
+- Added 'count_play' parameter to turn off counting plays on
+  /asset/$asset_id/play calls. Extended unit test for new parameter.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------
