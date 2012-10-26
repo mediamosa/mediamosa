@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Play proxy unittests.
@@ -36,9 +11,10 @@
 
 class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Play proxy - Common',
@@ -48,18 +24,21 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Basic play proxy call test.
+   */
   public function testPlayProxy() {
 
     // Create a upload test file with asset and mediafile.
     $upload = $this->uploadTestFile();
 
     // First test on the uploaded mediafile if play_proxy works.
-
+    //
     // Set the parameters.
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id']
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id'],
     );
 
     // Set the Uri.
@@ -79,7 +58,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     // Set the parameters.
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id']
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id'],
     );
 
     // Set the Uri.
@@ -92,7 +71,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     // Set the parameters.
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id'] . 'test'
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id'] . 'test',
     );
 
     // Set the Uri.
@@ -102,12 +81,16 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $response = $this->restCallGet($uri, $parameters, array(), array(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND));
   }
 
+  /**
+   * Test clean up of play proxy.
+   */
   public function testPlayProxyCleanup() {
 
-    // @FIXME Unable to test files that are no longer valid by create date. Its
-    //        impossible to change the create date of an file. So there is noway
-    //        to test the cleanup code based on creation date.
-
+    // @FIXME
+    // Unable to test files that are no longer valid by create date. Its
+    // impossible to change the create date of an file. So there is noway to
+    // test the cleanup code based on creation date.
+    //
     // Our App ID.
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
@@ -115,7 +98,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $ticket_path = mediamosa_configuration_storage::ticket_play_location_get($app_id) . DIRECTORY_SEPARATOR;
 
     // Test first if ticket get removed when its not in the database.
-
+    //
     // Get ticket.
     $ticket_id = mediamosa_db::uuid($app_id);
 
@@ -149,7 +132,9 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->file_exists($ticket_path . $ticket_id, "Check if the ticket did NOT get cleaned up by 'play_proxy_ticket_cleanup()'.");
   }
 
-  // 1.x ticket #71.
+  /**
+   * Various play xml response checks.
+   */
   public function testPlayProxyXMLResponse() {
     $asset_id = $this->createAsset();
     $mediafile_id = $this->createMediafile($asset_id);
@@ -208,7 +193,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           );
         }
         catch (mediamosa_exception_error $e) {
-          // If streaming profile isnt setup, we cant test it either, we ignore it.
+          // If streaming profile isnt setup, we cant test it either, we ignore
+          // it.
           $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
 
           if (!in_array($e->getCode(), $a_allowed_errors)) {
@@ -219,7 +205,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           continue;
         }
 
-        // Check the asx output
+        // Check the asx output.
         if ($parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE && $mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
           $tofind = "<asx version=\"3.0\">";
           $this->assertTrue(stripos($response['output'], $tofind) !== FALSE, 'Check if asx starttag.');
@@ -231,7 +217,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           $this->assertTrue(stripos($response['output'], $tofind) !== FALSE, 'Check if duration asx tag is added.');
         }
 
-        // Check if ASX file was created (we also will remove the file again)
+        // Check if ASX file was created (we also will remove the file again).
         if ($parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
           $filename = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
           if (file_exists($filename)) {
@@ -272,7 +258,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         );
       }
       catch (mediamosa_exception_error $e) {
-        // If streaming profile isnt setup, we cant test it either, we ignore it.
+        // If streaming profile isnt setup, we cant test it either, we ignore
+        // it.
         $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
 
         if (!in_array($e->getCode(), $a_allowed_errors)) {
@@ -285,20 +272,21 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
       switch ($mediafile_ext['metadata']['container_type']) {
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
-          // Not supported, need to find out if we can add autoStart= to the flv url
+          // Not supported, need to find out if we can add autoStart= to the flv
+          // url.
           break;
 
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
-          $tofind =  ".mp3";
+          $tofind = '.mp3';
           break;
 
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
           $tofind = "name='autoplay' value='true'";
-          // depends on which player is used.
-          //$this->assertTrue(
-          //  stripos($response['output'], $tofind) !== FALSE,
-          //  "Check if autoplay is on"
-          //);
+          // Depends on which player is used.
+          // $this->assertTrue(
+          // stripos($response['output'], $tofind) !== FALSE,
+          // "Check if autoplay is on"
+          // );
           break;
 
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV:
@@ -321,7 +309,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         );
       }
       catch (mediamosa_exception_error $e) {
-        // If streaming profile isnt setup, we cant test it either, we ignore it.
+        // If streaming profile isnt setup, we cant test it either, we ignore
+        // it.
         $a_allowed_errors = array(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND);
 
         if (!in_array($e->getCode(), $a_allowed_errors)) {
@@ -334,15 +323,16 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
       switch ($mediafile_ext['metadata']['container_type']) {
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
-          // Not supported, need to find out if we can add autoStart= to the flv url
+          // Not supported, need to find out if we can add autoStart= to the flv
+          // url.
           break;
 
         case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
-          $tofind =  "name='autoplay' value='false'";
-          // depends very much on player;
+          $tofind = "name='autoplay' value='false'";
+          // Depends very much on player;
           // $this->assertTrue(
-          //   stripos($response['output'], $tofind) !== FALSE,
-          //   "Check if autoplay is off"
+          // stripos($response['output'], $tofind) !== FALSE,
+          // "Check if autoplay is off"
           // );
           break;
 
@@ -398,7 +388,6 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, NULL, NULL, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
-      //($size['width'] == PP_FLASH_OBJECT_WIDTH && $size['height'] == PP_FLASH_OBJECT_HEIGHT),
       ($size['width'] == 100 && $size['height'] == 200),
       "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
     );
@@ -412,15 +401,19 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     // Streaming server.
     mediamosa_db::db_query(
       "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
-       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec')", array(
-      ':base_uri' => '{base_uri}',
-    ));
+      (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec')",
+      array(
+        ':base_uri' => '{base_uri}',
+      )
+    );
 
     mediamosa_db::db_query(
       "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
-       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container')", array(
-      ':base_uri' => '{base_uri}',
-    ));
+      (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container')",
+      array(
+        ':base_uri' => '{base_uri}',
+      )
+    );
 
     mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
       array(':nid' => 998, ':container' => 'test_container:h264')
@@ -430,7 +423,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       array(':nid' => 999, ':container' => 'test_container')
     );
 
-    // Specific codec
+    // Specific codec.
     $mediafile_ext = $parameters = array();
     $parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $mediafile_ext['mediafile_id'] = $mediafile_id;
@@ -450,7 +443,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue($response['output'] == 'url://unittest.h264/', 'Test container with specific codec that is defined.');
     $this->verbose('Response: ' . print_r($response, TRUE));
 
-    // General container
+    // General container.
     $parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $mediafile_ext['mediafile_id'] = $mediafile_id;
     $mediafile_ext['metadata']['container_type'] = 'test_container';
@@ -469,7 +462,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue($response['output'] == 'url://unittest.general/', 'Test container with specific codec that is defined.');
     $this->verbose('Response: ' . print_r($response, TRUE));
 
-    // Codec that is not defined (should get defaukt container)
+    // Codec that is not defined (should get defaukt container).
     $parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $mediafile_ext['mediafile_id'] = $mediafile_id;
     $mediafile_ext['metadata']['container_type'] = 'test_container';
@@ -487,5 +480,56 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->assertTrue($response['output'] == 'url://unittest.general/', 'Test container with undefined codec (plays general container).');
     $this->verbose('Response: ' . print_r($response, TRUE));
+  }
+
+  /**
+   * Test if the play count is increased.
+   */
+  public function testPlayProxyCount() {
+
+    // Create a upload test file with asset and mediafile.
+    $upload = $this->uploadTestFile();
+
+    // Set the parameters.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $upload['mediafile_id'],
+    );
+
+    // Do basic play proxy call.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $upload['asset_id']));
+    $this->restCallGet($uri, $parameters);
+
+    // Get the asset and see if played is on 1.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 1, 'Increased play count.');
+
+    // Turn play count off.
+    $parameters['count_play'] = 'false';
+
+    // Do basic play proxy call again.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri, $parameters);
+
+    // Get the asset and see if played is still on 1.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 1, 'Same play count.');
+
+    // Turn play count on.
+    $parameters['count_play'] = 'true';
+
+    // Do basic play proxy call again.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri, $parameters);
+
+    // Get the asset again.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $upload['asset_id']));
+    $response = $this->restCallGet($uri);
+
+    $this->assertTrue($response['xml']->items->item[0]->played == 2, 'Increased play count.');
   }
 }
