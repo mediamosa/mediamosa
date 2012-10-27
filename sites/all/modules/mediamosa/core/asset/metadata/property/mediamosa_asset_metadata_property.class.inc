@@ -147,17 +147,17 @@ class mediamosa_asset_metadata_property {
     assert($propgroup_id);
 
     // Get the property.
-    $a_prop = self::property_get_row_with_name($name, $propgroup_id);
-    if (!$a_prop) {
+    $prop = self::property_get_row_with_name($name, $propgroup_id);
+    if (!$prop) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_METADATA_DEFINITION);
     }
 
     // Get the prop ID.
-    $prop_id = $a_prop[mediamosa_asset_metadata_property_db::ID];
+    $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
     assert($prop_id);
 
     if ($delete != 'cascade') {
-      if (!mediamosa_db::db_exists(mediamosa_asset_metadata_db::TABLE_NAME, array(mediamosa_asset_metadata_db::ID => $prop_id))) {
+      if (mediamosa_db::db_exists(mediamosa_asset_metadata_db::TABLE_NAME, array(mediamosa_asset_metadata_db::PROP_ID => $prop_id))) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_METADATA_DEFINITION_NOT_EMPTY);
       }
     }
