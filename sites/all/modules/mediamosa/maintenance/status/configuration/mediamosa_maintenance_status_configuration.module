@@ -400,9 +400,9 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   $results['cron_server'] = array(
     'title' => t('Cron server'),
-    'value' => $status->build > 0 ? t('Good') : t('Not found'),
-    'severity' => _mediamosa_maintenance_status_okerror($status->build > 0),
-    'description' => $status->build > 0 ? '' : t('REST interface not found, please check setting for Miscellaneous -> URL REST for CRON setting in the !configuration', array('!configuration' => l(t('MediaMosa configuration, server settings'), 'admin/mediamosa/config/global'))),
+    'value' => (isset($status->build) && $status->build > 0) ? t('Good') : t('Not found'),
+    'severity' => isset($status->build) ? _mediamosa_maintenance_status_okerror($status->build > 0) : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR,
+    'description' => (isset($status->build) && $status->build > 0) ? '' : t('REST interface not found, please check setting for Miscellaneous -> URL REST for CRON setting in the !configuration', array('!configuration' => l(t('MediaMosa configuration, server settings'), 'admin/mediamosa/config/global'))),
   );
 
   // -------------------------------------------------------- Database settings.

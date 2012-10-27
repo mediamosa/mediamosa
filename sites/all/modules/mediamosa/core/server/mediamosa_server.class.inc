@@ -186,7 +186,9 @@ class mediamosa_server {
     // Do call.
     $response = mediamosa_http::do_internal_call($uri, 'version');
     if ($response->code != '200') {
-      self::log('Call to version call did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+      if (isset($response->headers)) {
+        self::log('Call to version call did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+      }
     }
 
     if (!empty($response->data)) {
