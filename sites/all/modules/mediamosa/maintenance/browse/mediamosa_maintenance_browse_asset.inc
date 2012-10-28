@@ -92,7 +92,7 @@ function mediamosa_browse_asset_filter_form() {
     '#default_value' => isset($session['operator']) ? $session['operator'] : 'and',
   );
 
-  if (!empty($collections) && is_array($collections)) {
+  if (isset($collections) && is_array($collections) && !empty($collections)) {
     $form['filters']['coll_id'] = array(
       '#type' => 'select',
       '#title' => t('Search within collection'),
@@ -814,7 +814,6 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
  * @return FALSE if there are no supplement or themed supplement info.
  *
  * @see _mediamosa_browse_asset_page_view_collections_list
- *
  */
 function _mediamosa_browse_asset_page_view_supplements_list($asset) {
 
@@ -873,7 +872,10 @@ function _mediamosa_browse_asset_page_view_supplements_list($asset) {
 }
 
 /**
- * Add+Edit form
+ * Add+Edit form for asset metadata.
+ *
+ * @see mediamosa_browse_asset_form_validate()
+ * @see mediamosa_browse_asset_form_submit()
  */
 function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
@@ -884,9 +886,6 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
   drupal_set_breadcrumb($breadcrumb);
-
-  // Get the asset REST call.
-  $url = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
   // Do REST call.
   $result_asset = mediamosa_response_connector::static_do_restcall_drupal('asset/' . $asset_id, 'GET', array());
@@ -940,12 +939,12 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
           '#description' => t('Clear an item to delete it from the asset\'s @name_fixed metadata.', array('@name_fixed' => $name_fixed))
         );
       }
-
+      $x = 0;
       foreach ($metadata_values as $metadata_value) {
         // Make the edit box.
-        // rpl_/old_ in front of the name makes sure we dont conflict with other
+        // current_ in front of the name makes sure we dont conflict with other
         // names in the form.
-        $form[$group_name]['rpl_' . $metadata_name] = array(
+        $form[$group_name]['metadata_' . $metadata_name . '[' . $x++ . ']'] = array(
           '#type' => drupal_strlen($metadata_value) > 80 ? 'textarea' : 'textfield',
           '#default_value' => $metadata_value,
           '#title' => t(_mediamosa_browse_fix_metadata_name($metadata_name)),
@@ -953,6 +952,15 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
       }
     }
   }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save changes'),
+    // No Drupal validation when pressing 'Save changes'.
+    '#limit_validation_errors' => array(),
+    // Must specify submit hook, else #limit_validation_errors will not work.
+    '#submit' => array('mediamosa_browse_asset_form_submit'),
+  );
 
   $options_metadata_groups = array('' => '');
 
@@ -968,147 +976,137 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
     }
   }
 
-
-  $form['add'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('New metadata field'),
-    '#collapsible' => TRUE,
-    '#description' => t('Add a new metadata field to the asset\'s metadata.')
-  );
-
-  $form['add']['new_metadata_property'] = array(
+  $form['actions']['new_metadata_property'] = array(
     '#type' => 'select',
+    '#required' => TRUE,
     '#title' => t('Metadata field'),
     '#description' => t('Enter value for the selected metadata field.'),
     '#options' => $options_metadata_groups,
   );
 
-  $form['add']['new_metadata_value'] = array(
+  $form['actions']['new_metadata_value'] = array(
     '#type' => 'textarea',
+    '#required' => TRUE,
     '#title' => t('Value'),
     '#description' => t('Enter value for the selected metadata field.'),
   );
 
-  $form['submit'] = array(
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit changes'),
+    '#value' => t('Add metadata'),
   );
+  $form['actions']['#type'] = 'actions';
+
+  // Show as settings form look.
+  $form['#theme'] = 'system_settings_form';
 
   return $form;
 }
 
 /**
- * Submit form.
+ * Form validation handler for mediamosa_browse_asset_form().
+ *
+ * @see mediamosa_browse_asset_form()
+ * @see mediamosa_browse_asset_form_submit()
  */
 function mediamosa_browse_asset_form_validate($form, &$form_state) {
+  // Save metadata edit.
+  if ($form_state['values']['op'] ==  t('Save changes')) {
+    // Get the metadata list.
+    $metadatas = mediamosa_asset_metadata_property::get_metadata_properties_full();
 
-  if ((empty($form_state['values']['new_metadata_property']) && $form_state['values']['new_metadata_value'] != '') || (!empty($form_state['values']['new_metadata_property']) && $form_state['values']['new_metadata_value'] == '')) {
-    if (empty($form_state['values']['new_metadata_property'])) {
-      form_set_error('new_metadata_property', t('Select the metadata property.'));
-    }
-    else {
-      form_set_error('new_metadata_value', t('give the selected metadata property a value.'));
-    }
-  }
+    foreach ($metadatas as $name => $metadata) {
+      // So it matches.
+      $name_current = 'metadata_' . $name;
 
-  // Get the metadata list.
-  $metadatas = mediamosa_asset_metadata_property::get_metadata_properties_full();
+      // Check if $name is a valid metadata field.
+      // We also skip checks on non-changed values.
+      if (!isset($form_state['values'][$name_current]) || $form_state['values'][$name_current] == '') {
+        continue;
+      }
 
-  foreach ($metadatas as $name => $metadata) {
-    // So it matches.
-    $name_rpl = 'rpl_' . $name;
+      // Now validate the value, empty is allowed.
+      switch ($metadata['propdef_type']) {
+        case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+          break;
 
-    // Check if $name is a valid metadata field.
-    // We also skip checks on non-changed values.
-    if (!isset($form_state['values'][$name_rpl]) || $form_state['values'][$name_rpl] == '') {
-      continue;
-    }
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          try {
+            $form_state['values'][$name_current] = mediamosa_type::check($name, mediamosa_sdk::TYPE_DATETIME, $form_state['values'][$name_current]);
+          }
+          catch (mediamosa_exception $e) {
+            form_set_error($name_current, t('Invalid date, must be in format YYYY-MM-DD or YYYY-MM-DD 00:00:00'));
+          }
+          break;
 
-    // Now validate the value, empty is allowed.
-    switch ($metadata['propdef_type']) {
-      case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-        break;
+        case mediamosa_asset_metadata_property_db::TYPE_INT:
+          if (!is_numeric($form_state['values'][$name_current])) {
+            form_set_error($name_current, t('This value must be numeric.'));
+          }
+          break;
 
-      case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-        try {
-          $form_state['values'][$name_rpl] = mediamosa_type::check($name, mediamosa_sdk::TYPE_DATETIME, $form_state['values'][$name_rpl]);
-        }
-        catch (mediamosa_exception $e) {
-          form_set_error($name_rpl, t('Invalid date, must be in format YYYY-MM-DD or YYYY-MM-DD 00:00:00'));
-        }
-        break;
-
-      case mediamosa_asset_metadata_property_db::TYPE_INT:
-        if (!is_numeric($form_state['values'][$name_rpl])) {
-          form_set_error($name_rpl, t('This value must be numeric.'));
-        }
-        break;
-
-      default:
-        assert(0);
-        drupal_set_message(t('Unknown/unsupported metadata type.'), 'error');
-        break;
+        default:
+          assert(0);
+          drupal_set_message(t('Unknown/unsupported metadata type.'), 'error');
+          break;
+      }
     }
   }
 }
 
 /**
- * Submit form.
+ * Form submission handler for mediamosa_browse_asset_form().
+ *
+ * @see mediamosa_browse_asset_form()
+ * @see mediamosa_browse_asset_form_validate()
  */
 function mediamosa_browse_asset_form_submit($form, &$form_state) {
 
-  $asset_id = $form_state['values']['asset_id'];
+  // Difference between submit hook and button pressed with submit hook.
+  $values = empty($form_state['input']) ? $form_state['values'] : $form_state['input'];
 
-  // Get the asset REST call.
-  $url = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+  // Get the asset_id.
+  $asset_id = $values['asset_id'];
 
-  // Do REST call.
-  $result_asset = mediamosa_response_connector::static_do_restcall_drupal('asset/' . $asset_id, 'GET', array());
+  // Start empty.
+  $params = array();
 
-  if (!mediamosa_response_connector::static_result_okay($result_asset)) {
-    drupal_set_message(t('Asset with ID @asset_id does not exists.', array('@asset_id' => $asset_id)), 'warning');
-    drupal_goto('admin/mediamosa/browse/asset');
-  }
+  if ($form_state['values']['op'] ==  t('Save changes')) {
+    foreach ($values as $name => $value) {
+      // Must start with current_.
+      if (drupal_substr($name, 0, 9) != 'metadata_') {
+        continue;
+      }
 
-  // Get the asset from the result.
-  $asset = reset($result_asset['items']);
-
-  // Collect was what made empty.
-  $empty_names = array();
-  $changed_names = array();
-
-  foreach ($form_state['values'] as $name_rpl => $value) {
-
-    // Must start with rpl_.
-    if (drupal_substr($name_rpl, 0, 4) != 'rpl_') {
-      continue;
+      // Get the original name.
+      $params[drupal_substr($name, 9)] = $value;
     }
-
-    // Get the original name.
-    $name = drupal_substr($name_rpl, 4);
-    $changed_names[$name] = $value;
+  }
+  elseif ($form_state['values']['op'] ==  t('Add metadata')) {
+    if (!empty($values['new_metadata_property'])) {
+      $params[$values['new_metadata_property']] = $values['new_metadata_value'];
+      $params['action'] = 'append'; // Use 'append' instead of 'replace'.
+    }
   }
 
-  // Save the changes.
-  $params = array(
-    'app_id' => $asset['app_id'], // Need to this under the app of the asset.
-    'user_id' => $asset['owner_id'], // Need the owner.
-  );
+  // Make sure we got something.
+  if (!empty($params)) {
+    // Get the asset.
+    $asset = mediamosa_asset::get($asset_id);
 
-  $params = array_merge($changed_names, $params);
+    // Needed.
+    $params['app_id'] = $asset['app_id'];
+    $params['user_id'] = $asset['owner_id'];
 
-  if (!empty($form_state['values']['new_metadata_property']) && $form_state['values']['new_metadata_value'] != '') {
-    $params[$form_state['values']['new_metadata_property']] = $form_state['values']['new_metadata_value'];
-  }
+    $uri = strtr('asset/@asset_id/metadata', array('@asset_id' => $asset_id));
 
-  $uri = strtr('asset/@asset_id/metadata', array('@asset_id' => $asset_id));
+    // Execute the metadata post.
+    $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
 
-  // Execute the metadata post.
-  $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
-
-  if (mediamosa_response_connector::static_result_okay($result)) {
-    drupal_set_message(t('The changes to the asset metadata have been saved.'));
-    drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      drupal_set_message(t('The changes to the asset metadata have been saved.'));
+      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id) . '/edit');
+    }
   }
 
   // Set failed.

@@ -80,7 +80,7 @@ SMALL {
  * Edit asset form.
  */
 #mediamosa-browse-asset-form .form-item .fluid.form-text {
-  width: 80%;
+  width: auto;
 }
 
 #mediamosa-browse-asset-form .form-item label {
