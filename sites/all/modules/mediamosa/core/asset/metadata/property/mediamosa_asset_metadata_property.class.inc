@@ -6,8 +6,29 @@
 
 class mediamosa_asset_metadata_property {
 
-  // ------------------------------------------------------------------ Static Function.
-  public static function property_list($app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_settings::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Get the metadata properties list of supplied app ids.
+   *
+   * @param array $app_ids
+   *   The application IDs from which to get the metadata tags.
+   * @param boolean $include_default_definitions
+   *   Include all metadata properties that are global.
+   * @param string $name
+   *   Retrieve for specific name.
+   * @param int $offset
+   *   Offset position.
+   * @param int $limit
+   *   Maximum results.
+   * @param string $order_by
+   *   Order by field.
+   * @param string $order_direction
+   *   Either 'ASC' or 'DESC'.
+   *
+   * @return DatabaseStatementInterface
+   *   The database query result.
+   */
+  public static function property_list(array $app_ids, $include_default_definitions, $name = '', $offset = 0, $limit = mediamosa_settings::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Make sure these are used.
     assert(in_array($order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
@@ -53,22 +74,30 @@ class mediamosa_asset_metadata_property {
    * Create metadata property for client app.
    *
    * @param integer $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $name
-   *  Name of the property.
+   *   Name of the property.
    * @param string $type
-   *  char, datetime, int
-   * @param integer $min_occurences (reserved)
-   * @param integer $max_occurences (reserved)
+   *   Type: char, datetime, int.
+   * @param integer $min_occurences
+   *   (reserved).
+   * @param integer $max_occurences
+   *   (reserved).
    * @param bool $is_hidden
+   *   Is hidden in REST output.
    *
    * @return
-   *  The new prop_id.
+   *   The new prop_id.
    */
   public static function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE) {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
+
+    // Can not be empty or start with a number.
+    if (empty($name) || is_numeric(substr($name, 0, 1))) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_METADATA_DEFINITION);
+    }
 
     // Get the propgroups.
     $property_groups = mediamosa_asset_metadata_property_group::property_group_row_get_with_appid($app_id);
@@ -82,27 +111,9 @@ class mediamosa_asset_metadata_property {
     }
 
     // Should be non-zero.
-    assert($propgroup_id);
+    assert((int) $propgroup_id);
 
-    // Make sure the property group does not exists yet (own app).
-    if ($app_id && mediamosa_db::db_exists(
-      mediamosa_asset_metadata_property_db::TABLE_NAME,
-      array(
-        mediamosa_asset_metadata_property_db::NAME => $name,
-        mediamosa_asset_metadata_property_db::APP_ID => $app_id,
-      )
-    )) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS);
-    }
-
-    // Make sure the property group does not exists yet (global app).
-    if (mediamosa_db::db_exists(
-      mediamosa_asset_metadata_property_db::TABLE_NAME,
-      array(
-        mediamosa_asset_metadata_property_db::NAME => $name,
-        mediamosa_asset_metadata_property_db::APP_ID => 0,
-      )
-    )) {
+    if (self::property_exists($app_id, $name)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS);
     }
 
@@ -126,13 +137,53 @@ class mediamosa_asset_metadata_property {
   }
 
   /**
+   * Check if property already exists.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $name
+   *   Name of the property.
+   */
+  public static function property_exists($app_id, $name) {
+    // Make sure the property group does not exists yet (own app).
+    if ($app_id && mediamosa_db::db_exists(
+        mediamosa_asset_metadata_property_db::TABLE_NAME,
+        array(
+          mediamosa_asset_metadata_property_db::NAME => $name,
+          mediamosa_asset_metadata_property_db::APP_ID => $app_id,
+        )
+      )) {
+      return TRUE;
+    }
+
+    // Make sure the property group does not exists yet (global).
+    if (mediamosa_db::db_exists(
+        mediamosa_asset_metadata_property_db::TABLE_NAME,
+        array(
+          mediamosa_asset_metadata_property_db::NAME => $name,
+          mediamosa_asset_metadata_property_db::APP_ID => 0,
+        )
+      )) {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Delete a metadata property.
    *
-   * @param array/integer $mixed_app_ids
+   * @param integer $app_ids
+   *   The app id.
    * @param string $name
+   *   The name of the property to delete.
    * @param string $delete
+   *   Delete mode, keep empty to only delete tag. Will fail if metadata is
+   *   linked to tag, unless 'cascade' is used.
+   *   - 'cascade':
+   *     All metadata linked to the tag will be deleted too.
    */
-  public static function property_delete($app_id, $name, $delete) {
+  public static function property_delete($app_id, $name, $delete = '') {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
