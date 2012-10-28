@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * MediaMosa support for Metadata type Qualified Dublin Core.
@@ -33,6 +8,12 @@
  * Implements hook_mediamosa_metadata_info().
  */
 function mediamosa_metadata_qdc_mediamosa_metadata_info() {
-  return mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME;
+  return array(
+    mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME => array(
+      'title' => t('Qualified Dublin Core'),
+      'description' => t('MediaMosa support for the metadata format Qualified Dublin Core. See !link for more information.', array('!link' => url('http://dublincore.org/documents/2000/07/11/dcmes-qualifiers/'))),
+      'context' => 'qdc',
+      'context_full' => 'qualified_dublin_core',
+    ),
+  );
 }
-  

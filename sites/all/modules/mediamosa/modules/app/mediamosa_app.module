@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The Application module.
@@ -111,8 +86,12 @@ function mediamosa_app_help($path, $arg) {
   switch ($path) {
     case 'admin/mediamosa/config/app':
       return '<p>' . t('List of client applications.') . '</p>';
+
     case 'admin/mediamosa/config/app/add':
       return '<p>' . t('Create client application by completing and submitting the form.') . '</p>';
+
+    case 'admin/mediamosa/config/app/%/metadata/tag':
+      return '<p>' . t('Every application can have its own metadata definitions, these are unique for the application. These metadata fields can also be set with the REST call /metadata_tag/') . '</p>';
   }
 }
 
@@ -128,6 +107,7 @@ function mediamosa_app_menu() {
     'page callback' => '_mediamosa_app_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_APPS),
+    'file' => 'mediamosa_app.admin.inc',
   );
 
   $items['admin/mediamosa/config/app/list'] = array(
@@ -159,7 +139,7 @@ function mediamosa_app_menu() {
   $items['admin/mediamosa/config/app/%node/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
   );
 
   $items['admin/mediamosa/config/app/%node/edit'] = array(
@@ -168,12 +148,35 @@ function mediamosa_app_menu() {
     'page arguments' => array(4),
     'access callback' => 'node_access',
     'access arguments' => array('update', 4),
-    'theme callback' => '_node_custom_theme',
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/app/%node/metadata/tag'] = array(
+    'title' => 'Metadata',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_metadata_tag_form', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'mediamosa_node_mediamosa_app.class.inc',
+    'file path' => drupal_get_path('module', 'mediamosa') . '/core/node',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT + 1,
+  );
+
+  $items['admin/mediamosa/config/app/%node/metadata/tag/%/delete'] = array(
+    'title' => 'Metadata',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_metadata_tag_form_delete_confirm', 4, 7),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'mediamosa_node_mediamosa_app.class.inc',
+    'file path' => drupal_get_path('module', 'mediamosa') . '/core/node',
   );
 
   $items['admin/mediamosa/config/app/%node/delete'] = array(
@@ -182,7 +185,6 @@ function mediamosa_app_menu() {
     'page arguments' => array('_mediamosa_node_delete_confirm', 4),
     'access callback' => 'node_access',
     'access arguments' => array('delete', 4),
-    'theme callback' => '_node_custom_theme',
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
@@ -209,162 +211,14 @@ function mediamosa_app_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/mediamosa/config/app/%node/metadata_tag/%/delete'] = array(
+    'page callback' => '_mediamosa_app_form_metadata_delete',
+    'access callback' => TRUE,
+    'page arguments' => array(4, 6),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
-}
-
-/**
- * Show a listing of apps.
- */
-function _mediamosa_app_list() {
-
-  global $user;
-
-  // Get all allowed apps.
-  $app_allowed = mediamosa_app::collect_allowed_apps();
-  $access_app_ids = array();
-  foreach ($app_allowed as $app_id => $app_name) {
-    $access_app_ids[] = $app_id;
-  }
-
-  // Reset the breadcrum.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  drupal_set_breadcrumb($breadcrumb);
-
-  // Our header.
-  $header = array(
-    array('data' => t('App ID'), 'field' => 'a.' . mediamosa_app_db::APP_ID),
-    array('data' => t('Name'), 'field' => 'a.' . mediamosa_app_db::APP_NAME),
-    array('data' => t('Quota'), 'field' => 'a.' . mediamosa_app_db::QUOTA),
-    t('Offline webservices'),
-    array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
-    array('data' => t('Status'), 'field' => 'a.' . mediamosa_app_db::ACTIVE),
-    t('Operations')
-  );
-
-  // Get the app nodes.
-  $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
-    ->fields('a')
-    ->limit(mediamosa_settings::maintenance_items_per_page())
-    ->orderByHeader($header);
-
-  if (!empty($access_app_ids)) {
-    $query->condition(mediamosa_app_db::APP_ID, $access_app_ids, 'IN');
-  }
-  elseif ($user->uid != 1) { // if not admin and no rights show nothing.
-    $query->condition('0', '1');
-  }
-
-  $apps = $query->execute()->fetchAll();
-
-  // Collect the node IDs.
-  $nids = array();
-  foreach ($apps as $app) {
-    $nids[] = $app[mediamosa_app_db::NID];
-  }
-
-  // Get the nodes.
-  $nodes = node_load_multiple($nids);
-
-  // Get all statuses of webservices per app.
-  $webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
-
-  // Get destination.
-  $l_options = array('query' => drupal_get_destination());
-
-  $rows = array();
-  foreach ($apps as $app) {
-    $app_id = $app[mediamosa_app_db::APP_ID];
-
-    $actions = array();
-    if (node_access('update', $nodes[$app[mediamosa_app_db::NID]])) {
-      $actions[] = l(t('Edit'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/edit', $l_options);
-    }
-    if (node_access('delete', $nodes[$app[mediamosa_app_db::NID]])) {
-      $actions[] = l(t('Delete'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/delete', $l_options);
-    }
-
-    $offline_webservices = array();
-    if (isset($webservice_statuses[$app_id])) {
-      foreach ($webservice_statuses[$app_id] as $handle => $status) {
-        if (!$status) {
-          $offline_webservices[] = $handle;
-        }
-      }
-    }
-
-    $rows[] = array(
-      $app[mediamosa_app_db::APP_ID],
-      'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
-      $app[mediamosa_app_db::QUOTA],
-      implode(', ', $offline_webservices),
-      $app[mediamosa_app_db::OWNER],
-      $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
-      empty($actions) ? '-' : implode(' | ', $actions),
-    );
-  }
-
-  $form['pager_top'] = array('#theme' => 'pager');
-  $form['table'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')
-  );
-  $form['pager_bottom'] = array('#theme' => 'pager');
-
-  return $form;
-}
-
-/**
- * Show more specific information about a application.
- *
- * @param integer $app_id
- */
-function _mediamosa_app_contacts($app_id) {
-  // Reset the breadcrum.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
-  drupal_set_breadcrumb($breadcrumb);
-
-  $response = t('Technical and administrative contact for a client application.');
-
-  $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault');
-  $apps = $query
-    ->fields('a')
-    ->condition('a.app_id', $app_id)
-    ->limit(mediamosa_settings::maintenance_items_per_page())
-    ->execute();
-
-  $apps = array();
-  foreach ($apps as $app) {
-    $apps[] = array(
-      $app[mediamosa_app_db::APP_ID],
-      $app[mediamosa_app_db::TECHNICAL_NAME],
-      $app[mediamosa_app_db::TECHNICAL_PHONE],
-      $app[mediamosa_app_db::TECHNICAL_EMAIL],
-      t('Technical'),
-    );
-    $apps[] = array(
-      $app[mediamosa_app_db::APP_ID],
-      $app[mediamosa_app_db::ADMINISTRATIVE_NAME],
-      $app[mediamosa_app_db::ADMINISTRATIVE_PHONE],
-      $app[mediamosa_app_db::ADMINISTRATIVE_EMAIL],
-      t('Administrative'),
-    );
-  }
-
-  $build['table'] = theme('table', array(
-      'header' => array(t('Application ID'), t('Name'), t('Phone'), t('E-mail'), t('Type')),
-      'rows' => $apps,
-  ));
-
-  return implode('', $build);
 }

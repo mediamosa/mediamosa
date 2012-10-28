@@ -48,6 +48,7 @@ require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
 require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
 require_once 'core/job/mediamosa_job.install.inc';
+require_once 'core/metadata/mediamosa_metadata.install.inc';
 require_once 'core/node/mediamosa_node.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/statistics/mediamosa_statistics.install.inc';
@@ -101,8 +102,8 @@ function mediamosa_install() {
   // Call installer Transcode.
   _mediamosa_transcode_install();
 
-  // Call installer Job.
-  _mediamosa_job_install(); // jobs before server.
+  // Call installer Job (before server install).
+  _mediamosa_job_install();
 
   // Install the server db.
   _mediamosa_server_install();
@@ -112,6 +113,9 @@ function mediamosa_install() {
 
   // Install the ftp_user table.
   _mediamosa_ftp_user_install();
+
+  // Install the internal metadata sets.
+  _mediamosa_metadata_install();
 
   // Add index to watchdog table.
   db_add_index('watchdog', 'idx_link', array('link'));
