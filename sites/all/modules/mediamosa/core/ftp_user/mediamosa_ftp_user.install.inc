@@ -24,10 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * FTP user installer.
-  */
+/**
+ * @file
+ * FTP user installer.
+ */
 
 require_once 'mediamosa_ftp_user_db.class.inc';
 

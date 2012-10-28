@@ -4,29 +4,6 @@
  * CQL test file.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -264,6 +241,103 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->var_export(array($asset_id_1, $asset_id_3, $asset_id_4, $asset_id_2));
     $this->assertTrue(array($asset_id_1, $asset_id_3, $asset_id_4, $asset_id_2) === $found_ids, 'Created: return in correct DESC order');
   }
+
+  /**
+  * Test tag properties with cql search.
+  */
+  public function testCQLTagProperty() {
+
+    // Create assets with sleep, so created value is unique.
+
+    $asset_id_2 = $this->createAsset();
+    sleep(2);
+    $asset_id_4 = $this->createAsset();
+    sleep(2);
+    $asset_id_3 = $this->createAsset();
+    sleep(2);
+    $asset_id_1 = $this->createAsset();
+
+    // add properties
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'asset 3',
+        'publisher' => 'foo',
+        'tag' => array(
+          mediamosa_sdk::metadata_encode_tag('free', array('media')),
+          mediamosa_sdk::metadata_encode_tag('hierarchical', array('video', 'mpeg')),
+          mediamosa_sdk::metadata_encode_tag('hierarchical', array('video', 'ogg')),
+        ),
+      )
+    );
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'asset 2',
+        'publisher' => 'bar',
+        'tag' => array(
+          mediamosa_sdk::metadata_encode_tag('hierarchical', array('music', 'mp3')),
+          mediamosa_sdk::metadata_encode_tag('genres', array('music', 'extra', 'level')),
+          mediamosa_sdk::metadata_encode_tag('genres', array('music', 'extra', 'other |+?-chars')),
+        ),
+      )
+    );
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'asset 1',
+        'publisher' => array('foo', 'bar'),
+        'tag' => array(
+          mediamosa_sdk::metadata_encode_tag('genres', array('music', 'classic music')),
+          mediamosa_sdk::metadata_encode_tag('genres', array('music', 'R&B')),
+          mediamosa_sdk::metadata_encode_tag('genres', array('music', 'wild *-test')),
+        ),
+      )
+    );
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'asset 4',
+        'tag' => array(
+          mediamosa_sdk::metadata_encode_tag('free', array('media')),
+          mediamosa_sdk::metadata_encode_tag('hierarchical', array('music', 'wav')),
+        ),
+      )
+    );
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('free', array('media'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('hierarchical', array(array('pattern' => '*'), 'wav'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_4 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('hierarchical', array('music'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('hierarchical', array('music', array('pattern' => '*')));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('hierarchical', array('video', 'mpeg'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_1 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_1 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array('music', 'R&B'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array('music', 'classic music'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array('music', 'wild *-test'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array(array('pattern' => '*'), 'extra', 'level'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array('music', 'extra', 'other |+?-chars'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag('genres', array('music', array('pattern' => '{var}*', 'vars' => array('{var}' => 'R&'))));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_3 => TRUE));
+    $cql_tag = '^' . mediamosa_sdk::metadata_encode_tag(array('pattern' => '*'), array('music'));
+    $this->cql_do_search_test_assets_1('tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_1('asset.tag = "' . $cql_tag . '"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+  }
+
 /*
   public function testSolr() {
 

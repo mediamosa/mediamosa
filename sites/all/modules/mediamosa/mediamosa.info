@@ -221,6 +221,9 @@ files[] = core/job/transcode/mediamosa_job_transcode.class.inc
 files[] = core/job/upload/mediamosa_job_upload_db.class.inc
 files[] = core/job/upload/mediamosa_job_upload.class.inc
 
+; MediaMosa MetaData sets.
+files[] = core/metadata/asset/mediamosa_metadata_asset.class.inc
+
 ; Node type load/insert/delete/update related code.
 files[] = core/node/mediamosa_node_mediamosa_app.class.inc
 files[] = core/node/mediamosa_node_mediamosa_settings.class.inc

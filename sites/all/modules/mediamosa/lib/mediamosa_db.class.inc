@@ -664,7 +664,7 @@ class mediamosa_db {
    * @param boolean $log_error
    *  Optional TRUE/FALSE to log the error, default is TRUE.
    */
-  static function db_must_exists($table_name, array $columns_and = array(), $errorcode = NULL, array $errorcode_args = array(), $log_error = TRUE) {
+  public static function db_must_exists($table_name, array $columns_and = array(), $errorcode = NULL, array $errorcode_args = array(), $log_error = TRUE) {
 
     $row = self::db_get_assoc($table_name, $columns_and);
     if ($row) {
@@ -722,7 +722,7 @@ class mediamosa_db {
    * @return boolean
    *  Returns TRUE if one or more rows where found.
    */
-  static function db_exists($table_name, array $columns_and = array()) {
+  public static function db_exists($table_name, array $columns_and = array()) {
 
     // Create select object.
     $query = self::db_select($table_name, 'row');

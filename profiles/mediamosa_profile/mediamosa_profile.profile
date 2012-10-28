@@ -130,7 +130,6 @@ function mediamosa_profile_metadata_support_form() {
   $options = array(
     'dublin_core' => st('Dublin Core'),
     'qualified_dublin_core' => st('Qualified Dublin Core'),
-    'asset' => st('General Asset Metadata'),
     'czp' => st('Content Zoek Profiel (Content Search Profile)'),
   );
 

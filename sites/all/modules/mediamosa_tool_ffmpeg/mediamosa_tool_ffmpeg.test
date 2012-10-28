@@ -81,7 +81,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 60,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '640x360', '-vf' => "'pad=640:480:0:60:black'");
+      ) : array('-s' => '640x360', '-vf' => "pad=640:480:0:60:black");
       $this->compare($expecting, $got);
 
       $got = mediamosa_tool_ffmpeg::calcAspectRatio(640, 480, '200x200');
@@ -91,7 +91,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 24,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '200x152', '-vf' => "'pad=200:200:0:24:black'");
+      ) : array('-s' => '200x152', '-vf' => "pad=200:200:0:24:black");
       $this->compare($expecting, $got);
 
       $got = mediamosa_tool_ffmpeg::calcAspectRatio(100, 100, '200x300');
@@ -101,7 +101,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 50,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '200x200', '-vf' => "'pad=200:300:0:50:black'");
+      ) : array('-s' => '200x200', '-vf' => "pad=200:300:0:50:black");
       $this->compare($expecting, $got);
 
       $got = mediamosa_tool_ffmpeg::calcAspectRatio(100, 100, '300x200');
@@ -111,7 +111,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 50,
         '-padright' => 50,
-      ) : array('-s' => '200x200', '-vf' => "'pad=300:200:50:0:black'");
+      ) : array('-s' => '200x200', '-vf' => "pad=300:200:50:0:black");
       $this->compare($expecting, $got);
 
       $got = mediamosa_tool_ffmpeg::calcAspectRatio(1920, 1080, '352x288');
@@ -121,7 +121,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 44,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '352x198', '-vf' => "'pad=352:286:0:44:black'");
+      ) : array('-s' => '352x198', '-vf' => "pad=352:286:0:44:black");
       $this->compare($expecting, $got);
 
 
@@ -135,7 +135,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 32,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '320x176', '-vf' => "'pad=320:240:0:32:black'");
+      ) : array('-s' => '320x176', '-vf' => "pad=320:240:0:32:black");
       $this->compare($expecting, $got);
 
       // Setting padding = no.
@@ -146,7 +146,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '320x176', '-vf' => "'pad=320:176:0:0:black'");
+      ) : array('-s' => '320x176', '-vf' => "pad=320:176:0:0:black");
       $this->compare($expecting, $got);
 
       // Setting padding = yes.
@@ -157,7 +157,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 64,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '640x352', '-vf' => "'pad=640:480:0:64:black'");
+      ) : array('-s' => '640x352', '-vf' => "pad=640:480:0:64:black");
       $this->compare($expecting, $got);
 
       // Setting padding = no.
@@ -168,7 +168,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '640x352', '-vf' => "'pad=640:352:0:0:black'");
+      ) : array('-s' => '640x352', '-vf' => "pad=640:352:0:0:black");
       $this->compare($expecting, $got);
 
       // Setting padding = yes.
@@ -179,7 +179,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 44,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '352x200', '-vf' => "'pad=352:288:0:44:black'");
+      ) : array('-s' => '352x200', '-vf' => "pad=352:288:0:44:black");
       $this->compare($expecting, $got);
 
       // Setting padding = no.
@@ -190,7 +190,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '352x200', '-vf' => "'pad=352:200:0:0:black'");
+      ) : array('-s' => '352x200', '-vf' => "pad=352:200:0:0:black");
       $this->compare($expecting, $got);
 
       // Setting padding = yes.
@@ -201,7 +201,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 100,
         '-padright' => 100,
-      ) : array('-s' => '1080x720', '-vf' => "'pad=1280:720:100:0:black'");
+      ) : array('-s' => '1080x720', '-vf' => "pad=1280:720:100:0:black");
       $this->compare($expecting, $got);
 
       // Setting padding = no.
@@ -212,7 +212,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '1080x720', '-vf' => "'pad=1080:720:0:0:black'");
+      ) : array('-s' => '1080x720', '-vf' => "pad=1080:720:0:0:black");
       $this->compare($expecting, $got);
 
       // Special cases.
@@ -233,7 +233,7 @@ class MediaMosaToolFfmpegTestCaseEga extends MediaMosaTestCaseEgaJob {
         '-padbottom' => 0,
         '-padleft' => 0,
         '-padright' => 0,
-      ) : array('-s' => '1280x720', '-vf' => "'pad=1280:720:0:0:black'");
+      ) : array('-s' => '1280x720', '-vf' => "pad=1280:720:0:0:black");
       $this->compare($expecting, $got);
     }
   }

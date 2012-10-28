@@ -95,7 +95,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the asset metadatas.
     $a_asset = $this->getAsset($asset_id);
-    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core'], $a_asset['czp']);
+    $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core'], $a_asset['czp'], $a_asset['asset']);
 
     // Check the metadatas.
     // From sent.

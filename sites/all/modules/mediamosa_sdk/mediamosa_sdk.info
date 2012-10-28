@@ -6,3 +6,4 @@ core = 7.x
 
 ; Used files.
 files[] = mediamosa_sdk.class.inc
+files[] = mediamosa_sdk.test

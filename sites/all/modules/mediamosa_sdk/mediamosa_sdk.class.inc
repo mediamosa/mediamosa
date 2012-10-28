@@ -1,28 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
 
 /**
  * @file
@@ -417,5 +393,84 @@ class mediamosa_sdk {
    */
   public static function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date(strtotime($datestamp), $type, $format, $timezone, $langcode);
+  }
+
+  /**
+   * Returns an encoded metadata tag that can be used to update asset metadata
+   * or in CQL strings.
+   *
+   * @param mixed $vocabulary
+   *   Name of the taxonomy vocabulary.
+   *
+   *   Either as string or as an array. Array is only needed when building a
+   *   search string for CQL.
+   *   - 'pattern' with a pattern that should not be urlencoded.
+   *   - 'vars' with an associative array of values that should be urlencoded.
+   *      and need to be replaced in the pattern.
+   *
+   *   Example;
+   *     array(
+   *       'pattern' => '{term}*',
+   *       'vars' => array('{term}' => 'foo')
+   *     );
+   *     Results into '0.foo%20*'
+   *
+   * @param array $term
+   *   - 'pattern' with a pattern that should not be urlencoded.
+   *   - 'vars' with an associative array of values that should be urlencoded
+   *      and need to be replaced in the pattern.
+   *   Terms for each level of the hierarchical taxonomy tree based on the rules
+   *   as the vocabulary name.
+   *
+   *   Example;
+   *     array(
+   *       array('pattern' => '*'),
+   *       array('pattern' => '{term}*', 'vars' => array('{term}' => 'foo ')),
+   *       'bar'
+   *     );
+   */
+  //     Results into '1.*/2.foo%20*/3.bar/'
+  /*
+   * @return string
+   *   The encoded string to use for CQL or storage for metadata.
+  */
+  public static function metadata_encode_tag($vocabulary, array $term) {
+    if (is_array($vocabulary)) {
+      if (empty($vocabulary['vars'])) {
+        $vocabulary = $vocabulary['pattern'];
+      }
+      else {
+        foreach ($vocabulary['vars'] as &$text) {
+          $text = urlencode($text);
+        }
+        $vocabulary = strtr($vocabulary['pattern'], $vocabulary['vars']);
+      }
+    }
+    else {
+      $vocabulary = urlencode($vocabulary);
+    }
+
+    $tag = '0.' . $vocabulary;
+    $scope = 1;
+    foreach ($term as $name) {
+      if (is_array($name)) {
+        if (empty($name['vars'])) {
+          $name = $name['pattern'];
+        }
+        else {
+          foreach ($name['vars'] as &$text) {
+            $text = urlencode($text);
+          }
+          $name = strtr($name['pattern'], $name['vars']);
+        }
+      }
+      else {
+        $name = urlencode($name);
+      }
+
+      $tag .= '/' . $scope++ . '.' . $name;
+    }
+
+    return $tag . '/';
   }
 }

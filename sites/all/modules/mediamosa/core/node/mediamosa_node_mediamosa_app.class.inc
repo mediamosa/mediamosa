@@ -1,32 +1,8 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The node type client application.
+ *
  * hook_load / -update / -delete / -insert / -view / -form / -validate hooks for
  * node type mediamosa_app.
  */
@@ -78,8 +54,6 @@ function _mediamosa_app_ajax_generate_shared_key() {
  */
 function mediamosa_app_load(&$nodes) {
   mediamosa_node_revision::load($nodes);
-
-  $app_ids = array();
 
   // Loop through the nodes and unserialize the master slave apps.
   foreach ($nodes as $key => $node) {
@@ -329,6 +303,7 @@ function mediamosa_app_form($node, &$form_state) {
   foreach ($apps_all as $app) {
     // Skip yourself.
     if (isset($node->nid) && $app[mediamosa_app_db::NID] == $node->nid) {
+      $app_id = $app[mediamosa_app_db::APP_ID];
       continue;
     }
 
@@ -445,6 +420,41 @@ function mediamosa_app_form($node, &$form_state) {
     '#size' => 20,
   );
 
+  $form['metadata'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Application specific Metadata fields'),
+    '#description' => t('Every application can have its own metadata definitions, which other applications will not share. These metadata fields can also be set with the REST call /metadata_tag/')
+  );
+
+  // Get all properties.
+  $header = array('tags', 'type', 'hidden', 'action');
+  $properties = mediamosa_asset_metadata_property::property_list(array($app_id), FALSE, '');
+  foreach ($properties as $prop) {
+    $rows[] = array($prop['prop_name'], $prop['type'], 'FALSE', l('delete', strtr('admin/mediamosa/config/app/%node/metadata_tag/%tag/delete', array('%node' => $node->nid, '%tag' => $prop['prop_id']))));
+  }
+  $tab = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width:50%;'), 'caption' => NULL,));
+  $form['metadata']['list'] = array(
+     '#markup' => $tab,
+  );
+  $form['metadata']['metadata_propname'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#title' => t('add a custom tag'),
+  );
+  $form['metadata']['metadata_type'] = array(
+    '#type' => 'select',
+    '#title' => t('type'),
+    '#options' => array('CHAR' => 'CHAR', 'DATETIME' => 'DATETIME', 'INT' => 'INT'),
+    '#default_value' => 'CHAR',
+  );
+  $form['metadata']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => ('Add new tag'),
+    '#submit' => array('_mediamosa_app_form_metadata_add_submit'),
+  );
+
   $form['oai'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -452,7 +462,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#title' => t('OAI Interface settings'),
     '#description' => t('')
   );
-
   $form['oai'][mediamosa_app_db::IS_METADATA_PUBLIC] = array(
     '#type' => 'select',
     '#title' => t('OAI visibility metadata'),
@@ -557,7 +566,7 @@ function mediamosa_app_form($node, &$form_state) {
     $nid = $node->nid;
 
     $query = 'admin/mediamosa/config/app/' . $nid . '/edit';
-    require_once('modules/image/image.admin.inc');
+    require_once 'modules/image/image.admin.inc';
     $app_id = mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node);
     $styles = image_styles();
 
@@ -897,4 +906,230 @@ function mediamosa_app_node_access($node, $op, $account) {
 
   // If we have to role, then we allow the action.
   return _mediamosa_user_access($role_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Implentation hook_form().
+ */
+function mediamosa_app_metadata_tag_form($form, &$form_state, $node) {
+
+  $form = array();
+  $form['metadata'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => t('Listing application metadata definitions.'),
+  );
+
+  // Table header.
+  $header = array(
+    array('data' => t('Tag name'), 'field' => 'amp.' . mediamosa_asset_metadata_property_db::NAME, 'sort' => 'asc'),
+    array('data' => t('Type'), 'field' => 'amp.' . mediamosa_asset_metadata_property_db::TYPE),
+    array('data' => t('Hidden'), 'field' => 'amp.' . mediamosa_asset_metadata_property_db::IS_HIDDEN),
+    t('Action'),
+  );
+
+  // Build the select object.
+  $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')->extend('PagerDefault')->extend('TableSort');
+  $properties = $query
+    ->fields('amp')
+    ->condition(mediamosa_asset_metadata_property_db::APP_ID, $node->app_id)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
+    ->orderByHeader($header)
+    ->execute();
+
+  // Add current properties.
+  foreach ($properties as $property) {
+    $rows[] = array(
+      $property['prop_name'],
+      array('data' => $property['type'], 'style' => 'width:100px'),
+      array('data' => $property['is_hidden'] == mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE ? t('Yes') : t('No'), 'style' => 'width:100px'),
+      array('data' => l('delete', 'admin/mediamosa/config/app/' . $node->nid . '/metadata/tag/' . $property['prop_id'] . '/delete'), 'style' => 'width:100px'),
+    );
+  }
+
+  $form['metadata']['pager_top'] = array('#theme' => 'pager');
+  $form['metadata']['list'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('This client application has no custom metadata definitions.'),
+  );
+  $form['metadata']['pager_bottom'] = array('#theme' => 'pager');
+
+  $form['actions']['metadata_propname'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Add a custom tag'),
+    '#desciption' => t('The name of the tag.'),
+    '#required' => TRUE,
+  );
+  $form['actions']['metadata_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Type'),
+    '#desciption' => t('The type of the tag.'),
+    '#required' => TRUE,
+    '#options' => array(
+      mediamosa_asset_metadata_property_db::TYPE_CHAR => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      mediamosa_asset_metadata_property_db::TYPE_DATETIME => mediamosa_asset_metadata_property_db::TYPE_DATETIME,
+      mediamosa_asset_metadata_property_db::TYPE_INT => mediamosa_asset_metadata_property_db::TYPE_INT,
+    ),
+    '#default_value' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+  );
+  $form['actions']['is_hidden'] = array(
+    '#type' => 'select',
+    '#title' => t('Is hidden'),
+    '#desciption' => t('Hidden tags are not included in the REST output.'),
+    '#required' => TRUE,
+    '#options' => array(
+      mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE => t('Yes'),
+      mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE => t('No'),
+    ),
+    '#default_value' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+  );
+  $form['actions']['app_id'] = array(
+    '#type' => 'value',
+    '#value' => $node->app_id,
+  );
+
+
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Add new tag'));
+  $form['actions']['#type'] = 'actions';
+
+  // Show as settings form look.
+  $form['#theme'] = 'system_settings_form';
+
+  return $form;
+}
+
+/**
+ * Form validation handler for mediamosa_app_metadata_tag_form().
+ *
+ * @see mediamosa_app_metadata_tag_form()
+ * @see mediamosa_app_metadata_tag_form_submit()
+ */
+function mediamosa_app_metadata_tag_form_validate($form, &$form_state) {
+
+  // Create shortcut.
+  $values = $form_state['values'];
+
+  // Adding new tag?
+  if ($values['op'] == t('Add new tag')) {
+    if (mediamosa_asset_metadata_property::property_exists($values['app_id'], $values['metadata_propname'])) {
+      form_set_error('metadata_propname', t('Metadata name already used either by client application or already exists as metadata global tag.'));
+    }
+  }
+}
+
+/**
+ * Form submission handler for mediamosa_app_metadata_tag_form().
+ *
+ * @see mediamosa_app_metadata_tag_form()
+ * @see mediamosa_app_metadata_tag_form_validate()
+ */
+function mediamosa_app_metadata_tag_form_submit($form, &$form_state) {
+
+  // Create shortcut.
+  $values = $form_state['values'];
+
+  // Adding new tag?
+  if ($values['op'] == t('Add new tag')) {
+    try {
+      mediamosa_asset_metadata_property::property_create($values['app_id'], $values['metadata_propname'], $values['metadata_type'], 0, 0, $values['is_hidden']);
+    }
+    catch (Exception $e) {
+      drupal_set_message(t('Property @propname not created; @message', array('@propname' => $values['metadata_propname'], '@message' => $e->getMessage())), 'error');
+      return;
+    }
+
+    drupal_set_message(t('Property @propname created.', array('@propname' => $values['metadata_propname'])));
+  }
+}
+
+/**
+ * Verify that the admin wants to delete the tag.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ * @param object $node
+ *   The application node.
+ * @param integer $prop_id
+ *   The ID of the property to delete.
+ *
+ * @return
+ *   TRUE if the tag should be deleted, FALSE otherwise.
+ *
+ * @see mediamosa_app_metadata_tag_form_delete_confirm_submit()
+ */
+function mediamosa_app_metadata_tag_form_delete_confirm($form, &$form_state, $node, $prop_id) {
+  // Get the property.
+  $property = mediamosa_asset_metadata_property::property_get_row($prop_id);
+  if (!$property) {
+    drupal_set_message(t('Property not found.', array()), 'error');
+    drupal_goto('admin/mediamosa/config/app/' . $node->nid . '/metadata/tag');
+  }
+
+  $form['nid'] = array(
+    '#type' => 'value',
+    '#value' => $node->nid,
+  );
+  $form['app_id'] = array(
+    '#type' => 'value',
+    '#value' => $node->app_id,
+  );
+  $form['prop_id'] = array(
+    '#type' => 'value',
+    '#value' => $prop_id,
+  );
+
+  return confirm_form(
+    $form,
+    t("Are you sure you want to delete the metadata tag '@tagname'?", array('@tagname' => $property[mediamosa_asset_metadata_property_db::NAME])),
+    'admin/mediamosa/config/app/' . $node->nid . '/metadata/tag',
+    t('This action cannot be undone.'),
+    t('Delete tag'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Delete the tag.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ *
+ * @see mediamosa_app_metadata_tag_form_delete_confirm()
+ */
+function mediamosa_app_metadata_tag_form_delete_confirm_submit($form, &$form_state) {
+
+  // Create shortcut.
+  $values = $form_state['values'];
+
+  if ($values['op'] == t('Delete tag')) {
+    // Get node.
+    $node = node_load($values['nid']);
+    if ($node && $node->app_id == $values['app_id']) {
+      try {
+        $property = mediamosa_asset_metadata_property::property_get_row($values['prop_id']);
+        if (!$property) {
+          drupal_set_message(t('Property not found.', array()), 'error');
+          drupal_goto('admin/mediamosa/config/app/' . $node->nid . '/metadata/tag');
+        }
+
+        mediamosa_asset_metadata_property::property_delete($values['app_id'], $property[mediamosa_asset_metadata_property_db::NAME]);
+        drupal_set_message(t('Property @propname deleted.', array('@propname' => $property[mediamosa_asset_metadata_property_db::NAME])));
+      }
+      catch (Exception $e) {
+        drupal_set_message(t('Property not deleted; @message.', array('@message' => $e->getMessage())), 'error');
+      }
+    }
+    else {
+      drupal_set_message(t('Property does not match application id.'), 'error');
+    }
+  }
+
+  drupal_goto('admin/mediamosa/config/app/' . $node->nid . '/metadata/tag');
 }
