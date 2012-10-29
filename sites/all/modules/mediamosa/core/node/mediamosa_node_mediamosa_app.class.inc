@@ -420,41 +420,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#size' => 20,
   );
 
-  $form['metadata'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#title' => t('Application specific Metadata fields'),
-    '#description' => t('Every application can have its own metadata definitions, which other applications will not share. These metadata fields can also be set with the REST call /metadata_tag/')
-  );
-
-  // Get all properties.
-  $header = array('tags', 'type', 'hidden', 'action');
-  $properties = mediamosa_asset_metadata_property::property_list(array($app_id), FALSE, '');
-  foreach ($properties as $prop) {
-    $rows[] = array($prop['prop_name'], $prop['type'], 'FALSE', l('delete', strtr('admin/mediamosa/config/app/%node/metadata_tag/%tag/delete', array('%node' => $node->nid, '%tag' => $prop['prop_id']))));
-  }
-  $tab = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width:50%;'), 'caption' => NULL,));
-  $form['metadata']['list'] = array(
-     '#markup' => $tab,
-  );
-  $form['metadata']['metadata_propname'] = array(
-    '#type' => 'textfield',
-    '#size' => 25,
-    '#title' => t('add a custom tag'),
-  );
-  $form['metadata']['metadata_type'] = array(
-    '#type' => 'select',
-    '#title' => t('type'),
-    '#options' => array('CHAR' => 'CHAR', 'DATETIME' => 'DATETIME', 'INT' => 'INT'),
-    '#default_value' => 'CHAR',
-  );
-  $form['metadata']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => ('Add new tag'),
-    '#submit' => array('_mediamosa_app_form_metadata_add_submit'),
-  );
-
   $form['oai'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
