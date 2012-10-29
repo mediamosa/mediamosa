@@ -73,8 +73,7 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
       $item[$section_part]['failure'] = $failures ? 'TRUE' : 'FALSE';
 
       // we add runtime (unixtimestamp) to verify if cron is still running.
-      $last_time = variable_get('mediamosa_status_last_time', 0);
-      $item['time'] = $last_time;
+      $item['time'] = variable_get('mediamosa_status_last_time', 0);
 
       $mediamosa->add_item($item);
     }

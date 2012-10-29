@@ -59,6 +59,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   const FORMAT = 'format';
   const RANGE = 'range';
   const TAG = 'tag';
+  const COUNT_PLAY = 'count_play';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_GROUP_ID = 'aut_group_id';
@@ -185,7 +186,12 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => "Tag to indentify and search for the mediafile to play.",
         ),
-      )
+        self::COUNT_PLAY => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specifing 'FALSE' will prevent increasing the play count on the asset. Default 'TRUE'.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+      ),
     );
 
     // Enrich with required REST vars.
@@ -494,8 +500,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $stills
     );
 
-    // All ok, now set played + 1
-    mediamosa_asset::asset_played($asset_id);
+    // If play count is allowed, increase the play counter with one.
+    if ($this->get_param_value(self::COUNT_PLAY)) {
+      // All ok, now set played + 1
+      mediamosa_asset::asset_played($asset_id);
+    }
 
     // Add response.
     $mediamosa->add_item($response);

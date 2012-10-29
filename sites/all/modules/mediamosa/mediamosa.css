@@ -9,7 +9,7 @@ TH.simpletest_test {
 }
 
 /*
- Fix problem when using float on form elements. Overrides the 
+ Fix problem when using float on form elements. Overrides the
  setting on .form-item in rubik theme.
 */
 DIV.form-item {
@@ -77,119 +77,134 @@ SMALL {
 }
 
 /**
+ * Edit asset form.
+ */
+#mediamosa-browse-asset-form .form-item .fluid.form-text {
+  width: auto;
+}
+
+#mediamosa-browse-asset-form .form-item label {
+  float: left;
+  width: 150px;
+  padding-top: 5px;
+  padding-right: 20px;
+}
+
+/**
  * Icons
  */
-.path-admin-mediamosa span.icon { 
+.path-admin-mediamosa span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px 0px;
 }
 
-.path-admin-mediamosa-config-global span.icon { 
+.path-admin-mediamosa-config-global span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px 0px;
 }
 
-.path-admin-mediamosa-config-connector span.icon, .path-admin-config-media-mediamosa-connector span.icon { 
+.path-admin-mediamosa-config-connector span.icon, .path-admin-config-media-mediamosa-connector span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-90px 0px;
 }
 
-.path-admin-mediamosa-config-server span.icon { 
+.path-admin-mediamosa-config-server span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -30px;
 }
 
-.path-admin-mediamosa-config-app span.icon { 
+.path-admin-mediamosa-config-app span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px -30px;
 }
 
-.path-admin-mediamosa-config-development span.icon, .path-admin-config-development-mediamosa-development span.icon { 
+.path-admin-mediamosa-config-development span.icon, .path-admin-config-development-mediamosa-development span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px -30px;
 }
 
-.path-admin-mediamosa-config-tool_params span.icon { 
+.path-admin-mediamosa-config-tool_params span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-90px -30px;
 }
 
-.path-admin-mediamosa-config-transcode_profile span.icon { 
+.path-admin-mediamosa-config-transcode_profile span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -60px;
 }
 
-.path-admin-mediamosa-config-webservice span.icon { 
+.path-admin-mediamosa-config-webservice span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px -60px;
 }
 
-.path-admin-mediamosa-browse-asset span.icon { 
+.path-admin-mediamosa-browse-asset span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px -60px;
 }
 
-.path-admin-mediamosa-browse-ftp_batch span.icon { 
+.path-admin-mediamosa-browse-ftp_batch span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-90px -60px;
 }
 
-.path-admin-mediamosa-browse-collection span.icon { 
+.path-admin-mediamosa-browse-collection span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -90px;
 }
 
-.path-admin-mediamosa-browse-errorcode span.icon { 
+.path-admin-mediamosa-browse-errorcode span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px -90px;
 }
 
-.path-admin-mediamosa-browse-integrity span.icon { 
+.path-admin-mediamosa-browse-integrity span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px -90px;
 }
 
-.path-admin-mediamosa-browse-log span.icon { 
+.path-admin-mediamosa-browse-log span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-90px -90px;
 }
 
-.path-admin-mediamosa-browse-restcall span.icon { 
+.path-admin-mediamosa-browse-restcall span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -120px;
 }
 
-.path-admin-mediamosa-browse-revision span.icon { 
+.path-admin-mediamosa-browse-revision span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px -120px;
 }
 
-.path-admin-mediamosa-browse-testing span.icon { 
+.path-admin-mediamosa-browse-testing span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px -120px;
 }
 
-.path-admin-mediamosa-statistics-diskspaceusage span.icon { 
+.path-admin-mediamosa-statistics-diskspaceusage span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -150px;
 }
 
-.path-admin-mediamosa-statistics-latestcollections span.icon { 
+.path-admin-mediamosa-statistics-latestcollections span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-30px -150px;
 }
 
-.path-admin-mediamosa-statistics-latestmediafiles span.icon { 
+.path-admin-mediamosa-statistics-latestmediafiles span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-60px -150px;
 }
 
-.path-admin-mediamosa-statistics-streamrequests span.icon { 
+.path-admin-mediamosa-statistics-streamrequests span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:-90px -150px;
 }
 
-.path-admin-mediamosa-statistics-searchwords span.icon { 
+.path-admin-mediamosa-statistics-searchwords span.icon {
   background-image:url(images/mediamosa-icons.png);
   background-position:0px -180px;
 }
+

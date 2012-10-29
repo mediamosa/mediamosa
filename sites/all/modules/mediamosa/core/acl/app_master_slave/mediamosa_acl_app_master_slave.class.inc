@@ -47,11 +47,11 @@
   */
 class mediamosa_acl_app_master_slave {
   /**
-   * Returns the join for joining with acl_app_master slave table
-   * 1.x vpx_acl_join_acl_app_master_slave_get
+   * Returns the join for joining with acl_app_master slave table.
    *
    * @param enum $acl_type
-   *  See mediamosa_acl::ACL_TYPE_*
+   *   See mediamosa_acl::ACL_TYPE_*.
+   *
    * @return string
    */
   public static function join_acl_app_master_slave_get($acl_type) {
@@ -86,15 +86,13 @@ class mediamosa_acl_app_master_slave {
   /**
    * Create a master - slave record.
    *
-   * 1.x: vpx_acl_acl_master_slave_create
-   *
    * @param string $acl_object_id
    * @param string $acl_object_type
    * @param integer $app_id
    * @param integer $app_id_slave
    * @param array $a_rights (reserved)
    */
-  function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
+  public static function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
 
     // Here to sadisify Zend about unused var.
     assert(is_array($a_rights));
@@ -151,15 +149,15 @@ class mediamosa_acl_app_master_slave {
    * Return the app_id(s) of EGAs that have slaves of my supplied EGA (master)
    *
    * @param array/integer $mixed_app_id
-   *  The app ID array or integer.
+   *   The app ID array or integer.
    * @param string $acl_type
-   *  The type of acl (mediamosa_acl::ACL_TYPE_*)
+   *   The type of acl (mediamosa_acl::ACL_TYPE_*).
    * @param string $object_id (optional)
-   *  The ID of object you want to know slaves on.
+   *   The ID of object you want to know slaves on.
    * @return array
-   *  returns array with info about the slaves
+   *   returns array with info about the slaves.
    */
-  function slave_get($mixed_app_id, $acl_object_type, $object_id = NULL) {
+  public static function slave_get($mixed_app_id, $acl_object_type, $object_id = NULL) {
     $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 
     if (isset($object_id)) {

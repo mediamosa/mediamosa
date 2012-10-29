@@ -38,7 +38,7 @@ class mediamosa_asset_metadata_property_db {
   const ID = 'prop_id';
   const PROPGROUP_ID = 'propgroup_id';
   const APP_ID = 'app_id';
-  const NAME = 'prop_name';// 1.x name: name.
+  const NAME = 'prop_name';
   const NAME_LENGTH = 32;
   const TYPE = 'type';
   const TYPE_DATETIME = 'DATETIME';

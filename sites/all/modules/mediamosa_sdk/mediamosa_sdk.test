@@ -1,0 +1,47 @@
+<?php
+/**
+ * @file
+ * Simpletest for MediaMosa SDK.
+ */
+
+/**
+ * SDK Functional tests.
+ */
+class MediaMosaSDKUnitTestCase extends DrupalUnitTestCase {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa - SDK - Functional tests',
+      'description' => 'Tests for functions that do not use database.',
+      'group' => 'MediaMosa SDK',
+    );
+  }
+
+  /**
+   * Tests for encoding tags;
+   */
+  public function testEncodeTag() {
+
+    $got = mediamosa_sdk::metadata_encode_tag('animals', array('instinct', 'dinos'));
+    $expecting = '0.animals/1.instinct/2.dinos/';
+
+    // First test, normal tag build up.
+    $this->assert($got === $expecting, t('Expecting @expecting, got @got', array('@expecting' => $expecting, '@got' => $got)));
+
+
+    $got = mediamosa_sdk::metadata_encode_tag(
+      array('pattern' => '{term}*', 'vars' => array('{term}' => 'ani')),
+      array(
+        array('pattern' => '*'),
+        array('pattern' => '{term}', 'vars' => array('{term}' => 'di/nos')),
+        'bar',
+      )
+    );
+
+    $expecting = '0.ani*/1.*/2.di%2Fnos/3.bar/';
+
+    // Second test, complex tag build up for CQL.
+    $this->assert($got === $expecting, t('Expecting @expecting, got @got', array('@expecting' => $expecting, '@got' => $got)));
+  }
+}

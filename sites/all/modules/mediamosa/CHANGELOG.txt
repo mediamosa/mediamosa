@@ -1,5 +1,38 @@
-MediaMosa 3.3.x-dev (build 1910), xxxx-xx-xx
---------------------------------------------
+MediaMosa 3.4.x-dev (build 1931, inuits branch)
+-----------------------------------------------
+- Improvements of Asset edit UI.
+  - labels and text fields on 1 line
+  - no empty collection dropdown on filter.
+- Added helper function to MediaMosa SDK to encode tag metadata for CQL usage.
+  Used by front-end and back-end.
+- Added new metadata set 'asset' to MediaMosa core. Used for internal metadata
+  storage on assets.
+- Added unit testing for CQL searching in new 'asset' metadata 'tag'.
+- Updated schema.xml for Solr3.6. Replace the schema if you where using the
+  previous one for Solr3.6.
+- Updated version MediaMosa SDK to 7.x-3.1.
+- Fixed minor dependency problem with SDK module 'mediamosa_development'.
+- Extended the hook output of 'mediamosa_metadata_info'. Now returns an
+  associated array;
+  - 'title'
+    Title of the set.
+  - 'description'
+    Description of the set.
+  - 'context'
+    The context name of the set, e.g. 'dc', 'qdc'. Used in CQL.
+- Fixed context set detection for new asset.tag metadata.
+- Metadata properties can no longer be created with a name starting with a
+  number.
+- Improved metadata add/edit form on asset browser.
+- Added forms for listing, creating and deletion of client application metadata
+  tags.
+- Fixed bug in REST asset/$asset_id/metadata_tag delete.
+- Added Drush command to core for adding a client application.
+- Fixed 2 notices with static's and during install.
+
+
+MediaMosa 3.3.x-dev (build 1910, master branch)
+-----------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
 - Removed mediamosa_migration module for migration of v1.7->v3.2.
@@ -47,6 +80,10 @@ MediaMosa 3.3.x-dev (build 1910), xxxx-xx-xx
 - Solr wildcard searching is now the same as MySQL, per text, not per word;
   't*t' will now match 'the match' and 'no test', instead of only 'no test'.
 - Fixed transcoding failure when option 'vpad' was used for ffmpeg.
+- Added 'count_view' parameter to turn off counting views on /asset/$asset_id
+  and /assets calls. Extended unit test for new parameter.
+- Added 'count_play' parameter to turn off counting plays on
+  /asset/$asset_id/play calls. Extended unit test for new parameter.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------

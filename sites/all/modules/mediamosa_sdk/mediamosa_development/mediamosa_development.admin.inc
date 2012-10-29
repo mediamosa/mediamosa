@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Admin related forms and functions.
@@ -61,6 +36,8 @@ class mediamosa_rest_call_dummy {
   const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
 
   const VAR_DEFAULT_VALUE = 'default_value';
+
+  const VERSION = 'version';
 }
 
 /**
@@ -97,7 +74,10 @@ function _ajax_execute_rest_call() {
   list($uri, $method) = explode('|', $uri_method);
 
   $var_setup = _mediamosa_development_get_var_setup($uri, $method);
-  $data = $uri_rebuild = $uri_vars = $errors = array();
+  $data = array();
+  $uri_rebuild = array();
+  $uri_vars = array();
+  $errors = array();
 
   // fill in the uri with the values (when needed).
   foreach (explode('/', $uri) as $uri_var) {
@@ -217,7 +197,7 @@ function _mediamosa_development_get_rest_calls() {
     foreach ($rest_calls as $uri => $rest_call) {
       foreach ($rest_call as $method => $rest_call_data) {
         $rest_call_options[$uri . '|' . $method] = $uri . ' [' . $method . ']';
-        $versions[$rest_call_data[mediamosa_rest_call::VERSION]] = t('version @version', array('@version' => $rest_call_data[mediamosa_rest_call::VERSION]));
+        $versions[$rest_call_data[mediamosa_rest_call_dummy::VERSION]] = t('version @version', array('@version' => $rest_call_data[mediamosa_rest_call_dummy::VERSION]));
       }
     }
 
@@ -237,7 +217,7 @@ function _mediamosa_development_get_rest_calls() {
   if ($response && !empty($response['items']['item'])) {
     foreach ($response['items']['item'] as $item) {
       $rest_call_options[$item['uri'] . '|' . $item['method']] = $item['uri'] . ' [' . $item['method'] . ']';
-      $versions[$item[mediamosa_rest_call::VERSION]] = t('version @version', array('@version' => $item[mediamosa_rest_call::VERSION]));
+      $versions[$item[mediamosa_rest_call_dummy::VERSION]] = t('version @version', array('@version' => $item[mediamosa_rest_call_dummy::VERSION]));
     }
   }
 
