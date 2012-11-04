@@ -21,14 +21,28 @@
       // Move anchors to top of tabs.
       $('a.anchor', $('#module-filter-left')).remove().prependTo('#module-filter-tabs');
 
-      $('input[name="module_filter[name]"]').keyup(function() {
-        if (Drupal.ModuleFilter.textFilter != $(this).val()) {
-          Drupal.ModuleFilter.textFilter = this.value;
-          if (Drupal.ModuleFilter.timeout) {
-            clearTimeout(Drupal.ModuleFilter.timeout);
-          }
-          Drupal.ModuleFilter.timeout = setTimeout('Drupal.ModuleFilter.filter("' + Drupal.ModuleFilter.textFilter + '")', 500);
+      $('input[name="module_filter[name]"]').keyup(function(e) {
+        switch (e.which) {
+          case 13:
+            if (Drupal.ModuleFilter.timeout) {
+              clearTimeout(Drupal.ModuleFilter.timeout);
+            }
+
+            Drupal.ModuleFilter.filter(Drupal.ModuleFilter.textFilter);
+            break;
+          default:
+            if (Drupal.ModuleFilter.textFilter != $(this).val()) {
+              Drupal.ModuleFilter.textFilter = this.value;
+              if (Drupal.ModuleFilter.timeout) {
+                clearTimeout(Drupal.ModuleFilter.timeout);
+              }
+              Drupal.ModuleFilter.timeout = setTimeout('Drupal.ModuleFilter.filter("' + Drupal.ModuleFilter.textFilter + '")', 500);
+            }
+            break;
         }
+      });
+      $('input[name="module_filter[name]"]').keypress(function(e) {
+        if (e.which == 13) e.preventDefault();
       });
 
       Drupal.ModuleFilter.showEnabled = $('#edit-module-filter-show-enabled').is(':checked');
@@ -78,23 +92,25 @@
   }
 
   Drupal.ModuleFilter.visible = function(checkbox) {
-    if (Drupal.ModuleFilter.showEnabled) {
-      if ($(checkbox).is(':checked') && !$(checkbox).is(':disabled')) {
-        return true;
+    if (checkbox.length > 0) {
+      if (Drupal.ModuleFilter.showEnabled) {
+        if ($(checkbox).is(':checked') && !$(checkbox).is(':disabled')) {
+          return true;
+        }
       }
-    }
-    if (Drupal.ModuleFilter.showDisabled) {
-      if (!$(checkbox).is(':checked') && !$(checkbox).is(':disabled')) {
-        return true;
+      if (Drupal.ModuleFilter.showDisabled) {
+        if (!$(checkbox).is(':checked') && !$(checkbox).is(':disabled')) {
+          return true;
+        }
       }
-    }
-    if (Drupal.ModuleFilter.showRequired) {
-      if ($(checkbox).is(':checked') && $(checkbox).is(':disabled')) {
-        return true;
+      if (Drupal.ModuleFilter.showRequired) {
+        if ($(checkbox).is(':checked') && $(checkbox).is(':disabled')) {
+          return true;
+        }
       }
     }
     if (Drupal.ModuleFilter.showUnavailable) {
-      if (!$(checkbox).is(':checked') && $(checkbox).is(':disabled')) {
+      if (checkbox.length == 0 || (!$(checkbox).is(':checked') && $(checkbox).is(':disabled'))) {
         return true;
       }
     }
