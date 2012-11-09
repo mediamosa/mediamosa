@@ -496,8 +496,8 @@ asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=J2MKUJUcleMUfUcsZVDpdxi8',
   );
 
   $rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'This call is depricated, see acl/app.',
-    mediamosa_rest_call::DESCRIPTION => 'This call is depricated, see acl/app.',
+    mediamosa_rest_call::TITLE => 'This call is deprecated, see acl/app.',
+    mediamosa_rest_call::DESCRIPTION => 'This call is deprecated, see acl/app.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/acl/get_foreign_apps?app_id=1&is_oai=TRUE',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>

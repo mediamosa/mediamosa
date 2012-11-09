@@ -3229,14 +3229,14 @@ function mediamosa_update_7128() {
     ->condition('server_path', '{base_uri}still/{TICKET}')
     ->execute();
 
-  return 'The /media REST call has been enabled and has replaced the now depricated /still REST call.';
+  return 'The /media REST call has been enabled and has replaced the now deprecated /still REST call.';
 }
 
 /**
  * Update the errorcode table.
  */
 function mediamosa_update_7129() {
-  // Remove depricated version.
+  // Remove deprecated version.
   db_delete('mediamosa_error')
     ->condition('name', 'ERRORCODE_INVALID_STILL_TICKET')
     ->execute();
