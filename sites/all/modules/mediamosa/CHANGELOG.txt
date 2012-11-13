@@ -1,4 +1,4 @@
-MediaMosa 3.2.2 (build 1884)
+MediaMosa 3.2.2 (build 1886)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
@@ -27,6 +27,7 @@ MediaMosa 3.2.2 (build 1884)
 - Fixed 3 more notices for php 5.4.
 - Added a post_transcode hook for tools.
 - Issue #56 (github) by Bigon: Mediamosa shouldn't hardcode path other modules.
+- Fixed: webm files requires extension .webm on play links.
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
