@@ -10,19 +10,6 @@
 -- above copyright notice is included.
 --
 
--- needs a patch on ffmpeg/ffmpeg.c:
--- --- ffmpeg.c    (revision 11006)
--- +++ ffmpeg.c    (working copy)
--- @@ -999,7 +999,7 @@
---                    nb_frames_dup, nb_frames_drop);
---
---          if (verbose >= 0)
--- -            fprintf(stderr, "%s    \r", buf);
--- +            fprintf(stderr, "%s    \n", buf);
---
---          fflush(stderr);
---      }
-
 require 'lpeg'
 
 local space = lpeg.S(" \t\n\r")^0
