@@ -13,6 +13,7 @@
 -- see http://www.inf.puc-rio.br/~roberto/lpeg.html
 -- and http://en.wikipedia.org/wiki/Parsing_expression_grammar
 -- and http://pdos.csail.mit.edu/%7Ebaford/packrat/popl04/peg-popl04.pdf
+require 'lpeg'
 
-print("lua works")
+print("lpeg works")
 os.exit(0)
