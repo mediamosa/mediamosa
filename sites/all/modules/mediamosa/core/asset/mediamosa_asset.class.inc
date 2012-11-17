@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The helper functions of asset module.
@@ -370,6 +345,9 @@ class mediamosa_asset {
    * Update the normalized field in asset for is_empty_asset flag.
    *
    * @param string $asset_id
+   *   The asset ID to update empty state.
+   * @param boolean $do_reindex
+   *   Trigger re-index on external databases.
    */
   public static function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
@@ -377,7 +355,7 @@ class mediamosa_asset {
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
        WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id = :asset_id AND
-             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR (mm.#prop_id = :prop_id AND mm.#val_int > 0))",
+             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR (mm.#prop_id = :prop_id AND mm.#val_int > 0))",
       0, // From.
       1, // Count.
       array(
@@ -392,8 +370,6 @@ class mediamosa_asset {
         ':asset_id' => $asset_id,
         '#uri' => mediamosa_asset_mediafile_db::URI,
         '#filename' => mediamosa_asset_mediafile_db::FILENAME,
-        '#is_downloadable' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
-        ':is_downloadable_true' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE,
         '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
         ':prop_id' => $prop_id,
         '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
