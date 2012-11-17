@@ -1,0 +1,20 @@
+--- a/includes/bootstrap.inc
++++ b/includes/bootstrap.inc
+@@ -2436,6 +2441,17 @@ function drupal_valid_test_ua() {
+
+   if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+     list(, $prefix, $time, $salt, $hmac) = $matches;
++
++    // Hotfix problem when using load balancers; As filectime() and fileinode()
++    // will not work for our MediaMosa simpletests running on load balancers or
++    // different REST servers, then filectime(__FILE__) . fileinode(__FILE__)
++    // will never return the same for each server. Also same problem when
++    // mixing linux and windows servers. Also time() might be different on
++    // servers as these servers might not be synced to the same clock.
++    // FIXME: we do need to add $drupal_hash_salt.
++    $test_prefix = $prefix;
++    return $test_prefix;
++
+     $check_string =  $prefix . ';' . $time . ';' . $salt;
+     // We use the salt from settings.php to make the HMAC key, since
+     // the database is not yet initialized and we can't access any Drupal variables.
