@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Install, update, and uninstall functions for the mediamosa module.
+ * Install, update, and uninstall functions for the MediaMosa module.
  */
 
 /**
@@ -3520,4 +3520,31 @@ function mediamosa_update_7140() {
   variable_del(__FUNCTION__);
 
   return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}
+
+/**
+ * Replace the .htaccess file under the mountpoint/media. This includes a fix
+ * for FireFox that requires mimetype in HTTP header for playback of webm, mp4
+ * and ogg files.
+ */
+function mediamosa_update_7141() {
+  // Get the path to the media directory.
+  $path = mediamosa_configuration_storage::media_get_path();
+  $found = mediamosa_io::file_exists($path . '.htaccess');
+
+  // When found, remove it first.
+  if ($found) {
+    if (!drupal_chmod($path . '.htaccess', 0664) || !is_writable($path)) {
+      return strtr("Unable to replace / write .htaccess on location '@path'. Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.", array('@path' => drupal_realpath($path)  . '.htaccess', '@url' => url('/', array('absolute' => TRUE))));
+    }
+  }
+
+  // Remove current.
+  drupal_unlink($path . '.htaccess');
+
+  // Create the htaccess file.
+  $found = mediamosa_configuration_storage::file_create_htaccess($path, mediamosa_configuration_storage::media_get_htaccess_contents());
+
+  // Return the status of this update.
+  return strtr(($found ? "Successfully replaced the .htaccess file under '@mount_pointmedia/.htaccess'." : 'Warning: Was unable to create /media under mount point (@mount_point). Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.'), array('@url' => url('/', array('absolute' => TRUE)), '@mount_point' => mediamosa_configuration_storage::mount_point_get()));
 }
