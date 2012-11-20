@@ -1,67 +1,25 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * @file
  * MediaMosa installation profile.
  */
 
-/**
- * @defgroup constants Module Constants
- * @{
- */
+// Include our helper class as autoloader is not up yet.
+require_once('mediamosa_profile.class.inc');
 
 /**
- * Test text for Lua Lpeg
- */
-define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
-
-/**
- * Retrieve the version.
- */
-function _mediamosa_profile_get_version() {
-  $inc = include_once (DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa') . '/mediamosa.version.class.inc');
-
-  // Try to include the settings file.
-  return $inc ? mediamosa_version::get_current_version_str(TRUE) : '';
-}
-
-/**
- * Set up title.
- */
-function _mediamosa_profile_get_title() {
-  return 'Installing MediaMosa ' . _mediamosa_profile_get_version();
-}
-
-/**
- * Implementation of hook_install_tasks().
+ * Implements hook_install_tasks().
  */
 function mediamosa_profile_install_tasks() {
 
-  drupal_set_title(_mediamosa_profile_get_title());
+  // Add our css.
+  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
 
-  $tasks = array(
+  // Set our title.
+  drupal_set_title(mediamosa_profile::get_title());
+
+  // Setup the tasks.
+  return array(
     'mediamosa_profile_metadata_support_form' => array(
       'display_name' => st('Metadata support'),
       'type' => 'form',
@@ -70,9 +28,6 @@ function mediamosa_profile_install_tasks() {
       'display_name' => st('Storage location'),
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
-    ),
-    'mediamosa_profile_configure_server' => array(
-      'display_name' => st('Configure the server'),
     ),
     'mediamosa_profile_apache_settings_form' => array(
       'display_name' => st('Apache settings'),
@@ -88,30 +43,28 @@ function mediamosa_profile_install_tasks() {
       'type' => 'form',
     ),
   );
-  return $tasks;
 }
 
 /**
- * Implementation of hook_install_tasks_alter().
+ * Implements hook_install_tasks_alter().
  */
 function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
 
-  // We need to rebuild tasks in the same order and put our
-  // 'mediamosa_profile_php_settings_form' between it.
-  $copy_tasks_till = 'install_bootstrap_full';
-
-  $tasks_rebuild = array();
-
+  // Our requirements step.
   $mediamosa_profile_php_settings_form = array(
     'display_name' => st('MediaMosa requirements'),
     'type' => 'form',
   );
 
+  // We need to rebuild tasks in the same order and put our
+  // 'mediamosa_profile_php_settings_form' between it.
+  $tasks_rebuild = array();
   foreach ($tasks as $name => $task) {
-    $tasks_rebuild[$name] = $task; // Copy task.
+    // Copy task.
+    $tasks_rebuild[$name] = $task;
 
-    // if we reach certain point, then insert our task.
-    if ($name == $copy_tasks_till) {
+    // If we reach certain point, then insert our task.
+    if ($name == 'install_bootstrap_full') {
       $tasks_rebuild['mediamosa_profile_php_settings_form'] = $mediamosa_profile_php_settings_form;
     }
   }
@@ -154,13 +107,14 @@ function mediamosa_profile_metadata_support_form() {
   return $form;
 }
 
-function mediamosa_profile_metadata_support_form_validate($form, &$form_state) {
+/**
+ * Process the submit of the metadata selection form.
+ */
+function mediamosa_profile_metadata_support_form_submit(&$form, &$form_state) {
+  // Get the values from the submit.
   $values = $form_state['values'];
-}
 
-function mediamosa_profile_metadata_support_form_submit($form, &$form_state) {
-  $values = $form_state['values'];
-
+  // List of our metadata modules.
   $to_enable = array(
     'dublin_core' => 'mediamosa_metadata_dc',
     'qualified_dublin_core' => 'mediamosa_metadata_qdc',
@@ -168,7 +122,7 @@ function mediamosa_profile_metadata_support_form_submit($form, &$form_state) {
     'czp' => 'mediamosa_metadata_czp',
   );
 
-  // Enable the metadata module that where selected.
+  // Enable the metadata modules that where selected.
   foreach ($to_enable as $type => $module) {
     if (!empty($values['metadata_support'][$type]) && $values['metadata_support'][$type] == $type) {
       module_enable(array($module));
@@ -176,6 +130,9 @@ function mediamosa_profile_metadata_support_form_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
 function system_form_install_settings_form_alter(&$form, $form_state, $form_id) {
   // Set default for site name field.
   $form['intro'] = array(
@@ -183,13 +140,12 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t("Set up Database"),
-    '#description' => t("
-    <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.
-    MediaMosa is currently <b>untested</b> with !postgresql.
-   </p>
+    '#title' => st('Setting up database'),
+    '#description' => st("
+   <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.</p>
+   <p>This version of MediaMosa will also work with !postgresql.</p>
    <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'mediamosa' before proceeding.</p>
-    <code>
+    <pre>
         # The password entries below needs to be changed.<br />
         <br />
         # Create the database.<br />
@@ -202,60 +158,65 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
         GRANT USAGE ON mediamosa.* TO 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
         <br />
         GRANT ALL ON mediamosa.* TO 'mediamosa'@'localhost';<br />
-    </code>
+    </pre>
     <p>
         You may change the 'mediamosa' database prefix and the database user name.<br />
         <br />
         If you want to migrate your current MediaMosa v1.7 database to the new 3.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
    ", array(
-    '!mysql' => l('MySQL', 'http://mysql.com/'),
-    '!mariadb' => l('MariaDB', 'http://mariadb.org/'),
-    '!postgresql' => l('PostgreSQL', 'http://www.postgresql.org/')
+    '!mysql' => l('MySQL', 'mysql.com', array('absolute' => TRUE)),
+    '!mariadb' => l('MariaDB', 'mariadb.org/', array('absolute' => TRUE)),
+    '!postgresql' => l('PostgreSQL', 'www.postgresql.org', array('absolute' => TRUE))
    ))
   );
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
-function system_form_install_configure_form_alter(&$form, $form_state, $form_id) {
+function system_form_install_configure_form_alter(&$form, &$form_state, $form_id) {
   $form['site_information']['site_name']['#default_value'] = 'MediaMosa';
   $form['site_information']['site_mail']['#default_value'] = 'webmaster@' . $_SERVER['SERVER_NAME'];
   $form['admin_account']['account']['name']['#default_value'] = 'admin';
   $form['admin_account']['account']['mail']['#default_value'] = 'admin@' . $_SERVER['SERVER_NAME'];
 }
 
+/**
+ * Show a checklist of the installation.
+ */
 function mediamosa_profile_php_settings_form($form, &$form_state, &$install_state) {
 
-  $php_modules = _mediamosa_profile_php_modules();
-  $installed_programs = _mediamosa_profile_installed_programs();
-  $php_settings = _mediamosa_profile_php_settings();
-  $errors = $php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors'];
-
+  // Requirements for PHP modules.
+  $php_modules = mediamosa_profile::requirements_php_modules();
   $form['requirements']['php_modules']['title'] = array(
-    '#markup' => '<h1>' . t('PHP Modules') . '</h1>'
+    '#markup' => '<h1>' . st('PHP Modules') . '</h1>'
   );
   $form['requirements']['php_modules']['requirements'] = array(
     '#markup' => theme('status_report', array('requirements' => $php_modules['requirements']))
   );
 
+  // Required installed 3rd party programs.
+  $installed_programs = mediamosa_profile::requirements_installed_programs();
   $form['requirements']['installed_programs']['title'] = array(
-    '#markup' => '<h1>' . t('Installed programs') . '</h1>'
+    '#markup' => '<h1>' . st('Installed programs') . '</h1>'
   );
   $form['requirements']['installed_programs']['requirements'] = array(
     '#markup' => theme('status_report', array('requirements' => $installed_programs['requirements']))
   );
 
+  // Required PHP settings.
+  $php_settings = mediamosa_profile::requirements_php_settings();
   $form['requirements']['php_settings']['title'] = array(
-    '#markup' => '<h1>' . t('PHP variables / Settings') . '</h1>'
+    '#markup' => '<h1>' . st('PHP variables / Settings') . '</h1>'
   );
   $form['requirements']['php_settings']['requirements'] = array(
     '#markup' => theme('status_report', array('requirements' => $php_settings['requirements']))
   );
 
-  if ($errors) {
+  // Check for errors.
+  if ($php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors']) {
     $form['requirements']['errors']['text'] = array(
-      '#markup' => "<p><b>Fix reported problems and press 'continue' to continue.</b></p>"
+      '#markup' => '<p><b>' . st("Solve the reported problems and press 'continue' to continue.") . '</b></p>',
     );
   }
 
@@ -266,166 +227,21 @@ function mediamosa_profile_php_settings_form($form, &$form_state, &$install_stat
   );
 
   return $form;
-
 }
 
 /**
  * Validate.
  */
 function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
-  $php_modules = _mediamosa_profile_php_modules();
-  $installed_programs = _mediamosa_profile_installed_programs();
-  $php_settings = _mediamosa_profile_php_settings();
+  // Get the requirements.
+  $php_modules = mediamosa_profile::requirements_php_modules();
+  $installed_programs = mediamosa_profile::requirements_installed_programs();
+  $php_settings = mediamosa_profile::requirements_php_settings();
 
-  $errors = $php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors'];
-
-  if ($errors) {
-    form_set_error('foo', st('Fix the reported problems below before you continue. You can ignore the (yellow) warnings.'));
+  // Check for errors.
+  if ($php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors']) {
+    form_set_error('foo', st('Solve the reported problems below before you continue. You can ignore the (yellow) warnings.'));
   }
-}
-
-/**
- * Submit the intro form.
- */
-function mediamosa_profile_php_settings_form_submit($form, &$form_state) {
-}
-
-/**
- * Checking the php modules.
- */
-function _mediamosa_profile_php_modules() {
-
-  $errors = 0;
-  $requirements = array();
-  // title, value, description (op), severity (op)
-
-  // Required modules.
-  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
-
-  $loaded_extensions = get_loaded_extensions();
-  foreach ($required_extensions as $extension) {
-    $missing = !in_array($extension, $loaded_extensions);
-
-    $requirements[$extension] = array(
-      'title' => st('<b>PHP module ' . $extension . ':</b>'),
-      'value' => !$missing ? 'Installed' : 'PHP module ' . $extension . ' is not installed.' ,
-      'severity' => !$missing ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    );
-  }
-  $exec_output = array();
-
-  $errors = 0;
-  foreach ($requirements as $requirement) {
-    if ($requirement['severity'] == REQUIREMENT_ERROR || $requirement['severity'] == REQUIREMENT_WARNING) {
-      $errors++;
-    }
-  }
-
-  return array('errors' => $errors, 'requirements' => $requirements);
-}
-
-function _command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
-  $exec_output = array();
-  $ret_val = 0;
-  exec($command . ' 2>/dev/null', $exec_output, $ret_val);
-
-  // If ret_val is ok, then check if $exec_output is empty.
-  if (in_array($ret_val, $allowed_ret_values)) {
-    if (empty($exec_output)) {
-      // Maybe stderr gave something back.
-      exec($command . ' 2>&1', $exec_output);
-    }
-
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/**
- * Checking the installed programs.
- */
-function _mediamosa_profile_installed_programs() {
-
-  // FFmpeg.
-  $exec_output = array();
-  $ffmpeg_installed = _command_installed('ffmpeg -version', $exec_output);
-
-  $requirements['ffmpeg'] = array(
-    'title' => st('<b>Program FFmpeg:</b>'),
-    'value' => $ffmpeg_installed ? 'Installed' : 'FFmpeg is not installed or inaccessable for PHP.' ,
-    'severity' => $ffmpeg_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => $ffmpeg_installed ? 'Found ' . reset($exec_output) : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
-  );
-
-  // Lua.
-  $exec_output = array();
-  $lua_installed = _command_installed('lua -v', $exec_output);
-
-  $requirements['lua'] = array(
-    'title' => st('<b>Program LUA 5.1:</b>'),
-    'value' => $lua_installed ? 'Installed' : 'LUA is not installed.' ,
-    'severity' => $lua_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => $lua_installed ? 'Found ' . reset($exec_output) : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
-  );
-
-  // Lpeg.
-  $exec_output = array();
-  $ret_val = 0;
-  exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
-
-  $requirements['lpeg'] = array(
-    'title' => st('<b>LUA extension Lpeg:</b>'),
-    'value' => !$ret_val ? 'Installed' : 'Lpeg extension is not installed.' ,
-    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-    'description' => !$ret_val ? '' : st('Install Lpeg extension for LUA. You can find more information how to install Lpeg !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
-  );
-
-  $errors = 0;
-  foreach ($requirements as $requirement) {
-    if ($requirement['severity'] == REQUIREMENT_ERROR || $requirement['severity'] == REQUIREMENT_WARNING) {
-      $errors++;
-    }
-  }
-
-  return array('errors' => $errors, 'requirements' => $requirements);
-}
-
-/**
- * Checking the PHP Settings.
- *
- * Only possible warnings for now.
- */
-function _mediamosa_profile_php_settings() {
-
-  $php_upload_max_filesize = ini_get('upload_max_filesize');
-  $too_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
-  $requirements['upload_max_filesize'] = array(
-    'title' => st('<b>upload_max_filesize:</b>'),
-    'value' => $php_upload_max_filesize,
-    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$too_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
-  );
-
-  $php_memory_limit = ini_get('memory_limit');
-  $too_low = (substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G');
-  $requirements['memory_limit'] = array(
-    'title' => st('<b>memory_limit:</b>'),
-    'value' => $php_memory_limit,
-    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$too_low ? '' : st('Warning: memory_limit should be at least 128M.'),
-  );
-
-  $php_post_max_size = ini_get('post_max_size');
-  $too_low = (substr($php_post_max_size, 0, -1) < 100) && (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G');
-  $requirements['php_post_max'] = array(
-    'title' => st('<b>post_max_size:</b>'),
-    'value' => $php_post_max_size,
-    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$too_low ? '' : st('Warning: post_max_size should be at least 100M.'),
-  );
-
-  return array('errors' => 0, 'requirements' => $requirements);
 }
 
 /**
@@ -435,17 +251,17 @@ function _mediamosa_profile_php_settings() {
 function mediamosa_profile_storage_location_form() {
   $form = array();
 
+  // Default mount pount.
   $mount_point = variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
-  $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '\\\\');
 
   $form['description'] = array(
-    '#markup' => '<p><b>' . st('The mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this mount point needs to be available for all servers (i.e. through NFS)') . '</b></p>',
+    '#markup' => '<p><b>' . st('The MediaMosa mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this mount point needs to be available for all servers (i.e. through NFS)') . '</b></p>',
   );
 
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa SAN/NAS Mount point'),
-    '#description' => t('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
+    '#description' => st('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
   );
@@ -473,121 +289,49 @@ function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
 }
 
 function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
+  // Get the form values.
   $values = $form_state['values'];
 
+  // Set our variables.
   variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
+
+  // Profile does not does not handle Windows installations.
   variable_set('mediamosa_current_mount_point_windows', '\\');
 
   // Inside the storage location, create a MediaMosa storage structure.
-  // data.
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/data');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills');
+  mediamosa_profile::mountpoint_mkdir('data');
+  mediamosa_profile::mountpoint_mkdir('data/stills');
 
   // We store each file in separate directories based on the first letter of the
   // file. We need to create these directories.
   $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ';
   for ($x = 0; $x < strlen($prefixes); $x++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . $prefixes{$x});
-    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . $prefixes{$x});
+    mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
+    mediamosa_profile::mountpoint_mkdir('data/stills/' . $prefixes{$x});
   }
 
   // Other.
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/transcode');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/links');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/download_links');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/ftp');
+  mediamosa_profile::mountpoint_mkdir('data/transcode');
+  mediamosa_profile::mountpoint_mkdir('links');
+  mediamosa_profile::mountpoint_mkdir('download_links');
+  mediamosa_profile::mountpoint_mkdir('ftp');
 
   // /media is replacing /still_links.
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/media');
-  _mediamosa_profile_mkdir($values['current_mount_point'], '/media/ticket');
+  mediamosa_profile::mountpoint_mkdir('media');
+  mediamosa_profile::mountpoint_mkdir('media/ticket');
 
+  // Create the htaccess file to protected the media directory.
   mediamosa_configuration_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_configuration_storage::media_get_htaccess_contents());
 }
 
 /**
- * Configure the server.
- * Tasks callback.
- */
-function mediamosa_profile_configure_server($install_state) {
-  $output = '';
-  $error = FALSE;
-
-  $server_name = _mediamosa_profile_server_name();
-
-
-  // Configure the servers.
-
-  // MediaMosa server table.
-  db_query("
-    UPDATE {mediamosa_server}
-    SET server_uri = REPLACE(server_uri, 'mediamosa.local', :server)
-    WHERE LOCATE('mediamosa.local', server_uri) > 0", array(
-    ':server' => $server_name,
-  ));
-  db_query("
-    UPDATE {mediamosa_server}
-    SET uri_upload_progress = REPLACE(uri_upload_progress, 'mediamosa.local', :server)
-    WHERE LOCATE('mediamosa.local', uri_upload_progress) > 0", array(
-    ':server' => $server_name,
-  ));
-  db_query("
-    UPDATE {mediamosa_server}
-    SET uri_upload_progress_server = REPLACE(uri_upload_progress_server, 'mediamosa.local', :server)
-    WHERE LOCATE('mediamosa.local', uri_upload_progress_server) > 0", array(
-    ':server' => $server_name,
-  ));
-
-  // MediaMosa node revision table.
-  $result = db_query("SELECT nid, vid, revision_data FROM {mediamosa_node_revision}");
-  foreach ($result as $record) {
-    $revision_data = unserialize($record->revision_data);
-    if (isset($revision_data['server_uri'])) {
-      $revision_data['server_uri'] = str_replace('mediamosa.local', $server_name, $revision_data['server_uri']);
-    }
-    if (isset($revision_data['uri_upload_progress'])) {
-      $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress']);
-    }
-    if (isset($revision_data['uri_upload_progress_server'])) {
-      $revision_data['uri_upload_progress_server'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress_server']);
-    }
-    db_query("
-      UPDATE {mediamosa_node_revision}
-      SET revision_data = :revision_data
-      WHERE nid = :nid AND vid = :vid", array(
-      ':revision_data' => serialize($revision_data),
-      ':nid' => $record->nid,
-      ':vid' => $record->vid,
-    ));
-  }
-
-  // Configure.
-  // URL REST.
-  variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
-
-  // Configure mediamosa connector.
-  variable_set('mediamosa_connector_url', 'http://' . $server_name);
-  $result = db_query("SELECT app_name, shared_key FROM {mediamosa_app} LIMIT 1");
-  foreach ($result as $record) {
-    variable_set('mediamosa_connector_username', $record->app_name);
-    variable_set('mediamosa_connector_password', $record->shared_key);
-  }
-
-
-  return $error ? $output : NULL;
-}
-
-/**
  * Information about cron, apache and migration.
- * Task callback.
  */
 function mediamosa_profile_cron_settings_form() {
   $form = array();
 
-  // Add our css.
-  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
-
   // Get the server name.
-  $server_name = _mediamosa_profile_server_name();
+  $server_name = mediamosa_profile::get_server_name();
   if (variable_get('mediamosa_apache_setting') == 'simple') {
     $server_name = 'localhost';
   }
@@ -597,12 +341,12 @@ function mediamosa_profile_cron_settings_form() {
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Cron setup'),
+    '#title' => st('Cron setup'),
     '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The setup for cron is required for MediaMosa to run properly.'),
   );
 
   $form['cron']['crontab_text'] = array(
-    '#markup' => t('<h5>Add a crontab entry</h5>Modify your cron using crontab, this will run the script every minute:<p><code>crontab -e</code></p><p>Add this line at the bottom:</p>'),
+    '#markup' => st('<h5>Add a crontab entry</h5>Modify your cron using crontab, this will run the script every minute:<p><code>crontab -e</code></p><p>Add this line at the bottom:</p>'),
   );
 
   $form['cron']['crontab'] = array(
@@ -628,13 +372,9 @@ function mediamosa_profile_cron_settings_form() {
 function mediamosa_profile_apache_settings_form() {
   $form = array();
 
-  // Add our css.
-  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
-
   // Get the server name.
-  $server_name = _mediamosa_profile_server_name();
+  $server_name = mediamosa_profile::get_server_name();
   $mount_point = variable_get('mediamosa_current_mount_point', '');
-  $document_root = _mediamosa_profile_document_root();
 
   $apache_settings_local = st("This setup is for installation of MediaMosa on 1 server and 1 domain.
   Can be used for simple testing setups, but also for a small server deploy. MediaMosa can be installed on a subdirectory
@@ -668,7 +408,7 @@ function mediamosa_profile_apache_settings_form() {
 ', array(
       '!mount_point' => $mount_point,
       '!server_name_clean' => $server_name,
-      '!document_root' => $document_root,
+      '!document_root' => DRUPAL_ROOT,
       '!rel_directory' => url(),
     ));
 
@@ -824,7 +564,7 @@ function mediamosa_profile_apache_settings_form() {
 <p><li>Restart Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>',
     array(
       '!server_name_clean' => $server_name_clean,
-      '!document_root' => $document_root,
+      '!document_root' => DRUPAL_ROOT,
       '!mount_point' => $mount_point,
     )
   );
@@ -881,42 +621,44 @@ function mediamosa_profile_apache_settings_form() {
 
 function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
   if (!in_array($form_state['values']['localhost'], array('simple', 'advanced'))) {
-    form_set_error('', t('You must choose an setup.'));
+    form_set_error('', t('You must choose a setup.'));
   }
 }
 
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
-  $server_name = _mediamosa_profile_server_name();
+  // Get current url.
+  $server_name = mediamosa_profile::get_server_name();
+
+  // Save the chosen install state.
   variable_set('mediamosa_apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
+  // Simple type of server? Then change default setup of advanced.
   if (variable_get('mediamosa_apache_setting') == 'simple') {
+    // Simple URL for job and app.
     variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name . '/');
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name . '/');
+
+    // Get all mediamosa_server nodes nids, and update server_uri.
+    $results = db_select('mediamosa_server', 'ms')
+      ->fields('ms', array(mediamosa_server_db::NID))
+      ->execute();
+
+    // Walk through the server nodes and save the simple url.
+    foreach ($results as $result) {
+      $node = node_load($result->{mediamosa_server_db::NID});
+      $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
+      node_save($node);
+    }
   }
   else {
+    // Advanced URLs.
     variable_set('mediamosa_jobscheduler_uri', 'http://job1.' . $server_name . '/');
     variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . '/');
-  }
-
-  // Get all mediamosa_server nodes nids, and update server_uri.
-  $results = db_select('mediamosa_server', 'ms')
-    ->fields('ms')
-    ->execute();
-
-  foreach ($results as $result) {
-    $node = node_load($result->nid);
-    if (variable_get('mediamosa_apache_setting') == 'simple') {
-      $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
-    }
-    node_save($node);
   }
 }
 
 function mediamosa_profile_domain_usage_form() {
   $form = array();
-
-  // Add our css.
-  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
 
   $form['domain'] = array(
     '#type' => 'fieldset',
@@ -926,14 +668,15 @@ function mediamosa_profile_domain_usage_form() {
   );
 
   $form['domain']['apache_options'] = array(
-    '#markup' => st("MediaMosa is setup by default using the 'mediamosa.local' DNS name. All REST interfaces, download and upload URLs use subdomains in our example setup. We use these subdomains as example; <ul>
-    <li>http://mediamosa.local/ or http://admin.mediamosa.local/ as administration front-end.</li>
-    <li>http://app1.mediamosa.local/ is an application REST interface.</li>
-    <li>http://app2.mediamosa.local/ is an application REST interface.</li>
-    <li>http://job1.mediamosa.local/ is an job REST interface used for transcoding and other job handeling tasks.</li>
-    <li>http://job2.mediamosa.local/ is an job REST interface used for transcoding and other job handeling tasks.</li>
-    <li>http://download.mediamosa.local/ is used for downloading files from MediaMosa.</li>
-    <li>http://upload.mediamosa.local/ is used for uploading files to MediaMosa.</li>
+    '#markup' => st(
+    "Your MediaMosa setup is using the '!host' DNS name. All REST interfaces, download and upload URLs use these subdomains in your current setup. We use these subdomains as example; <ul>
+    <li>http://!host/ or http://admin.!host/ as administration front-end.</li>
+    <li>http://app1.!host/ is an application REST interface.</li>
+    <li>http://app2.!host/ is an application REST interface.</li>
+    <li>http://job1.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>http://job2.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>http://download.!host/ is used for downloading files from MediaMosa.</li>
+    <li>http://upload.!host/ is used for uploading files to MediaMosa.</li>
     </ul>
     In the directory /sites in your MediaMosa installation, each of these DNS names do also exists as an directory, in each an example default.settings.php.<br />
     <br />
@@ -941,8 +684,11 @@ function mediamosa_profile_domain_usage_form() {
     <br />
     Using multiple subdomains allows you to scale your MediaMosa installation to use more APP or more JOB servers.<br />
     <br />
-    For more information how to setup our multiple subdomains read the !link on the Drupal website.
-    ", array('!link' => l('Advanced and multisite installation', 'http://drupal.org/node/346385', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
+    For more information how to setup our multiple subdomains read the !link on the Drupal website.",
+    array(
+      '!host' => mediamosa_profile::get_host(),
+      '!link' => l('Advanced and multisite installation', 'http://drupal.org/node/346385', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)),
+    )),
   );
 
   $form['continue'] = array(
@@ -951,49 +697,4 @@ function mediamosa_profile_domain_usage_form() {
   );
 
   return $form;
-}
-
-
-/**
- * Check if the directory is exist, else create it.
- *
- * @param $path
- *   Directory to create.
- */
-function _mediamosa_profile_mkdir($mountpoint, $path) {
-  if (!file_exists($mountpoint . $path)) {
-    drupal_mkdir($mountpoint . $path, NULL, TRUE);
-  }
-
-  // To separate simpletest from our installation, simpletest has its own
-  // mount pount.
-  if (!file_exists($mountpoint . '/media/simpletest' . $path)) {
-    drupal_mkdir($mountpoint . '/media/simpletest' . $path, NULL, TRUE);
-  }
-}
-
-/**
- * Give back the server name.
- */
-function _mediamosa_profile_server_name() {
-  $server_name = url('', array('absolute' => TRUE));
-  $server_name = rtrim($server_name, '/');
-  $server_name = drupal_substr($server_name, drupal_strlen('http://'));
-  $server_name = check_plain($server_name);
-  return $server_name;
-}
-
-/**
- * Give back the document root for install.php.
- */
-function _mediamosa_profile_document_root() {
-  // Document root.
-  $script_filename = getenv('PATH_TRANSLATED');
-  if (empty($script_filename)) {
-    $script_filename = getenv('SCRIPT_FILENAME');
-  }
-  $script_filename = str_replace('', '/', $script_filename);
-  $script_filename = str_replace('//', '/', $script_filename);
-  $document_root = dirname($script_filename);
-  return $document_root;
 }

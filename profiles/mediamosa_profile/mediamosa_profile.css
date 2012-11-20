@@ -1,5 +1,17 @@
-/* $Id: $ */
-
 .mm-profile-textarea {
 	  font-family: fixed, monospace;
+}
+
+#sidebar-first {
+  background-image: url("mediamosa-logo.png");
+  background-repeat: no-repeat;
+  padding-top: 160px;
+}
+
+#logo {
+  display: none;
+}
+
+.status-value {
+  width: 80px;
 }

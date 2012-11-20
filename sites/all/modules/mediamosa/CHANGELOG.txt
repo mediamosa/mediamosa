@@ -1,4 +1,45 @@
-MediaMosa 3.4.x-dev (build 1938, master branch)
+MediaMosa 3.4.x-dev (build 1950, master branch)
+-----------------------------------------------
+- Improvements of Asset edit UI.
+  - labels and text fields on 1 line
+  - no empty collection dropdown on filter.
+- Added helper function to MediaMosa SDK to encode tag metadata for CQL usage.
+  Used by front-end and back-end.
+- Added new metadata set 'asset' to MediaMosa core. Used for internal metadata
+  storage on assets.
+- Added unit testing for CQL searching in new 'asset' metadata 'tag'.
+- Updated schema.xml for Solr3.6. Replace the schema if you where using the
+  previous one for Solr3.6.
+- Updated version MediaMosa SDK to 7.x-3.1.
+- Fixed minor dependency problem with SDK module 'mediamosa_development'.
+- Extended the hook output of 'mediamosa_metadata_info'. Now returns an
+  associated array;
+  - 'title'
+    Title of the set.
+  - 'description'
+    Description of the set.
+  - 'context'
+    The context name of the set, e.g. 'dc', 'qdc'. Used in CQL.
+- Fixed context set detection for new asset.tag metadata.
+- Metadata properties can no longer be created with a name starting with a
+  number.
+- Improved metadata add/edit form on asset browser.
+- Added forms for listing, creating and deletion of client application metadata
+  tags.
+- Fixed bug in REST asset/$asset_id/metadata_tag delete.
+- Added Drush command to core for adding a client application.
+- Fixed 2 notices with static's and during install.
+- Fixed: the empty asset flag is now correctly set to TRUE regardless of the
+  value of the downloadable setting on the asset mediafile(s). Corresponding
+  unit test has also been extended and fixed.
+- Upgraded Drupal 7.15 to Drupal 7.17.
+- Cleanup and re-write of MediaMosa install profile.
+- Fixed: The 'patt' value in the LUA script 'vpx-transcode' was sometimes a
+  string type instead of expected integer. Fix by Mariano Asselborn/Acquia.
+- Fixed: The ffmpeg tool did not correctly use the padding value for ffmpeg. Fix
+  by Mariano Asselborn/Acquia.
+
+MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
@@ -86,7 +127,7 @@ MediaMosa 3.2.2 (build 1884)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
-- Fixed: some installations where no longer able to edit the MediaMosa servers.
+- Fixed: Some installations where no longer able to edit the MediaMosa servers.
 - Fixed: In some cases when a REST call was logged, an exception was thrown when
   no application ID was available or set.
 - Fixed: Fixing problem with 1.7 migration module; PDO exception with NULL value

@@ -1,10 +1,9 @@
-; $Id:  $
 name = MediaMosa
-distribution_name = MediaMosa
 description = <p>MediaMosa is a full featured, webservice oriented media management and distribution platform. MediaMosa is implemented as a modular extension to the open source Drupal system. You'll find the MediaMosa specific modules in sites/all/modules, the remainder of the tree is the standard Drupal core.</p><p>Before proceeding, please visit our <a href='http://mediamosa.org/trac/wiki/Quick%20install'>quick_install</a>.</p><p>Please visit mediamosa.org for more information, announcements, documentation, community forums, and new releases.</p><p>References:<ul><li><a href='http://www.mediamosa.org'>mediamosa.org</a></li><li><a href='http://www.drupal.org'>www.drupal.org</a></li></ul></p>
-
-version = 2.2
+distribution_name = MediaMosa
 core = 7.x
+version = 3.5
+
 dependencies[] = block
 dependencies[] = comment
 dependencies[] = color
@@ -41,12 +40,10 @@ dependencies[] = mediamosa_maintenance_browse
 dependencies[] = mediamosa_maintenance_status
 dependencies[] = mediamosa_maintenance_status_component
 dependencies[] = mediamosa_maintenance_status_configuration
-//dependencies[] = mediamosa_maintenance_status_server, Not done yet.
 dependencies[] = mediamosa_profile
 dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
 dependencies[] = mediamosa_ticket
-//dependencies[] = mediamosa_tool_windows
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_user
 dependencies[] = mediamosa_webservice
@@ -55,3 +52,4 @@ dependencies[] = mediamosa_tool_ffmpeg
 
 ; Using _profile extension to prevent name collisions with core module.
 files[] = mediamosa_profile.profile
+files[] = mediamosa_profile.class.inc

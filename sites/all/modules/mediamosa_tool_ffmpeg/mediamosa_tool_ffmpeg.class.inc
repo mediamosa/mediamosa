@@ -423,8 +423,8 @@ class mediamosa_tool_ffmpeg {
               }
               else {
                 $size_explode = explode('x', $size);
-                $size_width = $size_explode[0] + (2 * $v_padding);
-                $size_height = $size_explode[1] + (2 * $h_padding);
+                $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
+                $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
                 $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
 
@@ -494,8 +494,8 @@ class mediamosa_tool_ffmpeg {
     }
     else {
       $size_explode = explode('x', $size);
-      $size_width = $size_explode[0] + (2 * $v_padding);
-      $size_height = $size_explode[1] + (2 * $h_padding);
+      $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
+      $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
       $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $size, $size_width, $size_height, $v_padding, $h_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);

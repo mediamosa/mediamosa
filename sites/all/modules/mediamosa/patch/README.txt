@@ -6,7 +6,7 @@ patches are used for own Drupal 7 versions, when needed for upgrading Drupal.
 However remember that its best to use the Drupal version supplied with
 MediaMosa.
 
-- bootstrap.patch;
+- bootstrap-cookie.patch;
 
   -- Cookie domain --
   This patch is required for the cookie domain fix and the fix on simpletest.
@@ -16,11 +16,21 @@ MediaMosa.
 
   files[] = patch/mediamosa_cookie_domain.test
 
+- bootstrap-simpletest.patch;
 
-  -- Simpletest loadbalancer problem; --
-  Drupal 7 has problems when running simpletest on loadbalancers while tests can
-  do HTTP requests inside a simpletest. When during the HTTP request inside the
-  test is quering the loadbalancer, the other server might be chosen and
-  resulting in a 403 (forbidden) http error. Other problems will occur on some
-  tests which will do request on different REST interfaces on different servers.
+  -- Simpletest loadbalancer / multi server limitation --
+  Drupal 7 has problems when running simpletest on loadbalancers when tests do
+  HTTP requests inside a simpletest. When unit tests use HTTP requests during
+  the test, all requests that are made to other MediaMosa instances (like job
+  servers) will fail if the target server does not have the same file root as
+  the caller. This is caused by Drupals security on incoming HTTP calls from
+  unit tests. The call fails because the security validation includes an unique
+  file ID of the calling server's bootstrap.inc, which is different on other
+  servers installation. Therefor the call is not accepted and will fail. To
+  solve this problem, our patch disables this security layer.
+
+  However, a word caution; this patch is intended for running simpletest on
+  installations like acceptation/staging/test servers. Do not deploy this patch
+  on production servers, as it will create an security vulnerability on your
+  server(s).
 
