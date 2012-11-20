@@ -77,6 +77,7 @@ class mediamosa_asset_mediafile {
     $options += array(
       'get_originals_only' => FALSE,
       'exclude_stills' => FALSE,
+      'orderby' => FALSE,
     );
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
@@ -91,6 +92,11 @@ class mediamosa_asset_mediafile {
     // Skip stills?
     if ($options['exclude_stills']) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    }
+
+    // Order by?
+    if ($options['orderby']) {
+      $query->orderBy('mf.' . $options['orderby'], 'ASC');
     }
 
     return $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
