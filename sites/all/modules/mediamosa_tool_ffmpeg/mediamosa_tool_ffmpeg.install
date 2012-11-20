@@ -39,11 +39,7 @@ function mediamosa_tool_ffmpeg_install() {
   $default_params = array(
     array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
     array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv', 'wmv', 'mp4', 'avi', 'ogg', 'webm'), NULL, 'FALSE', NULL),
-    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'wma', 'pcm_s16le', 'libfaac', 'libvorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
-    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000', '64000', '128000', '192000', '256000', '512000'), '64000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
-    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050', '44100'), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
-    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
-
+    array('ffmpeg', 'strict', '-strict', NULL, NULL, array('', 'experimental'), NULL, 'FALSE', $t('allow non standardized experimental things.')),
     array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo', 'flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', $t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
     array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', 'The -vpre option is an preset option of ffmpeg used till version 0.8 for libx264 and later used only for libvpx, it is recommended that you use -profile and -preset for libx264.'),
     array('ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array('', 'main', 'baseline', 'ipod320', 'ipod640'), NULL, 'FALSE', NULL),
@@ -59,6 +55,11 @@ function mediamosa_tool_ffmpeg_install() {
     array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', $t('Aspect ratio')),
     array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force maintain the original video aspect ratio or not@default')),
     array('ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libvorbis', 'vorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000', '64000', '128000', '192000', '256000', '512000'), '128000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
+    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050', '44100'), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
+    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
+
   );
 
   // Insert default mappings as nodes.
