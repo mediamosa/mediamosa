@@ -180,7 +180,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   $rows = array(
     array(t('Title'), check_plain($node->title)),
     array(t('Transcode profile id'), check_plain($node->transcode_profile_id)),
-    array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
+    array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : ($node->app_id ? t('Unknown or deleted application') : t('Global app'))),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
     array(t('Is default profile'), t(drupal_ucfirst(drupal_strtolower($node->is_default_profile)))),

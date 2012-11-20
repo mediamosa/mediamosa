@@ -3229,14 +3229,14 @@ function mediamosa_update_7128() {
     ->condition('server_path', '{base_uri}still/{TICKET}')
     ->execute();
 
-  return 'The /media REST call has been enabled and has replaced the now depricated /still REST call.';
+  return 'The /media REST call has been enabled and has replaced the now deprecated /still REST call.';
 }
 
 /**
  * Update the errorcode table.
  */
 function mediamosa_update_7129() {
-  // Remove depricated version.
+  // Remove deprecated version.
   db_delete('mediamosa_error')
     ->condition('name', 'ERRORCODE_INVALID_STILL_TICKET')
     ->execute();
@@ -3470,4 +3470,54 @@ function mediamosa_update_7139() {
 
   // Update job_server_transcode.
   _mediamosa_update_helper_convert_command('mediamosa_asset_mediafile', 'mediafile_id');
+}
+
+/**
+ * Re-evaluate all assets 'is empty' values. This might take some time depending
+ * on the size of your database. If this update times out or stops because of
+ * OOM errors, just run update again. The update will continue where it was
+ * interrupted.
+ */
+function mediamosa_update_7140() {
+
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  while (TRUE) {
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+
+    // Now re-evalute the asset is_empty_flag.
+    foreach ($asset_ids as $asset_id) {
+      $updated_assets++;
+      mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+
+    // Next position.
+    $start += count($asset_ids);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
 }

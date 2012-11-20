@@ -520,7 +520,7 @@ function template_preprocess_restcall_doc(&$variables) {
       $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
 
       // Possible aliases.
-      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (depricated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
+      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (deprecated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
 
       $rows[] = array(
         $param . $is_array,
@@ -542,7 +542,7 @@ function template_preprocess_restcall_doc(&$variables) {
       $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
 
       // Possible aliases.
-      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (depricated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
+      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (deprecated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
 
       $rows[] = array(
         $param . $is_array,

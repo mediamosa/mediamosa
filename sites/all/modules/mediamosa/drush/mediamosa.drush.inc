@@ -2,6 +2,8 @@
 /**
  * @file
  * Drush integration for MediaMosa.
+ *
+ * Contains common drush functions for MediaMosa.
  */
 
 /**

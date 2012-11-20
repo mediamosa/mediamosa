@@ -1999,7 +1999,7 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
 /**
  * URI:
  *    acl/app
- *    acl/get_foreign_apps (depricated)
+ *    acl/get_foreign_apps (deprecated)
  *
  * Method: GET
  */

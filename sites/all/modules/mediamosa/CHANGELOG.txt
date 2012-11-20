@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 1931, inuits branch)
+MediaMosa 3.4.x-dev (build 1950, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -29,7 +29,15 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
 - Fixed bug in REST asset/$asset_id/metadata_tag delete.
 - Added Drush command to core for adding a client application.
 - Fixed 2 notices with static's and during install.
-
+- Fixed: the empty asset flag is now correctly set to TRUE regardless of the
+  value of the downloadable setting on the asset mediafile(s). Corresponding
+  unit test has also been extended and fixed.
+- Upgraded Drupal 7.15 to Drupal 7.17.
+- Cleanup and re-write of MediaMosa install profile.
+- Fixed: The 'patt' value in the LUA script 'vpx-transcode' was sometimes a
+  string type instead of expected integer. Fix by Mariano Asselborn/Acquia.
+- Fixed: The ffmpeg tool did not correctly use the padding value for ffmpeg. Fix
+  by Mariano Asselborn/Acquia.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
@@ -84,12 +92,42 @@ MediaMosa 3.3.x-dev (build 1910, master branch)
   and /assets calls. Extended unit test for new parameter.
 - Added 'count_play' parameter to turn off counting plays on
   /asset/$asset_id/play calls. Extended unit test for new parameter.
+- Removed pointless usage of require_once() in mediamosa_transcode module.
+- Improvements of Asset edit UI.
+  - labels and text fields on 1 line
+  - no empty collection dropdown on filter.
+- Added helper function to MediaMosa SDK to encode tag metadata for CQL usage.
+  Used by front-end and back-end.
+- Added new metadata set 'asset' to MediaMosa core. Used for internal metadata
+  storage on assets.
+- Added unit testing for CQL searching in new 'asset' metadata 'tag'.
+- Updated schema.xml for Solr3.6. Replace the schema if you where using the
+  previous one for Solr3.6.
+- Updated version MediaMosa SDK to 7.x-3.1.
+- Fixed minor dependency problem with SDK module 'mediamosa_development'.
+- Extended the hook output of 'mediamosa_metadata_info'. Now returns an
+  associated array;
+  - 'title'
+    Title of the set.
+  - 'description'
+    Description of the set.
+  - 'context'
+    The context name of the set, e.g. 'dc', 'qdc'. Used in CQL.
+- Fixed context set detection for new asset.tag metadata.
+- Metadata properties can no longer be created with a name starting with a
+  number.
+- Improved metadata add/edit form on asset browser.
+- Added forms for listing, creating and deletion of client application metadata
+  tags.
+- Fixed bug in REST asset/$asset_id/metadata_tag delete.
+- Added Drush command to core for adding a client application.
+- Fixed 2 notices with static's and during install.
 
 MediaMosa 3.2.2 (build 1884)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
-- Fixed: some installations where no longer able to edit the MediaMosa servers.
+- Fixed: Some installations where no longer able to edit the MediaMosa servers.
 - Fixed: In some cases when a REST call was logged, an exception was thrown when
   no application ID was available or set.
 - Fixed: Fixing problem with 1.7 migration module; PDO exception with NULL value
@@ -362,11 +400,11 @@ MediaMosa 3.0 (build 1698)
   (See ticket #432).
 - Play request with "tag" development (See ticket #216).
 - Parameter name "acl_group_id/aut_group_id" added in /asset/{asset_id}/play,
-  and "group_id" is marked as depricated (See ticket #238).
+  and "group_id" is marked as deprecated (See ticket #238).
 - Variable for custom control bar height in objectcode (See ticket #326).
 - Asset, assets and asset/$asset_id GET REST call show the collection data
   in better format (See ticket #332).
-- REST call preview_profile_id is now depricated, use
+- REST call preview_profile_id is now deprecated, use
   /transcode/profile/default REST call instead (See ticket #337).
 - Using is_app_admin to view other client apps jobs is no longer possible (See
   ticket #357).
@@ -456,7 +494,7 @@ Other changes (not ticket related).
 - Rewrote the usage of simplexml to domdocument for output.
 - The REST call documentation now shows alias usage for variables. Is mainly
   for the new acl_* renames from aut_*.
-- All aut_* input variables are now depricated and replaced by acl_* versions.
+- All aut_* input variables are now deprecated and replaced by acl_* versions.
   The aut_* input variables will still work though.
 - Added lower level of debugging to include the <debug> array in the 3.0 output.
 - Added global setting to force REST call output always to output in that
@@ -1009,7 +1047,7 @@ Other changes (not ticket related).
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
 - Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
   asset_created.
-- acl/get_foreign_apps is now depricated and replaced by /acl/app
+- acl/get_foreign_apps is now deprecated and replaced by /acl/app
 - Added /acl/app REST call. Returns listing of apps on which the current app has
   master-slave rights on.
 - Upgraded drupal 7 core from alpha 4 to alpha 6.
@@ -1072,7 +1110,7 @@ Other changes (not ticket related).
   during the REST call. This is very tricky; What do we do with any output
   already generated? Watchdog entries will be rolled back too. Need some more
   thinking for the global transaction support.
-- The still parameters end_frame and start_frame are now depricated and
+- The still parameters end_frame and start_frame are now deprecated and
   REST documentation has been adjusted to promote usage of end_time and
   start_time. Also documentation does now explanes parameters as seconds.
 - Fixed reset button on asset browse page.
@@ -1212,7 +1250,7 @@ Other changes (not ticket related)
 - Added REST call /internal/acl/get_foreign_apps.
 - Removed secret password from acl/get_foreign_apps function (its protected by
   internal password).
-- Mutli typo fixed in comments (depricated to deprecated).
+- Multi typo fixed in comments (depricated to deprecated).
 - Fixed migration; transcode profiles where not migrated.
 - Changed the MediaMosa internal REST calls text on configure page to reflect
   that these settings are only used for REST calls during the CRON like status

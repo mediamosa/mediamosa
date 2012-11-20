@@ -439,7 +439,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
       if h and m and s then
         frame = h * 3600 + m * 60 + s
       else
-        frame = patt
+        frame = tonumber(patt)
       end
     end
 
