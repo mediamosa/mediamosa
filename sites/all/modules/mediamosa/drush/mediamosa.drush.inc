@@ -56,6 +56,21 @@ function mediamosa_drush_command() {
     'aliases' => array('mman'),
   );
 
+  $items['mm-analyse-app'] = array(
+    'description' => 'Analyse all mediafiles of an app.',
+    'arguments' => array(
+      'app_id' => 'App id',
+    ),
+    'options' => array(
+      'priority' => 'Priority of the job, 0 = normal, -100 is maximum priority, 100 is lowest',
+    ),
+    'examples' => array(
+      'drush mediamosa-analyse-app 1' => 'Requests to analyse all mediafiles of app id 1.',
+      'drush mediamosa-analyse-app 1 --priority=10' => 'The same, but with lower priority.',
+    ),
+    'aliases' => array('mmanap'),
+  );
+
   $items['mm-asset-list'] = array(
     'description' => 'Returns a list of assets.',
     'aliases' => array('mmal'),
@@ -130,6 +145,21 @@ function mediamosa_drush_command() {
     ),
     'examples' => array(
       'drush mmretr C1IVjPsFefqRNoOSV7jIbZtI ' => 'Start a retranscode or reconversion job on mediafile id C1IVjPsFefqRNoOSV7jIbZtI.',
+    ),
+  );
+
+  $items['mm-retranscode-app'] = array(
+    'description' => 'Retranscode all mediafiles from an app with a transcode profile.',
+    'arguments' => array(
+      'app_id' => 'App id',
+      'transcode_profile_id' => 'Transcode profile id',
+    ),
+    'aliases' => array('mmretrap', 'mm-reconvert-app'),
+    'options' => array(
+      'priority' => 'Priority of the job, 0 = normal, -100 is maximum priority, 100 is lowest',
+    ),
+    'examples' => array(
+      'drush mmretrap 1 12 ' => 'Start a retranscode on all mediafiles with transcode 12 in appid 1.',
     ),
   );
 
@@ -267,7 +297,7 @@ function drush_mediamosa_mm_client_app_add($app_id, $name, $password) {
 }
 
 /**
- * Callback function for mediamosa-asset-list command.
+ * Callback function for mm-asset-list command.
  *
  * Returns a list of assets.
  *
@@ -425,7 +455,7 @@ function drush_mediamosa_mm_app_purge($app_id = NULL) {
 }
 
 /**
- * Callback function for mediamosa-analyse command.
+ * Callback function for mm-analyse command.
  *
  * @param int $mediafile_id
  *   Mediafile id to analyse.
@@ -452,6 +482,48 @@ function drush_mediamosa_mm_analyse($mediafile_id, $priority = 0) {
   $quiet = drush_get_option('quiet', NULL);
   if (!$quiet) {
     drush_print("Analyse job for mf: " . $mediafile['mediafile_id'] . " requested");
+  }
+}
+
+/**
+ * Callback function for mm-analyse-app command.
+ *
+ * @param int $app_id
+ *   App id to analyse all mediafiles from.
+ */
+function drush_mediamosa_mm_analyse_app($app_id) {
+
+  if (!(is_numeric($app_id))) {
+    return drush_set_error('', dt('Invalid app_id.'));
+  }
+  $priority = drush_get_option('priority', 0);
+  if (!(is_numeric($priority))) {
+    return drush_set_error('', dt('Priority must be an integer.'));
+  }
+
+  $quiet = drush_get_option('quiet', NULL);
+
+  $mm_fields = array(
+    mediamosa_asset_mediafile_db::ID,
+    mediamosa_asset_mediafile_db::OWNER_ID,
+    mediamosa_asset_mediafile_db::ASSET_ID,
+  );
+
+  $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+  $query->fields('mf', $mm_fields);
+  $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+  $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
+
+  foreach ($mediafiles as $mediafile_id => $mediafile) {
+    $job = mediamosa_job::create_analyse_job(
+      $mediafile['owner_id'],
+      $mediafile['asset_id'],
+      $mediafile['mediafile_id'],
+      $app_id,
+      $priority);
+    if (!$quiet) {
+      drush_print("Analyse job for mf: " . $mediafile['mediafile_id'] . " requested");
+    }
   }
 }
 
@@ -559,7 +631,7 @@ function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
 }
 
 /**
- * Drush function mediamosa-mm-retranscode.
+ * Drush function mm-retranscode.
  */
 function drush_mediamosa_mm_retranscode($mediafile_id) {
 
@@ -583,6 +655,51 @@ function drush_mediamosa_mm_retranscode($mediafile_id) {
     FALSE, '', '', '', '', '', '',
     $priority);
   drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+}
+
+/**
+ * Drush function mm-retranscode-app.
+ *
+ * Retranscodes all mediafiles from a app with a transcode profile.
+ */
+function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
+  if (!is_numeric($app_id)) {
+    return drush_set_error('', dt('Invalid app id.'));
+  }
+  if (!is_numeric($transcode_profile_id)) {
+    return drush_set_error('', dt('Invalid transcode profile.'));
+  }
+
+  $priority = drush_get_option('priority', '0');
+
+  $mm_fields = array(
+    mediamosa_asset_mediafile_db::ID,
+    mediamosa_asset_mediafile_db::OWNER_ID,
+    mediamosa_asset_mediafile_db::GROUP_ID,
+    mediamosa_asset_mediafile_db::ASSET_ID,
+  );
+
+  $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+  $query->fields('mf', $mm_fields);
+  $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+  $query->condition('mf.' . mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $transcode_profile_id);
+  $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
+  $count = 0;
+  foreach ($mediafiles as $mediafile_id => $mediafile) {
+    $job_id = mediamosa_job::create_job_retranscode(
+    $app_id,
+    $mediafile['owner_id'],
+    $mediafile['group_id'],
+    TRUE,
+    $mediafile['mediafile_id'],
+    FALSE, '', '', '', '', '', '',
+    $priority);
+    if (!$quiet) {
+      drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+    }
+    $count++;
+  }
+  drush_print(strtr("All done. @number retranscodes requested.", array('@number' => $count)));
 }
 
 /**
@@ -637,7 +754,7 @@ function drush_mediamosa_mm_jobs() {
   $rows = array();
   $rows[0] = array('status', 'type', 'number');
   foreach (array('WAITING', 'INPROGRESS', 'FAILED', 'FINISHED') as $status) {
-    foreach (array('ANALYSE', 'TRANSCODE') as $job_type) {
+    foreach (array('ANALYSE', 'TRANSCODE', 'STILL') as $job_type) {
       $jobs = mediamosa_job::get_job_list(NULL, NULL, TRUE, 0, '', '', "status==\"$status\" and job_type==\"$job_type\"");
       $rows[] = array($job_type, $status, $jobs->found_rows);
     }
