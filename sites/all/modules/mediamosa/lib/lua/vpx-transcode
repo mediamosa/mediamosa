@@ -125,6 +125,7 @@ local ln_video = space * "Stream #" * steam_number * language * COLON *
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
+local output_file
 local status_file
 local status_tmp
 local errors = {}
@@ -398,7 +399,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
                   "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
                   source_path, string.sub(hash, 1, 1), hash,
                   second_input, params, precommand,
-                  destination_path, hash..jpghelper, dst_ext)
+                  destination_path, output_file .. jpghelper, dst_ext)
   -- -%03d see sites/all/modules/vpx_shared/vpx_shared_defines.php VPX_STILL_EXTENSION constant too,
   -- if you want to change this, you have to do it on both place
   local fd = io.popen(command, "r")
@@ -572,25 +573,31 @@ end
 
 local source_path = arg[1]
 local hash = arg[2]
-local dst_ext = arg[3] or "avi"
-local params = arg[4] or ""
+local destination_file = arg[3]
+local dst_ext = arg[4] or "avi"
+local params = arg[5] or ""
 
-if source_path == nil or hash == nil then
-  print("Usage: vpx-transcode BASE_PATH HASH [extension] [\"ffmpeg parameters\"]")
+if source_path == nil or hash == nil or destination_file == nil then
+  print("Usage: vpx-transcode BASE_PATH HASH OUTPUTFILE [extension] [\"ffmpeg parameters\"]")
   os.exit(1)
 end
 
 local destination_path = source_path .. "/transcode"
 
 -- Temporary directory for 2 pass encoding.
-local tmp_dir = hash .. "_dir"
+local tmp_dir = destination_file .. "_dir"
 
-status_file = destination_path .. "/" .. hash .. ".status"
-status_tmp = destination_path .. "/" .. hash .. ".status.tmp"
+-- MediaMosa expects results in <output>.<dst_ext> and <output>.status.
+output_file = destination_file
+status_file = destination_path .. "/" .. destination_file .. ".status"
+status_tmp = status_file .. ".tmp"
 
--- Example for normal encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
+print("Status file: " .. status_file)
+print("Status tmp: " .. status_tmp)
 
--- Example for 2 pass encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data jNAZadDlRdTbpnSPFhKlH5AP mp4 '-b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -vpre baseline -s 640x480 -vf 'pad=640 480 0 0 black' '
+-- Example for normal encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr 999 mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
+
+-- Example for 2 pass encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data jNAZadDlRdTbpnSPFhKlH5AP 999 mp4 '-b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -vpre baseline -s 640x480 -vf 'pad=640 480 0 0 black' '
 
 local pass_start, pass_end = string.find(params, "-pass 2")
 local vcodec = "-vcodec libx264"
