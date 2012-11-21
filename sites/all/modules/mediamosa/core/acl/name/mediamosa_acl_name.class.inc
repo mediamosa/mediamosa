@@ -97,7 +97,7 @@ class mediamosa_acl_name {
    * @return integer
    *  return the last inserted ID or if already in DB, the ID of existing row
    */
-  function create($app_id, $s_name, $acl_type, $acl_group_id = NULL) {
+  public static function create($app_id, $s_name, $acl_type, $acl_group_id = NULL) {
 
     switch ($acl_type) {
       case mediamosa_acl::ACL_NAME_TYPE_APP: // no longer in the acl_name table
