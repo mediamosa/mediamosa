@@ -94,7 +94,7 @@ class mediamosa_tool_image {
         '@mediafile_dest' => $mediafile_dest,
         '@mediafile_source' => $mediafile_source,
         '@parameter_string' => implode(' ', $parameter_string),
-        '@status_file' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_source),
+        '@status_file' => mediamosa_configuration_storage::status_file_location_get($job_id),
       );
 
       // mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get()
@@ -117,10 +117,12 @@ class mediamosa_tool_image {
 
     // Build the values.
     $execution_string_options = array(
-      '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['jobserver_job_id'] . DIRECTORY_SEPARATOR,
+      '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['job_id'] . DIRECTORY_SEPARATOR,
       '@mediafile_location' => $options['location_source_file'],
       '@mediafile_id' => $options['mediafile_id'],
+      '@mediafile_dest' => $options['job_id'],
       '@parameter_string' => $options['parameter_string'],
+      '@status_file' => $options['status_file'],
     );
 
     // Execution string.
@@ -129,6 +131,6 @@ class mediamosa_tool_image {
     // Copy the result to transcode directory.
     // Remove the temporary directory (and files).
     // Create status file.
-    return strtr('mkdir @file_location; cd @file_location; convert @mediafile_location @parameter_string @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;', $execution_string_options);
+    return strtr('mkdir @file_location; cd @file_location; convert @mediafile_location @parameter_string @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_dest.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;', $execution_string_options);
   }
 }

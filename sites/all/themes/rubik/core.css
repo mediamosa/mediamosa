@@ -23,7 +23,6 @@ hr { display:none; }
 div.messages {
   color:#036;
   background-color:#f8f8f8;
-  padding:9px;
   border:1px solid #ccc;
   margin:0px 0px 10px;
   }
@@ -227,7 +226,8 @@ table .item-list,
 .form-item .form-item,
 .form-item .form-type-radio,
 .form.item .form-type-checkbox,
-.form-checkboxes .form-type-checkbox {
+.form-checkboxes .form-type-checkbox,
+.text-format-wrapper .fieldset .form-item {
     background:transparent;
     padding:0px;
     border:0px;
@@ -244,10 +244,20 @@ table .item-list,
   .form.item .form-type-checkbox,
   .form-checkboxes .form-type-checkbox { margin-bottom:0px; }
 
+.text-format-wrapper .form-item {
+  background:#fff;
+  margin:0px 0px 10px;
+
+  border-width:1px;
+  border-style:solid;
+  border-color:#ddd;
+  padding: 9px;
+  }
+
 .form-item label {
   margin:0px;
   padding:0px;
-  color:#999;
+  color:#666;
   font-weight:bold;
   font-size:10px;
   text-transform:uppercase;
@@ -352,7 +362,7 @@ select.form-select {
   padding:3px;
   border-width:1px;
   border-style:solid;
-  border-color:#eee;
+  border-color:#ccc;
   background:#fff;
   color:#666;
   max-width:100%;
@@ -449,7 +459,7 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 
   .collapsed .fieldset-legend a {
     background:#eee;
-    color:#999;
+    color:#484848;
     }
 
   .collapsed .fieldset-legend a:hover { color:#666; }
@@ -480,7 +490,8 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
   border-top:none; 
   }
 
-.filter-wrapper .fieldset-content {
+.filter-wrapper .fieldset-content,
+.fieldset .fieldset.filter-wrapper .fieldset-content  {
   background:#f8f8f8;
   border-top:0px;
   height:20px;
@@ -601,7 +612,7 @@ form .form-actions {
 
 .system-themes-list-disabled .theme-selector {
   background:#eee;
-  color:#999;
+  color:#676767;
   }
 
 /* admin/content/node & admin/user/user */
@@ -752,7 +763,7 @@ body.tao #admin-toolbar a.menu-hover span.menu-description span.icon {
   text-shadow:#fff 0px 1px 0px;
   padding:5px 10px 4px 10px;
   border-bottom:1px solid #ddd;
-  color:#999;
+  color:#666;
   }
 
 .vertical-tabs-list .selected a {

@@ -755,7 +755,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       $this->assertTrue($handle !== FALSE, 'Got file handle');
 
-      // GET parameters (for PUT)
+      // GET parameters (for PUT).
       $query = array(
         'mediafile_id' => $mediafile_id,
         'upload_ticket' => $uploadticket['ticket_id'],
@@ -766,27 +766,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       $action = url($uri, array('query' => $query, 'absolute' => TRUE));
 
-      $old_handle = isset($this->curlHandle) ? $this->curlHandle : NULL;
+      $curl_options = array(
+        CURLOPT_BINARYTRANSFER => TRUE,
+        CURLOPT_URL => $action,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_PUT => 1,
+        CURLOPT_INFILE  => $handle,
+        CURLOPT_INFILESIZE => mediamosa_io::filesize($filename),
+      );
 
-      $this->curlInitialize();
-      curl_setopt($this->curlHandle, CURLOPT_BINARYTRANSFER, TRUE);
-      curl_setopt($this->curlHandle, CURLOPT_URL, $action);
-      curl_setopt($this->curlHandle, CURLOPT_HTTPHEADER, $headers);
-      curl_setopt($this->curlHandle, CURLOPT_PUT, 1);
-      curl_setopt($this->curlHandle, CURLOPT_INFILE, $handle);
-      curl_setopt($this->curlHandle, CURLOPT_INFILESIZE, mediamosa_io::filesize($filename));
+      $out = $this->curlExec($curl_options);
 
-      // We can't use $this->curlExec() here, does not support PUT.
-      $out = curl_exec($this->curlHandle);
-
-      // Close the curl handle.
-      curl_close($this->curlHandle);
-      unset($this->curlHandle);
-      if ($old_handle) {
-        $this->curlHandle = $old_handle;
-      }
-
-      // Close the file.
       fclose($handle);
 
       // Our upload.

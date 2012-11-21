@@ -57,6 +57,7 @@ class mediamosa_asset_mediafile_play_proxy {
   const CONTAINER_TYPE_FLV = 'flv';
   const CONTAINER_TYPE_OGG = 'ogg';
   const CONTAINER_TYPE_WEBM = 'webm';
+  const CONTAINER_TYPE_MATROSKA_WEBM = 'matroska;webm';
 
   /**
    * Video codec types.
@@ -128,7 +129,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @return
    *  requested time format.
    */
-  function convert_msec($input, $container_type) {
+  public static function convert_msec($input, $container_type) {
     $output = FALSE;
 
     // bereken uur, minuut en seconde
@@ -191,7 +192,7 @@ class mediamosa_asset_mediafile_play_proxy {
    *  new width en height.
    *
    */
-  function calc_video_size($video_width, $video_height, $width, $height, $container_type) {
+  public static function calc_video_size($video_width, $video_height, $width, $height, $container_type) {
 
     // If video size is known, we can do some calculations on height/weight.
     if ($video_width > 0 && $video_height > 0) {
@@ -769,7 +770,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param $time_restriction_end
    *   End time in UTC of the time restriction period date.
    */
-  function check_time_restrictions($time_restriction_start = '', $time_restriction_end = '') {
+  public static function check_time_restrictions($time_restriction_start = '', $time_restriction_end = '') {
     if ($time_restriction_start != '' && time() < $time_restriction_start) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date("Y-m-d H:i:s", $time_restriction_start), '@timestamp' => $time_restriction_start));
     }

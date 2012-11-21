@@ -1,0 +1,10 @@
+name = Media Ontology
+description = MediaMosa support for the Ontology for Media Resources 1.0 (http://www.w3.org/TR/mediaont-10) from the W3C Media Annotation Working Group.
+package = MediaMosa - Metadata
+version = 3.0.0
+core = 7.x
+
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_metadata_mawg.class.inc

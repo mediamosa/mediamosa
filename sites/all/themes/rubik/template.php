@@ -468,6 +468,10 @@ function rubik_admin_drilldown_menu_item_link($link) {
 function rubik_preprocess_textfield(&$vars) {
   if ($vars['element']['#size'] >= 30 && empty($vars['element']['#field_prefix']) && empty($vars['element']['#field_suffix'])) {
     $vars['element']['#size'] = '';
+    if (!isset($vars['element']['#attributes']['class']) 
+      || !is_array($vars['element']['#attributes']['class'])) {
+       $vars['element']['#attributes']['class'] = array();
+    }
     $vars['element']['#attributes']['class'][] = 'fluid';
   }
 }
@@ -539,7 +543,7 @@ function _rubik_icon_classes($path) {
     // style targeting.
     $classes[] = 'path-'. str_replace('/', '-', implode('/', $args)) . '-';
     while (count($args)) {
-      $classes[] = 'path-'. str_replace('/', '-', implode('/', $args));
+      $classes[] = drupal_html_class('path-'. str_replace('/', '-', implode('/', $args)));
       array_pop($args);
     }
     return $classes;

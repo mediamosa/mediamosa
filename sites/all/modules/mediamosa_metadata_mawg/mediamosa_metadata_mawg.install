@@ -1,0 +1,88 @@
+<?php
+/**
+ * @file
+ * Installer for Metadata type Ontology for Media Resources.
+ *
+ * @todo add description.
+ */
+
+// Include Metadata class.
+require_once 'mediamosa_metadata_mawg.class.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_metadata_mawg_install() {
+
+  // Check if the property group already exists. If so, we have a pre-3.0
+  // install where MediaMosa created this group by core code.
+  if (mediamosa_metadata_mawg::property_group_installed(mediamosa_metadata_mawg::METADATA_PROPERTY_GROUP_NAME)) {
+    // Already installed?
+    return;
+  }
+
+  // Create the property group.
+  // @todo: add prefix: "ma:" not supported by mm yet.
+  $property_group_id = mediamosa_metadata_mawg::property_group_create(mediamosa_metadata_mawg::METADATA_PROPERTY_GROUP_NAME);
+
+  // The properties to create; from http://www.w3.org/TR/mediaont-10/#core-property-definitions.
+  $properties = array(
+    // Identification.
+    array('identifier', 'CHAR', 'A URI identifying a media resource, which can be either an abstract concept (e.g., Hamlet) or a specific object (e.g., an MPEG-4 encoding of the English version of "Hamlet").'),
+    array('title', 'CHAR', 'A tuple that specifies the title or name given to the resource. The type can be used to optionally define the category of the title.'),
+    array('language', 'CHAR', 'The language used in the resource.'),
+    array('locator', 'CHAR', 'The logical address at which the resource can be accessed (e.g. a URL, or a DVB URI).'),
+
+    // Creation.
+    array('contributor', 'CHAR', 'A tuple identifying the agent, using either a URI (recommended best practice) or plain text. The role can be used to optionally define the nature of the contribution (e.g., actor, cameraman, director, singer, author, artist, or other role types). An example of such a tuple is: {imdb:nm0000318, director}.'),
+    array('creator', 'CHAR', 'A tuple identifying the author of the resource, using either a URI (recommended best practice) or plain text. The role can be used to optionally define the category of author (e.g., playwright or author). The role is defined as plain text. An example of such a tuple is: {dbpedia:Shakespeare, playwright}.'),
+    array('date', 'DATETIME', ' tuple defining the date and time that the resource was created. The type can be used to optionally define the category of creation date (e.g., release date, date recorded, or date edited).'),
+    array('location', 'DATETIME', 'A tuple identifying a name or a set of geographic coordinates, in a given system, that describe where the resource has been created, developed, recorded, or otherwise authored. The name can be defined using either a URI (recommended best practice) or plain text. The geographic coordinates include longitude, latitude and an optional altitude information, in a given geo-coordinate system (such as the World Geodetic System) that MAY also be specified. At least a name or (longitude, latitude) must be provided. A registry of coordinate reference systems such as EPSG Geodetic Parameter Dataset can be used to identify coordinate systems by URIs.'),
+
+    // Content description.
+    array('description', 'CHAR', 'Free-form text describing the content of the resource.'),
+    array('keyword', 'CHAR', 'A concept, descriptive phrase or keyword that specifies the topic of the resource, using either a URI (recommended best practice) or plain text. In addition, the concept, descriptive phrase, or keyword contained in this element SHOULD be taken from an ontology or a controlled vocabulary.'),
+    array('genre', 'CHAR', 'The category of the content of the resource, using either a URI (recommended best practice) or plain text. In addition, the genre contained in this element SHOULD be taken from an ontology or controlled vocabulary, such as the EBU vocabulary.'),
+    array('rating', 'CHAR', 'The rating value (e.g., customer rating, review, audience appreciation), specified by a tuple defining the rating value, an optional rating person or organization defined as either a URI (recommended best practice) or as plain text, and an optional voting range. The voting range can optionally be used to define the minimum and maximum values that the rating can have.'),
+
+    // Relational.
+    array('relation', 'CHAR', 'A tuple that identifies a resource that the current resource is related with (using either a URI -recommended best practice- or plain text), and optionally, specifies the nature of the relationship. An example is a listing of content that has a (possibly named) relationship to another content, such as the trailer of a movie, or the summary of a media resource.'),
+    array('collection', 'CHAR', 'The name of the collection (using either a URI or plain text) from which the resource originates or to which it belongs. We recommend to use a URI, as a best practice.'),
+
+    // Rights.
+    array('copyright', 'CHAR', 'A tuple containing the copyright statement associated with the resource and optionally, the identifier of the copyright holder. Other issues related to Digital Rights Management are out of scope for this specification.'),
+    array('policy', 'CHAR', 'A tuple containing a policy statement either human readable as a string or machine resolvable as a URI, and the type of the policy to provide more information as to the nature of the policy'),
+
+    // Distribution.
+    array('publisher', 'CHAR', 'The publisher of a resource, defined as either a URI or plain text. We recommend, as a best practice, to define the publisher as a URI.'),
+    array('targetAudience', 'CHAR', 'A tuple identifying the audience being addressed (demographic class, parental guidance group, or geographical region) and an optional classification system (e.g., a parental guidance issuing agency).'),
+
+    // Fragment.
+    array('fragment', 'CHAR', 'A tuple containing a fragment identifier and optionally, its role. A fragment is a portion of the resource, as defined by the [MediaFragment] Working Group.'),
+    array('namedFragment', 'CHAR', 'A tuple containing a named fragment identifier and its label.'),
+
+    // Technical Properties.
+    array('frameSize', 'CHAR', 'A tuple defining the frame size of the resource (e.g., width and height of 720 and 480 units, respectively). The units can be optionally specified; if the units are not specified, then the units MUST be interpreted as pixels.'),
+    array('compression', 'CHAR', 'The compression type used. For container files (e.g., QuickTime, AVI), the compression is not defined by the format, as a container file can have several tracks that each use different encodings. In such a case, several compression instances should be used. Thus, querying the compression property of the track media fragments will return different values for each track fragment. Either or both of two values may be supplied: a URI, and a free-form string which can be used for user display or when the naming convention is lost or unknown. The URI consists of a absolute-URI (RFC 3986 [RFC 3986], section 4.3) and fragment (RFC 3986 [RFC 3986], section 3.5), that is, e.g. in the form absolute-URI#name. The absolute-URI identifies the naming convention used for the second parameter, which is a string name from that convention. A URL is preferred for the URI, and if it is used, it (a) might contain a date in the form mmyyyy, indicating that the owner of the domain in the URL agreed to its use as a label around that date and (b) should be de-referencable, yielding an informative resource about the naming convention. Note that this use of URIs with fragments also closely matches RDF (see RDF concepts). Note that for some container files, the format parameter can also carry an extended MIME type to document this; see [RFC 4281] for one such instance.'),
+    array('duration', 'CHAR', 'The actual duration of the resource. The units are defined to be seconds.'),
+    array('format', 'CHAR', 'The MIME type of the resource (e.g., wrapper or bucket media types), ideally including as much information as possible about the resource such as media type parameters, for example, using the "codecs" parameter [RFC 4281].'),
+    array('samplingRate', 'CHAR', 'The audio sampling rate. The units are defined to be samples/second.'),
+    array('frameRate', 'CHAR', 'The video frame rate. The units are defined to be frames/second.'),
+    array('averageBitRate', 'CHAR', 'The average bit rate. The units are defined to be kbps.'),
+    array('numTracks', 'CHAR', 'A tuple defining the number of tracks of a resource, optionally followed by the type of track (e.g., video, audio, or subtitle).'),
+  );
+
+  // Create the properties.
+  foreach ($properties as $property) {
+    // @todo: add description:  not supported by mm yet.
+    mediamosa_metadata_mawg::property_create($property_group_id, $property[0], $property[1]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_metadata_mawg_uninstall() {
+  // Remove it and delete all properties.
+  mediamosa_metadata_mawg::property_group_delete(mediamosa_metadata_mawg::METADATA_PROPERTY_GROUP_NAME);
+}
