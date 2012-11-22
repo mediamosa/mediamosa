@@ -20,14 +20,14 @@ function mediamosa_profile_install_tasks() {
 
   // Setup the tasks.
   return array(
-    'mediamosa_profile_metadata_support_form' => array(
-      'display_name' => st('Metadata support'),
-      'type' => 'form',
-    ),
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+    ),
+    'mediamosa_profile_metadata_support_form' => array(
+      'display_name' => st('Metadata support'),
+      'type' => 'form',
     ),
     'mediamosa_profile_apache_settings_form' => array(
       'display_name' => st('Apache settings'),
@@ -261,7 +261,7 @@ function mediamosa_profile_storage_location_form() {
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa SAN/NAS Mount point'),
-    '#description' => st('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
+    '#description' => st('Make sure the webserver user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
   );
