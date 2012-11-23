@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Asset"
 description = "The asset module contains all submodules for asset like mediafile, metadata, access layer etc."
 package = "MediaMosa - Modules"
@@ -14,15 +12,16 @@ dependencies[] = image
 files[] = mediamosa_asset.rest.class.inc
 files[] = mediamosa_asset.test
 files[] = mediamosa_asset.cql.test
+files[] = mediamosa_asset.cql_appcoll.test
 files[] = mediamosa_asset.cql_asset_collection.test
 files[] = mediamosa_asset.cql_isprivate.test
+files[] = mediamosa_asset.cql_mediafile_duration.test
 files[] = mediamosa_asset.cql_acl_context.test
 files[] = mediamosa_asset.function.test
+files[] = mediamosa_asset.search.acl.user_usergroup.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
 files[] = mediamosa_asset.vpx_still_url.test
-files[] = mediamosa_asset.cql_appcoll.test
-files[] = mediamosa_asset.cql_mediafile_duration.test
 
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.class.inc
@@ -42,6 +41,7 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
 
 ; Mediafile Play Proxy.
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.media.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.class.inc
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.stills.test

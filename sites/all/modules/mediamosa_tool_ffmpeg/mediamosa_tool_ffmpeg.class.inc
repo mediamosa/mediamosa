@@ -289,8 +289,8 @@ class mediamosa_tool_ffmpeg {
 
         case 'SCENE':
           mediamosa_job_server::log_mediafile($mediafile_id_source, 'Scene detection starts');
-          $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
-          $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_source);
+          $destination_path = mediamosa_storage::get_realpath_data_transcode();
+          $input = mediamosa_storage::get_uri_mediafile_id($mediafile_id_source);
 
           // Clean up I.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
@@ -488,7 +488,7 @@ class mediamosa_tool_ffmpeg {
 
     // Combine the string (only for linux, windows does not generate stills).
     if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $size, $h_padding, $h_padding, $v_padding, $v_padding,
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_storage::get_realpath_data(), $mediafile_id_source, $size, $h_padding, $h_padding, $v_padding, $v_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);
     }
@@ -496,7 +496,7 @@ class mediamosa_tool_ffmpeg {
       $size_explode = explode('x', $size);
       $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
       $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $size, $size_width, $size_height, $v_padding, $h_padding,
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_storage::get_realpath_data(), $mediafile_id_source, $size, $size_width, $size_height, $v_padding, $h_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);
     }

@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Play proxy still unittests.
@@ -52,7 +27,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     // App ids.
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
 
-    $upload = $this->uploadTestFile($this->getTestVideo_ogg());
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
@@ -91,7 +66,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->assertFalse(empty($still_id), 'Found still ID.');
 
     // Check if symlink exists.
-    $sympath = mediamosa_configuration_storage::media_get_file($app_id_1, $still_id) . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
+    $sympath = mediamosa_storage::get_uri_media_file($app_id_1, $still_id) . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
 
     $this->var_export($sympath);
 
@@ -134,7 +109,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     );
 
     // Put the ticket link on modified - 1 week and see if it gets cleaned up.
-    $ticket_link = mediamosa_configuration_storage::media_get_ticket_file($app_id_1, $stills['ticket_id']);
+    $ticket_link = mediamosa_storage::get_uri_media_ticket_file($app_id_1, $stills['ticket_id']);
 
     // Must exists.
     $this->file_exists($ticket_link);

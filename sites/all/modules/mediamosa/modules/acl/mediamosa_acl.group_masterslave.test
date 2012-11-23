@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -91,11 +89,11 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id = $this->createMediafile($asset_id);
 
     // Set mediafile rights.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('foo.nl', 'bar.nl'),
     );
-    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+    $xml = $this->setMediafileAcl($mediafile_id, $parameters);
 
     // Make an another test video with file.
 
@@ -110,8 +108,8 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAclGroup($groupname, $group_type);
 
     // Create acl hostname.
-    $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl', 'foobar.nl');
-    $this->createAclHostname($groupname, $a_hostnames);
+    $hostnames = array('foo.nl', 'goo.nl', 'hoo.nl', 'foobar.nl');
+    $this->createAclHostname($groupname, $hostnames);
 
     // Make an acl group for Ega 2.
 
@@ -122,8 +120,8 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAclGroup($groupname, $group_type);
 
     // Create acl hostname.
-    $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl', 'foobar.nl');
-    $this->createAclHostname($groupname, $a_hostnames);
+    $hostnames = array('bar.nl', 'car.nl', 'dar.nl', 'foobar.nl');
+    $this->createAclHostname($groupname, $hostnames);
 
     // Make a master / slave for asset + domain.
 
@@ -131,12 +129,12 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Set mediafile acl.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array($groupname, 'nu.nl'),
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => array('@ACADEMIA.group', '@teleblik.nl'),
     );
-    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
+    $xml = $this->setMediafileAcl($mediafile_id, $parameters);
 
     // Get_asset tests with granted.
 
@@ -144,62 +142,62 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_2();
 
     // Get asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_get::ACL_DOMAIN => 'nu.nl',
     );
-    $a_asset = $this->getAsset($asset_id, $a_parameters);
+    $asset = $this->getAsset($asset_id, $parameters);
 
     // Check the result.
     $this->assertTrue(
-      $a_asset['granted'] == 'TRUE',
+      $asset['granted'] == 'TRUE',
       t("Autorisation: acl_realm playproxy call by other realm is ok")
     );
 
     // Get asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_get::ACL_DOMAIN => 'later.nl',
     );
-    $a_asset = $this->getAsset($asset_id, $a_parameters);
+    $asset = $this->getAsset($asset_id, $parameters);
 
     // Check the result.
     $this->assertTrue(
-      $a_asset['granted'] == 'FALSE',
+      $asset['granted'] == 'FALSE',
       t("Autorisation: acl_realm playproxy call by other realm is not granted")
     );
 
     // Get asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_get::ACL_DOMAIN => 'bar.nl',
     );
-    $a_asset = $this->getAsset($asset_id, $a_parameters);
+    $asset = $this->getAsset($asset_id, $parameters);
 
     // Check the result.
     $this->assertTrue(
-      $a_asset['granted'] == 'TRUE',
+      $asset['granted'] == 'TRUE',
       t("Autorisation: acl_realm playproxy call by other realm is not granted")
     );
 
     // Get asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_get::ACL_DOMAIN => 'foo.nl',
     );
-    $a_asset = $this->getAsset($asset_id, $a_parameters);
+    $asset = $this->getAsset($asset_id, $parameters);
 
     // Check the result.
     $this->assertTrue(
-      $a_asset['granted'] == 'FALSE',
+      $asset['granted'] == 'FALSE',
       t("Autorisation: acl_realm playproxy call by other realm is not granted")
     );
 
     // Get asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_get::ACL_DOMAIN => 'foobar.nl',
     );
-    $a_asset = $this->getAsset($asset_id, $a_parameters);
+    $asset = $this->getAsset($asset_id, $parameters);
 
     // Check the result.
     $this->assertTrue(
-      $a_asset['granted'] == 'TRUE',
+      $asset['granted'] == 'TRUE',
       t("Autorisation: acl_realm playproxy call by other realm is not granted")
     );
 
@@ -213,10 +211,10 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Play proxy request.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
-    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // This is not playable from a wrong domain.
 
@@ -224,31 +222,31 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_2();
 
     // Play proxy request.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'john_doe',
     );
-    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Is playable in correct domain.
 
     // Play proxy request.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
       mediamosa_rest_call_asset_mediafile_play::ACL_DOMAIN => 'bar.nl',
     );
-    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Is playable in incorrect domain.
 
     // Play proxy request.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
       mediamosa_rest_call_asset_mediafile_play::ACL_DOMAIN => 'foo.nl',
     );
-    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     //
     // Clean up group definitions.
@@ -258,15 +256,15 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_2();
 
     // Delete acl hostnames.
-    $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl');
-    $this->deleteAclHostname($groupname, $a_hostnames);
+    $hostnames = array('bar.nl', 'car.nl', 'dar.nl');
+    $this->deleteAclHostname($groupname, $hostnames);
 
     // Switch Ega.
     $this->toEga_1();
 
     // Delete acl hostnames.
-    $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl');
-    $this->deleteAclHostname($groupname, $a_hostnames);
+    $hostnames = array('foo.nl', 'goo.nl', 'hoo.nl');
+    $this->deleteAclHostname($groupname, $hostnames);
 
     // Switch Ega.
     $this->toEga_2();

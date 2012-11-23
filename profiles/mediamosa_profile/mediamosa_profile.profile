@@ -307,7 +307,6 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   for ($x = 0; $x < strlen($prefixes); $x++) {
     mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
-    mediamosa_profile::mountpoint_mkdir('data/stills/' . $prefixes{$x});
   }
 
   // Other.
@@ -321,7 +320,7 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   mediamosa_profile::mountpoint_mkdir('media/ticket');
 
   // Create the htaccess file to protected the media directory.
-  mediamosa_configuration_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_configuration_storage::media_get_htaccess_contents());
+  mediamosa_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_storage::file_get_htaccess_contents());
 }
 
 /**

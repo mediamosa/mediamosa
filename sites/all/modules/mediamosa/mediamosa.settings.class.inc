@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * Global settings file. (1.x replacement for shared_defines).
+  * Global settings file.
   */
 class mediamosa_settings {
 
@@ -71,27 +71,6 @@ class mediamosa_settings {
   const ATOM_ENTRY_ID = 'MediaMosa:asset:';
   // RSS.
   const RSS_GENERATOR = 'MediaMosa RSS API';
-
-  // Path / SAN NAS Settings.
-  const SAN_NAS_DATA_FOLDER = 'data';
-  const SAN_NAS_STILLS_FOLDER = 'stills';
-  const SAN_NAS_TRANSCODE_FOLDER = 'transcode';
-
-  const SAN_NAS_MEDIA_FOLDER = 'media';
-  const SAN_NAS_TICKET_FOLDER = 'ticket';
-
-  // Ticket locations.
-  const PLAY_TICKET_LOCATION = 'links';
-  const DOWNLOAD_TICKET_LOCATION = 'download_links';
-  const STILL_TICKET_LOCATION = 'still_links';
-  const STILL_DATA_STYLE_LOCATION = 'style';
-  const STILL_LINK_STYLE_LOCATION = 'style';
-
-  // Expiration settings, in seconds.
-  const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
-  const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
-  const TICKET_EXPIRATION_STILL = 600; // 10 minutes
-  const TICKET_EXPIRATION_UPLOAD = 86400; // 24 hours
 
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
@@ -199,18 +178,6 @@ class mediamosa_settings {
   // of running new simpletests. Will try to clean up if to many tables are
   // found.
   const STATUS_MAX_TABLES = 800;
-
-  // FTP root directory under SAN/NAS.
-  const FTP_ROOT_DIR = 'ftp';
-
-  // FTP history directory under FTP_ROOT.
-  const FTP_HISTORY_DIR = 'history';
-
-  // FTP upload directory under FTP_ROOT.
-  const FTP_UPLOAD_DIR = 'upload';
-
-  // Current job.
-  const FTP_CURRENT_JOB_DIR = 'current.txt';
 
   // History extention.
   const FTP_HISTORY_EXTENTION = 'history';

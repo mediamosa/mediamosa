@@ -26,7 +26,6 @@ dependencies[] = mediamosa_configuration
 dependencies[] = mediamosa_configuration_debug
 dependencies[] = mediamosa_configuration_proxy
 dependencies[] = mediamosa_configuration_server
-dependencies[] = mediamosa_configuration_storage
 dependencies[] = mediamosa_connector
 dependencies[] = mediamosa_development
 dependencies[] = mediamosa_error

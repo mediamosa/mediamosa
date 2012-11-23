@@ -134,6 +134,55 @@ class mediamosa_http {
   }
 
   /**
+   * Wrapper around http_build_query().
+   *
+   * @param array $query
+   *   The query to rebuild.
+   *
+   * @return string
+   *   The URL encoded string.
+   */
+  public static function http_build_query(array $query) {
+    return strtr(http_build_query($query, '', '&'), array('%5B' => '[', '%5D' => ']', '%5b' => '[', '%5d' => ']'));
+  }
+
+  /**
+   * Slitup the query string.
+   *
+   * Opposite of http_build_query().
+   *
+   * @param string $query_str
+   *   The query string to split.
+   *
+   * @param array
+   *   The result array.
+   */
+  public static function parse_query($query_str) {
+    // Split the url.
+    $query = array();
+
+    // Split values.
+    foreach (explode('&', $query_str) as $valuepair) {
+      if (strpos($valuepair, '=')) {
+        list($name, $value) = explode('=', $valuepair, 2);
+        $query[urldecode($name)][] = urldecode($value);
+      }
+      else {
+        $query[urldecode($valuepair)][] = '';
+      }
+    }
+
+    // Now make single item queries with 0 keys no array.
+    foreach ($query as $name => $value) {
+      if (count($value) == 1 && key($value) == 0) {
+        $query[$name] = reset($value);
+      }
+    }
+
+    return $query;
+  }
+
+  /**
    * Glue part of (parsed) url.
    * @see parse_url()
    *

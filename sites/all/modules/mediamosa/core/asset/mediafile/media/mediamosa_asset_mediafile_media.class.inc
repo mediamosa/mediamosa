@@ -1,36 +1,10 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Class for /media REST call.
  */
 
- /**
-  * @file
-  * Class for /media REST call.
-  */
-
 class mediamosa_asset_mediafile_media {
-
   // ---------------------------------------------------------------- Functions.
   /**
    * Split up the mediafile_str into it parts.
@@ -43,7 +17,6 @@ class mediamosa_asset_mediafile_media {
    *     'mediafile_id' (always)
    *     'style_id' (always or 0)
    *     'extension'
-   *
    */
   public static function mediafile_str_parse($mediafile_str) {
     $matches = array();
@@ -138,7 +111,7 @@ class mediamosa_asset_mediafile_media {
     $path = mediamosa_io::dirname($link);
 
     // Create directory.
-    mediamosa_io::mkdir($path, TRUE);
+    mediamosa_io::mkdir($path);
 
     // Make sure the location is a directory.
     if (!is_dir($path)) {
@@ -223,7 +196,7 @@ class mediamosa_asset_mediafile_media {
 
     // Get the ticket location. It must exist. If it does not, then either the
     // ticket is invalid or we don't have access.
-    $original_mediaticket_file = mediamosa_configuration_storage::media_get_ticket_file($app_id, $original_mediaticket_str);
+    $original_mediaticket_file = mediamosa_storage::get_uri_media_ticket_file($app_id, $original_mediaticket_str);
     if (!file_exists($original_mediaticket_file)) {
       throw new mediamosa_exception_error_invalid_ticket(array('@ticket_id' => $ticket_id));
     }
@@ -243,7 +216,7 @@ class mediamosa_asset_mediafile_media {
     // same time as the master ticket.
 
     // Symlink Link.
-    $link = mediamosa_configuration_storage::media_get_file($app_id, $mediaticket_str);
+    $link = mediamosa_storage::get_uri_media_file($app_id, $mediaticket_str);
 
     // Create the symlink.
     self::handle_media_symlink($target, $link);
@@ -292,22 +265,40 @@ class mediamosa_asset_mediafile_media {
     if ($style_id) {
       // Handle still style, create it as target for our symlink.
       $target = mediamosa_asset_mediafile_still::image_style_create_derivative($mediafile_id, $style_id);
-
-      // Symlink Link.
-      $link = mediamosa_configuration_storage::media_get_file($app_id, $mediafile_str);
     }
     else {
       // Get the source file (has no extension) as our symlink target.
-      $target = mediamosa_configuration_storage::data_still_get_file($mediafile_id);
-
-      // Symlink Link.
-      $link = mediamosa_configuration_storage::media_get_file($app_id, $mediafile_str);
+      $target = mediamosa_storage::get_uri_data_file($mediafile_id);
     }
+
+    // Symlink Link.
+    $link = mediamosa_storage::get_uri_media_file($app_id, $mediafile_str);
 
     // Create the symlink.
     self::handle_media_symlink($target, $link);
 
     // Serve the file.
     self::serve_media($link, $mimetype);
+  }
+
+  /**
+   * Test if a permanent mediafile link can be made.
+   *
+   * @param string $mediafile_id
+   *   The ID of the mediafile to test.
+   *
+   * @throws mediamosa_exception_error_is_unappropriate
+   */
+  public static function allow_permanent($mediafile_id, $is_app_admin = FALSE) {
+    // Protected mediafiles (stills) can not be permanent.
+    try {
+      return !mediamosa_asset_mediafile::is_mediafile_protected($mediafile_id, $is_app_admin);
+    }
+    catch (mediamosa_exception_error_is_unappropriate $e) {
+      throw $e;
+    }
+    catch (mediamosa_exception $e) {
+      return FALSE;
+    }
   }
 }

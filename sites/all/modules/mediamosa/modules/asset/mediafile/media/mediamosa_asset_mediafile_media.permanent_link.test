@@ -38,7 +38,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     return array(
       'name' => 'Media - Stills with permanent and temporary (ticket) tests',
       'description' =>  'Extended tests for stills with permanent and temporary ticket calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
     );
   }
 
@@ -51,7 +51,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
-    $job_id = $this->createMediafileStill($mediafile_id);
+    $this->createMediafileStill($mediafile_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -241,7 +241,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->play_proxy($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
@@ -259,13 +259,13 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
     );
     // FIXME: turned off, no longer needed.
-//    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+//    $response = $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Again with owner (link must now be like ticket).
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->play_proxy($asset_id, $parameters);
 
     // Check response.
     // ticket link.
@@ -279,7 +279,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->play_proxy($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
@@ -303,20 +303,20 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+    $response = $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+    $response = $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->play_proxy($asset_id, $parameters);
 
     // Check response.
     // ticket link.
@@ -332,7 +332,7 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     $parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->play_proxy($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
@@ -420,4 +420,28 @@ class MediaMosaAssetMediafilePermanentMediaTestCaseEgaJob extends MediaMosaTestC
     // Must perm. link.
     $this->assertFalse(stripos($asset['vpx_still_url'], '/media/ticket/'), 'Must be perm. link');
   }
+
+  /**
+   * Normal play mediafiles.
+   */
+//  public function testPermanentLink() {
+//    // Create upload file.
+//    $options = array(
+//      'downloadable' => TRUE,
+//    );
+//    $upload = $this->uploadTestFile($options);
+//    $asset_id = $upload['asset_id'];
+//    $mediafile_id = $upload['mediafile_id'];
+//
+//
+//    $parameters = array(
+//      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
+//      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+//    );
+//    $response = $this->play_proxy($asset_id, $parameters);
+//
+//    $this->var_export($response);
+//
+//
+//  }
 }

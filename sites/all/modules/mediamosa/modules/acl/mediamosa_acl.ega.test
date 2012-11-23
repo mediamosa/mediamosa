@@ -35,7 +35,7 @@ class MediaMosaAclEgaTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'ACL - asset and mediafile information from other EGA',
+      'name' => 'ACL - Asset and mediafile information from other EGA',
       'description' => 'Testing ACL asset and mediafile request from other application related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );

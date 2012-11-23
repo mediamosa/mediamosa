@@ -4,29 +4,6 @@
  * The job handler server.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_job_scheduler {
   /**
    * Log message.
@@ -573,7 +550,7 @@ class mediamosa_job_scheduler {
           mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
           mediamosa_asset_mediafile_db::FILENAME => $job_info["filename"],
           mediamosa_asset_mediafile_db::APP_ID => $job_info["app_id"],
-          mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+          mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
           mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
         );
 
@@ -618,7 +595,7 @@ class mediamosa_job_scheduler {
       mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
       mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
       mediamosa_asset_mediafile_db::FILENAME => $job_info['filename'],
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
       mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID => $job_info['transcode_profile_id'],
       mediamosa_asset_mediafile_db::TOOL => $job_info['tool'],
       mediamosa_asset_mediafile_db::FILE_EXTENSION => $job_info['file_extension'],
@@ -667,8 +644,7 @@ class mediamosa_job_scheduler {
    */
   public static function add_still_to_db($job_id, $filenames) {
     // Scene changes.
-    $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
-    $my_file = $destination_path . $job_id . '_scene.txt';
+    $my_file = mediamosa_storage::get_uri_data_transcode_file($job_id . '_scene.txt');
 
     $scenes = array();
 

@@ -70,9 +70,9 @@ class mediamosa_job_server_still {
     // Check the generated stills
     $i = 1;
     $pixel_rgb = NULL;
-    $destination = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-    while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
-      $source = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+    $destination = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+    while (file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
+      $source = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
       $im = mediamosa_gd::imagecreatefromjpeg($source);
 
       if ($im) {

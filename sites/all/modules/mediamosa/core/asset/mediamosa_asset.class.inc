@@ -6,7 +6,7 @@
 
 class mediamosa_asset {
 
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Preprocess the asset for output.
    *
@@ -864,10 +864,10 @@ class mediamosa_asset {
 
               // Found a still?
               if (!empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
-
+                // Get the still ID.
                 $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
 
-                if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
+                if (mediamosa_asset_mediafile_media::allow_permanent($still_id, $is_app_admin)) {
                   $filename = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
                   $response = mediamosa_asset_mediafile_play_proxy::create_response_still($filename, $app_id);
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
@@ -900,7 +900,6 @@ class mediamosa_asset {
       // Now stuff that can be set more than once (f.e. metadata).
       if (!empty($asset['asset_property_group_name']) && ($asset['asset_property_is_hidden'] == 'FALSE' || $view_hidden_metadata)) {
         // Choose the value.
-        $asset_property_value = NULL;
         switch ($asset['asset_property_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
             $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset['asset_property_val_char'];

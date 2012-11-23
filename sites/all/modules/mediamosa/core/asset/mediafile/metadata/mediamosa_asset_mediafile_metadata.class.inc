@@ -213,8 +213,6 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Parse and store the returned string from analyse.
    *
-   * 1.x: _vpx_jobhandler_parse_metadata
-   *
    * @param mediafile_id
    * @param string $analyse_result
    */
@@ -298,22 +296,20 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Store the analyse result in the mediafile metadata.
    *
-   * 1.x: _vpx_jobhandler_update_analyse_job_info_to_mediafile
-   *
-   * @param $job_id
-   * @param $analyse_result
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $analyse_result
+   *   The string output of the analyse
    */
   public static function store_analyse($job_id, $analyse_result) {
     // Get the job.
     $job = mediamosa_job::get($job_id);
 
-    // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($job[mediamosa_job_db::MEDIAFILE_ID]));
-
+    // Get the mediafile_id.
     $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_ID];
 
-    // We don't remove any previous metadatas.
-    //self::delete_all_mediafile_metadata($mediafile_id);
+    // Get the filesize.
+    $filesize = mediamosa_io::filesize(mediamosa_storage::get_uri_mediafile_id($mediafile_id));
 
     // Parse and store metadata from the analyse result.
     $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
@@ -335,8 +331,8 @@ class mediamosa_asset_mediafile_metadata {
         mediamosa_job::create_job_still($job[mediamosa_job_db::APP_ID], $job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $still_parameters);
       }
       catch (mediamosa_exception_error_still_is_not_creatable $e) {
-        // The still is not creatable from the mediafile. Eg. it is an audio file.
-        // Do nothing.
+        // The still is not creatable from the mediafile. Eg. it is an audio
+        // file. Do nothing.
       }
     }
   }
@@ -349,7 +345,7 @@ class mediamosa_asset_mediafile_metadata {
    */
   public static function store_analyse_without_job($job_id, $analyse_result, $mediafile_id) {
     // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id));
+    $filesize = mediamosa_io::filesize(mediamosa_storage::get_uri_mediafile_id($mediafile_id));
 
     // Parse and store metadata from the analyse result.
     $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
@@ -363,24 +359,31 @@ class mediamosa_asset_mediafile_metadata {
     $job = mediamosa_job::get($job_id, array(mediamosa_job_db::MEDIAFILE_DEST));
     // Is it a retranscode job?
     if ($job[mediamosa_job_db::MEDIAFILE_DEST]) {
-      $mediafile_dest = $job[mediamosa_job_db::MEDIAFILE_DEST];
+      $mediafile_id_dest = $job[mediamosa_job_db::MEDIAFILE_DEST];
+
       // Delete the original.
-      mediamosa_asset_mediafile::delete($mediafile_dest);
+      mediamosa_asset_mediafile::delete($mediafile_id_dest);
+
       // Move the file.
       mediamosa_io::move(
-        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id),
-        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_dest)
+        mediamosa_storage::get_uri_mediafile_id($mediafile_id),
+        mediamosa_storage::get_uri_mediafile_id($mediafile_id_dest)
       );
 
-      mediamosa_db::db_query("SET foreign_key_checks = 0");
-      // Update mediamosa_asset_mediafile table.
-      mediamosa_asset_mediafile::update_mediafile_id($mediafile_id, $mediafile_dest);
-      // Update mediamosa_asset_mediafile_metadata table.
-      self::update_mediafile_id($mediafile_id, $mediafile_dest);
-      mediamosa_db::db_query("SET foreign_key_checks = 1");
+      // Turn off foreign keys so we can move mediafile data and metadata.
+      mediamosa_db::db_query('SET foreign_key_checks = 0');
 
-      // Update the mediafile_id.
-      $mediafile_id = $mediafile_dest;
+      // Update mediamosa_asset_mediafile table.
+      mediamosa_asset_mediafile::update_mediafile_id($mediafile_id, $mediafile_id_dest);
+
+      // Update mediamosa_asset_mediafile_metadata table.
+      self::move_mediafile_metadata($mediafile_id, $mediafile_id_dest);
+
+      // And turn it back on.
+      mediamosa_db::db_query('SET foreign_key_checks = 1');
+
+      // Take the new mediafile_id.
+      $mediafile_id = $mediafile_id_dest;
     }
 
     // Normalize to asset.
@@ -391,18 +394,17 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
-   * Update the mediafile_id.
+   * Move the technical metadata from one mediafile to another.
    *
-   * @param mediafile_id
-   * @param mediafile_dest
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string $mediafile_id_dest
+   *   The mediafile ID of the destination.
    */
-  public static function update_mediafile_id($mediafile_id, $mediafile_dest) {
-    $fields = array(
-      mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_dest,
-    );
+  public static function move_mediafile_metadata($mediafile_id, $mediafile_id_dest) {
     // Build the query.
     mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-      ->fields($fields)
+      ->fields(array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_id_dest))
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
   }
@@ -410,15 +412,21 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Create mediafile metadata value.
    *
-   * @param mediafile_id
-   * @param value Value of the metadata
-   * @param prop_name Property name
-   * @param type Type of the property
+   * @param string $mediafile_id
+   * @param string|integer $value
+   *   The value of the metadata property.
+   * @param $prop_name Property name
+   *   The name of the property.
+   * @param string $type
+   *   Type of the property.
+   *
+   * @see mediamosa_asset_mediafile_metadata_property_db::TYPE_*.
    */
   public static function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
 
-    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    // Make sure it exists.
+    mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     $fields = array();
     if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
@@ -445,6 +453,7 @@ class mediamosa_asset_mediafile_metadata {
       throw new mediamosa_exception_program_error('Invalid mediafile metadata type (@type)!', array('@type' => $type));
     }
 
+    // @todo: re-write to db_merge().
     $num_updated = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->fields($fields)
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
@@ -455,7 +464,7 @@ class mediamosa_asset_mediafile_metadata {
       $fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $mediafile_id;
       $fields[mediamosa_asset_mediafile_metadata_db::PROP_ID] = $prop_id;
 
-      $metadata_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
         ->fields($fields)
         ->execute();
     }
@@ -464,9 +473,12 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Create mediafile metadata value - INT.
    *
-   * @param mediafile_id
-   * @param value Value of the metadata
-   * @param prop_name Property name
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string|integer $value
+   *   The value of the metadata.
+   * @param string $prop_name
+   *   The name of the Property.
    */
   public static function create_mediafile_metadata_int($mediafile_id, $value, $prop_name) {
     self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
@@ -532,14 +544,14 @@ class mediamosa_asset_mediafile_metadata {
       return;
     }
 
-    // Don't let it grow to much, pop the first from the array to keep mem in
-    // check.
-    if (count($mediafile_metadata) > 50) {
-      array_shift($mediafile_metadata);
-    }
-
     // Check if metadata for this mediafile exists.
     if (!isset($mediafile_metadata[$mediafile_id])) {
+      // Don't let it grow to much, pop the first from the array to keep mem in
+      // check.
+      if (count($mediafile_metadata) > 50) {
+        array_shift($mediafile_metadata);
+      }
+
       // Default empty.
       $mediafile_metadata[$mediafile_id] = array();
 

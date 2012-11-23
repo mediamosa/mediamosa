@@ -122,9 +122,6 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 
     $app_ids = $this->get_param_value_app();
 
-    // Get the 1st app.
-    $app_id = reset($app_ids);
-
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $show_stills = $this->get_param_value(self::SHOW_STILLS);
 
@@ -209,7 +206,6 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
 
     // Create output.
     $items = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai);
-
 
     // Add to response.
     if (!empty($items['mediafile'])) {
@@ -409,7 +405,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         ),
         self::IS_DOWNLOADABLE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
+          self::VAR_DESCRIPTION => 'Mediafile can be downloaded. Only in combination with filename; must be FALSE when URI is used.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_ORIGINAL_FILE => array(
@@ -430,7 +426,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         ),
         self::SANNAS_MOUNT_POINT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The location path of the file.',
+          self::VAR_DESCRIPTION => 'The location path of the file. Only used in combination with filename.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::MEDIAFILE_ID => array(
@@ -451,14 +447,13 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
-    $is_original_file = $this->get_param_value(self::IS_ORIGINAL_FILE);
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
@@ -481,10 +476,10 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     }
 
     // Must exists.
-    $a_asset = mediamosa_asset::must_exists($asset_id);
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Check owner of parent asset, need ownership.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Want to copy these fields to new mediafile.
     $params = array(
@@ -517,7 +512,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
 
     // Ok add to output.
-    $o_mediamosa->add_item(array('mediafile_id' => $mediafile_id));
+    $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
 
     // Done.
   }

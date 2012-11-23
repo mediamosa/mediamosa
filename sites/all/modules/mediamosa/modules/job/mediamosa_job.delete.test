@@ -40,7 +40,7 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'JOB - delete with mediafile test',
+      'name' => 'JOB - Delete mediafile test',
       'description' => 'Deleting an asset with running jobs.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );
@@ -54,9 +54,9 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Delete a mediafile with a running job.
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -71,9 +71,9 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Delete an asset with a running job.
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -87,6 +87,5 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Delete the mediafile_id from the clean up.
     $this->deleteFromCleanUp($mediafile_id);
-
   }
 }

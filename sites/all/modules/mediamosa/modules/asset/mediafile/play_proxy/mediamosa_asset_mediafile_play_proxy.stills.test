@@ -1,31 +1,9 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * @file
  * Assets without still won't give back still links.
  */
+
 class MediaMosaPlayProxyStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
@@ -131,10 +109,7 @@ class MediaMosaPlayProxyStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->toEga_1();
 
     // Now do a play proxy call to still (as app 1).
-    $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
-    );
-    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+    $response = $this->do_play_proxy_still($asset_id);
 
     $this->var_export($response, 'response');
 

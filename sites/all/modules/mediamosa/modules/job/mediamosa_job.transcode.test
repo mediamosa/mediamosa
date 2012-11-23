@@ -54,7 +54,7 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     // Create transcode job.
-    $job_id = $this->createMediafileTranscode($mediafile_id);
+    $job_id = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -63,11 +63,16 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
 
-    // Add mediafile clean up.
+    // Add mediafile clean up and get the first transcoded mediafile.
+    $mediafile_id_transcoded = NULL;
     foreach ($asset['mediafiles'] as $mediafile) {
       if (isset($mediafile[0])) {
         foreach ($mediafile as $mediafile_child) {
           $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          if (!$mediafile_id_transcoded && $mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+          }
         }
       }
       else {
@@ -90,13 +95,14 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
       }
     }
     $this->assertTrue($mediafile_id_transcoded, 'Found transcoded mediafile');
+
     if ($mediafile_id_transcoded) {
-      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_transcoded);
+      $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id_transcoded);
       // Delete the transcoded file.
       mediamosa_io::unlink($filename);
 
       // Create transcode job.
-      $job_id = $this->createMediafileRetranscode($mediafile_id_transcoded);
+      $job_id = $this->createMediafileRetranscode($mediafile_id_transcoded, array('profile_id' => $this->getDefaultTranscodeProfile()));
 
       // Parse the queue.
       $this->doQueueCycleAll();
@@ -105,6 +111,9 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
         mediamosa_io::is_file($filename),
         strtr("The mediafile was successfuly retranscoded: @filename", array('@filename' => $filename))
       );
+    }
+    else {
+      $this->fail('Expected to find transcoded file!');
     }
   }
 

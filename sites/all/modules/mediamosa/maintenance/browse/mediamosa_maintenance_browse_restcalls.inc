@@ -506,52 +506,62 @@ function template_preprocess_restcall_doc(&$variables) {
 
   // Sort on param.
   ksort($var_setup[mediamosa_rest_call::VARS]);
-  $form = $rows = array();
+  $rows = array();
+  $rows_internal = array();
 
   if (!isset($var_setup[mediamosa_rest_call::VARS])) {
     $var_setup[mediamosa_rest_call::VARS] = array();
   }
+
   // First required.
   foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $item) {
     if (isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) && $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_YES) {
-      $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
+      if (isset($item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY]) && $item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY] == mediamosa_rest_call::VAR_IS_INTERNAL_ONLY_YES) {
+        continue;
+      }
 
-      // Get allowed values.
-      $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
-
-      // Possible aliases.
-      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (depricated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
-
-      $rows[] = array(
-        $param . $is_array,
-        mediamosa_sdk::typeAlias2Type($item[mediamosa_rest_call::VAR_TYPE]),
-        (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value must be either "' . implode('" or "', $allowed_values) . '".' : '') . (!empty($aliases) ? '<br /><small>' . $aliases . '</small>' : ''),
-        t('Required'),
-        isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
-        isset($item[mediamosa_rest_call::VAR_RANGE_END]) ? $item[mediamosa_rest_call::VAR_RANGE_END] : '-',
-      );
+      // Add item.
+      _template_preprocess_restcall_doc_item_helper($param, $item, $rows, TRUE);
     }
   }
 
   // Not required.
   foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $item) {
     if (!isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) || $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_NO) {
+      if (isset($item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY]) && $item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY] == mediamosa_rest_call::VAR_IS_INTERNAL_ONLY_YES) {
+        continue;
+      }
+
       $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
 
-      // Get allowed values.
-      $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
+      // Add item.
+      _template_preprocess_restcall_doc_item_helper($param, $item, $rows, FALSE);
+    }
+  }
 
-      // Possible aliases.
-      $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (depricated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
+  // Internals required.
+  foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $item) {
+    if (isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) && $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_YES) {
+      if (!isset($item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY]) || $item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY] != mediamosa_rest_call::VAR_IS_INTERNAL_ONLY_YES) {
+        continue;
+      }
 
-      $rows[] = array(
-        $param . $is_array,
-        mediamosa_sdk::typeAlias2Type($item[mediamosa_rest_call::VAR_TYPE]),
-        (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value (when supplied) must be either "' . implode('" or "', $allowed_values) . '".' : '') . (!empty($aliases) ? '<br /><small>' . $aliases . '</small>' : ''),
-        t('Optional'),
-        isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
-        isset($item[mediamosa_rest_call::VAR_RANGE_END]) ? $item[mediamosa_rest_call::VAR_RANGE_END] : '-',
-      );
+      $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
+
+      // Add item.
+      _template_preprocess_restcall_doc_item_helper($param, $item, $rows_internal, TRUE);
+    }
+  }
+
+  // Internals not required.
+  foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $item) {
+    if (!isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) || $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_NO) {
+      if (!isset($item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY]) || $item[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY] != mediamosa_rest_call::VAR_IS_INTERNAL_ONLY_YES) {
+        continue;
+      }
+
+      // Add item.
+      _template_preprocess_restcall_doc_item_helper($param, $item, $rows_internal, FALSE);
     }
   }
 
@@ -564,6 +574,18 @@ function template_preprocess_restcall_doc(&$variables) {
       'empty' => t('This REST call has no input parameters.'),
     )
   );
+
+  if (!empty($rows_internal)) {
+    // Parameter list.
+    $variables['parameters_internal'] = theme(
+      'table',
+      array(
+        'header' => $header,
+        'rows' => $rows_internal,
+        'empty' => t('This REST call has no input parameters.'),
+      )
+    );
+  }
 
   // Response fields.
   $header = array(
@@ -608,4 +630,35 @@ function template_preprocess_restcall_doc(&$variables) {
   if (empty($variables['rest_call']->example_response)) {
     $variables['warnings'][] = t('No example response specified.');
   }
+}
+
+/**
+ * Helper for adding rows.
+ *
+ * @param $param
+ *   The param name.
+ * @param $item
+ *   The item to add.
+ * @param $rows
+ *   The result rows.
+ * @param $required
+ *   Is TRUE when required.
+ */
+function _template_preprocess_restcall_doc_item_helper($param, $item, &$rows, $required = TRUE) {
+  $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
+
+  // Get allowed values.
+  $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
+
+  // Possible aliases.
+  $aliases = !empty($item[mediamosa_rest_call::VAR_ALIAS_FOR]) ? t("This variable also works when specified as (depricated) alias; @aliases", array('@aliases' => implode(', ', $item[mediamosa_rest_call::VAR_ALIAS_FOR]))) : '';
+
+  $rows[] = array(
+    $param . $is_array,
+    mediamosa_sdk::typeAlias2Type($item[mediamosa_rest_call::VAR_TYPE]),
+    (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value (when supplied) must be either "' . implode('" or "', $allowed_values) . '".' : '') . (!empty($aliases) ? '<br /><small>' . $aliases . '</small>' : ''),
+    $required ? t('Required') : t('Optional'),
+    isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
+    isset($item[mediamosa_rest_call::VAR_RANGE_END]) ? $item[mediamosa_rest_call::VAR_RANGE_END] : '-',
+  );
 }

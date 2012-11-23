@@ -148,7 +148,7 @@ class MediaMosaStillPlayProxyTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->assertTrue(empty($stills), 'No stills found.');
 
     // Create transcode job.
-    $job_id = $this->createMediafileTranscode($mediafile_id);
+    $job_id = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
 
     // Parse the queue.
     $this->doQueueCycleAll();

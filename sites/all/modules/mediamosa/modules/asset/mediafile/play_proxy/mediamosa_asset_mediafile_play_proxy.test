@@ -1,37 +1,7 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Play proxy unittests.
- *
- * Based on tickets mediamosa 1:
- * ticket_2
- * ticket_71
- * ticket_72
  */
 
 class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
@@ -70,7 +40,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $ticket_id = $response['xml']->items->item[0]->ticket_id;
 
     // Test if the link to file exists.
-    $link_to_file = mediamosa_configuration_storage::ticket_play_location_get($this->a_app[mediamosa_app_db::APP_ID]) . DIRECTORY_SEPARATOR . $ticket_id;
+    $link_to_file = mediamosa_storage::get_uri_media_play($this->a_app[mediamosa_app_db::APP_ID]) . DIRECTORY_SEPARATOR . $ticket_id;
 
     // Check if link exists.
     $this->assertTrue(file_exists($link_to_file), 'Ticket link to file exists');
@@ -112,7 +82,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
     // Base path.
-    $ticket_path = mediamosa_configuration_storage::ticket_play_location_get($app_id) . DIRECTORY_SEPARATOR;
+    $ticket_path = mediamosa_storage::get_uri_media_ticket($app_id);
 
     // Test first if ticket get removed when its not in the database.
 
@@ -149,7 +119,6 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->file_exists($ticket_path . $ticket_id, "Check if the ticket did NOT get cleaned up by 'play_proxy_ticket_cleanup()'.");
   }
 
-  // 1.x ticket #71.
   public function testPlayProxyXMLResponse() {
     $asset_id = $this->createAsset();
     $mediafile_id = $this->createMediafile($asset_id);
@@ -197,7 +166,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         $parameters['duration']['value'] = 4000;
 
         try {
-          $response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+          $response = self::create_response_1x_to_2x(
             $asset_id,
             $parameters,
             $a_asset_info,
@@ -233,10 +202,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
         // Check if ASX file was created (we also will remove the file again)
         if ($parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
-          $filename = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
-          if (file_exists($filename)) {
-            mediamosa_io::unlink($filename);
-          }
+          $filename = mediamosa_storage::get_uri_asx_file($app_id, $ticket);
+          mediamosa_io::unlink($filename);
         }
 
         if (!($parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
@@ -357,56 +324,56 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 100, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 200),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 100, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 264),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(0, 0, 200, 200, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 200),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, 0, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 400),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, 0, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 464),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 0, 400, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 400),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 0, 400, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 464),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, NULL, NULL, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       //($size['width'] == PP_FLASH_OBJECT_WIDTH && $size['height'] == PP_FLASH_OBJECT_HEIGHT),
       ($size['width'] == 100 && $size['height'] == 200),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     $size = mediamosa_asset_mediafile_play_proxy::calc_video_size(100, 200, 200, NULL, mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV);
     $this->assertTrue(
       ($size['width'] == 200 && $size['height'] == 400),
-      "Test mediamosa_asset_mediafile_play_proxy::calc_video_size()."
+      'Test mediamosa_asset_mediafile_play_proxy::calc_video_size().'
     );
 
     // Streaming server.

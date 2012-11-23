@@ -57,3 +57,28 @@ class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
     );
   }
 }
+
+/**
+ * URI: /get_current_mount_point
+ * Method: GET
+ */
+class mediamosa_rest_call_get_current_mount_point extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Get the linux mount point.
+    $current_mount_point = mediamosa_storage_stream_wrapper::get_storage_path_linux();
+
+    // Add to output.
+    $mediamosa->add_item(array('current_mount_point' => $current_mount_point));
+  }
+}

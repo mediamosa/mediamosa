@@ -146,10 +146,10 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
 
     // Create FTP dir.
-    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . '/' . mediamosa_configuration_storage::ftp_location_get() . '/' . $username;
+    $user_home_dir = mediamosa_storage::get_uri_ftp() . $username;
 
     try {
-      mediamosa_io::mkdir($user_home_dir, TRUE, 0775);
+      mediamosa_io::mkdir($user_home_dir);
     }
     catch (mediamosa_exception $e) {
       // Ignore.

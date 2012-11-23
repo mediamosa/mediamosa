@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Core - Open source media management and distribution platform.
@@ -38,6 +13,38 @@ require_once 'core/node/mediamosa_node.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_app.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function mediamosa_stream_wrappers() {
+
+  $wrappers = array();
+
+  // @todo: Class might not be registered yet on 3.5 release. Remove
+  //        class_exists() & require_once() in version 4.
+  if (!class_exists('mediamosa_storage_stream_wrapper')) {
+    require_once 'lib/mediamosa_storage.class.inc';
+  }
+
+  // Our MediaMosa Stream Wrappers.
+  $wrappers = array(
+    'mediamosa-storage' => array(
+      'name' => t('MediaMosa storage mount point location'),
+      'class' => 'mediamosa_storage_stream_wrapper',
+      'description' => t('All files and symbolic links used by MediaMosa.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-simpletest' => array(
+      'name' => t('MediaMosa storage simpletest mount point location'),
+      'class' => 'mediamosa_storage_simpletest_stream_wrapper',
+      'description' => t('All files and symbolic links used by MediaMosa during Simpletest.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+  );
+
+  return $wrappers;
+}
 
 /**
  * Implements hook_permission().
@@ -537,6 +544,31 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
 function mediamosa_mediamosa_configuration_collect() {
 
   $form = array();
+
+  $form['settings_storage'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Storage file system path'),
+    '#description' => t('The mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this file system path needs to be available for all servers (i.e. through NFS).'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_storage']['mediamosa_current_mount_point'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files. It should be writable by MediaMosa.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_storage_stream_wrapper::get_storage_path_linux(),
+  );
+
+  $form['settings_storage']['mediamosa_current_mount_point_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path windows'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
+    '#required' => FALSE,
+    '#default_value' => mediamosa_storage_stream_wrapper::get_storage_path_windows(),
+  );
+
   $form['settings_mediamosa'] = array(
     '#type' => 'fieldset',
     '#title' => t('Miscellaneous'),
@@ -600,12 +632,17 @@ function mediamosa_mediamosa_configuration_collect() {
  * Implements hook_mediamosa_configuration_validate().
  */
 function mediamosa_mediamosa_configuration_validate($form, $form_state) {
-//  global $databases;
 
   // Use normal so schema might be empty.
   $parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);
   if (!isset($parse_url['scheme']) || !in_array($parse_url['scheme'], array('http', 'https'))) {
     form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
+  }
+
+  // Get the path based on OS.
+  $path = mediamosa::is_windows_platform() ? $form_state['values']['mediamosa_current_mount_point_windows'] : $form_state['values']['mediamosa_current_mount_point'];
+  if (!empty($path) && !mediamosa_io::is_writable($path)) {
+    drupal_set_message(t('<em>Warning, your !os MediaMosa storage file system path is not writable.</em>', array('!os' => mediamosa::is_windows_platform() ? 'Windows' : 'Linux')), 'warning');
   }
 }
 
@@ -747,4 +784,21 @@ function mediamosa_mediamosa_search_engine() {
     'title' => t('MediaMosa default search'),
     'description' => t('The default search engine for searching in MediaMosa. This search engine is always available.'),
   ));
+}
+
+/**
+ * Implements hook_file_mimetype_mapping_alter().
+ */
+function mediamosa_file_mimetype_mapping_alter(&$mapping) {
+  if (array_search('video/webm', $mapping['mimetypes']) === FALSE) {
+    // Add missing mimetypes.
+    $mapping['mimetypes'][] = 'video/webm';
+    $mapping['mimetypes'][] = 'audio/webm';
+  }
+
+  // Webm.
+  $webm = array_search('video/webm', $mapping['mimetypes']);
+
+  // Check if video/webm is already added.
+  $mapping['extensions']['webm'] = $webm;
 }

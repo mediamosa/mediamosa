@@ -36,7 +36,7 @@ function mediamosa_batch_jobs_queue() {
   $output = '';
   $files = mediamosa_batch_jobs_sort_files(
     mediamosa_io::file_scan_directory(
-      mediamosa_configuration_storage::get_full_ftp_path(),
+      mediamosa_storage::get_uri_ftp(),
       '/\.' . mediamosa_settings::FTP_QUEUE_EXTENTION . '$/',
       array('nomask' => '/history/')
     ),
@@ -59,9 +59,9 @@ function mediamosa_batch_jobs_queue() {
  */
 function mediamosa_batch_jobs_current() {
   $output = '';
-  if (file_exists(mediamosa_configuration_storage::current_job_path())) {
-    $handle = fopen(mediamosa_configuration_storage::current_job_path(), 'r');
-    $filename = trim(fread($handle, filesize(mediamosa_configuration_storage::current_job_path())));
+  if (file_exists(mediamosa_storage::get_uri_ftp_history_job())) {
+    $handle = fopen(mediamosa_storage::get_uri_ftp_history_job(), 'r');
+    $filename = trim(fread($handle, filesize(mediamosa_storage::get_uri_ftp_history_job())));
     fclose($handle);
 
     if (file_exists($filename)) {
@@ -87,7 +87,7 @@ function mediamosa_batch_jobs_history() {
   $output = '';
   $files = mediamosa_batch_jobs_sort_files(
     mediamosa_io::file_scan_directory(
-      mediamosa_configuration_storage::get_full_history_path(),
+      mediamosa_storage::get_uri_ftp_history(),
       '/\.' . mediamosa_settings::FTP_HISTORY_EXTENTION . '$/'
     ),
     'filemtime'
@@ -134,7 +134,7 @@ function mediamosa_batch_jobs_delete_confirm(&$form_state) {
  */
 function mediamosa_batch_jobs_delete_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
-    $filename = mediamosa_configuration_storage::get_full_ftp_path() . '/' . urldecode($form_state['values']['batch']);
+    $filename = mediamosa_storage::get_uri_ftp() . '/' . urldecode($form_state['values']['batch']);
     if (file_exists($filename)) {
       unlink($filename);
     }
@@ -150,9 +150,9 @@ function mediamosa_batch_jobs_delete_confirm_submit($form, &$form_state) {
 function mediamosa_batch_jobs_log() {
   $filename = check_plain(urldecode(arg(5)));
   $usr = check_plain(urldecode(arg(6)));
-  $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . basename($filename, '.' . mediamosa_settings::FTP_HISTORY_EXTENTION) . '.log';
+  $path = mediamosa_storage::get_uri_ftp_history() . DIRECTORY_SEPARATOR . basename($filename, '.' . mediamosa_settings::FTP_HISTORY_EXTENTION) . '.log';
   if (!file_exists($path)) {
-    $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . $usr . '_' . basename($filename, '.' . mediamosa_settings::FTP_QUEUE_EXTENTION) . '.log';
+    $path = mediamosa_storage::get_uri_ftp_history() . DIRECTORY_SEPARATOR . $usr . '_' . basename($filename, '.' . mediamosa_settings::FTP_QUEUE_EXTENTION) . '.log';
   }
 
   drupal_set_title(t('Log') . ' ' . $filename);

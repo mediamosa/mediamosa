@@ -192,7 +192,7 @@ class mediamosa_asset_mediafile {
       $normalize_asset_ids[$mediafile[mediamosa_asset_mediafile_db::ASSET_ID]] = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
       // Unlink mediafile.
-      mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_filename_get($mediafile));
+      mediamosa_io::unlink(mediamosa_storage::get_uri_mediafile($mediafile));
     }
 
     // Delete mediafile from DB.
@@ -228,23 +228,18 @@ class mediamosa_asset_mediafile {
   /**
    * Enrich the response with mediafile data.
    *
-   * 1.x _media_management_return_mediafile_list()
-   *
-   * Merged with 1.x _media_management_process_mediafile_output.
-   *
    * @param array $mediafile_ids
-   * @param array $mixed_app_id
-   *  Either array or integer application ID.
+   *   The mediafiles to include in output.S
+   * @param array $app_ids
+   *   Either array or integer application ID.
    * @param boolean $is_oai
-   *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
+   *   Include extended EGA Play Urls.
    * @param boolean $show_stills
+   *   Include the stills.
+   * @param boolean $old_output
+   *   Output as pre-2.0.
    */
-  public static function enrich_response_mediafile(
-    array $mediafile_ids,
-    $mixed_app_id,
-    $is_oai,
-    $show_stills = TRUE,
-    $old_output = FALSE) {
+  public static function enrich_response_mediafile(array $mediafile_ids, array $app_ids, $is_oai, $show_stills = TRUE, $old_output = FALSE) {
 
     // Can be empty or null.
     if (empty($mediafile_ids) || is_null(reset($mediafile_ids))) {
@@ -252,8 +247,7 @@ class mediamosa_asset_mediafile {
     }
 
     // Both are allowed and needed.
-    $app_id = is_array($mixed_app_id) ? reset($mixed_app_id) : $mixed_app_id;
-    $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
+    $app_id = reset($app_ids);
 
     // Prefix for metadata in array.
     $prefix = 'mediafile_metadata_';
@@ -269,14 +263,14 @@ class mediamosa_asset_mediafile {
 
     // Add to item.
     $items = array();
-    foreach ($result as $row) {
-      $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
+    foreach ($result as $mediafile) {
+      $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
 
       // UTC conversion to app dates.
-      $row[mediamosa_asset_mediafile_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CREATED]);
-      $row[mediamosa_asset_mediafile_db::CHANGED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CHANGED]);
+      $mediafile[mediamosa_asset_mediafile_db::CREATED] = mediamosa::utcdate2appdate($mediafile[mediamosa_asset_mediafile_db::CREATED]);
+      $mediafile[mediamosa_asset_mediafile_db::CHANGED] = mediamosa::utcdate2appdate($mediafile[mediamosa_asset_mediafile_db::CHANGED]);
 
-      $items[$mediafile_id] = $row;
+      $items[$mediafile_id] = $mediafile;
 
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::COLORSPACE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::COLORSPACE);
@@ -302,6 +296,7 @@ class mediamosa_asset_mediafile {
     // Lets include the still, if we need them.
     if (!empty($mediafile_ids_found) && $show_stills) {
       $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER);
+
       // Get the stills.
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
       $query->fields('mf');
@@ -312,55 +307,53 @@ class mediamosa_asset_mediafile {
       $result = $query->execute();
 
       $i = 0;
-      foreach ($result as $row) {
+      foreach ($result as $still) {
         try {
-          $still_is_protected = $row[mediamosa_asset_mediafile_db::IS_PROTECTED];
+          $still_is_protected = $still[mediamosa_asset_mediafile_db::IS_PROTECTED];
 
           // Check the asset protection.
           $asset_is_protected = mediamosa_asset_db::IS_PROTECTED_FALSE;
-          if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
-            $response = mediamosa_asset::get($row[mediamosa_asset_mediafile_db::ASSET_ID], NULL);
+          if ($still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
+            $response = mediamosa_asset::get($still[mediamosa_asset_mediafile_db::ASSET_ID], NULL);
             if ($response) {
               // Asset is exists.
               $asset_is_protected = $response[mediamosa_asset_db::IS_PROTECTED];
             }
           }
 
-          if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
-            $ticket = $row[mediamosa_asset_mediafile_db::ID] . '.' . mediamosa_asset_mediafile::get_file_extension($row[mediamosa_asset_mediafile_db::ID]);
+          if ($still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE && $asset_is_protected == mediamosa_asset_db::IS_PROTECTED_FALSE) {
+            $ticket = $still[mediamosa_asset_mediafile_db::ID] . '.' . mediamosa_asset_mediafile::get_file_extension($still[mediamosa_asset_mediafile_db::ID]);
           }
           else {
             // Create ticket.
-            $ticket_id = mediamosa_ticket::process_play_ticket(
+            $ticket = mediamosa_storage::STORAGE_FOLDER_TICKET . '/' . mediamosa_ticket::process_play_ticket(
+              $app_id,
+              $still[mediamosa_asset_mediafile_db::OWNER_ID],
+              $still[mediamosa_asset_mediafile_db::ID],
               mediamosa_db::uuid($app_id),
               NULL,
-              mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
-              $app_id,
-              $row[mediamosa_asset_mediafile_db::OWNER_ID],
-              $row[mediamosa_asset_mediafile_db::ID]
+              mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL
             );
-
-            $ticket = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $ticket_id . '.' . mediamosa_asset_mediafile::get_file_extension($row[mediamosa_asset_mediafile_db::ID]);
           }
 
           // Create response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-          $row['still_ticket'] = $response['output'];
+          $still['still_ticket'] = $response['output'];
 
           // Add still to mediafile.
-          assert(!empty($row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
+          assert(!empty($still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
 
-          $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
-          $row = array_merge($row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
+          $mediafile_id = $still[mediamosa_asset_mediafile_db::ID];
+          $still = array_merge($still, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
 
           // Unset sannas mount point.
-          unset($row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
-          unset($row[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
+          unset($still[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+          unset($still[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
 
-          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still'][$i++] = $row;
-        }
-        catch (mediamosa_exception_error_file_not_found $e) {
-          // Ignore.
+          $items[$still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still'][$i++] = $still;
+         }
+         catch (mediamosa_exception_error_file_not_found $e) {
+           // Ignore.
         }
       }
     }
@@ -480,29 +473,20 @@ class mediamosa_asset_mediafile {
     }
 
     return $items_result;
-  }
+   }
 
   /**
-   * Search for mediafiles.
-   * Normally called _media_management_return_mediafile_list (enrich_response_mediafile) at the end.
-   *
-   * 1.x _media_management_search_mediafiles
+   * Search the mediafiles of the asset.
    *
    * @param string $asset_id
    * @param string $tag
    * @param boolean $is_still
+   * @param array $app_ids
    */
   public static function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
 
-    assert($asset_id !== FALSE);
-
-      // Asset must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_db::TABLE_NAME,
-      array(
-        mediamosa_asset_db::ID => $asset_id
-      )
-    );
+    // Asset must exist.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // FIXME write me to normal db_query.
     $a_query = array();
@@ -555,10 +539,13 @@ class mediamosa_asset_mediafile {
   /**
    * Analyse the mediafile and store it into the database metadata of mediafile.
    *
-   * 1.x: vpx_jobs_get_analysis_upload
-   *
    * @param $app_id
+   *   The client application ID.
    * @param $mediafile_id
+   *   The ID of the mediafile to analyse.
+   *
+   * @return string
+   *   The output of the executed batch.
    */
   public static function analyse($app_id, $mediafile_id) {
 
@@ -581,7 +568,7 @@ class mediamosa_asset_mediafile {
 
     $execution_string = sprintf('%s %s %s',
       mediamosa_settings::analyse_file(),
-      mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+      mediamosa_storage::get_path_data(),
       $mediafile_id
     );
 
@@ -797,10 +784,14 @@ class mediamosa_asset_mediafile {
    *
    * Will return TRUE when its protected, but you have access.
    *
-   * @param string $still_id
+   * @param $mediafile_id
+   *   The ID of mediafile to check.
    *
-   * @throws exception when asset or mediafiles where not found or access
-   *         denied.
+   * @throws mediamosa_exception_error_mediafile_not_found()
+   *         mediamosa_exception_error_asset_not_found()
+   *         mediamosa_exception_error_access_denied()
+   *         mediamosa_exception_error_is_unappropriate()
+   *
    */
   public static function is_mediafile_protected($mediafile_id, $is_app_admin = FALSE) {
 
@@ -814,9 +805,10 @@ class mediamosa_asset_mediafile {
     if (!$mediafile) {
       throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id)); // not found?
     }
-    // Forbidden when protected. We dont have enough information to do a play proxy call here.
+
+    // Forbidden when protected.
     if ($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
-      throw new mediamosa_exception_error_access_denied(array('@reason' => 'still is protected'));
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'mediafile is protected'));
     }
 
     // Get the asset.

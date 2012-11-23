@@ -1,37 +1,13 @@
 <?php
 /**
  * @file
- * GD helper functions.
- *
- * Some of these functions seem unused.
- */
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * GD library helper functions.
  */
 
 class mediamosa_gd {
+  // ---------------------------------------------------------------- Functions.
   /**
-   * Difference in lumosity.
+   * Calculate the difference in lumosity.
    *
    * @param integer $r1
    *   Red 1.
@@ -50,19 +26,10 @@ class mediamosa_gd {
    *   Difference in color.
    */
   public static function lumdiff($r1, $g1, $b1, $r2, $g2, $b2) {
-    $l1 = 0.2126 * pow($r1 / 255, 2.2)
-      + 0.7152 * pow($g1 / 255, 2.2)
-      + 0.0722 * pow($b1 / 255, 2.2);
+    $l1 = 0.2126 * pow($r1 / 255, 2.2) + 0.7152 * pow($g1 / 255, 2.2) + 0.0722 * pow($b1 / 255, 2.2);
+    $l2 = 0.2126 * pow($r2 / 255, 2.2) + 0.7152 * pow($g2 / 255, 2.2) + 0.0722 * pow($b2 / 255, 2.2);
 
-    $l2 = 0.2126 * pow($r2 / 255, 2.2)
-      + 0.7152 * pow($g2 / 255, 2.2)
-      + 0.0722 * pow($b2 / 255, 2.2);
-
-    if ($l1 > $l2) {
-      return ($l1 + 0.05) / ($l2 + 0.05);
-    }
-
-    return ($l2 + 0.05) / ($l1 + 0.05);
+    return (max($l1, $l2) + 0.05) / (min($l1, $l2) + 0.05);
   }
 
   /**
@@ -86,7 +53,7 @@ class mediamosa_gd {
   }
 
   /**
-   * Difference in color distance.
+   * Calculate the difference in color distance.
    *
    * @param integer $r1
    *   Red 1.
@@ -113,7 +80,7 @@ class mediamosa_gd {
   }
 
   /**
-   * Difference in brightness.
+   * Calculate the difference in brightness.
    *
    * @param integer $r1
    *   Red 1.
@@ -129,7 +96,7 @@ class mediamosa_gd {
    *   Blue 2.
    *
    * @return integer
-   *   Difference in color.
+   *   The difference in brightness.
    */
   public static function brghtdiff($r1, $g1, $b1, $r2, $g2, $b2) {
     $br1 = (299 * $r1 + 587 * $g1 + 114 * $b1) / 1000;
@@ -142,10 +109,10 @@ class mediamosa_gd {
    * Convert Hex to RGB.
    *
    * @param string $hexcolor
-   *   Hexidecimal color
+   *   The hexidecimal color to convert.
    *
    * @return array
-   *   RGB color.
+   *   An array per color (red, green, blue).
    */
   public static function hex2rgb($hexcolor = "") {
     $rgb = array();
@@ -160,7 +127,7 @@ class mediamosa_gd {
    * Convert RGB to Hex.
    *
    * @param array $rgb
-   *   Color values
+   *   A array holding the red, green and blue color values.
    *
    * @return string
    *   RGB value converted to hexidecimal.
@@ -177,13 +144,13 @@ class mediamosa_gd {
    * @param resource $src
    *   Source image link resource.
    * @param int $dst_x
-   *   x-coordinate of destination point.
+   *   The x-coordinate of destination point.
    * @param int $dst_y
-   *   y-coordinate of destination point.
+   *   The y-coordinate of destination point.
    * @param int $src_x
-   *   x-coordinate of source point.
+   *   The x-coordinate of source point.
    * @param int $src_y
-   *   y-coordinate of source point.
+   *   The y-coordinate of source point.
    * @param int $src_w
    *   Source width.
    * @param int $src_h
@@ -193,6 +160,11 @@ class mediamosa_gd {
    *   100. When pct = 0, no action is taken, when 100 this function behaves
    *   identically to imagecopy() for pallete images, while it implements alpha
    *   transparency for true colour images.
+   *
+   * @return boolean
+   *   Returns TRUE on success or FALSE on failure.
+   *
+   * @link http://www.php.net/imagecopymerge
    *
    * @throws mediamosa_exception_error().
    */
@@ -207,9 +179,7 @@ class mediamosa_gd {
   /**
    * Get the size of an image.
    *
-   * @link http://www.php.net/manual/en/function.getimagesize.php
-   *
-   * @param string $filename
+   * @param string $uri
    *   This parameter specifies the file you wish to retrieve information about.
    *   It can reference a local file or (configuration permitting) a remote file
    *   using one of the supported streams.
@@ -221,59 +191,83 @@ class mediamosa_gd {
    *   embed text information in images. A very common one is to embed IPTC
    *   information in the APP13 marker. You can use the iptcparse() function to
    *   parse the binary APP13 marker into something readable.
+   *
+   * @return array|boolean
+   *   Returns FALSE on failure or array with numeric keys;
+   *  - '0':
+   *    Pixel width.
+   *  - '1':
+   *    Pixel height.
+   *  - '2':
+   *    Is one of the IMAGETYPE_XXX constants indicating the type of the image.
+   *  - '3':
+   *    Is a text string with the correct height="yyy" width="xxx" string that
+   *    can be used directly in an IMG tag.
+   *
+   * @link http://www.php.net/getimagesize
+   *
+   * @throws mediamosa_exception_error().
    */
-  public static function getimagesize($filename, array &$imageinfo = array()) {
+  public static function getimagesize($uri, array &$imageinfo = array()) {
     if (!function_exists('getimagesize')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
 
-    return @getimagesize($filename, $imageinfo);
+    return @getimagesize(mediamosa_io::realpath($uri), $imageinfo);
   }
 
   /**
    * Create a new image from file or URL.
    *
-   * @param string $filename
-   *   Path to the JPEG image.
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to the JPEG image.
    *
    * @return resource
    *   Image resource identifier on success, FALSE on errors.
+   *
+   * @link http://www.php.net/imagecreatefromjpeg
+   *
+   * @throws mediamosa_exception_error().
    */
-  public static function imagecreatefromjpeg($filename) {
+  public static function imagecreatefromjpeg($uri) {
     if (!function_exists('imagecreatefromjpeg')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
 
-    return @imagecreatefromjpeg($filename);
+    return @imagecreatefromjpeg(mediamosa_io::realpath($uri));
   }
 
   /**
    * Create a new image from file or URL.
    *
-   * @param string $filename
-   *   Path to the PNG image.
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to the PNG image.
    *
    * @return resource
    *   Image resource identifier on success, FALSE on errors.
    *
+   * @link http://www.php.net/imagecreatefrompng
+   *
    * @throws mediamosa_exception_error().
    */
-  public static function imagecreatefrompng($filename) {
+  public static function imagecreatefrompng($uri) {
     if (!function_exists('imagecreatefrompng')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
 
-    return @imagecreatefrompng($filename);
+    return @imagecreatefrompng(mediamosa_io::realpath($uri));
   }
 
   /**
    * Get image width.
    *
    * @param resource $image
-   *   The image resource.
+   *   The resource identifier.
    *
    * @return int
-   *   Return the width of the image or FALSE on errors.
+   *   Return the width of the image or false on errors.
+   *
+   * @link http://www.php.net/imagesx
    *
    * @throws mediamosa_exception_error().
    */
@@ -289,10 +283,12 @@ class mediamosa_gd {
    * Get image height.
    *
    * @param resource $image
-   *   The image resource
+   *   The resource identifier.
    *
-   * @return integer
-   *   Return the height of the image or false on errors.
+   * @return integer|boolean
+   *   Return the height of the image or FALSE on errors.
+   *
+   * @link http://www.php.net/imagesy
    *
    * @throws mediamosa_exception_error().
    */
@@ -307,17 +303,17 @@ class mediamosa_gd {
   /**
    * Get the index of the color of a pixel.
    *
-   * @link http://www.php.net/manual/en/function.imagecolorat.php
-   *
    * @param resource $image
-   *   The image resource.
+   *   The resource identifier.
    * @param integer $x
-   *   x-coordinate of the point.
+   *   The x-coordinate of the point on surface.
    * @param integer $y
-   *   y-coordinate of the point.
+   *   The y-coordinate of the point on surface.
    *
-   * @return integer
+   * @return int
    *   The index of the color.
+   *
+   * @link http://www.php.net/imagecolorat
    *
    * @throws mediamosa_exception_error().
    */
@@ -333,10 +329,14 @@ class mediamosa_gd {
    * Destroy an image.
    *
    * @param resource $image
-   *   The image resource.
+   *   The resource identifier.
    *
    * @return boolean
    *   Returns TRUE on success or FALSE on failure.
+   *
+   * @link http://www.php.net/imagedestroy
+   *
+   * @throws mediamosa_exception_error().
    */
   public static function imagedestroy($image) {
     if (!function_exists('imagedestroy')) {
@@ -350,43 +350,56 @@ class mediamosa_gd {
    * Output image to browser or file.
    *
    * @param resource $image
-   *   The image resource.
-   * @param string $filename
-   *   (optional) The path to save the file to. If not set or NULL, the raw
-   *   image stream will be outputted directly. NULL is invalid if the quality
-   *   and filters arguments are not used.
+   *   The resource object.
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to save the file to. If NULL,
+   *   the raw image stream will be outputted directly.
    * @param integer $quality
-   *   (optional) Compression level: from 0 (no compression) to 9.
+   *   Quality is optional, and ranges from 0 (worst quality, smaller file) to
+   *   100 (best quality, biggest file). The default is the default IJG quality
+   *   value (about 75).
    *
-   * @return bool
+   * @return boolean
    *   Returns TRUE on success or FALSE on failure.
+   *
+   * @link http://php.net/imagejpeg
+   *
+   * @throws mediamosa_exception_error().
    */
-  public static function imagejpeg($image, $filename = NULL, $quality = NULL) {
-    imagejpeg($image, $filename, $quality);
+  public static function imagejpeg($image, $uri = NULL, $quality = NULL) {
+    if (!function_exists('imagejpeg')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return imagejpeg($image, (empty($uri) ? NULL : mediamosa_io::realpath($uri)), $quality);
   }
 
   /**
    * Output a PNG image to either the browser or a file.
    *
    * @param resource $image
-   *   The image resource.
-   * @param string $filename
-   *   (optional) The path to save the file to. If not set or NULL, the raw
-   *   image stream will be outputted directly. NULL is invalid if the quality
-   *   and filters arguments are not used.
+   *   The resource object.
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to save the file to. If NULL
+   *   the raw image stream will be outputted directly. NULL is invalid if the
+   *   quality and filters arguments are not used.
    * @param integer $quality
-   *   (optional) Compression level: from 0 (no compression) to 9.
+   *   Compression level: from 0 (no compression) to 9.
    * @param integer $filters
-   *   Allows reducing the PNG file size. It is a bitmask field which may be
-   *   set to any combination of the PNG_FILTER_XXX constants. PNG_NO_FILTER or
+   *   Allows reducing the PNG file size. It is a bitmask field which may be set
+   *   to any combination of the PNG_FILTER_XXX constants. PNG_NO_FILTER or
    *   PNG_ALL_FILTERS may also be used to respectively disable or activate all
    *   filters.
    *
    * @return boolean
    *   Returns TRUE on success or FALSE on failure.
+   *
+   * @link http://php.net/imagepng
+   *
+   * @throws mediamosa_exception_error().
    */
-  public static function imagepng($image, $filename = NULL, $quality = NULL, $filters = NULL) {
-    imagepng($image, $filename, $quality, $filters);
+  public static function imagepng($image, $uri = NULL, $quality = NULL, $filters = NULL) {
+    imagepng($image, (empty($uri) ? NULL : mediamosa_io::realpath($uri)), $quality, $filters);
   }
 
   /**
@@ -407,7 +420,7 @@ class mediamosa_gd {
    * @param boolean $use_padding
    *   Use padding parameters.
    *
-   * @return array|FALSE
+   * @return array|boolean
    *   An associated array with aspect info;
    *   - width
    *   - height

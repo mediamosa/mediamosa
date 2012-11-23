@@ -43,6 +43,7 @@ files[] = lib/mediamosa_io.class.inc
 files[] = lib/mediamosa_lib.class.inc
 files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
+files[] = lib/mediamosa_storage.class.inc
 files[] = lib/mediamosa_log.class.inc
 files[] = lib/mediamosa_type.class.inc
 files[] = lib/mediamosa_unicode.class.inc
@@ -245,7 +246,7 @@ files[] = core/statistics/file_helper/mediamosa_statistics_file_helper_db.class.
 files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket_db.class.inc
 files[] = core/statistics/mediamosa_statistics.class.inc
 
-; Storage.
+; Storage (deprecated, remove in 4.0)
 files[] = core/configuration/storage/mediamosa_configuration_storage.class.inc
 
 ; Server.
@@ -304,4 +305,7 @@ files[] = simpletest/mediamosa.simpletest.rest.class.inc
 ; Core tests.
 files[] = mediamosa.timezone.test
 files[] = mediamosa.environment.test
-files[] = mediamosa.lib.test
+
+; Library tests.
+files[] = lib/mediamosa_io.test
+files[] = lib/mediamosa_storage.test

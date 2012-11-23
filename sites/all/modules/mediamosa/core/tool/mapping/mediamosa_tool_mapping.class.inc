@@ -120,7 +120,7 @@ class mediamosa_tool_mapping {
 
     // Execute.
     $execution_string = strtr($execution_command, array(
-      '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
+      '@mediafile_location' => mediamosa_storage::get_uri_mediafile($mediafile),
     ));
     $output_array = array();
     $output_string = mediamosa_io::exec($execution_string, $output_array);
@@ -168,7 +168,7 @@ class mediamosa_tool_mapping {
     if (function_exists($visit_func)) {
       $technical_metadata_mapping = call_user_func($visit_func, $metadata_found);
     }
-    
+
     if ($technical_metadata_mapping) {
       foreach ($technical_metadata_mapping as $key => $value) {
         mediamosa_asset_mediafile_metadata::delete_mediafile_metadata($mediafile_id, $key, key($value));
@@ -178,7 +178,7 @@ class mediamosa_tool_mapping {
          'type' => key($value))));
       }
     }
-    
+
     // Store found asset metadata.
     mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $parse_array, 'update');
   }

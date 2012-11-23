@@ -37,56 +37,30 @@
  * URI: /still/$still_id/style/$style (perm. link)
  * URI: /still/ticket/$ticket_id/style/$style (normal temp. link).
  * URI: /still/[1stletter $still_id]/$still_id/style/$style (missing perm. link).
+ * URI: /download/$ticket_id/$filename (POST/GET).
+ * URI: /media/ticket/$app_id/[1st letter ticket]/$ticket_id[,style].ext (3.1)
+ * URI: /media/$app_id/[1st letter ticket]/$mediafile_id[,style].ext (3.1)
  *
- * 3.1 uri's;
- * URI: /media/ticket/$app_id/[1st letter ticket]/$ticket_id[,style].ext
- *      /media/$app_id/[1st letter ticket]/$mediafile_id[,style].ext
+ * 3.5 uri's;
+ * URI: /media/ticket/$app_id/[1st letter ticket]/$ticket_id-$responsetype/filename[,style].ext
+ *      /media/$app_id/[1st letter ticket]/$mediafile_id-$responsetype/filename[,style].ext
  *
- * Backwards;
- * URI: /still/ticket/$app_id/[1st letter ticket]/$ticket_id[,style].ext
- *      /still/$app_id/[1st letter ticket]/$mediafile_id[,style].ext
+ * $responsetype:
+ * still
+ * download
+ * play
  *
  * Method: GET / POST
  *
  */
 class mediamosa_rest_call_media extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const APP_ID = 'app_id';
   const MEDIAFILE_STR = 'mediafile_str';
   const MEDIATICKET_STR = 'mediaticket_str';
 
-  // ------------------------------------------------------------------ Get Var Setup.
-  /**
-   * Match URI.
-   *
-   * @param string $uri
-   *
-   * @return boolean
-   *   TRUE, if match.
-   */
-  /*
-  public static function match_uri($uri) {
-    // Delta is needed in simpletest.
-    $delta = (mediamosa::get()->in_simpletest_sandbox() && $uri[0] == 'simpletest' ? 2 : 1);
-    $uri_parts = explode('/', $uri);
-
-    // Match if there isn't second argument, or the first is "ticket", or the length of the first is 1.
-    // This is necessary, because of REST calls, like: still/$still_id/watermark.
-    return
-      $uri_parts[$delta] == 'still' && (
-        // still/$still_id
-        (empty($uri_parts[$delta + 1]) ||
-        // still/$still_id/style/$style
-        (!empty($uri_parts[$delta + 1]) && $uri_parts[$delta + 1] == 'style') ||
-        // still/ticket/$ticket_id and still/ticket/$ticket_id/style/$style
-        (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') ||
-        // still/[1stletter $still_id]/$still_id and still/[1stletter $still_id]/$still_id/style/$style
-        (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1)
-      )
-    );
-  }
-*/
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -117,8 +91,6 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $mediamosa = mediamosa::get();
-
     // Get the input values.
     $app_id = $this->get_param_value(self::APP_ID);
     $mediafile_str = $this->get_param_value(self::MEDIAFILE_STR);
@@ -130,15 +102,15 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
     }
 
     if ($mediaticket_str) {
-      // Before 3.1 we always served the image here. Now we don't because the
-      // REST call should not have been triggered in the first place with
+      // Before 3.1 we always served the mediafile here. Now we don't because
+      // the REST call should not have been triggered in the first place with
       // tickets (Apache is handeling this). Need to warn admin that his
       // configuration does not include the correct configuration for his
       // webserver.
 
       // In any case, if the ticket exists and we where triggered, then the
       // webserver setup is not correct and we should log this problem.
-      $file = mediamosa_configuration_storage::media_get_ticket_file($app_id, $mediaticket_str);
+      $file = mediamosa_storage::get_uri_media_ticket_file($app_id, $mediaticket_str);
       if (file_exists($file)) {
         mediamosa_watchdog::log('The /media REST call was triggered while this was not expected. Check your MediaMosa status page for more information.', array(), WATCHDOG_CRITICAL);
         throw new mediamosa_exception_error_501();

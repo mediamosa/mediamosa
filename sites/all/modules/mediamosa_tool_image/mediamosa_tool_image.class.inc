@@ -74,8 +74,6 @@ class mediamosa_tool_image {
     $job_server = mediamosa_job_server::get($jobserver_job_id);
     $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
 
-    $execution_string = '';
-
     if ($job_server_still) {
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE]; // wxh
       $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
@@ -85,19 +83,18 @@ class mediamosa_tool_image {
       $parameter_string[] = '-resize ' . $size;
 
       // Source.
-      $mediafile_source = mediamosa_configuration_storage::mediafile_filename_get(array(mediamosa_asset_mediafile_db::ID => $mediafile_id_source));
+      $mediafile_source = mediamosa_storage::get_realpath_mediafile(array(mediamosa_asset_mediafile_db::ID => $mediafile_id_source));
 
       // Dest.
-      $mediafile_dest = mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg");
+      $mediafile_dest = mediamosa_storage::get_realpath_data_transcode_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
       $options = array(
         '@mediafile_dest' => $mediafile_dest,
         '@mediafile_source' => $mediafile_source,
         '@parameter_string' => implode(' ', $parameter_string),
-        '@status_file' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_source),
+        '@status_file' => mediamosa_storage::get_realpath_status_file($mediafile_id_source),
       );
 
-      // mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get()
       return strtr('convert @mediafile_source @parameter_string @mediafile_dest; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file', $options);
     }
 

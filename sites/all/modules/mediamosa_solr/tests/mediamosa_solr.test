@@ -118,8 +118,8 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Setup simple search stuff
     $upload_1 = $this->uploadTestFile();
-    $upload_2 = $this->uploadTestFile($this->getTestVideo_ogg());
-    $upload_3 = $this->uploadTestFile($this->getTestVideo_BlackStill());
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
     $upload_4 = $this->uploadTestFile();
 
     // Create transcode for all.

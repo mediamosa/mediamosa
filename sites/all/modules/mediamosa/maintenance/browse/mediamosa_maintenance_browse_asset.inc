@@ -522,7 +522,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
       $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
     }
 
-    $variables['properties'][t('Autorisarion rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
+    $variables['properties'][t('Autorisation rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
   }
 
   return theme('mediamosa_maintenance_browse_properties', $variables);

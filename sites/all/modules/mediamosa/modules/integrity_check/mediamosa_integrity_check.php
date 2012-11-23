@@ -76,7 +76,7 @@ function check_media_records() {
 
   foreach ($result as $mediafile) {
     // Check if file exists.
-    if (!file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile['mediafile_id']))) {
+    if (!file_exists(mediamosa_storage::get_uri_mediafile_id($mediafile['mediafile_id']))) {
       $mediafile_id = $mediafile['mediafile_id'];
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -110,9 +110,8 @@ function check_media_records() {
 // Check media files.
 function check_media_files() {
   // Base folder.
-  $dir = mediamosa_configuration_storage::get_data_location();
+  $dir = mediamosa_storage::get_uri_data();
   $dh = opendir($dir);
-  $missing_db_mediafiles = array();
 
   while (($folder = readdir($dh)) !== FALSE) {
     // Is it '.' or '..'?
@@ -190,7 +189,7 @@ function check_still_records() {
 
   foreach ($result as $still) {
     // Check if file exists.
-    if (!file_exists(mediamosa_configuration_storage::data_still_get_file($still['mediafile_id']))) {
+    if (!file_exists(mediamosa_storage::get_uri_data_file($still['mediafile_id']))) {
       $mediafile_id = $still['mediafile_id'];
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -223,7 +222,7 @@ function check_still_records() {
 
 function check_still_files() {
   // Base folder.
-  $dir = mediamosa_configuration_storage::get_still_location();
+  $dir = mediamosa_storage::get_uri_data();
   $dh = opendir($dir);
 
   while (($folder = readdir($dh)) !== FALSE) {

@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Still style.
  */
-
- /**
-  * @file
-  * Still style.
-  */
 
 class mediamosa_asset_mediafile_still_style {
   // ------------------------------------------------------------------ Constants.
@@ -113,7 +88,7 @@ class mediamosa_asset_mediafile_still_style {
       strtr(
         'find @media_app_path -maxdepth 2 -mindepth 2 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+,@style_id\(\.[a-zA-Z0-9]+\)?$" -type l -delete',
         array(
-          '@media_app_path' => mediamosa_configuration_storage::media_get_path($app_id),
+          '@media_app_path' => mediamosa_io::realpath(mediamosa_storage::get_uri_media($app_id)),
           '@style_id' => $style_id,
         )
       )
@@ -124,8 +99,8 @@ class mediamosa_asset_mediafile_still_style {
       strtr(
         'find @media_app_path -maxdepth 2 -mindepth 2 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+,@style_id\(\.[a-zA-Z0-9]+\)?$" -type l -delete',
         array(
-          '@media_app_path' => mediamosa_configuration_storage::media_get_ticket_path($app_id),
-          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_STILL / 60),
+          '@media_app_path' => mediamosa_io::realpath(mediamosa_storage::get_uri_media_ticket($app_id)),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );

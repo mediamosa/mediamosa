@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Upload related function for mediafiles.
@@ -44,12 +19,10 @@ class mediamosa_asset_mediafile_upload {
   }
 
   /**
-   * Process the incoming upload. Will throw exceptions,
-   * in that case make sure your REST call does not return XML
-   * but redirects to some location.
+   * Process the incoming upload.
    *
-   * 1.x: vpx_upload_handle_file
-   *
+   * Will throw exceptions, in that case make sure your REST call does not
+   * return XML but redirects to some location.
    */
   public static function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
     // Set to false.
@@ -90,7 +63,7 @@ class mediamosa_asset_mediafile_upload {
     $job_id = mediamosa_job::create_job_upload($app_id,  $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID], $is_app_admin, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $file_size, $retranscode, $create_still, $still_parameters);
 
     // Build the filename.
-    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    $filename = mediamosa_io::realpath(mediamosa_storage::get_uri_mediafile_id($ticket[mediamosa_ticket_db::MEDIAFILE_ID], TRUE));
 
     // Create possible missing directories.
     mediamosa_io::mkdir(mediamosa_io::dirname($filename));
@@ -126,7 +99,7 @@ class mediamosa_asset_mediafile_upload {
 
     // Update the mediafile.
     $fields = array(
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
       mediamosa_asset_mediafile_db::FILENAME => ($is_method_put ? $filename_put : $_FILES['file']['name']),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => $transcode_inherits_acl ? mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE : mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
@@ -223,7 +196,7 @@ class mediamosa_asset_mediafile_upload {
     $still_id = mediamosa_db::uuid($app_id);
 
     // Get path to still.
-    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+    $still_filename = mediamosa_storage::get_uri_data_file($still_id);
 
     // Create possible missing directories.
     mediamosa_io::mkdir(mediamosa_io::dirname($still_filename));
@@ -359,7 +332,8 @@ class mediamosa_asset_mediafile_upload {
     }
 
     $written_bytes = 0;
-    $last_update = $timestamp = time();
+    $last_update = time();
+    $timestamp = $last_update;
 
     /// Read a chunk.
     $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);

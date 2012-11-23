@@ -1,0 +1,244 @@
+<?php
+
+/**
+ * @file
+ * Testing acl_user_id and acl_group_id ACL protection.
+ */
+
+class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - search ACL user and usergroups',
+      'description' => 'Testing asset search for ACL users and groups.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testACLUserUserGroups() {
+    // Create assets.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+
+    // Create mediafiles.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+
+    $this->createAssetMetadata($asset_id_1,array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2,array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_3,array('title' => 'aap noot mies'));
+
+    // All.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    // Set acl_user_id on johndoe on mediafile_id_1
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user_id' => 'johndoe'));
+
+    // Not johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets('', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'foo');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'foo');
+
+    // Am johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+
+    // Set acl_group_id random on mediafile_id_2
+    $this->setMediafileAcl($mediafile_id_2, array('acl_group_id' => array('random')));
+
+    // Not johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'foo');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'foo');
+
+    // Am johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+
+    // Set acl_user_id on johndoe on mediafile_id_2
+    $this->setMediafileAcl($mediafile_id_2, array('acl_user_id' => 'johndoe', 'acl_group_id' => array('random')));
+
+    $this->var_export($this->getMediafileAcl($mediafile_id_1));
+    $this->var_export($this->getMediafileAcl($mediafile_id_2));
+    $this->var_export($this->getMediafileAcl($mediafile_id_3, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT)));
+
+    // Set acl_group_id on johndoe on mediafile_id_3
+    $this->setMediafileAcl($mediafile_id_3, array('acl_group_id' => array('1')));
+
+    // Not johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), 'foo');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'foo');
+
+    // Am johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'johndoe');
+
+    // Am johndoe, in group '1'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+
+    // Am johndoe, in group '0'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+
+    // Set acl_user_id on johndoewho on mediafile_id_3
+    $this->setMediafileAcl($mediafile_id_3, array('acl_user_id' => 'johndoewho', 'acl_group_id' => array('1')));
+
+    $this->var_export($this->getMediafileAcl($mediafile_id_1));
+    $this->var_export($this->getMediafileAcl($mediafile_id_2));
+    $this->var_export($this->getMediafileAcl($mediafile_id_3));
+
+    // Not johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE));
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), 'foo');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'foo');
+
+    // Am johndoe.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'johndoe');
+
+    // Am johndoe, in group '1'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '1');
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), '', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), '', '1');
+
+    // Am johndoe, in group '0'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'johndoe', '0');
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), '', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), '', '0');
+
+    // Am noone, in group '0'
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), 'noone', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), 'noone', '0');
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), '', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), '', '0');
+
+    // Am johndoewho.
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho');
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), '');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), '');
+
+    // Am johndoewho, in group '1'
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho', '1');
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), '', '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), '', '1');
+
+    // Am johndoewho, in group '0'
+    $this->cql_do_search_test_assets('', array($asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), 'johndoewho', '0');
+    $this->cql_do_search_test_assets('', array($asset_id_4 => TRUE), array(), '', '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => FALSE, $asset_id_2 => FALSE, $asset_id_3 => FALSE, $asset_id_4 => TRUE), array(), '', '0');
+
+    // Am owner.
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID);
+
+    // Am owner, in group '1'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID, '1');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID, '1');
+
+    // Am owner, in group '0'
+    $this->cql_do_search_test_assets('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID, '0');
+    $this->cql_do_search_test_assets_granted('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(), self::SIMPLETEST_USER_ID, '0');
+  }
+
+  /**
+   * Problem reported by client.
+   */
+//  public function test_owner_search() {
+//    //asset?owner_id=urn:collab:person:fontys.nl:236338_student.fontys.nl&limit=1&user_id=urn:collab:person:fontys.nl:236338_student.fontys.nl&owner_id_match=exact&hide_empty_assets=true&app_id=5
+//    //asset?owner_id=urn:collab:person:windesheim.nl:s1047682&limit=1&user_id=urn:collab:person:windesheim.nl:s1047682&owner_id_match=exact&hide_empty_assets=true&app_id=5
+//
+//    // Create assets.
+//    $asset_id_1 = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => 'urn:collab:person:fontys.nl:236338_student.fontys.nl'));
+//    $asset_id_2 = $this->createAsset();
+//    $asset_id_3 = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => 'urn:collab:person:windesheim.nl:s1047682'));
+//    $asset_id_4 = $this->createAsset();
+//
+//    // Create mediafiles.
+//    $mediafile_id_1 = $this->createMediafile($asset_id_1, array(mediamosa_rest_call_asset_create::USER_ID => 'urn:collab:person:fontys.nl:236338_student.fontys.nl'));
+//    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+//    $mediafile_id_3 = $this->createMediafile($asset_id_3, array(mediamosa_rest_call_asset_create::USER_ID => 'urn:collab:person:windesheim.nl:s1047682'));
+//    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+//
+//    // Give each a upload.
+//    $this->uploadTestFileForMediafile($asset_id_1, $mediafile_id_1, '', FALSE, 'urn:collab:person:fontys.nl:236338_student.fontys.nl');
+//    $this->uploadTestFileForMediafile($asset_id_2, $mediafile_id_2);
+//    $this->uploadTestFileForMediafile($asset_id_3, $mediafile_id_3, '', FALSE, 'urn:collab:person:windesheim.nl:s1047682');
+//    $this->uploadTestFileForMediafile($asset_id_4, $mediafile_id_4);
+//
+//    // All.
+//    $this->cql_do_search_test_assets(
+//      '',
+//      array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE),
+//      array()
+//    );
+//
+//    // First owner check.
+//    $this->cql_do_search_test_assets(
+//      '',
+//      array($asset_id_1 => TRUE),
+//      array(
+//        'owner_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
+//        'owner_id_match' => 'exact',
+//        'user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
+//        'hide_empty_assets' => 'true',
+//      )
+//    );
+//
+//    // First owner check with CQL.
+//    $this->cql_do_search_test_assets(
+//      'owner_id="^urn:collab:person:fontys.nl:236338?student.fontys.nl^"',
+//      array($asset_id_1 => TRUE),
+//      array(
+//        'user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
+//        'hide_empty_assets' => 'true',
+//      )
+//    );
+//    // First owner check with CQL.
+//    $this->cql_do_search_test_assets(
+//      'owner_id="^urn:collab:person:fontys.nl:236338_student.fontys.nl^"',
+//      array($asset_id_1 => TRUE),
+//      array(
+//        'user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
+//        'hide_empty_assets' => 'true',
+//      )
+//    );
+//
+//    // First owner check.
+//    $this->cql_do_search_test_assets(
+//      '',
+//      array($asset_id_3 => TRUE),
+//      array(
+//        'owner_id' => 'urn:collab:person:windesheim.nl:s1047682',
+//        'owner_id_match' => 'exact',
+//        'user_id' => 'urn:collab:person:windesheim.nl:s1047682',
+//        'hide_empty_assets' => 'true',
+//      )
+//    );
+//
+//    // Set acl_user_id on owner on mediafile_id_1
+//    $this->setMediafileAcl($mediafile_id_2, array('acl_user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl'));
+//  }
+}

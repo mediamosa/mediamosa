@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
   * Play Proxy functions
@@ -67,8 +42,15 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Get the uri of the correct media server.
    *
-   * @param string $response_type
-   * @param array $mediafile_ext
+   * @param $response_type
+   *   The response type.
+   * @param $mediafile_ext (optional)
+   *   The mediafile data with metadata, used only when not STILL or DOWNLOAD
+   *   responses.
+   *   (@todo: on uses tech. metadata, so lets only supply tech. metadata).
+   *
+   * @return
+   *   The URI of the server or FALSE.
    */
   public static function get_media_server($response_type, array $mediafile_ext = array()) {
 
@@ -121,37 +103,39 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * This function converts miliseconds to the format specified
    *
-   * @param integer $msec
-   * @param string $container_type
-   *  See CONTAINER_TYPE_*
+   * @param $input
+   *   The number of seconds
+   * @param $container_type
+   *   See CONTAINER_TYPE_*
    *
    * @return
-   *  requested time format.
+   *   Converted time in msec format.
    */
   function convert_msec($input, $container_type) {
     $output = FALSE;
 
-    // bereken uur, minuut en seconde
+    // Calculate hour, minute and seconds.
     $second = 1000;
     $minute = $second * 60;
     $hour = $minute * 60;
-    $a_output['hours'] = floor($input / $hour);
-    $input -= $a_output['hours'] * $hour;
-    $a_output['minutes'] = floor($input / $minute);
-    $input -= $a_output['minutes'] * $minute;
-    $a_output['seconds'] = floor($input / $second);
-    $input -= $a_output['seconds'] * $second;
+    $output = array();
+    $output['hours'] = floor($input / $hour);
+    $input -= $output['hours'] * $hour;
+    $output['minutes'] = floor($input / $minute);
+    $input -= $output['minutes'] * $minute;
+    $output['seconds'] = floor($input / $second);
+    $input -= $output['seconds'] * $second;
     $msec = $input;
 
     switch ($container_type) {
       case self::CONTAINER_TYPE_WMV: // hh:mm:ss.fract(=sec/100)
         $fraction = mediamosa_unicode::substr($msec, 0, 2);
-        foreach ($a_output as $subject => $value) {
-          if ($a_output[$subject] < 10) {
-            $a_output[$subject] = '0' . $a_output[$subject];
+        foreach ($output as $subject => $value) {
+          if ($output[$subject] < 10) {
+            $output[$subject] = '0' . $output[$subject];
           }
         }
-        $output = implode(':', $a_output) . '.' . $fraction;
+        $output = implode(':', $output) . '.' . $fraction;
         break;
 
       case self::CONTAINER_TYPE_MP4: // hh:mm:ss:frames(=sec/30).
@@ -160,15 +144,15 @@ class mediamosa_asset_mediafile_play_proxy {
         $fraction = round($msec / $frame / 1000, 1);
         if ($fraction == 30) {
           $fraction = 0;
-          $a_output['seconds']++;
+          $output['seconds']++;
         }
 
-        foreach ($a_output as $subject => $value) {
-          if ($a_output[$subject] < 10) {
-            $a_output[$subject] = '0' . $a_output[$subject];
+        foreach ($output as $subject => $value) {
+          if ($output[$subject] < 10) {
+            $output[$subject] = '0' . $output[$subject];
           }
         }
-        $output = implode(':', $a_output) . ':' . $fraction;
+        $output = implode(':', $output) . ':' . $fraction;
         break;
     }
 
@@ -243,36 +227,6 @@ class mediamosa_asset_mediafile_play_proxy {
   }
 
   /**
-   * Wrapper for 1.x to 2.x.
-   *
-   * @param array $a_parameters
-   * @param array $a_asset_info (used for the metadata)
-   * @param array $mediafile_ext
-   * @param array $asset_metadata (not used)
-   * @param string $ticket
-   * @param integer $app_id
-   * @param string $mediafile_group_id
-   * @param array $stills
-   */
-  public static function create_response_1x_to_2x($asset_id, $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
-    return self::create_response(
-      $a_parameters['response']['value'],
-      $app_id,
-      $ticket,
-      $asset_id,
-      isset($a_parameters['autostart']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['autostart']['value']) : TRUE,
-      isset($a_parameters['width']['value']) ? $a_parameters['width']['value'] : 0,
-      isset($a_parameters['height']['value']) ? $a_parameters['height']['value'] : 0,
-      isset($a_parameters['start']['value']) ? $a_parameters['start']['value'] : NULL,
-      isset($a_parameters['duration']['value']) ? $a_parameters['duration']['value'] : NULL,
-      isset($a_parameters['is_app_admin']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['is_app_admin']['value']) : FALSE,
-      $a_asset_info,
-      $mediafile_ext,
-      $stills
-    );
-  }
-
-  /**
    * Generate default still link for asset.
    *
    * @param integer $app_id
@@ -289,7 +243,7 @@ class mediamosa_asset_mediafile_play_proxy {
       $ticket = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
 
       $response = self::create_response_still($ticket, $app_id);
-      return $response['output'];
+      return empty($response['output']) ? '' : $response['output'];
     }
 
     return '';
@@ -299,31 +253,31 @@ class mediamosa_asset_mediafile_play_proxy {
    * Create response for mediafile.
    *
    * @param string $response_type
-   *  See RESPONSE_*.
+   *   See RESPONSE_*.
    * @param integer $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $ticket
-   *  Precreated ticket.
+   *   Precreated ticket ID.
    * @param integer $autostart
-   *  Value for autostart in HTML.
-   * @param $width
-   *  Value for width in HTML object.
-   * @param $height
-   *  Value for height in HTML object.
-   * @param $start
-   *  Start param in HTML object.
+   *   Value for autostart in HTML.
+   * @param integer $width
+   *   Value for width in HTML object.
+   * @param integer $height
+   *   Value for height in HTML object.
+   * @param integer $start
+   *   Start param in HTML object.
    * @param $duration
-   *  Duration param in HTML object.
+   *   Duration param in HTML object.
    * @param boolean $is_app_admin
-   *  Super admin.
+   *   Super admin.
    * @param array $asset_metadata
-   *  Collection of the metadata of the asset, use metadata_get function.
+   *   Collection of the metadata of the asset, use metadata_get function.
    * @param array $mediafile_ext
-   *  Mediafile array.
+   *   Mediafile array.
    * @param string $mediafile_group_id
-   *  Group ID mediafile.
+   *   Group ID mediafile.
    * @param $stills
-   *  Array stills.
+   *   Array stills.
    */
   public static function create_response(
     $response_type,
@@ -344,6 +298,10 @@ class mediamosa_asset_mediafile_play_proxy {
     // Not a array here.
     assert(!is_array($app_id));
 
+    if (!isset($mediafile_ext['filename']) || $mediafile_ext['filename'] === '') {
+      $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
+    }
+
     $content_type = '';
     if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
       $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
@@ -354,17 +312,17 @@ class mediamosa_asset_mediafile_play_proxy {
 
     // Uri for non-tickets (still, download etc).
     foreach ($stills as $key => $value) {
-      if (mediamosa_unicode::substr($value['ticket'], 0, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/')) == mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/') {
+      if (mediamosa_unicode::substr($value['ticket'], 0, strlen(mediamosa_storage::STORAGE_FOLDER_TICKET . '/')) == mediamosa_storage::STORAGE_FOLDER_TICKET . '/') {
         // Remove prefix 'ticket/'.
-        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $app_id . '/' . mediamosa_configuration_storage::objectid_to_location(mediamosa_unicode::substr($value['ticket'], strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/'))), '/'));
+        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => mediamosa_storage::objectid_to_ticket_path($app_id, mediamosa_unicode::substr($value['ticket'], strlen(mediamosa_storage::STORAGE_FOLDER_TICKET . '/')))));
       }
       else {
-        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($value['ticket']), '/'));
+        $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => mediamosa_storage::objectid_to_path($app_id, $value['ticket'])));
       }
     }
 
     // Replace the {TICKET} with value.
-    $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
+    $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => mediamosa_storage::objectid_to_ticket_path($app_id, $ticket)));
 
     // Default empty.
     $variables = array();
@@ -500,7 +458,7 @@ class mediamosa_asset_mediafile_play_proxy {
       case self::RESPONSE_URI:
         switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_FLV:
-            $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
+            $output = strtr($streaming_server_ticket_uri, array(self::PARAM_URI_SCRIPT => 'StroboScope.php?file='));
             break;
 
           default:
@@ -516,12 +474,10 @@ class mediamosa_asset_mediafile_play_proxy {
           }
         }
 
-        if (!@is_null($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
+        // When URI is set, then we don't allow download (we don't have the
+        // file).
+        if (!empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED);
-        }
-
-        if ($mediafile_ext['filename'] == '') {
-          $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
         $output = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket)) . '/' . rawurlencode($mediafile_ext['filename']);
@@ -629,13 +585,13 @@ class mediamosa_asset_mediafile_play_proxy {
               }
 
               // Get the filename for the asx file.
-              $file_asx = mediamosa_configuration_storage::asx_file_location($app_id, $ticket);
+              $uri_asx = mediamosa_storage::get_uri_asx_file($app_id, $ticket);
 
               // Create a possible app_id directory.
-              mediamosa_io::mkdir(mediamosa_io::dirname($file_asx), TRUE, 0775);
+              mediamosa_io::mkdir(mediamosa_io::dirname($uri_asx));
 
               // Open file for writing.
-              $handle_file_asx = @fopen($file_asx, 'w+');
+              $handle_file_asx = @fopen($uri_asx, 'w+');
 
               // Check if file handle is open, else log it.
               if ($handle_file_asx) {
@@ -655,18 +611,18 @@ class mediamosa_asset_mediafile_play_proxy {
                   }
 
                   // Create new streaming server URI based on asx file.
-                  $streaming_server_ticket_uri = str_replace('{TICKET}', $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/') . '.asx', $uri);
+                  $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, mediamosa_storage::objectid_to_ticket_path($app_id, $ticket . '.asx'), $uri);
 
                   // Changed to text/html for ticket #188.
-                  //'video/x-ms-asx';
+                  // 'video/x-ms-asx'.
                   $content_type = 'text/html';
                 }
                 else {
-                  mediamosa_watchdog::log('Unable to write to .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
+                  mediamosa_watchdog::log('Unable to write to .asx file (@filename), falling back to normal object code (1)', array('@filename' => mediamosa_io::realpath($uri_asx)), WATCHDOG_CRITICAL, 'playproxy');
                 }
               }
               else {
-                mediamosa_watchdog::log('Unable to create .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
+                mediamosa_watchdog::log('Unable to create .asx file (@filename), falling back to normal object code (2)', array('@filename' => mediamosa_io::realpath($uri_asx)), WATCHDOG_CRITICAL, 'playproxy');
               }
             }
 
@@ -680,13 +636,13 @@ class mediamosa_asset_mediafile_play_proxy {
 
       case self::RESPONSE_STILL:
         // Fix ticket/[ticket_id].
-        $is_ticket = mediamosa_unicode::substr($ticket, 0, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/')) == mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/';
+        $is_ticket = mediamosa_unicode::substr($ticket, 0, strlen(mediamosa_storage::STORAGE_FOLDER_TICKET . '/')) == mediamosa_storage::STORAGE_FOLDER_TICKET . '/';
         if ($is_ticket) {
           // Remove prefix 'ticket/'.
-          $ticket = mediamosa_unicode::substr($ticket, strlen(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/'));
+          $ticket = mediamosa_unicode::substr($ticket, strlen(mediamosa_storage::STORAGE_FOLDER_TICKET . '/'));
         }
 
-        $output = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => ($is_ticket ? mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' : '') . $app_id . '/' . mediamosa_configuration_storage::objectid_to_location($ticket, '/')));
+        $output = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => ($is_ticket ? mediamosa_storage::STORAGE_FOLDER_TICKET . '/' : '') . $app_id . '/' . mediamosa_storage::map_uuid_to_path($ticket)));
         break;
     }
 
@@ -712,9 +668,15 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Return a matching mediafile based on the asset_id and a profile_id.
    *
-   * @param $asset_id
-   * @param $profile_id
-   * @param $original_mediafile_id
+   * @param string $asset_id
+   *   The asset ID.
+   * @param integer $profile_id
+   *   The transcode profile ID.
+   * @param string $original_mediafile_id
+   *   The ID of the original mediafile.
+   *
+   * @return
+   *   The matched mediafile ID or FALSE.
    */
   public static function get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id = NULL) {
 
@@ -746,8 +708,13 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Return a matching mediafile based on the asset_id and a tag.
    *
-   * @param $asset_id
-   * @param $tag
+   * @param string $asset_id
+   *   The asset ID.
+   * @param string $tag
+   *   The tag to search.
+   *
+   * @return
+   *   The matched mediafile ID or FALSE.
    */
   public static function get_mediafile_id_on_tag($asset_id, $tag) {
     return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
@@ -768,13 +735,15 @@ class mediamosa_asset_mediafile_play_proxy {
    *   (optional).
    * @param $time_restriction_end
    *   End time in UTC of the time restriction period date.
+   *
+   * @throws mediamosa_exception_error()
    */
-  function check_time_restrictions($time_restriction_start = '', $time_restriction_end = '') {
-    if ($time_restriction_start != '' && time() < $time_restriction_start) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date("Y-m-d H:i:s", $time_restriction_start), '@timestamp' => $time_restriction_start));
+  function check_time_restrictions($time_restriction_start, $time_restriction_end) {
+    if (time() < $time_restriction_start) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date('Y-m-d H:i:s', $time_restriction_start), '@timestamp' => $time_restriction_start));
     }
-    if ($time_restriction_start != '' && time() > $time_restriction_end) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array('@date' => date("Y-m-d H:i:s", $time_restriction_end), '@timestamp' => $time_restriction_end));
+    if (time() > $time_restriction_end) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array('@date' => date('Y-m-d H:i:s', $time_restriction_end), '@timestamp' => $time_restriction_end));
     }
   }
 }

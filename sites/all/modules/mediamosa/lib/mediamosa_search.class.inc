@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)

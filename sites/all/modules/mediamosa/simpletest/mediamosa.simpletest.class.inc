@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Defines for the groups.
  * MEDIAMOSA_TEST_GROUP_
  */
@@ -67,7 +44,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
   /**
    * Change if your test needs different timezone.
-   * 
+   *
    * @var string
    */
   protected $default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
@@ -300,6 +277,30 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function pass($message = NULL, $group = 'Other', array $caller = NULL) {
     return $this->assert(TRUE, $message, $group, $caller);
+  }
+
+  /**
+   * Helper function to figure caller locations in files.
+   *
+   * @param $caller
+   *   How much back into trace history.
+   *
+   * @return
+   *   Array with file and line values.
+   */
+  protected function backtrace($caller = 2) {
+    $backtrace = debug_backtrace();
+
+    // No backtrace.
+    if (empty($backtrace[$caller])) {
+      return array('file' => 'unknown', 'line' => 0);
+    }
+
+    if ($caller > 0) {
+      $this->pass(t('Function @parent_function (line @parent_line) is called from file @file on line @line.', array('@parent_function' => $backtrace[$caller - 1]['function'], '@parent_line' => $backtrace[$caller - 1]['line'], '@file' => $backtrace[$caller]['file'], '@line' => $backtrace[$caller]['line'])));
+    }
+
+    return array('file' => (empty($backtrace[$caller]['file']) ? 'unknown' : $backtrace[$caller]['file']), 'line' => empty($backtrace[$caller]['line']) ? 0 : empty($backtrace[$caller]['line']));
   }
 
   /**
@@ -681,11 +682,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Create folder.
    *
-   * @param string $location
+   * @param string $uri
+   *
+   * @see mediamosa_io::mkdir()
    */
-  protected function mkdir($location) {
+  protected function mkdir($uri) {
     // Create the directory first.
-    $this->assertTrue(mediamosa_io::mkdir($location, TRUE, 0775), t('Check if @location can be created by MediaMosa', array('@location' => $location)));
+    mediamosa_io::mkdir($uri);
+    $this->pass(t('Created directory @uri (@realpath)', array('@uri' => $uri, '@realpath' => mediamosa_io::realpath($uri))));
   }
 
   /**

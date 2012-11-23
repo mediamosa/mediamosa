@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Play Proxy functions
@@ -321,7 +296,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $ticket = mediamosa_ticket::process_play_ticket($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
     }
 
-    // If response type is still, we get all information of all stills with all details.
+    // If response type is still, we get all information of all stills with all
+    // details.
     $stills = array();
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
       // Test if access on unappropriate flag.
@@ -333,11 +309,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
         if (!empty($still_id_default)) {
           // Generate ticket or perm link?
-          if (mediamosa_asset_mediafile_still::is_still_permanent($still_id_default, $is_app_admin)) {
+          if (mediamosa_asset_mediafile_media::allow_permanent($still_id_default, $is_app_admin)) {
             $ticket =  $still_id_default . '.' . mediamosa_asset_mediafile::get_file_extension($still_id_default);
           }
           else {
-            $ticket = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
+            $ticket = mediamosa_storage::STORAGE_FOLDER_TICKET . '/' . mediamosa_ticket::process_play_ticket($app_id, $user_id, $still_id_default, $ticket, $mediafile_ext, $response_type);
           }
         }
       }
@@ -451,11 +427,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             // make a play or download symlink.
             if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
               // Generate ticket or perm link?
-              if (mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin)) {
+              if (mediamosa_asset_mediafile_media::allow_permanent($t_stills['still_id'], $is_app_admin)) {
                 $ticket_still = $t_stills['still_id'] . '.' . $file_ext;
               }
               else {
-                $ticket_still = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+                $ticket_still = mediamosa_storage::STORAGE_FOLDER_TICKET . '/' . mediamosa_ticket::process_play_ticket($app_id, $t_stills['still_id'], $ticket_still, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL, $user_id);
               }
             }
             else {

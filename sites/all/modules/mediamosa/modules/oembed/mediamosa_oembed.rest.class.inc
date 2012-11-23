@@ -228,9 +228,9 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       // Get the metadata.
       $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
-      $filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile);
+      $filename = mediamosa_storage::get_uri_mediafile($mediafile);
       if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
-        $ticket = mediamosa_ticket::process_play_ticket($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
+        $ticket = mediamosa_ticket::process_play_ticket($app_id, $still_id, $ticket, $mediafile, $response_type, $user_id);
 
         $response = mediamosa_asset_mediafile_play_proxy::create_response(
           $response_type,
@@ -279,11 +279,11 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       // Generate ticket or perm link?
-      if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
+      if (mediamosa_asset_mediafile_media::allow_permanent($still_id, $is_app_admin)) {
         $ticket_str = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
       }
       else {
-        $ticket_str = mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . mediamosa_ticket::process_play_ticket($ticket_id, $mediafile, $response_type, $app_id, $user_id, $still_id);
+        $ticket_str = mediamosa_storage::STORAGE_FOLDER_TICKET . '/' . mediamosa_ticket::process_play_ticket($app_id, $still_id, $ticket_id, $mediafile, $response_type, $user_id);
       }
 
       // Create the response.

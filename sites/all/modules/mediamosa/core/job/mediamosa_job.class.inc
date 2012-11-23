@@ -542,7 +542,7 @@ class mediamosa_job {
         $still_id = $a_mediafile['mediafile_id'];
 
         // Destination.
-        $destination = mediamosa_configuration_storage::data_still_get_file($still_id);
+        $destination = mediamosa_storage::get_realpath_data_file($still_id);
 
         // Still size.
         $size = mediamosa_gd::getimagesize($destination);
@@ -559,7 +559,7 @@ class mediamosa_job {
         if ($pos !== FALSE) {
           $file_type = mediamosa_unicode::substr($size['mime'], $pos + 1);
         }
-        $filesize = filesize($destination);
+        $filesize = mediamosa_io::filesize($destination);
 
         mediamosa_asset_mediafile_metadata::create_metadata_still_default($still_id, $width, $height, $filesize, $size['mime'], $file_type);
 
@@ -697,7 +697,7 @@ class mediamosa_job {
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Get the newly uploaded filename.
-    $uploaded_filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile);
+    $uploaded_filename = mediamosa_storage::get_uri_mediafile($mediafile);
 
     // Get the filesize of the uploaded file.
     $uploaded_filesize = mediamosa_io::filesize($uploaded_filename);
@@ -712,7 +712,6 @@ class mediamosa_job {
 
     // Check if we need to retranscode.
     $retranscode = $job_ext_upload[mediamosa_job_upload_db::RETRANSCODE];
-    $create_still = $job_ext_upload[mediamosa_job_upload_db::CREATE_STILL];
 
     if ($retranscode == mediamosa_job_upload_db::RETRANSCODE_TRUE) {
       self::add_retranscode_jobs(
@@ -726,9 +725,6 @@ class mediamosa_job {
       // Delete the unoriginal mediafiles of this asset.
       mediamosa_asset_mediafile::delete_transcoded_unoriginal_mediafiles($job_ext_upload[mediamosa_job_db::ASSET_ID], $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
     }
-
-    // Lets try to get it so we know we either UPDATE or INSERT.
-    $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
 
     // Insert or update.
     $mediafile_id = $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID];

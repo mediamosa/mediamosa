@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Represents a job server.
  */
 class mediamosa_job_server {
@@ -354,7 +331,7 @@ class mediamosa_job_server {
     mediamosa_io::clearstatcache();
 
     // Get the filename of the source.
-    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_src);
+    $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id_src);
 
     // Check of the source file exists.
     if (!file_exists($filename)) {
@@ -370,10 +347,10 @@ class mediamosa_job_server {
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // Clean up possible earlier status files.
-        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
+        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($mediafile_id_src . '.status'));
 
         // Make sure the tmp transcode directory exists.
-        mediamosa_io::mkdir(mediamosa_configuration_storage::transcode_file_location_get(''));
+        mediamosa_io::mkdir(mediamosa_storage::get_uri_data_transcode());
         $execution_string = self::get_transcode_exec($jobserver_job_id, $mediafile_id_src);
         break;
 
@@ -480,7 +457,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // No status file found, we just have to wait.
         if (empty($job_status['Status'])) {
-          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_io::realpath(mediamosa_storage::get_uri_status_file($mediafile_id_src)), '@job_id' => $job_id));
           return;
         }
 
@@ -515,11 +492,11 @@ class mediamosa_job_server {
 
       case mediamosa_job_server_db::JOB_TYPE_STILL:
         // Scene still filename.
-        $file_scene = mediamosa_configuration_storage::still_scene_file_location_get($job_id);
+        $file_scene = mediamosa_storage::get_uri_scene_file($job_id);
 
         if (!file_exists($file_scene) && empty($job_status)) {
           // No status file found, we just have to wait.
-          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_io::realpath(mediamosa_storage::get_uri_status_file($mediafile_id_src)), '@job_id' => $job_id));
           return;
         }
 
@@ -721,7 +698,7 @@ class mediamosa_job_server {
 
     $execution_string = sprintf('%s %s %s',
       mediamosa_settings::analyse_file(),
-      mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get(),
+      mediamosa_storage::get_realpath_data(),
       $mediafile_id
     );
 
@@ -783,7 +760,7 @@ class mediamosa_job_server {
           $parameter_string = escapeshellarg($parameter_string);
         }
 
-        $execution_string = sprintf('%s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $file_extension, $parameter_string);
+        $execution_string = sprintf('%s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_storage::get_realpath_data(), $mediafile_id, $file_extension, $parameter_string);
         break;
 
       default:
@@ -809,14 +786,14 @@ class mediamosa_job_server {
             // Parameter string for cmd.
             'parameter_string' => $parameter_string,
             // the data dir in sannas (extra).
-            'path_mount_point_data' => mediamosa_configuration_storage::mount_point_get() . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR,
+            'path_mount_point_data' => mediamosa_storage::get_realpath_data(),
             // Path to the transcode file.
-            'location_dest_file' => mediamosa_configuration_storage::transcode_file_location_get($mediafile_id),
+            'location_dest_file' => mediamosa_storage::get_realpath_data_transcode_file($mediafile_id),
             // Location of source mediafile.
-            'location_source_file' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
+            'location_source_file' => mediamosa_storage::get_realpath_mediafile($mediafile),
           );
 
-          // PHP 5.2.3 or higher
+          // PHP 5.2.3 or higher.
           $execution_string = call_user_func($class_name . '::get_transcode_exec', $args);
         }
     }
@@ -824,7 +801,7 @@ class mediamosa_job_server {
     // Unknown.
     if (empty($execution_string)) {
       return strtr('{ echo "Status: error"; echo "Errors: Error"; } > @status', array(
-        '@status' => mediamosa_configuration_storage::status_file_location_get($mediafile_id),
+        '@status' => mediamosa_io::realpath(mediamosa_storage::get_uri_status_file($mediafile_id)),
       ));
 
       // One tool has been found. Process started. Return now.
@@ -865,10 +842,10 @@ class mediamosa_job_server {
    * @param $orig
    */
   public static function get_status_contents($filename, $orig = FALSE) {
-    $statusfile = mediamosa_configuration_storage::status_file_location_get($filename);
+    $statusfile = mediamosa_storage::get_uri_status_file($filename);
 
     if (!mediamosa_io::file_exists($statusfile)) {
-      self::log('Unable to load status contents; file @file does not exists.', array('@file' => $statusfile), WATCHDOG_CRITICAL);
+      self::log('Unable to load status contents; file @file does not exists.', array('@file' => mediamosa_io::realpath($statusfile)), WATCHDOG_CRITICAL);
       return array();
     }
 
@@ -881,7 +858,7 @@ class mediamosa_job_server {
     );
 
     // FIXME: move to mediamosa_io
-    $handle = fopen($statusfile, "r");
+    $handle = fopen($statusfile, 'r');
     while (!feof($handle)) {
       $lines[] = fgets($handle);
     }
@@ -938,7 +915,7 @@ class mediamosa_job_server {
     $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
 
     // Check if there really is an image ($file_size > 0)
-    $filename = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg");
+    $filename = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
     if (!file_exists($filename) || !filesize($filename)) {
       // Something failed, very likely the frametime was too high. Remove the files and fail the job.
       $still_error = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_FRAMETIME_GREATER_THEN_DURATION);
@@ -946,13 +923,14 @@ class mediamosa_job_server {
       // Update status.
       self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $still_error);
 
+
       // Remove all of the still images.
       $i = 1;
-      while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg')) && $i <= mediamosa_settings::STILL_MAXIMUM) {
-        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
+      while (file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg')) && $i <= mediamosa_settings::STILL_MAXIMUM) {
+        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
         $i++;
       }
-      mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
+      mediamosa_io::unlink(mediamosa_storage::get_uri_status_file($base_filename));
 
       self::log_mediafile($mediafile_id_src, $still_error);
       return mediamosa_job_server_db::JOB_STATUS_FAILED;
@@ -963,16 +941,16 @@ class mediamosa_job_server {
 
     $i = 1;
     $mediafile_dest = array();
-    while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
+    while (file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
       if ($i <= mediamosa_settings::STILL_MAXIMUM) {
         // Generate new hash
         $filename = mediamosa_db::uuid(rand(1, 9999));
 
-        $source = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-        $dest = mediamosa_configuration_storage::mediafile_still_filename_get($filename);
+        $source = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+        $dest = mediamosa_storage::get_uri_data_file($filename);
 
         // Make sure dest. exists.
-        mediamosa_io::mkdir(mediamosa_io::dirname($dest), TRUE);
+        mediamosa_io::mkdir(mediamosa_io::dirname($dest));
 
         // Everything went ok, move the still and remove other files
         mediamosa_io::rename($source, $dest);
@@ -980,12 +958,12 @@ class mediamosa_job_server {
       }
       else {
         // Reached the maximum, just delete the remain stills
-        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
+        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
       }
 
       $i++;
     }
-    mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
+    mediamosa_io::unlink(mediamosa_storage::get_uri_status_file($base_filename));
 
     // Data to update.
     $fields = array(
@@ -1050,9 +1028,9 @@ class mediamosa_job_server {
     }
 
     // Get the filenames.
-    $file_status = mediamosa_configuration_storage::status_file_location_get($old_filename);
-    $file_transcode = mediamosa_configuration_storage::transcode_file_location_get($old_filename . '.' . $file_extension);
-    $file_dest = mediamosa_configuration_storage::mediafile_id_filename_get($new_filename);
+    $file_status = mediamosa_storage::get_uri_status_file($old_filename);
+    $file_transcode = mediamosa_storage::get_uri_data_transcode_file($old_filename . '.' . $file_extension);
+    $file_dest = mediamosa_storage::get_uri_mediafile_id($new_filename, TRUE);
 
     // Rename transcoded file to new dest.
     mediamosa_io::rename($file_transcode, $file_dest);

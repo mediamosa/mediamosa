@@ -624,7 +624,7 @@ class mediamosa_statistics {
     // Store the play tickets only.
     if ($ticket_type == mediamosa_ticket::TICKET_TYPE_PLAY) {
       // The ticket id should be unique, then just simply store.
-      $tid = mediamosa_db::db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
+      mediamosa_db::db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
         ->fields(array(
           mediamosa_streaming_ticket_db::TICKET_ID => $ticket_id,
           mediamosa_streaming_ticket_db::APP_ID => $app_id,

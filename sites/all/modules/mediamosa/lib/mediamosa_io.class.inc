@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -24,10 +22,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * In and out file library layer.
-  */
+/**
+ * @file
+ * In and out file library layer.
+ */
 
 class mediamosa_io {
 
@@ -42,8 +40,70 @@ class mediamosa_io {
     mediamosa_debug::log($message, $variables, 'mediamosa_io');
   }
 
+   /**
+   * Returns the absolute local filesystem path of a stream URI. Will return the
+   * result with ending slash (/ OR \ windows) if provided uri also ended wid
+   * slash.
+   *
+   * Note: Like PHP's realpath(), it will return FALSE when provided URI does
+   *       not exists as directory stucture, dirname($uri) must exists.
+   *       Also realpath does not return correctly to files that do not exists.
+   *       If 'foo.txt' exists and 'foo_link.txt does not, and you do
+   *       realpath('foo_link.txt'), it will return 'foo.txt' instead.
+   *
+   * @param $uri
+   *   A stream wrapper URI or a filesystem path, possibly including one or more
+   *   symbolic links.
+   *
+   * @return
+   *   The absolute local filesystem path (with no symbolic links), or FALSE on
+   *   failure.
+   */
+  public static function realpath($uri) {
+    // Empty uri is always fatal.
+    if (empty($uri)) {
+      return FALSE;
+    }
+
+    // Make sure result will also end with slash when original $uri did also.
+    $end = drupal_substr($uri, -1) == '/' ? DIRECTORY_SEPARATOR : '';
+
+    // Keep the filename.
+    if (empty($end)) {
+      $end = basename($uri);
+      if ($end != $uri) {
+        $end = DIRECTORY_SEPARATOR . $end;
+      }
+      $uri = dirname($uri);
+    }
+
+    // Get stream wrapper.
+    $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
+    if ($wrapper) {
+      return rtrim($wrapper->realpath(), '\\/') . $end;
+    }
+
+    // Pass on to realpath.
+    return rtrim(realpath($uri), '\\/') . $end;
+  }
+
   /**
-   * Attempts to create the directory specified by pathname.
+   * Returns the absolute URL version of a stream URI.
+   *
+   * @param $uri
+   *   A stream wrapper URI or a filesystem path, possibly including one or more
+   *   symbolic links.
+   *
+   * @return
+   *   The absolute URL or FALSE on failure.
+   */
+  public static function realurl($uri) {
+    return file_create_url($uri);
+  }
+
+  /**
+   * Attempts to create the directory specified by pathname. Pathname must be
+   * inside mediamosa-storage:// path.
    *
    * Fails with exception. This overrides the recursive php mkdir
    * as it does not correctly sets chmod recursively. It also uses the
@@ -51,34 +111,79 @@ class mediamosa_io {
    * outside this tree.
    *
    * @param string $pathname
-   *  Path of the directory to create.
-   * @param bool $recursive
-   *  Enable recursive to create the sub maps required to create directory.
-   * @param int $mode
-   *  Default mode value for created directory, defaults to mode 0775.
+   *   Path of the directory to create.
+   * @param string $recursive
+   *   Enable recursive to create the sub maps required to create directory.
+   * @param integer $mode
+   *   Default mode value for created directory, defaults to mode 0775.
+   *
+   * @throws mediamosa_exception_error()
    */
-  public static function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
-    // Log it.
-    mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
-
+  public static function mkdir($uri, $recursive = TRUE, $mode = 0775) {
     // Already exists? Then don't try to create.
-    if (file_exists($pathname) && is_dir($pathname)) {
-      return TRUE; // Return TRUE for unit test.
+    if (file_exists($uri) && is_dir($uri)) {
+      return;
     }
 
-    // first determine sannas mount point.
-    $sannas = rtrim(mediamosa_configuration_storage::mount_point_get(), DIRECTORY_SEPARATOR); // remove possible trailing slash.
-    $pathname = rtrim($pathname, DIRECTORY_SEPARATOR); // remove possible trailing slash.
-    $sannas_depth = count(explode(DIRECTORY_SEPARATOR, $sannas));
+    // Not recursive?
+    if (!$recursive) {
+      if (!drupal_mkdir($uri, $mode)) {
+        throw new mediamosa_exception_error(
+          mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+          array(
+            '@location' => $uri,
+            '@reason' => mediamosa::last_php_error_message()
+          )
+        );
+      }
 
-    $dirs = explode(DIRECTORY_SEPARATOR, $pathname);
-    $count = count($dirs);
+      // Directory created.
+      return;
+    }
 
-    $path = $sannas; // we start with sannas mount point.
-    for ($i = $sannas_depth; $i < $count; $i++) {
-      $path .= DIRECTORY_SEPARATOR . $dirs[$i];
-      if (!is_dir($path)) {
-        if (!drupal_mkdir($path)) {
+    // Scheme?
+    if (strpos($uri, '://') !== FALSE) {
+      list($scheme, $path) = explode('://', $uri, 2);
+
+      // Realpath does not return path when parts of the directory do not exist
+      // yet.
+
+      // Convert, as realpath can return empty.
+      $scheme = self::realpath($scheme . '://');
+      if (!$scheme) {
+        throw new mediamosa_exception_error(
+          mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+          array(
+            '@location' => $uri,
+            '@reason' => 'Scheme is not known',
+          )
+        );
+      }
+
+      // Rebuild.
+      $uri = $scheme . '/' . $path;
+    }
+
+    // Check if directory we create is in mediamosa-storage://
+    $storage_path = mediamosa_storage::get_realpath();
+
+    // Must start with storage_path.
+    if (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen($storage_path)) != $storage_path) {
+      throw new mediamosa_exception_error(
+        mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+        array(
+          '@location' => $uri,
+          '@reason' => 'Can not create directory outside the MediaMosa mount pount.',
+        )
+      );
+    }
+
+    // Recursive mkdir.
+    $path = '';
+    foreach (explode(DIRECTORY_SEPARATOR, trim($uri, DIRECTORY_SEPARATOR)) as $folder) {
+      $path .= '/' . $folder;
+      if (!file_exists($path)) {
+        if (!drupal_mkdir($path, $mode)) {
           throw new mediamosa_exception_error(
             mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
             array(
@@ -96,57 +201,25 @@ class mediamosa_io {
   /**
    * Deletes a file.
    *
-   * @param string $filename
-   *  The file to delete.
+   * @param string uri
+   *   A URI or pathname.
    */
-  public static function unlink($filename) {
-    if (!file_exists($filename)) {
+  public static function unlink($uri) {
+    if (!file_exists($uri)) {
       return TRUE;
     }
 
-    return @unlink($filename);
+    return drupal_unlink($uri);
   }
 
   /**
-   * Remove complete style directory with content.
+   * Tells whether the filename is a symbolic link
    *
-   * @param string $dir
-   * @param string $style
+   * @param string $uri
+   *   The uri of the link to test.
    */
-  public static function delete_style_directory($dir, $style = NULL) {
-    if (!is_dir($dir)) {
-      return;
-    }
-
-    // Security checks before we do anything.
-
-    // Relative path is not allowed.
-    if (drupal_substr($dir, 0, 1) != '/') {
-      return;
-    }
-
-    $dir_array = explode(DIRECTORY_SEPARATOR, $dir);
-    $dir_count = count($dir_array);
-
-    // Directory parts.
-    // /SANNAS/still_links/style/style_name/
-    // /SANNAS/data/still/style/style_name/
-    if ($dir_count < 6) {
-      return;
-    }
-
-    // It should be /.../style/style_name/.
-    if ($dir_array[$dir_count - 3] != mediamosa_settings::STILL_LINK_STYLE_LOCATION && $dir_array[$dir_count - 3] != mediamosa_settings::STILL_DATA_STYLE_LOCATION) {
-      return;
-    }
-
-    // The last part should be the style name.
-    if (!$style || $dir_array[$dir_count - 2] != $style) {
-      return;
-    }
-
-    $command = 'rm -r ' . escapeshellarg($dir);
-    $last_line = mediamosa_io::exec($command, $output, $return_var);
+  public static function is_link($uri) {
+    return is_link(self::realpath($uri));
   }
 
   /**
@@ -155,13 +228,22 @@ class mediamosa_io {
   public static function clearstatcache() {
     clearstatcache();
   }
+
   /**
    * Gets file size.
+   *
+   * @param string $uri
+   *   The file location.
+   *
+   * @return integer|boolean
+   *   The size of the file or FALSE.
    */
-  public static function filesize($filename) {
+  public static function filesize($uri) {
     // Filesize needs clear cache.
     self::clearstatcache();
 
+    // Convert to filename.
+    $filename = self::realpath($uri);
     return file_exists($filename) ? filesize($filename) : FALSE;
   }
 
@@ -214,30 +296,37 @@ class mediamosa_io {
   /**
    * Move one file to other file (rename).
    *
-   * @param string $old_name
-   * @param string $new_name
+   * @param $from_uri
+   *   Rename from name.
+   * @param $to_uri
+   *   Rename to name.
    *
-   * @return bool
+   * @return
+   *   Returns TRUE when successful.
    */
-  public static function rename($old_name, $new_name) {
+  public static function rename($from_uri, $to_uri) {
     $success = FALSE;
     $message = 'cause unknown';
+
     try {
       // Make sure dest. map exists.
-      $dirname = dirname($new_name);
-      self::mkdir($dirname, TRUE);
+      self::mkdir(dirname($to_uri), TRUE);
 
-      $success = rename($old_name, $new_name);
+      $from_realpath = mediamosa_io::realpath($from_uri);
+      $to_realpath = mediamosa_io::realpath($to_uri);
+
+      // Now rename.
+      $success = rename($from_realpath, $to_realpath);
     }
     catch (Exception $e) {
       $message = $e->getMessage();
     }
 
-    if (!$success) {
-      self::log("Renaming file '@old_name' to '@new_name' failed, @message.", array('@old_name' => $old_name, '@new_name' => $new_name, '@message' => $message));
+    if (!$success || !file_exists($to_realpath)) {
+      self::log("Renaming file '@old_name' to '@new_name' failed, @message.", array('@old_name' => $from_realpath, '@new_name' => $to_realpath, '@message' => $message));
     }
     else {
-      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => $old_name, '@new_name' => $new_name));
+      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => $from_realpath, '@new_name' => $to_realpath));
     }
 
     return $success;
@@ -269,15 +358,6 @@ class mediamosa_io {
 
     // Test it.
     return file_exists($filename);
-  }
-
-  /**
-   * Test if file is a symbolic link.
-   *
-   * @param string $filename
-   */
-  public static function is_link($filename) {
-    return is_link($filename);
   }
 
   /**
@@ -317,9 +397,8 @@ class mediamosa_io {
 
       // If root is not the same, then related .. comes in front.
       if (!empty($target_parts) && $target_parts[0] == $link_parts[0]) {
-        // Flag if both path have a common start point.
-        $relative_count = FALSE;
-        for ($x = 0; $x < count($target_parts) && $x < count($link_parts); $x++) {
+        $max_parts = min(count($target_parts), count($link_parts));
+        for ($x = 0; $x < $max_parts; $x++) {
           if ($target_parts[$x] != $link_parts[$x]) {
             break;
           }
@@ -330,7 +409,7 @@ class mediamosa_io {
       }
 
       // Rebuild target.
-      $target = str_repeat('..' . DIRECTORY_SEPARATOR, count($link_parts)) . implode(DIRECTORY_SEPARATOR, $target_parts) . (is_file($target) ? DIRECTORY_SEPARATOR . self::basename($target) : '');
+      $target =  (count($link_parts) ? str_repeat('..' . DIRECTORY_SEPARATOR, count($link_parts)) : '.') . implode(DIRECTORY_SEPARATOR, $target_parts) . (is_file($target) ? DIRECTORY_SEPARATOR . self::basename($target) : '');
     }
 
     return $target;
@@ -340,11 +419,18 @@ class mediamosa_io {
    * Create a symbolic link.
    *
    * @param string $target
-   *  Target file.
+   *   Target file.
    * @param string $link
-   *  Link to file to create.
+   *   Link to file to create.
    */
   public static function symlink($target, $link, $make_relative = TRUE) {
+    $target = self::realpath($target);
+    $link = self::realpath($link);
+    if (empty($target) || empty($link)) {
+      mediamosa_debug::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
+      return FALSE;
+    }
+
     if ($make_relative) {
       // Make symlinks targets relative.
       $target = self::symlink_absolute2relative($target, $link);
@@ -385,20 +471,24 @@ class mediamosa_io {
   /**
    * Sets access and modification time of file.
    *
-   * @param string $filename
-   *  The name of the file being touched.
-   * @param integer $time
-   *  The touch time. If time  is not supplied, the current system time is used.
-   * @param integer $atime
-   *  If present, the access time of the given filename is set to the value of atime.
-   *  Otherwise, it is set to time.
+   * @param $filename
+   *   The name of the file being touched.
+   * @param $time
+   *   The touch time. If time  is not supplied, the current system time is
+   *   used.
+   * @param $atime
+   *   If present, the access time of the given filename is set to the value of
+   *   atime. Otherwise, it is set to time.
    */
-  public static function touch($filename, $time = NULL, $atime = NULL) {
+  public static function touch($uri, $time = NULL, $atime = NULL) {
     if (!isset($time)) {
       $time = time();
     }
 
-    return @touch($filename, $time, $atime);
+    // Touch does not realpath.
+    $uri = self::realpath($uri);
+
+    return touch($uri, $time, $atime);
   }
 
   /**

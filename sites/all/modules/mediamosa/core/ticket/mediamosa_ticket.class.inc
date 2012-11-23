@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The ticket class.
  */
-
- /**
-  * @file
-  * The ticket class.
-  */
 
 class mediamosa_ticket {
 
@@ -120,102 +95,116 @@ class mediamosa_ticket {
   }
 
   /**
-   * Process ticket for play-proxy usage.
+   * Process ticket for play-proxy usage. Will setup the symlink to the file.
    *
-   * @param string $ticket_id
-   *  A unique ID for the ticket.
-   * @param array $mediafile_ext
-   *  Is mediafile array with mediafile_metadata array.
-   * @param string $response_type
-   *  See mediamosa_asset_mediafile_play_proxy::RESPONSE_*
-   * @param integer $app_id
-   *  Application ID.
-   * @param string $user_id
-   *  Owner of ticket.
-   * @param string $still_id
-   *  Optional still_id.
+   * @param $mediafile_id
+   *   The ID of the mediafile to create symlink to.
+   * @param $user_id
+   *   Owner of ticket.
+   * @param $ticket_id
+   *   A unique ID for the ticket.
+   * @param $mediafile_ext
+   *   Is mediafile array with mediafile_metadata array.
+   * @param $response_type
+   *   See mediamosa_asset_mediafile_play_proxy::RESPONSE_*
+   * @param $app_id
+   *   Application ID.
    */
-  public static function process_play_ticket($ticket_id, $mediafile_ext, $response_type, $app_id, $user_id, $still_id = FALSE) {
-    // Not set? Set default.
-    if (!isset($response_type)) {
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
-    }
+  static public function process_play_ticket($app_id, $user_id, $mediafile_id, $ticket_id, $response_type, $options = array()) {
 
-    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
-      // Find default or at least one still.
-      if (!$still_id) {
-        // Find default still and make sure its ok.
-        $still_id = mediamosa_asset_mediafile_still::find_default($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID]);
-
-        if (!$still_id) {
-          return;
-        }
-      }
-      else {
-        // When we provide the still ID, we need to check it.
-        mediamosa_asset_mediafile_still::check($still_id);
-      }
-    }
-    else {
+//    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
+//      // Find default or at least one still.
+//      if (!$mediafile_id) {
+//        // Find default still and make sure its ok.
+//        $mediafile_id = mediamosa_asset_mediafile_still::find_default($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID]);
+//
+//        if (!$mediafile_id) {
+//          return;
+//        }
+//      }
+//      else {
+//        // When we provide the still ID, we need to check it.
+//        mediamosa_asset_mediafile_still::check($mediafile_id);
+//      }
+//    }
+//    else {
       // Check if the mediafile exists.
-      $filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile_ext);
+      $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id);
       if (!file_exists($filename)) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $filename));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => mediamosa_io::realpath($filename)));
       }
-    }
+//    }
 
     // Based on type, set the parameters.
     switch ($response_type) {
       case mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL:
         // Need extension.
-        $file_ext = mediamosa_asset_mediafile::get_file_extension($still_id);
+        $file_ext = mediamosa_asset_mediafile::get_file_extension($mediafile_id);
 
         // Attach ext.
-        $ticket_id = $ticket_id . '.' . $file_ext;
+        $ticket_id .= '.' . $file_ext;
 
         $ticket_type = self::TICKET_TYPE_STILL;
-        $ticket_target = mediamosa_configuration_storage::data_still_get_file($still_id);
-        $ticket_symlink = mediamosa_configuration_storage::media_get_ticket_file($app_id, $ticket_id);
+        $ticket_target = mediamosa_storage::get_uri_data_file($mediafile_id);
+        $ticket_symlink = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id);
         break;
 
       case mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD:
+
         $ticket_type = self::TICKET_TYPE_DOWNLOAD;
-        $ticket_target = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_ext[mediamosa_asset_mediafile_db::ID]);
+        $ticket_target = mediamosa_storage::get_uri_mediafile_id($mediafile_id);
 
         // Set default filename.
         if (empty($mediafile_ext['filename'])) {
           $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
-        $ticket_symlink = mediamosa_configuration_storage::ticket_download_location_get() . $ticket_id . DIRECTORY_SEPARATOR . $mediafile_ext['filename'];
+        $ticket_symlink = mediamosa_storage::get_uri_media_download_ticket() . $ticket_id . DIRECTORY_SEPARATOR . $mediafile_ext['filename'];
         break;
 
       default:
         $ticket_type = self::TICKET_TYPE_PLAY;
-        $ticket_target = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_ext[mediamosa_asset_mediafile_db::ID]);
+        $ticket_target = mediamosa_storage::get_uri_mediafile_id($mediafile_id);
+
+        // Need extension.
+        $file_ext = '';
 
         // Now based on certain extensions, attach the fileext. to the filename.
         if (!empty($mediafile_ext['metadata']['container_type'])) {
           switch ($mediafile_ext['metadata']['container_type']) {
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
-              $ticket_id .= '.flv';
+              $file_ext .= 'flv';
               break;
+
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
-              $ticket_id .= '.mp4';
+              $file_ext .= 'mp4';
               break;
+
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
-              $ticket_id .= '.mp3';
+              $file_ext .= 'mp3';
               break;
+
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_OGG:
-              $ticket_id .= '.ogg';
+              $file_ext .= 'ogg';
               break;
+
             case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WEBM:
-              $ticket_id .= '.webm';
+              $file_ext .= '.webm';
               break;
           }
         }
 
-        $ticket_symlink = mediamosa_configuration_storage::ticket_play_location_get($app_id) . DIRECTORY_SEPARATOR . $ticket_id;
+        if (empty($file_ext)) {
+          $file_ext = mediamosa_asset_mediafile::get_file_extension($mediafile_id);
+        }
+
+        if (!empty($file_ext)) {
+          // Add ext.
+          $ticket_id .= '.' . $file_ext;
+        }
+
+        // Create link.
+        $ticket_symlink = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id);
         break;
     }
 
@@ -223,7 +212,7 @@ class mediamosa_ticket {
     $ticket_path = mediamosa_io::dirname($ticket_symlink);
 
     // Create directory.
-    mediamosa_io::mkdir($ticket_path, TRUE, 0775);
+    mediamosa_io::mkdir($ticket_path);
 
     // Make sure the location of the ticket is a directory.
     if (!is_dir($ticket_path)) {
@@ -235,12 +224,6 @@ class mediamosa_ticket {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
     }
 
-    // Get the mediafile for ticket.
-    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL && $still_id ? $still_id : (isset($mediafile_ext['mediafile_id']) ? $mediafile_ext['mediafile_id'] : ''));
-
-    // Insert Ticket.
-    self::create($app_id, $ticket_type, $user_id, $mediafile_id, $ticket_id);
-
     // Create the symlink ticket.
     if (file_exists($ticket_symlink)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target . ' (link already exists)'));
@@ -250,6 +233,9 @@ class mediamosa_ticket {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target));
     }
 
+    // Insert Ticket.
+    self::create($app_id, $ticket_type, $user_id, $mediafile_id, $ticket_id);
+
     // Return the ticket, we might have changed it.
     return $ticket_id;
   }
@@ -258,9 +244,8 @@ class mediamosa_ticket {
    * Run at fixed intervals.
    */
   public static function ticket_cleanup() {
-
-    if (!mediamosa_configuration_storage::is_mount_setup()) {
-      self::log('Can not run clean up expired tickets; mount point not setup, need to specify the linux or windows mount point in mediamosa configuration.');
+    if (!mediamosa_storage::is_storage_setup()) {
+      self::log('Can not run clean up expired tickets; storage file system not setup, need to specify the linux or windows storage file system in mediamosa configuration.');
       return;
     }
 
@@ -268,16 +253,16 @@ class mediamosa_ticket {
     $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Retrieve location of the play tickets.
-    $ticket_play_location = mediamosa_configuration_storage::ticket_play_location_get();
+    $ticket_play_location =mediamosa_storage::get_realpath_media_play();
 
     // Clean up the play tickets.
     mediamosa_io::exec(
       strtr(
-        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
+        'find @ticket_play_location. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
         array(
           '@ticket_play_location' => $ticket_play_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_PLAY / 60),
         )
       )
     );
@@ -285,11 +270,11 @@ class mediamosa_ticket {
     // Clean up the tickets with extensions
     mediamosa_io::exec(
       strtr(
-        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -mmin +@ticket_expiration -delete',
+        'find @ticket_play_location. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -mmin +@ticket_expiration -delete',
         array(
           '@ticket_play_location' => $ticket_play_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_PLAY / 60),
         )
       )
     );
@@ -303,21 +288,21 @@ class mediamosa_ticket {
         ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_PLAY,
         '#issued' => mediamosa_ticket_db::ISSUED,
         ':now' => $db_time_now,
-        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_PLAY,
+        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_PLAY,
       )
     );
 
     // Set the download location.
-    $ticket_download_location = mediamosa_configuration_storage::ticket_download_location_get();
+    $ticket_download_location = mediamosa_storage::get_realpath_media_download_ticket();
 
     // Clean up the download directories.
     mediamosa_io::exec(
       strtr(
-        'find @ticket_download_location/. -maxdepth 2 -mindepth 2 -type l -mmin +@ticket_expiration -delete',
+        'find @ticket_download_location. -maxdepth 2 -mindepth 2 -type l -mmin +@ticket_expiration -delete',
         array(
           '@ticket_download_location' => $ticket_download_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD / 60),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD / 60),
         )
       )
     );
@@ -325,11 +310,11 @@ class mediamosa_ticket {
     // Clean up the download directories.
     mediamosa_io::exec(
       strtr(
-        'find @ticket_download_location/. -maxdepth 1 -mindepth 1 -name "@wildmatch" -type d -mmin +@ticket_expiration -delete',
+        'find @ticket_download_location. -maxdepth 1 -mindepth 1 -name "@wildmatch" -type d -mmin +@ticket_expiration -delete',
         array(
           '@ticket_download_location' => $ticket_download_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD / 60),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD / 60),
         )
       )
     );
@@ -339,8 +324,8 @@ class mediamosa_ticket {
       strtr(
         'find @ticket_media_location -maxdepth 3 -mindepth 3 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+\(,[0-9]+\)?\(\.[a-zA-Z0-9]+\)?$" -type l -mmin +@ticket_expiration -delete',
         array(
-          '@ticket_media_location' => mediamosa_configuration_storage::media_get_ticket_path(),
-          '@ticket_expiration' => (int) (mediamosa_settings::TICKET_EXPIRATION_STILL / 60),
+          '@ticket_media_location' => mediamosa_storage::get_realpath_media_ticket(),
+          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );
@@ -354,7 +339,7 @@ class mediamosa_ticket {
         ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_STILL,
         '#issued' => mediamosa_ticket_db::ISSUED,
         ':now' => $db_time_now,
-        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_STILL,
+        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_STILL,
       )
     );
 
@@ -367,7 +352,7 @@ class mediamosa_ticket {
         ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_UPLOAD,
         '#issued' => mediamosa_ticket_db::ISSUED,
         ':now' => $db_time_now,
-        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_UPLOAD,
+        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_UPLOAD,
       )
     );
   }
@@ -405,18 +390,18 @@ class mediamosa_ticket {
     $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Get the correct expire date.
-    $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;
+    $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_UPLOAD;
     switch ($ticket_type) {
       case mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD:
-        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD;
+        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD;
         break;
 
       case mediamosa_ticket_db::TICKET_TYPE_PLAY:
-        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_PLAY;
+        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_PLAY;
         break;
 
       case mediamosa_ticket_db::TICKET_TYPE_STILL:
-        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;
+        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_UPLOAD;
         break;
 
       case mediamosa_ticket_db::TICKET_TYPE_UPLOAD:

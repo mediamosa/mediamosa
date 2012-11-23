@@ -59,6 +59,6 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
     $this->uploadTestFile();
 
     // PUT upload test.
-    $this->uploadTestFile('', NULL, TRUE);
+    $this->uploadTestFile(array('use_put' => TRUE));
   }
 }

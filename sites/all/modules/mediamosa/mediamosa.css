@@ -208,3 +208,13 @@ SMALL {
   background-position:0px -180px;
 }
 
+/*
+ Changes to the simple test listing.
+ */
+td.simpletest-test-label {
+  width: 500px;
+}
+
+td.simpletest-test-label label {
+  font-weight: normal;
+}

@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
@@ -24,10 +22,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * MediaMosa Exception classes.
-  */
+/**
+ * @file
+ * MediaMosa Exception classes.
+ */
 
 define('MEDIAMOSA_EXCEPTION_SEVERITY_HIGH', 80);
 define('MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL', 50);

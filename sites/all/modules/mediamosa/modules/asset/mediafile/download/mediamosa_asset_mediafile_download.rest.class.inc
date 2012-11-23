@@ -73,7 +73,7 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     $filename = $this->get_param_value(self::FILENAME);
 
     // Get filename.
-    $path = mediamosa_configuration_storage::ticket_download_location_get() . $ticket_id;
+    $path = mediamosa_storage::get_uri_media_download_ticket() . $ticket_id;
     $file = $path . DIRECTORY_SEPARATOR . $filename;
 
     // Make sure the file exists we want to download.

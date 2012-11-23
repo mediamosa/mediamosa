@@ -1,3 +1,39 @@
+
+- Rewrote mount point related IO to stream wrapper class. Moint point is now
+  available as URI mediamosa-storage:// in core code.
+- Extended mediamosa_io class with realpath function to translate URI to file
+  paths.
+- Fixed: The REST call /media/$filename had wrong version number assigned to it
+  (2.0.0 -> 3.0.0).
+- The class mediamosa_configuration_storage is now deprecated. Use class
+  mediamosa_storage instead. All functions are now also properly (re)named.
+- Removed from mediamosa_settings all FTP_*_DIR settings.
+- All definitions for 'static public' where converted to 'public static', same
+  as Drupal.
+- All copyright notes with Copyright (C) 2011 changed to 2012.
+- Renamed mediamosa.lib.test to lib/mediamosa_io.test.
+- Fixed: When cron was not running for longer than 10 minutes, then the refresh
+  now for the status page was no longer displayed.
+- Fixed: Component check for mount point did not do a existence check on the sub
+         folders.
+- Fixed: Install profile did not create all 'Y' sub directories.
+- Download servers will use the /media URL instead of /download.
+- Fixed: CQL search in /openapi/mediaItems/$items_user_id/$group_id did not use
+         exact search on group_id, owner_id, asset_id and mediafile_id.
+
+@todo:
+- check if /media is available on main url, as /media might be marked as
+  download REST call.
+- Current 3.2 release does not hide the other profiles(!) during install.
+- Mount point question; creation of still (see
+  mediamosa_asset_mediafile_still::create()) stores the mount point. This is a
+  real problem when moving the mount point. Same for storing transcoded
+  mediafiles and upload.
+- The stored mount point is only used once when creating the ticket link during
+  playproxy, all other code does not look at the stored mount point.
+
+
+
 MediaMosa 3.4.x-dev (build 1931, inuits branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
@@ -38,6 +74,10 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
   string type instead of expected integer. Fix by Mariano Asselborn/Acquia.
 - Fixed: The ffmpeg tool did not correctly use the padding value for ffmpeg. Fix
   by Mariano Asselborn/Acquia.
+- Fixed: webm playback on FireFox requires extra mime-type settings for HTTP
+  headers, these have been added to the .htaccess file in the /media directory
+  under mountpoint.
+- Stills are now moved to the common /data dir instead of /data/stills.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

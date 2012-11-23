@@ -49,7 +49,6 @@
   $description = $variables['rest_call']->description;
   $uri = $variables['rest_call']->uri;
   $method = $variables['rest_call']->method;
-  $class = $variables['rest_call']->method;
 
   $classname = $variables['rest_call']->{mediamosa_rest_call::CLASS_NAME};
   $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/config/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) . ', REST class: ' . $classname : '';
@@ -84,12 +83,18 @@
 ?>
 <h3><?php print t('Request Parameters'); ?></h3>
 <?php print $variables['parameters']; ?>
-<?php if (!empty($variables['response_fields'])) { ?>
+
+<?php if (!empty($variables['parameters_internal'])): ?>
+<h3><?php print t('Internal Request Parameters'); ?>&nbsp;<small>(can only be used during internal REST calls)</small></h3>
+<?php print $variables['parameters_internal']; ?>
+<?php endif; ?>
+
+<?php if (!empty($variables['response_fields'])): ?>
 <h3><?php print t('Response fields'); ?></h3>
 <?php print $variables['response_fields']; ?>
-<?php } ?>
+<?php endif; ?>
 <h3><?php print t('Example Request'); ?></h3>
 <p><?php print str_replace("\n\n", "</p>\n<br>\n<p>", $example_request); ?></p>
 <h3><?php print t('Example Response'); ?></h3>
-<pre><?php print htmlentities($rest_call->example_response); ?></pre>
+<pre><?php print htmlentities($example_response); ?></pre>
 </div>

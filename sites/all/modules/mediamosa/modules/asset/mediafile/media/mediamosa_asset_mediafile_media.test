@@ -48,17 +48,17 @@ class MediaMosaAssetMediafileMediaTestCaseEgaJob extends MediaMosaTestCaseEgaJob
     // App ids.
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
 
-    $upload = $this->uploadTestFile($this->getTestVideo_ogg());
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
-    $job_id = $this->createMediafileStill($mediafile_id);
+    $this->createMediafileStill($mediafile_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
 
     // Get the asset, so we have the still.
-    $asset = $this->getAsset($asset_id);
+    $this->getAsset($asset_id);
 
     $still_servers = mediamosa_server::get_enabled_still();
     $this->assertTrue(!empty($still_servers), t('@num enabled still server(s) found.', array('@num' => $still_servers->rowCount())));
@@ -99,7 +99,7 @@ class MediaMosaAssetMediafileMediaTestCaseEgaJob extends MediaMosaTestCaseEgaJob
       $this->var_export($result->headers);
 
       // Get filepath to still.
-      $still_link = mediamosa_configuration_storage::data_still_get_file($still_id);
+      $still_link = mediamosa_storage::get_realpath_data_file($still_id);
 
       $this->var_export($still_link, 'still path');
 
