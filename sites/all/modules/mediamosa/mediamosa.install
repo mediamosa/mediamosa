@@ -3678,6 +3678,16 @@ function mediamosa_update_7145() {
   return strtr("Moved @count stills to main mediafile data dir.<br />@messages", array('@count' => $stills_moved, '@message' => implode('<br />', $messages)));
 }
 
+/**
+ * Disable the mediamosa_configuration_storage module. Its no longer used.
+ */
+function mediamosa_update_7146() {
+  $mediamosa_configuration_storage = module_exists('mediamosa_configuration_storage');
+  if ($mediamosa_configuration_storage) {
+    module_disable(array('mediamosa_configuration_storage'));
+  }
+}
+
 ///**
 // * Clean up current play and download tickets, as these moved and are no longer
 // * valid.
