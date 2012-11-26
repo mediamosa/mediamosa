@@ -1,28 +1,5 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * @file
  * In and out file library layer.
  */
@@ -33,14 +10,20 @@ class mediamosa_io {
    * Log for mediamosa_io.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
    */
   public static function log($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'mediamosa_io');
   }
 
-   /**
+  /**
    * Returns the absolute local filesystem path of a stream URI. Will return the
    * result with ending slash (/ OR \ windows) if provided uri also ended wid
    * slash.
@@ -80,11 +63,19 @@ class mediamosa_io {
     // Get stream wrapper.
     $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
     if ($wrapper) {
-      return rtrim($wrapper->realpath(), '\\/') . $end;
+      $realpath = rtrim($wrapper->realpath(), '\\/') . $end;
+    }
+    else {
+      $realpath = rtrim(realpath($uri), '\\/') . $end;
     }
 
-    // Pass on to realpath.
-    return rtrim(realpath($uri), '\\/') . $end;
+    // Make sure it never returns root.
+    if ($realpath == DIRECTORY_SEPARATOR || empty($realpath)) {
+      throw new mediamosa_exception_program_error("The mediamosa_io::realpath() functions was not able to translate uri '@uri', realpath translated this to: '@realpath'.", array('@uri' => $uri, '@realpath' => $realpath));
+    }
+
+    // Done.
+    return $realpath;
   }
 
   /**
@@ -427,7 +418,7 @@ class mediamosa_io {
     $target = self::realpath($target);
     $link = self::realpath($link);
     if (empty($target) || empty($link)) {
-      mediamosa_debug::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
+      self::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
       return FALSE;
     }
 
@@ -436,8 +427,13 @@ class mediamosa_io {
       $target = self::symlink_absolute2relative($target, $link);
     }
 
-    mediamosa_debug::log('Creating symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
-    return symlink($target, $link);
+    self::log('Creating symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
+    $result = symlink($target, $link);
+    if (!$result) {
+      self::log('Failed to create symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
+    }
+
+    return $result;
   }
 
   /**
@@ -471,12 +467,12 @@ class mediamosa_io {
   /**
    * Sets access and modification time of file.
    *
-   * @param $filename
-   *   The name of the file being touched.
-   * @param $time
+   * @param string $uri
+   *   The uri of the file being touched.
+   * @param integer $time
    *   The touch time. If time  is not supplied, the current system time is
    *   used.
-   * @param $atime
+   * @param integer $atime
    *   If present, the access time of the given filename is set to the value of
    *   atime. Otherwise, it is set to time.
    */
