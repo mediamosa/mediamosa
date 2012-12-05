@@ -146,8 +146,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
     $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
 
-    // Test if access on unappropriate flag.
-    mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, $play_call);
+    // Test if access on inappropriate flag.
+    mediamosa_asset::is_inappropriate($app_ids, $asset_id, $user_id, $is_app_admin, $play_call);
 
     // Check access.
     mediamosa_acl::access_check_on_object(
@@ -214,47 +214,39 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     if ($mediafile_id) {
       // Mediafile.
 
+      // Override type.
       $type = self::TYPE_VIDEO;
-
-      // Variables.
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT;
 
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
 
       // Now get the mediafile.
-      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
+      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
 
       // Get the metadata.
       $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
-      $filename = mediamosa_storage::get_uri_mediafile($mediafile);
+      $filename = mediamosa_storage::get_realpath_data_mediafile($mediafile);
       if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
-        $ticket = mediamosa_ticket::process_play_ticket($app_id, $still_id, $ticket, $mediafile, $response_type, $user_id);
-
-        $response = mediamosa_asset_mediafile_play_proxy::create_response(
-          $response_type,
+        $response = mediamosa_media::do_response_object(
           $app_id,
-          $ticket,
-          $asset_id,
-          TRUE,
+          $user_id,
+          $mediafile,
           ($maxwidth ? $maxwidth : 0),
           ($maxheight ? $maxheight : 0),
+          TRUE,
           NULL,
-          NULL,
-          FALSE,
-          $asset_metadata,
-          $mediafile,
-          array()
+          NULL
         );
+
         $html = $response['output'];
 
-        $video_size = mediamosa_asset_mediafile_play_proxy::calc_video_size(
+        $video_size = mediamosa_media::calc_video_size(
           isset($mediafile['metadata']['width']) ? $mediafile['metadata']['width'] : 0,
           isset($mediafile['metadata']['height']) ? $mediafile['metadata']['height'] : 0,
           $maxwidth,
           $maxheight,
-          isset($mediafile['metadata']['container_type']) ? $mediafile['metadata']['container_type'] : self::CONTAINER_TYPE_WMV
+          isset($mediafile['metadata']['container_type']) ? $mediafile['metadata']['container_type'] : mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV
         );
 
         $width = ($video_size['width'] ? $video_size['width'] : $maxwidth);
@@ -262,46 +254,15 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       }
     }
     elseif ($still_id) {
-      // Still.
-
-      $type = self::TYPE_PHOTO;
-
-      // Variables.
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL;
-
       // Now get the still.
       $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
       $mediafile_id = $still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
 
       list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
 
-      // Get the metadata, need it for extension.
-      $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+      // Get still
+      $response = mediamosa_media::do_response_still($app_id, $user_id, $still);
 
-      // Generate ticket or perm link?
-      if (mediamosa_asset_mediafile_media::allow_permanent($still_id, $is_app_admin)) {
-        $ticket_str = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
-      }
-      else {
-        $ticket_str = mediamosa_storage::STORAGE_FOLDER_TICKET . '/' . mediamosa_ticket::process_play_ticket($app_id, $still_id, $ticket_id, $mediafile, $response_type, $user_id);
-      }
-
-      // Create the response.
-      $response = mediamosa_asset_mediafile_play_proxy::create_response(
-        $response_type,
-        $app_id,
-        $ticket_str,
-        $asset_id,
-        TRUE,
-        ($maxwidth ? $maxwidth : 0),
-        ($maxheight ? $maxheight : 0),
-        NULL,
-        NULL,
-        FALSE,
-        $asset_metadata,
-        $mediafile,
-        array()
-      );
       $url = $response['output'];
 
       $width = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'width');
@@ -314,7 +275,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     // Collect the data for output.
 
     $output += array(
-      'type' => $type,
+      'type' => self::TYPE_PHOTO,
       'version' => '1.0',
       'title' => $title,
       'author_name' => $author_name,

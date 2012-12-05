@@ -259,6 +259,36 @@ class mediamosa_gd {
   }
 
   /**
+   * Create a new image from file or URL.
+   *
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to the image (JPG|PNG).
+   *
+   * @return resource
+   *   Image resource identifier on success, FALSE on errors.
+   *
+   * @see imagecreatefrompng()
+   * @see imagecreatefromjpeg()
+   *
+   * @throws mediamosa_exception_error().
+   */
+  public static function imagecreate($uri) {
+    // Need to know type of image.
+    $imagesize = mediamosa_gd::getimagesize($uri);
+
+    switch ($imagesize[2]) {
+      case IMAGETYPE_JPEG:
+        return self::imagecreatefromjpeg($uri);
+
+      case IMAGETYPE_PNG:
+        return self::imagecreatefrompng($uri);
+    }
+
+    // Unsupported image format.
+    return FALSE;
+  }
+
+  /**
    * Get image width.
    *
    * @param resource $image
@@ -400,6 +430,41 @@ class mediamosa_gd {
    */
   public static function imagepng($image, $uri = NULL, $quality = NULL, $filters = NULL) {
     imagepng($image, (empty($uri) ? NULL : mediamosa_io::realpath($uri)), $quality, $filters);
+  }
+
+  /**
+   * Output image to browser or file.
+   *
+   * @param resource $image
+   *   The resource object.
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path to save the file to. If NULL,
+   *   the raw image stream will be outputted directly.
+   * @param integer $quality
+   *   Quality is optional, and ranges from 0 (worst quality, smaller file) to
+   *   100 (best quality, biggest file). The default is the default IJG quality
+   *   value (about 75).
+   *
+   * @return boolean
+   *   Returns TRUE on success or FALSE on failure.
+   *
+   * @see imagejpeg()
+   * @see imagepng()
+   */
+  public static function image($image, $uri = NULL, $quality = NULL) {
+    // Need to know type of image.
+    $imagesize = mediamosa_gd::getimagesize($uri);
+
+    switch ($imagesize[2]) {
+      case IMAGETYPE_JPEG:
+        return self::imagejpeg($image, $uri, $quality);
+
+      case IMAGETYPE_PNG:
+        return self::imagepng($image, $uri, $quality);
+    }
+
+    // Unsupported image format.
+    return FALSE;
   }
 
   /**

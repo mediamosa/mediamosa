@@ -4,29 +4,6 @@
  * The MediaMosa Server module.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_server {
   // ------------------------------------------------------------------ Consts.
   /**
@@ -304,11 +281,11 @@ class mediamosa_server {
    * Find the streaming server based on container and codec.
    *
    * @param string $container_type
-   *  Container type like mp4;mpg etc.
+   *   Container type like mp4;mpg etc.
    * @param string $video_codec
-   *  Codec.
+   *   The video codec.
    * @param string $mime_type
-   *  Mime type.
+   *   (optional) The mime type.
    */
   public static function get_streaming($container_type, $video_codec, $mime_type = NULL) {
     static $servers = array();
@@ -465,7 +442,7 @@ class mediamosa_server {
     }
 
     // Metafile.
-    if ($container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4 || $container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3 || $container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+    if ($container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_MP4 || $container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_MP3 || $container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV) {
       $container_type_ok = TRUE;
     }
     else {
@@ -512,14 +489,72 @@ class mediamosa_server {
    *  Mime type.
    */
   public static function get_uri_streaming($container_type, $video_codec, $mime_type = NULL) {
-
+    // Find server.
     $server = self::get_streaming($container_type, $video_codec, $mime_type);
-
     if ($server) {
       return self::get_server_url($server);
     }
 
     return FALSE;
+  }
+
+  /**
+   * Get the uri of the correct media server.
+   *
+   * @param $response_type
+   *   The response type.
+   * @param $mediafile_id
+   *   The mediafile ID when matching response for view (play).
+   *
+   * @return string
+   *   The URI of the server or FALSE.
+   */
+  public static function get_server_by_responsetype($response_type, $mediafile_id) {
+
+    switch ($response_type) {
+      case mediamosa_media::RESPONSE_STILL:
+        return mediamosa_db::db_query(
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          array(
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
+            '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+            '#server_status' => mediamosa_server_db::SERVER_STATUS,
+            '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
+            ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
+          )
+        )->fetchField();
+
+      case mediamosa_media::RESPONSE_DOWNLOAD:
+        return mediamosa_db::db_query(
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          array(
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
+            '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+            '#server_status' => mediamosa_server_db::SERVER_STATUS,
+            '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
+            ':server_type' => mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+          )
+        )->fetchField();
+    }
+
+    // Needed at this point.
+    assert(!empty($mediafile_id));
+
+    // Get the URI.
+    $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'container_type');
+    $video_codec = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'video_codec');
+    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'mime_type');
+    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type);
+
+    if (!$uri) { // No streaming profile found
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
+    }
+
+    return $uri;
   }
 
   /**

@@ -29,7 +29,7 @@ require_once 'core/metadata/mediamosa_metadata.install.inc';
 require_once 'core/node/mediamosa_node.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/statistics/mediamosa_statistics.install.inc';
-require_once 'core/ticket/mediamosa_ticket.install.inc';
+require_once 'core/media/mediamosa_media.install.inc';
 require_once 'core/tool/mediamosa_tool.install.inc';
 require_once 'core/transcode/mediamosa_transcode.install.inc';
 require_once 'core/storage/mediamosa_storage.install.inc';
@@ -68,8 +68,8 @@ function mediamosa_install() {
   // Install the user dbs.
   _mediamosa_user_install();
 
-  // Call installer ticket.
-  _mediamosa_ticket_install();
+  // Call installer media.
+  _mediamosa_media_install();
 
   // Call installer ftp_batch.
   _mediamosa_ftp_batch_install();
@@ -136,8 +136,8 @@ function mediamosa_uninstall() {
   // Remove ftp_batch.
   _mediamosa_ftp_batch_uninstall();
 
-  // Call uninstaller ticket.
-  _mediamosa_ticket_uninstall();
+  // Call uninstaller media.
+  _mediamosa_media_uninstall();
 
   // Uninstall the user dbs.
   _mediamosa_user_uninstall();
@@ -543,7 +543,7 @@ function mediamosa_update_7012() {
     array(
       mediamosa_asset_db::APP_ID,
       mediamosa_asset_db::ISPRIVATE,
-      mediamosa_asset_db::IS_UNAPPROPRIATE,
+      mediamosa_asset_db::IS_INAPPROPRIATE,
       mediamosa_asset_db::IS_EMPTY_ASSET,
     )
   );
@@ -3191,7 +3191,7 @@ function mediamosa_update_7127() {
   if (!$found && is_writable(mediamosa_storage::get_uri())) {
     // Make the [mount_point]/media directory.
     mediamosa_io::mkdir($path . 'ticket/');
-    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_htaccess_contents());
+    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
   }
 
   if ($found) {
@@ -3502,7 +3502,6 @@ function mediamosa_update_7140() {
 
     // Now re-evalute the asset is_empty_flag.
     foreach ($asset_ids as $asset_id) {
-      $updated_assets++;
       mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
     }
 
@@ -3541,7 +3540,7 @@ function mediamosa_update_7141() {
   drupal_unlink($path . '.htaccess');
 
   // Create the htaccess file.
-  $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_htaccess_contents());
+  $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
 
   // Return the status of this update.
   return strtr(($found ? "Successfully replaced the .htaccess file under '@mount_pointmedia/.htaccess'." : 'Warning: Was unable to create /media under mount point (@mount_point). Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.'), array('@url' => url('/', array('absolute' => TRUE)), '@mount_point' => mediamosa_storage::get_realpath()));
@@ -3578,6 +3577,7 @@ function mediamosa_update_7143() {
  * installations may be missing the Y directory.
  */
 function mediamosa_update_7144() {
+  // Get uri to storage.
   $storage = mediamosa_storage::get_uri();
 
   mediamosa_io::mkdir($storage . 'data/Y');
@@ -3590,7 +3590,7 @@ function mediamosa_update_7144() {
  * Move the stills to the normal mediafile data tree. If this script times out,
  * you can restart update again and the script will continue where it ended.
  * Will only move stills which are found as still in the database. All other
- * files will not be moved.
+ * files under mountpount/data/stills will not be moved.
  */
 function mediamosa_update_7145() {
 
@@ -3691,91 +3691,128 @@ function mediamosa_update_7145() {
 function mediamosa_update_7146() {
   $mediamosa_configuration_storage = module_exists('mediamosa_configuration_storage');
   if ($mediamosa_configuration_storage) {
+    // Disable module.
     module_disable(array('mediamosa_configuration_storage'));
+
+    // Uninstall module
+    drupal_uninstall_modules(array('mediamosa_configuration_storage'));
+
+    return 'The module MediaMosa Configuration Storage has been integrated into core. This module is now turned off and uninstalled. Please keep this module off as in future version this module will be completly removed.';
   }
 }
 
+/**
+ * Clean up current play and download tickets, as these moved and are no longer
+ * valid or used.
+ */
+function mediamosa_update_7147() {
+
+  // Clean up links location.
+  $ticket_play_location = mediamosa_storage::get_realpath() . 'links/';
+
+  if (mediamosa_io::file_exists($ticket_play_location) && is_dir($ticket_play_location)) {
+    // Clean up the play tickets.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
+        array(
+          '@ticket_play_location' => $ticket_play_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+        )
+      )
+    );
+
+    // Clean up the tickets with extensions.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
+        array(
+          '@ticket_play_location' => $ticket_play_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+        )
+      )
+    );
+
+    // Try to remove directory.
+    @drupal_rmdir($ticket_play_location);
+  }
+
+  // Clean up download_links location.
+  $ticket_download_location = mediamosa_storage::get_realpath() . 'download_links/';
+
+  if (mediamosa_io::file_exists($ticket_download_location)) {
+    // Clean up the play tickets.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_download_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
+        array(
+          '@ticket_download_location' => $ticket_download_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+        )
+      )
+    );
+
+    // Clean up the tickets with extensions.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_download_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
+        array(
+          '@ticket_download_location' => $ticket_download_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+        )
+      )
+    );
+
+    // Try to remove directory.
+    @drupal_rmdir($ticket_download_location);
+  }
+}
+
+/**
+ * The playproxy code and ticket module has been moved into the MediaMosa Media
+ * module. The ticket module will be turned off.
+ */
+function mediamosa_update_7148() {
+
+  // Turn off ticket module.
+  module_disable(array('mediamosa_ticket'));
+
+  // Remove cron variable of ticket (its renamed to
+  // mediamosa_media_ticket_cron_last).
+  variable_set('mediamosa_media_ticket_cron_last', variable_get('mediamosa_ticket_cron_last'));
+  variable_del('mediamosa_ticket_cron_last');
+
+  // Uninstall mediamosa_ticket module.
+  drupal_uninstall_modules(array('mediamosa_ticket'));
+
+  // Enable new module 'mediamosa_media'.
+  module_enable(array('mediamosa_media'));
+}
+
+/**
+ * Must replace /download, /ticket and /still server mappings with /media.
+ */
+function mediamosa_update_7149() {
+
+  // Paths to replace.
+  $paths = array(
+    '{base_uri}ticket/{TICKET}',
+  );
+
+  // Replace the server paths with the media variant.
+  db_update('mediamosa_server')->fields(array('server_path' => '{base_uri}media/{TICKET}'))->condition('server_path', $paths, 'IN')->execute();
+
+  // Done.
+  return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
+}
+
 ///**
-// * Clean up current play and download tickets, as these moved and are no longer
-// * valid.
+// * Create the new media object directory under mount point.
 // */
-//function mediamosa_update_7134() {
-//  // Get the 3.0-- links location.
-//  $ticket_play_location = mediamosa_storage::get_realpath() . 'links' . DIRECTORY_SEPARATOR;
+//function mediamosa_update_7150() {
+//  // Get uri to storage.
+//  $storage = mediamosa_storage::get_uri();
 //
-//  if (mediamosa_io::file_exists($ticket_play_location)) {
-//    // Clean up the play tickets.
-//    mediamosa_io::exec(
-//      strtr(
-//        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
-//        array(
-//          '@ticket_play_location' => $ticket_play_location,
-//          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-//        )
-//      )
-//    );
-//
-//    // Clean up the tickets with extensions.
-//    mediamosa_io::exec(
-//      strtr(
-//        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
-//        array(
-//          '@ticket_play_location' => $ticket_play_location,
-//          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-//        )
-//      )
-//    );
-//
-//    // Try to remove directory.
-//    @rmdir($ticket_play_location);
-//  }
-//
-//  // Get the 3.0-- links location.
-//  $ticket_download_location = mediamosa_storage::get_realpath() . 'download_links' . DIRECTORY_SEPARATOR;
-//
-//  if (mediamosa_io::file_exists($ticket_download_location)) {
-//    // Clean up the play tickets.
-//    mediamosa_io::exec(
-//      strtr(
-//        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
-//        array(
-//          '@ticket_play_location' => $ticket_download_location,
-//          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-//        )
-//      )
-//    );
-//
-//    // Clean up the tickets with extensions.
-//    mediamosa_io::exec(
-//      strtr(
-//        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
-//        array(
-//          '@ticket_play_location' => $ticket_download_location,
-//          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-//        )
-//      )
-//    );
-//
-//    // Try to remove directory.
-//    @rmdir($ticket_download_location);
-//  }
-//}
-//
-///**
-// * Must replace /download, /ticket and /still server mappings with /media.
-// */
-//function mediamosa_update_7137() {
-//
-//  // Paths to replace.
-//  $paths = array(
-//    '{base_uri}download/{TICKET}',
-//    '{base_uri}still/{TICKET}',
-//    '{base_uri}ticket/{TICKET}',
-//  );
-//
-//  // Replace the server paths with the media variant.
-//  db_update('mediamosa_server')->fields(array('server_path' => '{base_uri}media/{TICKET}'))->condition('server_path', $paths, 'IN')->execute();
-//
-//  // Done.
-//  return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
+//  // Create object dir.
+//  mediamosa_io::mkdir($storage . 'object');
 //}

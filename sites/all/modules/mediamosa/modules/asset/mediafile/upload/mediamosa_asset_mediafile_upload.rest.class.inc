@@ -88,7 +88,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $group_id = $this->get_param_value(self::GROUP_ID);
 
     // Create.
-    $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
+    $ticket_id = mediamosa_media_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
 
     // Get serverupload.
     $server_upload = mediamosa_server::get_random_upload();
@@ -448,12 +448,12 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $watermark_id = $this->get_param_value(self::WATERMARK_ID);
 
     // Get the ticket.
-    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
+    $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
     if (empty($ticket)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
     // Get the mediafile using the ticket mediafile_id.
-    $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
     $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
     // Check watermark id, if exists.
@@ -469,7 +469,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
       'start_frame' => $this->get_param_value(self::START_FRAME),
       'end_frame' => $this->get_param_value(self::END_FRAME),
-      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id)),
+      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id)),
       'h_padding' => ($this->get_param_value_org(self::H_PADDING) == '' ? NULL : $this->get_param_value(self::H_PADDING)),
       'v_padding' => ($this->get_param_value_org(self::V_PADDING) == '' ? NULL : $this->get_param_value(self::V_PADDING)),
       'tag' => $this->get_param_value(self::TAG),

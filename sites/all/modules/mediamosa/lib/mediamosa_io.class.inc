@@ -25,7 +25,7 @@ class mediamosa_io {
 
   /**
    * Returns the absolute local filesystem path of a stream URI. Will return the
-   * result with ending slash (/ OR \ windows) if provided uri also ended wid
+   * result with ending slash (/ OR \ windows) if provided uri also ended with
    * slash.
    *
    * Note: Like PHP's realpath(), it will return FALSE when provided URI does
@@ -186,7 +186,6 @@ class mediamosa_io {
         drupal_chmod($path, 0775);
       }
     }
-    return TRUE;
   }
 
   /**
@@ -194,6 +193,9 @@ class mediamosa_io {
    *
    * @param string uri
    *   A URI or pathname.
+   *
+   * @return boolean
+   *   Return TRUE on success or FALSE with failure.
    */
   public static function unlink($uri) {
     if (!file_exists($uri)) {
@@ -242,6 +244,10 @@ class mediamosa_io {
    * Return the filename without extension.
    *
    * @param string $filename
+   *   The filename to process.
+   *
+   * @return string
+   *   The filename without extension.
    */
   public static function get_base_filename($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
@@ -252,7 +258,11 @@ class mediamosa_io {
   /**
    * Return the file extension (excluding the dot, like 'jpg' or 'mp4').
    *
-   * @param $filename
+   * @param string $filename
+   *   The filename to get extension from.
+   *
+   * @return string
+   *   The file extension without the dot or ''.
    */
   public static function get_ext($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
@@ -263,7 +273,11 @@ class mediamosa_io {
   /**
    * Returns directory name component of path.
    *
-   * @param $path
+   * @param string $path
+   *   The path to process.
+   *
+   * @return string
+   *   The directory name component.
    */
   public static function dirname($path) {
     return dirname($path);
@@ -272,9 +286,9 @@ class mediamosa_io {
   /**
    * Returns trailing name component of path.
    *
-   * @param $path
+   * @param string $path
    *   A path.
-   * @param $suffix
+   * @param string $suffix
    *  If the name component ends in suffix this will also be cut off (optional).
    *
    * @return

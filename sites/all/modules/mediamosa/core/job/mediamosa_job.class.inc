@@ -697,7 +697,7 @@ class mediamosa_job {
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Get the newly uploaded filename.
-    $uploaded_filename = mediamosa_storage::get_uri_mediafile($mediafile);
+    $uploaded_filename = mediamosa_storage::get_realpath_data_mediafile($mediafile);
 
     // Get the filesize of the uploaded file.
     $uploaded_filesize = mediamosa_io::filesize($uploaded_filename);

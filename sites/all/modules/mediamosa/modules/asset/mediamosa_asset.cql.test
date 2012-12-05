@@ -51,7 +51,7 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
 
     // Change is_unappropriate to TRUE.
     $parameters = array(
-      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'true',
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'true',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
     );
 
@@ -60,7 +60,7 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get asset and check setting.
     $asset = $this->getAsset($asset_id);
-    $this->assertTrue($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE);
+    $this->assertTrue($asset[mediamosa_asset_db::IS_INAPPROPRIATE] == mediamosa_asset_db::IS_INAPPROPRIATE_TRUE);
 
     // Must find it.
     $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array($asset_id => TRUE), $search_params);

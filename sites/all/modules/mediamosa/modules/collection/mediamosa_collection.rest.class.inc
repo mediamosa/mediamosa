@@ -457,7 +457,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     // Collection must exist.
     $collection = mediamosa_collection::must_exists($coll_id);
 
-    if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
+    if ($collection[mediamosa_collection_db::IS_INAPPROPRIATE] == mediamosa_collection_db::IS_INAPPROPRIATE_TRUE) {
       // Must be owner or admin.
       try {
         // Check the rights
@@ -529,7 +529,7 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
     // Collection must exist.
     $collection = mediamosa_collection::must_exists($coll_id);
 
-    if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
+    if ($collection[mediamosa_collection_db::IS_INAPPROPRIATE] == mediamosa_collection_db::IS_INAPPROPRIATE_TRUE) {
       // Must be owner or admin.
       try {
         // Check the rights
@@ -633,7 +633,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
-    $this->unset_param(self::IS_UNAPPROPRIATE);
+    $this->unset_param(self::IS_INAPPROPRIATE);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
@@ -736,7 +736,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => '',
         ),
-        self::IS_UNAPPROPRIATE => array(
+        self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
         ),
@@ -759,7 +759,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
 
     // Only when app admin.
     if (!$is_app_admin) {
-      $this->unset_param(self::IS_UNAPPROPRIATE);
+      $this->unset_param(self::IS_INAPPROPRIATE);
       $this->unset_param(self::OWNER_ID);
       $this->unset_param(self::GROUP_ID);
     }
@@ -783,7 +783,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     $category = $this->get_param_value(self::CATEGORY);
     $isprivate = $this->get_param_value(self::ISPRIVATE);
     $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
-    $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
+    $is_unappropriate = $this->get_param_value(self::IS_INAPPROPRIATE);
 
     // Now update the collection.
     if (!mediamosa_collection::update($coll_id, $owner_id, $title, $description, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate)) {

@@ -1,25 +1,5 @@
-
-- Rewrote mount point related IO to stream wrapper class. Moint point is now
-  available as URI mediamosa-storage:// in core code.
-- Extended mediamosa_io class with realpath function to translate URI to file
-  paths.
-- Fixed: The REST call /media/$filename had wrong version number assigned to it
-  (2.0.0 -> 3.0.0).
-- The class mediamosa_configuration_storage is now deprecated. Use class
-  mediamosa_storage instead. All functions are now also properly (re)named.
-- Removed from mediamosa_settings all FTP_*_DIR settings.
-- All definitions for 'static public' where converted to 'public static', same
-  as Drupal.
-- All copyright notes with Copyright (C) 2011 changed to 2012.
-- Renamed mediamosa.lib.test to lib/mediamosa_io.test.
-- Fixed: When cron was not running for longer than 10 minutes, then the refresh
-  now for the status page was no longer displayed.
-- Fixed: Component check for mount point did not do a existence check on the sub
-         folders.
-- Fixed: Install profile did not create all 'Y' sub directories.
 - Download servers will use the /media URL instead of /download.
-- Fixed: CQL search in /openapi/mediaItems/$items_user_id/$group_id did not use
-         exact search on group_id, owner_id, asset_id and mediafile_id.
+
 
 @todo:
 - check if /media is available on main url, as /media might be marked as
@@ -78,6 +58,37 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
   headers, these have been added to the .htaccess file in the /media directory
   under mountpoint.
 - Stills are now moved to the common /data dir instead of /data/stills.
+- Rewrote mount point related IO to stream wrapper class. Moint point is now
+  available as URI 'mediamosa-storage://' in core code.
+- Extended mediamosa_io class with realpath function to translate URI to file
+  paths.
+- The class mediamosa_configuration_storage has been replace with the
+  mediamosa_storage class.
+- Removed from mediamosa_settings all FTP_*_DIR settings, they were no longer
+  used.
+- Renamed mediamosa.lib.test to lib/mediamosa_io.test.
+- Fixed: Component check for mount point did not do a existence check on the sub
+  folders.
+- Fixed: Install profile did not create all 'Y' sub directories.
+- Fixed: CQL search in /openapi/mediaItems/$items_user_id/$group_id did not use
+  exact search on group_id, owner_id, asset_id and mediafile_id.
+- Changed the order of function parameters of mediamosa_media::create_response()
+  to make more sense.
+- Moved function get_mediafile_id_on_profile() from playproxy class to mediafile
+  class.
+- Moved function get_mediafile_id_on_tag() from playproxy class to mediafile
+  class.
+- Renamed function get_mediafile_id_on_profile() to get_mediafile_id_by_profile().
+- Renamed function get_mediafile_id_on_tag() to get_mediafile_id_by_tag().
+- All play proxy code and ticket related code moved to new module
+  mediamosa_media.
+- Moved module mediamosa_ticket into mediamosa_media.
+- Rest call asset/$asset_id/play has been renamed to asset/$asset_id/view. The
+  asset/$asset_id/play is now marked deprecated.
+- Rest call /mediafile/$mediafile_id/still now forces response type parameter to
+  be 'still', any other value will return an error.
+- mediamosa_asset_mediafile_still::find_default() no longer returns the
+  mediafile_id but the whole mediafile array.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

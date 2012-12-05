@@ -622,7 +622,7 @@ class mediamosa_statistics {
    */
   public static function create_streaming_ticket($ticket_id, $ticket_type, $app_id, $mediafile_id) {
     // Store the play tickets only.
-    if ($ticket_type == mediamosa_ticket::TICKET_TYPE_PLAY) {
+    if ($ticket_type == mediamosa_media_ticket::TICKET_TYPE_PLAY) {
       // The ticket id should be unique, then just simply store.
       mediamosa_db::db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
         ->fields(array(

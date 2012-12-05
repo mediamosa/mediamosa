@@ -588,7 +588,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
       'start_frame' => $this->get_param_value(self::START_FRAME),
       'end_frame' => $this->get_param_value(self::END_FRAME),
-      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id)),
+      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id)),
       'h_padding' => $this->get_param_value(self::H_PADDING),
       'v_padding' => $this->get_param_value(self::V_PADDING),
       'tag' => $this->get_param_value(self::TAG),
@@ -1168,7 +1168,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     if (!$this->isset_given_param(self::SIZE)) {
       $a_app_ids = $this->get_param_value_app();
       $app_id = reset($a_app_ids);
-      $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_value($app_id));
+      $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_size($app_id));
     }
 
     unset($var_setup[self::VARS][self::FRAMETIME]);

@@ -212,9 +212,9 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
     // Play proxy request.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // This is not playable from a wrong domain.
 
@@ -223,30 +223,30 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
     // Play proxy request.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
-      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'john_doe',
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'john_doe',
     );
-    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Is playable in correct domain.
 
     // Play proxy request.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
-      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
-      mediamosa_rest_call_asset_mediafile_play::ACL_DOMAIN => 'bar.nl',
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe2',
+      mediamosa_rest_call_media_view::ACL_DOMAIN => 'bar.nl',
     );
-    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Is playable in incorrect domain.
 
     // Play proxy request.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
-      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
-      mediamosa_rest_call_asset_mediafile_play::ACL_DOMAIN => 'foo.nl',
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe2',
+      mediamosa_rest_call_media_view::ACL_DOMAIN => 'foo.nl',
     );
-    $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     //
     // Clean up group definitions.

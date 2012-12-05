@@ -43,9 +43,9 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -68,7 +68,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);;
+    return self::get_var_setup_default($var_setup);;
   }
 
   public function do_call() {
@@ -155,9 +155,9 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -182,7 +182,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);;
+    return self::get_var_setup_default($var_setup);;
   }
 
   public function do_call() {
@@ -240,7 +240,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -311,7 +311,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -333,7 +333,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
 
     // Check the watermark id.
-    $watermark = mediamosa_asset_mediafile::must_exists($watermark_id, $app_id);
+    mediamosa_asset_mediafile::must_exists($watermark_id, $app_id);
 
     $asset_id = $still[mediamosa_asset_mediafile_db::ASSET_ID];
     $owner_id = $still[mediamosa_asset_mediafile_db::OWNER_ID];
@@ -353,7 +353,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     // Must be on.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
 
-    // Does the user has access?
+    // Must be owner.
     mediamosa_acl::owner_check(
       $app_id,
       $user_id,
@@ -371,16 +371,16 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
       self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
     );
 
-    $create_new_still = TRUE;
-    $still_id_new = mediamosa_asset_mediafile_still::create_watermark($still_id, $app_id, $still_parameters, $create_new_still);
+    // Create watermark.
+    $still_id_new = mediamosa_asset_mediafile_still::create_watermark($still_id, $app_id, $still_parameters, TRUE);
 
     if (!$still_id_new) {
       // TODO: Better error code?
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
+    // Reset still parameters.
     $still_parameters = array(
-      // TODO: New type?
       'still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
     );
 
@@ -422,7 +422,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -452,7 +452,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -492,21 +492,31 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
  * URI: /mediafile/$mediafile_id/still
  * Method: GET
  */
-class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_asset_mediafile_play {
-  // ------------------------------------------------------------------ Consts.
-  // ------------------------------------------------------------------ Public functions.
+class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_media_view {
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
-    // Make not required, so we pass the check.
-    $a_var_setup[self::VARS][self::ASSET_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+    // Make not required, so we pass the check. The asset ID is always set by
+    // do_call().
+    $var_setup[self::VARS][self::ASSET_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
 
-    return $a_var_setup;
+    // Required, its in the uri.
+    $var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+
+    // Only still response allowed.
+    $var_setup[self::VARS][self::RESPONSE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+      self::VAR_DESCRIPTION => 'The still response type.',
+      self::VAR_ALLOWED_VALUES => array(
+        mediamosa_media::RESPONSE_STILL,
+      ),
+      self::VAR_DEFAULT_VALUE => mediamosa_media::RESPONSE_STILL
+    );
+    return $var_setup;
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
@@ -518,10 +528,7 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Set the asset_id.
-    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::ASSET_ID, $mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
-
-    // Now fix response on still generation.
-    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL);
+    $this->set_param_value(mediamosa_rest_call_media_view::ASSET_ID, $mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
 
     // Now do play call.
     parent::do_call();
@@ -532,9 +539,8 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
  * URI: /asset/$asset_id/still
  * Method: GET
  */
-class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_play {
-  // ------------------------------------------------------------------ Consts.
-  // ------------------------------------------------------------------ Public functions.
+class mediamosa_rest_call_get_still extends mediamosa_rest_call_media_view {
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = parent::get_var_setup();
 
@@ -545,9 +551,9 @@ class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       self::VAR_DESCRIPTION => 'The still response type.',
       self::VAR_ALLOWED_VALUES => array(
-        mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
+        mediamosa_media::RESPONSE_STILL,
       ),
-      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL
+      self::VAR_DEFAULT_VALUE => mediamosa_media::RESPONSE_STILL
     );
 
     return $var_setup;

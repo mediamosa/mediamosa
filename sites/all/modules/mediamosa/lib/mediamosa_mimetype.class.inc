@@ -40,6 +40,11 @@ class mediamosa_mimetype {
    *    The file extension or FALSE on failure.
    */
   public static function mimetype2extension($mimetype) {
+    // Do not convert default.
+    if ($mimetype == 'application/octet-stream') {
+      return FALSE;
+    }
+
     // Re-use the Drupal mimetype library.
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();

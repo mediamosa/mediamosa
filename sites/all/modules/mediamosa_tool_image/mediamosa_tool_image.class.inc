@@ -83,7 +83,7 @@ class mediamosa_tool_image {
       $parameter_string[] = '-resize ' . $size;
 
       // Source.
-      $mediafile_source = mediamosa_storage::get_realpath_mediafile(array(mediamosa_asset_mediafile_db::ID => $mediafile_id_source));
+      $mediafile_source = mediamosa_storage::get_realpath_data_file($mediafile_id_source);
 
       // Dest.
       $mediafile_dest = mediamosa_storage::get_realpath_data_transcode_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');

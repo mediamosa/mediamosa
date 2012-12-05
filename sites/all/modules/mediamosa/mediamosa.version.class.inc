@@ -1,7 +1,7 @@
 <?php
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 1944);
+define('MEDIAMOSA_BUILD', 1950);
 define('MEDIAMOSA_VERSION', '3.4.x');
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Inuitsbuild');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Inuitsbuild');
@@ -35,7 +35,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_3_0 = '2.3.0';
   const MEDIAMOSA_VERSION_3_0_0 = '3.0.0';
   const MEDIAMOSA_VERSION_3_4_0 = '3.4.0';
-  
+
   // Used for APPs.
   const LATEST = 'LATEST';
 

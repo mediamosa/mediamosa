@@ -2,28 +2,25 @@
 /**
  * @file
  * Play proxy still unittests.
- *
- * Based on tickets mediamosa 1:
- * ticket_261
  */
 
-class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+class MediaMosaMediaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Storage - ticket / files cleanup',
-      'description' => 'Tests if the ticket are cleaned up and files are removed when deleted.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      'name' => 'Media - Ticket / files cleanup',
+      'description' => 'Tests if the media tickets are cleaned up and temporary files are removed when deleted.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
     );
   }
 
   /**
    * Check ticket and files cleanup.
    */
-  public function testSannasCleanup() {
+  public function testMediaTicketCleanup() {
     // App ids.
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
 
@@ -49,7 +46,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $still = reset($stills);
     $this->var_export($still);
 
-    // Do play proxy call and create a symlink.
+    // Do media play call and create a symlink.
     // Test the output, do output call.
     $permanent_still_url = str_replace('/media/', '/media/simpletest/media/', $still['output']);
 
@@ -66,7 +63,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->assertFalse(empty($still_id), 'Found still ID.');
 
     // Check if symlink exists.
-    $sympath = mediamosa_storage::get_uri_media_file($app_id_1, $still_id) . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
+    $sympath = mediamosa_storage::get_uri_media_file($app_id_1, $still_id) . '.' . mediamosa_asset_mediafile::get_file_extension($still);
 
     $this->var_export($sympath);
 
@@ -118,7 +115,7 @@ class MediaMosaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->assertTrue(touch($ticket_link, time() - (60*60*24*7)), 'Changed modified date on file');
 
     // Run clean script.
-    mediamosa_ticket::ticket_cleanup();
+    mediamosa_media_ticket::ticket_cleanup();
 
     // Must exists. FIXME: touch does not seem to work.
     //$this->file_not_exists($ticket_link);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * MediaMosa installation profile.
+ * MediaMosa server installation profile.
  */
 
 // Include our helper class as autoloader is not up yet.
@@ -77,8 +77,9 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
 }
 
 /**
- * Get the mount point.
- * Task callback.
+ * Implements hook_form().
+ *
+ * Select the metadata set(s).
  */
 function mediamosa_profile_metadata_support_form() {
   $form = array();
@@ -185,6 +186,8 @@ function system_form_install_configure_form_alter(&$form, &$form_state, $form_id
 }
 
 /**
+ * Implements hook_form().
+ *
  * Show a checklist of the installation.
  */
 function mediamosa_profile_php_settings_form($form, &$form_state, &$install_state) {
@@ -233,7 +236,7 @@ function mediamosa_profile_php_settings_form($form, &$form_state, &$install_stat
 }
 
 /**
- * Validate.
+ * Implements hook_validate().
  */
 function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
   // Get the requirements.
@@ -249,7 +252,6 @@ function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
 
 /**
  * Get the mount point.
- * Task callback.
  */
 function mediamosa_profile_storage_location_form() {
   $form = array();
@@ -277,6 +279,9 @@ function mediamosa_profile_storage_location_form() {
   return $form;
 }
 
+/**
+ * Implements hook_validate().
+ */
 function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
   $values = $form_state['values'];
 
@@ -301,32 +306,13 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   // Profile does not does not handle Windows installations.
   variable_set('mediamosa_current_mount_point_windows', '\\');
 
-  // Inside the storage location, create a MediaMosa storage structure.
-  mediamosa_profile::mountpoint_mkdir('data');
-  mediamosa_profile::mountpoint_mkdir('data/stills');
-
-  // We store each file in separate directories based on the first letter of the
-  // file. We need to create these directories.
-  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  for ($x = 0; $x < strlen($prefixes); $x++) {
-    mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
-  }
-
-  // Other.
-  mediamosa_profile::mountpoint_mkdir('data/transcode');
-  mediamosa_profile::mountpoint_mkdir('links');
-  mediamosa_profile::mountpoint_mkdir('download_links');
-  mediamosa_profile::mountpoint_mkdir('ftp');
-
-  // /media is replacing /still_links.
-  mediamosa_profile::mountpoint_mkdir('media');
-  mediamosa_profile::mountpoint_mkdir('media/ticket');
-
-  // Create the htaccess file to protected the media directory.
-  mediamosa_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_storage::file_get_htaccess_contents());
+  // Setup the mountpoint.
+  mediamosa_profile::setup_mountpoint();
 }
 
 /**
+ * Implements hook_form().
+ *
  * Information about cron, apache and migration.
  */
 function mediamosa_profile_cron_settings_form() {
@@ -371,8 +357,9 @@ function mediamosa_profile_cron_settings_form() {
 }
 
 /**
+ * Implements hook_form().
+ *
  * Information about cron, apache and migration.
- * Task callback.
  */
 function mediamosa_profile_apache_settings_form() {
   $form = array();
@@ -624,12 +611,18 @@ function mediamosa_profile_apache_settings_form() {
   return $form;
 }
 
+/**
+ * Implements hook_validate().
+ */
 function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
   if (!in_array($form_state['values']['localhost'], array('simple', 'advanced'))) {
     form_set_error('', t('You must choose a setup.'));
   }
 }
 
+/**
+ * Implements hook_submit().
+ */
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   // Get current url.
   $server_name = mediamosa_profile::get_server_name();

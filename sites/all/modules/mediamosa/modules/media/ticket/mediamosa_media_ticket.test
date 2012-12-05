@@ -1,23 +1,21 @@
 <?php
 /**
   * @file
-  * Unittests for play proxy ticket mechanisme.
+  * Unittests for media play ticket mechanisme.
   */
 
-class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaMosaTestCaseEgaJob {
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'PlayProxy - asset/mediafile play proxy ticket mechanisme tests',
-      'description' => 'Testing asset mediafile play proxy ticket mechanisme related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      'name' => 'Media - Ticket tests',
+      'description' => 'Testing asset mediafile media play ticket mechanisme related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
   function testBugReportMediaMosaOrgTicket422() {
     // Create an asset.
     $asset_id = $this->createAsset();
@@ -79,28 +77,24 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
 
     // Ok try to play them.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
-      mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => $default_profile_id,
+      mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
+      mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
     );
-    $xml = $this->do_play_proxy_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $xml = $this->do_media_play_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     $this->var_export($xml);
 
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
-      mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => $default_profile_id,
+      mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
+      mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
     );
-    $xml = $this->play_proxy_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $xml = $this->do_media_play_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Now get the tickets from the database.
-    $result = mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_ticket} WHERE #mediafile_id IN(:mediafile_ids)',
-      array(
-        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_ticket_db::MEDIAFILE_ID,
-        ':mediafile_ids' => $mediafile_ids,
-      )
-    )->fetchAll();
+    $result = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->condition(mediamosa_media_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
+      ->execute()
+      ->fetchAll();
 
     $this->var_export($result, 'Ticket DB dump');
 
@@ -113,7 +107,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     $this->assertTrue(!count($mediafile_ids), 'All mediafiles got tickets');
   }
 
-  // Testing mediafile play proxy ticket, see: ticket 72.
+  // Testing mediafile media play ticket, see: ticket 72.
   function testPlayProxyTicketMechanisme() {
 
     // Preparation.
@@ -144,10 +138,10 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
       // Ask mediafile download url.
       $parameters = array(
-        mediamosa_rest_call_asset_mediafile_play::RESPONSE => $subject,
-        mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_rest_call_media_view::RESPONSE => $subject,
+        mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
       );
-      $xml = $this->do_play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+      $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
       $output = $xml['items']['item']['output'];
 
       switch ($subject) {

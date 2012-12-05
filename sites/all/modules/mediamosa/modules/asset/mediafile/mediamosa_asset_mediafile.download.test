@@ -72,7 +72,7 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     }
 
     // Touch a temporary mediafile.
-    $filename = mediamosa_storage::get_uri_mediafile($mediafile);
+    $filename = mediamosa_storage::get_realpath_data_mediafile($mediafile);
     $is_touched = mediamosa_io::touch($filename);
     $this->assertTrue(
       $is_touched,
@@ -81,10 +81,10 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     // Ask mediafile download url.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $xml = $this->play_proxy($asset_id, $parameters);
+    $xml = $this->do_media_play($asset_id, $parameters);
 
     // Check the download url.
     $download = $xml['items']['item']['output'];
@@ -116,10 +116,10 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     // Ask mediafile download url.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $xml = $this->play_proxy($asset_id, $parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
+    $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
 
     //
     // Delete temporary items.

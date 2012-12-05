@@ -102,7 +102,7 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $still_list = $stills['stills'];
 
     // Get the created still.
-    $filename_still = mediamosa_storage::get_uri_data_file($still_list['still_id']);
+    $filename_still = mediamosa_storage::get_realpath_data_file($still_list['still_id']);
 
     // Check filename.
     $this->assertTrue($filename_still, strtr('Got generated still filename: @filename', array('@filename' => $filename_still)));

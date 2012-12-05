@@ -1,40 +1,12 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The Asset REST calls.
  */
-
- /**
-  * @file
-  * The Asset REST calls.
-  */
 
 /**
  * URI: /change_ownership
  * Method: POST
- *
- * 1.x: media_management_change_ownership
- *
  */
 class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -48,9 +20,9 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::OLD_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
@@ -88,7 +60,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -189,9 +161,9 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
@@ -209,7 +181,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -287,9 +259,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::RETURN_ASSET_IDS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
@@ -395,38 +367,38 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     );
 
     // Include limit, offset vars.
-    $a_var_setup = self::get_var_setup_range($a_var_setup);
+    $var_setup = self::get_var_setup_range($var_setup);
 
     // Include order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup);
+    $var_setup = self::get_var_setup_order_by($var_setup);
 
     // Include default.
-    $a_var_setup = self::get_var_setup_default($a_var_setup);
+    $var_setup = self::get_var_setup_default($var_setup);
 
     // Process what we have.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
     // If we return only asset ids, then we differ from limit_max.
     $return_asset_ids = $this->get_param_value(self::RETURN_ASSET_IDS);
 
     if ($return_asset_ids) {
-      $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
+      $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
     }
 
     $app_ids = $this->get_param_value_app();
 
     // Now include metadata search stuff.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, $a_var_setup, self::get_search_params());
+    $var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, $var_setup, self::get_search_params());
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Override Process Rest Args.
   // Fix for alias of user_id / acl_user_id.
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
 
     // Process input.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
     // If user_id is set, override acl_user_id, dont care if acl_user_id is set.
     $user_id = $this->get_param_value(self::USER_ID);
@@ -436,7 +408,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     }
 
     // Return the var_setup.
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Override Validate Rest Args.
@@ -590,8 +562,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
  * URI: /asset/$asset_id/favorites/count
  *      /asset/$asset_id/count_favorites (deprecated)
  * Method: GET
- *
- * 1.x: media_management_favorites_count_asset
  */
 class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -601,9 +571,9 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -613,7 +583,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -636,8 +606,6 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
  * URI: /asset/$asset_id/delete
  *
  * Method: POST
- *
- * 1.x: media_management_delete_asset
  */
 class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -648,9 +616,9 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -671,7 +639,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -722,8 +690,6 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
  * Method: GET
  *
  * Get a asset.
- *
- * 1.x: media_management_get_asset
  */
 class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -748,9 +714,9 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -812,7 +778,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     );
 
     // Include default.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -857,7 +823,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_ASSET, $asset_id, $app_ids);
 
     // Check un/inappropriate flag.
-    mediamosa_asset::is_unappropriate($asset_id, $app_ids, $acl_user_id, $is_app_admin);
+    mediamosa_asset::is_inappropriate($app_ids, $asset_id, $acl_user_id, $is_app_admin);
 
     // Collect.
     $add_has_streamable_mediafiles = FALSE;
@@ -933,9 +899,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -998,7 +964,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     );
 
     // Include default.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1144,9 +1110,9 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -1169,7 +1135,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
     );
 
     // Include default.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1248,9 +1214,9 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -1280,7 +1246,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
     );
 
     // Include default.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1362,7 +1328,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If is_inappropriate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
         ),
-        self::IS_UNAPPROPRIATE => array(
+        self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Alias, same as is_inappropriate.',
           self::VAR_DEFAULT_VALUE => NULL,
@@ -1409,10 +1375,10 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
 
     // If is_inappropriate is set, we'll use that one.
     if ($this->isset_given_param(self::IS_INAPPROPRIATE)) {
-      $this->set_param_value(self::IS_UNAPPROPRIATE, $this->get_param_value(self::IS_INAPPROPRIATE));
+      $this->set_param_value(self::IS_INAPPROPRIATE, $this->get_param_value(self::IS_INAPPROPRIATE));
     }
 
-    $is_unappropriate =  $this->get_param_value(self::IS_UNAPPROPRIATE);
+    $is_unappropriate =  $this->get_param_value(self::IS_INAPPROPRIATE);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);

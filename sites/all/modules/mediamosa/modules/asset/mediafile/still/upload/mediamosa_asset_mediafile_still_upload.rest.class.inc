@@ -178,8 +178,8 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
 
     // Check watermark id, if exists.
     if ($watermark_id) {
-      $ticket = mediamosa_ticket::get_valid($ticket_id, mediamosa_ticket_db::TICKET_TYPE_STILL);
-      mediamosa_asset_mediafile::must_exists($watermark_id, $ticket[mediamosa_ticket_db::APP_ID]);
+      $ticket = mediamosa_media_ticket::get_valid($ticket_id, mediamosa_media_ticket_db::TICKET_TYPE_STILL);
+      mediamosa_asset_mediafile::must_exists($watermark_id, $ticket[mediamosa_media_ticket_db::APP_ID]);
     }
 
     $still_parameters = array(

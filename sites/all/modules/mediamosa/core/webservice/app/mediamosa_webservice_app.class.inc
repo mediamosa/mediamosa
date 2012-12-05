@@ -36,20 +36,20 @@ class mediamosa_webservice_app {
   const HANDLE_MEDIA_UPLOAD = 'media_upload';
   const HANDLE_TRANSCODING = 'transcoding';
 
-  // ------------------------------------------------------------------ Static Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Check active status of an webservice.
    *
-   * 1.x: vpx_shared_webservice_is_active
-   *
    * @param string $handle
-   *  Webservice handle.
+   *   Webservice handle.
    * @param integer $app_id
-   *  Application ID.
-   * @return bool
+   *   Application ID.
+   *
+   * @return boolean
+   *   TRUE when webservice is allowed, FALSE otherwise.
    */
-  public static function webservice_is_active($handle, array $a_app_ids = array()) {
-    if (!empty($a_app_ids)) {
+  public static function webservice_is_active($handle, array $app_ids = array()) {
+    if (!empty($app_ids)) {
       $result = mediamosa_db::db_query(
         'SELECT wa.#wa_status AS wa_status, w.#w_status AS w_status
          FROM {#mediamosa_webservice_app} AS wa
@@ -66,7 +66,7 @@ class mediamosa_webservice_app {
           '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
           '#app_id' => mediamosa_app_db::APP_ID,
           ':handle' => $handle,
-          ':app_id' => $a_app_ids
+          ':app_id' => $app_ids
         )
       )->fetchAssoc();
 
@@ -104,8 +104,8 @@ class mediamosa_webservice_app {
    * @param integer $app_id
    *  Application ID.
    */
-  public static function webservice_must_be_active($handle, array $a_app_ids = array()) {
-    if (!self::webservice_is_active($handle, $a_app_ids)) {
+  public static function webservice_must_be_active($handle, array $app_ids = array()) {
+    if (!self::webservice_is_active($handle, $app_ids)) {
       throw new mediamosa_exception_error_webservice_disabled();
     }
   }

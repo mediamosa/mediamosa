@@ -470,12 +470,12 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
           break;
 
         case mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD:
-          mediamosa_io::unlink(mediamosa_storage::get_uri_mediafile_id($object_id));
+          mediamosa_io::unlink(mediamosa_storage::get_realpath_data_file($object_id));
           break;
 
         case mediamosa_integrity_check_db::TYPE_MISSING_STILLRECORD:
           // TODO: test, after implemented.
-          mediamosa_io::unlink(mediamosa_storage::get_uri_data_file($object_id));
+          mediamosa_io::unlink(mediamosa_storage::get_realpath_data_file($object_id));
           break;
 
         default:

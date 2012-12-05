@@ -134,9 +134,6 @@ files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.class
 files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property_db.class.inc
 files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property.class.inc
 
-; Asset Mediafile Playproxy.
-files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc
-
 ; Asset Mediafile Still.
 files[] = core/asset/mediafile/still/mediamosa_asset_mediafile_still.class.inc
 
@@ -234,7 +231,7 @@ files[] = core/node/revision/mediamosa_node_revision.class.inc
 ; OpenAPI class.
 files[] = core/openapi/mediamosa_openapi.class.inc
 
-; Statistics
+; Statistics.
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.class.inc
 files[] = core/statistics/file_upload/mediamosa_statistics_file_upload_db.class.inc
 files[] = core/statistics/job/mediamosa_statistics_job_db.class.inc
@@ -268,9 +265,12 @@ files[] = core/server/streaming/container/mediamosa_server_streaming_container_d
 ; Server Tool.
 files[] = core/server/tool/mediamosa_server_tool_db.class.inc
 
-; Ticket.
-files[] = core/ticket/mediamosa_ticket_db.class.inc
-files[] = core/ticket/mediamosa_ticket.class.inc
+; Media.
+files[] = core/media/mediamosa_media.class.inc
+
+; Media ticket.
+files[] = core/media/ticket/mediamosa_media_ticket.class.inc
+files[] = core/media/ticket/mediamosa_media_ticket_db.class.inc
 
 ; Transcode.
 files[] = core/transcode/profile/mediamosa_transcode_profile_db.class.inc

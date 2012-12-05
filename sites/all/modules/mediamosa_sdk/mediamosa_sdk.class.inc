@@ -256,13 +256,13 @@ class mediamosa_sdk {
   const TYPE_GROUP_ID                    = 'GROUP_ID';
   const TYPE_ASSET_ID                    = 'ASSET_ID';
   const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
+  const TYPE_MEDIAFILE_ID_PREFIX         = 'MEDIAFILE_ID_PREFIX';
   const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
-  const TYPE_MEDIAFILE_STR               = 'MEDIAFILE_STR'; // format: mediafile_id[,style][.ext] used for /media calls.
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
   const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
   const TYPE_TICKET_ID                   = 'TICKET_ID';
-  const TYPE_MEDIATICKET_STR             = 'MEDIATICKET_STR'; // extension on ticket ID, see TYPE_MEDIAFILE.
+  const TYPE_TICKET_ID_PREFIX            = 'TICKET_ID_PREFIX';
   const TYPE_JOB_ID                      = 'JOB_ID';
 
   const TYPE_DOMAIN                      = 'DOMAIN';

@@ -1,8 +1,6 @@
-; $Id$
-
-name = "Jobs"
-description = "The jobs module handles, executes and manages queing of jobs."
-package = "MediaMosa - Modules"
+name = Jobs
+description = The jobs module handles, executes and manages queing of jobs.
+package = MediaMosa - Modules
 version = 7.x-3.2.2
 core = 7.x
 

@@ -1410,7 +1410,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
       $job_id = mediamosa_job::create_job_upload($app_id,  $asset[mediamosa_asset_db::OWNER_ID], $asset[mediamosa_asset_db::GROUP_ID], $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
 
       // Build the filename.
-      $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id, TRUE);
+      $filename = mediamosa_storage::get_realpath_data_file($mediafile_id, TRUE);
 
       if ($post_upload) {
         // POST: file in the data.

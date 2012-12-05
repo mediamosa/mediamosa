@@ -97,7 +97,7 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->assertTrue($mediafile_id_transcoded, 'Found transcoded mediafile');
 
     if ($mediafile_id_transcoded) {
-      $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id_transcoded);
+      $filename = mediamosa_storage::get_realpath_data_file($mediafile_id_transcoded);
       // Delete the transcoded file.
       mediamosa_io::unlink($filename);
 

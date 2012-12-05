@@ -19,10 +19,10 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections'
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY', 'MediaMosa Library');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA', 'MediaMosa Media');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OAUTH', 'MediaMosa oAuth');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OEMBED', 'MediaMosa oEmbed');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI', 'MediaMosa OpenAPI');
-define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest Parents');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL', 'MediaMosa Stills');
@@ -241,21 +241,51 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Returns if we are in verbose mode.
+   *
+   * @return boolean
+   *   Returns TRUE when verbose is on.
+   */
+  public function isVerbose() {
+    return variable_get('simpletest_verbose', TRUE);
+  }
+
+  /**
    * Dump the log so we know what happened.
    */
   protected function dump_watchdog() {
-    // Dump the log.
-    $result = db_query('SELECT * FROM {watchdog}');
+    if (self::isVerbose()) {
+      // Dump the log.
+      $result = db_query('SELECT * FROM {watchdog}');
 
-    $texts = array('Dumping contents of watchdog');
+      $texts = array('Dumping contents of watchdog');
 
-    foreach ($result as $log_item) {
-      $items = empty($log_item->variables) ? array() : unserialize($log_item->variables);
-      $texts[] = strtr($log_item->message, is_array($items) ? $items : array());
+      foreach ($result as $log_item) {
+        $items = empty($log_item->variables) ? array() : unserialize($log_item->variables);
+        $texts[] = strtr($log_item->message, is_array($items) ? $items : array());
+      }
+
+      // In verbose mode only.
+      $this->verbose(implode('<br />', $texts), 'Watchdog dump');
     }
+  }
 
-    // In verbose mode only.
-    $this->verbose(implode('<br />', $texts), 'watchdog dump');
+  /**
+   * Logs verbose message in a text file.
+   *
+   * The a link to the vebose message will be placed in the test results via
+   * as a passing assertion with the text '[verbose message]'.
+   *
+   * @param $message
+   *   The verbose message to be stored.
+   *
+   * @see simpletest_verbose()
+   */
+  protected function verbose($message, $type = 'Verbose message') {
+    if ($id = simpletest_verbose($message)) {
+      $url = file_create_url($this->originalFileDirectory . '/simpletest/verbose/' . get_class($this) . '-' . $id . '.html');
+      $this->error(l(t($type), $url, array('attributes' => array('target' => '_blank'))), 'User notice');
+    }
   }
 
   /**
@@ -709,18 +739,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param string $filename
    */
-  protected function file_exists($filename, $text = 'Check if file exists.') {
-    mediamosa_io::clearstatcache();
-
-    // Extra w8 for update from san/nas.
-    sleep(2);
-
+  protected function file_exists($filename, $text = 'Check if file (@filename) exists.') {
+    $result = mediamosa_io::file_exists($filename);
     $this->assertTrue(
-      file_exists($filename),
-      $text
+      $result,
+      strtr($text, array('@filename' => $filename))
     );
 
-    return file_exists($filename);
+    return $result;
   }
 
   /**
@@ -846,7 +872,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Log the creation in the resutls.
     $this->assert(TRUE, t("App created with node ID; '%id',  app_id; '%app_id', name; '%name' and shared key; '%shared_key'.", array('%id' => $node->nid, '%app_id' => $node->{mediamosa_app_db::APP_ID}, '%name' => $node->title, '%shared_key' => $node->{mediamosa_app_db::SHARED_KEY})));
 
-    return (array)$node;
+    return (array) $node;
   }
 
   /**

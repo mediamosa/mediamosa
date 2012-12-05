@@ -171,7 +171,7 @@ class mediamosa_collection {
       $fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
     }
     if (isset($is_unappropriate)) {
-      $fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+      $fields[mediamosa_collection_db::IS_INAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_INAPPROPRIATE_TRUE : mediamosa_collection_db::IS_INAPPROPRIATE_FALSE;
     }
 
     // Add created value.
@@ -234,7 +234,7 @@ class mediamosa_collection {
       $fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
     }
     if (isset($is_unappropriate)) {
-      $fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+      $fields[mediamosa_collection_db::IS_INAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_INAPPROPRIATE_TRUE : mediamosa_collection_db::IS_INAPPROPRIATE_FALSE;
     }
 
     if (empty($fields)) {

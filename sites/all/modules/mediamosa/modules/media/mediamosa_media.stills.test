@@ -4,21 +4,18 @@
  * Assets without still won't give back still links.
  */
 
-class MediaMosaPlayProxyStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
-
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Still - PlayProxy calls',
+      'name' => 'Media - Still Play calls',
       'description' => 'Execute PlayProxy calls to receive stills.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
-  public function testPlayProxyStills() {
+  // -------------------------------------------------------------------- Tests.
+  public function testMediaPlayStills() {
 
     //
     // Set up Egas.
@@ -108,8 +105,8 @@ class MediaMosaPlayProxyStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     // Switch Ega.
     $this->toEga_1();
 
-    // Now do a play proxy call to still (as app 1).
-    $response = $this->do_play_proxy_still($asset_id);
+    // Now do a media play call to still (as app 1).
+    $response = $this->do_media_play_still($asset_id);
 
     $this->var_export($response, 'response');
 

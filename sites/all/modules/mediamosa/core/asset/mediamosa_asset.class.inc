@@ -53,16 +53,17 @@ class mediamosa_asset {
    * @param $asset_id
    *   The ID of the asset.
    * @param $app_id
-   *   (optional) The application ID of the asset as extra check.
+   *   (optional) The application ID of the asset to verify asset is indeed from
+   *   supplied app.
    *
    * @return
    *   The found asset or FALSE.
    */
   public static function get($asset_id, $app_id = NULL) {
 
-    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
-    $query->fields('a');
-    $query->condition('a.' . mediamosa_asset_db::ID, $asset_id);
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
+      ->fields('a')
+      ->condition('a.' . mediamosa_asset_db::ID, $asset_id);
     if (!empty($app_id)) {
       $query->condition('a.' . mediamosa_asset_db::APP_ID, $app_id);
     }
@@ -455,28 +456,28 @@ class mediamosa_asset {
    * Collect the asset information.
    *
    * @param array $asset_ids
-   *  Array asset_ids.
+   *   Array asset_ids.
    * @param array $app_ids
-   *  Application app ids.
+   *   Application app ids.
    * @param string $user_id
-   *  The acl_user ID.
+   *   The acl_user ID.
    * @param boolean $granted
-   *  Show or hide accessable assets.
+   *   Show or hide accessable assets.
    * @param array $acl_group_id
-   *  Group ID authentication.
+   *   Group ID authentication.
    * @param string $acl_domain
-   *  Domain authentication.
+   *   Domain authentication.
    * @param string $acl_realm
-   *  Realm authentication.
+   *   Realm authentication.
    * @param boolean $is_app_admin
-   *  Used for including unappropriate assets.
+   *   Used for including unappropriate assets.
    * @param $show_stills
-   *  Include stills.
+   *   Include stills.
    * @param $show_collections
-   *  Include collection information.
+   *   Include collection information.
    * @param $add_has_streamable_mediafile
    * @param $view_hidden_metadata
-   *   Show hidden metadata.
+   *    Show hidden metadata.
    */
   public static function asset_collect(
     array $asset_ids,
@@ -552,7 +553,7 @@ class mediamosa_asset {
       // 2.x changes to database need to be aliased to 1.x name giving (for
       // now).
       $aliases = array(
-        mediamosa_asset_db::IS_UNAPPROPRIATE => 'is_unappropiate',
+        mediamosa_asset_db::IS_INAPPROPRIATE => 'is_unappropiate',
       );
 
       // Aliases.
@@ -748,18 +749,19 @@ class mediamosa_asset {
 
     // has_streamable_mediafiles.
     if ($add_has_streamable_mediafiles) {
-      $ids = implode("','", $asset_ids);
-      $mf = array();
-      $result = mediamosa_db::db_query(sprintf("
-        SELECT #asset_id, #uri, #mediafile_id
-        FROM {#mediamosa_asset_mediafile}
-        WHERE #asset_id IN ('%s')", $ids), array(
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-        '#uri' => mediamosa_asset_mediafile_db::URI,
-      ));
+      $result = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+        ->fields(
+          'mf',
+          array(
+            mediamosa_asset_mediafile_db::ASSET_ID,
+            mediamosa_asset_mediafile_db::URI,
+            mediamosa_asset_mediafile_db::ID,
+          )
+        )
+        ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_ids, 'IN')
+        ->execute();
 
+      $mf = array();
       foreach ($result as $row) {
         // It is FALSE in the beginning.
         if (!isset($mf[$row[mediamosa_asset_mediafile_db::ASSET_ID]])) {
@@ -855,34 +857,28 @@ class mediamosa_asset {
 
             // Process still.
             try {
-              $mediafile_ext['asset_id'] = $asset[mediamosa_asset_db::ID];
+              $still = array();
 
               // Get the still_id.
-              if (!isset($items['stills'][$asset[mediamosa_asset_db::ID]])) {
-                $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
+              if (empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
+                $still = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
+                if ($still) {
+                  $items['stills'][$asset[mediamosa_asset_db::ID]] = $still[mediamosa_asset_mediafile_db::ID];
+                }
               }
-
-              // Found a still?
-              if (!empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
+              else {
                 // Get the still ID.
                 $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
 
-                if (mediamosa_asset_mediafile_media::allow_permanent($still_id, $is_app_admin)) {
-                  $filename = $still_id . '.' . mediamosa_asset_mediafile::get_file_extension($still_id);
-                  $response = mediamosa_asset_mediafile_play_proxy::create_response_still($filename, $app_id);
-                  $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-                  $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
-                }
-                else {
-                  $ticket_id = mediamosa_ticket::process_play_ticket(mediamosa_db::uuid($app_id), $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL, $app_id, $acl_user_id, $still_id);
+                // Get the still.
+                $still = mediamosa_asset_mediafile::get($still_id);
+              }
 
-                  if ($ticket_id) {
-                    // Create still response.
-                    $response = mediamosa_asset_mediafile_play_proxy::create_response_still(mediamosa_settings::SAN_NAS_TICKET_FOLDER . '/' . $ticket_id, $app_id);
-                    $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-                    $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
-                  }
-                }
+              if ($still) {
+                // Create still response.
+                $response = mediamosa_media::do_response_still($app_id, $acl_user_id, $still);
+                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
               }
             }
             catch (mediamosa_exception $e) {
@@ -947,7 +943,11 @@ class mediamosa_asset {
   /**
    * Enrich the response object with has_streamable_mediafiles information.
    *
-   * @param array $items
+   * @param array $mediafiles
+   *   The mediafiles in output.
+   *
+   * @return boolean
+   *   Returns TRUE when input contains streamable mediafiles, FALSE otherwise.
    */
   public static function enrich_response_has_streamable_mediafiles($mediafiles) {
     $has_streamable_mediafiles = FALSE;
@@ -958,8 +958,9 @@ class mediamosa_asset {
     }
 
     foreach ($mediafiles as $mediafile) {
-      if (substr(key($mediafile), 0, 1) == '#') { // Serialize attributes?
-        foreach ($mediafile as $attributes => $mediafile2) {
+      // Check for serialize attributes.
+      if (substr(key($mediafile), 0, 1) == '#') {
+        foreach ($mediafile as $mediafile2) {
           $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile2['response_object_available'] == 'TRUE');
         }
       }
@@ -975,10 +976,8 @@ class mediamosa_asset {
   /**
    * Update the dates for asset.
    *
-   * 1.x: _media_management_update_asset_timestamps
-   *
    * @param string $asset_id
-   *
+   *   The asset ID.
    */
   public static function update_asset_timestamps($asset_id) {
     // Get the NOW date.
@@ -1031,9 +1030,8 @@ class mediamosa_asset {
   /**
    * Increase played.
    *
-   * 1.x: _mediafile_management_asset_played
-   *
-   * @param $asset_id
+   * @param string $asset_id
+   *   The asset ID that played.
    */
   public static function asset_played($asset_id) {
     mediamosa_db::db_query(
@@ -1048,14 +1046,18 @@ class mediamosa_asset {
   }
 
   /**
-   * Test access for unappropriate.
+   * Test access for inappropriate.
    *
+   * @param array $app_ids
+   *   The applications IDs.
    * @param string $asset_id
-   * @param array $app_id
+   *   The asset ID.
    * @param string $user_id
-   * @param bool $is_app_admin
+   *   The current user ID in case of ownership of asset.
+   * @param boolean $is_app_admin
+   *   Is app admin for overruling the inappropriate status.
    */
-  public static function is_unappropriate($asset_id, array $app_ids, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
+  public static function is_inappropriate(array $app_ids, $asset_id, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
 
     $asset = self::get($asset_id);
     if (!$asset) {
@@ -1063,7 +1065,7 @@ class mediamosa_asset {
     }
 
     // If its not unapp. then leave.
-    if ($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE) {
+    if ($asset[mediamosa_asset_db::IS_INAPPROPRIATE] != mediamosa_asset_db::IS_INAPPROPRIATE_TRUE) {
       return;
     }
 
@@ -1086,18 +1088,21 @@ class mediamosa_asset {
   /**
    * Create asset.
    *
-   * @param $app_id
-   *  The Application ID.
-   * @param $owner_id
-   *  The owner ID.
-   * @param $group_id
-   *  The group ID.
-   * @param $reference_id
-   *  The reference ID.
-   * @param $provider_id
-   *  The provider ID
-   * @param $parent_id (deprecated)
-   *  The parent ID.
+   * @param integer $app_id
+   *   The Application ID.
+   * @param string $owner_id
+   *   The owner ID.
+   * @param string $group_id
+   *   The group ID.
+   * @param string $reference_id
+   *   The reference ID.
+   * @param string $provider_id
+   *   The provider ID
+   * @param string $parent_id (deprecated)
+   *   The parent ID.
+   *
+   * @param string
+   *   The new asset ID of the created asset.
    */
   public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $parent_id = NULL) {
 
@@ -1200,7 +1205,7 @@ class mediamosa_asset {
       $fields[mediamosa_asset_db::ISPRIVATE] = $isprivate ? mediamosa_asset_db::ISPRIVATE_TRUE : mediamosa_asset_db::ISPRIVATE_FALSE;
     }
     if (!is_null($is_unappropriate)) {
-      $fields[mediamosa_asset_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE : mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE;
+      $fields[mediamosa_asset_db::IS_INAPPROPRIATE] = $is_unappropriate ? mediamosa_asset_db::IS_INAPPROPRIATE_TRUE : mediamosa_asset_db::IS_INAPPROPRIATE_FALSE;
     }
 
     if (isset($reference_id)) {
@@ -1276,9 +1281,20 @@ class mediamosa_asset {
   /**
    * Given asset must exist.
    *
-   * @param $asset_id
+   * @param string $asset_id
+   *   The asset to check.
+   * @param integer $app_id
+   *   (optional) Application ID.
+   *
+   * @return boolean
+   *   Returns TRUE when asset is exists or FALSE.
    */
-  public static function must_exists($asset_id, $do_parent = FALSE) {
+  public static function must_exists($asset_id, $app_id = NULL) {
+    if (isset($app_id)) {
+      // Asset must exist.
+      return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::APP_ID => $app_id));
+    }
+
     // Asset must exist.
     return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
   }

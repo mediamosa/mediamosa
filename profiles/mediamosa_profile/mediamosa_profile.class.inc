@@ -13,13 +13,11 @@ if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.cl
  */
 class mediamosa_profile {
 
-  // ------------------------------------------------------------------- Consts.
-
-  // ------------------------------------------------------- Functions (static).
+  // ---------------------------------------------------------------- Functions.
   /**
    * Retrieve the version.
    *
-   * @return
+   * @return string
    *   Return the version of MediaMosa found in this installation.
    */
   public static function get_version_mediamosa() {
@@ -33,6 +31,9 @@ class mediamosa_profile {
 
   /**
    * Build title during install.
+   *
+   * @return string
+   *   The title to use during installation.
    */
   public static function get_title() {
     return st('Installing MediaMosa @version', array('@version' => self::get_version_mediamosa()));
@@ -41,7 +42,7 @@ class mediamosa_profile {
   /**
    * Retrieve the server domain and path.
    *
-   * @return
+   * @return string
    *   Return the server domain and path.
    */
   public static function get_server_name() {
@@ -58,7 +59,7 @@ class mediamosa_profile {
   /**
    * Retrieve the server domain and path.
    *
-   * @return
+   * @return string
    *   Return the server domain and path.
    */
   public static function get_host() {
@@ -77,16 +78,19 @@ class mediamosa_profile {
    *
    * Also returns its default stdio / strerr output in $exec_output
    *
-   * @param $command
+   * @param string $command
    *   Command to test.
-   * @param $exec_output
+   * @param array $exec_output
    *   Gets the output of stdio/stderr
-   * @param $allowed_ret_values
+   * @param array $allowed_ret_values
    *   List of return values that indicate command is installed. Most programs
    *   will use exit(0) as indication that it was run. Some use exit(1) or
    *   higher as exit value.
+   *
+   * @return boolean
+   *   TRUE when commond is installed, FALSE otherwise.
    */
-  static public function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
+  static public function command_installed($command, array &$exec_output, array $allowed_ret_values = array(0)) {
     $exec_output = array();
     $ret_val = 0;
     exec($command . ' 2>/dev/null', $exec_output, $ret_val);
@@ -107,8 +111,8 @@ class mediamosa_profile {
   /**
    * Requirements php modules.
    *
-   * @return
-   *   Returns an array;
+   * @return array
+   *   Returns an associative array;
    *   - 'errors':
    *     The number of errors encountered.
    *   - 'requirements':
@@ -157,8 +161,8 @@ class mediamosa_profile {
   /**
    * Requirements installed programs.
    *
-   * @return
-   *   Returns an array;
+   * @return array
+   *   Returns an associative array;
    *   - 'errors':
    *     The number of errors encountered.
    *   - 'requirements':
@@ -242,8 +246,8 @@ class mediamosa_profile {
    *
    * Only possible warnings for now.
    *
-   * @return
-   *   Returns an array;
+   * @return array
+   *   Returns an associative array;
    *   - 'errors':
    *     The number of errors encountered.
    *   - 'requirements':
@@ -308,5 +312,37 @@ class mediamosa_profile {
     if (!file_exists($mountpoint . '/media/simpletest/' . $path)) {
       drupal_mkdir($mountpoint . '/media/simpletest/' . $path, NULL, TRUE);
     }
+  }
+
+  /**
+   * Create the basic mountpoint setup.
+   */
+  public static function setup_mountpoint() {
+    // Inside the storage location, create a MediaMosa storage structure.
+    mediamosa_profile::mountpoint_mkdir('data');
+
+    // We store each file in separate directories based on the first letter of the
+    // file. We need to create these directories.
+    $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for ($x = 0; $x < strlen($prefixes); $x++) {
+      mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
+    }
+
+    // Other.
+    mediamosa_profile::mountpoint_mkdir('data/transcode');
+    mediamosa_profile::mountpoint_mkdir('ftp');
+
+    // /media is replacing /still_links.
+    mediamosa_profile::mountpoint_mkdir('media');
+    mediamosa_profile::mountpoint_mkdir('media/ticket');
+
+    // New for generated object code (like .asx files).
+    mediamosa_profile::mountpoint_mkdir('media/object');
+
+    // /media/download is replacing download_links.
+    mediamosa_profile::mountpoint_mkdir('media/download');
+
+    // Create the htaccess file to protected the media directory.
+    mediamosa_storage::file_create_htaccess(variable_get('mediamosa_current_mount_point') . '/media', mediamosa_storage::file_get_media_htaccess_contents());
   }
 }

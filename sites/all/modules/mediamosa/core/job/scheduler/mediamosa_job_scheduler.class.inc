@@ -1265,7 +1265,7 @@ class mediamosa_job_scheduler {
             if (preg_match('/(\d+)x(\d+)/', $target_size)) {
               // If there is a still default size for the client app available,
               // then use that instead.
-              $target_size = mediamosa_app::get_still_default_value($app_id);
+              $target_size = mediamosa_app::get_still_default_size($app_id);
               if (!$target_size) {
                 // Get the video size.
                 $target_size = mediamosa_asset_mediafile::get_size($mediafile_id);

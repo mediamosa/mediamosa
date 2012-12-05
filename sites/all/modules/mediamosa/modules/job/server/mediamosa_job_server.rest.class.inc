@@ -287,7 +287,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
 
         // Get params.
         $frametime = $this->get_param_value(self::FRAMETIME);
-        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id));
+        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id));
         $h_padding = $this->get_param_value(self::H_PADDING);
         $v_padding = $this->get_param_value(self::V_PADDING);
         $blackstill_check = $this->get_param_value(self::BLACKSTILL_CHECK);

@@ -120,7 +120,7 @@ class mediamosa_tool_mapping {
 
     // Execute.
     $execution_string = strtr($execution_command, array(
-      '@mediafile_location' => mediamosa_storage::get_uri_mediafile($mediafile),
+      '@mediafile_location' => mediamosa_storage::get_realpath_data_mediafile($mediafile),
     ));
     $output_array = array();
     $output_string = mediamosa_io::exec($execution_string, $output_array);

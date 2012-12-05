@@ -331,7 +331,7 @@ class mediamosa_job_server {
     mediamosa_io::clearstatcache();
 
     // Get the filename of the source.
-    $filename = mediamosa_storage::get_uri_mediafile_id($mediafile_id_src);
+    $filename = mediamosa_storage::get_realpath_data_file($mediafile_id_src);
 
     // Check of the source file exists.
     if (!file_exists($filename)) {
@@ -790,7 +790,7 @@ class mediamosa_job_server {
             // Path to the transcode file.
             'location_dest_file' => mediamosa_storage::get_realpath_data_transcode_file($mediafile_id),
             // Location of source mediafile.
-            'location_source_file' => mediamosa_storage::get_realpath_mediafile($mediafile),
+            'location_source_file' => mediamosa_storage::get_realpath_data_mediafile($mediafile),
           );
 
           // PHP 5.2.3 or higher.
@@ -947,7 +947,7 @@ class mediamosa_job_server {
         $filename = mediamosa_db::uuid(rand(1, 9999));
 
         $source = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-        $dest = mediamosa_storage::get_uri_data_file($filename);
+        $dest = mediamosa_storage::get_realpath_data_file($filename);
 
         // Make sure dest. exists.
         mediamosa_io::mkdir(mediamosa_io::dirname($dest));
@@ -1030,7 +1030,7 @@ class mediamosa_job_server {
     // Get the filenames.
     $file_status = mediamosa_storage::get_uri_status_file($old_filename);
     $file_transcode = mediamosa_storage::get_uri_data_transcode_file($old_filename . '.' . $file_extension);
-    $file_dest = mediamosa_storage::get_uri_mediafile_id($new_filename, TRUE);
+    $file_dest = mediamosa_storage::get_realpath_data_file($new_filename, TRUE);
 
     // Rename transcoded file to new dest.
     mediamosa_io::rename($file_transcode, $file_dest);

@@ -1,40 +1,18 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * @file
  * Main class MediaMosa.
- *
- * Notes;
- * Drupal functions are mapped to this class as statics. This is done to prevent
- * to much core dependency on drupal and change behavor (if required).
- * Exceptions are the db_* (database) functions which are statics in the
- * mediamosa_db class.
  */
-class mediamosa {
 
-  // --------------------------------------------------------------- Parameters.
+class mediamosa {
+  // ------------------------------------------------------------------- Consts.
+  // Environment variables.
+  const ENV_APP_IDS = 'app_ids';
+  const ENV_APP_ID = 'app_id';
+  const ENV_TIMEZONE = 'timezone';
+  const ENV_MEDIAMOSA_VERSION = 'active_version';
+
+  // --------------------------------------------------------------------- Vars.
   static private $is_db_logging = FALSE;
 
   static private $num_of_queries = array();
@@ -43,12 +21,6 @@ class mediamosa {
 
   // Stores last error that went through error_handler.
   static private $last_php_error = NULL;
-
-  // Environment variables.
-  const ENV_APP_IDS = 'app_ids';
-  const ENV_APP_ID = 'app_id';
-  const ENV_TIMEZONE = 'timezone';
-  const ENV_MEDIAMOSA_VERSION = 'active_version';
 
   // Setup REST environment.
   static protected $environment = array();
@@ -62,7 +34,7 @@ class mediamosa {
     $this->setup_environment();
   }
 
-  // --------------------------------------------------------- Public Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Do basic checks on settings
    * will throw mediamosa_exception when checks are not met.
@@ -78,7 +50,6 @@ class mediamosa {
     }
   }
 
-  // ------------------------------------------------------ Protected Functions.
   /**
    * Set up environment based on the input app_id(s).
    */
@@ -103,8 +74,8 @@ class mediamosa {
     $app_id = reset($app_ids);
 
     // Set up.
-    self::$environment[self::ENV_APP_IDS] = $app_ids;
     self::$environment[self::ENV_APP_ID] = $app_id;
+    self::$environment[self::ENV_APP_IDS] = $app_ids;
     self::$environment[self::ENV_TIMEZONE] = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
     $active_version = variable_get('mediamosa_version', mediamosa_version::LATEST);
 

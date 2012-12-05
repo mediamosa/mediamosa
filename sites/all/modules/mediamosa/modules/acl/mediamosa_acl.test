@@ -43,7 +43,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
-   * Wrapper for play proxy.
+   * Wrapper for play proxy (media play).
    * use pp_call_* (!).
    */
   private function pp_call($asset_id, $mediafile_id, $user_id, $acl_group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
@@ -51,22 +51,22 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // For backtracing.
     $this->backtrace();
 
-    $parameters[mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID] = $mediafile_id;
-    $parameters[mediamosa_rest_call_asset_mediafile_play::USER_ID] = $user_id;
+    $parameters[mediamosa_rest_call_media_view::MEDIAFILE_ID] = $mediafile_id;
+    $parameters[mediamosa_rest_call_media_view::USER_ID] = $user_id;
 
     if (isset($acl_group_id)) {
-      $parameters[mediamosa_rest_call_asset_mediafile_play::ACL_GROUP_ID] = $acl_group_id;
+      $parameters[mediamosa_rest_call_media_view::ACL_GROUP_ID] = $acl_group_id;
     }
 
     if (isset($domain)) {
-      $parameters[mediamosa_rest_call_asset_mediafile_play::DOMAIN] = $domain;
+      $parameters[mediamosa_rest_call_media_view::DOMAIN] = $domain;
     }
 
     if (isset($realm)) {
-      $parameters[mediamosa_rest_call_asset_mediafile_play::REALM] = $realm;
+      $parameters[mediamosa_rest_call_media_view::REALM] = $realm;
     }
 
-    return $this->play_proxy($asset_id, $parameters, $a_expected_result_ids);
+    return $this->do_media_play($asset_id, $parameters, $a_expected_result_ids);
   }
 
   /**
@@ -241,7 +241,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // Set private off, unapp on.
     $parameters = array(
       mediamosa_rest_call_asset_update::ISPRIVATE => 'false',
-      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'true',
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'true',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
     );
 
@@ -258,7 +258,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // Set private off, unapp off.
     $parameters = array(
       mediamosa_rest_call_asset_update::ISPRIVATE => 'false',
-      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'false',
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'false',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
     );
 

@@ -130,9 +130,12 @@ class mediamosa_asset_mediafile_metadata_property {
   /**
    * Get the property.
    *
-   * @param prop_id
+   * @param string $prop_id
+   *   The ID of the property to get.
+   * @param boolean $reset
+   *   Reload static data.
    *
-   * @return
+   * @return array
    *   Returns single array(prop_name, type)
    */
   public static function get_property($prop_id, $reset = FALSE) {

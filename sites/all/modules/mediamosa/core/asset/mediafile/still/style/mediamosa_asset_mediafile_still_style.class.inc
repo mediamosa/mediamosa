@@ -5,21 +5,25 @@
  */
 
 class mediamosa_asset_mediafile_still_style {
-  // ------------------------------------------------------------------ Constants.
-
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the still style data.
    *
-   * @param $style_id
+   * @param integer $style_id
    *   The ID of the style.
-   * @param $app_id
-   *   Application ID.
+   * @param integer $app_id
+   *   (optional) Application ID.
+   * @param array $fields
+   *   (optional) Selection of database fields.
+   *
+   * @return array|FALSE
+   *   The style or FALSE.
+   *
    */
   public static function get($style_id, $app_id = NULL, array $fields = array()) {
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_still_style_db::TABLE_NAME, 'ss');
-    $query->fields('ss', $fields);
-    $query->condition('ss.' . mediamosa_asset_mediafile_still_style_db::ID, $style_id);
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_still_style_db::TABLE_NAME, 'ss')
+      ->fields('ss', $fields)
+      ->condition('ss.' . mediamosa_asset_mediafile_still_style_db::ID, $style_id);
     if ($app_id) {
       $query->condition('ss.' . mediamosa_asset_mediafile_still_style_db::APP_ID, $app_id);
     }
@@ -30,6 +34,7 @@ class mediamosa_asset_mediafile_still_style {
    * Insert the still style data.
    *
    * @param array $fields
+   *   The value pair to insert.
    */
   public static function insert($fields) {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_still_style_db::TABLE_NAME)
@@ -88,7 +93,7 @@ class mediamosa_asset_mediafile_still_style {
       strtr(
         'find @media_app_path -maxdepth 2 -mindepth 2 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+,@style_id\(\.[a-zA-Z0-9]+\)?$" -type l -delete',
         array(
-          '@media_app_path' => mediamosa_io::realpath(mediamosa_storage::get_uri_media($app_id)),
+          '@media_app_path' => mediamosa_storage::get_realpath_media($app_id),
           '@style_id' => $style_id,
         )
       )
@@ -99,11 +104,10 @@ class mediamosa_asset_mediafile_still_style {
       strtr(
         'find @media_app_path -maxdepth 2 -mindepth 2 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+,@style_id\(\.[a-zA-Z0-9]+\)?$" -type l -delete',
         array(
-          '@media_app_path' => mediamosa_io::realpath(mediamosa_storage::get_uri_media_ticket($app_id)),
+          '@media_app_path' => mediamosa_storage::get_realpath_media_ticket($app_id),
           '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );
-
   }
 }

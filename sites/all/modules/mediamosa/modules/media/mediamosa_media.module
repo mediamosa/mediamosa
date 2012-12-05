@@ -1,0 +1,168 @@
+<?php
+/**
+ * @file
+ * The media module.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function mediamosa_media_cron() {
+
+  // No need for ticket clean up inside simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
+  try {
+    $start = time();
+    mediamosa_debug::log('mediamosa_media_ticket_cron started.', array(), 'ticket_cron');
+
+    $run_last = variable_get('mediamosa_media_ticket_cron_last', NULL);
+
+    // may run?
+    if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::TICKET_CRON_INTERVAL) {
+      // For the next time...
+      variable_set('mediamosa_media_ticket_cron_last', REQUEST_TIME);
+
+      // Play proxy ticket cleanup.
+      mediamosa_media_ticket::ticket_cleanup();
+    }
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_media_ticket_cron ended: @secs', array('@sec' => time() - $start), 'ticket_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_media_ticket_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}
+
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_media_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Do a media call.
+  $rest_calls['asset/$asset_id/view'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_view',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_media',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+  );
+
+  // Do a media call.
+  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_view',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_media',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Do a media call.
+  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET];
+
+  // Download file.
+  $rest_calls['download/$app_id/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_download',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
+  );
+
+  // Media view call.
+  $rest_calls['media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_media',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
+  );
+
+  // Media view call.
+  $rest_calls['media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_ticket',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_media',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
+  );
+
+  // In sandbox we have /still as special REST call so we don't have problems
+  // with apache alias on /still.
+  if (mediamosa::get()->in_simpletest_sandbox()) {
+    $rest_calls['media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'] = $rest_calls['media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'];
+    $rest_calls['media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'] = $rest_calls['media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'];
+  }
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_media_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  // Play a mediafile.
+  $rest_calls['asset/$asset_id/view'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'View a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/k1QmUkhpAvRNU9mBl871oQfq/view<br /><br />mediafile_id = "T2hLaHNlDROR6UTYJFn2b8Cz"<br />user_id = "testuser"<br />response = "download"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://mediamosa.local/download/T2hLaHNlDROR6UTYJFn2b8Cz/Filename_not_set</output>
+    <content_type></content_type>
+    <ticket_id>T2hLaHNlDROR6UTYJFn2b8Cz</ticket_id>
+  </item>
+</items>',
+  );
+
+  // Play a mediafile.
+  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/view'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/view'][mediamosa_rest_call::METHOD_GET];
+
+  // Media.
+  $rest_calls['media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Serves mediafiles directly.',
+    mediamosa_rest_call::DESCRIPTION => 'Serves mediafiles using the REST interface.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'This rest call will return the mediafile.',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the mediafile.',
+  );
+  $rest_calls['media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Serves mediafiles directly.',
+    mediamosa_rest_call::DESCRIPTION => 'Serves mediafiles using the REST interface. The mediafiles are served using the ticket system. These mediafiles are considered temporary as long as the ticket exists.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'This rest call will return the mediafile foo.',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the mediafile.',
+  );
+
+  if (mediamosa::get()->in_simpletest_sandbox()) {
+    $rest_calls['media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'] = $rest_calls['media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'];
+    $rest_calls['media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'] = $rest_calls['media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'];
+  }
+
+  // Download file.
+  $rest_calls['download/$app_id/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Download a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/23/j89y492b84/foo.mpg',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
+  );
+
+  return $rest_calls;
+}

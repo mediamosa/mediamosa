@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * FFmpeg tool functions.
  */
+
 class mediamosa_tool_ffmpeg {
   /**
    * Name / ID of the module.
@@ -44,7 +20,7 @@ class mediamosa_tool_ffmpeg {
    */
   const BLACK_STILL_INTERVAL = 30;
 
-  // ------------------------------------------------------- Functions (static).
+  // ---------------------------------------------------------------- Functions.
   /**
    * Test if ffmpeg uses -padtop or -vf=pad function in this version.
    *
@@ -290,7 +266,7 @@ class mediamosa_tool_ffmpeg {
         case 'SCENE':
           mediamosa_job_server::log_mediafile($mediafile_id_source, 'Scene detection starts');
           $destination_path = mediamosa_storage::get_realpath_data_transcode();
-          $input = mediamosa_storage::get_uri_mediafile_id($mediafile_id_source);
+          $input = mediamosa_storage::get_realpath_data_file($mediafile_id_source);
 
           // Clean up I.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');

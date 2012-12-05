@@ -1,36 +1,7 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The status commponent module.
- */
-
-/**
- * Constants.
  */
 
 /**
@@ -78,14 +49,14 @@ function mediamosa_maintenance_status_component_generate() {
   if (!$found && is_writable($mount_point)) {
     // Make the [mount_point]/media directory.
     mediamosa_io::mkdir($path . 'ticket/');
-    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_htaccess_contents());
+    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
   }
 
   $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
   foreach ($htaccess as $key => $line) {
     $htaccess[$key] = trim($line, "\n\r\t ");
   }
-  $htaccess_org = explode("\n", trim(mediamosa_storage::file_get_htaccess_contents()));
+  $htaccess_org = explode("\n", trim(mediamosa_storage::file_get_media_htaccess_contents()));
   foreach ($htaccess_org as $key => $line) {
     $htaccess_org[$key] = trim($line, "\n\r\t ");
   }
@@ -96,7 +67,7 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => !$contents && $found ? _mediamosa_maintenance_status_okwarning(FALSE) : _mediamosa_maintenance_status_okerror($found && $contents),
   );
   if (!$found || !$contents) {
-    $variables = array('%directory' => $path, '@path' => $path . '.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_htaccess_contents())));
+    $variables = array('%directory' => $path, '@path' => $path . '.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_media_htaccess_contents())));
     $results['mount_media_htaccess']['description'] = t("Warning: Couldn't find .htaccess file in location @path (or with correct contents).<br />Please create a .htaccess file in your %directory directory which contains the following lines: <br /><code>!htaccess</code>", $variables);
   }
 
