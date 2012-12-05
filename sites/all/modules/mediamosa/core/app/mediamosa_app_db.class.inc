@@ -106,7 +106,10 @@ class mediamosa_app_db {
   const STILL_MAINTAIN_ASPECT_RATIO_YES = 'YES';
   const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
   const TOOL_ANALYSE = 'tool_analyse';
-
+  
+  // Pseudo field
+  const STORAGE_DEFAULT_URI = 'storage_default_uri';
+  
   // ------------------------------------------------------------------ Functions.
   /**
    * Returns all fields.

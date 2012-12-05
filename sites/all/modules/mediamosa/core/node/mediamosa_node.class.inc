@@ -38,12 +38,14 @@ require_once 'mediamosa_node_mediamosa_app.class.inc';
 require_once 'mediamosa_node_mediamosa_server.inc';
 require_once 'mediamosa_node_mediamosa_settings.class.inc';
 require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
+require_once 'mediamosa_node_mediamosa_storage_profile.inc';
 require_once 'mediamosa_node_mediamosa_tool_params.inc';
 require_once 'mediamosa_node_mediamosa_tool_mapping.inc';
 
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
+  const MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE = 'mediamosa_storage_profile';
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_TOOL_PARAMS = 'mediamosa_tool_params';
   const MEDIAMOSA_NODE_TYPE_TOOL_MAPPING = 'mediamosa_tool_mapping';
@@ -134,6 +136,10 @@ class mediamosa_node {
   public static function get_fields($node) {
 
     switch ($node->type) {
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE:
+        $fields = mediamosa_storage_profile_db::get_fields();
+        return $fields;
+      
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
         $fields = mediamosa_transcode_profile_db::get_fields();
         $fields[] = 'commands';
@@ -219,6 +225,12 @@ class mediamosa_node {
  */
 function mediamosa_node_info() {
   return array(
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE => array(
+      'name' => t('MediaMosa storage profile'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE,
+      'has_body' => FALSE,
+      'description' => t('The storage profile contains information about storage for media files'),
+    ),
     mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE => array(
       'name' => t('MediaMosa transcode profile'),
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
@@ -289,6 +301,18 @@ function _mediamosa_node_revision_overview($node) {
       drupal_set_breadcrumb($breadcrumb);
       break;
 
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administration'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Storage profiles'), 'admin/mediamosa/config/storage_profile');
+      $breadcrumb[] = l($node->title, 'admin/mediamosa/config/storage_profile/' . $node->nid);
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+    
     case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
       // Reset the breadcrum.
       $breadcrumb = array();
@@ -397,6 +421,16 @@ function _mediamosa_node_delete_confirm_submit($form, &$form_state) {
 
   // Call the node confirm submit function.
   node_delete_confirm_submit($form, $form_state);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mediamosa_form_mediamosa_storage_profile_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/storage_profile';
 }
 
 /**

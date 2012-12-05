@@ -1,33 +1,30 @@
 <?php
 /**
  * @file
- * The MediaMosa storage and mountpoint stream wrapper classes.
+ * main storage class.
  */
 
-/**
- * The MediaMosa storage class.
- */
-class mediamosa_storage {
+abstract class mediamosa_storage {
 
   // ------------------------------------------------------------------- Consts.
   const STORAGE_FOLDER_TICKET = 'ticket';
-
+  
   // Ticket locations.
   const PLAY_TICKET_LOCATION = 'links'; // -> media
   const DOWNLOAD_TICKET_LOCATION = 'download_links'; // -> media
-
+  
   // Expiration settings, in seconds.
   // @todo: currently all ticket types have same expiration because of design.
-
+  
   // Symbolic link based.
   const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
   const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
   const TICKET_EXPIRATION_STILL = 600; // 10 minutes
-
+  
   // Not symbolic link.
   const TICKET_EXPIRATION_UPLOAD = 86400; // 24 hours
-
-  // ---------------------------------------------------------------- Functions.
+  
+  // ---------------------------------------------------------------- Static functions.
   /**
    * Is the storage file system path specified?
    *
@@ -551,6 +548,236 @@ class mediamosa_storage {
   public static function trim_uri($uri) {
     return drupal_substr($uri, -3) != '://' ? rtrim($uri, '/') . '/' : $uri;
   }
+  
+  /**
+   * Create storage instance based on a storage profile
+   * 
+   * @param $profile
+   *   Profile object, array or id
+   * 
+   * @return mediamosa_storage
+   *   MediaMosa storage object
+   *   
+   * @throws mediamosa_exception_error
+   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
+   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
+   */
+  public static function create_instance_for_profile($profile) {
+    if (is_object($profile)) {
+      $profile = get_object_vars($profile);
+    }
+    if (is_numeric($profile)) {
+      $profile = mediamosa_storage_profile::get($profile);
+    }
+    $class = 'mediamosa_storage_' . $profile[mediamosa_storage_profile_db::TYPE];
+
+    if (!class_exists($class)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
+    }
+    
+    if (!in_array('mediamosa_storage', class_parents($class))) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
+    }
+    
+    return new $class($profile[mediamosa_storage_profile_db::NID]);
+  }
+  
+  /**
+   * Create storage instance based on a storage mapping
+   * 
+   * @param $mapping
+   *   Mapping array or id
+   * 
+   * @return mediamosa_storage
+   *   MediaMosa storage object
+   *   
+   * @throws mediamosa_exception_error
+   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
+   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
+   */
+  public static function create_instance_for_mapping($mapping) {
+    if (!is_numeric($mapping)) {
+      $mapping = $mapping[mediamosa_storage_mapping_db::ID];
+    }
+    
+    return self::create_instance_for_uri(mediamosa_storage_mapping::get_uri($mapping));
+  }
+  
+  /**
+   * Create storage instance based on a storage uri
+   * 
+   * @param $uri
+   *   Storage uri
+   *   
+   * @return mediamosa_storage
+   *   MediaMosa storage object
+   *   
+   * @throws mediamosa_exception_error
+   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
+   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
+   */
+  public static function create_instance_for_uri($uri) {
+    $uri = parse_url($uri);
+    $class = 'mediamosa_storage_' . $uri['scheme'];
+    $path = $uri['path'];
+    
+    $profile = null;
+    if (is_numeric($uri['host'])) {
+      $profile = mediamosa_storage_profile::get($uri['host']);
+      $profile = $profile[mediamosa_storage_profile_db::NID];
+    }
+    
+    if (!class_exists($class)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
+    }
+    
+    if (!in_array('mediamosa_storage', class_parents($class))) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
+    }
+    
+    $instance = new $class($profile); 
+    $instance->set_uri($uri);
+    
+    return $instance;
+  }
+  
+  /**
+   * Create storage instance based on a mediafile
+   * 
+   * @param $mediafile
+   *   Mediafile id
+   * 
+   * @return mediamosa_storage
+   *   MediaMosa storage object
+   *   
+   * @throws mediamosa_exception_error
+   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
+   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
+   */
+  public static function create_instance_for_mediafile($mediafile_id) {
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+
+    if (!mediafile) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
+    }
+    
+    $uri = $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT];
+    
+    // Fallback to standard mediamosa storage if no SANNAS mountpoint is provided
+    if (!$uri) {
+      $uri = mediamosa_storage_standard::get_uri($mediafile[mediamosa_asset_mediafile_db::FILENAME]);
+    }
+    
+    $uri = parse_url($uri);
+    $class = 'mediamosa_storage_' . $uri['scheme'];
+    $path = $uri['path'];
+    
+    if (!$profile && is_numeric($uri['host'])) {
+      $profile = $uri['host'];
+    }
+    
+    if (is_object($profile)) {
+      $profile = get_object_vars($profile);
+    }
+    
+    if (!class_exists($class)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
+    }
+    
+    if (!in_array('mediamosa_storage', class_parents($class))) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
+    }
+    
+    $instance = new $class($profile); 
+    $instance->set_mediafile($uri);
+    
+    return $instance;
+  }
+  
+  // ---------------------------------------------------------------- Class vars.
+  protected $profile;
+  protected $mediafile;
+  protected $uri;
+  
+  // ---------------------------------------------------------------- Class methods.
+  /**
+   * Main constructor
+   * 
+   * @param $profile
+   *   Storage profile node or nid
+   * 
+   * @param $uri
+   *   Optional uri to the storage object
+   */
+  private function __construct($profile) {
+    if (is_numeric($profile)) {
+      $profile_id = $profile;
+      $profile = node_load($profile_id);
+      if (!$profile) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_PROFILE_NOT_FOUND, array('@profile_id' => $profile_id));
+      }
+    }
+    $this->profile = $profile;
+  }
+  
+  /**
+   * Set mediafile
+   * 
+   * @param $mediafile
+   *   Mediafile id or array
+   */
+  public function set_mediafile($mediafile) {
+    if (is_numeric($mediafile)) {
+      $mediafile_id = $mediafile; 
+      $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+      if (!mediafile) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
+      }
+    }
+    
+    $this->mediafile = $mediafile;
+    //TODO: set $this->uri based on $this->mediafile
+  }
+  
+  /**
+   * Set uri
+   * 
+   * @param $uri
+   */
+  public function set_uri($uri) {
+    $this->uri = $uri;
+    //TODO: set $this-> mediafile based on $this->uri if possible
+  }
+  
+  /**
+   * Return the storage options available for the storage type
+   * 
+   * @param $profile
+   *   Storage profile object
+   * 
+   * @return
+   *   Array of available storage options 
+   */
+  public abstract function get_storage_options();
+  
+  /**
+   * Return alle required upload parameters for the storage type
+   * which allow a frontend application to build the correct upload form
+   * 
+   * $param $app_id
+   *   Application ID.
+   * 
+   * @param $user_id
+   *   User ID
+   * 
+   * @param $group_id
+   *   Group ID
+   * 
+   * @return
+   *   Array with upload parameters
+   */
+  public abstract function get_upload_parameters($app_id, $user_id, $group_id);
+  
 }
 
 /**

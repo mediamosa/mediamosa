@@ -1,0 +1,45 @@
+<?php
+/**
+ * @file
+ * Provides installation functions.
+ *
+ * @author Jimmy Berry ("boombatower", http://drupal.org/user/214218)
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function awssdk_uninstall() {
+  // Remove all variables.
+  $results = db_select('variable', 'v')
+    ->fields('v', array('name'))
+    ->condition('name', 'aws%', 'LIKE')
+    ->execute();
+  foreach ($results as $result) {
+    variable_del($result->name);
+  }
+}
+
+/**
+ * Remove aws_enable_extensions variable since the settings was removed in 1.5.
+ */
+function awssdk_update_7500() {
+  variable_del('aws_enable_extensions');
+}
+
+/**
+ * Update configuration variables from 1.4.x to 1.5.x.
+ */
+function awssdk_update_7501() {
+  $map = array(
+    'aws_secret_key' => 'aws_secret',
+    'aws_cloudfront_keypair_id' => 'aws_cloudfront_keypair',
+    'aws_cloudfront_private_key_pem' => 'aws_cloudfront_pem',
+  );
+  foreach ($map as $old => $new) {
+    if ($value = variable_get($old)) {
+      variable_set($new, $value);
+    }
+    variable_del($old);
+  }
+}

@@ -1,0 +1,121 @@
+<?php
+/**
+ * @file
+ * Provides primary Drupal hook implementations.
+ *
+ * @author Heshan Wanigasooriya ("heshan.lk", http://drupal.org/user/199102)
+ * @author Jimmy Berry ("boombatower", http://drupal.org/user/214218)
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function awssdk_ui_menu() {
+  $items = array();
+
+  $items['admin/config/media/awssdk'] = array(
+    'title' => 'AWS SDK',
+    'description' => 'Configure the Amazon Web Services SDK settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('awssdk_ui_settings_form'),
+    'access arguments' => array('access administration pages'),
+  );
+
+  return $items;
+}
+
+/**
+ * Settings form.
+ */
+function awssdk_ui_settings_form($form, &$form_state) {
+  $form['required'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Required'),
+    '#description' => t('The following fields are required by the SDK, but may be passed directly to the constructors instead. The second two fields have acceptable defaults so you only need to fill in the first two.'),
+  );
+  $form['required']['aws_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amazon Web Services Key'),
+    '#default_value' => variable_get('aws_key', ''),
+    '#required' => TRUE,
+    '#description' => t('Amazon Web Services Key. Found in the AWS Security Credentials.'),
+  );
+  $form['required']['aws_secret'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amazon Web Services Secret Key'),
+    '#default_value' => variable_get('aws_secret', ''),
+    '#required' => TRUE,
+    '#description' => t('Amazon Web Services Secret Key. Found in the AWS Security Credentials.'),
+  );
+  $form['required']['aws_certificate_authority'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Determines which Cerificate Authority file to use'),
+    '#default_value' => variable_get('aws_certificate_authority', FALSE),
+    '#description' => t('A value of boolean `false` will use the Certificate Authority file available on the system. A value of boolean `true` will use the Certificate Authority provided by the SDK. Passing a file system path to a Certificate Authority file (chmodded to `0755`) will use that. Leave this set to `false` if you\'re not sure.'),
+  );
+  $form['required']['aws_default_cache_config'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Storage type to use for caching'),
+    '#default_value' => variable_get('aws_default_cache_config', ''),
+    '#description' => t('This option allows you to configure a preferred storage type to use for caching by default. Valid values are: `apc`, `xcache`, a DSN-style string such as `pdo.sqlite:/sqlite/cache.db`, a file system path such as `./cache` or `/tmp/cache/`, or a serialized array for memcached configuration.'),
+  );
+
+  $form['extra'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Extra'),
+    '#description' => t('The following fields are never used by the SDK, but can be handy in certain usecases or may be required by some modules.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['extra']['aws_account_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amazon Account ID without dashes'),
+    '#default_value' => variable_get('aws_account_id', ''),
+    '#description' => t('Amazon Account ID without dashes. Used for identification with Amazon EC2. Found in the AWS Security Credentials.'),
+  );
+  $form['extra']['aws_canonical_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Your CanonicalUser ID'),
+    '#default_value' => variable_get('aws_canonical_id', ''),
+    '#description' => t('Your CanonicalUser ID. Used for setting access control settings in AmazonS3. Found in the AWS Security Credentials.'),
+  );
+  $form['extra']['aws_canonical_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Your CanonicalUser DisplayName'),
+    '#default_value' => variable_get('aws_canonical_name', ''),
+    '#return_value' => TRUE,
+    '#description' => t('Your CanonicalUser DisplayName. Used for setting access control settings in AmazonS3. Found in the AWS Security Credentials (i.e. "Welcome, AWS_CANONICAL_NAME").'),
+  );
+  $form['extra']['aws_mfa_serial'] = array(
+    '#type' => 'textfield',
+    '#title' => t('12-digit serial number'),
+    '#default_value' => variable_get('aws_mfa_serial', ''),
+    '#description' => t('12-digit serial number taken from the Gemalto device used for Multi-Factor Authentication. Ignore this if you\'re not using MFA.'),
+  );
+  $form['extra']['aws_cloudfront_keypair'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amazon CloudFront key-pair to use for signing private URLs'),
+    '#default_value' => variable_get('aws_cloudfront_keypair', ''),
+    '#description' => t('Amazon CloudFront key-pair to use for signing private URLs. Found in the AWS Security Credentials.'),
+  );
+  $form['extra']['aws_cloudfront_pem'] = array(
+    '#type' => 'textarea',
+    '#title' => t('The contents of the *.pem private key that matches with the CloudFront key-pair ID'),
+    '#default_value' => variable_get('aws_cloudfront_pem', ''),
+    '#description' => t('The contents of the *.pem private key that matches with the CloudFront key-pair ID. Found in the AWS Security Credentials.'),
+  );
+  $form['#submit'][] = 'awssdk_ui_settings_form_submit';
+  return system_settings_form($form);
+}
+
+/**
+ * Clear config cache to new settings take effect.
+ */
+function awssdk_ui_settings_form_submit($form, &$form_state) {
+  // Set aws_certificate_authority to bool TRUE the aws sdk is testing === TRUE.
+  if ($form_state['values']['aws_certificate_authority']) {
+    $form_state['values']['aws_certificate_authority'] = TRUE;
+  }
+
+  cache_clear_all('awssdk_config_load', 'cache');
+}

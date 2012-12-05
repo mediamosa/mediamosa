@@ -7,6 +7,9 @@
 // Include our helper class as autoloader is not up yet.
 require_once('mediamosa_profile.class.inc');
 
+require_once 'sites/all/modules/mediamosa/core/storage/mediamosa_storage.class.inc';
+
+
 /**
  * Implements hook_install_tasks().
  */
@@ -358,6 +361,9 @@ function mediamosa_profile_cron_settings_form() {
     '#value' => t('Continue'),
   );
 
+  // Reset static for 'file_get_stream_wrappers' to solve issue of invoke stream_wrappers for mediamosa in drush
+  drupal_static_reset('file_get_stream_wrappers');
+  
   // Flush all.
   drupal_flush_all_caches();
 

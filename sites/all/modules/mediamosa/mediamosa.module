@@ -15,6 +15,16 @@ require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 
 /**
+ * Implements hook_mediamosa_storage_info().
+ */
+function mediamosa_mediamosa_storage_info() {
+  return array(mediamosa_storage_standard::NAME => array(
+    'name' => t('Standard storage'),
+    'description' => t('The standard MediaMosa storage.'),
+  ));
+}
+
+/**
  * Implements hook_stream_wrappers().
  */
 function mediamosa_stream_wrappers() {
@@ -24,7 +34,7 @@ function mediamosa_stream_wrappers() {
   // @todo: Class might not be registered yet on 3.5 release. Remove
   //        class_exists() & require_once() in version 4.
   if (!class_exists('mediamosa_storage_stream_wrapper')) {
-    require_once 'lib/mediamosa_storage.class.inc';
+    require_once 'core/storage/mediamosa_storage.class.inc';
   }
 
   // Our MediaMosa Stream Wrappers.
@@ -182,6 +192,10 @@ function mediamosa_permission() {
     mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES => array(
       'title' => t('Access MediaMosa configuration (transcode profiles)'),
       'description' => t($text_view_switch, array('@type' => 'transcode profiles')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_STORAGE_PROFILES => array(
+      'title' => t('Access MediaMosa configuration (storage profiles)'),
+      'description' => t($text_view_switch, array('@type' => 'storage profiles')),
     ),
     mediamosa_permission::ACCESS_CONFIG_WEBSERVICES => array(
       'title' => t('Access MediaMosa configuration (webservices)'),
@@ -802,3 +816,15 @@ function mediamosa_file_mimetype_mapping_alter(&$mapping) {
   // Check if video/webm is already added.
   $mapping['extensions']['webm'] = $webm;
 }
+
+/**
+ * Implements hook_mediamosa_storage_profile_view().
+ * Needs to appear being mediamosa_storage_standard
+ */
+function mediamosa_storage_standard_mediamosa_storage_profile_view($node, $view_mode = 'full') {
+  $rows = array(
+    array(t('Linux Mount Point'), check_plain(mediamosa_storage_standard::get_current_mountpoint())),
+    array(t('Windows Mount Point'), check_plain(mediamosa_storage_standard::get_current_mountpoint_windows())),
+  );
+  return $rows;
+}  

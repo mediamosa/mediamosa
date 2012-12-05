@@ -85,6 +85,7 @@ class mediamosa_permission {
   const ACCESS_CONFIG_TOOLPARAMS = 'mediamosa|access|config|toolparams';
   const ACCESS_CONFIG_TOOLMAPPING = 'mediamosa|access|config|toolmapping';
   const ACCESS_CONFIG_TRANSCODE_PROFILES = 'mediamosa|access|config|transcode_profiles';
+  const ACCESS_CONFIG_STORAGE_PROFILES = 'mediamosa|access|config|storage_profiles';
   const ACCESS_CONFIG_WEBSERVICES = 'mediamosa|access|config|webservices';
   const UPDATE_CONFIG_WEBSERVICES = 'mediamosa|update|config|webservices';
 

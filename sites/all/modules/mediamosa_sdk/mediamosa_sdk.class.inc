@@ -209,6 +209,11 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
+  // storage related errorcodes
+  const ERRORCODE_STORAGE_CLASS_NOT_FOUND = 4000;
+  const ERRORCODE_STORAGE_CLASS_INVALID = 4001;
+  const ERRORCODE_STORAGE_PROFILE_NOT_FOUND = 4002;
+  
   // ---------------------------------------------------------------- Var Types.
   // Do not make the ID value longer than 32 characters.
   //    12345678901234567890123456789012    12345678901234567890123456789012

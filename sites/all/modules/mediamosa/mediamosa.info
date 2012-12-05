@@ -43,7 +43,6 @@ files[] = lib/mediamosa_io.class.inc
 files[] = lib/mediamosa_lib.class.inc
 files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
-files[] = lib/mediamosa_storage.class.inc
 files[] = lib/mediamosa_log.class.inc
 files[] = lib/mediamosa_type.class.inc
 files[] = lib/mediamosa_unicode.class.inc
@@ -248,6 +247,12 @@ files[] = core/statistics/mediamosa_statistics.class.inc
 
 ; Storage (deprecated, remove in 4.0)
 files[] = core/configuration/storage/mediamosa_configuration_storage.class.inc
+files[] = core/storage/profile/mediamosa_storage_profile_db.class.inc
+files[] = core/storage/profile/mediamosa_storage_profile.class.inc
+files[] = core/storage/mapping/mediamosa_storage_mapping_db.class.inc
+files[] = core/storage/mapping/mediamosa_storage_mapping.class.inc
+files[] = core/storage/standard/mediamosa_storage_standard.class.inc
+files[] = core/storage/mediamosa_storage.class.inc
 
 ; Server.
 files[] = core/server/mediamosa_server.class.inc

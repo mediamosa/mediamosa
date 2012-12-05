@@ -227,6 +227,10 @@ function _mediamosa_error_install() {
     'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
     'ERRORCODE_INVALID_REST_CALL' => "Invalid REST call with ID '@rest_call'",
     'ERRORCODE_INVALID_TICKET' => "Invalid ticket with ID '@ticket_id'",
+    
+  	'ERRORCODE_STORAGE_CLASS_NOT_FOUND' => "Storage class '@class' was not found",
+    'ERRORCODE_STORAGE_CLASS_INVALID' => "Storage class '@class' does not extend the 'mediamosa_storage' class",
+    'ERRORCODE_STORAGE_PROFILE_NOT_FOUND' => "Storage profile with ID '@profile_id' was not found",
   );
 
   $query = array();

@@ -1,0 +1,16 @@
+; $Id$
+
+name = "Amazon S3 storage module"
+description = "The MediaMosa Amazon S3 storage module."
+package = "MediaMosa - Storage"
+version = 7.x-3.4
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_storage
+dependencies[] = awssdk (>=5.1)
+
+; Used files
+files[] = mediamosa_storage_s3.class.inc
+files[] = mediamosa_storage_s3_db.class.inc

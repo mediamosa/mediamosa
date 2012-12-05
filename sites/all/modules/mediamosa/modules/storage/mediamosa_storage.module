@@ -1,0 +1,214 @@
+<?php
+// $Id$
+
+ /**
+  * @file
+  * MediaMosa storage.
+  */
+
+require_once 'profile/mediamosa_storage_profile.inc';
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_storage_help($path, $arg) {
+
+  switch ($path) {
+    case 'admin/mediamosa/config/storage_profile':
+      return '<p>' . t('Storage profiles are used by client applications to store their media files. There are different storage modules available to allow different types of storage like local mountpoints and cloud storage. If no storage profile has been selected for a certain client app, the default profile will be used.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_storage_permission() {
+  $permissions = array();
+  
+  // Get all the apps.
+  $apps = mediamosa_app::get_all_apps_cached();
+  
+  // Build access permission for each storage module
+  $types = module_invoke_all('mediamosa_storage_info');
+  foreach ($types as $key => $type) {
+    $permissions[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|add'] = array(
+      'title' => t('Access ' . $type['name'] . ' for all apps'),
+      'description' => t('Enables the user to use ' . $type['name'] . ' fr all client applications.'),
+    );
+    foreach ($apps as $app) {
+      $perms[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
+        'title' => t('Storage owner of client application ' . $app[mediamosa_app_db::APP_NAME]),
+        'description' => t('Making the user storage owner of this client application will give access to the storage profile of its client application.'),
+      );
+    }
+  }
+  return $permissions;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_storage_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/storage_profile'] = array(
+    'title' => 'Storage profiles',
+    'description' => 'Storage profiles are used by client application to store their media files. There are different storage modules available to allow different types of storage like local mountpoints and cloud storage.',
+    'page callback' => '_mediamosa_storage_profile_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_STORAGE_PROFILES),
+  );
+
+  $items['admin/mediamosa/config/storage_profile/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/add'] = array(
+    'title' => 'Add',
+    'description' => 'Add a new storage profile.',
+    'page callback' => '_mediamosa_storage_profile_add_page',
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  // Add each storage type to the menu
+  // TODO: review access callback
+  $types = module_invoke_all('mediamosa_storage_info');
+  if (class_exists('mediamosa_storage_standard')) {
+    // Never allow to add extra standard storage
+    unset($types[mediamosa_storage_standard::NAME]);
+  }
+  foreach ($types as $key => $type) {
+    $items['admin/mediamosa/config/storage_profile/add/' . $key] = array(
+      'title' => $type['name'],
+      'title callback' => 'check_plain',
+    	'description' => $type['description'],
+      //'page callback' => 'node_add',
+      //'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
+      'page callback' => '_mediamosa_storage_profile_add_page',
+    	'page arguments' => array(5),
+    	'access callback' => 'node_access',
+      'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
+      'file' => 'node.pages.inc',
+      'file path' => drupal_get_path('module', 'node'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+    );
+  }
+  
+  $items['admin/mediamosa/config/storage_profile/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/mediamosa/config/storage_profile/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_storage_profile_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_storage_node_access($node, $op, $account) {
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support our type.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE) {
+    return NODE_ACCESS_IGNORE;
+  }
+  
+  // Prevent standard storgae from being deleted
+  if (class_exists('mediamosa_storage_standard') && $node->{mediamosa_storage_profile_db::TYPE} == mediamosa_storage_standard::NAME && op == 'delete') {
+    return NODE_ACCESS_DENY;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the permission we need.
+  $permission_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $node->{mediamosa_storage_profile_db::TYPE} . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|' . $op;
+
+  // If we have the permission, then we allow the action.
+  return _mediamosa_user_access($permission_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Returns form elements for client app storage settings
+ * 
+ * @param $node
+ *   Client app node
+ *   
+ * @param $form_state
+ *   Form state of the client app form
+ *   
+ * @return
+ *   Form elements for storage settings
+ * 
+ * @see mediamosa_app_form 
+ */
+function _mediamosa_storage_app_form($node, &$form_state) {
+  $form = array();
+  
+  $form[mediamosa_app_db::STORAGE_DEFAULT_URI] = array(
+    '#type' => 'select',
+    '#title' => t('Storage location'),
+    '#description' => t('Default storage location for media files.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STORAGE_DEFAULT_URI, $node),
+    '#options' => _mediamosa_storage_profile_app_options(mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node, 0)),
+    '#required' => FALSE,
+  );
+  
+  return $form;
+}

@@ -1,0 +1,15 @@
+; $Id$
+
+name = "Mountpoint storage module"
+description = "The MediaMosa mountpoint storage module."
+package = "MediaMosa - Storage"
+version = 7.x-3.4
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_storage
+
+; Used files
+files[] = mediamosa_storage_mountpoint.class.inc
+files[] = mediamosa_storage_mountpoint_db.class.inc

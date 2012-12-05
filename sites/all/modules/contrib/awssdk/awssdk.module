@@ -1,0 +1,176 @@
+<?php
+/**
+ * @file
+ * Provides primary Drupal hook implementations.
+ *
+ * @author Jimmy Berry ("boombatower", http://drupal.org/user/214218)
+ */
+
+/**
+ * Denotes "AWS SDK for PHP" minimum version number.
+ */
+define('AWSSDK_MINIMUM_VERSION', '1.5.4');
+
+/**
+ * Implements hook_libraries_info()
+ */
+function awssdk_libraries_info() {
+  return array(
+    'awssdk' => array(
+      'title' => 'AWS SDK for PHP',
+      'vendor url' => 'http://aws.amazon.com/sdkforphp/',
+      'download url' => 'http://aws.amazon.com/sdkforphp/',
+      'version arguments' => array(
+        'file' => 'sdk.class.php',
+        'pattern' => "/define\('CFRUNTIME_VERSION', '(.*)'\);/",
+        'lines' => 200,
+      ),
+      'files' => array(
+        'php' => array(
+          'sdk.class.php',
+        ),
+      ),
+      'callbacks' => array(
+        'post-load' => array(
+          'awssdk_config_set',
+        )
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_requirements()
+ */
+function awssdk_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+
+  // None of these requirements are relevant outside of runtime.
+  if ($phase != 'runtime') {
+    return $requirements;
+  }
+
+  $info = libraries_load('awssdk');
+  if (!$info['loaded']) {
+    $requirements['awssdk'] = array(
+      'severity' => REQUIREMENT_ERROR,
+      'title' => $t('AWSSDK'),
+      'value' => $t('Failed to load the AWSSDK'),
+      'description' => $t('Please make sure the AWSSDK library is installed in the libraries directory. Use the drush make file for easy installation.'),
+    );
+  }
+  else if(!$info['version'] || version_compare($info['version'], AWSSDK_MINIMUM_VERSION) < 0) {
+    $requirements['awssdk'] = array(
+      'severity' => REQUIREMENT_ERROR,
+      'title' => $t('AWSSDK'),
+      'value' => $info['version'] . ' [' . l(t('compatibility test'), 'admin/reports/awssdk') . ']',
+      'description' => $t('Please make sure the AWSSDK library installed is ' . AWSSDK_MINIMUM_VERSION . ' or greater.'),
+    );
+  }
+  else {
+    global $base_url;
+    $requirements['awssdk'] = array(
+      'severity' => REQUIREMENT_OK,
+      'title' => $t('AWSSDK'),
+      'value' => $info['version'] . ' [' . l(t('compatibility test'), 'admin/reports/awssdk') . ']',
+    );
+
+    // Check for SDK compatibility.
+    include $info['library path'] . '/_compatibility_test/sdk_compatibility.inc.php';
+    if ($compatiblity == REQUIREMENTS_NOT_MET) {
+      $requirements['awssdk']['severity'] = REQUIREMENT_ERROR;
+      $requirements['awssdk']['description'] = $t('Your PHP environment does not support the minimum requirements for the AWS SDK for PHP.');
+    }
+    // Ensure that the two required credentials have been set.
+    elseif (!CFCredentials::get()->key || !CFCredentials::get()->secret) {
+      $requirements['awssdk']['severity'] = REQUIREMENT_ERROR;
+      $requirements['awssdk']['description'] = $t('The required AWSSDK credentials key and secret have not been set.');
+
+      // Add link to configuration form if ui is enabled.
+      if (module_exists('awssdk_ui')) {
+        $requirements['awssdk']['description'] .= ' [' . l(t('configuration'), 'admin/config/media/awssdk') . ']';
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Load the default AWSSDK settings and apply variable overrides.
+ *
+ * @return
+ *   An associative array containing AWSSDK setting values.
+ */
+function awssdk_config_load() {
+  if (!($config = &drupal_static(__FUNCTION__))) {
+    $config = ($cache = cache_get(__FUNCTION__)) ? $cache->data : array();
+  }
+
+  if (!$config) {
+    $keys = array(
+      // Required keys.
+      'key',
+      'secret',
+      'account_id',
+      'canonical_id',
+
+      // Optional keys.
+      'canonical_name',
+      'certificate_authority',
+      'default_cache_config',
+      'mfa_serial',
+      'cloudfront_keypair',
+      'cloudfront_pem',
+    );
+
+    // Look for variables for each key and pull in the values.
+    foreach ($keys as $key) {
+      if (($value = variable_get('aws_' . $key)) !== NULL) {
+        $config[$key] = $value;
+      }
+    }
+
+    // Merge required defaults.
+    $config += array(
+      'default_cache_config' => '',
+      'certificate_authority' => FALSE,
+    );
+
+    cache_set(__FUNCTION__, $config);
+  }
+
+  return $config;
+}
+
+/**
+ * Set configuration via CFCredentials::set() during library load.
+ */
+function awssdk_config_set() {
+  // Any environment support should be done through variable overrides,
+  // otherwise alter the library definition for callbacks -> post-load.
+  CFCredentials::set(array(
+    '@default' => awssdk_config_load(),
+  ));
+}
+
+/**
+ * Implements hook_menu()
+ */
+function awssdk_menu() {
+  $items['admin/reports/awssdk'] = array(
+    'page callback' => 'awssdk_report',
+    'page arguments' => array(libraries_get_path('awssdk') . '/_compatibility_test/sdk_compatibility_test.php'),
+    'access arguments' => array('access site reports'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Provide a function to wrap the require construct to be used as menu callback.
+ */
+function awssdk_report($file) {
+  require $file;
+}

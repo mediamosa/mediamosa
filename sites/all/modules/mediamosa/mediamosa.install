@@ -32,6 +32,7 @@ require_once 'core/statistics/mediamosa_statistics.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
 require_once 'core/tool/mediamosa_tool.install.inc';
 require_once 'core/transcode/mediamosa_transcode.install.inc';
+require_once 'core/storage/mediamosa_storage.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
 require_once 'core/webservice/mediamosa_webservice.install.inc';
 
@@ -79,6 +80,9 @@ function mediamosa_install() {
   // Call installer Transcode.
   _mediamosa_transcode_install();
 
+  // Call installer Storage.
+  _mediamosa_storage_install();
+  
   // Call installer Job (before server install).
   _mediamosa_job_install();
 
@@ -120,6 +124,9 @@ function mediamosa_uninstall() {
   // Remove Job.
   _mediamosa_job_uninstall();
 
+  // Remove Storage Profile.
+  _mediamosa_storage_uninstall();
+  
   // Remove Transcode Profile.
   _mediamosa_transcode_uninstall();
 

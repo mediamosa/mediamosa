@@ -67,6 +67,11 @@ function mediamosa_app_load(&$nodes) {
 
     // Make sure timezone is set.
     $nodes[$key]->{mediamosa_app_db::TIMEZONE} = empty($nodes[$key]->{mediamosa_app_db::TIMEZONE}) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $nodes[$key]->{mediamosa_app_db::TIMEZONE};
+    
+    // Load default storage uri if storage module is enabled
+    if (module_exists('mediamosa_storage')) {
+      $nodes[$key]->{mediamosa_app_db::STORAGE_DEFAULT_URI} = mediamosa_storage_mapping::get_default_uri($node->{mediamosa_app_db::APP_ID});
+    }
   }
 }
 
@@ -92,9 +97,14 @@ function mediamosa_app_update($node) {
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
-
+    
     // Update webservice.
     _mediamosa_app_update_webservice($node);
+
+    // Update default storage uri if storage module is enabled
+    if (module_exists('mediamosa_storage')) {
+      mediamosa_storage_mapping::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_DEFAULT_URI});
+    }
   }
 }
 
@@ -119,6 +129,11 @@ function mediamosa_app_insert($node) {
 
   // Update webservice.
   _mediamosa_app_update_webservice($node);
+
+  // Update default storage uri if storage module is enabled
+  if (module_exists('mediamosa_storage')) {
+    mediamosa_storage_mapping::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_DEFAULT_URI});
+  }
 }
 
 /**
@@ -146,6 +161,11 @@ function _mediamosa_app_update_webservice($node) {
  * Implements hook_delete().
  */
 function mediamosa_app_delete($node) {
+  // Delete storage mappings if storage module enabled
+  if (module_exists('mediamosa_storage')) {
+    mediamosa_storage_mapping::delete_all(mediamosa_app_db::APP_ID);
+  }
+  
   // Delete revisions.
   mediamosa_node_revision::delete_ex($node, mediamosa_app_db::TABLE_NAME);
 }
@@ -201,10 +221,15 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
     array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
   );
-
+  
   // Add timestamps.
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
+  
+  // Add default storage mapping uri if mediamosa_storage module enabled
+  if (module_exists('mediamosa_storage')) {
+    array_splice($rows, 2, 0, array(array(t('Default storage location'), check_plain(mediamosa_storage_mapping::get_default_view($node->{mediamosa_app_db::APP_ID})))));
+  }
 
   $rows_contact = array(
     array(t('Technical name'), check_plain($node->technical_name)),
@@ -401,6 +426,17 @@ function mediamosa_app_form($node, &$form_state) {
     '#options' => mediamosa_rest::get_all_versions(t('Use global setting')),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
+  
+  if (module_exists('mediamosa_storage')) {
+    $form['storage'] = array(
+        '#type' => 'fieldset',
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#title' => t('Storage settings'),
+        '#description' => t('Configure the storage location of the media files for this application'),
+    );
+    $form['storage'] = array_merge($form['storage'], _mediamosa_storage_app_form($node, $form_state));
+  }
 
   $form['masterslave'] = array(
     '#type' => 'fieldset',
