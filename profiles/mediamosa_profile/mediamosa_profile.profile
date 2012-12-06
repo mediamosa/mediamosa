@@ -164,9 +164,9 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
         <br />
         If you want to migrate your current MediaMosa v1.7 database to the new 3.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
    ", array(
-    '!mysql' => l('MySQL', 'mysql.com', array('absolute' => TRUE)),
-    '!mariadb' => l('MariaDB', 'mariadb.org/', array('absolute' => TRUE)),
-    '!postgresql' => l('PostgreSQL', 'www.postgresql.org', array('absolute' => TRUE))
+    '!mysql' => l('MySQL', 'http://mysql.com', array('absolute' => TRUE)),
+    '!mariadb' => l('MariaDB', 'http://mariadb.org', array('absolute' => TRUE)),
+    '!postgresql' => l('PostgreSQL', 'http://www.postgresql.org', array('absolute' => TRUE))
    ))
   );
 }
