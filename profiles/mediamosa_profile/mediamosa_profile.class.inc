@@ -291,9 +291,8 @@ class mediamosa_profile {
    *   Directory to create.
    */
   public static function mountpoint_mkdir($path) {
-
     // Will add left slash.
-    $path = ltrim('/', $path);
+    $path = ltrim($path, '/');
 
     // Expecting mountpoint to be set as variable.
     $mountpoint = variable_get('mediamosa_current_mount_point');
