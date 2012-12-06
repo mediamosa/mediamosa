@@ -82,10 +82,11 @@ class mediamosa_tool_pdf {
         '@mediafile_location' => $options['location_source_file'],
         '@mediafile_id' => $options['mediafile_id'],
         '@params' => $options['parameter_string'],
+        '@status_file' => $options['status_file'],
       );
 
       // Build the execute_string.
-      return strtr('mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.swf; cd ..; rm -r @file_location; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;', $execution_string_options);
+      return strtr('mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.swf; cd ..; rm -r @file_location; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;', $execution_string_options);
     }
 
     return FALSE;

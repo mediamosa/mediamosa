@@ -89,6 +89,7 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
   be 'still', any other value will return an error.
 - mediamosa_asset_mediafile_still::find_default() no longer returns the
   mediafile_id but the whole mediafile array.
+- Made more simultaneous running jobs per asset possible.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
