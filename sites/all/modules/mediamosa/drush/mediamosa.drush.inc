@@ -135,6 +135,20 @@ function mediamosa_drush_command() {
     ),
   );
 
+  $items['mm-still'] = array(
+    'description' => 'Start a still job.',
+    'arguments' => array(
+      'mediafile_id' => 'Mediafile id',
+    ),
+    'aliases' => array('mmstll'),
+    'options' => array(
+      'priority' => 'Priority of the job, 0 = normal, -100 is maximum priority, 100 is lowest',
+    ),
+    'examples' => array(
+      'drush mm-still C1IVjPsFefqRNoOSV7jIbZtI ' => 'Request to generate a still from mediafile id C1IVjPsFefqRNoOSV7jIbZtI.',
+    ),
+  );
+
   $items['mm-jobs'] = array(
     'description' => 'Show a list of jobs in the queue.',
     'aliases' => array('mmjbs'),
@@ -333,7 +347,7 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   // Show table of mediafiles.
   $rows[] = array('Mediafiles');
   $rows[] = array(
-    'ID', 'Created', 'Profile id', 'Mime Type', 'Size', 'Filename',
+    'ID', 'Created', 'Profile id', 'Mime Type', 'FileSize', 'Size', 'Filename',
   );
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
@@ -342,7 +356,7 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     mediamosa_asset_mediafile_db::FILENAME,
   );
 
-  $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields);
+  $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields, array('orderby' => mediamosa_asset_mediafile_db::CREATED));
 
   foreach ($mediafiles as $mediafile_id => $mediafile) {
     $rows[] = array(
@@ -351,6 +365,7 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
       $mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID],
       mediamosa_asset_mediafile::get_mimetype($mediafile_id),
       format_size(mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE)),
+      mediamosa_asset_mediafile::get_size($mediafile_id),
       $mediafile[mediamosa_asset_mediafile_db::FILENAME],
     );
   }
@@ -530,6 +545,9 @@ function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
     mediamosa_asset_mediafile_db::GROUP_ID,
   );
   $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
+  if (!$mediafile) {
+    return drush_set_error('', dt('Unknown mediafile_id.'));
+  }
 
   $job_id = mediamosa_job::create_job_transcode(
     $mediafile['app_id'],
@@ -565,6 +583,48 @@ function drush_mediamosa_mm_retranscode($mediafile_id) {
     $mediafile['mediafile_id'],
     FALSE, '', '', '', '', '', '');
   drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+}
+
+/**
+ * Drush function mm-still.
+ *
+ * Drush command to generate a still.
+ */
+function drush_mediamosa_mm_still($mediafile_id) {
+
+  $priority = drush_get_option('priority', '0');
+
+  $fields = array(
+    mediamosa_asset_mediafile_db::ID,
+    mediamosa_asset_mediafile_db::ASSET_ID,
+    mediamosa_asset_mediafile_db::APP_ID,
+    mediamosa_asset_mediafile_db::OWNER_ID,
+    mediamosa_asset_mediafile_db::GROUP_ID,
+  );
+  $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
+
+  $still_parameters = array(
+    'still_type' => 'NORMAL',
+    'still_per_mediafile' => 1,
+    'frametime' => 10,
+    'size' => mediamosa_app::get_still_default_value($mediafile['app_id']),
+    'tag' => NULL,
+    'watermark_id' => NULL,
+    'watermark_dst_x' => NULL,
+    'watermark_dst_y' => NULL,
+    'watermark_pct' => NULL,
+    'watermark_v_align' => NULL,
+    'watermark_h_align' => NULL,
+  );
+
+  $job_id = mediamosa_job::create_job_still(
+    $mediafile['app_id'],
+    $mediafile['owner_id'],
+    TRUE,
+    $mediafile['mediafile_id'],
+    $still_parameters,
+    $priority);
+  drush_print("Still job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
 }
 
 /**
