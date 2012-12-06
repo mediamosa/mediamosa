@@ -508,6 +508,8 @@ function drush_mediamosa_mm_generate_asset($number_assets = 1, $number_mediafile
  */
 function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
 
+  $priority = drush_get_option('priority', '0');
+
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
     mediamosa_asset_mediafile_db::ASSET_ID,
@@ -531,6 +533,8 @@ function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
  * Drush function mediamosa-mm-retranscode.
  */
 function drush_mediamosa_mm_retranscode($mediafile_id) {
+
+  $priority = drush_get_option('priority', '0');
 
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
