@@ -1,3 +1,13 @@
+Module Filter 7.x-1.7, 2012-07-05
+---------------------------------
+#1033012 by greenSkin: Hide incompatible module rows when the 'Unavailable'
+  checkbox is unchecked.
+#1170388 by greenSkin: Fixed conflict with Overlay module. Added class
+  "overlay-exclude" to tab links.
+#1124218 by jyee, greenSkin: Suppress form submission when hitting the enter
+  key while the filter input is focused.
+
+
 Module Filter 7.x-1.6, 2011-09-15
 ---------------------------------
 #1241662 by Niklas Fiekas: Sort modules by display name.
