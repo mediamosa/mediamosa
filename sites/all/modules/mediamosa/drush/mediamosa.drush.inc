@@ -332,15 +332,27 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
 
   // Show table of mediafiles.
   $rows[] = array('Mediafiles');
+  $rows[] = array(
+    'ID', 'Created', 'Profile id', 'Mime Type', 'Size', 'Filename',
+  );
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
+    mediamosa_asset_mediafile_db::CREATED,
+    mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
     mediamosa_asset_mediafile_db::FILENAME,
   );
 
   $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields);
 
   foreach ($mediafiles as $mediafile_id => $mediafile) {
-    $rows[] = array($mediafile_id, $mediafile['filename']);
+    $rows[] = array(
+      $mediafile_id,
+      $mediafile[mediamosa_asset_mediafile_db::CREATED],
+      $mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID],
+      mediamosa_asset_mediafile::get_mimetype($mediafile_id),
+      format_size(mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE)),
+      $mediafile[mediamosa_asset_mediafile_db::FILENAME],
+    );
   }
   drush_print_table($rows, TRUE);
 }
