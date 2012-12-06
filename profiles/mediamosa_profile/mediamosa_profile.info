@@ -52,6 +52,7 @@ dependencies[] = mediamosa_tool_ffmpeg
 
 ; Contrib modules.
 dependencies[] = advanced_help
+dependencies[] = module_filter
 
 ; Using _profile extension to prevent name collisions with core module.
 files[] = mediamosa_profile.profile
