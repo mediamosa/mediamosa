@@ -1,48 +1,25 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The APP authentication class.
  */
+
 class mediamosa_app_dbus {
-  // ------------------------------------------------------------------ Consts.
-  // End User Application authentication settings
+  // End User Application authentication settings.
   const APP_AUTH_CONTEXT = 'vpx';
   const APP_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
   const APP_AUTH_SERVER_GUID = 'server_guid';
 
-  // ------------------------------------------------------------------ Functions (static).
   /**
    * Get the shared key for the application.
    *
    * @param string $name
+   *   Client application name.
+   *
    * @return string
+   *   The shared key.
    */
-  public function get_shared_key($name) {
+  public static function get_shared_key($name) {
     return mediamosa_db::db_query(
       "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = :active_true",
       array(
@@ -67,9 +44,12 @@ class mediamosa_app_dbus {
    * Test if application is enabled (active).
    *
    * @param string $name
+   *   Client application name.
+   *
    * @return boolean
+   *   whether app is active or not.
    */
-  public function is_app_active($name) {
+  public static function is_app_active($name) {
     return mediamosa_db::db_query(
       "SELECT #active FROM {#table_name} WHERE #name = :name",
       array(
@@ -86,7 +66,10 @@ class mediamosa_app_dbus {
    * Get the app.
    *
    * @param string $name
+   *   Client application name.
+   *
    * @return array
+   *   Client application information.
    */
   public static function get_app($name) {
     return mediamosa_app::get_by_name($name);
@@ -96,10 +79,14 @@ class mediamosa_app_dbus {
    * A (cookie) ID authentication method.
    *
    * @param string $command
+   *   .
    * @param string $param
-   * @return boolean / string
+   *   .
+   *
+   * @return string
+   *   Returns error string, data string or boolean TRUE.
    */
-  function dbus_cookie_sha1($command, $param) {
+  public static function dbus_cookie_sha1($command, $param) {
 
     switch ($command) {
       case 'AUTH':
@@ -129,12 +116,15 @@ class mediamosa_app_dbus {
    * Process the incoming DBUS line.
    *
    * @param string $line
+   *   dbus line.
+   *
    * @return string
+   *   a SUCCESS or REJECTED string.
    */
-  public function app_dbus_protocol($line) {
+  public static function app_dbus_protocol($line) {
     // Initialize identification.
     $auth_methods = array(
-      'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1'
+      'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1',
     );
 
     // Make sure session is clean.
@@ -142,7 +132,7 @@ class mediamosa_app_dbus {
       $_SESSION['mediamosa_dbus'] = array(
         'mechanism'  => FALSE,
         'challenge'  => FALSE,
-        'username'   => ''
+        'username'   => '',
       );
     }
 
@@ -208,8 +198,8 @@ class mediamosa_app_dbus {
 
         // Set the identification in session.
         $_SESSION['mediamosa_app'] = array(
-          'app_id' =>  $a_app[mediamosa_app_db::APP_ID],
-          'name' => $a_app[mediamosa_app_db::APP_NAME]
+          'app_id' => $a_app[mediamosa_app_db::APP_ID],
+          'name' => $a_app[mediamosa_app_db::APP_NAME],
         );
 
         return 'OK ' . self::get_server_guid();
