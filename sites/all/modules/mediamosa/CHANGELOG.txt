@@ -38,6 +38,23 @@ MediaMosa 3.4.x-dev (build 1950, master branch)
   string type instead of expected integer. Fix by Mariano Asselborn/Acquia.
 - Fixed: The ffmpeg tool did not correctly use the padding value for ffmpeg. Fix
   by Mariano Asselborn/Acquia.
+- Changed tests so it uses curlExec for PUT upload.
+- Job scheduler now runs jobs of the same asset parallel instead of waiting till current asset job is finished.
+- Added .webm as a extention to ticket links for webm videos.
+- Added support for new Metadata format: Ontology for Media Resources 1.0.
+- Added advanced_help module.
+- Added first basic rules/actions/events support.
+- Added module_filter for the module list.
+- Upgraded Video-js to version 3.2.
+- Added a collection of usefull Drush commands.
+- Fixed strict warning for php 5.4.
+- Updated Rubik theme to latest upstream version.
+- Added priority option to drush transcode and retranscode.
+- Added webm play support for older ffmpeg versions.
+- Added drush command mm-still, to generate a still job.
+- Added orderby option to get list of mediafiles.
+- Changed creation of ffmpeg parameters order, as some versions of ffmpeg prefer the audio parameters before video parameters.
+- Made more simultaneous running jobs per asset possible.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
