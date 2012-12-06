@@ -523,8 +523,7 @@ function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
     $mediafile['group_id'],
     TRUE,
     $mediafile['mediafile_id'],
-    FALSE, '', '', '', '', $transcode_profile, '',
-    $priority);
+    FALSE, '', '', '', '', $transcode_profile, '');
   drush_print("Transcode job for mf: " . $mediafile['mediafile_id'] . " requested with profile id = " . $transcode_profile . ". Job id: " . $job_id . ".");
 }
 
@@ -548,8 +547,7 @@ function drush_mediamosa_mm_retranscode($mediafile_id) {
     $mediafile['group_id'],
     TRUE,
     $mediafile['mediafile_id'],
-    FALSE, '', '', '', '', '', '',
-    $priority);
+    FALSE, '', '', '', '', '', '');
   drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
 }
 
