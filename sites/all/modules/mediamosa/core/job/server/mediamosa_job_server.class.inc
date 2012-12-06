@@ -428,6 +428,11 @@ class mediamosa_job_server {
       // Enrich with changed.
       $fields = mediamosa_db::db_update_enrich($fields);
 
+      // generate event analyse finished.
+      if (module_exists('rules')) {
+        rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id_src);
+      }
+
       // And update row.
       mediamosa_db::db_update(mediamosa_job_server_analyse_db::TABLE_NAME)
         ->fields($fields)
