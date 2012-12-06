@@ -1158,11 +1158,11 @@ class mediamosa_job_scheduler {
    * Fetch an single available job.
    *
    * Choose a job that applies to the following rules;
-   *  - There are no other jobs working for the same asset (on any server)
-   *  - job is not WAITING
-   *  - There is no active upload for the asset.
-   *  - Low priority goes first. ?
-   *  - Job may not be started on other server.
+   *  - Job status is not WAITING,
+   *  - There is no upload job for the same asset,
+   *  - Job must not already have started on another server,
+   *  - Tool servers have slot left,
+   *  - Priority goes first.
    *
    * @param string $server_id
    *   The server ID.
@@ -1173,13 +1173,11 @@ class mediamosa_job_scheduler {
             mj.#job_status = :status
           AND
             mj.asset_id NOT IN
-              (SELECT asset_id FROM {#mediamosa_job} AS mj2
-               JOIN {#mediamosa_server_job} AS msj USING(job_id)
-               WHERE mj2.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING, :JOBSTATUS_WAITING))
-          AND
-            mj.asset_id NOT IN
               (SELECT asset_id FROM {#mediamosa_job} AS mj3
                WHERE mj3.job_type = :JOBTYPE_UPLOAD AND mj3.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING))
+          AND
+            mj.job_id NOT IN
+              (SELECT job_id FROM {#mediamosa_server_job})
           AND
             mj.job_type != :JOBTYPE_UPLOAD
           AND
@@ -1199,9 +1197,6 @@ class mediamosa_job_scheduler {
             OR
               (mj.job_type = :JOBTYPE_DELETE_MEDIAFILE)
             )
-          AND
-            mj.job_id NOT IN
-              (SELECT job_id FROM {#mediamosa_server_job})
           ORDER BY priority, job_id
           LIMIT 0,1',
       array(
