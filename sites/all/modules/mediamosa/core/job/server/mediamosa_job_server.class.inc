@@ -8,7 +8,26 @@
  * Represents a job server.
  */
 class mediamosa_job_server {
+  // ------------------------------------------------------------------- Consts.
+  /**
+   * Quick fix for tool type for job server selection for the job types
+   * JOB_TYPE_TRANSFER_MEDIA_*.
+   *
+   * @see mediamosa_mediamosa_tool_info().
+   */
+  const MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER = 'TRANSFER';
 
+  /**
+   * For analyse runs (is part of any tool).
+   */
+  const MEDIAMOSA_JOB_SERVER_TOOL_ANALYSE = 'ANALYSE';
+
+  /**
+   * For still generation (is part of any tool).
+   */
+  const MEDIAMOSA_JOB_SERVER_TOOL_STILL = 'STILL';
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Directory extension for tools
    */
@@ -108,7 +127,7 @@ class mediamosa_job_server {
     $run_last = variable_get('mediamosa_jobstatus_cron_running_' . $server_id, NULL);
     if (round(REQUEST_TIME - $run_last) < 120) {
       self::log('run_parse_queue() in safety timeout zone.');
-      return; // In timeout zone.
+      return;
     }
 
     variable_set('mediamosa_jobserver_cron_last_' . $server_id, REQUEST_TIME);
@@ -120,8 +139,7 @@ class mediamosa_job_server {
     variable_set('mediamosa_jobserver_cron_running_' . $server_id, REQUEST_TIME);
 
     // Set max run time on 120 sec.
-    set_time_limit(120);
-
+    drupal_set_time_limit(120);
     for ($x = 0; $x < 6; $x++) {
       $start_at = microtime(TRUE);
 
@@ -152,7 +170,7 @@ class mediamosa_job_server {
   /**
    * Parse the queue jobs.
    *
-   * This function is the engine of the job server (job processor. Should be
+   * This function is the engine of the job server (job processor). Should be
    * called at regular intervals.
    *
    * 1. Get a list of all jobs that are not finished, failed or canceled.
@@ -179,7 +197,6 @@ class mediamosa_job_server {
       }
     }
   }
-
 
   /**
    * Create analyse server job.
@@ -302,55 +319,60 @@ class mediamosa_job_server {
 
   /**
    * Start the job.
+   *
+   * @param array $job_server_job
+   *   The server job array contains all the information stored in one single
+   *   job server row in mediamosa_job_server table.
    */
-  public static function waiting_job_start($job_server_job) {
-
-    // FIXME:
-    // Check if jobs module is enable has been removed.
-    // Old code checked it without using the app_id. Which is unknown.
-    // Think its better not to check here but to prevent new jobs from being inserted
-    // when job module is turned off. Lets process jobs, even when its been disabled.
+  public static function waiting_job_start(array $job_server_job) {
 
     // Job ID.
     $job_id = $job_server_job[mediamosa_job_server_db::JOB_ID];
 
-    // Source Mediafile ID.
-    $mediafile_id_src = $job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
-
     // Job type.
     $job_type = $job_server_job[mediamosa_job_server_db::JOB_TYPE];
+
+    // Some jobs are started by job/$job_id/execute, but not here.
+    switch ($job_type) {
+      case mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD:
+      case mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE:
+      case mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD:
+        return;
+
+      default:
+        break;
+    }
+
+    // Source Mediafile ID.
+    $mediafile_id_src = $job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
 
     // Job server id (ID of the row in the mediamosa_job_server table).
     $jobserver_job_id = $job_server_job[mediamosa_job_server_db::ID];
 
-    // Set status in progress.
-    self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
-
-    // Check if source mediafile exists.
-    // but first do a clear cache.
-    mediamosa_io::clearstatcache();
+    // Need mediafile.
+    $mediafile_src = mediamosa_asset_mediafile::must_exists($mediafile_id_src);
 
     // Get the filename of the source.
-    $filename = mediamosa_storage::get_realpath_data_file($mediafile_id_src);
+    $mediamosa_uri = mediamosa_storage::get_uri_mediafile($mediafile_src);
 
     // Check of the source file exists.
-    if (!file_exists($filename)) {
+    if (!mediamosa_io::file_exists($mediamosa_uri)) {
       $link_asset = self::get_asset_link($job_id);
-      self::log_mediafile($mediafile_id_src, "Job ID: @job_id File '@file' not found,<br /><br/>@link", array('@job_id' => $job_id, '@file' => $filename, '@link' => $link_asset), NULL, WATCHDOG_CRITICAL);
-      self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => $filename));
+      self::log_mediafile($mediafile_id_src, "Job ID: @job_id File '@file' not found,<br /><br/>@link", array('@job_id' => $job_id, '@file' => mediamosa_io::realpath_safe($mediamosa_uri), '@link' => $link_asset), NULL, WATCHDOG_CRITICAL);
+      self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => mediamosa_io::realpath_safe($mediamosa_uri)));
       self::log_mediafile($mediafile_id_src, "Job ID: @job_id, memory_get_peak_usage = @memory_get_peak_usage, memory_usage: @memory_get_usage", array('@job_id' => $job_id, '@memory_get_peak_usage' => memory_get_peak_usage(), '@memory_get_usage' => memory_get_usage()));
       return;
     }
 
     // Based on jobtype we execute the job.
-    $execution_string = "";
+    $execution_string = '';
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // Make sure the tmp transcode directory exists.
         mediamosa_io::mkdir(mediamosa_storage::get_uri_data_transcode());
 
         // Clean up possible earlier status files.
-        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($mediafile_id_src . '.status'));
+        mediamosa_io::unlink(mediamosa_storage::get_realpath_status_file($job_id));
 
         $execution_string = self::get_transcode_exec($jobserver_job_id, $mediafile_id_src);
         break;
@@ -372,25 +394,24 @@ class mediamosa_job_server {
     // Log our action.
     self::log_mediafile($mediafile_id_src, 'About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
 
+    // Set job in progress.
     self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
-    // Now execute.
-    if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
 
-      $a_output = array();
-      $s_output = mediamosa_io::exec($execution_string . ' 2>&1', $a_output);
+    // Now execute analyse directly, as its really fast.
+    if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
+      $exec_output = mediamosa_asset_mediafile::analyse(0, $mediafile_id_src, $execution_string);
 
       $link_asset = self::get_asset_link($job_id);
-      self::log_mediafile($mediafile_id_src, 'Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
+      self::log_mediafile($mediafile_id_src, 'Job @job_type (Job ID: @job_id) returned output: @output<br /><br />@link',
         array(
           '@job_type' => $job_type,
           '@job_id' => $job_id,
-          '@s_output' => $s_output,
-          '@a_output' => implode("\n", $a_output),
+          '@output' => implode("\n", $exec_output),
           '@link' => $link_asset,
         )
       );
 
-      if (!empty($s_output)) {
+      if (!empty($exec_output)) {
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FINISHED, '1.000');
       }
       else {
@@ -402,11 +423,16 @@ class mediamosa_job_server {
 
       // Update job_server_analyse row.
       $fields = array(
-        mediamosa_job_server_analyse_db::ANALYSE_RESULT => implode("\n", $a_output),
+        mediamosa_job_server_analyse_db::ANALYSE_RESULT => implode("\n", $exec_output),
       );
 
       // Enrich with changed.
       $fields = mediamosa_db::db_update_enrich($fields);
+
+      // Generate event analyse finished.
+      if (module_exists('rules')) {
+        rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id_src);
+      }
 
       // And update row.
       mediamosa_db::db_update(mediamosa_job_server_analyse_db::TABLE_NAME)
@@ -415,15 +441,13 @@ class mediamosa_job_server {
         ->execute();
     }
     else {
-      $a_output = array();
-      $s_output = mediamosa_io::exec($execution_string, $a_output);
+      $exec_output = mediamosa_io::exec($execution_string);
       $link_asset = self::get_asset_link($job_id);
-      self::log_mediafile($mediafile_id_src, 'Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
+      self::log_mediafile($mediafile_id_src, 'Job @job_type (Job ID: @job_id) returned output: @output<br /><br />@link',
         array(
           '@job_type' => $job_type,
           '@job_id' => $job_id,
-          '@s_output' => $s_output,
-          '@a_output' => implode("\n", $a_output),
+          '@output' => implode("\n", $exec_output),
           '@link' => $link_asset,
         )
       );
@@ -441,14 +465,24 @@ class mediamosa_job_server {
    */
   public static function running_job_update($job_server_job) {
 
+    // Job type.
+    $job_type = $job_server_job[mediamosa_job_server_db::JOB_TYPE];
+
+    // Only update these types.
+    switch ($job_type) {
+      case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
+      case mediamosa_job_server_db::JOB_TYPE_STILL:
+        break;
+
+      default:
+        return;
+    }
+
     // Job ID.
     $job_id = $job_server_job[mediamosa_job_server_db::JOB_ID];
 
     // Source Mediafile ID.
     $mediafile_id_src = $job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
-
-    // Job type.
-    $job_type = $job_server_job[mediamosa_job_server_db::JOB_TYPE];
 
     // Read the contents of the status file in an array.
     $job_status = self::get_status_contents($job_id);
@@ -460,7 +494,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // No status file found, we just have to wait.
         if (empty($job_status['Status'])) {
-          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_storage::get_realpath_status_file($job_id), '@job_id' => $job_id));
+          self::log_debug_mediafile($mediafile_id_src, "No status file found with @statusfile for job @job_id, maybe next run.", array('@statusfile' => mediamosa_storage::get_realpath_status_file($job_id), '@job_id' => $job_id));
           return;
         }
 
@@ -469,7 +503,7 @@ class mediamosa_job_server {
           $status = mediamosa_job_server_db::JOB_STATUS_FINISHED;
 
           // Store the transcode.
-          self::store_new_mediafile($job_id, $mediafile_id_src);
+          self::store_new_mediafile($job_id);
 
           // Log it.
           self::log_mediafile($mediafile_id_src, 'End job @job_type, Job ID: @job_id, status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
@@ -497,9 +531,9 @@ class mediamosa_job_server {
         // Scene still filename.
         $file_scene = mediamosa_storage::get_uri_scene_file($job_id);
 
-        if (!file_exists($file_scene) && empty($job_status)) {
+        if (!mediamosa_io::file_exists($file_scene) && empty($job_status)) {
           // No status file found, we just have to wait.
-          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_io::realpath(mediamosa_storage::get_uri_status_file($job_id)), '@job_id' => $job_id));
+          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_storage::get_realpath_status_file($job_id), '@job_id' => $job_id));
           return;
         }
 
@@ -510,7 +544,7 @@ class mediamosa_job_server {
           'Progress' => '0.000',
         );
 
-        if (file_exists($file_scene) || ($job_status['Status'] == 'done' && $job_status['Errors'] == 'none')) {
+        if (mediamosa_io::file_exists($file_scene) || ($job_status['Status'] == 'done' && $job_status['Errors'] == 'none')) {
           $status = self::store_new_still($job_id, $mediafile_id_src);
 
           if ($status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
@@ -528,7 +562,7 @@ class mediamosa_job_server {
         }
 
         // Update the status.
-        if (!file_exists($file_scene) && $job_status['Errors'] != 'none') {
+        if (!mediamosa_io::file_exists($file_scene) && $job_status['Errors'] != 'none') {
           // Might be because there is no status file, dont bother to update.
           if (isset($job_status['Errors'])) {
             self::set_job_status($job_id, $status, $job_status['Progress'], $job_status['Errors']);
@@ -593,11 +627,11 @@ class mediamosa_job_server {
    * @param $progress
    * @param $error_description
    */
-  public static function set_job_status($job_id, $job_status, $progress, $error_description = '', $a_error_description_args = array()) {
+  public static function set_job_status($job_id, $job_status, $progress, $error_description = '', $error_description_args = array()) {
 
     // Set args in description.
-    if (!empty($a_error_description_args)) {
-      $error_description = strtr($error_description, $a_error_description_args);
+    if (!empty($error_description_args)) {
+      $error_description = strtr($error_description, $error_description_args);
     }
 
     $fields = array(
@@ -614,15 +648,15 @@ class mediamosa_job_server {
     }
 
     // Check if its started.
-    $a_jobserver_job = self::get_with_jobid($job_id);
-    if (!$a_jobserver_job) {
+    $jobserver_job = self::get_with_jobid($job_id);
+    if (!$jobserver_job) {
       self::log('Fatal: trying to update job with ID; @job_id', array('@job_id' => $job_id));
       assert(0);
       return;
     }
 
     // Set status.
-    if ($a_jobserver_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING && $job_status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
+    if ($jobserver_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING && $job_status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
       $fields[mediamosa_job_server_db::STARTED] = mediamosa_datetime::utc_current_timestamp_now(TRUE);
     }
 
@@ -648,13 +682,10 @@ class mediamosa_job_server {
   public static function get_asset_link($job_id) {
 
     // Get the job.
-    $a_jobserver_job = mediamosa_job::get($job_id);
+    $jobserver_job = mediamosa_job::get($job_id);
 
     // Get asset ID from job.
-    $asset_id = $a_jobserver_job[mediamosa_job_db::ASSET_ID];
-
-    // Get the asset.
-    $a_asset = mediamosa_asset::get($a_jobserver_job[mediamosa_job_db::ASSET_ID]);
+    $asset_id = $jobserver_job[mediamosa_job_db::ASSET_ID];
 
     // Return link.
     return l(mediamosa::t('Go to asset @asset_id', array('@asset_id' => $asset_id)), mediamosa_settings::get_url_asset($asset_id));
@@ -681,27 +712,28 @@ class mediamosa_job_server {
     if (is_null($hint)) {
       // If hint is null, we want to use the site default parameters.
       if ($app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
-        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+        $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
       }
 
       if ($app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
-        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+        $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
     }
     elseif ($hint == 'TRUE') {
       // We want to hint.
-      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
-      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+      $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+      $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
     }
     else {
       // Do nothing. We don't want hinting.
     }
 
-    assert(file_exists(mediamosa_settings::analyse_file()));
+    assert(mediamosa_io::file_exists(mediamosa_settings::lua_analyse_script()));
 
+    // Script will add the mediamosa_id[0]/mediamosa_id to the path.
     $execution_string = sprintf('%s %s %s',
-      mediamosa_settings::analyse_file(),
-      mediamosa_storage::get_realpath_data(),
+      mediamosa_settings::lua_analyse_script(),
+      mediamosa_storage::get_local_mediafile_path($mediafile_id),
       $mediafile_id
     );
 
@@ -729,9 +761,6 @@ class mediamosa_job_server {
     $tool = $job_server_transcode[mediamosa_job_server_transcode_db::TOOL];
     $file_extension = $job_server_transcode[mediamosa_job_server_transcode_db::FILE_EXTENSION];
     $command = $job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
-
-    // Mime type.
-    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
     // Get the mediafile.
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -767,7 +796,7 @@ class mediamosa_job_server {
           $parameter_string = escapeshellarg($parameter_string);
         }
 
-        $execution_string = sprintf('%s %s %s %s %s %s > /dev/null &', mediamosa_settings::ffmpeg_transcode_file(), mediamosa_storage::get_realpath_data(), $mediafile_id, $job_server[mediamosa_job_server_db::JOB_ID], $file_extension, $parameter_string);
+        $execution_string = sprintf('%s %s %s %s %s %s > /dev/null &', mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile), $mediafile_id, $job_server[mediamosa_job_server_db::JOB_ID], $file_extension, $parameter_string);
         break;
 
       default:
@@ -793,14 +822,14 @@ class mediamosa_job_server {
             // Parameter string for cmd.
             'parameter_string' => $parameter_string,
             // the data dir in sannas (extra).
-            'path_mount_point_data' => mediamosa_storage::get_realpath_data(),
+            'path_mount_point_data' => mediamosa_storage::get_local_mediafile_path($mediafile),
             // Path to the transcode file.
             'location_dest_file' => mediamosa_storage::get_realpath_data_transcode_file($mediafile_id),
             // Location of source mediafile.
-            'location_source_file' => mediamosa_storage::get_realpath_data_mediafile($mediafile),
+            'location_source_file' => mediamosa_storage::get_realpath_mediafile($mediafile),
             // Location of the status_file.
             'status_file' => $status_file,
-            );
+          );
 
           // PHP 5.2.3 or higher.
           $execution_string = call_user_func($class_name . '::get_transcode_exec', $args);
@@ -847,14 +876,15 @@ class mediamosa_job_server {
   /**
    * Create an array of the status file.
    *
-   * @param $filename
+   * @param $job_id
+   *   The job ID is used as status filename.
    * @param $orig
    */
-  public static function get_status_contents($filename, $orig = FALSE) {
-    $statusfile = mediamosa_storage::get_uri_status_file($filename);
-
+  public static function get_status_contents($job_id, $orig = FALSE) {
+    // Get the statusfile filename.
+    $statusfile = mediamosa_storage::get_realpath_status_file($job_id);
     if (!mediamosa_io::file_exists($statusfile)) {
-      self::log('Unable to load status contents; file @file does not exists.', array('@file' => mediamosa_io::realpath($statusfile)), WATCHDOG_CRITICAL);
+      self::log('Unable to load status contents; file @file does not exists.', array('@file' => $statusfile), WATCHDOG_CRITICAL);
       return array();
     }
 
@@ -920,13 +950,18 @@ class mediamosa_job_server {
    *   Contains the error message
    */
   public static function store_new_still($job_id, $mediafile_id_src) {
+    // Need job for app_id.
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
+    $app_id = $job[mediamosa_job_db::APP_ID];
+
 
     $base_filename = mediamosa_io::get_base_filename($job_id);
 
     // Check if there really is an image ($file_size > 0)
-    $filename = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
-    if (!file_exists($filename) || !filesize($filename)) {
-      // Something failed, very likely the frametime was too high. Remove the files and fail the job.
+    $filename = mediamosa_storage::get_realpath_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+    if (!mediamosa_io::file_exists($filename) || !mediamosa_io::filesize($filename)) {
+      // Something failed, very likely the frametime was too high. Remove the
+      // files and fail the job.
       $still_error = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_FRAMETIME_GREATER_THEN_DURATION);
 
       // Update status.
@@ -934,11 +969,11 @@ class mediamosa_job_server {
 
       // Remove all of the still images.
       $i = 1;
-      while (file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg')) && $i <= mediamosa_settings::STILL_MAXIMUM) {
-        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
+      while (mediamosa_io::file_exists(mediamosa_storage::get_realpath_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg')) && $i <= mediamosa_settings::STILL_MAXIMUM) {
+        mediamosa_io::unlink(mediamosa_storage::get_realpath_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
         $i++;
       }
-      mediamosa_io::unlink(mediamosa_storage::get_uri_status_file($job_id));
+      mediamosa_io::unlink(mediamosa_storage::get_realpath_status_file($job_id));
 
       self::log_mediafile($mediafile_id_src, $still_error);
       return mediamosa_job_server_db::JOB_STATUS_FAILED;
@@ -949,29 +984,29 @@ class mediamosa_job_server {
 
     $i = 1;
     $mediafile_dest = array();
-    while (file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
+    while (mediamosa_io::file_exists(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
       if ($i <= mediamosa_settings::STILL_MAXIMUM) {
-        // Generate new hash
-        $filename = mediamosa_db::uuid(rand(1, 9999));
+        // Generate new hash.
+        $mediafile_id = mediamosa_db::uuid($app_id);
 
-        $source = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-        $dest = mediamosa_storage::get_realpath_data_file($filename);
+        $source_uri = mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+        $destination_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $mediafile_id);
 
-        // Make sure dest. exists.
-        mediamosa_io::mkdir(mediamosa_io::dirname($dest));
+        // Make sure destination dir exists.
+        mediamosa_io::mkdir(mediamosa_io::dirname($destination_uri));
 
         // Everything went ok, move the still and remove other files
-        mediamosa_io::rename($source, $dest);
-        $mediafile_dest[] = $filename;
+        mediamosa_io::rename($source_uri, $destination_uri);
+        $mediafile_dest[] = $mediafile_id;
       }
       else {
-        // Reached the maximum, just delete the remain stills
-        mediamosa_io::unlink(mediamosa_storage::get_uri_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
+        // Reached the maximum, just delete the remain stills.
+        mediamosa_io::unlink(mediamosa_storage::get_realpath_data_transcode_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
       }
 
       $i++;
     }
-    mediamosa_io::unlink(mediamosa_storage::get_uri_status_file($job_id));
+    mediamosa_io::unlink(mediamosa_storage::get_realpath_status_file($job_id));
 
     // Data to update.
     $fields = array(
@@ -999,10 +1034,14 @@ class mediamosa_job_server {
    * @param $filename
    * @param $orig
    */
-  public static function store_new_mediafile($job_id, $old_filename) {
+  public static function store_new_mediafile($job_id) {
+
+    // Get the job.
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
+    $app_id = $job[mediamosa_job_db::APP_ID];
 
     // Generate the filename.
-    $new_filename = mediamosa_db::uuid(rand(1, 9999));
+    $mediafile_id = mediamosa_db::uuid($job_id);
 
     $job_server = mediamosa_db::db_query(
       'SELECT mjst.#command, mjst.#file_extension, mjs.#mediafile_id
@@ -1029,25 +1068,19 @@ class mediamosa_job_server {
     // Get file extension.
     $file_extension = $job_server[mediamosa_job_server_transcode_db::FILE_EXTENSION];
 
-    // If extension is RAW, attach it to the filename.
-    if ($file_extension == mediamosa_job::JOBRAW_FILE_EXTENSION) {
-      // First character check and extension.
-      $new_filename = (mt_rand(0, 9)) . mediamosa_unicode::substr($new_filename, 1) . '.' . mediamosa_job::JOBRAW_FILE_EXTENSION;
-    }
-
     // Get the filenames.
-    $file_status = mediamosa_storage::get_realpath_status_file($job_id);
-    $file_transcode = mediamosa_storage::get_realpath_data_transcode_file($job_id . '.' . $file_extension);
-    $file_dest = mediamosa_storage::get_realpath_data_file($new_filename, TRUE);
+    $file_status_uri = mediamosa_storage::get_uri_status_file($job_id);
+    $file_transcode_uri = mediamosa_storage::get_uri_data_transcode_file($job_id . '.' . $file_extension);
+    $file_destination_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $mediafile_id);
 
     // Rename transcoded file to new dest.
-    mediamosa_io::rename($file_transcode, $file_dest);
+    mediamosa_io::rename($file_transcode_uri, $file_destination_uri);
 
     // Now remove the status file.
-    mediamosa_io::unlink($file_status);
+    mediamosa_io::unlink($file_status_uri);
 
     $fields = array(
-      mediamosa_job_server_db::MEDIAFILE_DEST => $new_filename,
+      mediamosa_job_server_db::MEDIAFILE_DEST => $mediafile_id,
     );
 
     // Enrich with update date.
@@ -1060,11 +1093,12 @@ class mediamosa_job_server {
       ->execute();
 
     // Log it.
-    self::log_mediafile($job_server[mediamosa_job_server_db::MEDIAFILE_ID_SRC], "Job with ID @job_id ready, new mediafile stored as '@file_dest'.", array('@job_id' => $job_id, '@file_dest' => $file_dest));
+    self::log_mediafile($job_server[mediamosa_job_server_db::MEDIAFILE_ID_SRC], "Job with ID @job_id ready, new mediafile stored as '@uri' (@path).", array('@job_id' => $job_id, '@uri' => $file_destination_uri, '@path' => mediamosa_io::realpath($file_destination_uri)));
   }
 
   /**
    * Delete a server job.
+   *
    * @param integer $job_id
    * @param bool $killjob
    */
@@ -1125,5 +1159,195 @@ class mediamosa_job_server {
     mediamosa_db::db_delete(mediamosa_job_server_db::TABLE_NAME)
       ->condition(mediamosa_job_server_db::ID, $jobserver_job_id)
       ->execute();
+  }
+
+  /**
+   * Execute the job.
+   *
+   * Warning; This job can take a lot of time to complete and should only be
+   * called with /job/$job_id/execute REST call with method HEAD.
+   *
+   * We could use lock() code to prevent running the job twice. But re-write is
+   * planned for job server and using lock now will only make it unnecessary
+   * more complex, as job scheduler will make sure only one instance of this
+   * job runs.
+   *
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $jop_type
+   *   The job type, see mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_*.
+   * @param string $mediafile_id
+   *   The mediafile ID to process.
+   * @param array $job_data
+   *   The data for job.
+   */
+  public static function job_execute($job_id, $job_type, $mediafile_id, array $job_data) {
+    try {
+      // Create the job on the job server.
+      self::create_job($job_id, $job_type, $mediafile_id);
+
+      // Set status in progress.
+      self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
+
+      // Now do the extreme, and set the time limit of this script to max run
+      // time of a job.
+      $max_execution_time = ini_get('max_execution_time');
+      $time_limit = mediamosa_settings::JOB_JOB_TIMEOUT - $max_execution_time;
+      if ($time_limit) {
+        drupal_set_time_limit($time_limit);
+      }
+
+      // Get the mediafile.
+      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+      // Now based on type, call the correct function.
+      switch ($job_type) {
+        case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD:
+          self::job_media_download($mediafile, $job_data);
+          break;
+
+        case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD:
+          self::job_media_upload($mediafile, $job_data);
+          break;
+
+        case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE:
+          self::job_media_move($mediafile, $job_data);
+          break;
+
+        // Unknown type.
+        default:
+          self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000');
+          throw new mediamosa_exception_program_error("Job execute not allowed on type '@type'.", array('@type' => $job_type));
+      }
+    }
+    catch (Exception $e) {
+       self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', $e->getMessage());
+       throw $e;
+    }
+
+    // We are done, put our job on finished.
+    self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FINISHED, '1.000');
+  }
+
+  /**
+   * Execute the media download job.
+   *
+   * Download the file and store the file into the transition area.
+   *
+   * @param array $mediafile
+   *   The mediafile to download.
+   * @param array $job_data
+   *   The job data (empty for now).
+   */
+  protected static function job_media_download(array $mediafile, array $job_data) {
+    // Need some data.
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+
+    // Get the source uri.
+    $source_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+    // Need space to download, store in transition area.
+    // Transition will ask source for the MD5 and will create uri accordingly.
+    // However, if for some reason the MD5 could not be retrieved, the MD5
+    // default is used (see mediamosa_io_streamwrapper::MD5_DEFAULT).
+    // When downloaded, the verification will accept the diffence in MD5 uri and
+    // file, as mediamosa_storage_transition::register_transition_file() will
+    // move the file to its correct place when MD5 does not match the file.
+    $transition_uri = mediamosa_storage_transition::need_transition_space($source_uri);
+
+    // If file exists, then its already downloaded.
+    //
+    // However, the md5 in the transition_uri must match the md5 of the file.
+    // We might have files that where created or downloaded, but never verified.
+    if (mediamosa_io::file_exists($transition_uri) && !mediamosa_storage_transition::verify_transition_file($transition_uri)) {
+      // Invalid file, remove it, can not use it, redownload.
+      mediamosa_storage_transition::unregister_transition_file($transition_uri);
+    }
+
+    // If the file exists, its md5 matches the transition_uri.
+    //
+    // If the file is not on expected location, then download it now.
+    if (!mediamosa_io::file_exists($transition_uri)) {
+      // Download mediafile.
+      mediamosa_storage::mediafile_copy($source_uri, $transition_uri);
+
+      // Verify downloaded file md5 vs transition_uri's md5. They must match.
+      $verification = mediamosa_storage_transition::verify_transition_file($transition_uri, TRUE);
+
+      // Verfication failed, remove download.
+      if (!$verification) {
+        // Invalid file, remove it, can not use it.
+        mediamosa_storage_transition::unregister_transition_file($transition_uri);
+
+        // Download failed.
+        throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("download failed, download file with mediafile ID (@id) did not match expected checksum.", array('@id' => $mediafile_id))));
+      }
+    }
+
+    // Download done, register the download so transition will keep it for a
+    // while. Register function will check if location of the file is correct
+    // and will move file if md5 in uri does not match file. It expects that
+    // the MD5 of the file is correct.
+    $transition_uri = mediamosa_storage_transition::register_transition_file($transition_uri);
+
+    // Need streamwrapper.
+    $mediamosa_io_streamwrapper_transition = mediamosa_io::require_stream_wrapper_instance_by_uri($transition_uri);
+
+    // Get md5.
+    $transition_md5 = $mediamosa_io_streamwrapper_transition->get_md5_from_uri();
+
+    // Ok, now set the MD5 for this mediafile or else we will never find this
+    // downloaded file later.
+    mediamosa_asset_mediafile_metadata::create_mediafile_metadata_char($mediafile_id, $transition_md5, mediamosa_asset_mediafile_metadata::MD5);
+  }
+
+  /**
+   * Execute the media upload job.
+   *
+   * Upload the mediafile from transition to its own location (update).
+   *
+   * @param array $mediafile
+   *   The mediafile to upload.
+   * @param array $job_data
+   *   The job data;
+   *   - 'source_uri':
+   *     The file uri to upload to storage location.
+   */
+  protected static function job_media_upload(array $mediafile, array $job_data = array()) {
+    // Expecting source_uri.
+    assert(isset($job_data['source_uri']));
+
+    // Need some data.
+    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+    $is_still = mediamosa_asset_mediafile::is_still($mediafile);
+
+    // Need destination storage location.
+    $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id, $is_still);
+
+    // Now upload file.
+    mediamosa_storage::mediafile_copy($job_data['source_uri'], $destination_uri);
+  }
+
+  /**
+   * Execute the media move job.
+   *
+   * @param array $mediafile
+   *   The mediafile to move.
+   * @param array $job_data
+   *   The job data;
+   *   - storage_profile_id
+   *     The destination storage profile ID.
+   *   - path
+   *     The path on the storage.
+   */
+  protected static function job_media_move(array $mediafile, array $job_data) {
+
+    if (empty($job_data['path'])) {
+      throw new mediamosa_exception_program_error('Missing path info in @func', array('@func' => __FUNCTION__));
+    }
+
+    // Move mediafile.
+    mediamosa_storage::mediafile_move($mediafile, $job_data['storage_profile_id'], $job_data['path']);
   }
 }

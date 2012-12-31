@@ -94,15 +94,18 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
 
     // File check.
-    $file = mediamosa_storage::get_realpath_data_file($still_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($still_id);
     $this->assertTrue(
-      mediamosa_io::file_exists($file, TRUE),
-      t("file lookup on @file.", array('@file' => $file))
+      mediamosa_io::file_exists($mediafile_uri),
+      t("file lookup on @file.", array('@file' => mediamosa_io::realpath_safe($mediafile_uri)))
     );
 
     //
     // Delete still.
     //
+
+    // File check for later check.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($still_id);
 
     // Delete still.
     $this->deleteStill($asset_id);
@@ -124,13 +127,10 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
       t("database lookup on still_id = @still_id (count = @count).", array('@still_id' => $still_id, '@count' => $count))
     );
 
-    // File check.
-    $file = mediamosa_storage::get_realpath_data_file($still_id);
-
     // Check file is gone.
     $this->assertFalse(
-      mediamosa_io::file_exists($file, TRUE),
-      t("file lookup on @file.", array('@file' => $file))
+      mediamosa_io::file_exists($mediafile_uri),
+      t("File lookup on '@file' (@uri).", array('@file' => mediamosa_io::realpath_safe($mediafile_uri), '@uri' => $mediafile_uri))
     );
   }
 }

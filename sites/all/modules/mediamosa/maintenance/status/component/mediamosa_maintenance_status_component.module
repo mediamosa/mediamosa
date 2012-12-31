@@ -42,17 +42,17 @@ function mediamosa_maintenance_status_component_generate() {
   );
 
   // --------------------------------------------------- SANNAS media/.htaccess.
-  $path = mediamosa_storage::get_uri_media();
+  $path = mediamosa_storage::get_realpath_media();
   $found = mediamosa_io::file_exists($path . '.htaccess');
 
   // Create when missing.
   if (!$found && is_writable($mount_point)) {
     // Make the [mount_point]/media directory.
-    mediamosa_io::mkdir($path . 'ticket/');
+    mediamosa_io::mkdir($path . '/ticket/');
     $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
   }
 
-  $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
+  $htaccess = explode("\n", trim(file_get_contents($path . '/.htaccess')));
   foreach ($htaccess as $key => $line) {
     $htaccess[$key] = trim($line, "\n\r\t ");
   }
@@ -67,7 +67,7 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => !$contents && $found ? _mediamosa_maintenance_status_okwarning(FALSE) : _mediamosa_maintenance_status_okerror($found && $contents),
   );
   if (!$found || !$contents) {
-    $variables = array('%directory' => $path, '@path' => $path . '.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_media_htaccess_contents())));
+    $variables = array('%directory' => $path, '@path' => $path . '/.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_media_htaccess_contents())));
     $results['mount_media_htaccess']['description'] = t("Warning: Couldn't find .htaccess file in location @path (or with correct contents).<br />Please create a .htaccess file in your %directory directory which contains the following lines: <br /><code>!htaccess</code>", $variables);
   }
 
@@ -77,16 +77,16 @@ function mediamosa_maintenance_status_component_generate() {
     'not_writeable' => array(),
   );
 
-  $dirs = array('data', 'data/transcode', 'media', 'media/ticket', 'ftp');
+  $dirs = array('data', 'data/transcode', 'data/transition', 'media', 'media/ticket', 'ftp');
   foreach ($dirs as $dir) {
-    _mediamosa_maintenance_status_component_directory($mount_point . $dir, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
   }
 
   // We store each file in separate directories based on the first letter of the
   // file. We need to create these directories.
   $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   for ($x = 0; $x < strlen($prefixes); $x++) {
-    _mediamosa_maintenance_status_component_directory($mount_point . 'data' . DIRECTORY_SEPARATOR . substr($prefixes, $x, 1), $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $prefixes[$x], $checks);
   }
 
   $results['mount_structure'] = array(
@@ -107,7 +107,7 @@ function mediamosa_maintenance_status_component_generate() {
     $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['not_writeable']) . '</pre>';
   }
 
-  $filename = $mount_point . 'data/transcode/test_' . mt_rand(0, 9999) . '.txt';
+  $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
   $content = mt_rand(0, 9999);
   $read_content = '';
 
@@ -142,13 +142,13 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
   );
 
-  if (!empty($mount_point) && is_dir($mount_point)) {
+  if (!empty($mount_point) && mediamosa_io::is_dir($mount_point)) {
     $du_simpletest = mediamosa_io::disk_usage_recursive(mediamosa_storage::get_uri_simpletest());
     $results['du_simpletest'] = array(
       'title' => t('Simpletest diskusage'),
       'value' => format_size($du_simpletest),
       'severity' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
-      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'.", array('@simpletest_dir' => mediamosa_io::realpath(mediamosa_storage::get_uri_simpletest()))) : '',
+      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'.", array('@simpletest_dir' => mediamosa_io::realpath_safe(mediamosa_storage::get_uri_simpletest()))) : '',
     );
   }
 

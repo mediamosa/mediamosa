@@ -40,8 +40,8 @@ class mediamosa_media {
   const PARAM_URI_SCRIPT = '{SCRIPT}';
 
   // Default width & height for playproxy flash object HTML.
-  CONST PP_FLASH_OBJECT_HEIGHT = 240;
-  CONST PP_FLASH_OBJECT_WIDTH = 320;
+  const PP_FLASH_OBJECT_HEIGHT = 240;
+  const PP_FLASH_OBJECT_WIDTH = 320;
 
   /**
    * Video codec types.
@@ -94,7 +94,7 @@ class mediamosa_media {
    * @param string $filename
    *   The mediafile string; mediafile_id[,style_id][-mediatype][.extension]
    *
-   * @return
+   * @return array
    *   An associative array containing;
    *     'basename' (always)
    *     'style_id' (always or 0)
@@ -103,7 +103,11 @@ class mediamosa_media {
   public static function filename_parse($filename) {
     $matches = array();
     if (preg_match('@^([a-zA-Z0-9]+),?([0-9]+)?(\.[a-zA-Z0-9]+)?$@', $filename, $matches)) {
-      return array($matches[1], empty($matches[2]) ? 0 : $matches[2], empty($matches[3]) ? '' : mediamosa_unicode::substr($matches[3], 1));
+      return array(
+        $matches[1],
+        empty($matches[2]) ? 0 : $matches[2],
+        empty($matches[3]) ? '' : mediamosa_unicode::substr($matches[3], 1),
+      );
     }
 
     // If its not in our format, then return it as is.
@@ -113,9 +117,9 @@ class mediamosa_media {
   /**
    * Create the symlink.
    *
-   * @param $target
+   * @param string $target
    *   The target of the symlink.
-   * @param $link
+   * @param string $link
    *   The link of the symlink.
    *
    * @throws
@@ -124,7 +128,6 @@ class mediamosa_media {
    *     ERRORCODE_DIR_NOT_WRITABLE
    *     ERRORCODE_FILE_NOT_FOUND
    *     ERRORCODE_UNABLE_TO_CREATE_SYMLINK
-   *
    */
   protected static function handle_media_symlink($target, $link) {
     // Create the symlink, if not already. In most cases, its either already
@@ -162,9 +165,9 @@ class mediamosa_media {
   /**
    * Serve the file by returning it as file using http.
    *
-   * @param $file
+   * @param string $file
    *   The file location to serve.
-   * @param $mimetype
+   * @param string $mimetype
    *   The mimetype of the file.
    */
   protected static function serve_media($file, $mimetype) {
@@ -186,7 +189,6 @@ class mediamosa_media {
    *   The filename. May contain style info when file is still.
    */
   public static function handle_media_request_permanent($app_id, $mediafile_id, $filename) {
-
     // Get the parts.
     list(, $style_id, $extension) = self::filename_parse($filename);
 
@@ -194,13 +196,20 @@ class mediamosa_media {
     mediamosa_asset_mediafile::is_mediafile_protected($mediafile_id);
 
     // Get the mimetype from the technical metadata.
-    $mimetype = mediamosa_asset_mediafile::get_mimetype($mediafile_id);
+    $mimetype = mediamosa_asset_mediafile::get_mime_type($mediafile_id);
 
     // Now use the mimetype to match ext.
     $mimetype_extension = mediamosa_mimetype::extension2mimetype($extension);
 
     // Log it.
-    mediamosa_debug::log('Mediafile content-type; @mimetype, matching with extension @extension, @mimetype_extension', array('@mimetype' => $mimetype, '@extension' => $extension, '@mimetype_extension' => $mimetype_extension));
+    mediamosa_debug::log(
+      'Mediafile content-type; @mimetype, matching with extension @extension, @mimetype_extension',
+      array(
+        '@mimetype' => $mimetype,
+        '@extension' => $extension,
+        '@mimetype_extension' => $mimetype_extension,
+      )
+    );
 
     // The mimetypes must match.
     if ($mimetype_extension != $mimetype) {
@@ -209,7 +218,7 @@ class mediamosa_media {
 
     // We can trust the extension.
     // At this point the mediafile exists, and we have access.
-
+    //
     // Any style_id?
     if ($style_id) {
       // Handle still style, create it as target for our symlink.
@@ -217,13 +226,13 @@ class mediamosa_media {
     }
     else {
       // Get the source file (has no extension) as our symlink target.
-      $target = mediamosa_storage::get_realpath_data_file($mediafile_id);
+      $target = mediamosa_storage::get_uri_mediafile($mediafile_id);
     }
 
-    // Symlink Link.
+    // The link.
     $link = mediamosa_storage::get_realpath_media_permanent_file($app_id, $mediafile_id, $filename);
 
-    // Create the symlink.
+    // Create symlink.
     self::handle_media_symlink($target, $link);
 
     // Serve the file.
@@ -236,11 +245,11 @@ class mediamosa_media {
    * We only process the ticket when style is provided AND the ticket does
    * exists. The style is only used on stills.
    *
-   * @param $app_id
+   * @param integer $app_id
    *   The application ID.
-   * @param $ticket_id
+   * @param string $ticket_id
    *   The ticket ID.
-   * @param $filename
+   * @param string $filename
    *   The filename. Still filename may contain style information;
    *   (filename[,style_id][.extension]).
    *
@@ -260,7 +269,7 @@ class mediamosa_media {
     }
 
     // Get the mimetype from the technical metadata.
-    $mimetype = mediamosa_asset_mediafile::get_mimetype($mediafile_id);
+    $mimetype = mediamosa_asset_mediafile::get_mime_type($mediafile_id);
 
     // Now use the mimetype to match ext.
     $mimetype_extension = mediamosa_mimetype::extension2mimetype($extension);
@@ -271,15 +280,15 @@ class mediamosa_media {
     }
 
     // We can trust the extension.
-
+    //
     // Only when the ticket does not exists and a style was defined, then allow
     // to generate the ticket link with style. In any other case, we don't
     // create ticket links.
-
+    //
     // Get the ticket location. It must exist. If it does not, then either the
     // ticket is invalid, timed-out or we don't have access.
     $original_mediaticket_file = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $basename . '/' . $extension);
-    if (!file_exists($original_mediaticket_file)) {
+    if (!mediamosa_io::file_exists($original_mediaticket_file)) {
       throw new mediamosa_exception_error_invalid_ticket(array('@ticket_id' => $ticket_id));
     }
 
@@ -294,11 +303,11 @@ class mediamosa_media {
     $target = mediamosa_asset_mediafile_still::image_style_create_derivative($mediafile_id, $style_id);
 
     // Ticket exists and we have a valid style.
-
+    //
     // Now create ticket symlink to the style file. Also the ticket symlink must
     // have the same create date as the original ticket so its cleaned up at the
     // same time as the master ticket.
-
+    //
     // Symlink Link.
     $link = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename);
 
@@ -319,6 +328,7 @@ class mediamosa_media {
    *   The filename.
    */
   public static function get_media_filename(array $mediafile) {
+    // Get filename.
     $filename = mediamosa_asset_mediafile::get_filename($mediafile);
 
     // Get the file without ext.
@@ -336,12 +346,16 @@ class mediamosa_media {
    *
    * @param integer $app_id
    *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
    * @param array $mediafile
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
    *
-   * @param string
+   * @return array
    *   An associative array; (see mediamosa_media::MEDIA_VIEW_*)
    *   - 'ticket_id'
    *     The ticket ID used.
@@ -356,26 +370,23 @@ class mediamosa_media {
    *   - 'server_uri_build'
    *     The finished server uri.
    */
-  static public function process_media_view($app_id, array $mediafile, $response_type) {
+  static public function process_media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
 
     // Get the stuff we need.
     $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
     $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
 
-    // Get the owner for the ticket.
-    $user_id = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
-
     // Make sure the physical file exists.
     mediamosa_storage::file_must_exist($mediafile_id);
 
     // Get the permanent status.
-    $is_permanent = mediamosa_media::allow_permanent($mediafile);
+    $is_permanent = mediamosa_media::allow_permanent($mediafile, $is_app_admin);
 
     // Get the filename.
     $filename = self::get_media_filename($mediafile);
 
     // Get target file.
-    $target = mediamosa_storage::get_realpath_data_file($mediafile_id);
+    $target_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
 
     // Only store temporary tickets.
     // Is a permanent link?
@@ -390,9 +401,9 @@ class mediamosa_media {
       $responsetype2tickettype = array(
         mediamosa_media::RESPONSE_STILL => mediamosa_media_ticket::TICKET_TYPE_STILL,
         mediamosa_media::RESPONSE_DOWNLOAD => mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD,
-        mediamosa_media::RESPONSE_METAFILE => mediamosa_media_ticket::TICKET_TYPE_PLAY,
-        mediamosa_media::RESPONSE_OBJECT => mediamosa_media_ticket::TICKET_TYPE_PLAY,
-        mediamosa_media::RESPONSE_URI => mediamosa_media_ticket::TICKET_TYPE_PLAY,
+        mediamosa_media::RESPONSE_METAFILE => mediamosa_media_ticket::TICKET_TYPE_VIEW,
+        mediamosa_media::RESPONSE_OBJECT => mediamosa_media_ticket::TICKET_TYPE_VIEW,
+        mediamosa_media::RESPONSE_URI => mediamosa_media_ticket::TICKET_TYPE_VIEW,
       );
 
       // Convert to ticket type.
@@ -420,7 +431,7 @@ class mediamosa_media {
     }
 
     // Create the symlink.
-    self::handle_media_symlink($target, $link);
+    self::handle_media_symlink($target_uri, $link);
 
     // Get the streaming server URI.
     $server_uri = self::get_server_uri($mediafile_id, $uri, $response_type);
@@ -434,7 +445,7 @@ class mediamosa_media {
       self::MEDIA_VIEW_FILENAME => $filename,
       self::MEDIA_VIEW_PATH => $path,
       self::MEDIA_VIEW_LINK => $link,
-      self::MEDIA_VIEW_TARGET => $target,
+      self::MEDIA_VIEW_TARGET => mediamosa_io::realpath($target_uri),
       self::MEDIA_VIEW_SERVER_URI => $server_uri,
       self::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri_build,
     );
@@ -468,10 +479,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
-   * @param boolean $is_app_admin
-   *   Is user application admin.
    * @param array $mediafile
    *   The mediafile to download.
+   * @param boolean $is_app_admin
+   *   Is user application admin.
    *
    * @return array
    *   An associative array;
@@ -486,7 +497,7 @@ class mediamosa_media {
    */
   public static function do_response_download($app_id, $user_id, $is_app_admin, $mediafile) {
     // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $mediafile, self::RESPONSE_DOWNLOAD);
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_DOWNLOAD, $is_app_admin);
 
     if (!$is_app_admin) {
       if (!mediamosa_lib::boolstr2bool($mediafile[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE])) {
@@ -508,10 +519,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
-   * @param string $asset_id
-   *   The asset ID.
    * @param array $mediafile
    *   The mediafile to use.
+   * @param boolean $is_app_admin
+   *   Is user application admin.
    * @param boolean $autostart
    *   The autostart parameter.
    * @param integer $start
@@ -530,9 +541,12 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error
    */
-  public static function do_response_metafile($app_id, $user_id, $asset_id, $mediafile, $autostart, $start, $duration) {
+  public static function do_response_metafile($app_id, $user_id, $is_app_admin, $mediafile, $autostart, $start, $duration) {
+    // Get the asset_id.
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
     // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $mediafile, self::RESPONSE_OBJECT);
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_METAFILE, $is_app_admin);
 
     // Get server uri build.
     $server_uri_build = $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
@@ -593,7 +607,11 @@ class mediamosa_media {
         $output = "<asx version=\"3.0\">\n\t<entry>\n";
 
         if (!empty($asset_metadata['dublin_core'])) {
-          foreach (array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator') as $tag => $subject) {
+          foreach (array(
+            'TITLE' => 'title',
+            'COPYRIGHT' => 'rights',
+            'ABSTRACT' => 'description',
+            'AUTHOR' => 'creator') as $tag => $subject) {
             if (!empty($asset_metadata['dublin_core'][$subject])) {
               $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]['values']) . '</' . $tag . ">\n";
             }
@@ -612,7 +630,11 @@ class mediamosa_media {
         $output = "<asx version=\"3.0\">\n\t<entry>\n";
 
         if (!empty($asset_metadata['dublin_core'])) {
-          foreach (array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator') as $tag => $subject) {
+          foreach (array(
+            'TITLE' => 'title',
+            'COPYRIGHT' => 'rights',
+            'ABSTRACT' => 'description',
+            'AUTHOR' => 'creator') as $tag => $subject) {
             if (!empty($asset_metadata['dublin_core'][$subject])) {
               $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]['values']) . '</' . $tag . ">\n";
             }
@@ -685,6 +707,8 @@ class mediamosa_media {
    *   The owner of the ticket.
    * @param array $mediafile
    *   The mediafile to use.
+   * @param boolean $is_app_admin
+   *   Is app admin.
    * @param integer $width
    *   The width of the video.
    * @param integer $height
@@ -707,9 +731,9 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error
    */
-  public static function do_response_object($app_id, $user_id, $mediafile, $width, $height, $autostart, $start, $duration) {
+  public static function do_response_object($app_id, $user_id, $is_app_admin, $mediafile, $width, $height, $autostart, $start, $duration) {
     // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $mediafile, self::RESPONSE_OBJECT);
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_OBJECT, $is_app_admin);
 
     // Get server uri build.
     $server_uri_build = $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
@@ -750,7 +774,7 @@ class mediamosa_media {
       '{AUTOPLAY}' => $autostart ? 'true' : 'false',
       '{AUTOPLAY_NUM}' => $autostart ? '1' : '0',
       '{AUTOPLAY_TEXT}' => $autostart ? 'autoplay' : '',
-      '{IF_START]' => '',
+      '{IF_START}' => '',
       '{/IF_START}' => '',
       '{IF_DURATION}' => '',
       '{/IF_DURATION}' => '',
@@ -769,21 +793,22 @@ class mediamosa_media {
       $output
     );
 
-    // START, END DURATION TIMES variables
+    // START, END DURATION TIMES variables.
     if (isset($start)) {
       $variables['{START_TIME}'] = self::convert_msec($start, $container_type);
       $variables['{START_TIME_SECONDS}'] = (int) ($start / 1000);
     }
     else {
-      // Remove code {IF_START} (Exclude from output) //   \{IF_START\}(.*?)\{/IF_START\}/is
+      // Remove code {IF_START} (Exclude from output)
+      // \{IF_START\}(.*?)\{/IF_START\}/is.
       $output = preg_replace('@\{IF_START\}.*?\{/IF_START\}@si', '', $output);
     }
 
     if (isset($duration)) {
       $endtime = $start + $duration;
       $variables['{DURATION_TIME}'] = self::convert_msec($duration, $container_type);
-      $variables['{DURATION_TIME_SECONDS}'] = (int) ($duration/1000);
-      $variables['{START_PLUS_DURATION_TIME_SECONDS}'] = (int) ($start + $duration)/1000;
+      $variables['{DURATION_TIME_SECONDS}'] = (int) ($duration / 1000);
+      $variables['{START_PLUS_DURATION_TIME_SECONDS}'] = (int) ($start + $duration) / 1000;
       $variables['{END_TIME}'] = self::convert_msec($endtime, $container_type);
     }
     else {
@@ -799,11 +824,9 @@ class mediamosa_media {
 
       case mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV:
       default:
-        // Either set, then we must use an external asx file.
-        $use_external_asx_file = (isset($start) || isset($duration));
-
-        // If TRUE, create an asx file use uri to the new file.
-        if ($use_external_asx_file) {
+        // Either set, then we must use an external asx file (asx requires this
+        // when start or duration is used.
+        if (isset($start) || isset($duration)) {
           $input = array();
           $output_asx = '';
           preg_match('@\{IF_EXTERNAL\}(.*?)\{/IF_EXTERNAL\}@is', $output, $input);
@@ -811,12 +834,12 @@ class mediamosa_media {
             $output_asx = $input[0];
           }
           else {
-            $use_external_asx_file = FALSE;
             mediamosa_watchdog::log('Object code for ASX is missing the {IF_EXTERNAL} ... {/IF_EXTERNAL} tags, unable to generate .asx file for external usage.', array(), WATCHDOG_CRITICAL, 'playproxy');
           }
         }
 
-        if ($use_external_asx_file) {
+        // Got output template for asx?
+        if (!empty($output_asx)) {
           if (isset($start)) {
             // Remove code {IF_START} (Exclude from output).
             $variables['{START_TIME}'] = self::convert_msec($start, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV);
@@ -833,10 +856,13 @@ class mediamosa_media {
           }
 
           // Process all the variables and make replacement in the objectcode.
-          $output = strtr($output, $variables);
+          $output_asx = strtr($output_asx, $variables);
+
+          // Same filename, extension .asx.
+          $filename_asx = mediamosa_io::get_base_filename(mediamosa_io::basename($media_view[self::MEDIA_VIEW_FILENAME])) . '.asx';
 
           // Get the filename for the asx file.
-          $file_asx = mediamosa_storage::get_realpath_object_file($app_id, $media_view[self::MEDIA_VIEW_TICKET_ID], mediamosa_io::basename($media_view[self::MEDIA_VIEW_FILENAME]) . '.asx');
+          $file_asx = mediamosa_storage::get_realpath_object_file($app_id, $media_view[self::MEDIA_VIEW_TICKET_ID], $filename_asx);
 
           // Create a possible app_id directory.
           mediamosa_io::mkdir(mediamosa_io::dirname($file_asx));
@@ -857,16 +883,26 @@ class mediamosa_media {
               // Get the streaming server URI.
               $server_uri = self::get_server_uri($mediafile[mediamosa_asset_mediafile_db::ID], '', self::RESPONSE_STILL);
 
+              // Path to object file.
+              // @todo: rewrite to stream wrapper URL.
+              $path = mediamosa_storage::get_path_media_object_file($app_id, $media_view[self::MEDIA_VIEW_TICKET_ID], $filename_asx);
+
               // Rebuild uri with path.
-              $output = strtr($server_uri, array(self::PARAM_URI_TICKET => $media_view[self::MEDIA_VIEW_PATH]));
+              $server_uri_build = strtr($server_uri, array(self::PARAM_URI_TICKET => $path));
+
+              // Need new view link.
+              $link = mediamosa_io::dirname($media_view[self::MEDIA_VIEW_LINK]) . '/' . $filename_asx;
 
               // The current symlink now points to the mediafile, must change it
               // to the object file.
-              mediamosa_io::unlink($media_view[self::MEDIA_VIEW_LINK]);
+              mediamosa_io::unlink($link);
 
-              // Create new symlink.
-              if (!mediamosa_io::symlink($file_asx, $media_view[self::MEDIA_VIEW_LINK])) {
-                throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $media_view[self::MEDIA_VIEW_LINK]));
+              // Add symlink, if not already (= perm).
+              if (!mediamosa_io::file_exists($link)) {
+                // Create new symlink.
+                if (!mediamosa_io::symlink($file_asx, $link)) {
+                  throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $media_view[self::MEDIA_VIEW_LINK]));
+                }
               }
             }
             else {
@@ -878,14 +914,15 @@ class mediamosa_media {
           }
         }
 
-        $variables['{WMA_TICKET_URI}'] = $server_uri_build;
-
-        // Remove code {IF_EXTERNAL} (Exclude from output)
+        // Remove code {IF_EXTERNAL} (Exclude from output).
         $output = preg_replace('@\{IF_EXTERNAL\}.*?\{/IF_EXTERNAL\}@si', '', $output);
+
+        // Add WMA ticket uri for asx.
+        $variables['{WMA_TICKET_URI}'] = $server_uri_build;
         break;
     }
 
-    // Process all the variables and make replacement in the objectcode
+    // Process all the variables and make replacement in the objectcode.
     $output = strtr($output, $variables);
 
     return array(
@@ -902,10 +939,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The user ID for ticket owner.
-   * @param string $asset_id
-   *   The asset ID.
    * @param array $still
    *   The still mediafile.
+   * @param boolean $is_app_admin
+   *   Is app admin.
    * @param array $filtered_stills
    *   The filtered stills result or empty.
    *
@@ -920,18 +957,21 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error
    */
-  static public function do_response_still($app_id, $user_id, $still, array $filtered_stills = array()) {
+  static public function do_response_still($app_id, $user_id, $is_app_admin, $still, array $filtered_stills = array()) {
 
     // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $still, mediamosa_media::RESPONSE_STILL);
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $still, mediamosa_media::RESPONSE_STILL, $is_app_admin);
 
-    // Uri for non-tickets (still, download etc).
+    // Go through the filtered stills and copy main still and replace the
+    // version in filtered_stills.
     foreach ($filtered_stills as $key => $filtered_still) {
-      if ($still[mediamosa_asset_mediafile_db::ID] == $filtered_still[mediamosa_asset_mediafile_db::ID]) {
+      if ($still[mediamosa_asset_mediafile_db::ID] == $filtered_still['still_id']) {
         $filtered_media_view = $media_view;
       }
       else {
-        $filtered_media_view = mediamosa_media::process_media_view($app_id, $filtered_still, mediamosa_media::RESPONSE_STILL);
+        $filtered_still[mediamosa_asset_mediafile_db::ID] = $filtered_still['still_id'];
+        unset($filtered_still['still_id']);
+        $filtered_media_view = mediamosa_media::process_media_view($app_id, $user_id, $filtered_still, mediamosa_media::RESPONSE_STILL, $is_app_admin);
       }
 
       // Add still ticket.
@@ -941,7 +981,7 @@ class mediamosa_media {
 
     $response = array(
       'output' => $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD],
-      'content_type' => mediamosa_asset_mediafile::get_mimetype($still[mediamosa_asset_mediafile_db::ID]),
+      'content_type' => mediamosa_asset_mediafile::get_mime_type($still[mediamosa_asset_mediafile_db::ID]),
       'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
     );
 
@@ -961,17 +1001,19 @@ class mediamosa_media {
    *   The client application ID.
    * @param string $asset_id
    *   The asset ID to use default still.
+   * @param boolean $is_app_admin
+   *   Is app admin.
    *
    * @return string
    *   The still response url.
    */
-  public static function do_response_still_default($app_id, $asset_id) {
+  public static function do_response_still_default($app_id, $asset_id, $is_app_admin = FALSE) {
     // Get default still.
     $still = mediamosa_asset_mediafile_still::find_default($asset_id);
 
     // Any still?
     if (!empty($still)) {
-      $response = self::do_response_still($app_id, $still[mediamosa_asset_mediafile_db::OWNER_ID], $still);
+      $response = self::do_response_still($app_id, $still[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $still);
       return $response['output'];
     }
 
@@ -987,6 +1029,8 @@ class mediamosa_media {
    *   The user ID for ticket owner.
    * @param array $mediafile
    *   The mediafile.
+   * @param boolean $is_app_admin
+   *   Is app admin.
    *
    * @return array
    *   An associative array;
@@ -997,10 +1041,10 @@ class mediamosa_media {
    *   - 'ticket_id'
    *     The ticket ID created.
    */
-  public static function do_response_uri($app_id, $user_id, $mediafile) {
+  public static function do_response_uri($app_id, $user_id, $is_app_admin, $mediafile) {
 
     // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $mediafile, mediamosa_media::RESPONSE_URI);
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, mediamosa_media::RESPONSE_URI, $is_app_admin);
 
     // Get the container type.
     $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'container_type');
@@ -1023,19 +1067,21 @@ class mediamosa_media {
    *
    * @param array $mediafile
    *   The mediafile to test.
-   * @param array $asset
-   *   (optional) The asset, provide when available. Will get asset when not
-   *   provided.
+   * @param boolean $is_app_admin
+   *   Is app admin.
    *
-   * @throws mediamosa_exception_error_is_unappropriate
+   * @throws mediamosa_exception_error_is_inappropriate
    */
-  public static function allow_permanent(array $mediafile) {
+  public static function allow_permanent(array $mediafile, $is_app_admin) {
     // Protected mediafiles can not be permanent.
     try {
       return !mediamosa_asset_mediafile::is_mediafile_protected_ext($mediafile);
     }
-    catch (mediamosa_exception_error_is_unappropriate $e) {
-      throw $e;
+    catch (mediamosa_exception_error_is_inappropriate $e) {
+      if (!$is_app_admin) {
+        throw $e;
+      }
+      return FALSE;
     }
     catch (mediamosa_exception $e) {
       return FALSE;
@@ -1043,12 +1089,54 @@ class mediamosa_media {
   }
 
   /**
-   * This function converts miliseconds to the format specified
+   * Remove the permanent symlink to a mediafile.
    *
-   * @param $input
-   *   The number of seconds
-   * @param $container_type
-   *   See CONTAINER_TYPE_*
+   * @param string $mediafile_id
+   *   The mediafile to remove link from.
+   */
+  public static function remove_permanent_link($app_id, $mediafile_id) {
+    // Remove permanent links of mediafile.
+    mediamosa_io::exec(
+      strtr(
+        'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
+        array(
+          '@media_location' => mediamosa_storage::get_realpath_media_permanent_file($app_id),
+          '@wildmatch' => $mediafile_id,
+        )
+      )
+    );
+  }
+
+  /**
+   * Remove the permanent symlink to all mediafiles of provided asset.
+   *
+   * @param string $asset_id
+   *   The asset ID.
+   */
+  public static function remove_permanent_link_asset($asset_id) {
+
+    // Get the mediafiles.
+    $mediafiles = mediamosa_asset_mediafile::get_by_asset_id(
+      $asset_id,
+      array(
+        mediamosa_asset_mediafile_db::APP_ID,
+        mediamosa_asset_mediafile_db::ID,
+      )
+    );
+
+    // Remove all from asset.
+    foreach ($mediafiles as $mediafile_id => $mediafile) {
+      self::remove_permanent_link($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile_id);
+    }
+  }
+
+  /**
+   * This function converts miliseconds to the format specified.
+   *
+   * @param integer $input
+   *   The number of seconds.
+   * @param string $container_type
+   *   See CONTAINER_TYPE_*.
    *
    * @return string
    *   Converted time in msec format.
@@ -1106,14 +1194,16 @@ class mediamosa_media {
   /**
    * Calculate the size of the video based on given size and type.
    *
-   * @param integer v_width
-   *   The mediafile width
-   * @param integer v_height
-   *   The mediafile height
-   * @param integer width
-   *   The media play call parameter width
-   * @param integer height
-   *   The media play call parameter height
+   * @param integer $video_width
+   *   The mediafile width.
+   * @param integer $video_height
+   *   The mediafile height.
+   * @param integer $width
+   *   The media play call parameter width.
+   * @param integer $height
+   *   The media play call parameter height.
+   * @param string $container_type
+   *   See mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_*.
    *
    * @return array
    *   The new width en height.
@@ -1128,15 +1218,15 @@ class mediamosa_media {
       elseif (($width == 0 || !isset($width)) && $height > 0) {
         $width = (int) round($height * ($video_width / $video_height));
       }
-      elseif ( ($width == 0 || !isset($width) ) && ($height == 0 || !isset($height)) ) {
-        // if none is given we use the default size.
+      elseif (($width == 0 || !isset($width)) && ($height == 0 || !isset($height))) {
+        // If none is given we use the default size.
         $width = $video_width;
         $height = $video_height;
       }
     }
 
     if ($width <= 0 && $height <= 0) {
-      // no luck, use default values.
+      // No luck, use default values.
       $width = self::PP_FLASH_OBJECT_WIDTH;
       $height = self::PP_FLASH_OBJECT_HEIGHT;
     }
@@ -1162,26 +1252,33 @@ class mediamosa_media {
   /**
    * Check if the time has been restricted.
    *
-   * @param $time_restriction_start
+   * @param integer $time_restriction_start
    *   Start time in UTC of the time restriction period in datetime format
    *   (optional).
-   * @param $time_restriction_end
+   * @param integer $time_restriction_end
    *   End time in UTC of the time restriction period date.
    *
    * @throws mediamosa_exception_error()
    */
   public static function check_time_restrictions($time_restriction_start, $time_restriction_end) {
     if (time() < $time_restriction_start) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date('Y-m-d H:i:s', $time_restriction_start), '@timestamp' => $time_restriction_start));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array(
+        '@date' => date('Y-m-d H:i:s', $time_restriction_start),
+        '@timestamp' => $time_restriction_start,
+      ));
     }
     if (time() > $time_restriction_end) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array('@date' => date('Y-m-d H:i:s', $time_restriction_end), '@timestamp' => $time_restriction_end));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array(
+        '@date' => date('Y-m-d H:i:s', $time_restriction_end),
+        '@timestamp' => $time_restriction_end,
+      ));
     }
   }
 
   /**
-   * Return the stills based on filter properties. If filter properties are
-   * empty then all stills of this asset are returned.
+   * Return the stills based on filter properties.
+   *
+   * If filter properties are empty then all stills of this asset are returned.
    *
    * @param integer $app_id
    *   The application ID.
@@ -1201,8 +1298,6 @@ class mediamosa_media {
    *   (optional) The range of stills ('1' or '1,3-5').
    * @param string $format
    *   (optional) The still format.
-   * @param string $user_id
-   *   The user ID.
    * @param string $tag
    *   (optional) The tag on still(s).
    *
@@ -1211,7 +1306,7 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error
    */
-  public static function collect_stills($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $size, $width, $height, $range, $format, $tag) {
+  public static function collect_stills($app_id, $asset_id, $mediafile_id, $still_id, $size, $width, $height, $range, $format, $tag) {
     // Stills to create.
     $stills = array();
 
@@ -1226,12 +1321,12 @@ class mediamosa_media {
     $query->join(
       mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
       'mfmm',
-      'mfmm.mediafile_id = still.mediafile_id_source'
+      'mfmm.mediafile_id = still.mediafile_id'
     );
     $query->join(
       mediamosa_asset_mediafile_db::TABLE_NAME,
       'mf',
-      'mf.mediafile_id = still.mediafile_id AND mf.is_still = :is_still',
+      'mf.mediafile_id = still.mediafile_id_source AND mf.is_still = :is_still',
       array('is_still' => mediamosa_asset_mediafile_db::IS_STILL_FALSE)
     );
     $query->addField('still', mediamosa_asset_mediafile_db::ID, 'still_id');
@@ -1244,6 +1339,7 @@ class mediamosa_media {
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
         mediamosa_asset_mediafile_db::TAG,
         mediamosa_asset_mediafile_db::URI,
+        mediamosa_asset_mediafile_db::IS_PROTECTED,
       )
     );
     $query->addField('mf', mediamosa_asset_mediafile_db::ID, 'mediafile_id');
@@ -1251,26 +1347,25 @@ class mediamosa_media {
     $query->condition('still.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
     $query->condition('still.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
     $query->condition('still.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+
     if (!empty($still_id)) {
       $query->condition('still.' . mediamosa_asset_mediafile_db::ID, $still_id);
     }
-    if (isset($mediafile_id)) {
+    if (!empty($mediafile_id)) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     }
     if (isset($tag)) {
       $query->condition('still.' . mediamosa_asset_mediafile_db::TAG, $tag);
     }
-    $query->condition('mfmm.' . mediamosa_asset_mediafile_metadata_db::PROP_ID, mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER));
 
-    $query->orderBy('still.' . mediamosa_asset_mediafile_db::ASSET_ID, 'ASC');
+    // Order by still order.
+    $query->condition('mfmm.' . mediamosa_asset_mediafile_metadata_db::PROP_ID, mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER));
     $query->orderBy('mfmm.' . mediamosa_asset_mediafile_metadata_db::VAL_INT, 'ASC');
 
-    $result = $query->execute();
-
-    foreach ($result as $still) {
+    foreach ($query->execute() as $still) {
       // Enrich the t_stills with the still parameters.
       if (self::collect_stills_helper($still, $width, $height, $format, $order)) {
-        $stills[] = $result;
+        $stills[] = $still;
       }
     }
 
@@ -1278,11 +1373,13 @@ class mediamosa_media {
   }
 
   /**
+   * Select still based on given parameters.
+   *
    * Match provided width, height, format and order to select the correct
    * stills.
    *
-   * @param array &result
-   *   Collection of the technical metadata of the stills.
+   * @param array &$still
+   *   The mediafile still array where its metadata will be added.
    * @param integer $width
    *   (optional) The width.
    * @param integer $height
@@ -1296,7 +1393,7 @@ class mediamosa_media {
    *   Returns TRUE when still matches the provided values (width, height,
    *   format, order).
    */
-  static protected function collect_stills_helper(array &$result, $width = NULL, $height = NULL, $format = NULL, $order = NULL) {
+  static protected function collect_stills_helper(array &$still, $width = NULL, $height = NULL, $format = NULL, $order = NULL) {
 
     // Need this to compare.
     if (!isset($width) && !isset($height) && !isset($format) && !isset($order)) {
@@ -1304,8 +1401,7 @@ class mediamosa_media {
     }
 
     // Get the technical metadata of the still.
-    $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($result['still_id']);
-    $values_to_still = array();
+    $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($still['still_id']);
 
     $fields = array(
       mediamosa_asset_mediafile_metadata::WIDTH,
@@ -1321,20 +1417,19 @@ class mediamosa_media {
 
     // Collect the values we need.
     foreach ($fields as $field) {
-      $values_to_still[$field] = (empty($values[$field]) ? NULL : $values[$field]);
+      $still[$field] = (empty($values[$field]) ? NULL : $values[$field]);
     }
 
-    $result = array_merge($result, $values_to_still);
-    if (isset($width) && $width != $values_to_still[mediamosa_asset_mediafile_metadata::WIDTH]) {
+    if (isset($width) && $width != $still[mediamosa_asset_mediafile_metadata::WIDTH]) {
       return FALSE;
     }
-    if (isset($height) && $height != $values_to_still[mediamosa_asset_mediafile_metadata::HEIGHT]) {
+    if (isset($height) && $height != $still[mediamosa_asset_mediafile_metadata::HEIGHT]) {
       return FALSE;
     }
-    if (isset($format) && $format != $values_to_still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
+    if (isset($format) && $format != $still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
       return FALSE;
     }
-    if (count($order) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $order)) {
+    if (count($order) && !in_array($still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $order)) {
       return FALSE;
     }
 

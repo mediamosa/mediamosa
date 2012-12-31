@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The REST call object provides the REST call function data and excecution.
  */
 
-/**
-  * @file
-  * The REST call object provides the REST call function data and excecution.
-  */
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
@@ -82,16 +58,30 @@ abstract class mediamosa_rest_call {
   const DEFAULT_PARAMS_VALUES = 'default_params_values';
 
   // Access to the REST call.
-  const ACCESS = 'access';      // Value OR'd;
-  const ACCESS_INTERNAL = 1;    // Access to REST call when internally accessed.
-  const ACCESS_INTERNAL_ONLY = 1;    // Access to REST call internally only..
-  const ACCESS_EXTERNAL = 2;    // Access to REST call when externally accessed.
-  const ACCESS_EXTERNAL_ONLY = 2;    // Access to REST call externally only.
-  const ACCESS_AUTHENTICATED = 4; // Access to REST call when authenticated (true came back in the auth hook).
-  const ACCESS_AUTHENTICATED_ONLY = 4; // Access to REST call when authenticated only.
-  const ACCESS_DEFAULT = 5;     // Access default allowes internals and authenticated access.
-                                // External access needs to be specified.
-  const ACCESS_FOR_EXTERNAL = 7; // Default for external calls (normal/internal/external).
+  //
+  // The access value is an OR'd value from different access types.
+  const ACCESS = 'access';
+
+  // Allow internal access (need internal authentication).
+  const ACCESS_INTERNAL = 1;
+  // Internal only switch;
+  const ACCESS_INTERNAL_ONLY = 1;
+
+  // Allow external access (no authentication required).
+  const ACCESS_EXTERNAL = 2;
+  // External access only (no other authentication required).
+  const ACCESS_EXTERNAL_ONLY = 2;
+
+  // Access allowed by authentication hook (DBUS etc).
+  const ACCESS_AUTHENTICATED = 4;
+  // Access only allowed by authentication hook (DBUS etc).
+  const ACCESS_AUTHENTICATED_ONLY = 4;
+
+  // Default allows Internal and authentication access.
+  const ACCESS_DEFAULT = 5;
+
+  // Allow access by all access rules.
+  const ACCESS_FOR_EXTERNAL = 7;
 
   const TITLE = 'title';             // Title of the REST call (In English, required).
   const DESCRIPTION = 'description'; // Description of the REST call (In English, required).
@@ -224,7 +214,6 @@ abstract class mediamosa_rest_call {
   }
 
   // ----------------------------------------------------- Functions (abstract).
-
   // Get the rest input info.
   abstract function get_var_setup();
   // The execution of the call.
@@ -777,10 +766,10 @@ abstract class mediamosa_rest_call {
     else {
       // Fill the $rest_args array with rest input.
       foreach ($_GET as $key_get => $value_get) {
+         // Ignore the q variable.
         if ($key_get == 'q') {
-          continue; // Ignore the q variable.
+          continue;
         }
-        // Set by default off.
 
         if (!isset($var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));

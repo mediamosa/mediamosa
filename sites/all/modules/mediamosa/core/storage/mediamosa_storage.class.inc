@@ -5,26 +5,145 @@
  */
 
 abstract class mediamosa_storage {
-
   // ------------------------------------------------------------------- Consts.
   const STORAGE_FOLDER_TICKET = 'ticket';
 
-  // Expiration settings, in seconds.
-  // @todo: currently all ticket types have same expiration because of design.
+  // --------------------------------------------------------------------- Vars.
+  /**
+   * The storage profile array.
+   *
+   * @var mediamosa_storage
+   */
+  protected $storage_profile;
 
-  // Symbolic link based.
+  /**
+   * The applications linked to profile for mediafiles.
+   *
+   * @var mediamosa_storage_app
+   */
+  protected $storage_profile_apps;
 
-  // 10 minutes.
-  const TICKET_EXPIRATION_PLAY = 600;
-  const TICKET_EXPIRATION_DOWNLOAD = 600;
-  const TICKET_EXPIRATION_STILL = 600;
+  /**
+   * The applications linked to profile for stills.
+   *
+   * @var mediamosa_storage_app
+   */
+  protected $storage_profile_apps_stills;
 
-  // Not symbolic link based.
-  // 24 hours.
-  const TICKET_EXPIRATION_UPLOAD = 86400;
+  // ----------------------------------------------------- Functions (abstract).
+  /**
+   * Get the default scheme (without the '://').
+   *
+   * @param boolean $is_still
+   *   Is mount point for still?
+   *
+   * @return string
+   *   The uri of the moint point to store.
+   */
+  public abstract static function get_scheme($is_still = FALSE);
+
+  /**
+   * Return the storage options available for the storage type
+   *
+   * @return
+   *   Array of available storage options
+   */
+  public abstract function get_storage_options();
+
+  /**
+   * Return alle required upload parameters for the storage type
+   * which allow a frontend application to build the correct upload form
+   *
+   * $param $app_id
+   *   Application ID.
+   *
+   * @param $user_id
+   *   User ID
+   * @param $group_id
+   *   Group ID
+   *
+   * @return
+   *   Array with upload parameters
+   */
+  public abstract function get_upload_parameters($app_id, $user_id, $group_id);
+
+  // -------------------------------------------------------------- Constructor.
+  /**
+   * Main constructor
+   *
+   * @param array $storage_profile
+   *   Storage profile.
+   */
+  public function __construct(array $storage_profile) {
+    $this->storage_profile = $storage_profile;
+
+    // Get all storage profiles apps.
+    $this->load_all_storage_profile_apps();
+  }
+
+  // ------------------------------------------------------------------ Methods.
+  /**
+   * Return with uri of the profile mount point.
+   *
+   * Unless local mount point, the uri must include $storage_profile::ID and
+   * $storage_profile_app::PATH or $storage_profile_app::PATH_STILLS.
+   *
+   * @param integer $storage_profile_id
+   *   The storage profile ID.
+   * @param string $path
+   *   The storage path.
+   * @param boolean $is_still
+   *   Is mount point for still?
+   *
+   * @return string
+   *   The uri of the storage profile.
+   */
+  public function build_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
+    return self::trim_uri(static::get_scheme($is_still) . '://' . $storage_profile_id) . $path;
+  }
+
+  /**
+   * Is storage object local or external?
+   *
+   * @return boolean
+   *   Return TRUE when all data is stored on local storage.
+   */
+  public function is_local() {
+    return TRUE;
+  }
+
+  /**
+   * Load all linked storage_profile_apps.
+   */
+  protected function load_all_storage_profile_apps() {
+    // Build the query.
+    $storage_profile_apps = mediamosa_db::db_select(mediamosa_storage_profile_app_db::TABLE_NAME, 'spa')
+      ->condition(db_or()
+        ->condition(mediamosa_storage_profile_app_db::PROFILE_ID, $this->storage_profile[mediamosa_storage_profile_db::ID])
+        ->condition(mediamosa_storage_profile_app_db::PROFILE_ID_STILLS, $this->storage_profile[mediamosa_storage_profile_db::ID])
+      )
+      ->fields('spa')
+      ->execute();
+
+    // Storage profiles for mediafiles.
+    $this->storage_profiles_apps = array();
+
+    // Storage profiles for stills.
+    $this->storage_profiles_apps_stills = array();
+
+    // Store them.
+    foreach ($storage_profile_apps as $storage_profile_app) {
+      if ($storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] == $this->storage_profile[mediamosa_storage_profile_db::ID]) {
+        $this->storage_profile_apps[$storage_profile_app[mediamosa_storage_profile_app_db::APP_ID]] = $storage_profile_app;
+      }
+
+      if ($storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID_STILLS] == $this->storage_profile[mediamosa_storage_profile_db::ID]) {
+        $this->storage_profiles_apps_stills[$storage_profile_app[mediamosa_storage_profile_app_db::APP_ID]] = $storage_profile_app;
+      }
+    }
+  }
 
   // ---------------------------------------------------------------- Functions.
-
   /**
    * Is the storage file system path specified?
    *
@@ -65,80 +184,239 @@ abstract class mediamosa_storage {
     return 'mediamosa-storage-simpletest://';
   }
 
+  // ------------------------------------------------------- Storage mountpoint.
+  /**
+   * Get the mount point uri based on the storage profile and path.
+   *
+   * Both these values are found in the mediamosa_storage_profile_app table.
+   *
+   * @param array $storage_profile_id
+   *   The storage profile ID.
+   * @param string $path
+   *   The (prefix) path on the uri.
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The local moint point uri.
+   */
+  public static function get_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
+    // Need parent storage profile.
+    $storage_profile = mediamosa_storage_profile::get($storage_profile_id);
+
+    // Get uri.
+    return self::get_mount_point_uri_by_storage_profile($storage_profile, $path, $is_still);
+  }
+
+  /**
+   * Get the mount point uri based on the storage profile and path.
+   *
+   * Both these values are found in the mediamosa_storage_profile_app table.
+   *
+   * @param array $storage_profile_app
+   *   The storage profile app (link between app and storage profile).
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The local moint point uri.
+   */
+  public static function get_mount_point_uri_by_storage_profile_app(array $storage_profile_app, $is_still = FALSE) {
+    // Get right path.
+    $path = $is_still ? $storage_profile_app[mediamosa_storage_profile_app_db::PATH_STILLS] : $storage_profile_app[mediamosa_storage_profile_app_db::PATH];
+
+    return self::get_mount_point_uri($storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $path, $is_still);
+  }
+
+  /**
+   * Get the mount point uri based on the storage profile app array.
+   *
+   * @param array $storage_profile
+   *   The storage profile.
+   * @param string $path
+   *   The (prefix) path on the uri.
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The local moint point uri.
+   */
+  public static function get_mount_point_uri_by_storage_profile(array $storage_profile, $path, $is_still = FALSE) {
+    // Create the storage instance.
+    $mediamosa_storage = mediamosa_storage_profile::create_storage_instance_by_profile($storage_profile);
+
+    // Build the local mount point.
+    return $mediamosa_storage->build_mount_point_uri($storage_profile[mediamosa_storage_profile_db::ID], $path, $is_still);
+  }
+
+  // -------------------------------------------------------------- Storage URI.
+  /**
+   * Create the uri of the file where the mediafile will be stored.
+   *
+   * The storage uri can be local or external (e.g. S3). This function can not
+   * be used to get the current URI location of the mediafile (use
+   * mediamosa_storage::get_mediafile_uri() instead).
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The storage destination uri.
+   */
+  public static function create_storage_uri($app_id, $mediafile_id, $is_still = FALSE) {
+    // Get the storage profile app based on the application ID.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    // Build up the mount point uri.
+    $mount_point_uri = self::get_mount_point_uri_by_storage_profile_app($storage_profile_app, $is_still);
+
+    // Return the complete uri.
+    return self::trim_uri($mount_point_uri, '') . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+  }
+
+  // -------------------------------------------------------------------- Local.
+  /**
+   * Create the local mount point uri.
+   *
+   * This function provides the mountpoint of the first uri of the new created
+   * mediafiles on local file system. Is stored in the sannas_mount_point field.
+   *
+   * @todo: need to return local moint point (always).
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The local moint point uri.
+   */
+  public static function create_local_mount_point_uri($app_id, $is_still = FALSE) {
+    // Get the storage profile app based on the application ID.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    // Build up the mount point uri.
+    return self::get_mount_point_uri_by_storage_profile_app($storage_profile_app, $is_still);
+  }
+
+  /**
+   * Create the complete file path for new mediafiles.
+   *
+   * The path and filename returned are intended for creation of the new file.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param boolean $is_still
+   *   TRUE when mediafile is still.
+   *
+   * @return string
+   *   The local mediafile uri.
+   */
+  public static function create_local_mediafile_uri($app_id, $mediafile_id, $is_still = FALSE) {
+    return self::trim_uri(self::create_local_mount_point_uri($app_id, $is_still), '') . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+  }
+
+  /**
+   * Return the local path location of the mediafile.
+   *
+   * Need to return the path without $mediafile_id[0] . '/' . $mediafile_id.
+   * Also used by simpletests.
+   *
+   * @param array|string $mediafile
+   *   Either the mediafile ID or the mediafile array.
+   *
+   * @return string
+   *   The uri without $mediafile_id[0] . '/' . $mediafile_id
+   */
+  public static function get_uri_mediafile_path($mediafile) {
+    // Get the mediafile uri.
+    $source_uri = self::get_uri_mediafile($mediafile);
+
+    // Build up the stream wrapper.
+    $source_streamwrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
+
+    return $source_streamwrapper->get_uri_mount_point();
+  }
+
+  /**
+   * Return the local path location of the mediafile.
+   *
+   * Used by LUA scripts:
+   * Need to return the path without $mediafile_id[0] . '/' . $mediafile_id.
+   * Also used by simpletests.
+   *
+   * @param array|string $mediafile
+   *   Either the mediafile ID or the mediafile array.
+   *
+   * @return string
+   *   The path without $mediafile_id[0] . '/' . $mediafile_id.
+   */
+  public static function get_local_mediafile_path($mediafile) {
+    // Get the mediafile uri.
+    $source_uri = self::get_uri_mediafile($mediafile);
+
+    // Build up the stream wrapper.
+    $source_streamwrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
+
+    return $source_streamwrapper->get_realpath_mount_point();
+  }
+
   // -------------------------------------------------- /data related functions.
   /**
-   * Return the data folder.
-   *
-   * @return
-   *   The path for 'data'.
-   */
-  public static function get_path_data() {
-    return 'data/';
-  }
-
-  /**
-   * Get the data location path.
+   * Return the translated real path of the storage.
    *
    * @return string
-   *   The uri location.
-   */
-  public static function get_uri_data() {
-    return 'mediamosa-storage://data/';
-  }
-
-  /**
-   * Get the data location path translated.
-   *
-   * @return string
-   *   The realpath location.
+   *   The storage real path.
    */
   public static function get_realpath_data() {
-    return mediamosa_io::realpath(self::get_uri_data());
+    return mediamosa_io::realpath('mediamosa-storage-data://');
   }
 
   /**
    * Return the mediafile uri.
    *
-   * Try to use get_realpath_data_file() instead.
+   * @param array|string $mediafile
+   *   Either the mediafile ID or the mediafile array.
    *
-   * @param string $mediafile_id
-   *   The ID of the mediafile data location.
+   * @return string
+   *   The location of the data location.
    *
-   * @return
-   *   The location of the
-   *   mediamosa-storage://data/[letter]/[mediafile_id].
+   * @see get_realpath_mediafile()
    */
-  protected static function get_uri_data_file($mediafile_id, $mount_point = '') {
-    $mount_point = empty($mount_point) ? self::get_realpath() : $mount_point;
-    return $mount_point . 'data/' . $mediafile_id[0] . '/' . $mediafile_id;
+  public static function get_uri_mediafile($mediafile) {
+    // MediaFile ID?
+    if (is_string($mediafile)) {
+      // @todo: not cached.
+      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile);
+    }
+
+    // If no mount point, then assign one.
+    if (empty($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+      $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::create_local_mount_point_uri($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+    }
+
+    return self::trim_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**
    * Return the mediafile location.
    *
-   * @param string $mediafile_id
-   *   The ID of the mediafile data location.
+   * Will throw exception when file is not local or does not exist.
    *
-   * @return
-   *   The location of the
-   *   mediamosa-storage://data/[letter]/[mediafile_id].
+   * @param array|string $mediafile
+   *   Either the mediafile ID or the mediafile array.
+   *
+   * @return string
+   *   The location of the the data location.
    */
-  public static function get_realpath_data_file($mediafile_id, $mount_point = '') {
-    return mediamosa_io::realpath(self::get_uri_data_file($mediafile_id, $mount_point));
-  }
-
-  /**
-   * Get the Mediafile mountpath path.
-   *
-   * @param array $mediafile
-   *   The mediafile array or simular, must contain at least 'mediafile_id'.
-   *
-   * @return
-   *   The URI to the mediafile. Might return normal path in case of mediafile
-   *   has own mountpoint.
-   */
-  public static function get_realpath_data_mediafile(array $mediafile) {
-    return self::get_realpath_data_file($mediafile[mediamosa_asset_mediafile_db::ID], $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+  public static function get_realpath_mediafile($mediafile) {
+    return mediamosa_io::realpath(self::get_uri_mediafile($mediafile));
   }
 
   /**
@@ -149,26 +427,52 @@ abstract class mediamosa_storage {
    */
   public static function file_must_exist($mediafile_id) {
     // Check if still file exists.
-    $file = self::get_realpath_data_file($mediafile_id);
-    if (!file_exists($file)) {
+    $file = self::get_realpath_mediafile($mediafile_id);
+    if (!mediamosa_io::file_exists($file)) {
       throw new mediamosa_exception_error_file_not_found(array('@filename' => $file));
     }
   }
 
+  // -------------------------------------------- /transition related functions.
   /**
-   * Return the tmp transcode folder.
+   * Return the transition folder.
    *
    * @return string
-   *   The location of the temporary transcode folder; data/transcode.
+   *   The location of the transition folder; data/transition.
+   *
+   * @see get_realpath_transition()
    */
-  public static function get_uri_data_transcode() {
-    return 'mediamosa-storage://data/transcode/';
+  protected static function get_uri_transition() {
+    return 'mediamosa-storage-transition://';
   }
 
   /**
    * Return the translated tmp transcode folder.
    *
-   * @return
+   * @return string
+   *   The location of the transition folder; data/transition.
+   */
+  public static function get_realpath_transition() {
+    return mediamosa_io::realpath(self::get_uri_transition());
+  }
+
+  // --------------------------------------------- /temporary related functions.
+  /**
+   * Return the tmp transcode folder.
+   *
+   * @return string
+   *   The location of the temporary transcode folder; data/transcode.
+   *
+   * @see get_realpath_data_transcode()
+   */
+  public static function get_uri_data_transcode() {
+    return 'mediamosa-storage-temporary://';
+  }
+
+  /**
+   * Return the translated tmp transcode folder.
+   *
+   * @return string
    *   The location of the temporary transcode folder; data/transcode.
    */
   public static function get_realpath_data_transcode() {
@@ -186,7 +490,7 @@ abstract class mediamosa_storage {
    *   The location of the trancode folder with filename.
    */
   public static function get_uri_data_transcode_file($filename) {
-    return self::get_uri_data_transcode() . $filename;
+    return self::trim_uri(self::get_uri_data_transcode()) . $filename;
   }
 
   /**
@@ -204,17 +508,16 @@ abstract class mediamosa_storage {
   }
 
   /**
-   * Returns the full path and filename of the status file of
-   * given filename.
+   * Returns the full path and filename of the status file of given filename.
    *
-   * @param $filename
+   * @param string $filename
    *   The status file.
    *
    * @return
    *   The uri to the status file.
    */
   public static function get_uri_status_file($filename) {
-    'mediamosa-storage://data/transcode/' . rawurlencode($filename) . '.status';
+    return self::get_uri_data_transcode() . rawurlencode($filename) . '.status';
   }
 
   /**
@@ -251,8 +554,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The uri.
    */
-  public static function get_uri_media() {
-    return 'mediamosa-storage://media/';
+  protected static function get_uri_media() {
+    return 'mediamosa-storage-media://';
   }
 
   /**
@@ -272,7 +575,7 @@ abstract class mediamosa_storage {
    *   The uri.
    */
   public static function get_uri_media_ticket() {
-    return 'mediamosa-storage://media/ticket/';
+    return 'mediamosa-storage-media://ticket';
   }
 
   /**
@@ -286,14 +589,14 @@ abstract class mediamosa_storage {
   }
 
   /**
-   * Return the path, usable for URLs.
+   * Return the path, usable for URLs. Not for URI usage.
    *
    * @param integer $app_id
    *   The application ID.
    * @param string $mediafile_id
-   *   The mediafile ID.
+   *   (optional) The mediafile ID.
    * @param string $filename
-   *   The filename of the file.
+   *   (optional) The filename of the file.
    *
    * @return string
    *   The path.
@@ -313,20 +616,20 @@ abstract class mediamosa_storage {
    * @param integer $app_id
    *   The application ID.
    * @param string $mediafile_id
-   *   The mediafile ID.
+   *   (optional) The mediafile ID.
    * @param string $filename
-   *   The filename of the file.
+   *   (optional) The filename of the file.
    *
    * @return string
    *   The uri.
    */
-  public static function get_realpath_media_permanent_file($app_id, $mediafile_id, $filename) {
-    // Return the uri.
-    return self::get_realpath_media() . self::get_path_media_permanent_file($app_id, $mediafile_id, $filename);
+  public static function get_realpath_media_permanent_file($app_id, $mediafile_id = '', $filename = '') {
+    // Return the realpath.
+    return self::get_realpath_media() . '/' . self::get_path_media_permanent_file($app_id, $mediafile_id, $filename);
   }
 
   /**
-   * Return the path usable for URLs.
+   * Return the path usable for URLs. Not for URIs.
    *
    * @param integer $app_id
    *   The application ID.
@@ -343,7 +646,34 @@ abstract class mediamosa_storage {
    */
   public static function get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
     // Return the path.
-    return 'ticket/' . strtolower($ticket_type) . '/' . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . $filename;
+    return 'ticket/' . (empty($ticket_type) ? '' : (strtolower($ticket_type) . '/')) . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . $filename;
+  }
+
+  /**
+   * Return the uri of a temporary symlink in the /media directory.
+   *
+   * The path returned here is an symbolic link to the actual mediafile. The
+   * link returned is temporary and is cleaned up after an amount of time.
+   * Ticket based symlinks are used when the file is protected by ACL and access
+   * is granted to the user. The ticket ID is random string that only the
+   * authenticated party knows.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $ticket_id
+   *   The mediafile ID.
+   * @param string $filename
+   *   The filename of the file.
+   * @param string $ticket_type.
+   *   (optional) The type of the ticket is used to identify the type of the
+   *   link. Is optional in case when $filename already contains the type.
+   *
+   * @return string
+   *   The uri.
+   */
+  public static function get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
+    // Return the uri.
+    return self::get_uri_media() . self::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
   }
 
   /**
@@ -370,9 +700,10 @@ abstract class mediamosa_storage {
    */
   public static function get_realpath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
     // Return the uri.
-    return self::get_realpath_media() . self::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
+    return mediamosa_io::realpath(self::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type));
   }
 
+  // ---------------------------------------------------- /media/object related.
   /**
    * Return uri for object files.
    *
@@ -388,8 +719,8 @@ abstract class mediamosa_storage {
    * @return
    *   The path to ticket location
    */
-  public static function get_uri_object_file($app_id, $ticket_id, $filename) {
-    return 'mediamosa-storage://media/object/' . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . $filename;
+  protected static function get_uri_object_file($app_id, $ticket_id, $filename) {
+    return 'mediamosa-storage-media://object/' . $app_id . '/' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($ticket_id) . '/' . $filename;
   }
 
   /**
@@ -408,7 +739,25 @@ abstract class mediamosa_storage {
    *   The path to ticket location
    */
   public static function get_realpath_object_file($app_id, $ticket_id, $filename) {
-    return self::get_realpath(self::get_uri_object_file($app_id, $ticket_id, $filename));
+    return mediamosa_io::realpath(self::get_uri_object_file($app_id, $ticket_id, $filename));
+  }
+
+  /**
+   * Return the path to object file (e.g. asx) usable for URLs, not for URIs.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $ticket_id
+   *   The mediafile ID.
+   * @param string $filename
+   *   The filename of the file.
+   *
+   * @return string
+   *   The path.
+   */
+  public static function get_path_media_object_file($app_id, $ticket_id, $filename) {
+    // Return the path.
+    return 'object/' . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . $filename;
   }
 
   // --------------------------------------------------- /ftp related functions.
@@ -418,8 +767,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The FTP location in uri.
    */
-  public static function get_uri_ftp() {
-    return 'mediamosa-storage://ftp/';
+  public static function get_realpath_ftp() {
+    return mediamosa_io::realpath('mediamosa-storage://ftp/');
   }
 
   /**
@@ -428,8 +777,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The FTP history location in uri.
    */
-  public static function get_uri_ftp_history() {
-    return 'mediamosa-storage://ftp/history/';
+  public static function get_realpath_ftp_history() {
+    return mediamosa_io::realpath('mediamosa-storage://ftp/history/');
   }
 
   /**
@@ -438,8 +787,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The history location uri.
    */
-  public static function get_uri_ftp_history_job() {
-    return 'mediamosa-storage://ftp/history/current.txt';
+  public static function get_realpath_ftp_history_job() {
+    return mediamosa_io::realpath('mediamosa-storage://ftp/history/current.txt');
   }
 
   /**
@@ -475,7 +824,7 @@ abstract class mediamosa_storage {
     $htaccess_path =  $directory . '/.htaccess';
 
     // If file already exists, then bail out.
-    if (file_exists($htaccess_path)) {
+    if (mediamosa_io::file_exists($htaccess_path)) {
       return TRUE;
     }
 
@@ -494,380 +843,123 @@ abstract class mediamosa_storage {
   /**
    * Trims the uri correctly without messing up schema.
    *
-   * Adds an '/' at the end and makes sure that only one is added.
-   *
    * @param string $uri
    *   The uri to trim.
+   * @param string $end
+   *   By default will add '/' at the end.
    *
    * @return string
    *   The trimed uri.
    */
-  public static function trim_uri($uri) {
-    return drupal_substr($uri, -3) != '://' ? rtrim($uri, '/') . '/' : $uri;
+  public static function trim_uri($uri, $add = '/') {
+    return drupal_substr($uri, -3) != '://' ? rtrim($uri, '/') . $add : $uri;
   }
 
   /**
-   * Create storage instance based on a storage profile
+   * Update the mountpoint to the new location.
    *
-   * @param $profile
-   *   Profile object, array or id
+   * @param array $mediafile
    *
-   * @return mediamosa_storage
-   *   MediaMosa storage object
+   * @param string $sannas_mount_point
+   */
+  public static function mediafile_update_mointpoint($mediafile, $sannas_mount_point) {
+    $fields = array(
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => $sannas_mount_point,
+    );
+
+    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+    $user_id = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
+
+    // Update the mediafile.
+    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $fields);
+  }
+
+  /**
+   * Copy mediafile to any location.
+   *
+   * @param string $source_uri
+   *   The uri of the source file.
+   * @param string $destination_uri
+   *   The uri of the target file. Must include the filename.
    *
    * @throws mediamosa_exception_error
-   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
-   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
    */
-  public static function create_instance_for_profile($profile) {
-    if (is_object($profile)) {
-      $profile = get_object_vars($profile);
+  public static function mediafile_copy($source_uri, $destination_uri) {
+    // This could happen.
+    if ($source_uri == $destination_uri) {
+      mediamosa_watchdog::log('Not coping mediafile; source and target are the same.');
+      return;
     }
-    if (is_numeric($profile)) {
-      $profile = mediamosa_storage_profile::get($profile);
-    }
-    $class = 'mediamosa_storage_' . $profile[mediamosa_storage_profile_db::TYPE];
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($source_uri);
+// @todo: remove from release.
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($destination_uri);
+// @todo: remove from release.
 
-    if (!class_exists($class)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
-    }
+    // Find the stream wrapper.
+    $mediamosa_io_streamwrapper_source = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
 
-    if (!in_array('mediamosa_storage', class_parents($class))) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
-    }
+    // Find the stream wrapper destination.
+    $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
 
-    return new $class($profile[mediamosa_storage_profile_db::NID]);
+    // Now copy.
+    $mediamosa_io_streamwrapper_destination->mediafile_copy($mediamosa_io_streamwrapper_source);
+
+    // Copied, return.
   }
 
   /**
-   * Create storage instance based on a storage mapping
+   * Move mediafile from one storage location to another.
    *
-   * @param $mapping
-   *   Mapping array or id
+   * Moving a mediafile from its current location to another comes in 4 flavors;
+   * 1. Moving from local to local storage (move file).
+   * 2. Moving from local to external storage (upload file).
+   * 3. Moving from external to local storage (download file).
+   * 4. Moving from external to external storage (move file).
    *
-   * @return mediamosa_storage
-   *   MediaMosa storage object
+   * @param array $mediafile
+   *   The mediafile to move.
+   * @param integer $storage_profile_id
+   *   The destination location.
+   * @param string $path
+   *   The destination path.
    *
+   * @throws mediamosa_exception_program_error
    * @throws mediamosa_exception_error
-   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
-   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
    */
-  public static function create_instance_for_mapping($mapping) {
-    if (!is_numeric($mapping)) {
-      $mapping = $mapping[mediamosa_storage_mapping_db::ID];
-    }
+  public static function mediafile_move(array $mediafile, $storage_profile_id, $path) {
 
-    return self::create_instance_for_uri(mediamosa_storage_mapping::get_uri($mapping));
-  }
+    // Source uri.
+    $source_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
-  /**
-   * Create storage instance based on a storage uri
-   *
-   * @param $uri
-   *   Storage uri
-   *
-   * @return mediamosa_storage
-   *   MediaMosa storage object
-   *
-   * @throws mediamosa_exception_error
-   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
-   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
-   */
-  public static function create_instance_for_uri($uri) {
-    $uri = parse_url($uri);
-    $class = 'mediamosa_storage_' . $uri['scheme'];
-    $path = $uri['path'];
+    // Get the storage profile.
+    $storage_profile = mediamosa_storage_profile::must_exists($storage_profile_id);
 
-    $profile = null;
-    if (is_numeric($uri['host'])) {
-      $profile = mediamosa_storage_profile::get($uri['host']);
-      $profile = $profile[mediamosa_storage_profile_db::NID];
-    }
+    // Is source mediafile a still?
+    $is_still = mediamosa_asset_mediafile::is_still($mediafile);
 
-    if (!class_exists($class)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
-    }
+    // Build the destination uri.
+    $destination_sannas_mount_point = mediamosa_storage::get_mount_point_uri_by_storage_profile($storage_profile, $path, $is_still);
+    $destination_uri = $destination_sannas_mount_point . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile[mediamosa_asset_mediafile_db::ID]);
 
-    if (!in_array('mediamosa_storage', class_parents($class))) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
-    }
+    // Get the destination stream wrapper.
+    $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
 
-    $instance = new $class($profile);
-    $instance->set_uri($uri);
+    // Copy file to destination.
+    self::mediafile_copy($source_uri, $destination_uri);
 
-    return $instance;
-  }
+    // Done, update the new location.
+    self::mediafile_update_mointpoint($mediafile, $mediamosa_io_streamwrapper_destination->get_uri_mount_point());
 
-  /**
-   * Create storage instance based on a mediafile
-   *
-   * @param $mediafile
-   *   Mediafile id
-   *
-   * @return mediamosa_storage
-   *   MediaMosa storage object
-   *
-   * @throws mediamosa_exception_error
-   *   If the storage class does not exist (mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND)
-   *   or is invalid (mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID)
-   */
-  public static function create_instance_for_mediafile($mediafile_id) {
-    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    // Store md5 metadata.
+    mediamosa_asset_mediafile_metadata::create_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], $mediamosa_io_streamwrapper_destination->getMD5(), mediamosa_asset_mediafile_metadata::MD5);
 
-    if (!mediafile) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
-    }
-
-    $uri = $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT];
-
-    // Fallback to standard mediamosa storage if no SANNAS mountpoint is provided
-    if (!$uri) {
-      $uri = mediamosa_storage_standard::get_uri($mediafile[mediamosa_asset_mediafile_db::FILENAME]);
-    }
-
-    $uri = parse_url($uri);
-    $class = 'mediamosa_storage_' . $uri['scheme'];
-    $path = $uri['path'];
-
-    if (!$profile && is_numeric($uri['host'])) {
-      $profile = $uri['host'];
-    }
-
-    if (is_object($profile)) {
-      $profile = get_object_vars($profile);
-    }
-
-    if (!class_exists($class)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND, array('@class' => $class));
-    }
-
-    if (!in_array('mediamosa_storage', class_parents($class))) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_CLASS_INVALID, array('@class' => $class));
-    }
-
-    $instance = new $class($profile);
-    $instance->set_mediafile($uri);
-
-    return $instance;
-  }
-
-  // ---------------------------------------------------------------- Class vars.
-  protected $profile;
-  protected $mediafile;
-  protected $uri;
-
-  // ---------------------------------------------------------------- Class methods.
-  /**
-   * Main constructor
-   *
-   * @param $profile
-   *   Storage profile node or nid
-   *
-   * @param $uri
-   *   Optional uri to the storage object
-   */
-  private function __construct($profile) {
-    if (is_numeric($profile)) {
-      $profile_id = $profile;
-      $profile = node_load($profile_id);
-      if (!$profile) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_PROFILE_NOT_FOUND, array('@profile_id' => $profile_id));
-      }
-    }
-    $this->profile = $profile;
-  }
-
-  /**
-   * Set mediafile
-   *
-   * @param $mediafile
-   *   Mediafile id or array
-   */
-  public function set_mediafile($mediafile) {
-    if (is_numeric($mediafile)) {
-      $mediafile_id = $mediafile;
-      $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
-      if (!mediafile) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
-      }
-    }
-
-    $this->mediafile = $mediafile;
-    //TODO: set $this->uri based on $this->mediafile
-  }
-
-  /**
-   * Set uri
-   *
-   * @param $uri
-   */
-  public function set_uri($uri) {
-    $this->uri = $uri;
-    //TODO: set $this-> mediafile based on $this->uri if possible
-  }
-
-  /**
-   * Return the storage options available for the storage type
-   *
-   * @param $profile
-   *   Storage profile object
-   *
-   * @return
-   *   Array of available storage options
-   */
-  public abstract function get_storage_options();
-
-  /**
-   * Return alle required upload parameters for the storage type
-   * which allow a frontend application to build the correct upload form
-   *
-   * $param $app_id
-   *   Application ID.
-   *
-   * @param $user_id
-   *   User ID
-   *
-   * @param $group_id
-   *   Group ID
-   *
-   * @return
-   *   Array with upload parameters
-   */
-  public abstract function get_upload_parameters($app_id, $user_id, $group_id);
-
-}
-
-/**
- * Our MediaMosa storage stream wrapper class.
- *
- * Under storage;
- * /data contains all physical files.
- * /media contains symbolic links to the /data files.
- *
- * mediamosa-storage://
- *
- * Provides support for all files and symlinks used by MediaMosa using the
- * Drupal file interface.
- *
- * @see mediamosa_storage::get_uri()
- */
-class mediamosa_storage_stream_wrapper extends DrupalLocalStreamWrapper {
-
-  // ------------------------------------------------- Stream wrapper functions.
-  /**
-   * Implements abstract public function getDirectoryPath()
-   */
-  public function getDirectoryPath() {
-    return self::get_storage_path();
-  }
-
-  /**
-   * Overrides getExternalUrl().
-   *
-   * Return the HTML URI of a public file.
-   */
-  public function getExternalUrl() {
-    // Unsupported for now.
-    return '';
-
-    //$path = str_replace('\\', '/', $this->getTarget());
-    //return self::getDirectoryPath() . '/' . drupal_encode_path($path);
-  }
-
-  /**
-   * Support for stat().
-   *
-   * Override:
-   * Fixing problem with Simpletests where notice of @stat is not suppressed.
-   *
-   * @param $uri
-   *   A string containing the URI to get information about.
-   * @param $flags
-   *   A bit mask of STREAM_URL_STAT_LINK and STREAM_URL_STAT_QUIET.
-   *
-   * @return
-   *   An array with file status, or FALSE in case of an error - see fstat()
-   *   for a description of this array.
-   *
-   * @see http://php.net/manual/en/streamwrapper.url-stat.php
-   */
-  public function url_stat($uri, $flags) {
-    $this->uri = $uri;
-    $path = $this->getLocalPath();
-
-    // Prevent the @stat(), which will give notice in Simpletest, even when
-    // its suppressed by @.
-    if (!file_exists($path)) {
-      return FALSE;
-    }
-
-    // Suppress warnings if requested or if the file or directory does not
-    // exist. This is consistent with PHP's plain filesystem stream wrapper.
-    if ($flags & STREAM_URL_STAT_QUIET) {
-      return @stat($path);
-    }
-
-    return stat($path);
-  }
-
-  // ---------------------------------------------- MediaMosa related functions.
-  /**
-   * Return the moint point path based on OS. Will return path to sandbox when
-   * in simpletest.
-   *
-   * @return
-   *   The path to the storage path.
-   */
-  public static function get_storage_path() {
-    if (mediamosa::in_simpletest_sandbox()) {
-      return mediamosa_storage_simpletest_stream_wrapper::get_storage_path();
-    }
-
-    return mediamosa_storage::trim_uri(mediamosa::is_windows_platform() ? self::get_storage_path_windows() : self::get_storage_path_linux(), '/') . '/';
-  }
-
-  /**
-   * Get the root of the storage setting for linux.
-   *
-   * @return
-   *   The path of the storage root.
-   */
-  public static function get_storage_path_linux() {
-    return mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
-  }
-
-  /**
-   * Get the root of the storage setting for windows.
-   *
-   * @return
-   *   The path of the storage root.
-   */
-  public static function get_storage_path_windows() {
-    return mediamosa::variable_get('mediamosa_current_mount_point_windows', '');
-  }
-}
-
-/**
- * Our MediaMosa storage simpletest stream wrapper class. Use this wrapper in
- * case you need to use the simpletest path during normal operations.
- *
- * mediamosa-storage-simpletest://
- *
- * @see mediamosa_storage::get_uri_simpletest()
- */
-class mediamosa_storage_simpletest_stream_wrapper extends mediamosa_storage_stream_wrapper {
-
-  /**
-   * Return the moint point path based on OS. Will return path to sandbox when
-   * in simpletest.
-   *
-   * @param $in_simpletest_sandbox
-   *   Specify TRUE if you want the path used during simpletest.
-   *
-   * @return
-   *   The path to the storage path.
-   */
-  public static function get_storage_path() {
-    return mediamosa_storage::trim_uri(mediamosa::is_windows_platform() ? self::get_storage_path_windows() : self::get_storage_path_linux()) . '/media/simpletest/';
+    // Remove old file. If the file is in use somewhere else, it will fail but
+    // is not fatal.
+    mediamosa_io::unlink($source_uri);
   }
 }

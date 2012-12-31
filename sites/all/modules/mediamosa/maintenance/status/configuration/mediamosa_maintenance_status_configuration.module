@@ -233,19 +233,19 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   // Only unix/linux platform.
   if (!mediamosa::is_windows_platform()) {
-    $lua_run = is_executable(mediamosa_settings::analyse_file());
+    $lua_run = is_executable(mediamosa_settings::lua_analyse_script());
 
     $results['app_lua_xmod1'] = array(
       'title' => t('LUA analyse script'),
-      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::analyse_file())),
+      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::lua_analyse_script())),
       'severity' => _mediamosa_maintenance_status_okerror($lua_run),
     );
 
-    $lua_run = is_executable(mediamosa_settings::ffmpeg_transcode_file());
+    $lua_run = is_executable(mediamosa_settings::lua_transcode_script());
 
     $results['app_lua_xmod2'] = array(
       'title' => t('LUA transcode script'),
-      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::ffmpeg_transcode_file())),
+      'value' => $lua_run ? t('Has execute rights') : t('Has no execute rights, use chmod +x to give rights to script for @file', array('@file' => mediamosa_settings::lua_transcode_script())),
       'severity' => _mediamosa_maintenance_status_okerror($lua_run),
     );
   }
@@ -302,10 +302,13 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   // ------------------------------------------------------- Check alias /media.
   // Check the /media alias.
-  $servers = mediamosa_server::get_enabled_download();
+  $servers = mediamosa_server::get_enabled(array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+    mediamosa_server_db::SERVER_TYPE_STREAMING,
+  ));
 
-  // Create file in /media dir.
-  $filename = mediamosa_storage::get_uri_media() . '0/t/test.txt';
+  // Create test file in /media dir.
+  $filename = mediamosa_storage::get_realpath_media() . '/0/t/test.txt';
   if (!mediamosa_io::file_exists($filename)) {
     mediamosa_io::mkdir(mediamosa_io::dirname($filename));
     mediamosa_io::touch($filename);
@@ -316,14 +319,34 @@ function _mediamosa_maintenance_status_configuration_generate() {
     $url = rtrim($server[mediamosa_server_db::SERVER_URI], '/') . '/media/0/t/test.txt';
     $result = mediamosa_http::drupal_http_request($url);
 
-    // Must be 200 code and not served by mediamosa.
+    // Must be 200 code and NOT served by mediamosa.
     $got_200 = $result->code == 200;
     $is_webserver = empty($result->headers['x-mediamosa-version']);
 
+    $is_streamer = $server[mediamosa_server_db::SERVER_TYPE] == mediamosa_server_db::SERVER_TYPE_STREAMING;
+    $type = drupal_strtolower($server[mediamosa_server_db::SERVER_TYPE]);
+
+    $text = $got_200 && $is_webserver ?
+      t('Alias present and working for @type server @name, uri: @uri',
+        array(
+          '@type' => $type,
+          '@name' => $server[mediamosa_server_db::SERVER_NAME],
+          '@uri' => $server[mediamosa_server_db::SERVER_URI]
+        )
+      )
+      :
+      t('Alias not working for @type server @name, uri: @uri',
+        array(
+          '@type' => $type,
+          '@name' => $server[mediamosa_server_db::SERVER_NAME],
+          '@uri' => $server[mediamosa_server_db::SERVER_URI]
+        )
+      );
+
     $results['server_download_' . $key] = array(
       'title' => t('Webserver media alias'),
-      'value' => $got_200 && $is_webserver ? t('Alias present and working for server @name, uri: @uri', array('@name' => $server[mediamosa_server_db::SERVER_NAME], '@uri' => $server[mediamosa_server_db::SERVER_URI])) : t('Alias not working for server @name, uri: @uri', array('@name' => $server[mediamosa_server_db::SERVER_NAME], '@uri' => $server[mediamosa_server_db::SERVER_URI])),
-      'severity' => _mediamosa_maintenance_status_okerror($got_200),
+      'value' => $text,
+      'severity' => $is_streamer ? _mediamosa_maintenance_status_okwarning($got_200) : _mediamosa_maintenance_status_okerror($got_200),
     );
 
     if (!$got_200 || !$is_webserver) {

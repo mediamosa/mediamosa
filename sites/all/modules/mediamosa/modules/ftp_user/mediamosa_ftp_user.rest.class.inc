@@ -146,7 +146,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
 
     // Create FTP dir.
-    $user_home_dir = mediamosa_storage::get_uri_ftp() . $username;
+    $user_home_dir = mediamosa_storage::get_realpath_ftp() . $username;
 
     try {
       mediamosa_io::mkdir($user_home_dir);

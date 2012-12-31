@@ -25,13 +25,17 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id_2 = $this->createMediafile($asset_id);
 
     // Upload 2 mediafiles.
-    $filename_1 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1, $this->getTestVideo());
-    $filename_2 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_2, $this->getTestVideo_ogg());
+    $filename_1 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1, $this->getTestVideo(), self::SIMPLETEST_USER_ID, array('transcode_inherits_acl' => TRUE));
+    $filename_2 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_2, $this->getTestVideo_ogg(), self::SIMPLETEST_USER_ID, array('transcode_inherits_acl' => TRUE));
     assert(!empty($filename_1));
     assert(!empty($filename_2));
 
-    // Now transcode both.
+    // Set ACL so we have tickets.
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user_id' => 'johndoe'));
+    $this->setMediafileAcl($mediafile_id_2, array('acl_user_id' => 'johndoe'));
 
+    // Now transcode both.
+    //
     // Create transcode job.
     $job_id_1 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => $this->getDefaultTranscodeProfile()));
     $job_id_2 = $this->createMediafileTranscode($mediafile_id_2, array('profile_id' => $this->getDefaultTranscodeProfile()));
@@ -72,6 +76,8 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
       }
     }
 
+    $this->var_export($mediafile_ids, 'Transcode mediafiles');
+
     // 2 transcodes must be found.
     $this->assertEqual(count($mediafile_ids), 2, 'Found 2 transcodes.');
 
@@ -80,7 +86,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
       mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
     );
-    $xml = $this->do_media_play_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $xml = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     $this->var_export($xml);
 
@@ -88,10 +94,11 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
       mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
     );
-    $xml = $this->do_media_play_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $xml = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Now get the tickets from the database.
     $result = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt')
       ->condition(mediamosa_media_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
       ->execute()
       ->fetchAll();
@@ -141,8 +148,8 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
         mediamosa_rest_call_media_view::RESPONSE => $subject,
         mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
       );
-      $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
-      $output = $xml['items']['item']['output'];
+      $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+      $output = (string) $xml->items->item->output;
 
       switch ($subject) {
         case 'plain':
@@ -156,6 +163,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
             t("Mediafile output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
           );
           break;
+
         case 'object':
           $test_string = '<object id=';
           // Check the output.
@@ -164,6 +172,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
             t("Object output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
           );
           break;
+
         default:
           // Test the output, do output call.
           $output = str_replace('/still/', '/simpletest/still/', $output);

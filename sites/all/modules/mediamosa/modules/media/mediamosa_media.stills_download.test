@@ -53,7 +53,7 @@ class MediaMosaMediaStillDownloadTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     $still_id = $stills['stills']['still_id'];
 
     foreach ($still_servers as $still_server) {
-      $url = str_replace('{TICKET}', $app_id_1 . '/' . $still_id[0] . '/'. $still_id, mediamosa_server::get_server_url($still_server)) . '.jpeg';
+      $url = str_replace('{TICKET}', $app_id_1 . '/' . $still_id[0] . '/'. $still_id . '/', mediamosa_server::get_server_url($still_server)) . $still_id . '.jpg';
 
       // Test the output, do output call.
       $url = str_replace('/media/', '/media/simpletest/media/', $url);
@@ -71,15 +71,15 @@ class MediaMosaMediaStillDownloadTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       $this->var_export($result->headers);
 
       // Get filepath to still.
-      $still_link = mediamosa_storage::get_realpath_data_file($still_id);
+      $still_uri = mediamosa_storage::get_uri_mediafile($still_id);
 
-      $this->var_export($still_link, 'still path');
+      $this->pass(t('Still path @path (@uri)', array('@path' => mediamosa_io::realpath_safe($still_uri), '@uri' => $still_uri)));
 
       // Does it exists?
-      $this->assertTrue(mediamosa_io::file_exists($still_link, TRUE), 'Found still file.');
+      $this->assertTrue(mediamosa_io::file_exists($still_uri), 'Found still file.');
 
       // Get the still filesize.
-      $still_size = mediamosa_io::filesize($still_link);
+      $still_size = mediamosa_io::filesize($still_uri);
 
       $this->var_export($still_size, 'still size');
       $this->var_export(strlen($result->data), 'download size');
@@ -87,8 +87,27 @@ class MediaMosaMediaStillDownloadTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       // Filesize of the file must be same as ours.
       $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
 
+      // Call must be handled by webserver second time.
+      $this->assertTrue(empty($result->headers['x-mediamosa-version']), 'First call handled by webserver (= permanent file)');
+
+      // Remove ACL from still (will clearout perm links).
+      $this->deleteMediafileAcl($still_id);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Dump header.
+      $this->var_export($result->headers);
+
+      // Filesize of the file must be same as ours.
+      $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
+
+      // 'content-length' must be same as our.
+      $this->assertTrue($result->headers['content-length'] == $still_size && $result->headers['content-length'] > 0, t('Content-length was set correctly.'));
+
+
       // Call must be handled by MediaMosa first time.
-      $this->assertTrue(!empty($result->headers['x-mediamosa-version']), 'First call handled by MediaMosa');
+      $this->assertTrue(!empty($result->headers['x-mediamosa-version']), 'Second call handled by MediaMosa');
 
       // Get the file.
       $result = mediamosa_http::drupal_http_request($url);
@@ -103,7 +122,7 @@ class MediaMosaMediaStillDownloadTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       $this->assertTrue($result->headers['content-length'] == $still_size && $result->headers['content-length'] > 0, t('Content-length was set correctly.'));
 
       // Call must be handled by webserver second time.
-      $this->assertTrue(empty($result->headers['x-mediamosa-version']), 'Second call handled by webserver (= permanent file)');
+      $this->assertTrue(empty($result->headers['x-mediamosa-version']), '3rd call handled by webserver (= permanent file)');
     }
   }
 }

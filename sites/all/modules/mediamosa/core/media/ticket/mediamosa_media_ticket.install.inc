@@ -39,10 +39,10 @@ function mediamosa_media_ticket_schema() {
       ),
       mediamosa_media_ticket_db::TICKET_TYPE => array(
         'description' => 'The ticket type.',
-        'type' => "enum('" . implode("','", array(mediamosa_media_ticket_db::TICKET_TYPE_PLAY, mediamosa_media_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_media_ticket_db::TICKET_TYPE_STILL, mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_media_ticket_db::TICKET_TYPE_VIEW, mediamosa_media_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_media_ticket_db::TICKET_TYPE_STILL, mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_media_ticket_db::TICKET_TYPE_PLAY, mediamosa_media_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_media_ticket_db::TICKET_TYPE_STILL, mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
-        'default' => mediamosa_media_ticket_db::TICKET_TYPE_PLAY,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_media_ticket_db::TICKET_TYPE_VIEW, mediamosa_media_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_media_ticket_db::TICKET_TYPE_STILL, mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'default' => mediamosa_media_ticket_db::TICKET_TYPE_VIEW,
       ),
       mediamosa_media_ticket_db::ISSUED => array(
         'type' => 'datetime',

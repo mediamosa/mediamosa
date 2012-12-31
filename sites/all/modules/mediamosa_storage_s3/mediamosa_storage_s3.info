@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Amazon S3 storage module"
 description = "The MediaMosa Amazon S3 storage module."
 package = "MediaMosa - Storage"
@@ -11,6 +9,15 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_storage
 dependencies[] = awssdk (>=5.1)
 
-; Used files
+; Used files.
+files[] = mediamosa_storage_s3.amazon_s3.class.inc
 files[] = mediamosa_storage_s3.class.inc
+files[] = mediamosa_storage_s3.exception.class.inc
+files[] = mediamosa_storage_s3.streamwrapper.class.inc
 files[] = mediamosa_storage_s3_db.class.inc
+files[] = tests/mediamosa_storage_s3.simpletest.class.inc
+
+; Test.
+files[] = tests/mediamosa_storage_s3.basic.test
+files[] = tests/mediamosa_storage_s3.io.test
+files[] = tests/mediamosa_storage_s3.jobs.test

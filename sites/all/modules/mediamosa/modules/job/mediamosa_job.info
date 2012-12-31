@@ -1,18 +1,19 @@
 name = Jobs
 description = The jobs module handles, executes and manages queing of jobs.
 package = MediaMosa - Modules
-version = 7.x-3.2.2
+version = 7.x-3.4.0
 core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
 
 ; Used files.
+files[] = mediamosa_job.analyse.test
+files[] = mediamosa_job.cql.test
+files[] = mediamosa_job.delete.test
 files[] = mediamosa_job.rest.class.inc
 files[] = mediamosa_job.test
-files[] = mediamosa_job.delete.test
 files[] = mediamosa_job.transcode.test
-files[] = mediamosa_job.cql.test
 
 ; Job Server.
 files[] = server/mediamosa_job_server.rest.class.inc

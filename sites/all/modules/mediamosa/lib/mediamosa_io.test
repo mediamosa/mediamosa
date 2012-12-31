@@ -1,0 +1,112 @@
+<?php
+/**
+ * @file
+ * Basic stream wrapper tests.
+ *
+ * Other IO/Stream modules (like Amazone S3) should copy the testIO function and
+ * put into their own io test.
+ */
+
+class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa library - Library IO tests',
+      'description' => 'Testing the MediaMosa IO layer.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
+    );
+  }
+
+  // ------------------------------------------------------------------ Methods.
+
+  // --------------------------------------------------------------------- Test.
+  /**
+   * Run first before test.
+   *
+   * @param integer $app_id
+   *   The client app.
+   * @param array $upload
+   *   The upload for the test.
+   */
+  protected function preTest($app_id, array $upload) {
+    $this->var_export($app_id);
+    $this->var_export($upload);
+  }
+
+  /**
+   * Basic test IO.
+   */
+  public function testIO() {
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Do preTest.
+    $this->preTest($app_id, $upload);
+
+    // Get mediafile URI.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
+
+    $this->var_export($mediafile_uri);
+
+    // Test exists.
+    $this->file_exists($mediafile_uri);
+
+    // Is a file.
+    $this->is_file($mediafile_uri);
+
+    // Is a dir.
+    $this->is_dir(mediamosa_io::dirname($mediafile_uri));
+
+    $filesize = mediamosa_io::filesize($mediafile_uri);
+    $this->assert($filesize == 993480, t("Got filesize '@filesize'", array('@filesize' => $filesize)));
+
+    // Make sure its an different filename, but same location.
+    $mediafile_uri_copy = substr($mediafile_uri, 0, -1);
+
+    // Copy file.
+    $this->copy($mediafile_uri, $mediafile_uri_copy);
+
+    // Is a file.
+    $this->is_file($mediafile_uri_copy);
+
+    // Is a dir.
+    $this->is_dir(mediamosa_io::dirname($mediafile_uri_copy));
+
+    // Delete file.
+    $this->unlink($mediafile_uri);
+
+    // Is not file.
+    $this->is_not_file($mediafile_uri);
+
+    // Is a dir.
+    $this->is_dir(mediamosa_io::dirname($mediafile_uri));
+
+    // Do postTest.
+    $this->postTest($app_id);
+  }
+
+  /**
+   * Run last in test.
+   *
+   * @param integer $app_id
+   *   The client app.
+   */
+  protected function postTest($app_id) {
+
+
+  }
+}

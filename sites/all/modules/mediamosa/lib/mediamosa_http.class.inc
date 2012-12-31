@@ -309,33 +309,26 @@ class mediamosa_http {
    * Do call to URL using CURL lib.
    *
    * @param string $url
+   *   The URL to call.
    * @param array $options
-   *  Extra options;
-   *   - header:
-   *     name => value pair for http header.
-   *   - use_curlproxy
-   *     set to TRUE to enable call through curlproxy (if specified).
-   *   - do_internal
-   *     Add the internal pass to the header. Remember to add /internal yourself to the url.
-   *   - do_head
-   *     true to trigger call.
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *     - do_head
+   *       Set to TRUE to do HEAD instead of GET.
    */
   public static function do_call($url, array $options = array()) {
-    $options['do_head'] = FALSE;
-    return self::do_head_call($url, $options);
-  }
-
-  /**
-   * Do a head call.
-   * Triggers the URL without getting or waiting for the output.
-   */
-  public static function do_head_call($url, array $options = array()) {
     // Set defaults.
     $options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
       'do_internal' => FALSE,
-      'do_head' => TRUE,
+      'do_head' => FALSE,
     );
 
     $curlproxy_http = NULL;
@@ -405,10 +398,46 @@ class mediamosa_http {
   }
 
   /**
+   * Do a head call.
+   *
+   * Triggers the URL without getting or waiting for the output.
+   *
+   * @param string $url
+   *   The URL to call.
+   * @param array $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *
+   * @see do_call()
+   */
+  public static function do_head_call($url, array $options = array()) {
+    $options['do_head'] = TRUE;
+    mediamosa_debug::log('Doing HEAD call to @url', array('@url' => $url));
+    $data = self::do_call($url, $options);
+    mediamosa_debug::log('Done HEAD call to @url', array('@url' => $url));
+    return $data;
+  }
+
+  /**
    * Wrapper for internal HEAD calls.
    *
    * @param $url
+   *   The URL to call, prefix url with /internal.
    * @param $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *
+   * @see do_head_call()
+   * @see do_call()
    */
   public static function do_head_internal_call($url, array $options = array()) {
     $options['do_internal'] = TRUE;

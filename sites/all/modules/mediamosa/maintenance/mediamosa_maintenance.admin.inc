@@ -180,7 +180,7 @@ function theme_mediamosa_maintenance_table($variables) {
   $build['table'] = theme('table', $variables);
 
   if (!empty($variables['note'])) {
-    $build['note'] = '<div align="right"><sup><small>' . check_plain($variables['note']) . '</small></sup><div>';
+    $build['note'] = '<div align="right"><sup><small>' . check_plain($variables['note']) . '</small></sup></div>';
   }
 
   if (!empty($variables['caption_bottom'])) {

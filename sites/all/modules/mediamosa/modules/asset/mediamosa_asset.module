@@ -362,7 +362,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   // Create ticket for upload.
   $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -375,14 +375,14 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  // Create ticket for upload.
-  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_create',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
-  );
-  
+//  // Create ticket for upload.
+//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
+//    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_create',
+//    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+//    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+//    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+//  );
+
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
@@ -1723,23 +1723,23 @@ tag=Best',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
-  // Create ticket for upload.
-  //TODO: update the doc of the following rest call
-  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
-  mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
-  mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
-  mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload/create',
-  mediamosa_rest_call::RESPONSE_FIELDS => array(),
-  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-  <item id="1">
-    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
-    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
-    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
-    <progress_id>1234567</progress_id>
-  </item>
-</items>',
-  );
-  
+//  // Create ticket for upload.
+//  //TODO: update the doc of the following rest call
+//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
+//  mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+//  mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+//  mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload/create',
+//  mediamosa_rest_call::RESPONSE_FIELDS => array(),
+//  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+//  <item id="1">
+//    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
+//    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
+//    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+//    <progress_id>1234567</progress_id>
+//  </item>
+//</items>',
+//  );
+
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
@@ -2018,7 +2018,7 @@ user_id=admin',
 function mediamosa_asset_mediamosa_configuration_collect() {
   $form['settings_supplement'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Supplement settings'),
+    '#title' => t('Asset supplement settings'),
     '#description' => t('You can set maximum supplement size for assets here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,

@@ -9,7 +9,7 @@
  * Method: POST
  */
 class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const OLD_GROUP_ID = 'old_group_id';
   const NEW_GROUP_ID = 'new_group_id';
@@ -18,7 +18,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   const OLD_APP_ID = 'old_app_id';
   const NEW_APP_ID = 'new_app_id';
 
-  // ------------------------------------------------------------------ Public Functions.
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = array();
 

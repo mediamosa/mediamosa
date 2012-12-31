@@ -409,9 +409,9 @@ function rubik_admin_block_content($vars) {
 
   $output = '';
   if (!empty($content)) {
-  
+
     foreach ($content as $k => $item) {
-    
+
       //-- Safety check for invalid clients of the function
       if (empty($content[$k]['localized_options']['attributes']['class'])) {
         $content[$k]['localized_options']['attributes']['class'] = array();
@@ -419,7 +419,7 @@ function rubik_admin_block_content($vars) {
       if (!is_array($content[$k]['localized_options']['attributes']['class'])) {
         $content[$k]['localized_options']['attributes']['class'] = array($content[$k]['localized_options']['attributes']['class']);
       }
-    
+
       $content[$k]['title'] = "<span class='icon'></span>" . filter_xss_admin($item['title']);
       $content[$k]['localized_options']['html'] = TRUE;
       if (!empty($content[$k]['localized_options']['attributes']['class'])) {
@@ -510,13 +510,47 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
+  // Unique ID.
+  $elements['#id'] = "{$elements['#id']}-{$instance}";
+
+  // Hide. Still no idea why we clone.
+  $elements['#attributes'] = array('style' => 'display:none');
+
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
     }
+    if (isset($elements[$key]['#name'])) {
+      $elements[$key]['#name'] = "{$elements[$key]['#name']}-{$instance}";
+    }
+
+    _rubik_render_clone($elements[$key], $instance);
   }
+
   $instance++;
   return drupal_render($elements);
+}
+
+/**
+ * @todo: fix on rubik theme.
+ */
+function _rubik_render_clone(&$elements, $instance) {
+
+  foreach (element_children($elements) as $key) {
+    unset($elements[$key]);
+    continue;
+
+    if (isset($elements[$key]['#id'])) {
+      $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
+    }
+    if (isset($elements[$key]['#name'])) {
+      $elements[$key]['#name'] = "{$elements[$key]['#name']}-{$instance}";
+      $elements["{$elements[$key]['#name']}-{$instance}"] = $elements[$key];
+      unset($elements[$key]);
+    }
+
+    _rubik_render_clone($elements[$key], $instance);
+  }
 }
 
 /**

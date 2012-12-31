@@ -1,10 +1,31 @@
 <?php
-// $Id$
+/**
+ * @file
+ * MediaMosa AWS S3 storage.
+ */
 
- /**
-  * @file
-  * MediaMosa AWS S3 storage.
-  */
+// Prevent requirement warning of awssdk.
+if (!($config = &drupal_static('awssdk_config_load'))) {
+  $config = array('key' => 'foo', 'secret' => 'foo');
+}
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function mediamosa_storage_s3_stream_wrappers() {
+
+  // Our MediaMosa S3 Stream Wrappers.
+  $wrappers = array(
+    'mediamosa-storage-s3' => array(
+      'name' => t('MediaMosa storage S3 mount point location'),
+      'class' => 'mediamosa_storage_s3_streamwrapper',
+      'description' => t('The remote storage stream wrapper for Amazon S3 for storing MediaFiles.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+  );
+
+  return $wrappers;
+}
 
 /**
  * Implements hook_mediamosa_storage_info().
@@ -25,10 +46,10 @@ function mediamosa_storage_s3_mediamosa_storage_profile_load($node) {
     ->fields('p')
     ->execute()
     ->fetchAssoc();
-  
+
   $node->{mediamosa_storage_s3_db::KEY} = $result[mediamosa_storage_s3_db::KEY];
   $node->{mediamosa_storage_s3_db::SECRET} = $result[mediamosa_storage_s3_db::SECRET];
-  
+
   return $node;
 }
 
@@ -43,11 +64,11 @@ function mediamosa_storage_s3_mediamosa_storage_profile_insert($node) {
       $fields[$field] = $node->{$field};
     }
   }
-  
+
   mediamosa_db::db_insert(mediamosa_storage_s3_db::TABLE_NAME)
     ->fields($fields)
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after inserting?
 }
 
@@ -67,7 +88,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_update($node) {
     ->fields($fields)
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after updating?
 }
 
@@ -78,7 +99,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_delete($node) {
   mediamosa_db::db_delete(mediamosa_storage_s3_db::TABLE_NAME)
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after deleting?
 }
 
@@ -108,7 +129,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_form($node, $form_state)
     '#default_value' => mediamosa_node::default_value(mediamosa_storage_s3_db::KEY, $node),
     '#maxlength' => mediamosa_storage_s3_db::KEY_LENGTH,
   );
-  
+
   $form[mediamosa_storage_s3_db::SECRET] = array(
     '#title' => t('AWS Secret'),
     '#type' => 'password',
@@ -117,39 +138,103 @@ function mediamosa_storage_s3_mediamosa_storage_profile_form($node, $form_state)
     //'#default_value' => mediamosa_node::default_value(mediamosa_storage_s3_db::SECRET, $node),
     '#maxlength' => mediamosa_storage_s3_db::SECRET_LENGTH,
   );
-  
+
   return $form;
 }
 
 /**
-* Implements hook_mediamosa_storage_profile_validate().
-*/
+ * Implements hook_mediamosa_storage_profile_validate().
+ */
 function mediamosa_storage_s3_mediamosa_storage_profile_validate($node, $form, $form_state) {
-  if(!libraries_load('awssdk')) {
-    form_set_error('', t('Unable to load the AWS SDK. Please check if awssdk is installed correctly.'));
+  // Validate login.
+  try {
+    mediamosa_storage_s3::boot($node->{mediamosa_storage_s3_db::KEY}, $node->{mediamosa_storage_s3_db::SECRET});
   }
-  else if(!class_exists('AmazonS3')) {
-    form_set_error('', t('Cannot load AmazonS3 class. Please check if awssdk is installed correctly'));
+  catch (Exception $e) {
+    form_set_error('', $e->getMessage());
   }
-  else {
-    // Test the AWS connection
+}
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_storage_s3_mediamosa_configuration_collect() {
+  $form['settings_s3'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Amazone S3 Simpletest'),
+    '#description' => t('The settings are <b>optional</b> and only used for simpletests. You should, by default, keep these settings empty. <b>Intended for developers</b>.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_s3']['s3_debug'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Amazone S3 Simpletest login'),
+    '#description' => t('The login settings enables and allows you to run the MediaMosa S3 simpletests for testing. These settings are only required for developers and should be left alone in most cases.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_enable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable s3 simpletests'),
+    '#default_value' => variable_get('mediamosa_storage_s3_simpletest_enable', FALSE),
+    '#description' => t('Enable simpletests for S3. It cost money to upload and download to S3, therefor the simpletest for S3 are off by default. The simpletests also need the debug login below.'),
+  );
+  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_aws_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Simpletest Amazon Web Services Key'),
+    '#default_value' => variable_get('mediamosa_storage_s3_simpletest_aws_key', ''),
+    '#description' => t('Amazon Web Services Key used during simpletest.'),
+  );
+  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_aws_secret'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Simpletest Amazon Web Services Secret Key'),
+    '#default_value' => variable_get('mediamosa_storage_s3_simpletest_aws_secret', ''),
+    '#description' => t('Amazon Web Services Secret Key used during simpletest.'),
+  );
+  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_region'] = array(
+    '#type' => 'select',
+    '#title' => t('Simpletest Amazon region'),
+    '#options' => mediamosa_storage_s3::get_s3_regions(),
+    '#default_value' => variable_get('mediamosa_storage_s3_simpletest_region', AmazonS3::REGION_IRELAND),
+    '#description' => t('Select the region where to use Amazon S3 simpletest'),
+  );
+
+//  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_aws_certificate_authority'] = array(
+//    '#type' => 'checkbox',
+//    '#title' => t('Determines which Cerificate Authority file to use'),
+//    '#default_value' => variable_get('aws_certificate_authority', FALSE),
+//    '#description' => t('A value of boolean `false` will use the Certificate Authority file available on the system. A value of boolean `true` will use the Certificate Authority provided by the SDK. Passing a file system path to a Certificate Authority file (chmodded to `0755`) will use that. Leave this set to `false` if you\'re not sure.'),
+//  );
+  return $form;
+}
+
+/**
+ * Implements hook_mediamosa_configuration_validate().
+ */
+function mediamosa_storage_s3_mediamosa_configuration_validate($form, $form_state) {
+  // Get data.
+  $mediamosa_storage_s3_simpletest_enable = $form_state['values']['mediamosa_storage_s3_simpletest_enable'];
+  $mediamosa_storage_s3_simpletest_aws_key = $form_state['values']['mediamosa_storage_s3_simpletest_aws_key'];
+  $mediamosa_storage_s3_simpletest_aws_secret = $form_state['values']['mediamosa_storage_s3_simpletest_aws_secret'];
+
+  // Key.
+  if (
+    variable_get('mediamosa_storage_s3_simpletest_enable') != $mediamosa_storage_s3_simpletest_enable ||
+    variable_get('mediamosa_storage_s3_simpletest_aws_key') != $mediamosa_storage_s3_simpletest_aws_key ||
+    variable_get('mediamosa_storage_s3_simpletest_aws_secret') != $mediamosa_storage_s3_simpletest_aws_secret) {
+    // Do clear data for simpletest so our hook is intiallized.
+    cache_clear_all('simpletest', 'cache');
+
+    // Validate login.
     try {
-      $s3 = new AmazonS3(array('key' => $node->{mediamosa_storage_s3_db::KEY}, 'secret' => $node->{mediamosa_storage_s3_db::SECRET}));
-      $user_id = $s3->get_canonical_user_id();
-      if(!$user_id['id']) {
-        form_set_error('', t('The S3 access credentials are invalid'));
-      }
+      mediamosa_storage_s3::boot($mediamosa_storage_s3_simpletest_aws_key, $mediamosa_storage_s3_simpletest_aws_secret);
+
+      drupal_set_message(t('S3 login succesful.'));
     }
-    catch(RequestCore_Exception $e){
-      if(strstr($e->getMessage(), 'SSL certificate problem')) {
-        form_set_error('', t('There was a problem with the SSL certificate. Try setting AWS_CERTIFICATE_AUTHORITY to true in "libraries/awssdk/config.inc.php". You may also have a curl library (e.g. the default shipped with MAMP) that does not contain trust certificates for the major authorities.'));
-      }
-      else {
-        form_set_error('', t('There was a problem connecting to S3'));
-      }
-    }
-    catch(Exception $e) {
-      form_set_error('', t('There was a problem connecting to S3'));
+    catch (Exception $e) {
+      form_set_error('', $e->getMessage());
     }
   }
 }

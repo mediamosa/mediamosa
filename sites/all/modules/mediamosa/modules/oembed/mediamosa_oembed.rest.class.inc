@@ -226,11 +226,12 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       // Get the metadata.
       $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
-      $filename = mediamosa_storage::get_realpath_data_mediafile($mediafile);
-      if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
+      $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+      if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && mediamosa_io::file_exists($mediafile_uri)) {
         $response = mediamosa_media::do_response_object(
           $app_id,
           $user_id,
+          $is_app_admin,
           $mediafile,
           ($maxwidth ? $maxwidth : 0),
           ($maxheight ? $maxheight : 0),
@@ -261,7 +262,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
 
       // Get still
-      $response = mediamosa_media::do_response_still($app_id, $user_id, $still);
+      $response = mediamosa_media::do_response_still($app_id, $user_id, $is_app_admin, $still);
 
       $url = $response['output'];
 

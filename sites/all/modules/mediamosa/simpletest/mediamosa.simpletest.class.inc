@@ -161,7 +161,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // FIXME: public:// does not seem to work here.
     $log = 'sites/default/files/simpletest/' . substr($this->databasePrefix, 10) . '/error.log';
     $found = FALSE;
-    if (file_exists($log)) {
+    if (mediamosa_io::file_exists($log)) {
       $found = 0;
       foreach (file($log) as $line) {
         if (preg_match('/\[.*?\] (.*?): (.*?) in (.*) on line (\d+)/', $line, $match)) {
@@ -170,7 +170,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
           $caller = array(
             'line' => $match[4],
             'file' => $match[3],
-            'function' => 'Unknown',
+            'function' => 'Dumplog',
           );
           $this->assert(FALSE, $line, $match[1], $caller);
         }
@@ -430,20 +430,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     return parent::drupalGet($path, $options, $headers);
   }
 
+
   /**
-   * Override drupalPost
-   *
-   * @param string $path
-   * @param string $edit
-   * @param string $submit
-   * @param array $options
-   * @param array $headers
+   * Implements drupalPost().
    */
-  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array()) {
+  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL, $extra_post = NULL) {
     // Just let them know we need the Drupal part.
     $headers[] = mediamosa_settings::X_MEDIAMOSA_DISABLE_APP . ': True';
 
-    return parent::drupalPost($path, $edit, $submit, $options, $headers);
+    return parent::drupalPost($path, $edit, $submit, $options, $headers, $form_html_id, $extra_post);
   }
 
   /**
@@ -650,27 +645,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * IO Stuff.
-   */
-  protected function copy($source, $dest) {
-    $this->assertTrue(
-      mediamosa_io::file_exists($source, TRUE),
-      t("Copy: Source file '@source' exists.", array('@source' => $source))
-    );
-
-    // Copy the test video
-    $this->assertTrue(
-      mediamosa_io::copy($source, $dest) != FALSE,
-      t("Copy: Copied from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
-    );
-
-    $this->assertTrue(
-      mediamosa_io::file_exists($dest, TRUE),
-      t("Copy: New file '@target' exists.", array('@target' => $dest))
-    );
-  }
-
-  /**
    * Create symlink.
    *
    * @param string $source
@@ -684,7 +658,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     $this->assertTrue(
-      mediamosa_io::file_exists($dest, TRUE),
+      mediamosa_io::file_exists($dest),
       t("Symlink: New file '@target' exists.", array('@target' => $dest))
     );
 
@@ -704,7 +678,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     $this->assertTrue(
-      mediamosa_io::file_exists($dest, TRUE) == FALSE,
+      mediamosa_io::file_exists($dest) == FALSE,
       t("Unlink: File '@target' is removed.", array('@target' => $dest))
     );
   }
@@ -713,60 +687,228 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Create folder.
    *
    * @param string $uri
-   *
+   *   The uri of the directory to create.
+   * @param boolean $recursive
+   *   Enable recursive to create the sub maps required to create directory.
+   * @param integer $mode
+   *   Default mode value for created directory, defaults to mode 0775.   *
    * @see mediamosa_io::mkdir()
    */
-  protected function mkdir($uri) {
+  protected function mkdir($uri, $recursive = TRUE, $mode = 0775) {
     // Create the directory first.
-    mediamosa_io::mkdir($uri);
-    $this->pass(t('Created directory @uri (@realpath)', array('@uri' => $uri, '@realpath' => mediamosa_io::realpath($uri))));
+    mediamosa_io::mkdir($uri, $recursive, $mode);
+    $this->pass(t('Created directory @uri (@realpath)', array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
   }
 
   /**
    * Create empty file.
    *
-   * @param string $filename
+   * @param string $uri
+   *   The file uri.
    * @param string $text
+   *   The text for assert.
+   *
+   * @return boolean
+   *   TRUE when success, FALSE otherwise.
    */
-  protected function touch($filename, $text = 'Create empty file.') {
-    mediamosa_io::touch($filename);
-    $this->unlinks[] = $filename;
-    return $this->file_exists($filename, $text);
+  protected function touch($uri, $text = 'Create empty file @uri (@realpath).') {
+    mediamosa_io::touch($uri);
+    $this->unlinks[] = mediamosa_io::realpath($uri);
+    return $this->file_exists($uri, $text);
   }
 
   /**
-   * Check if file or path exists.
+   * Copy file.
    *
-   * @param string $filename
+   * @param string $source_uri
+   *   Path to the source file.
+   * @param string $destination_uri
+   *   The destination path. If dest is a URL, the copy operation may fail if
+   *   the wrapper does not support overwriting of existing files.
    */
-  protected function file_exists($filename, $text = 'Check if file (@filename) exists.') {
-    $result = mediamosa_io::file_exists($filename);
+  protected function copy($source_uri, $destination_uri) {
+    $this->file_exists($source_uri, t("Copy: Source file '@source' exists.", array('@source' => $source_uri)));
+
+    // Copy the file.
+    $this->assertTrue(
+      mediamosa_io::copy($source_uri, $destination_uri) != FALSE,
+      t("Copy: Copied from '@source' to target '@target'", array('@source' => $source_uri, '@target' => $destination_uri))
+    );
+
+    $this->file_exists($destination_uri, t("Copy: New file '@target' exists.", array('@target' => $destination_uri)));
+  }
+
+  /**
+   * Check if file exists. Must be file type.
+   *
+   * @param string $uri
+   *   The file to check.
+   *
+   * @param boolean
+   *   Returns TRUE when file exists.
+   */
+  protected function file_exists($uri, $text = 'Check if file @uri (@realpath) exists.') {
+    // Check exists.
+    $result = mediamosa_io::file_exists($uri);
+
+    // Must be file.
+    $this->is_file($uri);
+
     $this->assertTrue(
       $result,
-      strtr($text, array('@filename' => $filename))
+      strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri)))
     );
 
     return $result;
   }
 
   /**
-   * Check if file or path does not exists.
+   * Check if dir exists. Must be dir/path type.
    *
-   * @param string $filename
+   * @param string $uri
+   *   The dir exists.
+   *
+   * @return boolean
+   *   Returns TRUE when dir exists, FALSE otherwise.
    */
-  protected function file_not_exists($filename, $text = 'Check if file does not exists.') {
-    mediamosa_io::clearstatcache();
+  protected function dir_exists($uri, $text = 'Check if dir @uri (@realpath) exists.') {
+    // Check exists.
+    $result = mediamosa_io::file_exists($uri);
 
-    $this->assertFalse(
-      file_exists($filename),
-      $text
+    // Must be dir.
+    $this->is_dir($uri);
+
+    $this->assertTrue(
+      $result,
+      strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri)))
     );
 
-    return file_exists($filename);
+    return $result;
+  }
+
+  /**
+   * Check if file does not exists.
+   *
+   * @param string $uri
+   *   The file or path to check.
+   *
+   * @return boolean
+   *   Returns TRUE when file does not exists, FALSE otherwise.
+   */
+  protected function file_not_exists($uri, $text = 'Check if file @uri (@realpath) does not exists.') {
+    // Check exists.
+    $result = mediamosa_io::file_exists($uri);
+
+    $this->assertFalse(
+      $result,
+      strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri)))
+    );
+
+    // Return reverse.
+    return !$result;
+  }
+
+  /**
+   * Check if dir/path does not exists.
+   *
+   * Expects the uri to be a dir/path.
+   *
+   * @param string $uri
+   *   The file or path to check.
+   *
+   * @return boolean
+   *   Returns TRUE when dir does not exists, FALSE otherwise.
+   */
+  protected function dir_not_exists($uri, $text = 'Check if dir @uri (@realpath) does not exists.') {
+    // Check exists.
+    $result = mediamosa_io::file_exists($uri);
+
+    $this->assertFalse(
+      $result,
+      strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri)))
+    );
+
+    // Return reverse.
+    return !$result;
+  }
+
+  /**
+   * Expect $uri to be file.
+   *
+   * @param string $uri
+   *   The uri to check.
+   *
+   * @return boolean
+   *   Returns TRUE when file, FALSE otherwise.
+   */
+  protected function is_file($uri, $text = 'Is file type @uri (@realpath)') {
+    $result = mediamosa_io::is_file($uri);
+    $this->assertTrue($result, strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
+    return $result;
+  }
+
+  /**
+   * Expect $uri not to be file.
+   *
+   * @param string $uri
+   *   The uri to check.
+   *
+   * @return boolean
+   *   Returns TRUE when not file, FALSE otherwise.
+   */
+  protected function is_not_file($uri, $text = 'Is not file type @uri (@realpath)') {
+    $result = mediamosa_io::is_file($uri);
+    $this->assertFalse($result, strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
+    return $result;
+  }
+
+  /**
+   * Expect $uri to be dir.
+   *
+   * @param string $uri
+   *   The uri to check.
+   *
+   * @return boolean
+   *   Returns TRUE when dir/path, FALSE otherwise.
+   */
+  protected function is_dir($uri, $text = 'Is dir type @uri (@realpath)') {
+    $result = mediamosa_io::is_dir($uri);
+    $this->assertTrue($result, strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
+    return $result;
+  }
+  /**
+   * Expect $uri not to be dir.
+   *
+   * @param string $uri
+   *   The uri to check.
+   *
+   * @return boolean
+   *   Returns TRUE when not dir/path, FALSE otherwise.
+   */
+  protected function is_not_dir($uri, $text = 'Is not dir type @uri (@realpath)') {
+    $result = mediamosa_io::is_dir($uri);
+    $this->assertFalse($result, strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
+    return $result;
+  }
+
+  /**
+   * Check if the file has the expected md5.
+   *
+   * @param string $uri
+   *   The file to check.
+   * @param string $md5
+   *   The md5 string.
+   */
+  protected function file_is_same($uri, $md5, $text = 'Check if file @uri (@realpath) matches the expected md5.') {
+    $md5_file = mediamosa_io::md5_file($uri);
+    $this->assert($md5 == $md5_file, strtr($text, array('@uri' => $uri, '@realpath' => mediamosa_io::realpath_safe($uri))));
   }
 
   /**
    * Return the path+filename to the test video.
+   *
+   * Changing this file will have an effect on some tests, as some expect this
+   * file.
    */
   protected function getTestVideo() {
     $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/test_video.wmv';
@@ -1136,5 +1278,27 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function deleteAllMediafileMetadata($mediafile_id) {
     return mediamosa_asset_mediafile_metadata::delete_all_mediafile_metadata($mediafile_id);
+  }
+
+  /**
+   * Returns the absolute local filesystem path of a stream URI.
+   *
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path, possibly including one or more
+   *   symbolic links.
+   *
+   * @return string
+   *   The absolute local filesystem path, or FALSE on failure.
+   */
+  protected function realpath($uri, $expected_realpath = '') {
+    $realpath = mediamosa_io::realpath($uri);
+
+    if (empty($expected_realpath)) {
+      $this->pass(t("Converted uri '@uri' to '@realpath'", array('@uri' => $uri, '@realpath' => $realpath)));
+    }
+    else {
+      $this->assert($realpath == $expected_realpath, t("Converted uri '@uri' to '@realpath'", array('@uri' => $uri, '@realpath' => $realpath)));
+    }
+    return $realpath;
   }
 }

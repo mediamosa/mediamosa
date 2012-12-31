@@ -3,7 +3,7 @@
 name = "User"
 description = "This module contains all MediaMosa User related functions."
 package = "MediaMosa - Modules"
-version = 7.x-3.2.2
+version = 7.x-3.4.0
 core = 7.x
 
 ; Dependencies (module names)

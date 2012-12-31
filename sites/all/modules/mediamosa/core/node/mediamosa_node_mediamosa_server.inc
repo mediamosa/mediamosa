@@ -1,36 +1,11 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ * @file
+ * hook_load / -update / -delete / -insert hooks for node type mediamosa_server.
  *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * There is no need to revision the tools and containers for transcode or
+ * streaming server. These values are taken from one field in the main object.
  */
-
- /**
-  * @file
-  * hook_load / -update / -delete / -insert hooks for node type mediamosa_server.
-  *
-  * There is no need to revision the tools and containers for transcode or
-  * streaming server. These values are taken from one field in the main object.
-  */
 
 /**
  * Implements hook_load().
@@ -59,13 +34,26 @@ function _process_server_node(&$node) {
     $node->{mediamosa_server_db::SERVER_URI} .= '/';
   }
 
-  if (isset($node->{mediamosa_server_db::TOOLS})) {
-    $tools = explode('|', $node->{mediamosa_server_db::TOOLS});
-    array_walk($tools, '_mediamosa_server_trim');
-    $tools = array_unique($tools);
+  if (isset($node->{mediamosa_server_db::TOOLS}) || isset($node->tool_selection)) {
+    if (isset($node->tool_selection)) {
+      // Convert from checkboxes to string.
+      $tools = array();
+      $server_tools = mediamosa_server_tool::get_server_tools(FALSE);
+      foreach ($node->tool_selection as $tool_id => $tool) {
+        if ($tool && $server_tools[$tool_id]) {
+          $tools[] = $tool_id;
+        }
+      }
+    }
+    else {
+      $tools = explode('|', $node->{mediamosa_server_db::TOOLS});
+      array_walk($tools, '_mediamosa_server_trim');
+      $tools = array_unique($tools);
+    }
 
-    // to fix spaces, doubles etc.
+    // Need to store.
     $node->{mediamosa_server_db::TOOLS} = implode('|', $tools);
+    $tools = array_unique($tools);
 
     // Remove all first.
     mediamosa_db::db_delete(mediamosa_server_tool_db::TABLE_NAME)
@@ -214,6 +202,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       unset($fields[mediamosa_server_db::SLOTS]);
       unset($fields[mediamosa_server_db::TOOLS]);
       break;
+
     case mediamosa_server_db::SERVER_TYPE_STREAMING:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]);
@@ -221,6 +210,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       unset($fields[mediamosa_server_db::SLOTS]);
       unset($fields[mediamosa_server_db::TOOLS]);
       break;
+
     case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]);
@@ -228,12 +218,14 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       unset($fields[mediamosa_server_db::CONTAINERS]);
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       break;
+
     case mediamosa_server_db::SERVER_TYPE_UPLOAD:
       unset($fields[mediamosa_server_db::CONTAINERS]);
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       unset($fields[mediamosa_server_db::SLOTS]);
       unset($fields[mediamosa_server_db::TOOLS]);
       break;
+
     default:
       assert(0); // so we know.
   }
@@ -408,11 +400,23 @@ function mediamosa_server_form($node, &$form_state) {
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::SLOTS, $node),
     );
 
-    $form['mediamosa_server'][mediamosa_server_db::TOOLS] = array(
-      '#type' => 'textfield',
-      '#title' => t('Tools'),
-      '#description' => t('Set tools for this server in the following format: ffmpeg|STILL|lin2win.'),
-      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::TOOLS, $node),
+    // Get the tools.
+    $tools = mediamosa_server_tool::get_server_tools(FALSE);
+    $tools_options = array();
+    foreach ($tools as $tool_id => $tool) {
+      $tools_options[$tool_id] = $tool['name'] . ' (' . $tool['description'] . ')';
+    }
+
+    // Get tool setting.
+    $tool_string = mediamosa_node::default_value(mediamosa_server_db::TOOLS, $node);
+    $default_tools = explode('|', $tool_string);
+
+    $form['mediamosa_server']['tool_selection'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Tools selection'),
+      '#options' => $tools_options,
+      '#description' => t('Select tools that are allowed to be processed by this server.'),
+      '#default_value' => $default_tools,
     );
   }
 
@@ -499,6 +503,7 @@ function mediamosa_server_form($node, &$form_state) {
  * Implements hook_validate().
  */
 function mediamosa_server_validate($node) {
+
   // Take type from node if available.
   if (isset($node->{mediamosa_server_db::SERVER_TYPE})) {
     $server_type = $node->{mediamosa_server_db::SERVER_TYPE};

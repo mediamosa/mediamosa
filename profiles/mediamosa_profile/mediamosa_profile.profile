@@ -283,28 +283,36 @@ function mediamosa_profile_storage_location_form() {
  * Implements hook_validate().
  */
 function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
-  $values = $form_state['values'];
+  // Get the mount point.
+  $mount_point = $form_state['values']['current_mount_point'];
 
-  if (trim($values['current_mount_point']) == '') {
+  if (trim($mount_point) == '') {
     form_set_error('current_mount_point', t("The current Linux mount point can't be empty."));
   }
-  elseif (!is_dir($values['current_mount_point'])) {
+  elseif (!is_dir($mount_point)) {
     form_set_error('current_mount_point', t('The current Linux mount point is not a directory.'));
   }
-  elseif (!is_writable($values['current_mount_point'])) {
+  elseif (!is_writable($mount_point)) {
     form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the webserver (@server_software).', array('@server_software' => $_SERVER['SERVER_SOFTWARE'])));
   }
 }
 
+/**
+ * Implements hook_submit().
+ */
 function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
-  // Get the form values.
-  $values = $form_state['values'];
+  // Get the mount point and make sure it ends with '/'.
+  $mount_point = mediamosa_profile::trim_uri($form_state['values']['current_mount_point']);
 
   // Set our variables.
-  variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
+  variable_set('mediamosa_current_mount_point', $mount_point);
+  variable_set('mediamosa_current_mount_point_temporary', $mount_point . 'data/transcode/');
+  variable_set('mediamosa_current_mount_point_transition', $mount_point . 'data/transition/');
 
   // Profile does not does not handle Windows installations.
   variable_set('mediamosa_current_mount_point_windows', '\\');
+  variable_set('mediamosa_current_mount_point_temporary_windows', '\\');
+  variable_set('mediamosa_current_mount_point_transition_windows', '\\');
 
   // Setup the mountpoint.
   mediamosa_profile::setup_mountpoint();
@@ -347,9 +355,10 @@ function mediamosa_profile_cron_settings_form() {
     '#value' => t('Continue'),
   );
 
-  // Reset static for 'file_get_stream_wrappers' to solve issue of invoke stream_wrappers for mediamosa in drush
+  // Reset static for 'file_get_stream_wrappers' to solve issue of invoke
+  // stream_wrappers for mediamosa in drush
   drupal_static_reset('file_get_stream_wrappers');
-  
+
   // Flush all.
   drupal_flush_all_caches();
 
@@ -572,14 +581,14 @@ function mediamosa_profile_apache_settings_form() {
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => '<b>' . t("Single server / domain setup.") . '</b>',
-      'advanced' => '<b>' . t("Multiple server / domain setup.") . '</b>',
+      'simple' => '<b>' . t('Single server / domain setup (testing setup).') . '</b>',
+      'advanced' => '<b>' . t('Multiple server / domain setup (production setup).') . '</b>',
     ),
   );
 
   $form['apache']['local'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Single server / domain setup.'),
+    '#title' => t('Single server / domain setup (testing setup).'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'simple'),
@@ -592,7 +601,7 @@ function mediamosa_profile_apache_settings_form() {
 
   $form['apache']['multi'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Multi server/domain setup.'),
+    '#title' => t('Multi server/domain setup (production setup).'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'advanced'),

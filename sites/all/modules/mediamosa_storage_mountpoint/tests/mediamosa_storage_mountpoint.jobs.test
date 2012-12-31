@@ -1,0 +1,108 @@
+<?php
+/**
+ * @file
+ * MediaMosa storage IO test.
+ */
+
+// Registry indexes all .test files, while the base is not indexed (module is
+// not on.
+if (!class_exists('MediaMosaStorageMountPointBaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaStorageMountPointIOTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    return array(
+      'name' => 'MediaMosa Storage - Mountpoint jobs test',
+      'description' => 'Tests for upload and download of local files using the storage mount point module.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+    );
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  public function testMountpointJobs() {
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+//    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    $this->dump_jobs();
+    $this->dump_watchdog();
+
+    // Get the asset.
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+
+    $source_uri = mediamosa_storage::trim_uri($this->getMediafileMountPoint($mediafile_id)) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+    $this->assert($source_uri == mediamosa_storage::get_uri_mediafile($mediafile_id), 'Uri build is same as product');
+    $this->var_export($source_uri);
+
+    $md5 = mediamosa_io::md5_file($source_uri);
+
+    // Create default profile.
+    $this->createMountPointProfile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    $this->var_export($storage_profile_app);
+
+    // Create the destination uri.
+    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app);
+    $this->assert($destination_uri == 'mediamosa-storage-mountpoint://2/mountpoint', 'Mount point correct');
+    $this->var_export($destination_uri);
+
+    $destination_uri_stills = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app, TRUE);
+    $this->assert($destination_uri_stills == 'mediamosa-storage-mountpoint://2/mountpoint/stills', 'Mount point correct');
+    $this->var_export($destination_uri_stills);
+
+    $this->realpath($source_uri);
+
+    // Create the mountpoint dir.
+    $this->mkdir('mediamosa-storage-mountpoint://2/mountpoint', FALSE);
+    $this->realpath($destination_uri);
+
+    $this->mkdir('mediamosa-storage-mountpoint://2/mountpoint/stills', FALSE);
+    $this->realpath($destination_uri_stills);
+
+    // Now upload to S3 with job.
+    $job_id = $this->doMediafileMove($mediafile_id, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
+
+    // Wait for it to complete.
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the job.
+    $job = $this->getJob($job_id);
+
+    // Must be finished.
+    foreach ($job->get()->xpath('items/item') as $job_item) {
+      $this->assert($job_item->status == mediamosa_job_db::JOB_STATUS_FINISHED, 'Jobs are finished');
+    }
+
+    // File must exists at destination.
+    $this->file_exists($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id), 'File was copied.');
+
+    // And source must be gone...
+    $this->file_not_exists($source_uri, 'File was moved.');
+
+    // Check if the copy is ok.
+    $this->file_is_same($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id), $md5);
+
+    $new_uri = $this->getMediafileMountPoint($mediafile_id) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+    $this->assert($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id) == $new_uri, t("New mountpount is set and correct ('@new_uri' <-> '@destination_uri'", array('@new_uri' => $new_uri, '@destination_uri' => $destination_uri)));
+    $this->var_export($new_uri);
+  }
+}

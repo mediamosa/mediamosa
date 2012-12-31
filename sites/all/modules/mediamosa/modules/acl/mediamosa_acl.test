@@ -66,7 +66,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       $parameters[mediamosa_rest_call_media_view::REALM] = $realm;
     }
 
-    return $this->do_media_play($asset_id, $parameters, $a_expected_result_ids);
+    return $this->do_media_view($asset_id, $parameters, $a_expected_result_ids);
   }
 
   /**

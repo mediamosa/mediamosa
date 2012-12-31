@@ -317,11 +317,11 @@ class mediamosa {
         'line' => $caller['line']
       );
 
-      // Log to file, just to be sure if watchdog should fail.
-      mediamosa_debug::error_log($message . ' (function: )' . $caller['function'], $caller['file'], $caller['line']);
-
       // Only log if error_reporting returns TRUE.
       if (error_reporting()) {
+        // Log to file, just to be sure if watchdog should fail.
+        mediamosa_debug::error_log($message . ' (function: ' . $caller['function'] . ')', $caller['file'], $caller['line']);
+
         // Unlike drupal, we don't treat recoverable errors as fatal, preventing
         // Drupal to display error page.
         _drupal_log_error(array(
@@ -537,8 +537,7 @@ class mediamosa {
    * Returns TRUE or FALSE if we are inside a sandbox.
    */
   public static function in_simpletest_sandbox() {
-    $test_info = &$GLOBALS['drupal_test_info'];
-    return (!empty($test_info['test_run_id']) ? TRUE : FALSE);
+    return (isset($GLOBALS['drupal_test_info']) && !empty($GLOBALS['drupal_test_info']['test_run_id']) ? TRUE : FALSE);
   }
 
   /**
@@ -613,6 +612,7 @@ class mediamosa {
     catch (Exception $e) {
       // ignore.
     }
+
     // Mark it installed, so its not install again.
     $versions = drupal_get_schema_versions($module);
     $version = $versions ? max($versions) : SCHEMA_INSTALLED;

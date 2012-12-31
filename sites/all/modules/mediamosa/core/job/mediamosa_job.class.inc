@@ -1,64 +1,66 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The job module.
  */
 
- /**
-  * @file
-  * The job module.
-  */
 class mediamosa_job {
-
-  // ------------------------------------------------------------------ Consts.
-  // Indicate windows tool.
-  const JOBWINDOWS_TOOL = 'windows';
-
-  // Raw job
-  const JOBRAW_TOOL = 'ffmpeg';
-  const JOBRAW_FILE_EXTENSION = 'avi';
-  const JOBRAW_COMMAND = 'videocodec:rawvideo;audiocodec:pcm_s16le;internal_previous_job:%d';
-
-  // ------------------------------------------------------------------ Static Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Log for job.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'job');
   }
 
   /**
-   * Log mediafile ids.
+   * Logs for specific mediafile.
    *
    * @param string $mediafile_id
-   * @param string $asset_id
+   *   The ID of the mediafile that is associated with the message.
    * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
+   * @param string $asset_id
+   *   (optional) The ID of the asset. Provide when available.
+   * @param integer $severity
+   *   The severity of the message; one of the following values as defined in
+   *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
+   *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
+   *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
+   *   - WATCHDOG_CRITICAL: Critical conditions.
+   *   - WATCHDOG_ERROR: Error conditions.
+   *   - WATCHDOG_WARNING: Warning conditions.
+   *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
+   *   - WATCHDOG_INFO: Informational messages.
+   *   - WATCHDOG_DEBUG: Debug-level messages.
    */
   public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job');
@@ -68,9 +70,12 @@ class mediamosa_job {
    * Make sure the job exists.
    *
    * @param integer $job_id
+   *   The Job ID.
    *
    * @return array
-   *  The found job.
+   *   The job array.
+   *
+   * @throws mediamosa_exception_error()
    */
   public static function must_exists($job_id) {
     return mediamosa_db::db_must_exists(mediamosa_job_db::TABLE_NAME, array(mediamosa_job_db::ID => $job_id));
@@ -78,8 +83,12 @@ class mediamosa_job {
 
   /**
    * Get the job from the main job table.
+   *
    * @param integer $job_id
-   *  The job ID.
+   *   The job ID.
+   *
+   * @return array
+   *   The job array.
    */
   public static function get($job_id, array $fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
@@ -90,28 +99,53 @@ class mediamosa_job {
   }
 
   /**
-   * Get the job from the main job table.
-   * @param integer $mediafile_id
-   *  The mediafile ID.
+   * Get the job from the main job table using the mediafile ID.
+   *
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   *
+   * @return array
+   *   The job array or FALSE.
    */
   public static function get_by_mediafileid($mediafile_id, array $fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
       ->fields('j', $fields)
       ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->orderBy(mediamosa_job_db::ID, 'ASC')
+      ->range(0, 1)
       ->execute()
       ->fetchAssoc();
   }
 
   /**
-   * Get the job from the main job table.
-   * @param integer $mediafile_id
+   * Get specific job from the main job table.
+   *
+   * @param string $mediafile_id
    *  The mediafile ID.
+   *
+   * @return array
+   *   Get all jobs belonging to mediafile.
    */
   public static function get_by_mediafileid_all($mediafile_id, array $fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
       ->fields('j', $fields)
       ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->orderBy(mediamosa_job_db::ID, 'ASC')
       ->execute();
+  }
+
+  /**
+   * Test if there are any running jobs.
+   *
+   * @return integer
+   *   Returns the number of running jobs.
+   */
+  public static function has_running_jobs() {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'job')
+      ->condition(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_INPROGRESS)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
   }
 
   /**
@@ -210,6 +244,10 @@ class mediamosa_job {
    * Get all information of this job in the database.
    *
    * @param integer $job_id
+   *   The job ID.
+   *
+   * @return array
+   *   The job array with extended info.
    */
   public static function get_job_ext($job_id) {
 
@@ -217,27 +255,27 @@ class mediamosa_job {
     $job_ext = self::get($job_id);
 
     // Any extra information stored here.
-    $a_job_child = NULL;
+    $job_child = NULL;
 
     // Based on type, we will get the sub-table info.
     switch ($job_ext[mediamosa_job_db::JOB_TYPE]) {
       case mediamosa_job_db::JOB_TYPE_STILL:
-        $a_job_child = mediamosa_job_still::get($job_id);
+        $job_child = mediamosa_job_still::get($job_id);
         break;
 
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
-        $a_job_child = mediamosa_job_transcode::get($job_id);
+        $job_child = mediamosa_job_transcode::get($job_id);
         break;
 
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
-        $a_job_child = mediamosa_job_upload::get($job_id);
+        $job_child = mediamosa_job_upload::get($job_id);
         break;
     }
 
     // If set, then merge.
-    if ($a_job_child) {
+    if ($job_child) {
       // Lapping info will prefer what is in job_ext.
-      return array_merge($a_job_child, $job_ext);
+      return array_merge($job_child, $job_ext);
     }
 
     return $job_ext;
@@ -275,60 +313,19 @@ class mediamosa_job {
   }
 
   /**
-   * Create an extra raw job for windows transcoding.
-   *
-   * @param integer $job_id
-   *  The job ID.
-   */
-  public static function create_raw($job_id) {
-    // Update job for progress.
-    self::set_progress($job_id, '0.333', TRUE);
-
-    // Get the job.
-    $a_job = self::get($job_id);
-    if (!$a_job) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $job_id));
-    }
-
-    // Fields to insert.
-    $fields = array(
-      mediamosa_job_db::ASSET_ID => $a_job[mediamosa_job_db::ASSET_ID],
-      mediamosa_job_db::MEDIAFILE_ID => $a_job[mediamosa_job_db::MEDIAFILE_ID],
-      mediamosa_job_db::OWNER_ID => $a_job[mediamosa_job_db::OWNER_ID],
-      mediamosa_job_db::APP_ID => $a_job[mediamosa_job_db::APP_ID],
-      mediamosa_job_db::PRIORITY => $a_job[mediamosa_job_db::PRIORITY],
-      mediamosa_job_db::JOB_TYPE => $a_job[mediamosa_job_db::JOB_TYPE],
-    );
-
-    // Add created/changed.
-    $fields = mediamosa_db::db_insert_enrich($fields);
-
-    // Insert it.
-    $job_id_raw = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
-      ->fields($fields)
-      ->execute();
-
-    // Create a new transcode job.
-    mediamosa_job_transcode::create(
-      $a_job[mediamosa_job_db::APP_ID],
-      $job_id_raw,
-      mediamosa_job::JOBRAW_FILE_EXTENSION,
-      sprintf(mediamosa_job::JOBRAW_COMMAND, $job_id),
-      mediamosa_job::JOBRAW_TOOL
-    );
-  }
-
-  /**
    * Add retranscode jobs.
    *
    * @param string $asset_id
-   *  The asset ID.
+   *   The asset ID.
    * @param string $mediafile_id
-   *  The mediafile ID.
+   *   The mediafile ID.
    * @param string $user_id
-   *  The owner.
+   *   The owner.
    * @param integer $app_id
-   *  The application ID.
+   *   The application ID.
+   *
+   * @return integer
+   *   Number of created jobs.
    */
   public static function add_retranscode_jobs($asset_id, $mediafile_id, $user_id, $app_id) {
     // Get all mediafiles that are transcoded, so we can retranscode them.
@@ -415,8 +412,8 @@ class mediamosa_job {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_TRANSCODE_MEDIAFILE, array('@mediafile_id' => $mediafile_dest, '@reason' => 'this mediafile is an original mediafile'));
     }
 
-    // Make sure the mediafile exists, returns the mediafile.
-    $mediafile_source = mediamosa_asset_mediafile::must_exists($mediafile_id_source, $app_id);
+    // Make sure the mediafile exists.
+    mediamosa_asset_mediafile::must_exists_quick($mediafile_id_source, $app_id);
 
     // Must be transcodable.
     mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id_source);
@@ -512,6 +509,114 @@ class mediamosa_job {
   }
 
   /**
+   * Create a media download job.
+   *
+   * This job will download the storage location and place it in the transition
+   * dir.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $user_id
+   *   The user ID.
+   * @param boolean $is_app_admin
+   *   Is user superuser?
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param integer $priority
+   *   The priority for job.
+   *
+   * @return integer
+   *   The job ID or FALSE.
+   */
+  public static function create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id, $priority = 0) {
+    // Create job.
+    return self::create(
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+      $app_id,
+      $user_id,
+      $is_app_admin,
+      $mediafile_id,
+      FALSE,
+      array(),
+      $priority
+    );
+  }
+
+  /**
+   * Create a media upload job.
+   *
+   * This job will upload the mediafile from source to its storage location.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $user_id
+   *   The user ID.
+   * @param boolean $is_app_admin
+   *   Is user superuser?
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string $source_uri
+   *   The source uri.
+   * @param integer $priority
+   *   The priority for job.
+   *
+   * @return integer
+   *   The job ID or FALSE.
+   */
+  public static function create_job_media_upload($app_id, $user_id, $is_app_admin, $mediafile_id, $source_uri, $priority = 0) {
+    // Create job.
+    return self::create(
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+      $app_id,
+      $user_id,
+      $is_app_admin,
+      $mediafile_id,
+      FALSE,
+      array('source_uri' => $source_uri),
+      $priority
+    );
+  }
+
+  /**
+   * Move a mediafile to another storage location.
+   *
+   * This job will download the mediafile (if needed) and upload it on the
+   * destination. Once finished and succesful, it will be removed from the
+   * source location and sannas_mount_point will point to the new location.
+   *
+   * The mediamove will use an temporary (local) location during the copy.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $user_id
+   *   The user ID.
+   * @param boolean $is_app_admin
+   *   Is user superuser?
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param integer $storage_profile_id
+   *   The storage profile ID.
+   * @param integer $priority
+   *   The priority for job.
+   *
+   * @return integer
+   *   The job ID or FALSE.
+   */
+  public static function create_job_media_move($app_id, $user_id, $is_app_admin, $mediafile_id, $storage_profile_id, $path, $priority = 0) {
+    // Create job.
+    return self::create(
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+      $app_id,
+      $user_id,
+      $is_app_admin,
+      $mediafile_id,
+      FALSE,
+      array('storage_profile_id' => $storage_profile_id, 'path' => $path),
+      $priority
+    );
+  }
+
+  /**
    * Create a job.
    *
    * @param string $job_type
@@ -525,27 +630,27 @@ class mediamosa_job {
   public static function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
 
     // Get the mediafile.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Owner check.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
+    mediamosa_acl::owner_check($app_id, $user_id, $mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
 
     // Get the asset ID.
-    $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
     // Re-analysing still.
-    if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $a_mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
+    if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
       // Get the metadata.
       $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       if (!$mediafile_metadata) {
-        $still_id = $a_mediafile['mediafile_id'];
+        $still_id = $mediafile['mediafile_id'];
 
         // Destination.
-        $destination = mediamosa_storage::get_realpath_data_file($still_id);
+        $still_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
         // Still size.
-        $size = mediamosa_gd::getimagesize($destination);
+        $size = mediamosa_gd::get_image_size($still_uri);
         if (!$size) {
           self::post_create_job_failed($app_id, $user_id, $mediafile_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
         }
@@ -559,9 +664,10 @@ class mediamosa_job {
         if ($pos !== FALSE) {
           $file_type = mediamosa_unicode::substr($size['mime'], $pos + 1);
         }
-        $filesize = mediamosa_io::filesize($destination);
+        $filesize = mediamosa_io::filesize($still_uri);
+        $md5 = mediamosa_io::md5_file($still_uri);
 
-        mediamosa_asset_mediafile_metadata::create_metadata_still_default($still_id, $width, $height, $filesize, $size['mime'], $file_type);
+        mediamosa_asset_mediafile_metadata::create_metadata_still_default($still_id, $width, $height, $filesize, $size['mime'], $file_type, $md5);
 
         self::post_create_job_finished($app_id, $user_id, $mediafile_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, '', $still_parameters);
       }
@@ -571,10 +677,10 @@ class mediamosa_job {
 
     // Create the job.
     $fields = array(
+      mediamosa_job_db::APP_ID => $app_id,
       mediamosa_job_db::ASSET_ID => $asset_id,
       mediamosa_job_db::MEDIAFILE_ID => $mediafile_id,
       mediamosa_job_db::OWNER_ID => $user_id,
-      mediamosa_job_db::APP_ID => $app_id,
       mediamosa_job_db::JOB_TYPE => $job_type,
       mediamosa_job_db::CREATE_STILL => $create_still ? mediamosa_job_db::CREATE_STILL_TRUE : mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($still_parameters),
@@ -617,14 +723,14 @@ class mediamosa_job {
 
     if ($status == mediamosa_job_db::JOB_STATUS_FINISHED) {
       // Get the mediafile.
-      $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
       // Owner check.
       $is_app_admin = FALSE;
-      mediamosa_acl::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
+      mediamosa_acl::owner_check($app_id, $user_id, $mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
 
       // Get the asset ID.
-      $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+      $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
     }
 
     // Create the job.
@@ -697,10 +803,10 @@ class mediamosa_job {
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Get the newly uploaded filename.
-    $uploaded_filename = mediamosa_storage::get_realpath_data_mediafile($mediafile);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
     // Get the filesize of the uploaded file.
-    $uploaded_filesize = mediamosa_io::filesize($uploaded_filename);
+    $uploaded_filesize = mediamosa_io::filesize($mediafile_uri);
 
     if ($uploaded_filesize != $job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]) {
       // Job failed.
@@ -728,11 +834,9 @@ class mediamosa_job {
 
     // Insert or update.
     $mediafile_id = $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID];
-    mediamosa_asset_mediafile_metadata::create_mediafile_metadata_int($mediafile_id, (int) $uploaded_filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
 
     // Analyse the mediafile.
     $analyse_result = mediamosa_asset_mediafile::analyse($job_ext_upload[mediamosa_job_db::APP_ID], $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
-    assert(is_array($analyse_result));
 
     // Store it.
     mediamosa_asset_mediafile_metadata::store_analyse($job_ext_upload[mediamosa_job_db::ID], $analyse_result);
@@ -782,10 +886,10 @@ class mediamosa_job {
       return;
     }
 
-    $a_job_transcode = mediamosa_job_transcode::get($job_id);
+    $job_transcode = mediamosa_job_transcode::get($job_id);
 
-    if (!empty($a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
-      $completed_transcoding_url = $a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
+    if (!empty($job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
+      $completed_transcoding_url = $job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
       self::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
 
       // Do the call (through proxy).
@@ -824,11 +928,11 @@ class mediamosa_job {
    * Make sure if the job information to start new job is correct.
    *
    * @param $job_id
-   *  Job ID.
+   *   The Job ID.
    * @param $job_type
-   *  Job type.
+   *   The Job type, see mediamosa_job_db::JOB_TYPE_*.
    * @param $mediafile_id
-   *  The Mediafile ID.
+   *   The Mediafile ID.
    */
   public static function is_valid_job($job_id, $job_type, $mediafile_id) {
 
@@ -974,8 +1078,6 @@ class mediamosa_job {
   /**
    * Give a list of jobs and as much as information.
    *
-   * 1.x: vpx_jobs_get_job_list
-   *
    * @param $app_id
    *   can be single appication ID or an array of.
    * @param $a_parameters
@@ -1050,10 +1152,11 @@ class mediamosa_job {
   /**
    * Deletes the job. Moved into function for re-use.
    *
-   * 1.x: _vpx_jobs_delete_job
-   *
    * @param integer $job_id
-   * @return bool TRUE; job has been deleted
+   *   The job ID.
+   *
+   * @return boolean
+   *   Returns TRUE when job was deleted, FALSE otherwise.
    */
   public static function delete_job($job_id) {
     mediamosa_db::db_query(
@@ -1180,6 +1283,7 @@ class mediamosa_job {
 
   /**
    * Cancel job.
+   *
    * Can only be removed if status is WAITING, FINISHED or FAILED and
    * not assigned to server (WAITING).
    */
@@ -1235,18 +1339,24 @@ class mediamosa_job {
     }
   }
 
+  /**
+   * Update the progress status of the upload job.
+   *
+   * @param integer $job_id
+   *   The job ID.
+   * @param integer $uploaded_file_size
+   *   The size of the current position done upload in bytes.
+   */
   public static function update_progress_upload($job_id, $uploaded_file_size) {
-
-      // Get complete job.
+    // Get complete job.
     $job_ext = mediamosa_job::get_job_ext($job_id);
 
     if (!$uploaded_file_size && $job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD) {
       // If the filesize is 0, then we are done...
       if (!$job_ext[mediamosa_job_upload_db::FILE_SIZE]) {
-
         // Update the job.
         mediamosa_job::update_status($job_ext, mediamosa_job_db::JOB_STATUS_INPROGRESS, '1.000');
-        return; // done
+        return;
       }
     }
 

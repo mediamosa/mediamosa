@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Default theme implementation to show REST call documentation.
@@ -42,9 +17,6 @@
  * @see template_preprocess_restcall_doc()
  */
 
-  // Just here so ZEND analyser doesn't give warnings about $variables.
-  $variables['ignore_zend'] = TRUE;
-
   $title = $variables['rest_call']->title;
   $description = $variables['rest_call']->description;
   $uri = $variables['rest_call']->uri;
@@ -59,25 +31,29 @@
   $example_request = is_array($variables['rest_call']->example_request) ? '<p>' . implode("</p>\n<p>", $variables['rest_call']->example_request) . '</p>' : $variables['rest_call']->example_request;
   $example_response = $variables['rest_call']->example_response;
 ?>
-<div id="restcall">
-<h2><?php print $title; ?></h2>
-<p><?php print str_replace("\n\n", "</p>\n<p>", $description); ?></p>
-<h3><?php print t('Request URL'); ?></h3>
-<p><?php
+<div id="restcall-details">
+<p><h2><?php print $title; ?></h2>
+<?php print str_replace("\n\n", "</p>\n<p>", $description); ?></p>
+<p><h3><?php print t('Request URL'); ?></h3>
+<?php
   print t('@uri [@method]', array('@uri' => '/' . $uri, '@method' => $method));
   if (!empty($link_to_debug)) {
     print ' <small>(' . $link_to_debug . ')</small>';
   }
-?></p>
+?>
+</p>
+<p>
 <h3><?php print t('Request Authorization'); ?></h3>
-<p><?php print $request_authorization; ?></p>
-
+<?php print $request_authorization; ?>
+</p>
 <?
   // Set any warning.
   if (!empty($warnings)) {
 ?>
+<p>
 <h3><?php print t('Warnings and checks during page generation'); ?></h3>
 <ul><li><?php print implode('<li>', $warnings); ?></ul>
+</p>
 <?
   }
 ?>

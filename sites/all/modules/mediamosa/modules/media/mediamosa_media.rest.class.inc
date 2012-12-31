@@ -35,6 +35,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
   const FORMAT = 'format';
   const RANGE = 'range';
   const TAG = 'tag';
+  const COUNT_PLAY = 'count_play';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_GROUP_ID = 'aut_group_id';
@@ -166,6 +167,11 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => "Tag to indentify and search for the mediafile to play.",
         ),
+        self::COUNT_PLAY => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specifing 'FALSE' will prevent increasing the play count on the asset. Default 'TRUE'.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
       )
     );
 
@@ -234,7 +240,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
     }
 
     // Get the asset.
-    $asset = mediamosa_asset::must_exists($asset_id, $app_id);
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Test if access on unappropriate flag.
     mediamosa_asset::is_inappropriate($app_ids, $asset_id, $user_id, $is_app_admin, TRUE);
@@ -304,7 +310,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
         $autostart = $this->get_param_value(self::AUTOSTART);
         $start = $this->get_param_value(self::START);
         $duration = $this->get_param_value(self::DURATION);
-        $response = mediamosa_media::do_response_metafile($app_id, $user_id, $asset_id, $mediafile, $autostart, $start, $duration);
+        $response = mediamosa_media::do_response_metafile($app_id, $user_id, $is_app_admin, $mediafile, $autostart, $start, $duration);
         break;
 
       case mediamosa_media::RESPONSE_OBJECT:
@@ -313,7 +319,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
         $autostart = $this->get_param_value(self::AUTOSTART);
         $start = $this->get_param_value(self::START);
         $duration = $this->get_param_value(self::DURATION);
-        $response = mediamosa_media::do_response_object($app_id, $user_id, $mediafile, $width, $height, $autostart, $start, $duration);
+        $response = mediamosa_media::do_response_object($app_id, $user_id, $is_app_admin, $mediafile, $width, $height, $autostart, $start, $duration);
         break;
 
       case mediamosa_media::RESPONSE_STILL:
@@ -329,7 +335,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
 
         // Get a list of filtered stills based on $size, $width, $height, $range
         // and $height.
-        $filtered_stills = mediamosa_media::collect_stills($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $size, $width, $height, $range, $format, $tag);
+        $filtered_stills = mediamosa_media::collect_stills($app_id, $asset_id, $mediafile_id, $still_id, $size, $width, $height, $range, $format, $tag);
 
         // Did any still pass our filters? For output we should at least find one.
         if (empty($filtered_stills)) {
@@ -372,19 +378,22 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
         );
 
         // Get response.
-        $response = mediamosa_media::do_response_still($app_id, $user_id, $still, $filtered_stills);
+        $response = mediamosa_media::do_response_still($app_id, $user_id, $is_app_admin, $still, $filtered_stills);
         break;
 
       case mediamosa_media::RESPONSE_URI:
-        $response = mediamosa_media::do_response_uri($app_id, $user_id, $mediafile);
+        $response = mediamosa_media::do_response_uri($app_id, $user_id, $is_app_admin, $mediafile);
         break;
 
       default:
         throw new mediamosa_exception_program_error('Unsupported response type; @response_type', array('@response_type' => $response_type));
     }
 
-    // All ok, now set played + 1
-    mediamosa_asset::asset_played($asset_id);
+    // If play count is allowed, increase the play counter with one.
+    if ($this->get_param_value(self::COUNT_PLAY)) {
+      // All ok, now set played + 1
+      mediamosa_asset::asset_played($asset_id);
+    }
 
     // Add response.
     $mediamosa->add_item($response);
@@ -412,7 +421,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
  * /media/$app_id/[1st letter ticket]/$mediafile_id/filename[,style].ext
  * /media/ticket/$app_id/[1st letter ticket]/$ticket_id/filename[,style].ext
  *
- * still (still response)
+ * Still (still response)
  * /media/$app_id/[1st letter ticket]/$mediafile_id-still/filename[,style].ext
  * /media/ticket/still/$app_id/[1st letter ticket]/$ticket_id-still/filename[,style].ext
  *
@@ -445,9 +454,8 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID_PREFIX => array(
-          // Mediaticket ID allows style.
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID_PREFIX,
-          self::VAR_DESCRIPTION => 'The mediafile ID.',
+          self::VAR_DESCRIPTION => 'One letter index of the mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
@@ -471,9 +479,17 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
   public function do_call() {
     // Get the input values.
     $app_id = $this->get_param_value(self::APP_ID);
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
-    $ticket_id = $this->get_param_value(self::TICKET_ID);
     $filename = $this->get_param_value(self::FILENAME);
+
+    $mediafile_id = NULL;
+    if ($this->isset_given_param(self::MEDIAFILE_ID)) {
+      $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    }
+
+    $ticket_id = NULL;
+    if ($this->isset_given_param(self::TICKET_ID)) {
+      $ticket_id = $this->get_param_value(self::TICKET_ID);
+    }
 
     // Either one required.
     if (!$mediafile_id && !$ticket_id) {
@@ -489,8 +505,8 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
 
       // In any case, if the ticket exists and we where triggered, then the
       // webserver setup is not correct and we should log this problem.
-      $file = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename);
-      if (file_exists($file)) {
+      $file = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename);
+      if (mediamosa_io::file_exists($file)) {
         mediamosa_watchdog::log('The /media REST call was triggered while this was not expected. Check your MediaMosa status page for more information.', array(), WATCHDOG_CRITICAL);
         throw new mediamosa_exception_error_501();
       }
@@ -516,7 +532,7 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
     catch (mediamosa_exception_error_access_denied $e) {
       throw new mediamosa_exception_error_403();
     }
-    catch (mediamosa_exception_error_is_unappropriate $e) {
+    catch (mediamosa_exception_error_is_inappropriate $e) {
       throw new mediamosa_exception_error_403();
     }
     catch (mediamosa_exception_error_invalid_ticket $e) {
@@ -545,9 +561,10 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
  * /media/ticket/$app_id/[1st letter ticket]/$ticket_id-download/filename[,style].ext
  *
  * Method: GET / POST
+ *
+ * @see mediamosa_rest_call_media
  */
 class mediamosa_rest_call_media_ticket extends mediamosa_rest_call_media {
-  // ------------------------------------------------------------------- Consts.
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
@@ -561,7 +578,7 @@ class mediamosa_rest_call_media_ticket extends mediamosa_rest_call_media {
         ),
         self::TICKET_ID_PREFIX => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID_PREFIX,
-          self::VAR_DESCRIPTION => 'The ticket prefix.',
+          self::VAR_DESCRIPTION => 'One letter index of the ticket ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::TICKET_ID => array(
@@ -579,11 +596,6 @@ class mediamosa_rest_call_media_ticket extends mediamosa_rest_call_media {
 
     // All we need.
     return $var_setup;
-  }
-
-  // ------------------------------------------------------------------ Do Call.
-  public function do_call() {
-    parent::do_call();
   }
 }
 
@@ -633,14 +645,15 @@ class mediamosa_rest_call_media_download extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     // Get the ticket ID.
+    $app_id = $this->get_param_value(self::APP_ID);
     $ticket_id = $this->get_param_value(self::TICKET_ID);
     $filename = $this->get_param_value(self::FILENAME);
 
     // Get filename.
-    $file = mediamosa_storage::get_realpath_media_download($ticket_id, $filename);
+    $file = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD);
 
     // Make sure the file exists we want to download.
-    if (!file_exists($file) || !is_file($file)) {
+    if (!mediamosa_io::file_exists($file) || !mediamosa_io::is_file($file)) {
       throw new mediamosa_exception(0, 'Invalid download ticket');
     }
 

@@ -40,6 +40,16 @@ files[] = lib/mediamosa_exception.class.inc
 files[] = lib/mediamosa_gd.class.inc
 files[] = lib/mediamosa_http.class.inc
 files[] = lib/mediamosa_io.class.inc
+files[] = lib/mediamosa_io.streamwrapper.class.inc
+files[] = lib/mediamosa_io.streamwrapper.external.class.inc
+files[] = lib/mediamosa_io.streamwrapper.external.example.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.data.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.media.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.simpletest.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.stills.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.temporary.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.transition.class.inc
 files[] = lib/mediamosa_lib.class.inc
 files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
@@ -181,8 +191,8 @@ files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.class.inc
 files[] = core/ftp_user/mediamosa_ftp_user_db.class.inc
 
 ; Job.
-files[] = core/job/mediamosa_job_db.class.inc
 files[] = core/job/mediamosa_job.class.inc
+files[] = core/job/mediamosa_job_db.class.inc
 
 ; Job Scheduler.
 files[] = core/job/scheduler/mediamosa_job_scheduler.class.inc
@@ -193,6 +203,7 @@ files[] = core/job/display/mediamosa_job_display.class.inc
 
 ; Job Server.
 files[] = core/job/server/mediamosa_job_server_db.class.inc
+files[] = core/job/server/mediamosa_job_server.rest.class.inc
 files[] = core/job/server/mediamosa_job_server.class.inc
 
 ; Job Server Analyse.
@@ -242,13 +253,13 @@ files[] = core/statistics/file_helper/mediamosa_statistics_file_helper_db.class.
 files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket_db.class.inc
 files[] = core/statistics/mediamosa_statistics.class.inc
 
-; Storage (deprecated, remove in 4.0)
+; Storage.
 files[] = core/configuration/storage/mediamosa_configuration_storage.class.inc
 files[] = core/storage/profile/mediamosa_storage_profile_db.class.inc
 files[] = core/storage/profile/mediamosa_storage_profile.class.inc
-files[] = core/storage/mapping/mediamosa_storage_mapping_db.class.inc
-files[] = core/storage/mapping/mediamosa_storage_mapping.class.inc
-files[] = core/storage/standard/mediamosa_storage_standard.class.inc
+files[] = core/storage/profile/app/mediamosa_storage_profile_app_db.class.inc
+files[] = core/storage/profile/app/mediamosa_storage_profile_app.class.inc
+files[] = core/storage/local/mediamosa_storage_local.class.inc
 files[] = core/storage/mediamosa_storage.class.inc
 
 ; Server.
@@ -263,6 +274,7 @@ files[] = core/server/job/mediamosa_server_job.class.inc
 files[] = core/server/streaming/container/mediamosa_server_streaming_container_db.class.inc
 
 ; Server Tool.
+files[] = core/server/tool/mediamosa_server_tool.class.inc
 files[] = core/server/tool/mediamosa_server_tool_db.class.inc
 
 ; Media.
@@ -313,4 +325,5 @@ files[] = mediamosa.environment.test
 
 ; Library tests.
 files[] = lib/mediamosa_io.test
-files[] = lib/mediamosa_storage.test
+files[] = lib/mediamosa_io.streamwrapper.test
+files[] = lib/mediamosa.lib.test

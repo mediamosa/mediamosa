@@ -49,7 +49,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
     // the file should still appear in the table.
     $file_parsed = FALSE;
 
-    if (file_exists($file->uri)) {
+    if (mediamosa_io::file_exists($file->uri)) {
 
       if (@$dom->load($file->uri)) {
 
@@ -68,7 +68,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
                   $metadatafile = dirname($file->uri) . '/' . $video->getElementsByTagName('metadataFile')->item(0)->nodeValue;
 
                   // Load metadata.
-                  if (file_exists($metadatafile)) {
+                  if (mediamosa_io::file_exists($metadatafile)) {
                     @$dom_metadata->load($metadatafile);
                     $record['title'] = (isset($dom_metadata->getElementsByTagName('title')->item(0)->nodeValue) ? $dom_metadata->getElementsByTagName('title')->item(0)->nodeValue : '');
                   }

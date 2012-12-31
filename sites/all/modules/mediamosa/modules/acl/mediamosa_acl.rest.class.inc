@@ -942,7 +942,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     $app_id = reset($app_ids);
 
     // Make sure the media file exists.
-    mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    mediamosa_asset_mediafile::must_exists_quick($mediafile_id, $app_id);
 
     $app_ids = $this->get_param_value('acl_app');
     $a_acl_user_ids = $this->get_param_value('acl_user');
@@ -1069,7 +1069,7 @@ class mediamosa_rest_call_acl_mediafile_delete_rights extends mediamosa_rest_cal
     $app_id = reset($app_ids);
 
     // Make sure the media file exists.
-    mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    mediamosa_asset_mediafile::must_exists_quick($mediafile_id, $app_id);
 
     // Get the media file
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
@@ -1666,10 +1666,10 @@ class mediamosa_rest_call_acl_asset_delete_rights extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Get the media file.
-    $a_asset = mediamosa_asset::get($asset_id, $app_id);
+    $asset = mediamosa_asset::get($asset_id, $app_id);
 
     // Remove rights.
-    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset);
+    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $asset);
 
     // All ok.
     $mediamosa->set_result_okay();

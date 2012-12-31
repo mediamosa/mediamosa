@@ -89,7 +89,27 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
   be 'still', any other value will return an error.
 - mediamosa_asset_mediafile_still::find_default() no longer returns the
   mediafile_id but the whole mediafile array.
-- Made more simultaneous running jobs per asset possible.
+- Fixed REST call browser to reset page counter when starting search.
+- Made more simultaneous running jobs per asset possible; Status files and
+  transcode now uses job_id instead of MediaFile ID.
+- Fixed rubik theme to allow form elements in the column_side 'actions' form
+  part.
+- Extended REST call browser to include filter on acces type (authentication,
+  external and internal).
+- The mediamosa_io:exec() function now returns the whole exec output as an array
+  instead of the last line. This replaces the 2nd referenced parameter '$output'
+  as this now used in the function to return the whole exec output of the
+  command.
+  The old parameters where;
+    ( string $command [, array &$output [, int &$return_var ]] )
+  The new parameters are;
+    ( string $command [, int &$return_var ] )
+- Added simpletest if analyse of file works as intended.
+- Added simpletest CSS to mediamosa.css for fixing rubik's theme overruling the
+  simpletest CSS and giving normal row color to exception messages.
+- Rewritten some queries into mediamosa_db::db_merge() variants.
+- External generated files like ASX helper files or now stored under
+  media/object and no longer misuse the location where still links where stored.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

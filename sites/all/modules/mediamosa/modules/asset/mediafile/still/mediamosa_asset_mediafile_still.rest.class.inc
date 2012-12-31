@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Still REST calls.
  */
-
- /**
-  * @file
-  * Still REST calls.
-  */
 
 /**
  * URI: /asset/$asset_id/still/delete
@@ -341,7 +316,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
 
     // TODO: Needs later decision.
     if (FALSE) {
-      // The new, watermarked still is inherit the basic values.
+      // The new, watermarked still will inherit the basic values.
       $tag = $still[mediamosa_asset_mediafile_db::TAG];
       $order = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, mediamosa_asset_mediafile_metadata::STILL_ORDER);
       $default = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($still_id, mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
@@ -375,8 +350,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     $still_id_new = mediamosa_asset_mediafile_still::create_watermark($still_id, $app_id, $still_parameters, TRUE);
 
     if (!$still_id_new) {
-      // TODO: Better error code?
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_FAILED_TO_CREATE, array('@during' => 'during watermark creation'));
     }
 
     // Reset still parameters.

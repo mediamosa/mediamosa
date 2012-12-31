@@ -9,8 +9,11 @@ class mediamosa_app {
   /**
    * Get the app using the app_id.
    *
-   * @param string $name
+   * @param integer $app_id
+   *   The client application ID.
+   *
    * @return array
+   *   The application array.
    */
   public static function get_by_appid($app_id) {
     static $apps = array();
@@ -38,8 +41,8 @@ class mediamosa_app {
    * @param array $fields
    *   For specific fields.
    *
-   * @return array
-   *   The result array.
+   * @return DatabaseStatementInterface
+   *   The result.
    */
   public static function get_by_appids(array $app_ids, array $fields = array()) {
     // Build query.
@@ -61,12 +64,17 @@ class mediamosa_app {
   /**
    * Get the app using the node ID.
    *
-   * @param string $name
+   * @param integer $nid
+   *   The node ID.
+   * @param array $fields
+   *   For specific columns.
+   *
    * @return array
+   *   The application or FALSE.
    */
-  public static function get_by_nid($nid, $a_fields = array()) {
+  public static function get_by_nid($nid, $fields = array()) {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
-      ->fields('app', $a_fields)
+      ->fields('app', $fields)
       ->condition(mediamosa_app_db::NID, $nid)
       ->execute()
       ->fetchAssoc();
@@ -89,7 +97,7 @@ class mediamosa_app {
   /**
    * Get all apps.
    *
-   * @return array
+   * @return DatabaseStatementInterface
    */
   public static function get_all_apps(array $fields = array(), $order_by = NULL, $order_direction = 'ASC') {
     $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
@@ -146,6 +154,9 @@ class mediamosa_app {
    *
    * Used to return the owner field in the mediamosa_app table. Now returns all
    * Drupal users that have an permission that allows access to a client app.
+   *
+   * @return array
+   *   The application owners.
    */
   public static function collect_app_owners() {
     global $user;
@@ -276,7 +287,7 @@ class mediamosa_app {
    *
    * @return array
    */
-  public static function get_all_apps_cached($options = array(), $reset = FALSE) {
+  public static function get_all_apps_cached($options = array()) {
     $apps = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
 
     $options += array(

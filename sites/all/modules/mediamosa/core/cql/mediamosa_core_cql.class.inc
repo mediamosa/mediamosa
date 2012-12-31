@@ -4,29 +4,6 @@
  * The parent main class for MediaMosa CQL.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 define('MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING', 'use_having');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN', 'column');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT', 'table_for_sort');
@@ -54,37 +31,37 @@ class mediamosa_core_cql {
    *  Value to compare.
    * @param unknown_type $type
    *  Type of param.
-   * @param array $a_translate_to
+   * @param array $translate_to
    *  Extra array to translate name.
    */
 
-  public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $a_translate_to = array()) {
-    $a_or = array();
+  public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $translate_to = array()) {
+    $or = array();
 
-    if (isset($a_translate_to[$name])) {
-      $name = $a_translate_to[$name];
+    if (isset($translate_to[$name])) {
+      $name = $translate_to[$name];
     }
 
-    $a_or = array();
+    $or = array();
 
     switch ($type) {
       case mediamosa_sdk::TYPE_SEARCH_STRING:
         switch ($match) {
           case 'exact':
             foreach ($values as $value) {
-              $a_or[] = $name . ' == "^' . addslashes($value) . '^"';
+              $or[] = $name . ' == "^' . addslashes($value) . '^"';
             }
             break;
 
           case 'begin':
             foreach ($values as $value) {
-              $a_or[] = $name . ' == "^' . addslashes($value) . '"';
+              $or[] = $name . ' == "^' . addslashes($value) . '"';
             }
             break;
 
           case 'contains':
             foreach ($values as $value) {
-              $a_or[] = $name . ' = "' . addslashes($value) . '"';
+              $or[] = $name . ' = "' . addslashes($value) . '"';
             }
             break;
         }
@@ -92,13 +69,13 @@ class mediamosa_core_cql {
 
       case mediamosa_sdk::TYPE_SEARCH_INT:
         foreach ($values as $value) {
-          $a_or[] = $name . ' == ' . intval($value);
+          $or[] = $name . ' == ' . intval($value);
         }
         break;
 
       case mediamosa_sdk::TYPE_SEARCH_BOOL:
         foreach ($values as $value) {
-          $a_or[] = $name . ' == "' . addslashes($value) . '"';
+          $or[] = $name . ' == "' . addslashes($value) . '"';
         }
         break;
 
@@ -106,13 +83,13 @@ class mediamosa_core_cql {
         foreach ($values as $value) {
           if (strpos($value, '|') === FALSE) {
             $value = mediamosa_datetime::date8601_to_timestamp($value, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-            $a_or[] = $name . ' == "' . addslashes($value) . '"';
+            $or[] = $name . ' == "' . addslashes($value) . '"';
           }
           else {
             list($v1, $v2) = explode('|', $value, 2);
             $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
             $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-            $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
+            $or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
           }
         }
         break;
@@ -122,7 +99,7 @@ class mediamosa_core_cql {
         break;
     }
 
-    return (count($a_or) > 1 ? '(' : '') . implode(' OR ', $a_or) . (count($a_or) > 1 ? ')' : '');
+    return (count($or) > 1 ? '(' : '') . implode(' OR ', $or) . (count($or) > 1 ? ')' : '');
   }
 
   /**

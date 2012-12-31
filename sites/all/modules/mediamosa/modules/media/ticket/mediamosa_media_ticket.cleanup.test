@@ -5,10 +5,7 @@
  */
 
 class MediaMosaMediaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
-
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'Media - Ticket / files cleanup',
@@ -22,108 +19,108 @@ class MediaMosaMediaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
    */
   public function testMediaTicketCleanup() {
     // App ids.
-    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
-    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg(), 'transcode_inherits_acl' => TRUE, 'downloadable' => TRUE, 'transcode' => array($this->getDefaultTranscodeProfile())));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
-    $job_id = $this->createMediafileStill($mediafile_id);
+    // Create still.
+    $this->createMediafileStill($mediafile_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
 
-    // Get the asset, so we have the still.
-    $asset = $this->getAsset($asset_id);
-
-    $still_servers = mediamosa_server::get_enabled_still();
-    $this->assertTrue(!empty($still_servers), t('@num enabled still server(s) found.', array('@num' => $still_servers->rowCount())));
-
     // Get the stills.
     $stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($stills) == 1, 'Found one still.');
+    $stills = reset($stills);
+    $this->var_export($stills);
+    $this->assertTrue(isset($stills['stills']['still_id']), 'Found one still.');
 
-    $still = reset($stills);
+    $still = $stills['stills'];
     $this->var_export($still);
 
-    // Do media play call and create a symlink.
-    // Test the output, do output call.
-    $permanent_still_url = str_replace('/media/', '/media/simpletest/media/', $still['output']);
+    // Protect original and still with ACL so we get ticket links.
+    $this->setMediafileAcl($mediafile_id, array('acl_user_id' => 'johndoe'));
+    $this->setMediafileAcl($still['still_id'], array('acl_user_id' => 'johndoe'));
 
-    // Get the file.
-    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+    // Got 3 ticket types to clean up;
+    // VIEW, DOWNLOAD and STILL.
+    //
+    // First need to create the ticket links.
 
-    // Check response.
-    $this->assertTrue(
-      $result->code == 200,
-      t("Download the test image from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
-    );
-
-    $still_id = $still['stills']['still_id'];
-    $this->assertFalse(empty($still_id), 'Found still ID.');
-
-    // Check if symlink exists.
-    $sympath = mediamosa_storage::get_uri_media_file($app_id_1, $still_id) . '.' . mediamosa_asset_mediafile::get_file_extension($still);
-
-    $this->var_export($sympath);
-
-    // Must exists.
-    $this->file_exists($sympath);
-
-    // Add ACL rule.
+    // View still.
     $parameters = array(
-      'acl_domain' => 'foo.nl',
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $this->setMediafileAcl($still_id, $parameters);
+    $response_uri = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->var_export($response_uri);
 
-    // Must not exists, symlink must be removed.
-    $this->file_not_exists($sympath);
+    // Download still.
+    $response_download = $this->do_media_view_download($asset_id, $mediafile_id);
+    $this->var_export($response_download);
 
-    // Check removal of ticket link.
+    // View still .
+    $response_still = $this->do_media_view_still($asset_id);
+    $this->var_export($response_still);
 
-    // Get the stills.
-    $stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($stills) == 1, 'Found still.');
+    // Get ticket IDs.
+    $tickets = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt', array(mediamosa_media_ticket_db::ID, mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::MEDIAFILE_ID, mediamosa_media_ticket_db::ISSUED))
+      ->execute()
+      ->fetchAllAssoc(mediamosa_media_ticket_db::ID);
 
-    // Get first array.
-    $stills = $stills[0];
+    $this->var_export($tickets);
+    $this->assert(count($tickets) == 3, 'Found 3 tickets');
 
-    // Still list.
-    $a_still_list = $stills['stills'];
+    // Check if 3 types ticket links exists.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]] = mediamosa_asset_mediafile::get($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_exists($uri);
+    }
 
-    $this->var_export($stills);
+    $this->pass('Cleanup pass 1');
 
-    // Test the output, do output call.
-    $permanent_still_url = str_replace('/media/', '/media/simpletest/media/', $stills['output']);
-
-    // Get the file using ticket.
-    $result = mediamosa_http::drupal_http_request($permanent_still_url);
-
-    // Check response.
-    $this->assertTrue(
-      $result->code == 200,
-      t("Download the test image from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
-    );
-
-    // Put the ticket link on modified - 1 week and see if it gets cleaned up.
-    $ticket_link = mediamosa_storage::get_uri_media_ticket_file($app_id_1, $stills['ticket_id']);
-
-    // Must exists.
-    $this->file_exists($ticket_link);
-/*
-    // Change it.
-    $this->assertTrue(touch($ticket_link, time() - (60*60*24*7)), 'Changed modified date on file');
-
-    // Run clean script.
+    // Now run cleanup.
     mediamosa_media_ticket::ticket_cleanup();
 
-    // Must exists. FIXME: touch does not seem to work.
-    //$this->file_not_exists($ticket_link);
+    // All tickets should be still here.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_exists($uri);
+    }
 
-    // Remove ACL rule.
-    $parameters = array(
-    );
-    $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-*/
+    // Now run cleanup but put expire on 0.
+    variable_set('mediamosa_ticket_expiration_view', 1);
+    variable_set('mediamosa_ticket_expiration_download', 1);
+    variable_set('mediamosa_ticket_expiration_still', 1);
+
+    $this->pass('Cleanup pass 2');
+
+    // Wait 2 minutes so tickets timeout.
+    drupal_set_time_limit(120);
+    sleep(120);
+
+    // Clean up for real.
+    mediamosa_media_ticket::ticket_cleanup();
+
+    // All tickets should be gone.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_not_exists($uri);
+    }
+
+    // All tickets should be gone.
+    $tickets = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt', array(mediamosa_media_ticket_db::ID, mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::MEDIAFILE_ID, mediamosa_media_ticket_db::ISSUED))
+      ->execute()
+      ->fetchAllAssoc(mediamosa_media_ticket_db::ID);
+
+    $this->var_export($tickets);
+    $this->assert(count($tickets) == 0, 'Found no tickets');
   }
 }

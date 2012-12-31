@@ -74,6 +74,21 @@ class mediamosa_profile {
   }
 
   /**
+   * Trims the uri correctly without messing up schema.
+   *
+   * Adds an '/' at the end and makes sure that only one is added.
+   *
+   * @param string $uri
+   *   The uri to trim.
+   *
+   * @return string
+   *   The trimed uri.
+   */
+  public static function trim_uri($uri) {
+    return drupal_substr($uri, -3) != '://' ? rtrim($uri, '/') . '/' : $uri;
+  }
+  
+  /**
    * Test if given command is installed / found.
    *
    * Also returns its default stdio / strerr output in $exec_output
@@ -330,6 +345,7 @@ class mediamosa_profile {
 
     // Other.
     mediamosa_profile::mountpoint_mkdir('data/transcode');
+    mediamosa_profile::mountpoint_mkdir('data/transition');
     mediamosa_profile::mountpoint_mkdir('ftp');
 
     // /media is replacing /still_links.

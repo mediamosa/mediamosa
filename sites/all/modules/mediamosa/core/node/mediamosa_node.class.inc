@@ -1,35 +1,10 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Include file for core node types. Add new node type includes here.
+ * This file is included on several places to ensure including all node
+ * creation code.
  */
-
- /**
-  * @file
-  * Include file for core node types. Add new node type includes here.
-  * This file is included on several places to ensure including all node
-  * creation code.
-  */
 
 /**
  * These are required, or else some hooks will not work for these node types.
@@ -62,16 +37,25 @@ class mediamosa_node {
   }
 
   /**
-   * Create basic node object to fill.
+   * Create basic MediaMosa node object to fill.
    *
-   * @param $type
-   * @param $title
+   * @param string $type
+   *   The node type.
+   * @param string $title
+   *   The title.
+   * @param string $description.
+   *   (optional) The node description.
+   *
+   * @return object
+   *   A node type object.
    */
-  public static function create_basic_node($type, $title) {
+  public static function create_basic_node($type, $title, $description = '') {
 
     $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
+    // Admin.
+    $node->uid = 1;
+    // Published.
+    $node->status = 1;
     $node->type = $type;
     $node->locked = 0;
     $node->has_title = 1;
@@ -79,6 +63,7 @@ class mediamosa_node {
     $node->custom = 1;
     $node->language = LANGUAGE_NONE;
     $node->title = $title;
+    $node->description = $description;
     return $node;
   }
 
@@ -139,7 +124,7 @@ class mediamosa_node {
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE:
         $fields = mediamosa_storage_profile_db::get_fields();
         return $fields;
-      
+
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
         $fields = mediamosa_transcode_profile_db::get_fields();
         $fields[] = 'commands';
@@ -214,7 +199,10 @@ class mediamosa_node {
 
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS:
         return mediamosa_node_mediamosa_settings::get_fields();
-    }
+
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE:
+        return mediamosa_storage_profile_db::get_fields();
+     }
 
     return array();
   }
@@ -312,7 +300,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb[] = l($node->title, 'admin/mediamosa/config/storage_profile/' . $node->nid);
       drupal_set_breadcrumb($breadcrumb);
       break;
-    
+
     case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
       // Reset the breadcrum.
       $breadcrumb = array();

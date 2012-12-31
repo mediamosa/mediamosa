@@ -106,7 +106,7 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->toEga_1();
 
     // Now do a media play call to still (as app 1).
-    $response = $this->do_media_play_still($asset_id);
+    $response = $this->do_media_view_still($asset_id);
 
     $this->var_export($response, 'response');
 

@@ -50,13 +50,13 @@ class MediaMosaMediaDownloadTestCase extends MediaMosaTestCaseEga {
     $mediafile = $this->getMediafile($mediafile_id);
 
     // Create ticket.
-    $ticket_id = mediamosa_media::process_media_view($app_id, $mediafile, mediamosa_media::RESPONSE_DOWNLOAD);
+    $ticket_id = mediamosa_media::process_media_view($app_id, self::SIMPLETEST_USER_ID, $mediafile, mediamosa_media::RESPONSE_DOWNLOAD, FALSE);
 
     // For cleanup.
     $ticket_symlink = mediamosa_storage::get_realpath_media_permanent_file($app_id, $ticket_id, $filename);
 
     $this->assertTrue(mediamosa_io::is_link($ticket_symlink), 'Is symlink: ' . $ticket_symlink);
-    $this->assertTrue(mediamosa_io::file_exists($ticket_symlink, TRUE), 'Symlink found: ' . $ticket_symlink);
+    $this->assertTrue(mediamosa_io::file_exists($ticket_symlink), 'Symlink found: ' . $ticket_symlink);
 
     $download_servers = mediamosa_server::get_enabled_download();
     $this->assertTrue(!empty($download_servers), t('@num enabled download server(s) found.', array('@num' => $download_servers->rowCount())));

@@ -313,23 +313,25 @@ class mediamosa_asset {
     $mediafile_info = $query->execute()->fetchAssoc();
 
     $mediafile_id = (empty($mediafile_info[mediamosa_asset_mediafile_db::ID]) ? NULL : $mediafile_info[mediamosa_asset_mediafile_db::ID]);
-    $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-    $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+    if (!empty($mediafile_id)) {
+      $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+      $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
-    // Set the length of the 1st original mediafile in the parent asset.
-    if (!is_null($file_duration) && !is_null($container_type)) {
-      mediamosa_db::db_query(
-        "UPDATE {#mediamosa_asset} SET #mediafile_duration = :mediafile_duration, #mediafile_container_type = :mediafile_container_type WHERE #asset_id = :asset_id",
-        array(
-          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-          '#mediafile_duration' => mediamosa_asset_db::MEDIAFILE_DURATION,
-          ':mediafile_duration' => $file_duration,
-          '#mediafile_container_type' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
-          ':mediafile_container_type' => $container_type,
-          '#asset_id' => mediamosa_asset_db::ID,
-          ':asset_id' => $asset_id,
-        )
-      );
+      // Set the length of the 1st original mediafile in the parent asset.
+      if (!is_null($file_duration) && !is_null($container_type)) {
+        mediamosa_db::db_query(
+          "UPDATE {#mediamosa_asset} SET #mediafile_duration = :mediafile_duration, #mediafile_container_type = :mediafile_container_type WHERE #asset_id = :asset_id",
+          array(
+            '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+            '#mediafile_duration' => mediamosa_asset_db::MEDIAFILE_DURATION,
+            ':mediafile_duration' => $file_duration,
+            '#mediafile_container_type' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
+            ':mediafile_container_type' => $container_type,
+            '#asset_id' => mediamosa_asset_db::ID,
+            ':asset_id' => $asset_id,
+          )
+        );
+      }
     }
 
     // Set the external.
@@ -876,14 +878,14 @@ class mediamosa_asset {
 
               if ($still) {
                 // Create still response.
-                $response = mediamosa_media::do_response_still($app_id, $acl_user_id, $still);
+                $response = mediamosa_media::do_response_still($app_id, $acl_user_id, $is_app_admin, $still);
                 $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
                 $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
               }
             }
             catch (mediamosa_exception $e) {
               // Ignore.
-              mediamosa_debug::log_asset($asset[mediamosa_asset_db::ID], $e->getMessage());
+              mediamosa_debug::log_asset($asset[mediamosa_asset_db::ID], "Caught and ignored; \n" . $e->getMessage());
             }
           }
         }
@@ -1072,7 +1074,7 @@ class mediamosa_asset {
     // If play call, then even if we are owner, then we can only play it when
     // is_app_admin is TRUE.
     if ($play_call && !$is_app_admin) {
-      throw new mediamosa_exception_error_is_unappropriate();
+      throw new mediamosa_exception_error_is_inappropriate();
     }
 
     // Must be owner or admin.
@@ -1081,7 +1083,7 @@ class mediamosa_asset {
     }
     catch (mediamosa_exception_error_access_denied $e) {
       assert($e);
-      throw new mediamosa_exception_error_is_unappropriate();
+      throw new mediamosa_exception_error_is_inappropriate();
     }
   }
 
@@ -1178,12 +1180,6 @@ class mediamosa_asset {
     // If not null, then check if this is the ega admin...
     if (!is_null($is_unappropriate)) {
       mediamosa_acl::app_admin_check($app_id, $asset[mediamosa_asset_db::APP_ID], $is_app_admin);
-
-      // Remove the permanent still links.
-      $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
-      foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
-      }
     }
 
     // Check if the start and end dates are not switched (start > end).
@@ -1235,14 +1231,11 @@ class mediamosa_asset {
       ->condition(mediamosa_asset_db::ID, $asset_id)
       ->execute();
 
-    // When setting is_unappropriate and setting to true, then remove all the
-    // permanent still links.
-    if (!is_null($is_unappropriate) && $is_unappropriate == TRUE) {
-      // Remove the permanent still links.
-      $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
-      foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
-      }
+    // When is_inappropriate is updated, we remove all perm. links to all
+    // mediafiles.
+    if (!is_null($is_unappropriate)) {
+      // Remove all perm. links from all mediafiles of this asset.
+      mediamosa_media::remove_permanent_link_asset($asset_id);
     }
 
     // Change the owner_id / group_id of mediafiles and jobs

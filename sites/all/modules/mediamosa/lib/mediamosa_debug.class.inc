@@ -49,7 +49,15 @@ class mediamosa_debug {
    */
   public static function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     if (self::is_debug_normal()) {
-      mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
+      if (is_resource($data)) {
+        mediamosa_watchdog::log(print_r($data, TRUE), array(), $severity, $type);
+      }
+      elseif (is_bool($data)) {
+        mediamosa_watchdog::log($data ? 'TRUE' : 'FALSE', array(), $severity, $type);
+      }
+      else {
+        mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
+      }
     }
   }
 

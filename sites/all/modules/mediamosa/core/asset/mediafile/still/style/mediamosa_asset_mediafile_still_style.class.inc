@@ -105,7 +105,6 @@ class mediamosa_asset_mediafile_still_style {
         'find @media_app_path -maxdepth 2 -mindepth 2 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+,@style_id\(\.[a-zA-Z0-9]+\)?$" -type l -delete',
         array(
           '@media_app_path' => mediamosa_storage::get_realpath_media_ticket($app_id),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );

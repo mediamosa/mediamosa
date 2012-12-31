@@ -1,12 +1,9 @@
 <?php
-// $Id$
-
- /**
-  * @file
-  * hook_load / -update / -delete / -insert hooks for node type mediamosa_storage_profile.
-  *
-  *
-  */
+/**
+ * @file
+ * hook_load / -update / -delete / -insert hooks for node type
+ * mediamosa_storage_profile.
+ */
 
 /**
  * Implements hook_load().
@@ -18,7 +15,7 @@ function mediamosa_storage_profile_load(&$nodes) {
   foreach ($nodes as $key => $node) {
     $nodes[$key] = module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_load', $node);
   }
-  
+
   return $nodes;
 }
 
@@ -40,9 +37,9 @@ function mediamosa_storage_profile_update($node) {
     $node->{mediamosa_storage_profile_db::PROFILE} = $node->title;
 
     // Update.
-    mediamosa_node_revision::update_ex($node, mediamosa_storage_profile_db::TABLE_NAME, $names); 
+    mediamosa_node_revision::update_ex($node, mediamosa_storage_profile_db::TABLE_NAME, $names);
   }
-  
+
   // Update type specific info
   module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_update', $node);
 }
@@ -53,10 +50,10 @@ function mediamosa_storage_profile_update($node) {
 function mediamosa_storage_profile_insert($node) {
   // If this profile is set als default, then reset the rest to FALSE.
   _mediamosa_storage_profile_update_isdefault($node);
-  
+
   // If just inserting another revision, don't trigger hook_mediamosa_storage_profile_insert
   $trigger_hook_mediamosa_storage_profile_insert = empty($node->{mediamosa_storage_profile_db::ID});
-  
+
   // Get the field names of the table.
   $names = mediamosa_storage_profile_db::get_fields();
 
@@ -65,7 +62,7 @@ function mediamosa_storage_profile_insert($node) {
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_storage_profile_db::TABLE_NAME, $names);
-  
+
   // Insert revision does not return the storage_profile_id
   $result = db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
     ->fields('sp', array(mediamosa_storage_profile_db::ID))
@@ -73,7 +70,7 @@ function mediamosa_storage_profile_insert($node) {
     ->condition(mediamosa_storage_profile_db::VID, $node->{mediamosa_storage_profile_db::VID})
     ->execute()
     ->fetchField();
-  
+
   $node->{mediamosa_storage_profile_db::ID} = $result;
 
   // Insert type specific info
@@ -127,10 +124,10 @@ function mediamosa_storage_profile_view($node, $view_mode = 'full') {
   // Get the apps.
   $apps = mediamosa_app::collect_allowed_apps();
   $apps[0] = t('[global profile]');
-  
+
   // Get list of all storage types
   $types = module_invoke_all('mediamosa_storage_info');
-  
+
   // Default parameters.
   $rows = array(
     array(t('Title'), check_plain($node->title)),
@@ -142,7 +139,7 @@ function mediamosa_storage_profile_view($node, $view_mode = 'full') {
 
   // Storage type specific parameters
   $rows = array_merge($rows, module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_view', $node, $view_mode));
-  
+
   // Add timestamps.
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
@@ -169,7 +166,7 @@ function mediamosa_storage_profile_form($node, $form_state) {
     $breadcrumb[] = l($node->title, 'admin/mediamosa/config/storage_profile/' . $node->nid);
   }
   drupal_set_breadcrumb($breadcrumb);
-  
+
   // Get the apps.
   $apps = mediamosa_app::collect_allowed_apps();
   $apps[0] = t('[global profile]');
@@ -185,7 +182,7 @@ function mediamosa_storage_profile_form($node, $form_state) {
       }
     }
   }
-  
+
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
@@ -226,7 +223,7 @@ function mediamosa_storage_profile_form($node, $form_state) {
     '#type' => 'hidden',
     '#value' => $node->{mediamosa_storage_profile_db::TYPE},
   );
-  
+
   $form['required'][mediamosa_storage_profile_db::APP_ID] = array(
     '#title' => t('Application'),
     '#type' => 'select',
@@ -261,7 +258,7 @@ function mediamosa_storage_profile_form($node, $form_state) {
       '#title' => t($types[$node->{mediamosa_storage_profile_db::TYPE}]['name']),
       '#description' => t('Parameters for ' . $types[$node->{mediamosa_storage_profile_db::TYPE}]['name'] . '.'),
   );
-  
+
   if (module_hook('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_form')) {
     $form[$node->{mediamosa_storage_profile_db::TYPE}] += module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_form', $node, $form_state);
   }
@@ -271,7 +268,7 @@ function mediamosa_storage_profile_form($node, $form_state) {
       '#markup' => t('No parameters'),
     );
   }
-  
+
   return $form;
 }
 
@@ -279,12 +276,16 @@ function mediamosa_storage_profile_form($node, $form_state) {
  * Implements hook_node_validate().
  */
 function mediamosa_storage_node_validate($node, $form, &$form_state) {
-  module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_validate', $node, $form, $form_state);
+  if (!empty($node->{mediamosa_storage_profile_db::TYPE})) {
+    module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_validate', $node, $form, $form_state);
+  }
 }
 
 /**
  * Implements hook_node_presave().
  */
 function mediamosa_storage_node_presave($node) {
-  module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_presave', $node);
+  if (!empty($node->{mediamosa_storage_profile_db::TYPE})) {
+    module_invoke('mediamosa_storage_' . $node->{mediamosa_storage_profile_db::TYPE}, 'mediamosa_storage_profile_presave', $node);
+  }
 }

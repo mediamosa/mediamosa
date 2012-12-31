@@ -13,7 +13,7 @@ class mediamosa_media_ticket_db {
   // Database fields;
   const ID = 'ticket_id';
   const TICKET_TYPE = 'ticket_type';
-  const TICKET_TYPE_PLAY = 'PLAY';
+  const TICKET_TYPE_VIEW = 'PLAY';
   const TICKET_TYPE_DOWNLOAD = 'DOWNLOAD';
   const TICKET_TYPE_STILL = 'STILL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';

@@ -166,3 +166,84 @@ function mediamosa_media_mediamosa_register_rest_call_doc() {
 
   return $rest_calls;
 }
+
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_media_mediamosa_configuration_collect() {
+
+  $form = array();
+
+  $form['settings_media'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Media settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_media']['tickets'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Ticket settings'),
+    '#description' => t('Tickets are used for Mediafiles that are protected by access (ACL). These tickets expire after an amount of time and prevent access to the Mediafiles using the ticket. Tickets are used for download, upload, view (play) and stills (thumbnails view) calls. The values of the ticket expire settings are in minutes.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_media']['tickets']['mediamosa_ticket_expiration_view'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Expire time view tickets (minutes)'),
+    '#description' => t('The view ticket is used when playing mediafile or viewing a PDF file.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_media_ticket::get_ticket_expiration_view(),
+  );
+
+  $form['settings_media']['tickets']['mediamosa_ticket_expiration_download'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Expire time download tickets (minutes)'),
+    '#description' => t('The download ticket allows downloading protected mediafiles.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_media_ticket::get_ticket_expiration_download(),
+  );
+
+  $form['settings_media']['tickets']['mediamosa_ticket_expiration_still'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Expire time still tickets (minutes)'),
+    '#description' => t('The still ticket allows to view stills using the ticket system.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_media_ticket::get_ticket_expiration_still(),
+  );
+
+  $form['settings_media']['tickets']['mediamosa_ticket_expiration_upload'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Expire time upload tickets (minutes)'),
+    '#description' => t('The upload ticket allows the total time a file can be upload using POST or PUT.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_media_ticket::get_ticket_expiration_upload(),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_mediamosa_configuration_validate().
+ */
+function mediamosa_media_mediamosa_configuration_validate($form, $form_state) {
+
+  if ($form_state['values']['mediamosa_ticket_expiration_view'] < 1 || !is_numeric($form_state['values']['mediamosa_ticket_expiration_view'])) {
+    form_set_error('mediamosa_ticket_expiration_view', t('Ticket expire must be higher than 0.'));
+  }
+
+  if ($form_state['values']['mediamosa_ticket_expiration_download'] < 1 || !is_numeric($form_state['values']['mediamosa_ticket_expiration_download'])) {
+    form_set_error('mediamosa_ticket_expiration_download', t('Ticket expire must be higher than 0.'));
+  }
+
+  if ($form_state['values']['mediamosa_ticket_expiration_still'] < 1 || !is_numeric($form_state['values']['mediamosa_ticket_expiration_still'])) {
+    form_set_error('mediamosa_ticket_expiration_still', t('Ticket expire must be higher than 0.'));
+  }
+
+  if ($form_state['values']['mediamosa_ticket_expiration_upload'] < 1 || !is_numeric($form_state['values']['mediamosa_ticket_expiration_upload'])) {
+    form_set_error('mediamosa_ticket_expiration_upload', t('Ticket expire must be higher than 0.'));
+  }
+
+}

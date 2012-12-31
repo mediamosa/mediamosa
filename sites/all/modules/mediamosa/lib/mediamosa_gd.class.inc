@@ -208,12 +208,31 @@ class mediamosa_gd {
    *
    * @throws mediamosa_exception_error().
    */
-  public static function getimagesize($uri, array &$imageinfo = array()) {
+  public static function get_image_size($uri, array &$imageinfo = array()) {
     if (!function_exists('getimagesize')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }
 
-    return @getimagesize(mediamosa_io::realpath($uri), $imageinfo);
+   return @getimagesize(mediamosa_io::realpath($uri), $imageinfo);
+  }
+
+  /**
+   * Get the type of an image.
+   *
+   * @param string $uri
+   *   This parameter specifies the file you wish to retrieve information about.
+   *   It can reference a local file or (configuration permitting) a remote file
+   *   using one of the supported streams.
+   *
+   * @return integer
+   *   Is one of the IMAGETYPE_XXX constants indicating the type of the image.
+   */
+  public static function get_image_type($uri) {
+    // Need to know type of image.
+    $imagesize = mediamosa_gd::get_image_size($uri);
+
+    // Return image type.
+    return $imagesize[2];
   }
 
   /**
@@ -274,7 +293,7 @@ class mediamosa_gd {
    */
   public static function imagecreate($uri) {
     // Need to know type of image.
-    $imagesize = mediamosa_gd::getimagesize($uri);
+    $imagesize = mediamosa_gd::get_image_size($uri);
 
     switch ($imagesize[2]) {
       case IMAGETYPE_JPEG:
@@ -429,7 +448,7 @@ class mediamosa_gd {
    * @throws mediamosa_exception_error().
    */
   public static function imagepng($image, $uri = NULL, $quality = NULL, $filters = NULL) {
-    imagepng($image, (empty($uri) ? NULL : mediamosa_io::realpath($uri)), $quality, $filters);
+    return imagepng($image, (empty($uri) ? NULL : mediamosa_io::realpath($uri)), $quality, $filters);
   }
 
   /**
@@ -437,6 +456,8 @@ class mediamosa_gd {
    *
    * @param resource $image
    *   The resource object.
+   * @param integer $image_type
+   *   Is one of the IMAGETYPE_XXX constants indicating the type of the image.
    * @param string $uri
    *   A stream wrapper URI or a filesystem path to save the file to. If NULL,
    *   the raw image stream will be outputted directly.
@@ -451,11 +472,10 @@ class mediamosa_gd {
    * @see imagejpeg()
    * @see imagepng()
    */
-  public static function image($image, $uri = NULL, $quality = NULL) {
-    // Need to know type of image.
-    $imagesize = mediamosa_gd::getimagesize($uri);
+  public static function image($image, $image_type, $uri = NULL, $quality = NULL) {
+    assert($image_type);
 
-    switch ($imagesize[2]) {
+    switch ($image_type) {
       case IMAGETYPE_JPEG:
         return self::imagejpeg($image, $uri, $quality);
 

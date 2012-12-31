@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Storage profiles"
 description = "The storage module handles different storage profiles."
 package = "MediaMosa - Modules"
@@ -10,5 +8,7 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
+files[] = mediamosa_storage.rest.class.inc
+files[] = mediamosa_storage.test.class.inc
 files[] = profile/mediamosa_storage_profile.inc
-files[] = mapping/mediamosa_storage_mapping.inc
+files[] = profile/app/mediamosa_storage_profile_app.inc

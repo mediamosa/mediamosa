@@ -1,10 +1,26 @@
 <?php
-// $Id$
+/**
+ * @file
+ * MediaMosa mountpoint storage.
+ */
 
- /**
-  * @file
-  * MediaMosa mountpoint storage.
-  */
+/**
+ * Implements hook_stream_wrappers().
+ */
+function mediamosa_storage_mountpoint_stream_wrappers() {
+
+  // Our MediaMosa S3 Stream Wrappers.
+  $wrappers = array(
+    'mediamosa-storage-mountpoint' => array(
+      'name' => t('MediaMosa storage custom mount point location'),
+      'class' => 'mediamosa_storage_mountpoint_streamwrapper',
+      'description' => t('The custom local storage stream wrapper MediaFiles.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+  );
+
+  return $wrappers;
+}
 
 /**
  * Implements hook_mediamosa_storage_info().
@@ -25,10 +41,10 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_load($node) {
     ->fields('p')
     ->execute()
     ->fetchAssoc();
-  
+
   $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT} = $result[mediamosa_storage_mountpoint_db::MOUNTPOINT];
   $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS} = $result[mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS];
-  
+
   return $node;
 }
 
@@ -43,11 +59,11 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_insert($node) {
       $fields[$field] = $node->{$field};
     }
   }
-  
+
   mediamosa_db::db_insert(mediamosa_storage_mountpoint_db::TABLE_NAME)
     ->fields($fields)
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after inserting?
 }
 
@@ -67,7 +83,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_update($node) {
     ->fields($fields)
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after updating?
 }
 
@@ -78,7 +94,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_delete($node) {
   mediamosa_db::db_delete(mediamosa_storage_mountpoint_db::TABLE_NAME)
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
-  
+
   //TODO: maybe do some other stuff before or after deleting?
 }
 
@@ -108,7 +124,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_form($node, $for
     '#default_value' => mediamosa_node::default_value(mediamosa_storage_mountpoint_db::MOUNTPOINT, $node),
     '#maxlength' => mediamosa_storage_mountpoint_db::MOUNTPOINT_LENGTH,
   );
-  
+
   $form[mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS] = array(
     '#title' => t('Windows Mountpoint'),
     '#type' => 'textfield',
@@ -117,7 +133,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_form($node, $for
     '#default_value' => mediamosa_node::default_value(mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS, $node),
     '#maxlength' => mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS_LENGTH,
   );
-  
+
   return $form;
 }
 
@@ -127,7 +143,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_form($node, $for
 function mediamosa_storage_mountpoint_mediamosa_storage_profile_validate($node, $form, $form_state) {
   $mountpoint = $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT};
   if (!is_dir($mountpoint)) {
-    form_set_error(mediamosa_storage_mountpoint_db::MOUNTPOINT, t('Invalid mountpoint'));
+    form_set_error(mediamosa_storage_mountpoint_db::MOUNTPOINT, t('Invalid mountpoint, just must precreate the directory'));
   }
   elseif (!is_writable($mountpoint)) {
     form_set_error(mediamosa_storage_mountpoint_db::MOUNTPOINT, t('Mountpoint not writable'));

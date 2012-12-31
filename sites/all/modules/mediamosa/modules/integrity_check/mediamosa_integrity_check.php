@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Integrity check PHP file
@@ -76,7 +51,7 @@ function check_media_records() {
 
   foreach ($result as $mediafile) {
     // Check if file exists.
-    if (!file_exists(mediamosa_storage::get_realpath_data_file($mediafile['mediafile_id']))) {
+    if (!mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile['mediafile_id']))) {
       $mediafile_id = $mediafile['mediafile_id'];
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -110,7 +85,7 @@ function check_media_records() {
 // Check media files.
 function check_media_files() {
   // Base folder.
-  $dir = mediamosa_storage::get_uri_data();
+  $dir = mediamosa_storage_local::get_scheme() . '://';
   $dh = opendir($dir);
 
   while (($folder = readdir($dh)) !== FALSE) {
@@ -189,7 +164,7 @@ function check_still_records() {
 
   foreach ($result as $still) {
     // Check if file exists.
-    if (!file_exists(mediamosa_storage::get_realpath_data_file($still['mediafile_id']))) {
+    if (!mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($still['mediafile_id']))) {
       $mediafile_id = $still['mediafile_id'];
       $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
       $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
@@ -222,7 +197,7 @@ function check_still_records() {
 
 function check_still_files() {
   // Base folder.
-  $dir = mediamosa_storage::get_uri_data();
+  $dir = mediamosa_storage::get_realpath_data();
   $dh = opendir($dir);
 
   while (($folder = readdir($dh)) !== FALSE) {

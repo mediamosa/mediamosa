@@ -11,21 +11,22 @@ class mediamosa_storage_s3_db {
   const TABLE_NAME = 'mediamosa_storage_profile_s3';
 
   // Additional database fields besides the default onces;
+  const NID = 'nid';
+  const VID = 'vid';
+  const PROFILE_ID = 'storage_profile_id';
   const KEY = 'aws_key';
   const KEY_LENGTH = 20;
   const SECRET = 'aws_secret';
   const SECRET_LENGTH = 40;
-  //const CLOUDFRONT_KEYPAIR = 'aws_cloudfront_keypair';
-  //const CLOUDFRONT_KEYPAIR_LENGTH = 40;
-  
+
   /**
    * Returns all fields.
    */
   public static function get_fields() {
     require_once 'mediamosa_storage_s3.install';
-    
+
     // Get the schema.
-    $a_schema = mediamosa_storage_s3_schema();
-    return array_keys($a_schema[mediamosa_storage_s3_db::TABLE_NAME]['fields']);
+    $schema = mediamosa_storage_s3_schema();
+    return array_keys($schema[mediamosa_storage_s3_db::TABLE_NAME]['fields']);
   }
 }

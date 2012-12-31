@@ -62,20 +62,20 @@ class mediamosa_asset_mediafile_upload {
     $job_id = mediamosa_job::create_job_upload($app_id,  $ticket[mediamosa_media_ticket_db::OWNER_ID], $ticket[mediamosa_media_ticket_db::GROUP_ID], $is_app_admin, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], $file_size, $retranscode, $create_still, $still_parameters);
 
     // Build the filename.
-    $filename = mediamosa_storage::get_realpath_data_file($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+    $destination_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
 
     // Create possible missing directories.
-    mediamosa_io::mkdir(mediamosa_io::dirname($filename));
+    mediamosa_io::mkdir(mediamosa_io::dirname($destination_uri));
 
     if ($is_method_put) {
       // PUT.
-      $success = self::handle_upload_put($filename, $job_id);
+      $success = self::handle_upload_put($destination_uri, $job_id);
     }
     else {
       // Expecting POST here.
 
       // FIXME: $_FILES might be posted as an array in a array (more than one file uploaded).
-      $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], $filename));
+      $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], mediamosa_io::realpath($destination_uri)));
     }
 
     // Enrich completed URL based on success.
@@ -98,7 +98,7 @@ class mediamosa_asset_mediafile_upload {
 
     // Update the mediafile.
     $fields = array(
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
       mediamosa_asset_mediafile_db::FILENAME => ($is_method_put ? $filename_put : $_FILES['file']['name']),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => $transcode_inherits_acl ? mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE : mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
@@ -155,9 +155,6 @@ class mediamosa_asset_mediafile_upload {
    */
   public static function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array(), $frametime = NULL) {
 
-    // Set to false.
-    $is_app_admin = FALSE;
-
     // Get the ticket.
     $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
 
@@ -178,7 +175,7 @@ class mediamosa_asset_mediafile_upload {
     mediamosa_user::must_have_user_quota($app_id, $ticket[mediamosa_media_ticket_db::OWNER_ID], $ticket[mediamosa_media_ticket_db::GROUP_ID]);
 
     // Check if mediafile exists.
-    mediamosa_asset_mediafile::must_exists($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+    mediamosa_asset_mediafile::must_exists_quick($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
 
     // Must be on.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
@@ -196,20 +193,20 @@ class mediamosa_asset_mediafile_upload {
     $still_id = mediamosa_db::uuid($app_id);
 
     // Get path to still.
-    $still_filename = mediamosa_storage::get_realpath_data_file($still_id);
+    $still_new_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $still_id, TRUE);
 
     // Create possible missing directories.
-    mediamosa_io::mkdir(mediamosa_io::dirname($still_filename));
+    mediamosa_io::mkdir(mediamosa_io::dirname($still_new_uri));
 
     if ($is_method_put) {
       // PUT.
-      $success = self::handle_upload_put($still_filename);
+      $success = self::handle_upload_put($still_new_uri);
     }
     else {
       // Expecting POST here.
 
       // FIXME: $_FILES might be posted as an array in a array (more than one file uploaded).
-      $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], $still_filename));
+      $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], mediamosa_io::realpath($still_new_uri)));
     }
 
     // Enrich completed URL based on success.
@@ -295,20 +292,18 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Specific function for PUT upload
    *
-   * 1.x: _vpx_upload_handle_file_put
-   *
-   * @param string $filename
+   * @param string $destination_uri
    *  Destination filename.
    * @param integer $job_id
    *  Job ID.
    */
-  protected static function handle_upload_put($filename, $job_id = 0) {
-    $filename_after_upload = NULL;
+  protected static function handle_upload_put($destination_uri, $job_id = 0) {
+    $destination_uri_after_upload = NULL;
 
     // If mediafile exists, rename it.
-    if (file_exists($filename)) {
-      $filename_after_upload = $filename;
-      $filename .= '.upload_temp';
+    if (mediamosa_io::file_exists($destination_uri)) {
+      $destination_uri_after_upload = $destination_uri;
+      $destination_uri .= '.upload_temp';
     }
 
     if ($job_id) {
@@ -320,9 +315,9 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Open the new file
-    $filename_file = @fopen($filename, 'w');
-    if (!$filename_file) {
-      throw new mediamosa_exception(0, "Unable to write to '" . $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    $file_handle = @fopen($destination_uri, 'w');
+    if (!$file_handle) {
+      throw new mediamosa_exception(0, "Unable to write to '" . $destination_uri . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
     // Open the stream
@@ -339,7 +334,7 @@ class mediamosa_asset_mediafile_upload {
     $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
 
     while ($kb) {
-      $written_bytes += @fwrite($filename_file, $kb);
+      $written_bytes += @fwrite($file_handle, $kb);
       if (!$written_bytes) {
         return FALSE;
       }
@@ -361,12 +356,12 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Close all open handles.
-    @fclose($filename_file);
+    @fclose($file_handle);
     @fclose($stream);
 
     // Ok rename when required.
-    if (isset($filename_after_upload)) {
-      mediamosa_io::rename($filename, $filename_after_upload);
+    if (isset($destination_uri_after_upload)) {
+      mediamosa_io::rename($destination_uri, $destination_uri_after_upload);
     }
 
     return TRUE;
@@ -375,25 +370,25 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Specific function for POST data upload
    *
-   * @param string $filename
+   * @param string $destination_uri
    *  Destination filename.
    *
    * @return int $written_bytes
    *   Number of the written bytes.
    */
-  public static function handle_upload_post($filename) {
-    $filename_after_upload = NULL;
+  public static function handle_upload_post($destination_uri) {
+    $destination_uri_after_upload = NULL;
 
     // If mediafile exists, rename it.
-    if (file_exists($filename)) {
-      $filename_after_upload = $filename;
-      $filename .= '.upload_temp';
+    if (mediamosa_io::file_exists($destination_uri)) {
+      $destination_uri_after_upload = $destination_uri;
+      $destination_uri .= '.upload_temp';
     }
 
     // Open the new file
-    $filename_file = @fopen($filename, 'w');
-    if (!$filename_file) {
-      throw new mediamosa_exception(0, "Unable to write to '" . $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    $file_handle = @fopen($destination_uri, 'w');
+    if (!$file_handle) {
+      throw new mediamosa_exception(0, "Unable to write to '" . $destination_uri . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
     // Open the stream
@@ -408,7 +403,7 @@ class mediamosa_asset_mediafile_upload {
     $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
 
     while ($kb) {
-      $written_bytes += @fwrite($filename_file, $kb);
+      $written_bytes += @fwrite($file_handle, $kb);
       if (!$written_bytes) {
         return FALSE;
       }
@@ -418,12 +413,12 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Close all open handles.
-    @fclose($filename_file);
+    @fclose($file_handle);
     @fclose($stream);
 
     // Ok rename when required.
-    if (isset($filename_after_upload)) {
-      mediamosa_io::rename($filename, $filename_after_upload);
+    if (isset($destination_uri_after_upload)) {
+      mediamosa_io::rename($destination_uri, $destination_uri_after_upload);
     }
 
     return $written_bytes;

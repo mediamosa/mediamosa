@@ -10,10 +10,21 @@ class mediamosa_media_ticket {
   /**
    *  Ticket types
    */
-  const TICKET_TYPE_PLAY = 'PLAY';
+  const TICKET_TYPE_VIEW = 'PLAY';
   const TICKET_TYPE_DOWNLOAD = 'DOWNLOAD';
   const TICKET_TYPE_STILL = 'STILL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';
+
+  /**
+   * Default expiration settings, in seconds.
+   */
+  const TICKET_EXPIRATION_VIEW = 10;
+  const TICKET_EXPIRATION_DOWNLOAD = 10;
+  const TICKET_EXPIRATION_STILL = 10;
+
+  // Not symbolic link based.
+  // 24 hours.
+  const TICKET_EXPIRATION_UPLOAD = 1440;
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -25,6 +36,46 @@ class mediamosa_media_ticket {
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'ticket');
+  }
+
+  /**
+   * Get the expire time for view tickets.
+   *
+   * @return integer
+   *   The number of minutes until ticket is expired.
+   */
+  public static function get_ticket_expiration_view() {
+    return variable_get('mediamosa_ticket_expiration_view', self::TICKET_EXPIRATION_VIEW);
+  }
+
+  /**
+   * Get the expire time for download tickets.
+   *
+   * @return integer
+   *   The number of minutes until ticket is expired.
+   */
+  public static function get_ticket_expiration_download() {
+    return variable_get('mediamosa_ticket_expiration_download', self::TICKET_EXPIRATION_DOWNLOAD);
+  }
+
+  /**
+   * Get the expire time for still tickets.
+   *
+   * @return integer
+   *   The number of minutes until ticket is expired.
+   */
+  public static function get_ticket_expiration_still() {
+    return variable_get('mediamosa_ticket_expiration_still', self::TICKET_EXPIRATION_STILL);
+  }
+
+  /**
+   * Get the expire time for upload tickets.
+   *
+   * @return integer
+   *   The number of minutes until ticket is expired.
+   */
+  public static function get_ticket_expiration_upload() {
+    return variable_get('mediamosa_ticket_expiration_upload', self::TICKET_EXPIRATION_UPLOAD);
   }
 
   /**
@@ -100,7 +151,79 @@ class mediamosa_media_ticket {
   }
 
   /**
-   * Run at fixed intervals.
+   * Cleanup expired ticket.
+   *
+   * Cleans up expired tickets symlinks and removes expired tickets from
+   * database.
+   *
+   * @param string $type
+   *   Ticket type, see mediamosa_media_ticket::TICKET_TYPE_*.
+   * @param integer $mindepth
+   *   Minimum depth.
+   * @param integer $maxdepth
+   *   Maximum depth.
+   * @param array $args
+   *   Possible extra arguments.
+   *
+   * @throws mediamosa_exception_program_error
+   */
+  public static function ticket_expire($type, $mindepth = 4, $maxdepth = 4, array $args = array()) {
+    // Get media path.
+    $path = mediamosa_storage::get_realpath_media_ticket();
+
+    switch ($type) {
+      case self::TICKET_TYPE_VIEW:
+        $expire = self::get_ticket_expiration_view();
+        break;
+
+      case self::TICKET_TYPE_DOWNLOAD:
+        $expire = self::get_ticket_expiration_download();
+        break;
+
+      case self::TICKET_TYPE_STILL:
+        $expire = self::get_ticket_expiration_still();
+        break;
+
+      default:
+        throw new mediamosa_exception_program_error('Unknown ticket type:' . $type);
+    }
+
+    // Delete tickets.
+    mediamosa_db::db_delete(mediamosa_media_ticket_db::TABLE_NAME)
+      ->condition(mediamosa_media_ticket_db::TICKET_TYPE, $type)
+      ->where(mediamosa_media_ticket_db::ISSUED . ' <= DATE_SUB(:now, INTERVAL ' . $expire . ' MINUTE)', array(':now' => mediamosa_datetime::utc_current_timestamp_now(TRUE)))
+      ->execute();
+
+    $args += array(
+      '-maxdepth' => $mindepth,
+      '-mindepth' => $maxdepth,
+      '-mmin' => '+' . (int) $expire,
+    );
+
+    $params = array();
+    foreach ($args as $cmd => $arg) {
+      $params[] = $cmd . ' ' . escapeshellarg($arg);
+    }
+
+    // Remove the symlinks.
+    mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+
+    // Now the ticket dir. We increase the expire here so we are sure the
+    // contents is empty.
+    $args['-maxdepth']--;
+    $args['-mindepth']--;
+
+    // Add one hour.
+    $args['-mmin'] = '+' . (int) $expire + 60;
+
+    // Add reg ex.
+    $args['-regex'] = "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]{" . mediamosa_settings::UUID_LENGTH . "}+?$";
+
+    mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+  }
+
+  /**
+   * Clean up expired tickets.
    */
   public static function ticket_cleanup() {
     if (!mediamosa_storage::is_storage_setup()) {
@@ -108,112 +231,14 @@ class mediamosa_media_ticket {
       return;
     }
 
-    // Get the current time.
-    $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
-
-    // Retrieve location of the play tickets.
-    $ticket_play_location = mediamosa_storage::get_realpath_media_ticket();
-
-    // Clean up the play tickets.
-    mediamosa_io::exec(
-      strtr(
-        'find @ticket_play_location. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
-        array(
-          '@ticket_play_location' => $ticket_play_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_PLAY / 60),
-        )
-      )
-    );
-
-    // Clean up the tickets with extensions
-    mediamosa_io::exec(
-      strtr(
-        'find @ticket_play_location. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -mmin +@ticket_expiration -delete',
-        array(
-          '@ticket_play_location' => $ticket_play_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_PLAY / 60),
-        )
-      )
-    );
-
-    // Now remove play tickets from the database.
-    $result = mediamosa_db::db_query(
-      'DELETE FROM {#mediamosa_media_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
-      array(
-        '#mediamosa_media_ticket' => mediamosa_media_ticket_db::TABLE_NAME,
-        '#ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE,
-        ':ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE_PLAY,
-        '#issued' => mediamosa_media_ticket_db::ISSUED,
-        ':now' => $db_time_now,
-        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_PLAY,
-      )
-    );
-
-    // Set the download location.
-    $ticket_download_location = mediamosa_storage::get_realpath_media_download();
-
-    // Clean up the download symlinks.
-    mediamosa_io::exec(
-      strtr(
-        'find @ticket_download_location. -maxdepth 2 -mindepth 2 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
-        array(
-          '@ticket_download_location' => $ticket_download_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD / 60),
-        )
-      )
-    );
-
-    // Clean up the download directories.
-    mediamosa_io::exec(
-      strtr(
-        'find @ticket_download_location. -maxdepth 1 -mindepth 1 -name "@wildmatch" -type d -mmin +@ticket_expiration -delete',
-        array(
-          '@ticket_download_location' => $ticket_download_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD / 60),
-        )
-      )
-    );
-
-    // Clean up symlinks ticket.
-    mediamosa_io::exec(
-      strtr(
-        'find @ticket_media_location -maxdepth 3 -mindepth 3 -regex "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]+\(,[0-9]+\)?\(\.[a-zA-Z0-9]+\)?$" -type l -mmin +@ticket_expiration -delete',
-        array(
-          '@ticket_media_location' => mediamosa_storage::get_realpath_media_ticket(),
-          '@ticket_expiration' => (int) (mediamosa_storage::TICKET_EXPIRATION_STILL / 60),
-        )
-      )
-    );
-
-    // Now remove still from the database.
-    $result = mediamosa_db::db_query(
-      'DELETE FROM {#mediamosa_media_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
-      array(
-        '#mediamosa_media_ticket' => mediamosa_media_ticket_db::TABLE_NAME,
-        '#ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE,
-        ':ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE_STILL,
-        '#issued' => mediamosa_media_ticket_db::ISSUED,
-        ':now' => $db_time_now,
-        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_STILL,
-      )
-    );
-
-    // Now remove expired upload tickets from the database.
-    $result = mediamosa_db::db_query(
-      'DELETE FROM {#mediamosa_media_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
-      array(
-        '#mediamosa_media_ticket' => mediamosa_media_ticket_db::TABLE_NAME,
-        '#ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE,
-        ':ticket_type' => mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD,
-        '#issued' => mediamosa_media_ticket_db::ISSUED,
-        ':now' => $db_time_now,
-        '#expire_play' => mediamosa_storage::TICKET_EXPIRATION_UPLOAD,
-      )
-    );
+    // Expire on type.
+    foreach (array(
+      self::TICKET_TYPE_DOWNLOAD,
+      self::TICKET_TYPE_STILL,
+      self::TICKET_TYPE_VIEW,
+    ) as $type) {
+      self::ticket_expire($type);
+    }
   }
 
   /**
@@ -249,28 +274,28 @@ class mediamosa_media_ticket {
     $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Get the correct expire date.
-    $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_UPLOAD;
     switch ($ticket_type) {
       case mediamosa_media_ticket_db::TICKET_TYPE_DOWNLOAD:
-        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_DOWNLOAD;
+        $expire_minutes = mediamosa_media_ticket::get_ticket_expiration_download();
         break;
 
-      case mediamosa_media_ticket_db::TICKET_TYPE_PLAY:
-        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_PLAY;
+      case mediamosa_media_ticket_db::TICKET_TYPE_VIEW:
+        $expire_minutes = mediamosa_media_ticket::get_ticket_expiration_view();
         break;
 
       case mediamosa_media_ticket_db::TICKET_TYPE_STILL:
-        $expire_seconds = mediamosa_storage::TICKET_EXPIRATION_UPLOAD;
+        $expire_minutes = mediamosa_media_ticket::get_ticket_expiration_still();
         break;
 
       case mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD:
       default:
+        $expire_minutes = mediamosa_media_ticket::get_ticket_expiration_upload();
         break;
     }
 
     // Do the query.
     return mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_media_ticket} WHERE #ticket_id = :ticket_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_seconds SECOND)',
+      'SELECT * FROM {#mediamosa_media_ticket} WHERE #ticket_id = :ticket_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_seconds MINUTE)',
       array(
         '#mediamosa_media_ticket' => mediamosa_media_ticket_db::TABLE_NAME,
         '#ticket_id' => mediamosa_media_ticket_db::ID,
@@ -279,7 +304,7 @@ class mediamosa_media_ticket {
         ':ticket_type' => $ticket_type,
         '#issued' => mediamosa_media_ticket_db::ISSUED,
         ':now' => $db_time_now,
-        '#expire_seconds' => $expire_seconds,
+        '#expire_seconds' => $expire_minutes,
       )
     )->fetchAssoc();
   }

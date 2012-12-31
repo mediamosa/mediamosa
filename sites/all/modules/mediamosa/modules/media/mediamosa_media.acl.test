@@ -19,28 +19,13 @@ class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
   // Testing asset mediafile delete, see: ticket 69.
   function testPlayProxyAcl() {
 
-    //
-    // Set up the environment
-    //
+    // Get the test file.
+    $upload = $this->uploadTestFile(array('downloadable' => TRUE));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
-    // Create an asset.
-    $asset_id = $this->createAsset();
-
-    // Create a mediafile.
-    $parameters = array(
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'TRUE',
-    );
-    $mediafile_id = $this->createMediafile($asset_id, $parameters);
-
-    // Touch a temporary mediafile.
-    $filename = mediamosa_storage::get_realpath_data_file($mediafile_id);
-    $is_touched = mediamosa_io::touch($filename);
-    $this->assertTrue(
-      $is_touched,
-      t('Create an empty mediafile on SAN/NAS: @filename', array('@filename' => $filename))
-    );
-    // Make sure it worked.
-    $this->file_exists($filename);
+    // Check if file is created.
+    mediamosa_storage::file_must_exist($mediafile_id);
 
     //
     // Test with the play_restriction_end is in the past.
@@ -74,7 +59,7 @@ class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
 
     // Check the function directly.
     $start_time = time() - (7*24*60*60); // One week in the past.
@@ -122,7 +107,7 @@ class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
 
     // Check the function directly.
     $start_time = time() + (24*60*60); // One day in the future.
@@ -172,7 +157,7 @@ class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $xml = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Check the function directly.
     $start_time = time() - (24*60*60); // One day in the past.
@@ -183,18 +168,6 @@ class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
     }
     catch (Exception $e) {
       $this->fail(t("The check_time_restrictions() doesn't accepted the good values."));
-    }
-
-    //
-    // Delete temporary items.
-    //
-
-    // Delete the temporary mediafile.
-    if ($is_touched) {
-      $this->assertTrue(
-        mediamosa_io::unlink($filename),
-        t('Delete the mediafile on SAN/NAS: @filename', array('@filename' => $filename))
-      );
     }
   }
 }

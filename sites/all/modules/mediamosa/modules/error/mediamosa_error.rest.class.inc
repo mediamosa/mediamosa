@@ -73,7 +73,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     $offset = $this->get_param_value(self::OFFSET);
 
     if ($code) {
-      $code = mediamosa_error::error_code_find($code, array(), TRUE);
+      $code = mediamosa_error::error_code_find($code, array(), FALSE);
       if (!$code) {
         return;
       }
@@ -131,7 +131,7 @@ class mediamosa_rest_call_error_get extends mediamosa_rest_call {
     $code = $this->get_param_value(mediamosa_error_db::CODE);
 
     // Get the error code.
-    $a_code = mediamosa_error::error_code_find($code, array(), TRUE);
+    $a_code = mediamosa_error::error_code_find($code, array(), FALSE);
 
     if ($a_code) {
       $o_mediamosa->add_item($a_code);

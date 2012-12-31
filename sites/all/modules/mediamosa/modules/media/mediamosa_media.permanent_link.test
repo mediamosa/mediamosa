@@ -15,73 +15,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
   }
 
   // -------------------------------------------------------------------- Tests.
-//  public function testPerm() {
-//    // Create upload file.
-//    $upload = $this->uploadTestFile();
-//    $asset_id = $upload['asset_id'];
-//    $mediafile_id = $upload['mediafile_id'];
-//
-//    // Create still job.
-//    $this->createMediafileStill($mediafile_id);
-//
-//    // Parse the queue.
-//    $this->doQueueCycleAll();
-//
-//    // Get the stills.
-//    $stills = $this->getMediafileStill($mediafile_id);
-//    $this->assertTrue(count($stills) == 1, 'One dimension result.');
-//
-//    // Get first array.
-//    $stills = $stills[0];
-//
-//    // Some tests.
-//    $this->assertTrue(isset($stills['stills']), 'Found the still.');
-//    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
-//    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
-//
-//    $still_id = $stills['stills']['still_id'];
-//
-//    $mediafile = $this->getMediafile($still_id);
-//    $this->var_export($mediafile);
-//
-//    $this->var_export(mediamosa_storage::get_realpath_data_file($still_id));
-//
-//    // Test if still exists.
-//    $this->file_exists(mediamosa_storage::get_realpath_data_file($still_id));
-//
-//    // No perm.
-//    $parameters = array(
-//      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
-//    );
-//    $response = $this->do_media_play($asset_id, $parameters);
-//
-//    // Test if still exists.
-//    $this->file_exists(mediamosa_storage::get_realpath_data_file($still_id));
-//
-//    // Add ACL rule.
-//    $parameters = array(
-//      'acl_domain' => 'foo.nl',
-//    );
-//    $this->setMediafileAcl($still_id, $parameters);
-//
-//    // Again with owner (link must now be like ticket).
-//    $parameters = array(
-//      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
-//    );
-//    $response = $this->do_media_play($asset_id, $parameters);
-//
-//    // Test if still exists.
-//    $this->file_exists(mediamosa_storage::get_realpath_data_file($still_id));
-//
-//    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->execute();
-//    foreach ($mediafiles as $mediafile) {
-//      $this->var_export($mediafile);
-//    }
-//  }
-
-
-  public function testStillPermanentLink() {
-
+  public function testPerm() {
     // Create upload file.
     $upload = $this->uploadTestFile();
     $asset_id = $upload['asset_id'];
@@ -107,11 +41,79 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
 
     $still_id = $stills['stills']['still_id'];
 
+    $mediafile = $this->getMediafile($still_id);
+    $this->var_export($mediafile);
+
+    $this->var_export(mediamosa_storage::get_realpath_mediafile($still_id));
+
+    // Test if still exists.
+    $this->file_exists(mediamosa_storage::get_uri_mediafile($still_id));
+
+    // No perm.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
+    );
+    $response = $this->do_media_view($asset_id, $parameters);
+
+    // Test if still exists.
+    $this->file_exists(mediamosa_storage::get_uri_mediafile($still_id));
+
+    // Add ACL rule.
+    $parameters = array(
+      'acl_domain' => 'foo.nl',
+    );
+    $this->setMediafileAcl($still_id, $parameters);
+
+    // Again with owner (link must now be like ticket).
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
+    );
+    $response = $this->do_media_view($asset_id, $parameters);
+
+    // Test if still exists.
+    $this->file_exists(mediamosa_storage::get_uri_mediafile($still_id));
+
+    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->execute();
+    foreach ($mediafiles as $mediafile) {
+      $this->var_export($mediafile);
+    }
+  }
+
+  public function testStillPermanentLink() {
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create still job.
+    $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
+
+    $this->var_export($stills);
+
+    // Get first array.
+    $stills = $stills[0];
+
+    // Some tests.
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
+
+    $still_id = $stills['stills']['still_id'];
+
 
     // Permanent still url without protection.
 
     // Test the output, do output call.
     $permanent_still_url = str_replace('/media/', '/media/simpletest/media/', $stills['output']);
+    $this->var_export($permanent_still_url);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -122,8 +124,12 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-    // Call must be handled by MediaMosa first time.
-    $this->assertTrue(!empty($result->headers['x-mediamosa-version']), 'First call handled by MediaMosa');
+    // Call must be handled by webserver first time. Perm. links are created the
+    // immediately.
+    $this->assertTrue(empty($result->headers['x-mediamosa-version']), 'First call handled by webserver (= permanent file)');
+
+    // Remove ACL from still.
+    $this->deleteMediafileAcl($still_id);
 
     // Get the file second time.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -134,8 +140,21 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image second time from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-    // Call must be handled by webserver second time.
-    $this->assertTrue(empty($result->headers['x-mediamosa-version']), 'Second call handled by webserver (= permanent file)');
+    $this->assertTrue(!empty($result->headers['x-mediamosa-version']), 'Second call handled by MediaMosa');
+
+    // Get the file again, now webserver again, as previous call created the
+    // perm link again.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+    // Call must be handled by webserver first time. Perm. links are created the
+    // immediately.
+    $this->assertTrue(empty($result->headers['x-mediamosa-version']), 'First call handled by webserver (= permanent file)');
 
     // Permanent still url with protection.
 
@@ -239,7 +258,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image from permanent link without ACL rule'@url' on original mediafile (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-    // Not make asset unappropriate
+    // Now make asset inappropriate.
     $parameters = array(
       mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
@@ -255,7 +274,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-    // Not make asset unappropriate
+    // Now make asset inappropriate.
     $parameters = array(
       mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'FALSE',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
@@ -278,11 +297,11 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
     );
-    $response = $this->do_media_play($asset_id, $parameters);
+    $response = $this->do_media_view($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']), 'permanent still check');
+    $this->assert($response->items->item->stills->still_id == mediamosa_io::get_base_filename($response->items->item->stills->ticket), 'permanent still check');
 
     // Add ACL rule.
     $parameters = array(
@@ -296,17 +315,17 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       mediamosa_rest_call_media_view::USER_ID => 'Not owner!',
     );
     // FIXME: turned off, no longer needed.
-//    $response = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+//    $response = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Again with owner (link must now be like ticket).
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
     );
-    $response = $this->do_media_play($asset_id, $parameters);
+    $response = $this->do_media_view($asset_id, $parameters);
 
     // Check response.
     // ticket link.
-    $this->assert(drupal_substr($response['items']['item']['stills']['ticket'], 0, 7) == 'ticket/', 'Found ticket link');
+    $this->assert(strpos((string) $response->items->item->stills->still_ticket, 'media/ticket/') !== FALSE, 'Found ticket link');
 
     // Remove ACL rule.
     $parameters = array(
@@ -316,11 +335,11 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
     );
-    $response = $this->do_media_play($asset_id, $parameters);
+    $response = $this->do_media_view($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']), 'permanent still check');
+    $this->assert($response->items->item->stills->still_id == mediamosa_io::get_base_filename($response->items->item->stills->ticket), 'permanent still check');
 
     // Not make asset unappropriate
     $parameters = array(
@@ -340,24 +359,24 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
       mediamosa_rest_call_media_view::USER_ID => 'Not owner!',
     );
-    $response = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+    $response = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
     );
-    $response = $this->do_media_play($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+    $response = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
     );
-    $response = $this->do_media_play($asset_id, $parameters);
+    $response = $this->do_media_view($asset_id, $parameters);
 
     // Check response.
     // ticket link.
-    $this->assert(drupal_substr($response['items']['item']['stills']['ticket'], 0, 7) == 'ticket/', 'Found ticket link');
+    $this->assert(strpos((string) $response->items->item->stills->still_ticket, 'media/ticket/') !== FALSE, 'Found ticket link');
 
     // Not make asset unappropriate.
     $parameters = array(
@@ -369,11 +388,11 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_STILL,
     );
-    $response = $this->do_media_play($asset_id, $parameters);
+    $response = $this->do_media_view($asset_id, $parameters);
 
     // Check response.
     // Perm. link means ticket is same as still ID.
-    $this->assert($response['items']['item']['stills']['still_id'] == mediamosa_io::get_base_filename($response['items']['item']['stills']['ticket']));
+    $this->assert($response->items->item->stills->still_id == mediamosa_io::get_base_filename($response->items->item->stills->ticket));
 
 
     //
@@ -475,7 +494,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
 //      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
 //      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
 //    );
-//    $response = $this->do_media_play($asset_id, $parameters);
+//    $response = $this->do_media_view($asset_id, $parameters);
 //
 //    $this->var_export($response);
 //

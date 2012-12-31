@@ -418,109 +418,6 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Create WMV job.
-   *
-   * @param integer $job_id
-   *   The job ID.
-   * @param string $asset_id
-   *   The asset ID.
-   * @param string $mediafile_id
-   *   The mediafile ID.
-   */
-  public static function create_wmv_job($job_id, $asset_id, $mediafile_id) {
-
-    // FIXME: @mediafile_id is empty.
-    self::log_mediafile($mediafile_id, 'Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id), $asset_id);
-
-    // Get all info.
-    $job_ext = mediamosa_job::get_job_ext($job_id);
-    if (!$job_ext) {
-      $command = '';
-      $owner = '';
-      $app_id = 0;
-      self::log_mediafile($mediafile_id, 'A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), $asset_id, WATCHDOG_EMERGENCY);
-    }
-    else {
-      $command = $job_ext[mediamosa_job_transcode_db::COMMAND];
-      $owner = $job_ext[mediamosa_job_db::OWNER_ID];
-      $app_id = $job_ext[mediamosa_job_db::APP_ID];
-    }
-
-    // Must have user_quota.
-    mediamosa_user::must_have_user_quota($app_id, $owner, '');
-
-    // Must be transcodable.
-    mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
-
-    // Create the job.
-    $fields = array(
-      mediamosa_job_db::ASSET_ID => $asset_id,
-      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id,
-      mediamosa_job_db::OWNER_ID => $owner,
-      mediamosa_job_db::APP_ID => $app_id,
-      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
-      mediamosa_job_db::PRIORITY => -1,
-    );
-
-    // Add created value.
-    $fields = mediamosa_db::db_insert_enrich($fields);
-
-    // Insert it.
-    $job_id_new = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
-      ->fields($fields)
-      ->execute();
-
-    // Add internal_previous_job value to the command string.
-    $commands = mediamosa_transcode_profile::commandToArray($command);
-    $commands['internal_previous_job'] = $job_id;
-    $command = mediamosa_transcode_profile::arrayToCommand($commands);
-
-    // Now create the transcode job.
-    $fields = array(
-      mediamosa_job_transcode_db::JOB_ID => $job_id_new,
-      mediamosa_job_transcode_db::TOOL => mediamosa_job::JOBWINDOWS_TOOL,
-      mediamosa_job_transcode_db::COMMAND => $command,
-      mediamosa_job_transcode_db::FILE_EXTENSION => 'wmv',
-    );
-
-    // Add changed/created values.
-    $fields = mediamosa_db::db_insert_enrich($fields);
-
-    // Insert it.
-    mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
-      ->fields($fields)
-      ->execute();
-  }
-
-  /**
-   * Remove the raw avi file for wmv transcode.
-   *
-   * @param integer $job_id
-   *   The job ID.
-   */
-  public static function wmv_remove_raw_file($job_id) {
-
-    // Get the job.
-    $job = mediamosa_job::get($job_id);
-
-    // Get the mediafile ID.
-    $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_ID];
-
-    if ($mediafile_id) {
-      // Delete the mediafile.
-      mediamosa_asset_mediafile::delete($mediafile_id);
-
-      self::log_mediafile($mediafile_id, "Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), NULL, WATCHDOG_NOTICE);
-    }
-    else {
-      self::log(
-        "Job @job_id not found, can't delete temp mediafile.",
-        array('@job_id' => $job_id), NULL, WATCHDOG_ERROR
-      );
-    }
-  }
-
-  /**
    * Called when transcode was successfully finished.
    *
    * @param integer $job_id
@@ -535,69 +432,16 @@ class mediamosa_job_scheduler {
     // Get the original transcode job.
     $job_info = self::get_transcodejob_info($job_id);
 
-    // Is the original job id found?
-    $commands = mediamosa_transcode_profile::commandToArray($job_info['command']);
-    $original_job_id = empty($commands['internal_previous_job']) ? 0 : $commands['internal_previous_job'];
-    if ($original_job_id > 0) {
-      // Check if extension requires extra job, e.g. windows transcoding.
-      if ($job_info['file_extension'] == mediamosa_job::JOBRAW_FILE_EXTENSION) {
-        // 1st pass:
-        // The raw intermediate has been created, now convert it to  wmv.
-        //
-        // NOTE should *not* be converted to api call: the API sets
-        // ownership, and we do not want this intermediate result to
-        // influence quota &c.
-        $fields = array(
-          mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
-          mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
-          mediamosa_asset_mediafile_db::FILENAME => $job_info["filename"],
-          mediamosa_asset_mediafile_db::APP_ID => $job_info["app_id"],
-          mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
-          mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-        );
-
-        // Add created.
-        $fields = mediamosa_db::db_insert_enrich($fields);
-
-        // Create.
-        mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
-          ->fields($fields)
-          ->execute();
-
-        // Add job for schedular.
-        self::create_wmv_job($original_job_id, $job_info['asset_id'], $mediafile_id_dest);
-
-        // Set progress.
-        mediamosa_job::set_progress($original_job_id, '0.666', FALSE);
-
-        // Bail out: the mediafile record for the intermediate result has been
-        // created; we don't want any further action here.
-        return;
-      }
-      else {
-        // 2nd pass:
-        // The raw intermediate has been converted to wmv, now delete the
-        // intermediate.
-        self::wmv_remove_raw_file($job_id);
-
-        // Current status.
-        $status = $job_info[mediamosa_job_db::JOB_STATUS];
-
-        // Set progress.
-        mediamosa_job::set_progress($original_job_id, '1.000', FALSE, mediamosa_job_db::JOB_STATUS_FINISHED);
-        mediamosa_job::notify_transcoding($status, JOBSTATUS_FINISHED, $original_job_id);
-      }
-    }
-
     // Get Asset.
-    $a_asset = mediamosa_asset::get($job_info['asset_id']);
-    assert(!empty($a_asset));
+    // @todo: do must exists.
+    $asset = mediamosa_asset::get($job_info['asset_id']);
+    assert(!empty($asset));
 
     $fields = array(
       mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
       mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
       mediamosa_asset_mediafile_db::FILENAME => $job_info['filename'],
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::get_uri(),
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($job_info['app_id']),
       mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID => $job_info['transcode_profile_id'],
       mediamosa_asset_mediafile_db::TOOL => $job_info['tool'],
       mediamosa_asset_mediafile_db::FILE_EXTENSION => $job_info['file_extension'],
@@ -646,12 +490,12 @@ class mediamosa_job_scheduler {
    */
   public static function add_still_to_db($job_id, $filenames) {
     // Scene changes.
-    $my_file = mediamosa_storage::get_uri_data_transcode_file($job_id . '_scene.txt');
+    $scene_realpath = mediamosa_storage::get_realpath_data_transcode_file($job_id . '_scene.txt');
 
     $scenes = array();
 
-    if (file_exists($my_file)) {
-      $fh = @fopen($my_file, 'r');
+    if (mediamosa_io::file_exists($scene_realpath)) {
+      $fh = @fopen($scene_realpath, 'r');
       if ($fh) {
         while (!feof($fh)) {
           $scenes[] = (int) fgets($fh);
@@ -707,7 +551,7 @@ class mediamosa_job_scheduler {
     }
 
     // Remove file.
-    mediamosa_io::unlink($my_file);
+    mediamosa_io::unlink($scene_realpath);
   }
 
   /**
@@ -717,29 +561,15 @@ class mediamosa_job_scheduler {
    *   The job ID.
    */
   public static function parse_failed_transcode($job_id) {
-    // Get the transcode job.
-    $job_info = self::get_transcodejob_info($job_id);
+    // Get original.
+    $job_original = mediamosa_job::get($job_id);
+    $status = $job_original[mediamosa_job_db::JOB_STATUS];
 
-    // Try to find the previous job ID.
-    $commands = mediamosa_transcode_profile::commandToArray($job_info['command']);
-    $original_job_id = empty($commands['internal_previous_job']) ? 0 : $commands['internal_previous_job'];
-    if ($original_job_id > 0) {
-      if ($job_info[mediamosa_job_transcode_db::FILE_EXTENSION] != mediamosa_job::JOBRAW_FILE_EXTENSION) {
+    // Set failed.
+    mediamosa_job::set_progress($job_id, '1.000', FALSE, mediamosa_job_db::JOB_STATUS_FAILED);
 
-        // Remove the raw file.
-        self::wmv_remove_raw_file($job_id);
-
-        // Get original.
-        $job_original = mediamosa_job::get($job_id);
-        $status = $job_original[mediamosa_job_db::JOB_STATUS];
-
-        // Set failed.
-        mediamosa_job::set_progress($original_job_id, '1.000', FALSE, mediamosa_job_db::JOB_STATUS_FAILED);
-
-        // Trigger url.
-        mediamosa_job::notify_transcoding($status, mediamosa_job_db::JOBSTATUS_FAILED, $original_job_id);
-      }
-    }
+    // Trigger url.
+    mediamosa_job::notify_transcoding($status, mediamosa_job_db::JOBSTATUS_FAILED, $job_id);
   }
 
   /**
@@ -848,6 +678,12 @@ class mediamosa_job_scheduler {
       case mediamosa_job_db::JOB_TYPE_ANALYSE:
         $errorcode = self::start_server_analyse_job($job_id, $uri, $mediafile_id);
         break;
+
+      case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD;
+      case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD;
+      case mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE;
+        $errorcode = self::start_server_job_media($job_id, $job_type, $uri, $mediafile_id);
+        break;
     }
 
     if ($job_type == mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE) {
@@ -858,8 +694,6 @@ class mediamosa_job_scheduler {
       // If okay update the database with the job info.
       if ($errorcode == mediamosa_error::ERRORCODE_OKAY) {
 
-        // Check if job still exists
-        // to be 100%, we might have to lock table ?
         if (mediamosa_db::db_exists(mediamosa_job_db::TABLE_NAME, array(mediamosa_job_db::ID => $job_id))) {
           $fields = array(
             mediamosa_server_job_db::SERVER_ID => $server_id,
@@ -887,7 +721,7 @@ class mediamosa_job_scheduler {
         else {
           self::log_mediafile(
             $mediafile_id,
-            'Making @job_type server job has stoped, job @job_id was deleted during the process.',
+            'Making @job_type server job has stopped, job @job_id was deleted during the process.',
             array(
               '@job_type' => $job_type,
               '@job_id' => $job_id,
@@ -1002,7 +836,7 @@ class mediamosa_job_scheduler {
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
 
-    if ($response->code == "201" || $response->code == "200") {
+    if ($response->code == '201' || $response->code == '200') {
       try {
         $simple_xml_response = new mediamosa_connector_response($response->data);
       }
@@ -1133,6 +967,40 @@ class mediamosa_job_scheduler {
   }
 
   /**
+   * Start media job by REST call.
+   *
+   * @param integer $job_id
+   *   The job ID.
+   * @param string $job_type
+   *   The job type.
+   * @param string $uri
+   *   The URI of the job server that will execute the job.
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   */
+  public static function start_server_job_media($job_id, $job_type, $uri, $mediafile_id) {
+    // Get job.
+    $job = mediamosa_job::get($job_id);
+
+    // GET parameters.
+    $query_data = array(
+      mediamosa_rest_call_server_job_execute::JOB_TYPE => $job_type,
+      mediamosa_rest_call_server_job_execute::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_server_job_execute::JOB_DATA => $job[mediamosa_job_db::STILL_PARAMETERS],
+    );
+    $rest_url = rtrim($uri, '/') . '/internal/job/' . $job_id . '/execute?' . http_build_query($query_data);
+
+    // Log call.
+    self::log_mediafile($mediafile_id, 'Execute job:' . $rest_url);
+
+    // Do HEAD request.
+    mediamosa_http::do_head_internal_call($rest_url);
+
+    // HEAD calls do not wait for okay.
+    return mediamosa_error::ERRORCODE_OKAY;
+  }
+
+  /**
    * Fetch an single available job.
    *
    * Choose a job that applies to the following rules;
@@ -1144,6 +1012,8 @@ class mediamosa_job_scheduler {
    *
    * @param string $server_id
    *   The server ID.
+   *
+   * @index `status`,`asset_id`,`job_id`, `job_type`
    */
   public static function fetch_single_available_job($server_id) {
     return mediamosa_db::db_query(
@@ -1159,6 +1029,9 @@ class mediamosa_job_scheduler {
               (SELECT asset_id FROM {#mediamosa_job} AS mj3
                WHERE mj3.job_type = :JOBTYPE_UPLOAD AND mj3.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING))
           AND
+            mj.job_id NOT IN
+              (SELECT job_id FROM {#mediamosa_server_job})
+          AND
             mj.job_type != :JOBTYPE_UPLOAD
           AND
             (
@@ -1168,19 +1041,20 @@ class mediamosa_job_scheduler {
                   WHERE #nid = :nid AND mjt.job_id = mj.job_id LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_ANALYSE AND
-                (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt
-                  WHERE mstt.tool = :JOBTYPE_ANALYSE AND mstt.#nid = :nid LIMIT 1) = 1)
+                (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt1
+                  WHERE mstt1.tool = :TOOL_ANALYSE AND mstt1.#nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_STILL AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt2
-                  WHERE mstt2.tool = :JOBTYPE_STILL AND mstt2.#nid = :nid LIMIT 1) = 1)
+                  WHERE mstt2.tool = :TOOL_STILL AND mstt2.#nid = :nid LIMIT 1) = 1)
             OR
-              (mj.job_type = :JOBTYPE_DELETE_MEDIAFILE)
+              (mj.job_type IN (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE) AND
+                (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt3
+                  WHERE mstt3.tool = :TOOL_TRANSFER AND mstt3.#nid = :nid LIMIT 1) = 1)
+            OR
+              (mj.job_type IN (:JOBTYPE_DELETE_MEDIAFILE))
             )
-          AND
-            mj.job_id NOT IN
-              (SELECT job_id FROM {#mediamosa_server_job})
-          ORDER BY priority, job_id
+          ORDER BY priority ASC, job_id ASC
           LIMIT 0,1',
       array(
         '#job_status' => mediamosa_job_db::JOB_STATUS,
@@ -1197,6 +1071,12 @@ class mediamosa_job_scheduler {
         ':JOBTYPE_ANALYSE' => mediamosa_job_db::JOB_TYPE_ANALYSE,
         ':JOBTYPE_STILL' => mediamosa_job_db::JOB_TYPE_STILL,
         ':JOBTYPE_DELETE_MEDIAFILE' => mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+        ':JOBTYPE_MEDIA_DOWNLOAD' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+        ':JOBTYPE_MEDIA_UPLOAD' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        ':JOBTYPE_MEDIA_MOVE' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+        ':TOOL_ANALYSE' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_ANALYSE,
+        ':TOOL_STILL' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_STILL,
+        ':TOOL_TRANSFER' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER,
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,

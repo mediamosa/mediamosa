@@ -120,17 +120,15 @@ class mediamosa_tool_mapping {
 
     // Execute.
     $execution_string = strtr($execution_command, array(
-      '@mediafile_location' => mediamosa_storage::get_realpath_data_mediafile($mediafile),
+      '@mediafile_location' => mediamosa_storage::get_realpath_mediafile($mediafile),
     ));
-    $output_array = array();
-    $output_string = mediamosa_io::exec($execution_string, $output_array);
+    $output_array = mediamosa_io::exec($execution_string);
     $link_asset = mediamosa_job_server::get_asset_link($job_id);
-    mediamosa_watchdog::log_mediafile($mediafile_id, 'Command for @command_type: @command ; returned output: @s_output - @a_output<br /><br />@link',
+    mediamosa_watchdog::log_mediafile($mediafile_id, 'Command for @command_type: @command ; returned output: @output<br /><br />@link',
       array(
         '@command_type' => $command_type,
         '@command' => $execution_string,
-        '@s_output' => $output_string,
-        '@a_output' => print_r($output_array, TRUE),
+        '@output' => print_r($output_array, TRUE),
         '@link' => $link_asset,
       )
     );

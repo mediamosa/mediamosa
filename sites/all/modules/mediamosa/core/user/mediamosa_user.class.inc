@@ -1,37 +1,11 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * User management module.
  */
 
- /**
-  * @file
-  * User management module.
-  */
-
 class mediamosa_user {
-
-  // ------------------------------------------------------------------ Functions static.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the user.
    *
@@ -285,17 +259,15 @@ class mediamosa_user {
   /**
    * Get the used diskspace of user/group.
    *
-   * 1.x:_user_management_get_diskspace
-   *
    * @param string $subject
    * @param string $id
    * @param integer $app_id
    *
    * @return array
    */
-  function get_diskspace($subject, $id, $app_id) {
+  public static function get_diskspace($subject, $id, $app_id) {
 
-    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
     $mbytes = mediamosa_db::db_query(
       'SELECT SUM(mfmd.#val_int) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
        JOIN {#mediamosa_asset_mediafile_metadata} AS mfmd ON mfmd.#mediafile_id = mf.#mediafile_id
@@ -480,7 +452,7 @@ class mediamosa_user {
    * @param $limit
    *  Limit of items in result set.
    */
-  function get_all($is_users, $app_id, $offset, $limit) {
+  public static function get_all($is_users, $app_id, $offset, $limit) {
 
     // Do the query.
     $result = mediamosa_db::db_query_range(
@@ -583,6 +555,4 @@ class mediamosa_user {
 
     return $group_with_highest_quotum;
   }
-
 }
-

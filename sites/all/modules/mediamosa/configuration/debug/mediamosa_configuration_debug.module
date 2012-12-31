@@ -34,6 +34,7 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
   $form['settings_debug'] = array(
     '#type' => 'fieldset',
     '#title' => t('Debug settings'),
+    '#description' => t('The debug settings are intended for developers.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );

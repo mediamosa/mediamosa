@@ -131,14 +131,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Implements tearDown().
    */
   protected function tearDown() {
-    // Now clean out all mediafile that might have files.
-    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->execute();
-    foreach ($mediafiles as $mediafile) {
-      mediamosa_watchdog::log_export($mediafile);
-    }
+    // Dump assets.
+    $this->dumpAssets();
 
-    // Call parent.
-    return parent::tearDown();
+    // Dump mediafiles.
+    $this->dumpMediafiles();
 
     // Clean up stuff.
     mediamosa_media_ticket::ticket_cleanup();
@@ -158,12 +155,15 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
         // Might already been deleted.
-        if ($mediafile) {
+        if ($mediafile && mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile))) {
           // Delete uploaded file by deleting the mediafile.
           mediamosa_asset_mediafile::delete($mediafile_id);
 
           // Check if the file has been deleted.
-          $this->assertFalse(file_exists(mediamosa_storage::get_realpath_data_mediafile($mediafile)), 'File has been deleted.');
+// @todo: remove from release.
+//          $uri = mediamosa_storage::get_uri_mediafile($mediafile);
+//          $this->assertFalse(mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile)), t("File '@uri' (@path) has been deleted.", array('@uri' => $uri, '@path' => mediamosa_io::realpath_safe($uri))));
+// @todo: remove from release.
         }
       }
     }
@@ -171,11 +171,32 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       assert(0);
     }
 
-    // Clean up array.
-    $this->mediafiles_cleanup = array();
-
     // Call parent.
     parent::tearDown();
+  }
+
+  /**
+   * Dump assets
+   */
+  protected function dumpAssets() {
+    $assets = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->fields('a')->execute();
+    mediamosa_watchdog::log('Dumping asset table contents.');
+    foreach ($assets as $asset) {
+      mediamosa_watchdog::log_export($asset);
+    }
+  }
+
+  /**
+   * Dump mediafiles with their metadata.
+   */
+  protected function dumpMediafiles() {
+    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->execute();
+    mediamosa_watchdog::log('Dumping mediafile table contents.');
+    foreach ($mediafiles as $mediafile) {
+      $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile[mediamosa_asset_mediafile_db::ID]);
+      mediamosa_watchdog::log_export($mediafile);
+      mediamosa_watchdog::log_export($mediafile_metadata);
+    }
   }
 
   /*
@@ -370,23 +391,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * @param string $mediafile_group_id
    * @param array $stills
    */
-  public static function create_response_1x_to_2x($asset_id, $a_parameters, $a_asset_info, $mediafile, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
-
-    switch ($a_parameters['response']['value']) {
+  public function do_response($app_id, $response_type, $mediafile, $is_app_admin = FALSE, $width = NULL, $height = NULL, $autostart = TRUE, $start = NULL, $duration = NULL) {
+    switch ($response_type) {
       case mediamosa_media::RESPONSE_DOWNLOAD:
-        return mediamosa_media::do_response_download($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], FALSE, $mediafile);
+        return mediamosa_media::do_response_download($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $mediafile);
 
       case mediamosa_media::RESPONSE_METAFILE:
-        return mediamosa_media::do_response_metafile($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $asset_id, $mediafile);
+        return mediamosa_media::do_response_metafile($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $mediafile, $autostart, $start, $duration);
 
       case mediamosa_media::RESPONSE_OBJECT:
-        return mediamosa_media::do_response_object($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $mediafile, 0, 0, NULL, NULL, NULL);
+        return mediamosa_media::do_response_object($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $mediafile, $width, $height, $autostart, $start, $duration);
 
       case mediamosa_media::RESPONSE_STILL:
-        return mediamosa_media::do_response_still($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $mediafile);
+        return mediamosa_media::do_response_still($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $mediafile);
 
       case mediamosa_media::RESPONSE_URI:
-        return mediamosa_media::do_response_uri($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $mediafile);
+        return mediamosa_media::do_response_uri($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin, $mediafile);
 
       default:
         throw new mediamosa_exception_program_error('Unsupported response type; @response_type', array('@response_type' => $response_type));
@@ -608,7 +628,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Upload the file.
-    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $source_filename, $upload_options);
+    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $source_filename, self::SIMPLETEST_USER_ID, $upload_options);
 
     // Lets return the asset_id, mediafile_id and filename.
     return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename, 'source_filename' => $source_filename);
@@ -617,7 +637,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFileForMediafile($asset_id, $mediafile_id, $filename = '', array $options = array()) {
+  protected function uploadTestFileForMediafile($asset_id, $mediafile_id, $filename = '', $owner_id = self::SIMPLETEST_USER_ID, array $options = array()) {
 
     // Setup default options.
     $options += array(
@@ -628,7 +648,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Create upload ticket.
-    $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id, array(mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => $owner_id));
 
     $result = db_select(mediamosa_media_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
     foreach ($result as $row) {
@@ -744,11 +764,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $out = $new;
     }
 
-    list($response, $data) = explode("\r\n\r\n", $out, 2);
+    list($response, ) = explode("\r\n\r\n", $out, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
 
     // Parse the response status line.
-    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+    list(, $code, ) = explode(' ', trim(array_shift($response)), 3);
 
     if ($options['use_put']) {
       // Check 100 / 200 response. PUT seems to return 100 code.
@@ -773,20 +793,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Get the mediafile.
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
     // So we know what the path is.
     $this->var_export($mediafile);
-    $this->pass('mediamosa-storage://data/a/aMW6BRDgAReIpZSVEFwFYW3X');
-    $this->pass(mediamosa_storage::get_realpath_data_mediafile($mediafile));
+    $this->pass($mediafile_uri);
+    $this->pass(mediamosa_storage::get_realpath_mediafile($mediafile));
 
     // Check if the file has been uploaded.
-    $this->assertTrue(file_exists(mediamosa_storage::get_realpath_data_mediafile($mediafile)), 'File has been uploaded.');
+    $this->assertTrue(mediamosa_io::file_exists($mediafile_uri), 'File has been uploaded.');
     // Check the size.
-    $filesize_uploaded = filesize(mediamosa_storage::get_realpath_data_mediafile($mediafile));
+    $filesize_uploaded = mediamosa_io::filesize($mediafile_uri);
     $this->assertTrue($filesize_uploaded, 'Uploaded filesize [' . $filesize_uploaded . '] the same as original  [' . $filesize_original . ']');
 
     // Lets return the filename.
-    return mediamosa_storage::get_realpath_data_mediafile($mediafile);
+    return mediamosa_storage::get_realpath_mediafile($mediafile);
   }
 
   /**
@@ -947,13 +968,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Get path to still.
-    $still_filename = mediamosa_storage::get_realpath_data_file($still_id);
+    $still_filename = mediamosa_storage::get_realpath_mediafile($still_id);
 
     // Add to unlinks.
     $this->unlinks[] = $still_filename;
 
     // Check if the file has been uploaded.
-    $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
+    $this->assertTrue(mediamosa_io::file_exists($still_filename), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
     return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
@@ -972,7 +993,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create upload ticket.
     $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
-    $result = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')->execute();
+    $result = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')->fields('mt')->execute();
     foreach ($result as $row) {
       $this->var_export($row, 'Dump Ticket');
     }
@@ -1014,7 +1035,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Our upload.
-    $this->verbose('POST request to: ' . url($uri, array('absolute' => TRUE)) .
+    $this->var_export('POST request to: ' . url($uri, array('absolute' => TRUE)) .
                    '<hr />Ending URL: ' . $this->getUrl() .
                    '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
                    '<hr />' . $out);
@@ -1051,19 +1072,19 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->mediafiles_cleanup[] = $still_id;
 
     // Parse the response status line.
-    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+    list(, $code, ) = explode(' ', trim(array_shift($response)), 3);
 
     // Check 200 resonse.
     $this->assertTrue($code == 200, 'Upload HTML response 200.');
 
     // Get path to still.
-    $still_filename = mediamosa_storage::get_realpath_data_file($still_id);
+    $still_filename = mediamosa_storage::get_realpath_mediafile($still_id);
 
     // Add to unlinks.
     $this->unlinks[] = $still_filename;
 
     // Check if the file has been uploaded.
-    $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
+    $this->file_exists($still_filename);
 
     // Lets return the mediafile_id for now.
     return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
@@ -1382,6 +1403,23 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return data.
     return $mediafile;
+  }
+
+  /**
+   * Get the mount point from the mediafile.
+   *
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   *
+   * @return string
+   *   The mount pount uri.
+   */
+  protected function getMediafileMountPoint($mediafile_id) {
+    return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->fields('mf', array(mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT))
+      ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
+      ->execute()
+      ->fetchField();
   }
 
   /**
@@ -3623,11 +3661,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Set the URI.
     $uri = strtr('still/@still_id/watermark', array('@still_id' => $still_id));
 
-    $this->verbose(t('REST call: @uri, parameters = @parameters', array(
-      '@uri' => $uri,
-      '@parameters' => print_r($parameters, TRUE),
-    )));
-
     // Do Post call.
     $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
@@ -3640,29 +3673,23 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr("Watermark still with ID: @still_id, got result @result (@result_description)", array('@still_id' => $still_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => (string) $response['xml']->header->request_result_description))
     );
 
-    // Get path to still.
-    $still_filename_watermarked = mediamosa_storage::get_realpath_data_file($still_id_watermarked);
-
     // Add to unlinks.
-    $this->unlinks[] = $still_filename_watermarked;
+    $this->unlinks[] = mediamosa_storage::get_uri_mediafile($still_id_watermarked);
 
     // Return response.
     return $still_id_watermarked;
   }
 
   // --------------------------------------------------------------- Play Proxy.
-  protected function do_media_play_uri($asset_id, $mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-
-    // Set the mediafile_id.
-    $parameters['mediafile_id'] = $mediafile_id;
+  protected function do_media_view_uri($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Response.
     $parameters[mediamosa_rest_call_media_view::RESPONSE] = mediamosa_media::RESPONSE_URI;
 
-    return $this->do_media_play($asset_id, $parameters, $expected_result_ids);
+    return $this->do_media_view($asset_id, $parameters, $expected_result_ids);
   }
 
-  protected function do_media_play_download($asset_id, $mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function do_media_view_download($asset_id, $mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set the mediafile_id.
     $parameters['mediafile_id'] = $mediafile_id;
@@ -3670,21 +3697,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Response.
     $parameters[mediamosa_rest_call_media_view::RESPONSE] = mediamosa_media::RESPONSE_DOWNLOAD;
 
-    return $this->do_media_play($asset_id, $parameters, $expected_result_ids);
+    return $this->do_media_view($asset_id, $parameters, $expected_result_ids);
   }
 
-  protected function do_media_play_still($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function do_media_view_still($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Response.
     $parameters[mediamosa_rest_call_media_view::RESPONSE] = mediamosa_media::RESPONSE_STILL;
 
-    return $this->do_media_play($asset_id, $parameters, $expected_result_ids);
+    return $this->do_media_view($asset_id, $parameters, $expected_result_ids);
   }
 
   /**
    * Do a media play call.
    */
-  protected function do_media_play($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function do_media_view($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set up backtrace.
     $backtrace = $this->backtrace();
@@ -3697,7 +3724,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
 
     // The uri.
-    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $asset_id));
+    $uri = strtr('asset/@asset_id/view', array('@asset_id' => $asset_id));
 
     // Do Post call.
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
@@ -3822,6 +3849,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return the asset IDs in order of the items.
     return $found_ids;
+  }
+
+  public function cql_do_search_test_assets_granted($cql, $expected_asset_ids, array $parameters = array(), $acl_user_id = FALSE, $acl_group_id = FALSE, $acl_domain = FALSE, $acl_realm = FALSE, $is_public_list = FALSE) {
+    return $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $acl_user_id, $acl_group_id, $acl_domain, $acl_realm, TRUE, $is_public_list);
   }
 
   public function cql_do_search_test_collections($cql, $expected_collection_ids, array $parameters = array()) {
@@ -4123,5 +4154,45 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    */
   public function engine_fulltext_wildcard_indexes_lines() {
     return TRUE;
+  }
+
+
+  /**
+   * Get the storage profile.
+   *
+   * @param integer $storage_profile_id
+   *   The profile ID.
+   *
+   * @return array
+   *   The storage profile.
+   */
+  public function getStorageProfile($storage_profile_id) {
+    $storage_profile = mediamosa_storage_profile::get($storage_profile_id);
+
+    $this->var_export($storage_profile, 'Storage profile');
+
+    return $storage_profile;
+  }
+
+  /**
+   * Attach the storage profile with application.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param integer $profile_id
+   *   Storage profile ID
+   * @param string $path
+   *   Storage path.
+   * @param integer $profile_id_stills
+   *   Storage profile ID stills.
+   * @param string $path_stills
+   *   Storage path stills.
+   */
+  public function attachStorageProfile($app_id, $profile_id, $path, $profile_id_stills, $path_stills) {
+    mediamosa_storage_profile_app::update_default($app_id, $profile_id, $path, $profile_id_stills, $path_stills);
+
+    // Is the first row.
+    $storage_profile_app = mediamosa_storage_profile_app::get(1);
+    $this->var_export($storage_profile_app, 'Storage profile App');
   }
 }

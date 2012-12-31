@@ -5,14 +5,14 @@
  */
 
 class mediamosa_app_db {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Table name;
   const TABLE_NAME = 'mediamosa_app';
 
   // Database fields;
-  const NID = 'nid';  // 1.x - caid
+  const NID = 'nid';
   const VID = 'vid';
-  const APP_ID = 'app_id'; // 1.x id (this is the APP_ID)
+  const APP_ID = 'app_id';
   const APP_NAME = 'app_name';
   const APP_NAME_LENGTH = 30;
   const TRANSCODING_POSITION_FROM = 'transcoding_position_from';
@@ -82,11 +82,12 @@ class mediamosa_app_db {
   const STILL_MAINTAIN_ASPECT_RATIO_YES = 'YES';
   const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
   const TOOL_ANALYSE = 'tool_analyse';
-  
-  // Pseudo field
-  const STORAGE_DEFAULT_URI = 'storage_default_uri';
-  
-  // ------------------------------------------------------------------ Functions.
+
+  // Pseudo fields; these are not stored or are part of the installation.
+  const STORAGE_URI = 'storage_uri';
+  const STORAGE_STILLS_URI = 'storage_stills_uri';
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Returns all fields.
    */
@@ -94,7 +95,7 @@ class mediamosa_app_db {
     require_once 'mediamosa_app.install.inc';
 
     // Get the schema.
-    $a_schema = mediamosa_app_schema();
-    return array_keys($a_schema[mediamosa_app_db::TABLE_NAME]['fields']);
+    $schema = mediamosa_app_schema();
+    return array_keys($schema[mediamosa_app_db::TABLE_NAME]['fields']);
   }
 }

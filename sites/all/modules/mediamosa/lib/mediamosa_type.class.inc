@@ -138,20 +138,23 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_JOB:
-        $a_job_types = array(
+        $job_types = array(
           mediamosa_job_db::JOB_TYPE_ANALYSE,
           mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
           mediamosa_job_db::JOB_TYPE_STILL,
           mediamosa_job_db::JOB_TYPE_TRANSCODE,
           mediamosa_job_db::JOB_TYPE_RETRANSCODE,
-          mediamosa_job_db::JOB_TYPE_UPLOAD
+          mediamosa_job_db::JOB_TYPE_UPLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
         );
 
-        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $a_job_types)) {
+        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $job_types)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE);
         }
 
-        $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
+        $checked_param_value = (string) mediamosa_unicode::strtoupper($mixed_param_value);
         break;
 
       case mediamosa_sdk::TYPE_JOB_STATUS:

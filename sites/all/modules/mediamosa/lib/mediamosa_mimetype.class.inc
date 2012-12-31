@@ -49,9 +49,10 @@ class mediamosa_mimetype {
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();
 
+    // Give prio on last ext; use array_keys() in reverse.
     $ext_id = array_search($mimetype, $mapping['mimetypes']);
     if ($ext_id !== FALSE) {
-      return array_search($ext_id, $mapping['extensions']);
+      return reset(array_reverse(array_keys($mapping['extensions'], $ext_id)));
     }
 
     return FALSE;

@@ -1,0 +1,106 @@
+<?php
+/**
+ * @file
+ * Basic test for S3.
+ */
+
+// Registry indexes all .test files, while the base is not indexed (module is
+// not on.
+if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
+      return array(
+        'name' => 'MediaMosa Storage - Amazon S3 jobs test',
+        'description' => 'Tests for Amazon S3 jobs upload and download.',
+        'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Test upload and download jobs.
+   */
+  public function testJobs() {
+    // If s3 object is missing, stop the test.
+    if (!$this->s3) {
+      return;
+    }
+
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+//    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+
+    // At this point our mediafile is local, we haven't attached the S3 profile
+    // on our App. Will do that now.
+
+    // Create default profile.
+    $this->createS3Profile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    // Create the destination uri.
+    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+
+    $this->var_export($destination_uri);
+
+    // Now upload to S3 with job.
+    $job_id = $this->doMediafileMove($mediafile_id, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
+
+    // Wait for it to complete.
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the job.
+    $job = $this->getJob($job_id);
+
+    // Must be finished.
+    foreach ($job->get()->xpath('items/item') as $job_item) {
+      $this->assert($job_item->status == mediamosa_job_db::JOB_STATUS_FINISHED);
+    }
+
+    // Check if the mediafile is present on s3.
+    $this->file_exists($destination_uri, 'File on S3 exists');
+
+//    // Create analyse job.
+//    $this->createMediafileAnalyse($mediafile_id);
+
+//    // Parse the queue.
+//    $this->doQueueCycleAll();
+
+
+    // Do file_exists
+    // Do file_size and compare.
+
+    // Delete mediafile and see if mediafile was removed from s3.
+
+    // Do upload job.
+
+    // Do download job.
+
+
+
+  }
+}

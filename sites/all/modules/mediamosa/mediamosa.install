@@ -82,7 +82,7 @@ function mediamosa_install() {
 
   // Call installer Storage.
   _mediamosa_storage_install();
-  
+
   // Call installer Job (before server install).
   _mediamosa_job_install();
 
@@ -126,7 +126,7 @@ function mediamosa_uninstall() {
 
   // Remove Storage Profile.
   _mediamosa_storage_uninstall();
-  
+
   // Remove Transcode Profile.
   _mediamosa_transcode_uninstall();
 
@@ -3140,7 +3140,7 @@ function mediamosa_update_7124() {
     $username = $user->userid;
 
     // Create FTP dir.
-    $user_home_dir = mediamosa_storage::get_uri_ftp() . $username;
+    $user_home_dir = mediamosa_storage::get_realpath_ftp() . $username;
 
     try {
       $chmod_result = drupal_chmod($user_home_dir, NULL); // changes ftp directories to 0775.
@@ -3184,7 +3184,7 @@ function mediamosa_update_7126() {
  */
 function mediamosa_update_7127() {
   // Create the new directory.
-  $path = mediamosa_storage::get_uri_media();
+  $path = mediamosa_storage::get_realpath_media();
   $found = mediamosa_io::file_exists($path . '.htaccess');
 
   // Create when missing.
@@ -3254,8 +3254,8 @@ function mediamosa_update_7129() {
  */
 function mediamosa_update_7130() {
     // Create the new directory.
-  $path = mediamosa_storage::get_realpath();
-  mediamosa_io::move($path . '/data/simpletest', $path . '/media/simpletest');
+  $path = mediamosa_storage_local::get_scheme();
+  mediamosa_io::move($path . '://data/simpletest', $path . '://media/simpletest');
 }
 
 /**
@@ -3367,7 +3367,7 @@ function mediamosa_update_7136() {
     // Load the profile node.
     $node = node_load($nid);
 
-    if ($node->command !== '') {
+    if ($node->command != '') {
       // Convert.
       $node->command = mediamosa_transcode_profile::convertOldCommand2NewCommand($node->command);
 
@@ -3526,7 +3526,7 @@ function mediamosa_update_7140() {
  */
 function mediamosa_update_7141() {
   // Get the path to the media directory.
-  $path = mediamosa_storage::get_uri_media();
+  $path = mediamosa_storage::get_realpath_media();
   $found = mediamosa_io::file_exists($path . '.htaccess');
 
   // When found, remove it first.
@@ -3595,12 +3595,12 @@ function mediamosa_update_7144() {
 function mediamosa_update_7145() {
 
   // Destination.
-  $data_destination_mf = mediamosa_storage::get_realpath_data();
+  $data_destination_mf = mediamosa_storage_local::get_scheme() . '://';
 
   // Source dir stills.
   $data_source_stills = $data_destination_mf . 'stills/';
 
-  if (!file_exists($data_source_stills) || !is_readable($data_source_stills)) {
+  if (!mediamosa_io::file_exists($data_source_stills) || !mediamosa_io::is_readable($data_source_stills)) {
     throw new Exception(strtr("The mountpoint '@mount' does not exists or is not read/writable.", array('@mount' => $data_source_stills)));
   }
 
@@ -3614,13 +3614,13 @@ function mediamosa_update_7145() {
     $dest_dir = $data_destination_mf . $prefixes[$x] . '/';
 
     // Make sure the source dir exists.
-    if (!file_exists($source_dir) && !is_dir($source_dir)) {
+    if (!mediamosa_io::file_exists($source_dir) && !is_dir($source_dir)) {
       $messages[] = strtr("Still dir '@source' does not exists and can not be moved.", array('@source' => $source_dir));
       continue;
     }
 
     // Make sure the source dir exists.
-    if (!file_exists($dest_dir) && !is_dir($dest_dir)) {
+    if (!mediamosa_io::file_exists($dest_dir) && !is_dir($dest_dir)) {
       $messages[] = strtr("Dest dir '@dest' does not exists and can not be moved.", array('@dest' => $dest_dir));
       continue;
     }
@@ -3686,7 +3686,7 @@ function mediamosa_update_7145() {
 }
 
 /**
- * Disable the mediamosa_configuration_storage module. Its no longer used.
+ * Uninstall the mediamosa_configuration_storage module. Its no longer used.
  */
 function mediamosa_update_7146() {
   $mediamosa_configuration_storage = module_exists('mediamosa_configuration_storage');
@@ -3708,9 +3708,9 @@ function mediamosa_update_7146() {
 function mediamosa_update_7147() {
 
   // Clean up links location.
-  $ticket_play_location = mediamosa_storage::get_realpath() . 'links/';
+  $ticket_play_location = mediamosa_storage::get_realpath() . 'links';
 
-  if (mediamosa_io::file_exists($ticket_play_location) && is_dir($ticket_play_location)) {
+  if (mediamosa_io::file_exists($ticket_play_location) && mediamosa_io::is_dir($ticket_play_location)) {
     // Clean up the play tickets.
     mediamosa_io::exec(
       strtr(
@@ -3770,7 +3770,8 @@ function mediamosa_update_7147() {
 
 /**
  * The playproxy code and ticket module has been moved into the MediaMosa Media
- * module. The ticket module will be turned off.
+ * module. The ticket module will be uninstalled and replaced by the new
+ * Mediamosa-media module.
  */
 function mediamosa_update_7148() {
 
@@ -3805,6 +3806,178 @@ function mediamosa_update_7149() {
   // Done.
   return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
 }
+
+/**
+ * Setup the setting for temporary file location for transcodes and still
+ * generation.
+ */
+function mediamosa_update_7150() {
+  // Expecting mountpoint to be set as variable.
+  $mountpoint = mediamosa_storage::get_realpath();
+  $path = 'data/transition';
+
+  // Create dir.
+  if (!mediamosa_io::file_exists($mountpoint . '/' .  $path)) {
+    drupal_mkdir($mountpoint . '/' . $path, NULL, TRUE);
+  }
+
+  // To separate simpletest from our installation, simpletest has its own
+  // mount pount.
+  if (!mediamosa_io::file_exists($mountpoint . '/media/simpletest/' . $path)) {
+    drupal_mkdir($mountpoint . '/media/simpletest/' . $path, NULL, TRUE);
+  }
+}
+
+/**
+ * Create new errorcodes in database.
+ */
+function mediamosa_update_7151() {
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_CLASS_NOT_FOUND',
+      mediamosa_error_db::MESSAGE => "Storage class '@class' was not found",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_CLASS_NOT_FOUND,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_PROFILE_NOT_FOUND',
+      mediamosa_error_db::MESSAGE => "Storage profile with ID '@profile_id' was not found",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_PROFILE_NOT_FOUND,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_STREAMWRAPPER_NOT_FOUND',
+      mediamosa_error_db::MESSAGE => "Storage streamwrapper not found for uri '@uri'",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_PROFILE_NOT_FOUND,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_IO_ACCESS_ERROR',
+      mediamosa_error_db::MESSAGE => "Storage IO access error, @error",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_IO_ACCESS_ERROR,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_IO_ERROR',
+      mediamosa_error_db::MESSAGE => "Storage IO error, @error",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_IO_ERROR,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH',
+      mediamosa_error_db::MESSAGE => "Streamwrapper class @class is an external storage type and does not support local paths (realpath)",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_CHECKSUM_FAILURE',
+      mediamosa_error_db::MESSAGE => "Checksum failed on file during @during for mediafile with ID '@id'",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_CHECKSUM_FAILURE,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STILL_FILE_NOT_FOUND',
+      mediamosa_error_db::MESSAGE => "Still file with Mediafile ID '@mediafile_id', expected location '@path' was not found",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STILL_FILE_NOT_FOUND,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STILL_FAILED_TO_CREATE',
+      mediamosa_error_db::MESSAGE => "Still failed to create @during",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STILL_FAILED_TO_CREATE,
+    ))
+  ->execute();
+}
+
+/**
+ * Reset all mediafile stored mountpoints to local mount point.
+ */
+function mediamosa_update_7152() {
+  db_update('mediamosa_asset_mediafile')
+    ->fields(array('sannas_mount_point' => 'mediamosa-storage-data://'))
+    ->execute();
+}
+
+/**
+ * Add new job types to database.
+ */
+function mediamosa_update_7153() {
+  // Add new job types.
+  db_change_field(
+    mediamosa_job_db::TABLE_NAME,
+    mediamosa_job_db::JOB_TYPE,
+    mediamosa_job_db::JOB_TYPE,
+    array(
+      'description' => 'The type of the job.',
+      'type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'default' => mediamosa_job_db::JOB_TYPE_UPLOAD,
+    )
+  );
+
+  db_change_field(
+    mediamosa_job_server_db::TABLE_NAME,
+    mediamosa_job_server_db::JOB_TYPE,
+    mediamosa_job_server_db::JOB_TYPE,
+    array(
+      'description' => 'The type of the job.',
+      'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'default' => mediamosa_job_server_db::JOB_TYPE_UPLOAD,
+    )
+  );
+}
+
+/**
+ * Replace index on job table.
+ */
+function mediamosa_update_7154() {
+  // Remove index from job.
+  db_drop_index(
+    mediamosa_job_db::TABLE_NAME,
+    'idx_status_assetid_jobtype_jobid'
+  );
+
+  // Add new index.
+  db_add_index(
+    mediamosa_job_db::TABLE_NAME,
+    'idx_status_assetid_jobtype_jobid',
+    array(
+      mediamosa_job_db::JOB_STATUS,
+      mediamosa_job_db::ASSET_ID,
+      mediamosa_job_db::ID,
+      mediamosa_job_db::JOB_TYPE
+    )
+  );
+}
+
+/**
+ * Create the new storage tables.
+ */
+function mediamosa_update_7155() {
+  // Create the storage submodule.
+  _mediamosa_storage_install();
+}
+
 
 ///**
 // * Create the new media object directory under mount point.

@@ -274,7 +274,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
   );
 
-  $tools = module_invoke_all('mediamosa_tool_info');
+  $tools = mediamosa_server_tool::get_server_tools();
   $options = array();
   foreach ($tools as $tool_id => $tool) {
     $options[$tool_id] = $tool['name'];

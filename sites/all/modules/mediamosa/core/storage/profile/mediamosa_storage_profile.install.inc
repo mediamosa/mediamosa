@@ -1,9 +1,7 @@
 <?php
-// $Id$
-
 /**
  * @file
- *
+ * The storage profile installer.
  */
 require_once 'mediamosa_storage_profile_db.class.inc';
 
@@ -36,7 +34,7 @@ function _mediamosa_storage_profile_install() {
 function _mediamosa_storage_profile_uninstall() {
   // Delete node type
   node_type_delete(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE);
-  
+
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_storage_profile_db::TABLE_NAME);
 }

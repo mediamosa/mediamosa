@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Testing acl_user_id and acl_group_id ACL protection.
@@ -183,9 +182,9 @@ class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseE
 //    $mediafile_id_4 = $this->createMediafile($asset_id_4);
 //
 //    // Give each a upload.
-//    $this->uploadTestFileForMediafile($asset_id_1, $mediafile_id_1, '', FALSE, 'urn:collab:person:fontys.nl:236338_student.fontys.nl');
+//    $this->uploadTestFileForMediafile($asset_id_1, $mediafile_id_1, '', 'urn:collab:person:fontys.nl:236338_student.fontys.nl');
 //    $this->uploadTestFileForMediafile($asset_id_2, $mediafile_id_2);
-//    $this->uploadTestFileForMediafile($asset_id_3, $mediafile_id_3, '', FALSE, 'urn:collab:person:windesheim.nl:s1047682');
+//    $this->uploadTestFileForMediafile($asset_id_3, $mediafile_id_3, '', 'urn:collab:person:windesheim.nl:s1047682');
 //    $this->uploadTestFileForMediafile($asset_id_4, $mediafile_id_4);
 //
 //    // All.
@@ -196,6 +195,7 @@ class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseE
 //    );
 //
 //    // First owner check.
+//    // 'a.owner_id = \'urn:collab:person:fontys.nl:236338\\\\_student.fontys.nl\''
 //    $this->cql_do_search_test_assets(
 //      '',
 //      array($asset_id_1 => TRUE),
@@ -208,17 +208,20 @@ class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseE
 //    );
 //
 //    // First owner check with CQL.
+//    // 'a.owner_id LIKE \'%urn:collab:person:fontys.nl:236338_student.fontys.nl%\''
 //    $this->cql_do_search_test_assets(
-//      'owner_id="^urn:collab:person:fontys.nl:236338?student.fontys.nl^"',
+//      'owner_id=="^urn:collab:person:fontys.nl:236338?student.fontys.nl^"',
 //      array($asset_id_1 => TRUE),
 //      array(
 //        'user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
 //        'hide_empty_assets' => 'true',
 //      )
 //    );
+//
 //    // First owner check with CQL.
+//    // 'a.owner_id = \'urn:collab:person:fontys.nl:236338\\\\_student.fontys.nl\''
 //    $this->cql_do_search_test_assets(
-//      'owner_id="^urn:collab:person:fontys.nl:236338_student.fontys.nl^"',
+//      'owner_id=="^urn:collab:person:fontys.nl:236338_student.fontys.nl^"',
 //      array($asset_id_1 => TRUE),
 //      array(
 //        'user_id' => 'urn:collab:person:fontys.nl:236338_student.fontys.nl',
@@ -227,6 +230,7 @@ class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseE
 //    );
 //
 //    // First owner check.
+//    // 'a.owner_id = \'urn:collab:person:windesheim.nl:s1047682\''
 //    $this->cql_do_search_test_assets(
 //      '',
 //      array($asset_id_3 => TRUE),

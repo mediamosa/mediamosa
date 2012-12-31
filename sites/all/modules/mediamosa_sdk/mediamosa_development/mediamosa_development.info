@@ -1,7 +1,7 @@
 name = "MediaMosa - development"
 description = "Enables to test and execute REST calls. For development purposes only."
 package = "MediaMosa - SDK"
-version = 7.x-3.0
+version = 7.x-3.4
 core = 7.x
 
 ; Dependencies (module names)

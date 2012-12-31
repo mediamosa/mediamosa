@@ -3,7 +3,7 @@
 name = "Simpletest result page"
 description = "Enable to view automated simpletests of the MediaMosa, which runs a selection of unittests every 10 minutes and shows the results."
 package = "MediaMosa - Maintenance"
-version = 7.x-3.2.2
+version = 7.x-3.4.0
 core = 7.x
 
 ; Dependencies (module names)

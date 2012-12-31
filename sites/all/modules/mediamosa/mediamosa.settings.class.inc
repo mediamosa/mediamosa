@@ -228,33 +228,17 @@ class mediamosa_settings {
   /**
    * Return the filename of the transcode  lua file.
    */
-  public static function ffmpeg_transcode_file() {
+  public static function lua_transcode_script() {
     // FFMPEG_TRANSCODE_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
 
   /**
-   * Return the filename of the windows transcode lha file.
-   */
-  public static function windows_transcode_file() {
-    // WINDOWS_TRANSCODE_FILE.
-    return 'start /min c:\lua\lua5.1 c:\lua\vpx-transcode-wmv.lua';
-  }
-
-  /**
    * Return the filename of the analyse lha file.
    */
-  public static function analyse_file() {
+  public static function lua_analyse_script() {
     // ANALYSE_FILE.
     return self::lua_base_get() . 'vpx-analyse';
-  }
-
-  /**
-   * Return the filename of the transcode lha file.
-   */
-  public static function still_file() {
-    // STILL_FILE.
-    return self::lua_base_get() . 'vpx-transcode';
   }
 
   /**

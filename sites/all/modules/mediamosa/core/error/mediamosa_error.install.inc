@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Error installer.
@@ -194,6 +169,8 @@ function _mediamosa_error_install() {
     'ERRORCODE_STILL_NOT_IMAGE' => "Still is not an image for asset with ID '@asset_id'",
     'ERRORCODE_STILL_IS_NOT_CREATABLE' => "Still can not be created for mediafile with '@mediafile_id'",
     'ERRORCODE_CREATING_DERIVATIVE' => "Unable creating derivative from image with style: @style, path: @path",
+    'ERRORCODE_STILL_FILE_NOT_FOUND' => "Still file with Mediafile ID '@mediafile_id', expected location '@path' was not found",
+    'ERRORCODE_STILL_FAILED_TO_CREATE' => "Still failed to create @during",
 
     'ERRORCODE_STARTING_JOB_FAILED' => 'Jobserver is unable to start job',
 
@@ -219,7 +196,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_USERMAN_INVALID_USER' => 'Invalid username',
     'ERRORCODE_USERMAN_GROUP_EXISTS' => 'Group already exists',
     'ERRORCODE_USERMAN_USER_EXISTS' => 'User already exists',
-    'ERRORCODE_IS_UNAPPROPRIATE' => 'This video is flagged unappropriate',
+    'ERRORCODE_IS_UNAPPROPRIATE' => 'This video is flagged inappropriate',
     'ERRORCODE_MASTERSLAVE_OWN_APP' => 'You are not allowed to create a master-slave application record where the master and slave application are the same',
     'ERRORCODE_IMAGE_FILE_TOO_BIG' => 'The image file size is bigger, than the allowed maximum (@filesize byte)',
     'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => "Transcode profile with name '@profile_name' already exists",
@@ -227,10 +204,14 @@ function _mediamosa_error_install() {
     'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
     'ERRORCODE_INVALID_REST_CALL' => "Invalid REST call with ID '@rest_call'",
     'ERRORCODE_INVALID_TICKET' => "Invalid ticket with ID '@ticket_id'",
-    
+
   	'ERRORCODE_STORAGE_CLASS_NOT_FOUND' => "Storage class '@class' was not found",
-    'ERRORCODE_STORAGE_CLASS_INVALID' => "Storage class '@class' does not extend the 'mediamosa_storage' class",
     'ERRORCODE_STORAGE_PROFILE_NOT_FOUND' => "Storage profile with ID '@profile_id' was not found",
+    'ERRORCODE_STORAGE_STREAMWRAPPER_NOT_FOUND' => "Storage streamwrapper not found for uri '@uri'",
+    'ERRORCODE_STORAGE_IO_ACCESS_ERROR' => "Storage IO access error, @error",
+    'ERRORCODE_STORAGE_IO_ERROR' => "Storage IO error, @error",
+    'ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH' => "Streamwrapper class @class is an external storage type and does not support local paths (realpath)",
+    'ERRORCODE_STORAGE_CHECKSUM_FAILURE' => "Checksum failed on file during @during for mediafile with ID '@id'",
   );
 
   $query = array();

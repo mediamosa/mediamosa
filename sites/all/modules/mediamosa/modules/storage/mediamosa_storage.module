@@ -1,10 +1,8 @@
 <?php
-// $Id$
-
- /**
-  * @file
-  * MediaMosa storage.
-  */
+/**
+ * @file
+ * MediaMosa storage.
+ */
 
 require_once 'profile/mediamosa_storage_profile.inc';
 
@@ -20,14 +18,85 @@ function mediamosa_storage_help($path, $arg) {
 }
 
 /**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_storage_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+  $rest_calls['storage/$mediafile_id/download'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_download',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+  );
+  $rest_calls['storage/$mediafile_id/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+  );
+  $rest_calls['storage/$mediafile_id/move'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_move',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_storage_mediamosa_register_rest_call_doc() {
+
+  $rest_calls = array();
+  $rest_calls['storage/$mediafile_id/download'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Download a mediafile from its location and put it in the transition area. The download will be registered and kept for a period of time.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/download [POST] user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will download the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+  $rest_calls['storage/$mediafile_id/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Upload the mediafile from transition area to the mediafile location. This call is more an update or replacement of the mediafile with the version in the transition area.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/upload [POST] user_id=foo&storage_profile_id=1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will upload the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+  $rest_calls['storage/$mediafile_id/move'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Move a mediafile from one storage profile location to another storage profile location. The move operation is done using upload and download jobs. When the physical is succesfully copied to the destination, the source is removed and the location description in the database is changed to the new location.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/move [POST] user_id=foo&storage_profile_id=1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will move the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+
+  return $rest_calls;
+}
+
+/**
  * Implements hook_permission().
  */
 function mediamosa_storage_permission() {
   $permissions = array();
-  
+
   // Get all the apps.
   $apps = mediamosa_app::get_all_apps_cached();
-  
+
   // Build access permission for each storage module
   $types = module_invoke_all('mediamosa_storage_info');
   foreach ($types as $key => $type) {
@@ -36,7 +105,7 @@ function mediamosa_storage_permission() {
       'description' => t('Enables the user to use ' . $type['name'] . ' fr all client applications.'),
     );
     foreach ($apps as $app) {
-      $perms[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
+      $permissions[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
         'title' => t('Storage owner of client application ' . $app[mediamosa_app_db::APP_NAME]),
         'description' => t('Making the user storage owner of this client application will give access to the storage profile of its client application.'),
       );
@@ -78,17 +147,14 @@ function mediamosa_storage_menu() {
   // Add each storage type to the menu
   // TODO: review access callback
   $types = module_invoke_all('mediamosa_storage_info');
-  if (class_exists('mediamosa_storage_standard')) {
-    // Never allow to add extra standard storage
-    unset($types[mediamosa_storage_standard::NAME]);
-  }
+  // Never allow to add extra local storage
+  unset($types[mediamosa_storage_local::NAME]);
+
   foreach ($types as $key => $type) {
     $items['admin/mediamosa/config/storage_profile/add/' . $key] = array(
       'title' => $type['name'],
       'title callback' => 'check_plain',
     	'description' => $type['description'],
-      //'page callback' => 'node_add',
-      //'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
       'page callback' => '_mediamosa_storage_profile_add_page',
     	'page arguments' => array(5),
     	'access callback' => 'node_access',
@@ -99,7 +165,7 @@ function mediamosa_storage_menu() {
       'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
     );
   }
-  
+
   $items['admin/mediamosa/config/storage_profile/%node'] = array(
     'page callback' => 'node_page_view',
     'page arguments' => array(4),
@@ -107,7 +173,7 @@ function mediamosa_storage_menu() {
     'access arguments' => array('view', 4),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['admin/mediamosa/config/storage_profile/%node/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -168,9 +234,9 @@ function mediamosa_storage_node_access($node, $op, $account) {
   if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE) {
     return NODE_ACCESS_IGNORE;
   }
-  
+
   // Prevent standard storgae from being deleted
-  if (class_exists('mediamosa_storage_standard') && $node->{mediamosa_storage_profile_db::TYPE} == mediamosa_storage_standard::NAME && op == 'delete') {
+  if ($node->{mediamosa_storage_profile_db::TYPE} == mediamosa_storage_local::NAME && $op == 'delete') {
     return NODE_ACCESS_DENY;
   }
 
@@ -182,33 +248,4 @@ function mediamosa_storage_node_access($node, $op, $account) {
 
   // If we have the permission, then we allow the action.
   return _mediamosa_user_access($permission_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
-}
-
-/**
- * Returns form elements for client app storage settings
- * 
- * @param $node
- *   Client app node
- *   
- * @param $form_state
- *   Form state of the client app form
- *   
- * @return
- *   Form elements for storage settings
- * 
- * @see mediamosa_app_form 
- */
-function _mediamosa_storage_app_form($node, &$form_state) {
-  $form = array();
-  
-  $form[mediamosa_app_db::STORAGE_DEFAULT_URI] = array(
-    '#type' => 'select',
-    '#title' => t('Storage location'),
-    '#description' => t('Default storage location for media files.'),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STORAGE_DEFAULT_URI, $node),
-    '#options' => _mediamosa_storage_profile_app_options(mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node, 0)),
-    '#required' => FALSE,
-  );
-  
-  return $form;
 }

@@ -1,10 +1,12 @@
 <?php
-// $Id$
-
 /**
  * @file
- * The storage profile DB class.
+ * The storage DB class.
+ *
+ * The storage class handles the storages of all mediafiles on local and
+ * external sources.
  */
+
 class mediamosa_storage_profile_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
@@ -31,9 +33,9 @@ class mediamosa_storage_profile_db {
    */
   public static function get_fields() {
     require_once 'mediamosa_storage_profile.install.inc';
-    
+
     // Get the schema.
-    $a_schema = mediamosa_storage_profile_schema();
-    return array_keys($a_schema[mediamosa_storage_profile_db::TABLE_NAME]['fields']);
+    $schema = mediamosa_storage_profile_schema();
+    return array_keys($schema[mediamosa_storage_profile_db::TABLE_NAME]['fields']);
   }
 }

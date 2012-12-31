@@ -1,0 +1,79 @@
+<?php
+/**
+ * @file
+ * Job tests for transcode jobs.
+ */
+
+class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - analyse test',
+      'description' => 'Testing the transcoding jobs.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Basic job transcode test.
+   */
+  public function testJobAnalyse() {
+
+    // Create upload file.
+    $upload = $this->uploadTestFile(array('filename' => self::getTestVideo()));
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    // Show the mediafile.
+    $this->var_export($mediafile);
+
+    // Get it directly from the database.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->var_export($metadata);
+
+    // We expect these.
+    $expecting = array(
+      'video_codec' => 'wmv3',
+      'colorspace' => 'yuv420p',
+      'width' => '320',
+      'height' => '240',
+      'fps' => '25',
+      'audio_codec' => 'wmav2',
+      'sample_rate' => '32000',
+      'channels' => '2',
+      'file_duration' => '00:00:29.92',
+      'container_type' => 'asf',
+      'bitrate' => '265',
+      'bpp' => '0.14',
+      'filesize' => '993480',
+      'mime_type' => 'video/x-ms-asf',
+      'is_hinted' => 'FALSE',
+      'is_inserted_md' => 'FALSE',
+      'md5' => '713fa44acad156667e4c3e64a6051212',
+    );
+
+    // Same amount of properties? If this no longer is the same, then eihter
+    // remove this assert or add the missing param to the $expecting.
+    $this->assert(count($mediafile['metadata']) == count($expecting), t('Got same amount [REST] of technical metadata back as we expected.'));
+
+    // Same with DB.
+    $this->assert(count($metadata) == count($expecting), t('Got same amount [DB] of technical metadata back as we expected.'));
+
+    // Now see if what we expect is present.
+    foreach ($expecting as $name => $value) {
+      $this->assert(isset($mediafile['metadata'][$name]), t("Found param '@name'", array('@name' => $name)));
+      $this->assert($mediafile['metadata'][$name] == $value, t("Values are the same for param '@name'", array('@name' => $name)));
+
+      $this->assert(isset($metadata[$name]), t("Found param '@name'", array('@name' => $name)));
+      $this->assert($metadata[$name] == $value, t("Values are the same for param '@name'", array('@name' => $name)));
+    }
+  }
+}

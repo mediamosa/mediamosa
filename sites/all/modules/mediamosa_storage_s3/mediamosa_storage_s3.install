@@ -7,21 +7,6 @@
 require_once 'mediamosa_storage_s3_db.class.inc';
 
 /**
- * Implements hook_requirements().
- */
-function mediamosa_storage_s3_requirements($phase) {
-
-  $requirements = array();
-
-  // Ensure translations don't break at install time.
-  $t = get_t();
-  
-  // No special requirements for standard storage
-
-  return $requirements;
-}
-
-/**
  * Implements hook_install().
  */
 function mediamosa_storage_s3_install() {
@@ -40,8 +25,8 @@ function mediamosa_storage_s3_uninstall() {
 
   foreach ($result as $record) {
     node_delete($record->{mediamosa_storage_profile_db::NID});
-  }  
-  
+  }
+
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema('mediamosa_storage_s3');
 
@@ -57,13 +42,6 @@ function mediamosa_storage_s3_uninstall() {
 }
 
 /**
- * Implements hook_disable().
- */
-function mediamosa_storage_s3_disable() {
-  // Nothing todo
-}
-
-/**
  * Implements hook_schema().
  */
 function mediamosa_storage_s3_schema() {
@@ -72,23 +50,23 @@ function mediamosa_storage_s3_schema() {
   $schema[mediamosa_storage_s3_db::TABLE_NAME] = array(
     'description' => 'The mountpoint storage table.',
     'fields' => array(
-      mediamosa_storage_profile_db::NID => array(
+      mediamosa_storage_s3_db::NID => array(
         'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_storage_profile_db::VID => array(
+      mediamosa_storage_s3_db::VID => array(
         'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_storage_profile_db::ID => array(
+      mediamosa_storage_s3_db::PROFILE_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => 'The storage profile id.',
+        'description' => 'The parent storage profile id.',
       ),
       mediamosa_storage_s3_db::KEY => array(
         'type' => 'varchar',
@@ -103,11 +81,11 @@ function mediamosa_storage_s3_schema() {
   			'description' => 'AWS secret access key.',
       ),
     ),
-    'primary key' => array(mediamosa_storage_profile_db::ID),
-    'unique keys' => array(
-      'uni_nid' => array(mediamosa_storage_profile_db::NID),
+    'primary key' => array(mediamosa_storage_profile_db::NID),
+    'foreign keys' => array(
+      mediamosa_storage_s3_db::PROFILE_ID => array(mediamosa_storage_profile_db::TABLE_NAME => mediamosa_storage_profile_db::ID),
     ),
   );
-  
+
   return $schema;
 }

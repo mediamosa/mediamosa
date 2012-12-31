@@ -4,29 +4,6 @@
  * Authorization layer for assets, media functions.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_acl {
 
   // ------------------------------------------------------------------ Consts.
@@ -678,7 +655,7 @@ class mediamosa_acl {
     }
     else {
       // Get ACL rights, evaluate rights->isprotected.
-      list($is_protected, $rights_set_user_usergroup, $rights_set_domain_realm) = mediamosa_acl::is_protected_get($app_id, $user_id, $acl_type, $object, $is_app_admin);
+      list(, $rights_set_user_usergroup, $rights_set_domain_realm) = mediamosa_acl::is_protected_get($app_id, $user_id, $acl_type, $object, $is_app_admin);
     }
 
 
@@ -867,18 +844,8 @@ class mediamosa_acl {
             ->condition(mediamosa_asset_mediafile_db::ID, $acl_object_id)
             ->execute();
 
-          // If its a still then remove the possible link to still.
-          if (mediamosa_asset_mediafile::is_still($object)) {
-            mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $acl_object_id);
-          }
-          else {
-            // Remove all perm. still links to stills.
-            $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
-
-            foreach ($still_ids as $still_id) {
-              mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
-            }
-          }
+          // ACL status changed, remove possible perm. link.
+          mediamosa_media::remove_permanent_link($app_id, $acl_object_id);
 
           // Reindex the asset using the mediafile ID.
           mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
@@ -910,11 +877,8 @@ class mediamosa_acl {
             ->condition(mediamosa_asset_db::ID, $acl_object_id)
             ->execute();
 
-          // Remove the permanent still links.
-          $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($acl_object_id);
-          foreach ($still_ids as $still_id) {
-            mediamosa_asset_mediafile_still::remove_permanent_link($app_id, $still_id);
-          }
+          // ACL status changed, remove possible perm. link.
+          mediamosa_media::remove_permanent_link_asset($acl_object_id);
 
           // Reindex the asset.
           mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
@@ -935,36 +899,42 @@ class mediamosa_acl {
    * Remove rights from object.
    *
    * @param integer $app_id
+   *   The application ID.
    * @param string $user_id
+   *   The owner of the object.
    * @param string $acl_type
+   *   The type of object, mediafile, asset or collection. See
+   *   mediamosa_acl::ACL_TYPE_*.
    * @param array $object
+   *   An assocative array with owner, app and mediafile IDs data.
    * @param boolean $is_app_admin
+   *   Overrulling of owner check.
    */
   public static function rights_clear($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
-        $owner_id = $object["owner_id"];
-        $object_app_id = $object["app_id"];
-        $acl_object_id = $object["mediafile_id"];
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $acl_object_id = $object['mediafile_id'];
         break;
 
       case mediamosa_acl::ACL_TYPE_ASSET:
-        $owner_id = $object["owner_id"];
-        $object_app_id = $object["app_id"];
-        $acl_object_id = $object["asset_id"];
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $acl_object_id = $object['asset_id'];
         break;
 
       case mediamosa_acl::ACL_TYPE_COLLECTION:
-        $owner_id = $object["owner_id"];
-        $object_app_id = $object["app_id"];
-        $acl_object_id = $object["coll_id"];
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $acl_object_id = $object['coll_id'];
         break;
 
       default:
         throw new mediamosa_exception_error_unexpected_error();
     }
 
-    // Only owners (with the same app_id) can change access (for now)
+    // Only owners (from the same app_id) can change access.
     mediamosa_acl::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
 
     switch ($acl_type) {
@@ -1024,11 +994,17 @@ class mediamosa_acl {
     // Reindex object.
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+        // ACL status changed, remove possible perm. link.
+        mediamosa_media::remove_permanent_link($object_app_id, $acl_object_id);
+
         // Reindex the asset using the mediafile ID.
         mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
         break;
 
       case mediamosa_acl::ACL_TYPE_ASSET:
+        // ACL status changed, remove possible perm. link.
+        mediamosa_media::remove_permanent_link_asset($acl_object_id);
+
         // Reindex the asset using the mediafile ID.
         mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
         break;

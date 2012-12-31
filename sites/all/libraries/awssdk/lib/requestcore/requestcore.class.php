@@ -843,7 +843,7 @@ class RequestCore
 			throw new cURL_Exception('cURL resource: ' . (string) $curl_handle . '; cURL error: ' . curl_error($curl_handle) . ' (cURL error code ' . curl_errno($curl_handle) . '). See http://curl.haxx.se/libcurl/c/libcurl-errors.html for an explanation of error codes.');
 		}
 
-		$parsed_response = $this->process_response($curl_handle, $this->response);
+    $parsed_response = $this->process_response($curl_handle, $this->response);
 
 		curl_close($curl_handle);
 

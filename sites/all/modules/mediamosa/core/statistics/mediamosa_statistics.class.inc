@@ -357,7 +357,7 @@ class mediamosa_statistics {
     $dir = self::get_streaming_path();
 
     // Search the next log file.
-    if (is_dir($dir) && is_readable($dir)) {
+    if (mediamosa_io::is_dir($dir) && mediamosa_io::is_readable($dir)) {
       $directory_handler = opendir($dir);
       if ($directory_handler) {
         while (($file = readdir($directory_handler)) !== false) {
@@ -404,7 +404,7 @@ class mediamosa_statistics {
       ->execute();
 
     // File must exists.
-    if (!file_exists($dir_file) || !is_readable($dir_file)) {
+    if (!mediamosa_io::file_exists($dir_file) || !mediamosa_io::is_readable($dir_file)) {
       self::log_debug('The file @file is not available', array('@file' => $file));
       return;
     }
@@ -622,7 +622,7 @@ class mediamosa_statistics {
    */
   public static function create_streaming_ticket($ticket_id, $ticket_type, $app_id, $mediafile_id) {
     // Store the play tickets only.
-    if ($ticket_type == mediamosa_media_ticket::TICKET_TYPE_PLAY) {
+    if ($ticket_type == mediamosa_media_ticket::TICKET_TYPE_VIEW) {
       // The ticket id should be unique, then just simply store.
       mediamosa_db::db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
         ->fields(array(
