@@ -306,6 +306,9 @@ class MediaMosaAmazonS3 extends AmazonS3 {
    *   The S3 response object.
    */
   public function _download($bucket, $source_filename, $dest_path) {
+    // Make sure directory exists.
+    mediamosa_io::mkdir(mediamosa_io::dirname($dest_path));
+
     return $this->get_object($bucket, $source_filename, array(
       'fileDownload' => $dest_path,
     ));

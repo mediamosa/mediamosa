@@ -300,7 +300,19 @@ abstract class mediamosa_storage {
     $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
 
     // Build up the mount point uri.
-    return self::get_mount_point_uri_by_storage_profile_app($storage_profile_app, $is_still);
+    $local_uri = self::get_mount_point_uri_by_storage_profile_app($storage_profile_app, $is_still);
+
+    // See if its local.
+    //
+    // Build up the stream wrapper.
+    $local_streamwrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($local_uri);
+
+    if ($local_streamwrapper->is_local()) {
+      return $local_uri;
+    }
+
+    // Not local, then revert back to default storage.
+    return self::get_uri_data();
   }
 
   /**
@@ -364,12 +376,79 @@ abstract class mediamosa_storage {
     // Build up the stream wrapper.
     $source_streamwrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
 
+    // If the mediafile is not local, then return default mount point for
+    // transition links.
+    if (!$source_streamwrapper->is_local()) {
+      return self::get_realpath_transition_links();
+    }
+
+    // LUA can use the transition location (mediafile_id[0]/mediafile_id/md5) so
+    // use links version instead. Although it will point to the latest
+    // registered transition.
+    if ($source_streamwrapper instanceof mediamosa_io_streamwrapper_local_transition) {
+      return mediamosa_storage::get_realpath_transition_links();
+    }
+
     return $source_streamwrapper->get_realpath_mount_point();
+  }
+
+  /**
+   * Process a new mediafile after upload or transcoding.
+   *
+   * Will move the file to its final storage location. Expect the mediafile ID
+   * to exist as mediafile entry in database.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $mediafile_id
+   *   The mediafile ID of the new file.
+   * @param boolean $is_new
+   *   Will alter the sannas location to transition if TRUE.
+   */
+  public static function relocate_mediafile_to_external($app_id, $mediafile_id, $is_new) {
+    // Need (new) destination uri.
+    $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id);
+
+    // Find the stream wrapper.
+    $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
+
+    // If destination is local, then we do nothing.
+    if ($mediamosa_io_streamwrapper_destination->is_local()) {
+      return;
+    }
+
+    // Move file to transition. Returns the new location.
+    $destination_uri = mediamosa_storage_transition::mediafile_local_move_to_transition($mediafile_id);
+
+    // New location for mediafile is transition.
+    $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
+
+    // Update mount point with transition location.
+    if ($is_new) {
+      mediamosa_storage::mediafile_update_mointpoint($mediafile_id, $mediamosa_io_streamwrapper_destination->get_uri_mount_point());
+    }
+
+    // Transition can not be the final location. So create a upload job to
+    // its final storage.
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+
+    // Create the job.
+    mediamosa_job::create_job_media_upload($app_id, $mediafile[mediamosa_asset_mediafile_db::OWNER_ID], FALSE, $mediafile_id);
   }
 
   // -------------------------------------------------- /data related functions.
   /**
-   * Return the translated real path of the storage.
+   * Return the uri of the (data) storage.
+   *
+   * @return string
+   *   The storage real path.
+   */
+  public static function get_uri_data() {
+    return 'mediamosa-storage-data://';
+  }
+
+  /**
+   * Return the translated real path of the (data) storage.
    *
    * @return string
    *   The storage real path.
@@ -377,6 +456,18 @@ abstract class mediamosa_storage {
   public static function get_realpath_data() {
     return mediamosa_io::realpath('mediamosa-storage-data://');
   }
+
+//  /**
+//   * Return the uri of the mediafile located in default mount point.
+//   *
+//   * Is default location after transcode.
+//   *
+//   * @return string
+//   *   The storage real path.
+//   */
+//  public static function get_uri_data_file($mediafile_id) {
+//    return 'mediamosa-storage-data://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+//  }
 
   /**
    * Return the mediafile uri.
@@ -427,7 +518,7 @@ abstract class mediamosa_storage {
    */
   public static function file_must_exist($mediafile_id) {
     // Check if still file exists.
-    $file = self::get_realpath_mediafile($mediafile_id);
+    $file = self::get_uri_mediafile($mediafile_id);
     if (!mediamosa_io::file_exists($file)) {
       throw new mediamosa_exception_error_file_not_found(array('@filename' => $file));
     }
@@ -456,6 +547,29 @@ abstract class mediamosa_storage {
     return mediamosa_io::realpath(self::get_uri_transition());
   }
 
+  // -------------------------------------- /transition/links related functions.
+  /**
+   * Return the transition folder.
+   *
+   * @return string
+   *   The location of the transition folder; data/transition.
+   *
+   * @see get_realpath_transition()
+   */
+  public static function get_uri_transition_links() {
+    return 'mediamosa-storage-transition-links://';
+  }
+
+  /**
+   * Return the translated tmp transcode folder.
+   *
+   * @return string
+   *   The location of the transition folder; data/transition.
+   */
+  public static function get_realpath_transition_links() {
+    return mediamosa_io::realpath(self::get_uri_transition_links());
+  }
+
   // --------------------------------------------- /temporary related functions.
   /**
    * Return the tmp transcode folder.
@@ -463,9 +577,9 @@ abstract class mediamosa_storage {
    * @return string
    *   The location of the temporary transcode folder; data/transcode.
    *
-   * @see get_realpath_data_transcode()
+   * @see get_realpath_temporary()
    */
-  public static function get_uri_data_transcode() {
+  public static function get_uri_temporary() {
     return 'mediamosa-storage-temporary://';
   }
 
@@ -475,8 +589,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The location of the temporary transcode folder; data/transcode.
    */
-  public static function get_realpath_data_transcode() {
-    return mediamosa_io::realpath(self::get_uri_data_transcode());
+  public static function get_realpath_temporary() {
+    return mediamosa_io::realpath(self::get_uri_temporary());
   }
 
   /**
@@ -489,8 +603,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The location of the trancode folder with filename.
    */
-  public static function get_uri_data_transcode_file($filename) {
-    return self::trim_uri(self::get_uri_data_transcode()) . $filename;
+  public static function get_uri_temporary_file($filename) {
+    return self::trim_uri(self::get_uri_temporary()) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($filename);
   }
 
   /**
@@ -503,8 +617,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The location of the trancode folder with filename.
    */
-  public static function get_realpath_data_transcode_file($filename) {
-    return mediamosa_io::realpath(self::get_uri_data_transcode_file($filename));
+  public static function get_realpath_temporary_file($filename) {
+    return mediamosa_io::realpath(self::get_uri_temporary_file($filename));
   }
 
   /**
@@ -517,7 +631,7 @@ abstract class mediamosa_storage {
    *   The uri to the status file.
    */
   public static function get_uri_status_file($filename) {
-    return self::get_uri_data_transcode() . rawurlencode($filename) . '.status';
+    return self::get_uri_temporary_file($filename . '.status');
   }
 
   /**
@@ -863,6 +977,11 @@ abstract class mediamosa_storage {
    * @param string $sannas_mount_point
    */
   public static function mediafile_update_mointpoint($mediafile, $sannas_mount_point) {
+    if (is_string($mediafile)) {
+      // Provided ID? Then get array from db.
+      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile);
+    }
+
     $fields = array(
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => $sannas_mount_point,
     );
@@ -891,14 +1010,6 @@ abstract class mediamosa_storage {
       mediamosa_watchdog::log('Not coping mediafile; source and target are the same.');
       return;
     }
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($source_uri);
-// @todo: remove from release.
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($destination_uri);
-// @todo: remove from release.
 
     // Find the stream wrapper.
     $mediamosa_io_streamwrapper_source = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);

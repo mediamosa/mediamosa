@@ -137,6 +137,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Dump mediafiles.
     $this->dumpMediafiles();
 
+    // Dump transitions.
+    $this->dumpTransitions();
+
     // Clean up stuff.
     mediamosa_media_ticket::ticket_cleanup();
 
@@ -156,8 +159,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
         // Might already been deleted.
         if ($mediafile && mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile))) {
-          // Delete uploaded file by deleting the mediafile.
-          mediamosa_asset_mediafile::delete($mediafile_id);
+// @todo: remove from release.
+//          // Delete uploaded file by deleting the mediafile.
+//          mediamosa_asset_mediafile::delete($mediafile_id);
+// @todo: remove from release.
 
           // Check if the file has been deleted.
 // @todo: remove from release.
@@ -179,7 +184,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump assets
    */
   protected function dumpAssets() {
-    $assets = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->fields('a')->execute();
+    $assets = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->fields('a')->orderBy(mediamosa_asset_db::CREATED)->execute();
     mediamosa_watchdog::log('Dumping asset table contents.');
     foreach ($assets as $asset) {
       mediamosa_watchdog::log_export($asset);
@@ -190,12 +195,23 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump mediafiles with their metadata.
    */
   protected function dumpMediafiles() {
-    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->execute();
+    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->orderBy(mediamosa_asset_mediafile_db::CREATED)->execute();
     mediamosa_watchdog::log('Dumping mediafile table contents.');
     foreach ($mediafiles as $mediafile) {
       $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile[mediamosa_asset_mediafile_db::ID]);
       mediamosa_watchdog::log_export($mediafile);
       mediamosa_watchdog::log_export($mediafile_metadata);
+    }
+  }
+
+  /**
+   * Dump transition registration table.
+   */
+  protected function dumpTransitions() {
+    $transitions = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 't')->fields('t')->execute();
+    mediamosa_watchdog::log('Dumping transition table contents.');
+    foreach ($transitions as $transition) {
+      mediamosa_watchdog::log_export($transition);
     }
   }
 

@@ -10,14 +10,14 @@ if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
   return;
 }
 
-class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
   // ------------------------------------------------------------------ Methods.
   public static function getInfo() {
     // Only available when these are set.
     if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
       return array(
-        'name' => 'MediaMosa Storage - Amazon S3 jobs test',
-        'description' => 'Tests for Amazon S3 jobs upload and download.',
+        'name' => 'MediaMosa Storage - Amazon S3 jobs profile test',
+        'description' => 'Test if upload is correctly uploaded to S3 after local upload.',
         'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
       );
     }
@@ -25,9 +25,9 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
 
   // ---------------------------------------------------------------- Functions.
   /**
-   * Test upload and download jobs.
+   * Test auto upload to s3.
    */
-  public function testJobs() {
+  public function testJobsProfile() {
     // If s3 object is missing, stop the test.
     if (!$this->s3) {
       return;
@@ -36,10 +36,20 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     // My app ID.
     $app_id = $this->a_app['app_id'];
 
+    // Create default profile.
+    $this->createS3Profile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+    $this->var_export($storage_profile_app);
+
     // Do upload.
     $upload = $this->uploadTestFile();
-//    $asset_id = $upload['asset_id'];
+    $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
 
     // Now transcode local file.
     // Create transcode job.
@@ -49,17 +59,48 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     $this->doQueueCycleAll();
 
     // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Add mediafile clean up and get the first transcoded mediafile.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if (!$mediafile_id_transcoded && $mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break 2;
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
+    }
+
+    // Check if files are on s3.
+    $uri_original = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+    $uri_transcode = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id_transcoded);
+
+    $this->file_exists($uri_original);
+    $this->file_exists($uri_transcode);
+
+return;
+
+
+
+
+
+
+
+
+    // Get the asset.
     $mediafile = $this->getMediafile($mediafile_id);
     $this->var_export($mediafile);
 
     // At this point our mediafile is local, we haven't attached the S3 profile
     // on our App. Will do that now.
 
-    // Create default profile.
-    $this->createS3Profile();
-
-    // Get my default app storage.
-    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
 
     // Create the destination uri.
     $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);

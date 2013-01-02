@@ -37,7 +37,7 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
     $paths = array(
       mediamosa_storage::get_uri_mediafile_path($mediafile_id),
       mediamosa_storage::get_uri_media_ticket(),
-      mediamosa_storage::get_uri_data_transcode(),
+      mediamosa_storage::get_uri_temporary(),
     );
 
     $this->var_export($paths);

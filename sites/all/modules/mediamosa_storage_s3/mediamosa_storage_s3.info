@@ -20,4 +20,5 @@ files[] = tests/mediamosa_storage_s3.simpletest.class.inc
 ; Test.
 files[] = tests/mediamosa_storage_s3.basic.test
 files[] = tests/mediamosa_storage_s3.io.test
+files[] = tests/mediamosa_storage_s3.jobs.profile.test
 files[] = tests/mediamosa_storage_s3.jobs.test

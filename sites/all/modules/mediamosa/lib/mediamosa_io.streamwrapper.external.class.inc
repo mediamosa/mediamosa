@@ -8,7 +8,7 @@
  * The uri of typical external mediamosa stream;
  *
  * Uri:
- * {scheme}://{storage_profile_id}/[path][/-/mediafile_path].
+ * {scheme}://{storage_profile_id}[/path][/-/mediafile_path].
  *
  * Difference with local wrapper is that storage_profile_id in uri is required.
  */
@@ -23,10 +23,22 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
   }
 
   /**
-   * External stream wrappers can not provide a local (realpath) file location.
+   * External stream wrappers can not provide a local (realpath) file location,
+   * unless the file exists in transition.
+   *
+   * Its required that the $this->uri is complete with mediafile ID.
    */
-  final function realpath() {
-    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH, array('@class' => __CLASS__), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, FALSE);
+  public function realpath() {
+    // External stream wrappers may use the version in transition, if we can
+    // find it (and has correct md5).
+    $transition_uri = mediamosa_storage_transition::find_transition_file($this);
+
+    if (empty($transition_uri)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL, array('@uri' => $this->uri));
+    }
+
+    // Get the local path.
+    return mediamosa_io::realpath($transition_uri);
   }
 
   /**
@@ -40,26 +52,6 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
 
     //$path = str_replace('\\', '/', $this->getTarget());
     //return self::getDirectoryPath() . '/' . drupal_encode_path($path);
-  }
-
-  /**
-   * Returns the working path. Any info used by storage profile object is
-   * stripped from the path.
-   *
-   * Expects the path to be [storage_profile_id]/[path][/-/mediafile_path].
-   *
-   * @return string
-   *   The storage path.
-   */
-  public function getTarget($uri = NULL) {
-    // When $uri is provided, then we must assume that we are not in 'realpath'
-    // mode.
-    if (!empty($uri)) {
-      return parent::getTarget($uri);
-    }
-
-    // Build target.
-    return mediamosa_storage::trim_uri($this->get_path()) . $this->get_mediafile_path();
   }
 
   // --------------------------------------------------------- Abstract methods.

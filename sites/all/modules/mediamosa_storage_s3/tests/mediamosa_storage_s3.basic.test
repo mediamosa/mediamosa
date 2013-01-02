@@ -56,14 +56,14 @@ class MediaMosaS3BasicTestCaseEga extends MediaMosaS3BaseTestCaseEga {
 
     // Now download the file again.
     $dest_path = mediamosa_storage::get_realpath_transition();
-    $this->isOKS3Response($this->s3->_download($this->getBucketName(), $source_filename, $dest_path . '/' . $filename));
+    $this->isOKS3Response($this->s3->_download($this->getBucketName(), $source_filename, $dest_path . '/' . $this->testId . '/' . $filename));
 
     // Get bucket headers.
     $this->var_export($this->s3->get_object_filesize($this->getBucketName(), $source_filename));
 
     // Check if file is present and remove it again.
-    if ($this->file_exists($dest_path . '/' . $filename)) {
-      $this->unlink($dest_path . '/' . $filename);
+    if ($this->file_exists($dest_path .  '/' . $this->testId . '/' . $filename)) {
+      $this->unlink($dest_path .  '/' . $this->testId . '/' . $filename);
     }
   }
 }

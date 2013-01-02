@@ -74,6 +74,12 @@ function mediamosa_stream_wrappers() {
       'description' => t('Transitional local files for temporary usage and kept as long as the transition diskspace allows it.'),
       'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
     ),
+    'mediamosa-storage-transition-links' => array(
+      'name' => t('Transition MediaMosa links'),
+      'class' => 'mediamosa_io_streamwrapper_local_transition_links',
+      'description' => t('Transitional links are symlinks to transition files.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
   );
 
   // When in simpletest, add our simpletest wrapper.

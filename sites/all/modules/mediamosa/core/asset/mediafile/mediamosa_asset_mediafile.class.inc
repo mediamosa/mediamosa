@@ -557,7 +557,7 @@ class mediamosa_asset_mediafile {
       }
 
       // Remove the prefix from the metadata and move into the metadata array of the asset.
-      foreach ($items[$mediafile_id] as $key => $value) {
+      foreach (array_keys($items[$mediafile_id]) as $key) {
         if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is it an metadata tag?
           $new_key = mediamosa_unicode::substr($key, mediamosa_unicode::strlen($prefix));
           $items[$mediafile_id]['metadata'][$new_key] = $items[$mediafile_id][$key];
@@ -693,7 +693,20 @@ class mediamosa_asset_mediafile {
     $execution_string .= (count($options) ? ' ' . implode(' ', $options) : '');
 
     // Return the result from the exec.
-    return mediamosa_io::exec($execution_string . ' 2>&1');
+    $analyse_result =  mediamosa_io::exec($execution_string . ' 2>&1');
+
+    // Store parsed result.
+    $parsed_analyse_result = array();
+
+    // Walk through results and make proper array.
+    foreach ($analyse_result as $line) {
+      if (strpos($line, ':') !== FALSE) {
+        list($name, $value) = explode(':', $line, 2);
+        $parsed_analyse_result[trim($name)] = trim($value);
+      }
+    }
+
+    return $parsed_analyse_result;
   }
 
   /**

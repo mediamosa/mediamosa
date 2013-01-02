@@ -103,11 +103,11 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       // Get bucket.
       $bucket = $this->get_bucket();
 
-      // Get path.
-      $path = $this->getTarget();
+      // Get mediafile path.
+      $medaifile_path = $this->get_mediafile_path();
 
       // Get MD5.
-      $md5s[$this->uri] = $s3->_getMD5($bucket, $path);
+      $md5s[$this->uri] = $s3->_getMD5($bucket, $medaifile_path);
 
       // Still empty? Set to default (as unknown).
       if (empty($md5s[$this->uri])) {
@@ -143,7 +143,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       $bucket = $this->get_bucket();
 
       // Get path.
-      $path = $this->getTarget();
+      $path = $this->get_mediafile_path();
 
       // Need real path.
       $transition_path = mediamosa_io::realpath($transition_uri);
@@ -152,9 +152,14 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       }
 
       // Now download.
-      if (!$s3->isOKS3Response($s3->_download($bucket, $path, $transition_path)) || !mediamosa_io::file_exists($transition_uri)) {
+      if (!$s3->_download($bucket, $path, $transition_path)->isOK()) {
         // Failed, throw.
         throw new mediamosa_storage_s3_exception('Failed to download file.');
+      }
+
+      if (!mediamosa_io::file_exists($transition_uri)) {
+        // Failed, throw.
+        throw new mediamosa_storage_s3_exception('Failed to download file, file was not found.');
       }
     }
 
@@ -591,25 +596,15 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $object_name = $this->get_mediafile_path();
 
     // Do delete.
-    $response = $s3->delete_object($bucket, $object_name);
-    // @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($response);
-// @todo: remove from release.
-
-
-    return $response->isOK();
-
 		return $s3->delete_object($bucket, $object_name)->isOK();
 	}
 
 	/**
 	 * Renames a file or directory.
    *
-   * This method is called in response to php:rename().
+   * This method is called in response to php:rename(). Both uris must be on
+   * the same location.
    *
-   * FIXME: rename expects source to be file on s3, which can not be depended
-   *        on; source can be any uri.
 	 *
 	 * @param string $path_from
    *   The URL to the current file.
@@ -848,11 +843,6 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 		$out[8] = $out['atime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
 		$out[9] = $out['mtime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
 		$out[10] = $out['ctime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($out);
-// @todo: remove from release.
-
 
     return $out;
 	}

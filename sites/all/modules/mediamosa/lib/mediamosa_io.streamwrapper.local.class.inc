@@ -110,7 +110,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
       // No need to delete destination, as copy will replace it.
     }
     else {
-      // @todo: remove from release.
+// @todo: remove from release.
       mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
       mediamosa_debug::log_export(mediamosa_io::dirname($this->uri));
 // @todo: remove from release.
@@ -164,7 +164,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    * Validate the uri format.
    *
    * Expects;
-   * {scheme}://{storage_profile_id}[/{path}][/-/{mediafile_path}]
+   * {scheme}://[/{path}][/-/{mediafile_path}]
    *
    * @param string $uri
    *   The uri to validate.
@@ -264,28 +264,6 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    */
   public function getDirectoryPath() {
     return rtrim(mediamosa::is_windows_platform() ? static::get_storage_path_windows() : static::get_storage_path_linux(), '/');
-  }
-
-  /**
-   * Implements getTarget()
-   */
-  public function getTarget($uri = NULL) {
-    // When $uri is provided, then we must assume that we are not in 'realpath'
-    // mode.
-    if (!empty($uri)) {
-      return parent::getTarget($uri);
-    }
-
-    // Target.
-    $target = parent::getTarget();
-
-    // Target might contain mediafile path.
-    if (strpos($target, '/-/') !== FALSE) {
-      list($target, $mediafile_path) = explode('/-/', $target, 2);
-      return trim($target . '/' . $mediafile_path, '/');
-    }
-
-    return $target;
   }
 
   // ------------------------------------------------------------------ Methods.

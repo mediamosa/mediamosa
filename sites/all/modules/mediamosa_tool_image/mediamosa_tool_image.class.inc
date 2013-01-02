@@ -86,7 +86,7 @@ class mediamosa_tool_image {
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
       // Dest.
-      $mediafile_dest = mediamosa_storage::get_realpath_data_transcode_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
       $options = array(
         '@mediafile_dest' => $mediafile_dest,

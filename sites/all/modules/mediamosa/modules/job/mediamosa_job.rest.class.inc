@@ -234,7 +234,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     }
 
     // Create it.
-    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), $priority, $hint);
+    $job_id = mediamosa_job::create_job_analyse($app_id, $user_id, $is_app_admin, $mediafile_id, $priority, $hint);
 
     // Add job_id.
     $mediamosa->add_item(array('job_id' => $job_id));
@@ -614,7 +614,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         break;
 
       default:
-        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
+        $job_id = mediamosa_job::create_job($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
         break;
     }
 

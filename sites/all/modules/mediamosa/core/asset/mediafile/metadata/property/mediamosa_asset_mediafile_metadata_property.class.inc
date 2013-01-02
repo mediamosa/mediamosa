@@ -105,6 +105,8 @@ class mediamosa_asset_mediafile_metadata_property {
   /**
    * Get the property.
    *
+   * FIXME: caching here is not used (see usage of get_property()).
+   *
    * @param string $prop_id
    *   The ID of the property to get.
    * @param boolean $reset

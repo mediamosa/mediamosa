@@ -33,14 +33,14 @@ class MediaMosaMkdir extends MediaMosaTestCase {
     drupal_rmdir($storage . 'baz');
 
     // Determine test sannas dir.
-    $storage = mediamosa_storage::get_uri_data_transcode();
+    $storage = 'mediamosa-storage-transition-links://';
 
-    drupal_rmdir($storage . 'foo');
-    drupal_rmdir($storage . 'bar' . DIRECTORY_SEPARATOR . 'foo');
-    drupal_rmdir($storage . 'bar');
-    drupal_rmdir($storage . 'baz' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo');
-    drupal_rmdir($storage . 'baz' . DIRECTORY_SEPARATOR . 'bar');
-    drupal_rmdir($storage . 'baz');
+    drupal_rmdir($storage . 'foouri');
+    drupal_rmdir($storage . 'baruri' . DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($storage . 'baruri');
+    drupal_rmdir($storage . 'bazuri' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo');
+    drupal_rmdir($storage . 'bazuri' . DIRECTORY_SEPARATOR . 'bar');
+    drupal_rmdir($storage . 'bazuri');
 
     parent::teardown();
   }
@@ -50,6 +50,8 @@ class MediaMosaMkdir extends MediaMosaTestCase {
    * Test the mkdir() function.
    */
   public function testMkdir() {
+    // My app ID.
+    $app_id = rand(1000, 1100);
 
     // Determine test sannas dir.
     $storage = mediamosa_storage::get_realpath();
@@ -86,33 +88,68 @@ class MediaMosaMkdir extends MediaMosaTestCase {
      */
 
     // Determine test sannas dir.
-    $storage = mediamosa_storage::get_uri_data_transcode();
+    $storage = 'mediamosa-storage-transition-links://';
 
     // Call mkdir.
-    $path = $storage . 'foo';
-    mediamosa_io::mkdir($path, TRUE, 0775);
-    $perms = substr(sprintf('%o', fileperms($path)), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('foo'): $perms");
+    $uri = $storage . 'foouri';
+    mediamosa_io::mkdir($uri, TRUE, 0775);
+
+    $realpath = mediamosa_io::realpath($uri);
+    $this->dir_exists($uri);
+    $this->dir_exists($realpath);
+
+    $perms = substr(sprintf('%o', fileperms($realpath)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('foouri'): $perms");
 
     // Call mkdir with 2 levels deep.
-    $path = $storage . 'bar' . DIRECTORY_SEPARATOR . 'foo';
+    $uri = $storage . 'baruri' . DIRECTORY_SEPARATOR . 'foo';
+    mediamosa_io::mkdir($uri, TRUE, 0775);
 
-    mediamosa_io::mkdir($path, TRUE, 0775);
-    $perms = substr(sprintf('%o', fileperms($path)), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('bar/foo'): $perms");
-    $perms = substr(sprintf('%o', fileperms($storage . 'bar')), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('bar/foo'): $perms");
+    $realpath = mediamosa_io::realpath($uri);
+    $this->dir_exists($uri);
+    $this->dir_exists($realpath);
+
+    $perms = substr(sprintf('%o', fileperms($realpath)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('baruri/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms(mediamosa_io::realpath($storage . 'baruri'))), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('baruri/foo'): $perms");
 
     // Call mkdir with 3 levels deep.
-    $path = $storage . 'baz' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo';
+    $uri = $storage . 'bazuri' . DIRECTORY_SEPARATOR . 'bar' . DIRECTORY_SEPARATOR . 'foo';
+    mediamosa_io::mkdir($uri, TRUE, 0775);
 
-    mediamosa_io::mkdir($path, TRUE, 0775);
-    $perms = substr(sprintf('%o', fileperms($path)), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('baz/bar/foo'): $perms");
-    $perms = substr(sprintf('%o', fileperms($storage . 'baz' . DIRECTORY_SEPARATOR . 'bar')), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('baz/bar/foo'): $perms");
-    $perms = substr(sprintf('%o', fileperms($storage . 'baz')), -4);
-    $this->assertEqual($perms, '0775', "Testing chmod rights of baz after mkdir('baz/bar/foo'): $perms");
+    $realpath = mediamosa_io::realpath($uri);
+    $this->dir_exists($uri);
+    $this->dir_exists($realpath);
+
+    $perms = substr(sprintf('%o', fileperms($realpath)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('bazuri/bar/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms(mediamosa_io::realpath($storage . 'bazuri' . DIRECTORY_SEPARATOR . 'bar'))), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of bar after mkdir('bazuri/bar/foo'): $perms");
+    $perms = substr(sprintf('%o', fileperms(mediamosa_io::realpath($storage . 'bazuri'))), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of baz after mkdir('bazuri/bar/foo'): $perms");
+
+    // Call mkdir with mediafile ID.
+    $uri = $storage . mediamosa_io_streamwrapper::create_uri_mediafile_id_path(mediamosa_db::uuid($app_id));
+    $this->pass($uri);
+    mediamosa_io::mkdir($uri, TRUE, 0775);
+
+    $realpath = mediamosa_io::realpath($uri);
+    $this->dir_exists($uri);
+    $this->dir_exists($realpath);
+
+    $perms = substr(sprintf('%o', fileperms($realpath)), -4);
+    $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('" . $uri . "'): $perms");
+
+    $uri = $storage . '2' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path(mediamosa_db::uuid($app_id));
+    $this->pass($uri);
+    mediamosa_io::mkdir($uri, TRUE, 0775);
+
+    $realpath = mediamosa_io::realpath($uri);
+    $this->dir_exists($uri);
+    $this->dir_exists($realpath);
+
+    drupal_rmdir($uri);
   }
 }
 

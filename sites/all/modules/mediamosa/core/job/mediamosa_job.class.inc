@@ -371,7 +371,7 @@ class mediamosa_job {
     mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest);
+    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest);
 
     // Create sub transcode job.
     mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id);
@@ -427,7 +427,7 @@ class mediamosa_job {
     }
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id_source, $create_still, $still_parameters, $priority, FALSE, $mediafile_dest);
+    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id_source, $create_still, $still_parameters, $priority, FALSE, $mediafile_dest);
 
     // Create sub transcode job.
     mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id_source);
@@ -467,7 +467,7 @@ class mediamosa_job {
   public static function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array(), $priority = NULL) {
     if (self::is_still_creatable($mediafile_id)) {
       // Create job.
-      $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
+      $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
 
       // Create sub still job.
       mediamosa_job_still::create($job_id, $still_parameters);
@@ -499,7 +499,7 @@ class mediamosa_job {
     mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
+    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
 
     // Create sub upload job.
     mediamosa_job_upload::create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode, $create_still);
@@ -530,7 +530,7 @@ class mediamosa_job {
    */
   public static function create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id, $priority = 0) {
     // Create job.
-    return self::create(
+    return self::create_job(
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
       $app_id,
       $user_id,
@@ -555,24 +555,22 @@ class mediamosa_job {
    *   Is user superuser?
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param string $source_uri
-   *   The source uri.
    * @param integer $priority
    *   The priority for job.
    *
    * @return integer
    *   The job ID or FALSE.
    */
-  public static function create_job_media_upload($app_id, $user_id, $is_app_admin, $mediafile_id, $source_uri, $priority = 0) {
+  public static function create_job_media_upload($app_id, $user_id, $is_app_admin, $mediafile_id, $priority = 0) {
     // Create job.
-    return self::create(
+    return self::create_job(
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
       $app_id,
       $user_id,
       $is_app_admin,
       $mediafile_id,
       FALSE,
-      array('source_uri' => $source_uri),
+      array(),
       $priority
     );
   }
@@ -604,7 +602,7 @@ class mediamosa_job {
    */
   public static function create_job_media_move($app_id, $user_id, $is_app_admin, $mediafile_id, $storage_profile_id, $path, $priority = 0) {
     // Create job.
-    return self::create(
+    return self::create_job(
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
       $app_id,
       $user_id,
@@ -614,6 +612,33 @@ class mediamosa_job {
       array('storage_profile_id' => $storage_profile_id, 'path' => $path),
       $priority
     );
+  }
+
+  /**
+   * Create analyse job.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param string $user_id
+   *   The owner of the job.
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   * @param string $mediafile_id
+   *   The ID of the mediafile to analyse.
+   * @param integer $priority
+   *   The job priority.
+   * @param boolean $hint
+   *   Hinting of the mediafile.
+   *
+   * @return integer
+   *   The job ID.
+   */
+  public static function create_job_analyse($app_id, $user_id, $is_app_admin, $mediafile_id, $priority = NULL, $hint = FALSE) {
+    // Create mediadownload job.
+    self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
+
+    // Create analyse job.
+    return self::create_job(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), $priority, $hint);
   }
 
   /**
@@ -627,7 +652,7 @@ class mediamosa_job {
    * @param bool $create_still
    * @param array $still_parameters
    */
-  public static function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
+  public static function create_job($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
 
     // Get the mediafile.
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);

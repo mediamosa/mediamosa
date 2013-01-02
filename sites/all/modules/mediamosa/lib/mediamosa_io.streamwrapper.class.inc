@@ -219,30 +219,36 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
 
   // --------------------------------------------------- Stream wrapper methods.
   /**
-   * Returns the local writable target of the resource within the stream.
+   * Returns the working path. Any info used by storage profile object is
+   * stripped from the path.
    *
-   * This function should be used in place of calls to realpath() or similar
-   * functions when attempting to determine the location of a file. While
-   * functions like realpath() may return the location of a read-only file, this
-   * method may return a URI or path suitable for writing that is completely
-   * separate from the URI used for reading.
-   *
+   * Expects the path to be [storage_profile_id]/[path][/-/mediafile_path].
    * @param string $uri
    *   (optional) The uri.
    *
-   * @return string|boolean
-   *   Returns a string representing a location suitable for writing of a file,
-   *   or FALSE if unable to write to the file such as with read-only streams.
+   * @return string
+   *   The storage path.
    */
-  protected function getTarget($uri = NULL) {
-    if (!isset($uri)) {
-      $uri = $this->uri;
+  public function getTarget($uri = NULL) {
+    // When $uri is provided, then we must assume that we are not in 'realpath'
+    // mode.
+    if (!empty($uri)) {
+      list(, $target) = explode('://', $uri, 2);
+      return $target;
     }
 
-    list(, $target) = explode('://', $uri, 2);
+    $targets = array();
+    $path = $this->get_path();
+    $mediafile_path = $this->get_mediafile_path();
 
-    // Return target.
-    return $target;
+    if ($path != '') {
+      $targets[] = $path;
+    }
+    if ($mediafile_path != '') {
+      $targets[] = $mediafile_path;
+    }
+
+    return implode('/', $targets);
   }
 
   /**
@@ -252,7 +258,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * my code not to translate information in uri into path data. Also breaks
    * if directory does not exists.
    */
-  function realpath() {
+  public function realpath() {
     // Extra debug.
     if (mediamosa::in_simpletest_sandbox()) {
       $this->validate_uri($this->uri);
@@ -424,7 +430,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
 
     // No parts, then suspect the result as mediafile_id.
     if (count($parts) == 1) {
-      return $parts;
+      return mediamosa_io::get_base_filename(reset($parts));
     }
 
     // At least 2 parts.
@@ -432,11 +438,11 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
     // One letter?
     if (strlen($parts[0]) == 1) {
       // Expect 2nd part to be mediafile.
-      return $parts[1];
+      return mediamosa_io::get_base_filename($parts[1]);
     }
 
     // 2nd part must be mediafile_id.
-    return $parts[2];
+    return mediamosa_io::get_base_filename($parts[2]);
   }
 
   /**

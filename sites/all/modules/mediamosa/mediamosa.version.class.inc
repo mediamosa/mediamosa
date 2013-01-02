@@ -3,8 +3,8 @@
 // Change build number and version here.
 define('MEDIAMOSA_BUILD', 1971);
 define('MEDIAMOSA_VERSION', '3.4.x');
-define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Inuitsbuild');
-define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Inuitsbuild');
+define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-beta-1');
+define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-beta-1');
 
 /**
  * @file

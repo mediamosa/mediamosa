@@ -221,6 +221,7 @@ class mediamosa_sdk {
   const ERRORCODE_STORAGE_IO_ERROR = 4004;
   const ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH = 4005;
   const ERRORCODE_STORAGE_CHECKSUM_FAILURE = 4006;
+  const ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL = 4007;
 
   // ---------------------------------------------------------------- Var Types.
   // Do not make the ID value longer than 32 characters.

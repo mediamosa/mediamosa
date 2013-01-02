@@ -3904,6 +3904,14 @@ function mediamosa_update_7151() {
       mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STILL_FAILED_TO_CREATE,
     ))
   ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL',
+      mediamosa_error_db::MESSAGE => "External file (@uri) not found locally",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL,
+    ))
+  ->execute();
 }
 
 /**

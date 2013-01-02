@@ -169,6 +169,19 @@ class mediamosa_io {
   }
 
   /**
+   * Test if uri is realpath or uri format.
+   *
+   * @param string $uri
+   *   The uri to test.
+   *
+   * @return boolean
+   *   Returns TRUE when uri.
+   */
+  public static function is_uri($uri) {
+    return self::get_uri_scheme($uri) != '';
+  }
+
+  /**
    * Return the scheme of the uri.
    *
    * @param string $uri
@@ -347,16 +360,16 @@ class mediamosa_io {
     $uri_scheme = self::get_uri_scheme($uri);
 
     // Get path without scheme.
-    $uri_path = $uri_scheme == '' ? trim($uri, $separators) : self::get_uri_path($uri);
+    $uri_path = ($uri_scheme == '' ? trim($uri, $separators) : self::get_uri_path($uri));
 
-    // Either scheme:// or '/'.
-    $uri_scheme = $uri_scheme == '' ? (drupal_substr($uri, 0, 1) == '/' ? '/' : '') : ($uri_scheme . '://');
+    // Either scheme:/ or '' (will add '/' because of implode).
+    $uri_scheme = ($uri_scheme == '' ? '' : ($uri_scheme . ':/'));
 
     // Split up on separator(s).
     $parts = preg_split('/[' . preg_quote($separators, '/') . ']/', $uri_path, -1, PREG_SPLIT_NO_EMPTY);
 
     // Path to rebuild.
-    $path = array();
+    $path = array($uri_scheme);
 
     // Now do recursive on the parts.
     for ($x = 0; $x < count($parts); $x++) {
@@ -368,12 +381,12 @@ class mediamosa_io {
         if (!isset($parts[++$x])) {
           continue;
         }
-        $path[] = $part;
+        $path[] = '/' . $part;
         $part = $parts[$x];
       }
 
       $path[] = $part;
-      $uri = $uri_scheme . implode($path, DIRECTORY_SEPARATOR);
+      $uri = implode($path, DIRECTORY_SEPARATOR);
 
       if (!self::file_exists($uri)) {
         if (!drupal_mkdir($uri, $mode, TRUE)) {
@@ -494,6 +507,13 @@ class mediamosa_io {
   /**
    * Move one file to other file (rename).
    *
+   * Notes;
+   * It will not move local to external locations.
+   * It will not move across different external locations.
+   * You can only move files externally when source and destination are the
+   * same location.
+   * You can move files across local locations.
+   *
    * @param string $from_uri
    *   Rename from name.
    * @param string $to_uri
@@ -507,14 +527,56 @@ class mediamosa_io {
     $message = 'cause unknown';
 
     try {
-      // Make sure dest. map exists.
-      self::mkdir(dirname($to_uri), TRUE);
+      $mediamosa_io_streamwrapper_from = NULL;
+      $mediamosa_io_streamwrapper_to = NULL;
 
-      $from_realpath = mediamosa_io::realpath($from_uri);
-      $to_realpath = mediamosa_io::realpath($to_uri);
+      // Create wrapper when we can. If we can not, its a local path.
+      if (self::is_uri($from_uri)) {
+        $mediamosa_io_streamwrapper_from = mediamosa_io::require_stream_wrapper_instance_by_uri($from_uri);
+      }
 
-      // Now rename.
-      $success = rename($from_realpath, $to_realpath);
+      // Create wrapper when we can. If we can not, its a local path.
+      if (self::is_uri($to_uri)) {
+        $mediamosa_io_streamwrapper_to = mediamosa_io::require_stream_wrapper_instance_by_uri($to_uri);
+      }
+
+      // What is local?
+      $from_is_local = !$mediamosa_io_streamwrapper_from || ($mediamosa_io_streamwrapper_from && $mediamosa_io_streamwrapper_from->is_local());
+      $to_is_local = !$mediamosa_io_streamwrapper_to || ($mediamosa_io_streamwrapper_to && $mediamosa_io_streamwrapper_to->is_local());
+
+      // Is both local?
+      if ($from_is_local && $to_is_local) {
+        // Both are local.
+        //
+        // Make sure dest. map exists.
+        self::mkdir(self::dirname($to_uri), TRUE);
+
+        // To realpath.
+        $from_realpath = mediamosa_io::realpath($from_uri);
+        $to_realpath = mediamosa_io::realpath($to_uri);
+
+        // Rename.
+        $success = rename($from_realpath, $to_realpath);
+      }
+      elseif (!$from_is_local && !$to_is_local) {
+        // Both external, must be same location. Compare storage profile ID.
+        if ($mediamosa_io_streamwrapper_from->get_storage_profile_id() != $mediamosa_io_streamwrapper_to->get_storage_profile_id()) {
+          // Both external, but not same location.
+          throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t('cannot rename a file across external wrapper types')));
+        }
+
+        // Same location external, we can rename.
+        //
+        // Make sure dest. map exists.
+        self::mkdir(self::dirname($to_uri), TRUE);
+
+        // Rename using the streamwrapper.
+        $success = $mediamosa_io_streamwrapper_from->rename($from_uri, $to_uri);
+      }
+      else {
+        // One external, one local, not allowed.
+        throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t('cannot rename a file across wrapper types')));
+      }
     }
     catch (Exception $e) {
       $message = $e->getMessage();
@@ -523,14 +585,14 @@ class mediamosa_io {
     if (!$success || !self::file_exists($to_uri)) {
       self::log("Renaming file '@old_name' to '@new_name' failed, @message.",
         array(
-          '@old_name' => $from_realpath,
-          '@new_name' => $to_realpath,
+          '@old_name' => $from_uri,
+          '@new_name' => $to_uri,
           '@message' => $message,
         )
       );
     }
     else {
-      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => $from_realpath, '@new_name' => $to_realpath));
+      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => mediamosa_io::realpath_safe($from_uri), '@new_name' => mediamosa_io::realpath_safe($to_uri)));
     }
 
     return $success;
@@ -612,12 +674,36 @@ class mediamosa_io {
    *   Link to file to create.
    */
   public static function symlink($target_uri, $link_uri, $make_relative = TRUE) {
+// @todo: remove from release.
+    mediamosa_debug::log_export('***** TRACE ***** ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+// @todo: remove from release.
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($target_uri);
+// @todo: remove from release.
+
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($link_uri);
+// @todo: remove from release.
+
+
     $target = self::realpath($target_uri);
     $link = self::realpath($link_uri);
     if (empty($target) || empty($link)) {
       self::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
       return FALSE;
     }
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($target);
+// @todo: remove from release.
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($link);
+// @todo: remove from release.
+
+
 
     if ($make_relative) {
       // Make symlinks targets relative.

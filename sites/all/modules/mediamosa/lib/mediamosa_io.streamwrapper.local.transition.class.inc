@@ -58,6 +58,44 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
     return $md5;
   }
 
+  /**
+   * Overrule, so we can remove possible symlink to us.
+   *
+   * @param string $uri
+   *   The uri.
+   */
+  public function unlink($uri) {
+    // Store.
+    $this->uri = $uri;
+
+    // Translate, but catch any exceptions.
+    try {
+      // Get the mediafile ID.
+      $mediafile_id = $this->get_mediafile_id();
+
+      // Build up the link.
+      $link_uri = 'mediamosa-storage-transition-links://' . self::create_uri_mediafile_id_path($mediafile_id);
+
+      if (mediamosa_io::file_exists($link_uri)) {
+        // Need to identify the file.
+        $inode = fileinode($this->realpath());
+
+        // Get target.
+        $link_target = readlink(mediamosa_io::realpath($link_uri));
+
+        // Ok, symlink points to us, we can savely remove the symlink.
+        if (fileinode($link_target) == $inode) {
+          mediamosa_io::unlink($link_uri);
+        }
+      }
+    }
+    catch (mediamosa_exception $e) {
+      // Ignore.
+    }
+
+    parent::unlink($uri);
+  }
+
   // --------------------------------------------------------- Abstract methods.
   /**
    * Validate the uri format.
@@ -75,6 +113,29 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
     $reg = '#^.*[a-zA-Z0-9]/[a-zA-Z0-9]+/[a-zA-Z0-9]+$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
+  }
+
+  // ----------------------------------------------------------- Create symlink.
+  /**
+   * Create symlink for data usage to our file.
+   *
+   * If any symlink already exists, we will remove it.
+   */
+  public function create_transition_symlink_data() {
+    // Get the mediafile ID.
+    $mediafile_id = $this->get_mediafile_id();
+
+    // Build up the link.
+    $link_uri = 'mediamosa-storage-transition-links://' . self::create_uri_mediafile_id_path($mediafile_id);
+
+    // Remove it before we attempt to create it.
+    mediamosa_io::unlink($link_uri);
+
+    // Create the directory.
+    mediamosa_io::mkdir(mediamosa_io::dirname($link_uri));
+
+    // Create the symlink.
+    mediamosa_io::symlink($this->uri, $link_uri);
   }
 
   // ---------------------------------------------- MediaMosa related functions.

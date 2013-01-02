@@ -68,6 +68,8 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Is a file.
     $this->is_file($mediafile_uri);
 
+    $this->var_export(mediamosa_io::dirname($mediafile_uri));
+
     // Is a dir.
     $this->is_dir(mediamosa_io::dirname($mediafile_uri));
 

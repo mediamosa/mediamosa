@@ -338,7 +338,7 @@ class mediamosa_exception_error_still_is_not_creatable extends mediamosa_excepti
 // In case stream wrapper can not be located.
 class mediamosa_exception_error_streamwrapper_not_found extends mediamosa_exception_error {
   public function __construct($args = array()) {
-    parent::__construct(mediamosa_error::ERRORCODE_STORAGE_STREAMWRAPPER_NOT_FOUND, $args, self::MEDIAMOSA_EXCEPTION_SEVERITY_LOW, FALSE);
+    parent::__construct(mediamosa_error::ERRORCODE_STORAGE_STREAMWRAPPER_NOT_FOUND, $args, self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, FALSE);
   }
 }
 

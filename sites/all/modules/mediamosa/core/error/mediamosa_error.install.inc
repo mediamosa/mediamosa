@@ -212,6 +212,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_STORAGE_IO_ERROR' => "Storage IO error, @error",
     'ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH' => "Streamwrapper class @class is an external storage type and does not support local paths (realpath)",
     'ERRORCODE_STORAGE_CHECKSUM_FAILURE' => "Checksum failed on file during @during for mediafile with ID '@id'",
+    'ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL' => "External file (@uri) not found locally",
   );
 
   $query = array();

@@ -321,7 +321,7 @@ class mediamosa_job_scheduler {
             // metadata.
             mediamosa_asset_mediafile_metadata::store_analyse(
               (string) $response_data->items->item[$i]->job_id,
-              explode("\n", (string) $response_data->items->item[$i]->analyse_result)
+              unserialize((string) $response_data->items->item[$i]->analyse_result)
             );
             break;
 
@@ -433,7 +433,6 @@ class mediamosa_job_scheduler {
     $job_info = self::get_transcodejob_info($job_id);
 
     // Get Asset.
-    // @todo: do must exists.
     $asset = mediamosa_asset::get($job_info['asset_id']);
     assert(!empty($asset));
 
@@ -459,6 +458,9 @@ class mediamosa_job_scheduler {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
+
+    //  Relocate mediafile if final storage location is not local.
+    mediamosa_storage::relocate_mediafile_to_external($job_info['app_id'], $mediafile_id_dest, TRUE);
 
     // Perform a post transcode, if supported.
     if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_transcode')) {
@@ -490,7 +492,7 @@ class mediamosa_job_scheduler {
    */
   public static function add_still_to_db($job_id, $filenames) {
     // Scene changes.
-    $scene_realpath = mediamosa_storage::get_realpath_data_transcode_file($job_id . '_scene.txt');
+    $scene_realpath = mediamosa_storage::get_realpath_temporary_file($job_id . '_scene.txt');
 
     $scenes = array();
 
@@ -569,7 +571,7 @@ class mediamosa_job_scheduler {
     mediamosa_job::set_progress($job_id, '1.000', FALSE, mediamosa_job_db::JOB_STATUS_FAILED);
 
     // Trigger url.
-    mediamosa_job::notify_transcoding($status, mediamosa_job_db::JOBSTATUS_FAILED, $job_id);
+    mediamosa_job::notify_transcoding($status, mediamosa_job_db::JOB_STATUS_FAILED, $job_id);
   }
 
   /**
@@ -818,9 +820,6 @@ class mediamosa_job_scheduler {
    *   The mediafile ID.
    */
   public static function start_server_analyse_job($job_id, $uri, $mediafile_id) {
-
-    // Delete metadata.
-    mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
 
     // GET parameters.
     $query_data = array(

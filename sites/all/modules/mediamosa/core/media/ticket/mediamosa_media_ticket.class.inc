@@ -219,6 +219,11 @@ class mediamosa_media_ticket {
     // Add reg ex.
     $args['-regex'] = "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]{" . mediamosa_settings::UUID_LENGTH . "}+?$";
 
+    $params = array();
+    foreach ($args as $cmd => $arg) {
+      $params[] = $cmd . ' ' . escapeshellarg($arg);
+    }
+
     mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
   }
 

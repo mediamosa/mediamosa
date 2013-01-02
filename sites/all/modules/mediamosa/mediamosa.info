@@ -50,6 +50,7 @@ files[] = lib/mediamosa_io.streamwrapper.local.simpletest.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.stills.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.temporary.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.transition.class.inc
+files[] = lib/mediamosa_io.streamwrapper.local.transition.links.class.inc
 files[] = lib/mediamosa_lib.class.inc
 files[] = lib/mediamosa_mimetype.class.inc
 files[] = lib/mediamosa_search.class.inc
@@ -254,7 +255,8 @@ files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket
 files[] = core/statistics/mediamosa_statistics.class.inc
 
 ; Storage.
-files[] = core/configuration/storage/mediamosa_configuration_storage.class.inc
+files[] = core/storage/transition/mediamosa_storage_transition_db.class.inc
+files[] = core/storage/transition/mediamosa_storage_transition.class.inc
 files[] = core/storage/profile/mediamosa_storage_profile_db.class.inc
 files[] = core/storage/profile/mediamosa_storage_profile.class.inc
 files[] = core/storage/profile/app/mediamosa_storage_profile_app_db.class.inc

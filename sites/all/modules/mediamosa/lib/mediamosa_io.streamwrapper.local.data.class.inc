@@ -26,6 +26,6 @@ class mediamosa_io_streamwrapper_local_data extends mediamosa_io_streamwrapper_l
     }
 
     $target = parent::getTarget();
-    return 'data' . (empty($target) ? '' : '/' . $target);
+    return 'data' . ($target == '' ? '' : ('/' . $target));
   }
 }
