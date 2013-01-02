@@ -3910,8 +3910,14 @@ function mediamosa_update_7151() {
     '{base_uri}ticket/{TICKET}',
   );
 
-  // Replace the server paths with the media variant.
-  db_update('mediamosa_server')->fields(array('server_path' => '{base_uri}media/{TICKET}'))->condition('server_path', $paths, 'IN')->execute();
+  // Get all servers with matching replacement for ticket url.
+  $nids = mediamosa_db::db_select('mediamosa_server', 's')->fields('s', array('nid'))->condition('server_path', $paths, 'IN')->execute()->fetchCol();
+
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $node) {
+    $node->server_path = '{base_uri}media/{TICKET}';
+    node_save($node);
+  }
 
   // Done.
   return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
