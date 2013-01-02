@@ -307,11 +307,15 @@ function _mediamosa_maintenance_status_configuration_generate() {
     mediamosa_server_db::SERVER_TYPE_STREAMING,
   ));
 
-  // Create test file in /media dir.
-  $filename = mediamosa_storage::get_uri_media() . '0/t/test.txt';
-  if (!mediamosa_io::file_exists($filename)) {
-    mediamosa_io::mkdir(mediamosa_io::dirname($filename));
-    mediamosa_io::touch($filename);
+  try {
+    // Create test file in /media dir.
+    $filename = mediamosa_storage::get_uri_media() . '0/t/test.txt';
+    if (!mediamosa_io::file_exists($filename)) {
+      mediamosa_io::mkdir(mediamosa_io::dirname($filename));
+      mediamosa_io::touch($filename);
+    }
+  }
+  catch (Exception $e) {
   }
 
   foreach ($servers as $key => $server) {

@@ -911,7 +911,7 @@ class mediamosa_io {
    * function is unspecified and may differ between operating systems and
    * PHP versions.
    *
-   * @param string $directory
+   * @param string $uri
    *   A directory of the filesystem or disk partition.
    *
    * @return float
@@ -919,18 +919,18 @@ class mediamosa_io {
    *
    * @link http://php.net/manual/en/function.disk-free-space.php
    */
-  public static function disk_free_space($directory) {
-    return disk_free_space($directory);
+  public static function disk_free_space($uri) {
+    return disk_free_space(mediamosa_io::realpath($uri));
   }
 
   /**
    * Returns available space on filesystem or disk partition.
    *
-   * @param string $directory
+   * @param string $uri
    *   The directory to get totals from.
    */
-  public static function disk_total_space($directory) {
-    return disk_total_space($directory);
+  public static function disk_total_space($uri) {
+    return disk_total_space(mediamosa_io::realpath($uri));
   }
 
   /**

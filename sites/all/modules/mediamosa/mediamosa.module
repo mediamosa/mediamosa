@@ -30,7 +30,7 @@ function mediamosa_mediamosa_storage_info() {
 function mediamosa_stream_wrappers() {
   $wrappers = array();
 
-  // Do not use our stream wrappers during update or at the point our stream
+  // Do not use our stream wrappers during update and at the point our stream
   // wrappers are not known.
   if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update' && drupal_get_installed_schema_version('mediamosa', TRUE) < 7142) {
     return $wrappers;
@@ -80,17 +80,13 @@ function mediamosa_stream_wrappers() {
       'description' => t('Transitional links are symlinks to transition files.'),
       'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
     ),
-  );
-
-  // When in simpletest, add our simpletest wrapper.
-  if (mediamosa::in_simpletest_sandbox()) {
-    $wrappers['mediamosa-storage-simpletest'] = array(
+    'mediamosa-storage-simpletest' => array(
       'name' => t('MediaMosa storage simpletest mount point location'),
       'class' => 'mediamosa_storage_simpletest_stream_wrapper',
       'description' => t('All files and symbolic links used by MediaMosa during Simpletest.'),
       'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
-    );
-  }
+    ),
+  );
 
   return $wrappers;
 }

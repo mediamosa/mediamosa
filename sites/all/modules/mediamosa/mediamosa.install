@@ -4019,6 +4019,17 @@ function mediamosa_update_7156() {
   variable_set('mediamosa_current_mount_point_transition_windows', variable_get('mediamosa_current_mount_point_transition_windows', $mountpoint_windows . '\data\transition'));
 }
 
+/**
+ * Create the new mediamosa media ticket table.
+ */
+function mediamosa_update_7157() {
+  // Install the mediamosa_media_ticket table.
+  _mediamosa_media_ticket_install();
+
+  // Drop mediamosa_ticket table.
+  db_drop_table('mediamosa_ticket');
+}
+
 ///**
 // * Create the new media object directory under mount point.
 // */

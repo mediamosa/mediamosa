@@ -26,7 +26,7 @@ function mediamosa_maintenance_status_component_generate() {
   $results = array();
 
   // Get the mount point. The mount point always ends with DIRECTORY_SEPARATOR.
-  $mount_point = mediamosa_storage::get_realpath();
+  $mount_point = mediamosa_storage::get_uri();
 
   // ------------------------------------------------------- SANNAS mount point.
   $results['mount_set'] = array(
@@ -42,17 +42,17 @@ function mediamosa_maintenance_status_component_generate() {
   );
 
   // --------------------------------------------------- SANNAS media/.htaccess.
-  $path = mediamosa_storage::get_realpath_media();
+  $path = mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_media());
   $found = mediamosa_io::file_exists($path . '.htaccess');
 
   // Create when missing.
   if (!$found && is_writable($mount_point)) {
     // Make the [mount_point]/media directory.
-    mediamosa_io::mkdir($path . '/ticket/');
+    mediamosa_io::mkdir($path . 'ticket/');
     $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
   }
 
-  $htaccess = explode("\n", trim(file_get_contents($path . '/.htaccess')));
+  $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
   foreach ($htaccess as $key => $line) {
     $htaccess[$key] = trim($line, "\n\r\t ");
   }
