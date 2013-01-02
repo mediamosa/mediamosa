@@ -48,11 +48,6 @@ files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.upload.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.watermark.test
 
-; Media.
-files[] = mediafile/media/mediamosa_asset_mediafile_media.permanent_link.test
-files[] = mediafile/media/mediamosa_asset_mediafile_media.rest.class.inc
-files[] = mediafile/media/mediamosa_asset_mediafile_media.test
-
 ; Mediafile Still Upload.
 files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.rest.class.inc
 files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.test

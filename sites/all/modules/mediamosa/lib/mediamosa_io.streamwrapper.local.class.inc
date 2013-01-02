@@ -110,12 +110,6 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
       // No need to delete destination, as copy will replace it.
     }
     else {
-// @todo: remove from release.
-      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-      mediamosa_debug::log_export(mediamosa_io::dirname($this->uri));
-// @todo: remove from release.
-
-
       // Make sure directory exists.
       mediamosa_io::mkdir(mediamosa_io::dirname($this->uri));
     }

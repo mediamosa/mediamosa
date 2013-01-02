@@ -21,6 +21,7 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
         'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
       );
     }
+    return array();
   }
 
   // ---------------------------------------------------------------- Functions.

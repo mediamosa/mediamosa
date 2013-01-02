@@ -65,7 +65,7 @@ abstract class mediamosa_storage {
    * @return
    *   Array with upload parameters
    */
-  public abstract function get_upload_parameters($app_id, $user_id, $group_id);
+  //public abstract function get_upload_parameters($app_id, $user_id, $group_id);
 
   // -------------------------------------------------------------- Constructor.
   /**
@@ -668,7 +668,7 @@ abstract class mediamosa_storage {
    * @return string
    *   The uri.
    */
-  protected static function get_uri_media() {
+  public static function get_uri_media() {
     return 'mediamosa-storage-media://';
   }
 

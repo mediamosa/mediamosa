@@ -55,9 +55,9 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
     throw new mediamosa_exception_program_error('The usage of ' . __CLASS__ . '::' . __FUNCTION__ . '() is not supported in this class.');
   }
 
-  public function get_upload_parameters($app_id, $user_id, $group_id) {
-    throw new mediamosa_exception_program_error('The usage of ' . __CLASS__ . '::' . __FUNCTION__ . '() is not supported in this class.');
-  }
+//  public function get_upload_parameters($app_id, $user_id, $group_id) {
+//    throw new mediamosa_exception_program_error('The usage of ' . __CLASS__ . '::' . __FUNCTION__ . '() is not supported in this class.');
+//  }
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -416,12 +416,8 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
     // Get current location.
     $source_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
 
-// Find the stream wrapper.
+    // Find the stream wrapper.
     $mediamosa_io_streamwrapper_source = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($source_uri);
-// @todo: remove from release.
 
     // Only local files.
     if (!$mediamosa_io_streamwrapper_source->is_local()) {
@@ -445,10 +441,6 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
     // and will move file if md5 in uri does not match file. It expects that
     // the MD5 of the file is correct.
     $transition_uri = self::register_transition_file($transition_uri);
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($transition_uri);
-// @todo: remove from release.
 
     // Need streamwrapper.
     $mediamosa_io_streamwrapper_transition = mediamosa_io::require_stream_wrapper_instance_by_uri($transition_uri);

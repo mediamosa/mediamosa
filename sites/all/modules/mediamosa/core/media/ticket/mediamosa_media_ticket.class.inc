@@ -214,7 +214,7 @@ class mediamosa_media_ticket {
     $args['-mindepth']--;
 
     // Add one hour.
-    $args['-mmin'] = '+' . (int) $expire + 60;
+    $args['-mmin'] = '+' . ($expire + 60);
 
     // Add reg ex.
     $args['-regex'] = "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]{" . mediamosa_settings::UUID_LENGTH . "}+?$";

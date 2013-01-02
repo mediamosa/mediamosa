@@ -70,9 +70,9 @@ class mediamosa_storage_example extends mediamosa_storage {
    * @return
    *   Array with upload parameters
    */
-  public function get_upload_parameters($app_id, $user_id, $group_id) {
-    return array();
-  }
+//  public function get_upload_parameters($app_id, $user_id, $group_id) {
+//    return array();
+//  }
 }
 
 class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwrapper_external {

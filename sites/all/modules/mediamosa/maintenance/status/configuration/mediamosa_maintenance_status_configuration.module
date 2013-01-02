@@ -308,7 +308,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   ));
 
   // Create test file in /media dir.
-  $filename = mediamosa_storage::get_realpath_media() . '/0/t/test.txt';
+  $filename = mediamosa_storage::get_uri_media() . '0/t/test.txt';
   if (!mediamosa_io::file_exists($filename)) {
     mediamosa_io::mkdir(mediamosa_io::dirname($filename));
     mediamosa_io::touch($filename);
@@ -316,7 +316,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   foreach ($servers as $key => $server) {
     // Check if we can find the file.
-    $url = rtrim($server[mediamosa_server_db::SERVER_URI], '/') . '/media/0/t/test.txt';
+    $url = mediamosa_storage::trim_uri($server[mediamosa_server_db::SERVER_URI]) . 'media/0/t/test.txt';
     $result = mediamosa_http::drupal_http_request($url);
 
     // Must be 200 code and NOT served by mediamosa.

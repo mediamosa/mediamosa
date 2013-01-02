@@ -26,6 +26,7 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
         'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
       );
     }
+    return array();
   }
 
   // ------------------------------------------------------------------ Methods.

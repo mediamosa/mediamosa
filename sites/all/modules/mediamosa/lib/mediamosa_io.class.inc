@@ -374,6 +374,10 @@ class mediamosa_io {
     // Now do recursive on the parts.
     for ($x = 0; $x < count($parts); $x++) {
       $part = $parts[$x];
+      // No empty parts.
+      if ($part === '') {
+        continue;
+      }
 
       // The '-' will happen because our stream uri have '/-/' as path <->
       // mediafile_path seperator.
@@ -674,36 +678,12 @@ class mediamosa_io {
    *   Link to file to create.
    */
   public static function symlink($target_uri, $link_uri, $make_relative = TRUE) {
-// @todo: remove from release.
-    mediamosa_debug::log_export('***** TRACE ***** ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-// @todo: remove from release.
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($target_uri);
-// @todo: remove from release.
-
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($link_uri);
-// @todo: remove from release.
-
-
     $target = self::realpath($target_uri);
     $link = self::realpath($link_uri);
     if (empty($target) || empty($link)) {
       self::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
       return FALSE;
     }
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($target);
-// @todo: remove from release.
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($link);
-// @todo: remove from release.
-
-
 
     if ($make_relative) {
       // Make symlinks targets relative.

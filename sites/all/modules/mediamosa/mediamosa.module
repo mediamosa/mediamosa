@@ -28,12 +28,12 @@ function mediamosa_mediamosa_storage_info() {
  * Implements hook_stream_wrappers().
  */
 function mediamosa_stream_wrappers() {
-
   $wrappers = array();
 
-  // Class might not be registered by autoloader yet on release.
-  if (!class_exists('mediamosa_storage')) {
-    require_once 'core/storage/mediamosa_storage.class.inc';
+  // Do not use our stream wrappers during update or at the point our stream
+  // wrappers are not known.
+  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update' && drupal_get_installed_schema_version('mediamosa', TRUE) < 7142) {
+    return $wrappers;
   }
 
   // Our MediaMosa Stream Wrappers.
@@ -706,7 +706,7 @@ function mediamosa_mediamosa_configuration_collect() {
   $form['settings_storage']['temporary']['mediamosa_current_mount_point_temporary'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa temporary system path'),
-    '#description' => t('The lin'),
+    '#description' => t('The linux temporary system path'),
     '#required' => TRUE,
     '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary', '/srv/mediamosa'),
   );
