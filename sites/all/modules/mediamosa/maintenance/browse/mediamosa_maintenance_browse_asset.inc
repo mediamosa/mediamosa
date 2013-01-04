@@ -627,12 +627,14 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
-
+    
     // Mediafile properties.
     $rows = array();
     $rows[] = array(t('Mediafile id'), $item['mediafile_id']);
+    $rows[] = array(t('Mount pount uri'), $item['sannas_mount_point']);
     $rows[] = array(t('Owner id'), $item['owner_id']);
     $rows[] = array(t('Group id'), $item['group_id']);
+    $rows[] = array(t('MD5'), $item['metadata']['md5']);
     $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
     $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
     $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');

@@ -21,6 +21,24 @@
 require_once 'mediamosa_io.streamwrapper.class.inc';
 
 class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
+  // --------------------------------------------------- Stream wrapper methods.
+  /**
+   * Overrides getExternalUrl().
+   */
+  public function getExternalUrl() {
+    return '';
+
+//    $path = str_replace('\\', '/', $this->getTarget());
+//    return url('system/temporary/' . $path, array('absolute' => TRUE));
+  }
+
+  /**
+   * Implements getDirectoryPath().
+   */
+  public function getDirectoryPath() {
+    return rtrim(mediamosa::is_windows_platform() ? $this->get_storage_path_windows() : $this->get_storage_path_linux(), '/');
+  }
+
   // --------------------------------------------------------- Abstract methods.
   /**
    * Build the storage object that belongs to this streamwrapper.
@@ -206,7 +224,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    * Validate the uri format.
    *
    * Expects;
-   * mediafile_id[0]/mediafile_id
+   * mediafile_id[0]/mediafile_id[.ext]
    *
    * Remember that mediafile_id is optional.
    *
@@ -242,24 +260,6 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     return $md5s[$this->uri];
   }
 
-  // --------------------------------------------------- Stream wrapper methods.
-  /**
-   * Overrides getExternalUrl().
-   */
-  public function getExternalUrl() {
-    return '';
-
-//    $path = str_replace('\\', '/', $this->getTarget());
-//    return url('system/temporary/' . $path, array('absolute' => TRUE));
-  }
-
-  /**
-   * Implements getDirectoryPath().
-   */
-  public function getDirectoryPath() {
-    return rtrim(mediamosa::is_windows_platform() ? static::get_storage_path_windows() : static::get_storage_path_linux(), '/');
-  }
-
   // ------------------------------------------------------------------ Methods.
   /**
    * Get the root of the storage setting for linux.
@@ -267,23 +267,25 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_linux() {
+  public function get_storage_path_linux() {
     if (mediamosa::in_simpletest_sandbox()) {
-      return mediamosa_storage_simpletest_stream_wrapper::get_storage_path_linux();
+      $wrapper = new mediamosa_storage_simpletest_stream_wrapper();
+      return $wrapper->get_storage_path_linux();
     }
 
     return mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
   }
 
   /**
-   * Get the root of the storage setting for windows.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_windows() {
+  public function get_storage_path_windows() {
     if (mediamosa::in_simpletest_sandbox()) {
-      return mediamosa_storage_simpletest_stream_wrapper::get_storage_path_windows();
+      $wrapper = new mediamosa_storage_simpletest_stream_wrapper();
+      return $wrapper->get_storage_path_windows();
     }
 
     return mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\');

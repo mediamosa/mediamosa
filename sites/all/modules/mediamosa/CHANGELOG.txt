@@ -14,7 +14,7 @@
 
 
 
-MediaMosa 3.4.x-dev (build 1931, inuits branch)
+MediaMosa 3.4.x-dev (build 1975, inuits branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -110,6 +110,9 @@ MediaMosa 3.4.x-dev (build 1931, inuits branch)
 - Rewritten some queries into mediamosa_db::db_merge() variants.
 - External generated files like ASX helper files or now stored under
   media/object and no longer misuse the location where still links where stored.
+- Removed usage of the static:: (loose static option of PHP5.3) and rewrite into
+  method usage.
+- Fixed bug in mediamosa_io::mkdir() when uri contained mediafile ID splitter.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

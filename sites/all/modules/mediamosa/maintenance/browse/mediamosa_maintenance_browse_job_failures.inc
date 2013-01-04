@@ -214,7 +214,7 @@ function _mediamosa_browse_job_failures_reanalyse_transcode($jobs = array()) {
 
     // Create the job.
     if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE) {
-      mediamosa_job::create_analyse_job($owner_id, $asset_id, $mediafile_id, $app_id);
+      mediamosa_job::create_job_analyse($app_id, $owner_id, FALSE, $mediafile_id);
     }
     elseif ($job_type == mediamosa_job_db::JOB_TYPE_TRANSCODE) {
       $job_transcode = mediamosa_job_transcode::get($job_id);

@@ -42,7 +42,7 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
    *   The uri of the storage profile.
    */
   public function build_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
-    return self::get_scheme($is_still) . '://';
+    return $this->get_scheme($is_still) . '://';
   }
 
   /**
@@ -69,7 +69,7 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
    * @return string
    *   The uri of the moint point to store.
    */
-  public static function get_scheme($is_still = FALSE) {
+  public function get_scheme($is_still = FALSE) {
     return 'mediamosa-storage-transition';
   }
 
@@ -230,6 +230,28 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
   }
 
   /**
+   * Remove mediafile from transition space; mediafile has been deleted.
+   *
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   */
+  public static function delete_mediafile($mediafile_id) {
+    $md5s = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')
+      ->fields('st', array(
+        mediamosa_storage_transition_db::MD5,
+      ))
+      ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute()
+      ->fetchCol();
+
+    // Now build the transition uri.
+    foreach ($md5s as $md5) {
+      $transition_uri = self::build_transition_uri($mediafile_id, $md5);
+      self::unregister_transition_file($transition_uri);
+    }
+  }
+
+  /**
    * Delete entry from database.
    *
    * @param string $mediafile_id
@@ -283,7 +305,7 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
       }
     }
 
-    return self::get_scheme() . '://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id) . '/' . $md5;
+    return 'mediamosa-storage-transition://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id) . '/' . $md5;
   }
 
   /**

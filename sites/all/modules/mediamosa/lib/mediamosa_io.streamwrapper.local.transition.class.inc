@@ -138,28 +138,32 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
     mediamosa_io::symlink($this->uri, $link_uri);
   }
 
-  // ---------------------------------------------- MediaMosa related functions.
+  // ------------------------------------------------------------------ Methods.
   /**
-   * Get the root of the transition setting for linux.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_linux() {
+  public function get_storage_path_linux() {
     if (mediamosa::in_simpletest_sandbox()) {
-      return mediamosa_storage::trim_uri(mediamosa_storage_simpletest_stream_wrapper::get_storage_path_linux()) . 'data/transition';
+      return mediamosa_storage::trim_uri(parent::get_storage_path_linux()) . 'data/transition';
     }
 
     return mediamosa::variable_get('mediamosa_current_mount_point_transition', '/srv/mediamosa/data/transition');
   }
 
   /**
-   * Get the root of the transition setting for windows.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_windows() {
+  public function get_storage_path_windows() {
+    if (mediamosa::in_simpletest_sandbox()) {
+      return mediamosa_storage::trim_uri(parent::get_storage_path_windows()) . 'data/transition';
+    }
+
     return mediamosa::variable_get('mediamosa_current_mount_point_transition_windows', '\\');
   }
 }

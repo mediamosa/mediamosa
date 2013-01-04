@@ -38,6 +38,9 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
    *   The storage profile.
    */
   protected function createMountPointProfile($app_id = 0) {
+    // Create wrapper.
+    $wrapper = new mediamosa_storage_simpletest_stream_wrapper();
+
     // Create the one and only default local storage
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE, 'MediaMosa mountpoint storage');
     $node->{mediamosa_storage_profile_db::TYPE} = mediamosa_storage_mountpoint::NAME;
@@ -45,8 +48,8 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
     $node->{mediamosa_storage_profile_db::VERSION} = 0;
     $node->{mediamosa_storage_profile_db::PROFILE} = 'MediaMosa Mount Point storage';
     $node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} = mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE;
-    $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT} = mediamosa_storage_simpletest_stream_wrapper::get_storage_path_linux();
-    $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS} = mediamosa_storage_simpletest_stream_wrapper::get_storage_path_windows();
+    $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT} = $wrapper->get_storage_path_linux();
+    $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS} = $wrapper->get_storage_path_windows();
     node_save($node);
 
     $node_profile = node_load($node->nid);

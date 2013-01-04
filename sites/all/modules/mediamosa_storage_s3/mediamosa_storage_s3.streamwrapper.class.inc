@@ -173,7 +173,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 
       // Check md5.
       if ($md5_source != $md5) {
-        throw new mediamosa_storage_s3_exception("Download failed: file does not match stored md5: '@md5'. Downloaded file got '@md5_source'.", array('@md5' => $md5, '@md5_source' => $md5_source));
+        throw new mediamosa_storage_s3_exception(t("Download failed: file does not match stored md5: '@md5'. Downloaded file got '@md5_source'.", array('@md5' => $md5, '@md5_source' => $md5_source)));
       }
     }
 

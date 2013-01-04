@@ -75,7 +75,8 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
 //    // Create storage profile app and attach it to default.
 //    $this->attachStorageProfile($app_id, 1, 'data', 1, 'data/stills');
 
-    $path_prefix = mediamosa_storage::trim_uri(mediamosa_io_streamwrapper_local::get_storage_path_linux());
+    $wrapper = new mediamosa_io_streamwrapper_local();
+    $path_prefix = mediamosa_storage::trim_uri($wrapper->get_storage_path_linux());
 
     // Now do real path and check result.
     $path = mediamosa_io::realpath('mediamosa-storage-data://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id));

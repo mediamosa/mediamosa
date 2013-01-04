@@ -6,12 +6,13 @@
 
 /**
  * Execute a REST call.
+ *
  * @param string $uri
- *  The URI of the REST call.
+ *   The URI of the REST call.
  * @param string $method
- *  The Method (POST/GET/PUT).
+ *   The Method (POST/GET/PUT).
  * @param array $data
- *  Array name => value.
+ *   Array name => value.
  */
 function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
 

@@ -3269,7 +3269,7 @@ function mediamosa_update_7129() {
  */
 function mediamosa_update_7130() {
     // Create the new directory.
-  $path = mediamosa_storage_local::get_scheme();
+  $path = mediamosa_storage_local::SCHEME;
   mediamosa_io::move($path . '://data/simpletest', $path . '://media/simpletest');
 }
 
@@ -3704,7 +3704,7 @@ function mediamosa_update_7146() {
 function mediamosa_update_7147() {
 
   // Destination.
-  $data_destination_mf = mediamosa_storage_local::get_scheme(TRUE) . '://';
+  $data_destination_mf = mediamosa_storage_local::SCHEME_STILLS . '://';
 
   // Source dir stills.
   $data_source_stills = mediamosa_storage::get_uri_data() . 'stills/';

@@ -53,10 +53,7 @@ class mediamosa_media {
    */
   const MEDIA_VIEW_TICKET_ID = 'ticket_id';
   const MEDIA_VIEW_FILENAME = 'filename';
-  const MEDIA_VIEW_PATH = 'path';
   const MEDIA_VIEW_LINK = 'link';
-  const MEDIA_VIEW_TARGET = 'target';
-  const MEDIA_VIEW_SERVER_URI = 'server_uri';
   const MEDIA_VIEW_SERVER_URI_BUILD = 'server_uri_build';
 
   // ---------------------------------------------------------------- Functions.
@@ -359,14 +356,10 @@ class mediamosa_media {
    *   An associative array; (see mediamosa_media::MEDIA_VIEW_*)
    *   - 'ticket_id'
    *     The ticket ID used.
-   *   - 'path'
-   *     The path to use for URL's
    *   - 'link'
    *     The symbolic link complete path.
-   *   - 'target'
-   *     The target file.
-   *   - 'server_uri'
-   *     Unprocessed server uri.
+   *   - 'filename'
+   *     The filename of the media.
    *   - 'server_uri_build'
    *     The finished server uri.
    */
@@ -379,8 +372,8 @@ class mediamosa_media {
     // Make sure the physical file exists.
     mediamosa_storage::file_must_exist($mediafile_id);
 
-    // Get the permanent status.
-    $is_permanent = mediamosa_media::allow_permanent($mediafile, $is_app_admin);
+    // Get the permanent status, public mediafiles can be public.
+    $is_public = mediamosa_media::is_public($mediafile, $is_app_admin);
 
     // Get the filename.
     $filename = self::get_media_filename($mediafile);
@@ -390,7 +383,7 @@ class mediamosa_media {
 
     // Only store temporary tickets.
     // Is a permanent link?
-    if ($is_permanent) {
+    if ($is_public) {
       $ticket_id = $mediafile_id;
 
       // Get the paths needed for the symlink.
@@ -443,10 +436,7 @@ class mediamosa_media {
     return array(
       self::MEDIA_VIEW_TICKET_ID => $ticket_id,
       self::MEDIA_VIEW_FILENAME => $filename,
-      self::MEDIA_VIEW_PATH => $path,
       self::MEDIA_VIEW_LINK => $link,
-      self::MEDIA_VIEW_TARGET => mediamosa_io::realpath($target_uri),
-      self::MEDIA_VIEW_SERVER_URI => $server_uri,
       self::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri_build,
     );
   }
@@ -1063,7 +1053,8 @@ class mediamosa_media {
   }
 
   /**
-   * Test if a permanent mediafile link can be made.
+   * Test if a perminant mediafile link can be made, is only available for
+   * public mediafiles.
    *
    * @param array $mediafile
    *   The mediafile to test.
@@ -1072,7 +1063,7 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error_is_inappropriate
    */
-  public static function allow_permanent(array $mediafile, $is_app_admin) {
+  public static function is_public(array $mediafile, $is_app_admin) {
     // Protected mediafiles can not be permanent.
     try {
       return !mediamosa_asset_mediafile::is_mediafile_protected_ext($mediafile);
@@ -1094,7 +1085,7 @@ class mediamosa_media {
    * @param string $mediafile_id
    *   The mediafile to remove link from.
    */
-  public static function remove_permanent_link($app_id, $mediafile_id) {
+  public static function remove_public_link($app_id, $mediafile_id) {
     // Remove permanent links of mediafile.
     mediamosa_io::exec(
       strtr(
@@ -1113,7 +1104,7 @@ class mediamosa_media {
    * @param string $asset_id
    *   The asset ID.
    */
-  public static function remove_permanent_link_asset($asset_id) {
+  public static function remove_public_link_asset($asset_id) {
 
     // Get the mediafiles.
     $mediafiles = mediamosa_asset_mediafile::get_by_asset_id(
@@ -1126,7 +1117,7 @@ class mediamosa_media {
 
     // Remove all from asset.
     foreach ($mediafiles as $mediafile_id => $mediafile) {
-      self::remove_permanent_link($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile_id);
+      self::remove_public_link($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile_id);
     }
   }
 

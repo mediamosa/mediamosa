@@ -980,7 +980,8 @@ class mediamosa_job_server {
     $base_filename = mediamosa_io::get_base_filename($job_id);
 
     // Check if there really is an image ($file_size > 0)
-    $filename = mediamosa_storage::get_realpath_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+    $filename = mediamosa_storage::get_uri_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+
     if (!mediamosa_io::file_exists($filename) || !mediamosa_io::filesize($filename)) {
       // Something failed, very likely the frametime was too high. Remove the
       // files and fail the job.

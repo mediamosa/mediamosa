@@ -1235,7 +1235,7 @@ class mediamosa_asset {
     // mediafiles.
     if (!is_null($is_unappropriate)) {
       // Remove all perm. links from all mediafiles of this asset.
-      mediamosa_media::remove_permanent_link_asset($asset_id);
+      mediamosa_media::remove_public_link_asset($asset_id);
     }
 
     // Change the owner_id / group_id of mediafiles and jobs

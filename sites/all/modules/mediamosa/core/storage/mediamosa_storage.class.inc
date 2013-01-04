@@ -40,7 +40,7 @@ abstract class mediamosa_storage {
    * @return string
    *   The uri of the moint point to store.
    */
-  public abstract static function get_scheme($is_still = FALSE);
+  public abstract function get_scheme($is_still = FALSE);
 
   /**
    * Return the storage options available for the storage type
@@ -99,7 +99,7 @@ abstract class mediamosa_storage {
    *   The uri of the storage profile.
    */
   public function build_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
-    return self::trim_uri(static::get_scheme($is_still) . '://' . $storage_profile_id) . $path;
+    return self::trim_uri($this->get_scheme($is_still) . '://' . $storage_profile_id) . $path;
   }
 
   /**
@@ -423,9 +423,10 @@ abstract class mediamosa_storage {
     // New location for mediafile is transition.
     $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
 
-    // Update mount point with transition location.
+    // Update mount point with transition location, but use the link to the
+    // file.
     if ($is_new) {
-      mediamosa_storage::mediafile_update_mointpoint($mediafile_id, $mediamosa_io_streamwrapper_destination->get_uri_mount_point());
+      mediamosa_storage::mediafile_update_mointpoint($mediafile_id, mediamosa_storage::get_uri_transition_links());
     }
 
     // Transition can not be the final location. So create a upload job to

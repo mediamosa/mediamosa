@@ -1,46 +1,21 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Contains CQL exceptions defines
  */
 
-define("MEDIAMOSA_CQL_EXCEPTION_SEVERITY_HIGH", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
-define("MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NORMAL", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL);
-define("MEDIAMOSA_CQL_EXCEPTION_SEVERITY_LOW", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_LOW);
-define("MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NONE", 0);
+define('MEDIAMOSA_CQL_EXCEPTION_SEVERITY_HIGH', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+define('MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NORMAL', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL);
+define('MEDIAMOSA_CQL_EXCEPTION_SEVERITY_LOW', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_LOW);
+define('MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NONE', 0);
 
 /**
  * Default cql exception
  */
 class mediamosa_cql_exception extends mediamosa_exception {
 
-  public function __construct($s_message, $severity = MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NORMAL) {
-    parent::__construct(mediamosa_error::ERRORCODE_CQL_ERROR, $s_message, $severity);
+  public function __construct($message, $severity = MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NORMAL) {
+    parent::__construct(mediamosa_error::ERRORCODE_CQL_ERROR, $message, $severity, $severity > MEDIAMOSA_CQL_EXCEPTION_SEVERITY_NONE);
   }
 }
 

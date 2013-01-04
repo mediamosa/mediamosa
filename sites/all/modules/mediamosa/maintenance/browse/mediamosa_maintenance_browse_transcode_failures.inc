@@ -1,30 +1,4 @@
 <?php
-
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Failure browser, based on Collection browser.
@@ -88,7 +62,7 @@ function mediamosa_browse_transcode_failures_list_form() {
     '#description' => t('Below list displays the failed transcodings in the jobs table. Select the desired jobs and select a mass operation to apply.'),
     '#item_count_total' => t('Failed transcodings found: @total', array('@total' => $item_count_total))
   );
-  
+
   foreach ($result['items'] as $row) {
     $form['transfail']['table']['job_id' .  $row['transcode_job_id']]['job_id' . $row['transcode_job_id']] = array(
       '#type' => 'checkbox',
@@ -174,7 +148,7 @@ function _mediamosa_browse_transcode_failures_hidejobs($jobs) {
 }
 
 function _mediamosa_browse_transcode_failures_toggle_hidden() {
-  
+
   $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
 
   // Toggle hidden attribute
@@ -223,7 +197,7 @@ function _mediamosa_browse_transcode_failures_execute() {
   if((isset($session['visibility'])) && ($session['visibility']=='HIDDEN'))
     $params['visibility'] = $session['visibility'];
 
-  
+
   // Do the rest call.
   return mediamosa_response_connector::static_do_restcall_drupal('transcode/failures', 'GET', $params);
 }
@@ -296,7 +270,7 @@ function theme_mediamosa_browse_transcode_failures($variables) {
   foreach (element_children($table) as $key) {
     $element = &$table[$key];
     $row = array();
-    
+
     // Cycle through each test within the current group.
     foreach (element_children($element) as $test_name) {
       $test = $element[$test_name];

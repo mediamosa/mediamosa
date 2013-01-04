@@ -54,7 +54,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
    *   The uri of the storage profile.
    */
   public function build_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
-    return self::trim_uri(static::get_scheme() . '://' . $storage_profile_id) . $path;
+    return self::trim_uri($this->get_scheme($is_still) . '://' . $storage_profile_id) . $path;
   }
 
   /**
@@ -90,7 +90,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
    * @return string
    *   The uri of the moint point to store.
    */
-  public static function get_scheme($is_still = FALSE) {
+  public function get_scheme($is_still = FALSE) {
     return 'mediamosa-storage-mountpoint';
   }
 

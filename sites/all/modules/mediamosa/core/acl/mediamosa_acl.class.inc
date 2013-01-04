@@ -844,8 +844,8 @@ class mediamosa_acl {
             ->condition(mediamosa_asset_mediafile_db::ID, $acl_object_id)
             ->execute();
 
-          // ACL status changed, remove possible perm. link.
-          mediamosa_media::remove_permanent_link($app_id, $acl_object_id);
+          // ACL status changed, remove possible public link.
+          mediamosa_media::remove_public_link($app_id, $acl_object_id);
 
           // Reindex the asset using the mediafile ID.
           mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
@@ -878,7 +878,7 @@ class mediamosa_acl {
             ->execute();
 
           // ACL status changed, remove possible perm. link.
-          mediamosa_media::remove_permanent_link_asset($acl_object_id);
+          mediamosa_media::remove_public_link_asset($acl_object_id);
 
           // Reindex the asset.
           mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
@@ -995,7 +995,7 @@ class mediamosa_acl {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         // ACL status changed, remove possible perm. link.
-        mediamosa_media::remove_permanent_link($object_app_id, $acl_object_id);
+        mediamosa_media::remove_public_link($object_app_id, $acl_object_id);
 
         // Reindex the asset using the mediafile ID.
         mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
@@ -1003,7 +1003,7 @@ class mediamosa_acl {
 
       case mediamosa_acl::ACL_TYPE_ASSET:
         // ACL status changed, remove possible perm. link.
-        mediamosa_media::remove_permanent_link_asset($acl_object_id);
+        mediamosa_media::remove_public_link_asset($acl_object_id);
 
         // Reindex the asset using the mediafile ID.
         mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);

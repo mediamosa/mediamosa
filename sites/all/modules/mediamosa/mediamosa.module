@@ -815,15 +815,19 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
     drupal_set_message(t('<em>Warning, your !os MediaMosa storage file system path is not writable.</em>', array('!os' => mediamosa::is_windows_platform() ? 'Windows' : 'Linux')), 'warning');
   }
 
+  $wrapper_local = new mediamosa_io_streamwrapper_local();
+  $wrapper_local_stills = new mediamosa_io_streamwrapper_local_stills();
+  $wrapper_local_temporary = new mediamosa_io_streamwrapper_local_temporary();
+  $wrapper_local_transition = new mediamosa_io_streamwrapper_local_transition();
   if (
-    mediamosa_io_streamwrapper_local::get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point'] ||
-    mediamosa_io_streamwrapper_local::get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_windows'] ||
-    mediamosa_io_streamwrapper_local_stills::get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_stills'] ||
-    mediamosa_io_streamwrapper_local_stills::get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_stills_windows'] ||
-    mediamosa_io_streamwrapper_local_temporary::get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_temporary'] ||
-    mediamosa_io_streamwrapper_local_temporary::get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_temporary_windows'] ||
-    mediamosa_io_streamwrapper_local_transition::get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_transition'] ||
-    mediamosa_io_streamwrapper_local_transition::get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_transition_windows']
+    $wrapper_local->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point'] ||
+    $wrapper_local->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_windows'] ||
+    $wrapper_local_stills->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_stills'] ||
+    $wrapper_local_stills->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_stills_windows'] ||
+    $wrapper_local_temporary->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_temporary'] ||
+    $wrapper_local_temporary->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_temporary_windows'] ||
+    $wrapper_local_transition->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_transition'] ||
+    $wrapper_local_transition->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_transition_windows']
   ) {
     // Get the running jobs.
     $running_jobs = mediamosa_job::has_running_jobs();
@@ -997,9 +1001,10 @@ function mediamosa_file_mimetype_mapping_alter(&$mapping) {
  * Needs to appear being mediamosa_storage_local
  */
 function mediamosa_storage_local_mediamosa_storage_profile_view($node, $view_mode = 'full') {
+  $wrapper = new mediamosa_io_streamwrapper_local();
   $rows = array(
-    array(t('Linux Mount Point'), check_plain(mediamosa_io_streamwrapper_local::get_storage_path_linux())),
-    array(t('Windows Mount Point'), check_plain(mediamosa_io_streamwrapper_local::get_storage_path_windows())),
+    array(t('Linux Mount Point'), check_plain($wrapper->get_storage_path_linux())),
+    array(t('Windows Mount Point'), check_plain($wrapper->get_storage_path_windows())),
   );
   return $rows;
 }

@@ -79,7 +79,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
    * @return string
    *   The uri of the moint point to store.
    */
-  public static function get_scheme($is_still = FALSE) {
+  public function get_scheme($is_still = FALSE) {
     return 'mediamosa-storage-s3';
   }
 
@@ -154,7 +154,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
       throw new mediamosa_storage_s3_exception('There was a problem connecting to S3');
     }
     catch(Exception $e) {
-      throw new mediamosa_storage_s3_exception("There was a problem connecting to S3, message: '@message", array('@message' => $e->getMessage()));
+      throw new mediamosa_storage_s3_exception(t("There was a problem connecting to S3, message: '@message'", array('@message' => $e->getMessage())));
     }
 
     return $s3;

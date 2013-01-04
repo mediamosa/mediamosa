@@ -62,7 +62,8 @@ class mediamosa_rest_call_get_current_mount_point extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     // Get the linux mount point.
-    $current_mount_point = mediamosa_io_streamwrapper_local::get_storage_path_linux();
+    $wrapper = new mediamosa_io_streamwrapper_local();
+    $current_mount_point = $wrapper->get_storage_path_linux();
 
     // Add to output.
     $mediamosa->add_item(array('current_mount_point' => $current_mount_point));

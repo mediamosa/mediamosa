@@ -14,24 +14,24 @@
 require_once 'mediamosa_io.streamwrapper.class.inc';
 
 class mediamosa_io_streamwrapper_local_stills extends mediamosa_io_streamwrapper_local_data {
-  // ---------------------------------------------------------------- Functions.
+  // ------------------------------------------------------------------ Methods.
   /**
-   * Get the root of the storage for stills setting for linux.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_linux() {
+  public function get_storage_path_linux() {
     return mediamosa::variable_get('mediamosa_current_mount_point_stills', parent::get_storage_path_linux());
   }
 
   /**
-   * Get the root of the storage for stills setting for windows.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_windows() {
+  public function get_storage_path_windows() {
     return mediamosa::variable_get('mediamosa_current_mount_point_stills_windows', parent::get_storage_path_windows());
   }
 }

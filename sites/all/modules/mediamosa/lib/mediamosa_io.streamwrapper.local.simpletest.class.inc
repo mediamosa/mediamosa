@@ -9,24 +9,24 @@
  */
 
 class mediamosa_storage_simpletest_stream_wrapper extends mediamosa_io_streamwrapper_local {
-  // ---------------------------------------------- MediaMosa related functions.
+  // ------------------------------------------------------------------ Methods.
   /**
    * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_linux() {
+  public function get_storage_path_linux() {
     return mediamosa_storage::trim_uri(mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa')) . 'media/simpletest';
   }
 
   /**
-   * Get the root of the storage setting for windows.
+   * Get the root of the storage setting for linux.
    *
    * @return string
    *   The path of the storage root.
    */
-  public static function get_storage_path_windows() {
+  public function get_storage_path_windows() {
     return mediamosa_storage::trim_uri(mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\')) . 'media/simpletest';
   }
 }

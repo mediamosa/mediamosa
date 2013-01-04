@@ -318,6 +318,12 @@ class mediamosa_asset_mediafile {
       // Collect asset id.
       $normalize_asset_ids[$mediafile[mediamosa_asset_mediafile_db::ASSET_ID]] = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
+      // Remove perm. link.
+      mediamosa_media::remove_public_link($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile[mediamosa_asset_mediafile_db::ID]);
+
+      // The delete mediafile from transition.
+      mediamosa_storage_transition::delete_mediafile($mediafile[mediamosa_asset_mediafile_db::ID]);
+
       // Unlink mediafile.
       mediamosa_io::unlink(mediamosa_storage::get_uri_mediafile($mediafile));
     }
@@ -465,7 +471,6 @@ class mediamosa_asset_mediafile {
           $still = array_merge($still, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
 
           // Unset sannas mount point.
-          unset($still[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
           unset($still[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
 
           $items[$still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still'][$i++] = $still;
@@ -564,9 +569,6 @@ class mediamosa_asset_mediafile {
           unset($items[$mediafile_id][$key]);
         }
       }
-
-      // Unset these;
-      unset($items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
 
       // Response object/plain/metafile available.
       // When file is missing these will be non-existing, make them empty.

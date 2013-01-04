@@ -115,7 +115,7 @@ class mediamosa_asset_mediafile_upload {
     // Update the job.
     mediamosa_job::update_progress_upload($job_id, $file_size);
 
-    //  Relocate mediafile if final storage location is not local.
+    //Relocate mediafile if final storage location is not local.
     mediamosa_storage::relocate_mediafile_to_external($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], TRUE);
 
     // Trigger URL.
@@ -278,8 +278,10 @@ class mediamosa_asset_mediafile_upload {
   }
 
   /**
-   * trigger tid itl.
-   * @param URL $completed_url
+   * Trigger completion URL.
+   *
+   * @param string $completed_url
+   *   The url to trigger.
    */
   static function trigger_completion_url($completed_url) {
     // We call compeleted url when the job status has been updated.
@@ -296,9 +298,9 @@ class mediamosa_asset_mediafile_upload {
    * Specific function for PUT upload
    *
    * @param string $destination_uri
-   *  Destination filename.
+   *   Destination filename.
    * @param integer $job_id
-   *  Job ID.
+   *   Job ID.
    */
   protected static function handle_upload_put($destination_uri, $job_id = 0) {
     $destination_uri_after_upload = NULL;

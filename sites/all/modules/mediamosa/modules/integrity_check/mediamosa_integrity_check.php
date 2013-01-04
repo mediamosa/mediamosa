@@ -85,7 +85,7 @@ function check_media_records() {
 // Check media files.
 function check_media_files() {
   // Base folder.
-  $dir = mediamosa_storage_local::get_scheme() . '://';
+  $dir = mediamosa_storage_local::SCHEME . '://';
   $dh = opendir($dir);
 
   while (($folder = readdir($dh)) !== FALSE) {

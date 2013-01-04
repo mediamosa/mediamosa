@@ -236,12 +236,13 @@ class mediamosa_asset_mediafile_metadata {
     self::delete_by_mediafileid($mediafile_id);
 
     // Store basic information.
-    //
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
+
     // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_storage::get_uri_mediafile($mediafile_id));
+    $filesize = mediamosa_io::filesize($mediafile_uri);
 
     // Get the md5.
-    $md5 = mediamosa_io::md5_file(mediamosa_storage::get_uri_mediafile($mediafile_id));
+    $md5 = mediamosa_io::md5_file($mediafile_uri);
 
     // Create filesize metadata.
     self::create_mediafile_metadata_int($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
@@ -316,6 +317,9 @@ class mediamosa_asset_mediafile_metadata {
     // The output of ffmpeg.
     $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $metadata['ffmpeg-output'])) : '';
 
+    // Update statistics.
+    mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
+
     // Done.
     return $ffmpeg_output;
   }
@@ -365,21 +369,6 @@ class mediamosa_asset_mediafile_metadata {
    * @param array $analyse_result
    */
   public static function store_analyse_without_job($job_id, array $analyse_result, $mediafile_id) {
-    // Get the path of the mediafile.
-    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
-
-    // Get the filesize.
-    $filesize = mediamosa_io::filesize($mediafile_uri);
-
-    // Get the md5.
-    $md5 = mediamosa_io::md5_file($mediafile_uri);
-
-    // Create filesize metadata.
-    self::create_mediafile_metadata_int($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
-
-    // Create md5 metadata.
-    self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
-
     // Parse and store metadata from the analyse result.
     $ffmpeg_output = self::store_metadata($mediafile_id, $analyse_result);
 
@@ -419,9 +408,6 @@ class mediamosa_asset_mediafile_metadata {
 
     // Normalize to asset.
     mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
-
-    // Update statistics
-    mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
   }
 
   /**
@@ -491,6 +477,7 @@ class mediamosa_asset_mediafile_metadata {
         mediamosa_asset_mediafile_metadata_db::PROP_ID => $prop_id,
       ))
       ->fields($fields)
+      ->updateFields($fields)
       ->execute();
   }
 

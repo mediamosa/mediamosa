@@ -11,6 +11,9 @@ class mediamosa_storage_local extends mediamosa_storage {
    */
   const NAME = 'local';
 
+  const SCHEME = 'mediamosa-storage-data';
+  const SCHEME_STILLS = 'mediamosa-storage-stills';
+
   // --------------------------------------------------------- Abstract Methods.
   // ------------------------------------------------------------------ Methods.
   /**
@@ -35,7 +38,7 @@ class mediamosa_storage_local extends mediamosa_storage {
    *   The uri of the storage profile.
    */
   public function build_mount_point_uri($storage_profile_id, $path, $is_still = FALSE) {
-    return self::get_scheme($is_still) . '://';
+    return $this->get_scheme($is_still) . '://';
   }
 
   /**
@@ -89,7 +92,6 @@ class mediamosa_storage_local extends mediamosa_storage {
 //    );
 //  }
 
-  // ---------------------------------------------------------------- Functions.
   /**
    * Get the default scheme.
    *
@@ -99,7 +101,7 @@ class mediamosa_storage_local extends mediamosa_storage {
    * @return string
    *   The uri of the moint point to store.
    */
-  public static function get_scheme($is_still = FALSE) {
-    return $is_still ? 'mediamosa-storage-stills' : 'mediamosa-storage-data';
+  public function get_scheme($is_still = FALSE) {
+    return $is_still ? self::SCHEME_STILLS : self::SCHEME;
   }
 }

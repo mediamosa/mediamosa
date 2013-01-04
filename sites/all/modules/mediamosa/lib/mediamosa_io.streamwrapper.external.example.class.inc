@@ -40,7 +40,7 @@ class mediamosa_storage_example extends mediamosa_storage {
    * @return string
    *   The uri of the moint point to store.
    */
-  public static function get_scheme($is_still = FALSE) {
+  public function get_scheme($is_still = FALSE) {
     return 'mediamosa-storage-external-example';
   }
 
@@ -152,5 +152,4 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
     // Implement into your class file_exists().
     return $this->file_exists() ? TRUE : FALSE;
   }
-
 }
