@@ -37,6 +37,15 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
   }
 
   /**
+   * Run right after the test.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   */
+  protected function postTest($app_id) {
+  }
+
+  /**
    * Basic test IO.
    */
   public function testIO() {
@@ -99,16 +108,5 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Do postTest.
     $this->postTest($app_id);
-  }
-
-  /**
-   * Run last in test.
-   *
-   * @param integer $app_id
-   *   The client app.
-   */
-  protected function postTest($app_id) {
-
-
   }
 }

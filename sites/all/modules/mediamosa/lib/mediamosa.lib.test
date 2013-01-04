@@ -12,7 +12,7 @@ class MediaMosaMkdir extends MediaMosaTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'MediaMosa - mkdir()',
+      'name' => 'MediaMosa library - mkdir()',
       'description' => 'Test if mkdir recursively correctly sets the chmod of the dirs.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
     );
@@ -161,7 +161,7 @@ class MediaMosaTypeValidation extends MediaMosaTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'MediaMosa - Type validation',
+      'name' => 'MediaMosa library - Type validation',
       'description' => 'Test for type validation layer.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
     );
