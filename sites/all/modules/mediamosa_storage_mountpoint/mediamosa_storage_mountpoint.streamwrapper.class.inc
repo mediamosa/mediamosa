@@ -108,6 +108,8 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
     $matches = array();
     $reg = '#^(?P<scheme>.+)://(?P<strorage_profile_id>[0-9]+)/?(?:(?P<path>.*)/-/(?P<mediafile_path>.*)|(?P<altpath>.+))?$#';
     if (!preg_match($reg, $uri, $matches)) {
+      // External and mount point module uri's must have valid URI's. Local
+      // stream wrappers work fine with only the scheme.
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "'"));
     }
 
@@ -121,7 +123,7 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
 
     // Validate the mediafile_path part.
     if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "'"));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
     }
 
     // Return parts.
@@ -146,7 +148,7 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^.*[a-zA-Z0-9](/[a-zA-Z0-9]+)?$#';
+    $reg = '#^[a-zA-Z0-9](/[a-zA-Z0-9]+)?$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }

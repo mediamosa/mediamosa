@@ -416,7 +416,7 @@ class mediamosa_job {
     }
 
     // Make sure the mediafile exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id_source, $app_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id_source, $app_id);
 
     // Must be transcodable.
     mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id_source);

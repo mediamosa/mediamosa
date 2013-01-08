@@ -219,16 +219,110 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $source_md5 = mediamosa_io::md5_file($source_uri);
 
     // Mediafile must exist in db.
-    mediamosa_asset_mediafile::must_exists($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Need content_type.
     $content_type = mediamosa_asset_mediafile::get_mime_type($mediafile_id);
 
+    // Check if mediafile is public.
+    $acl = mediamosa_storage_s3::mediafile_is_public($mediafile) ? MediaMosaAmazonS3::ACL_PUBLIC : MediaMosaAmazonS3::ACL_PRIVATE;
+
     // Upload the file.
-    $s3->_upload($bucket, $source_uri, $path, $source_md5, $mediafile_id, $content_type);
+    $s3->_upload($bucket, $source_uri, $path, $source_md5, $mediafile_id, $acl, $content_type);
 
     // Set the MD5.
     $this->setMD5($source_md5);
+  }
+
+  /**
+   * Process media view request.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
+   * @param array $mediafile
+   *   The mediafile to process.
+   * @param string $response_type
+   *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   *
+   * @return array
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
+   *   - 'ticket_id'
+   *     The ticket ID used.
+   *   - 'link'
+   *     The symbolic link complete path.
+   *   - 'filename'
+   *     The filename of the media.
+   *   - 'server_uri_build'
+   *     The finished server uri.
+   *   - 'is_public'
+   *     Public urls have no ACL rules.
+   */
+   public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+
+    // Get the stuff we need.
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+
+    // Get the permanent status, public mediafiles can be public.
+    $is_public = mediamosa_media::is_public($mediafile, $is_app_admin);
+
+    // Get the filename.
+    $filename = mediamosa_media::get_media_filename($mediafile);
+
+    // Convert to ticket type.
+    $ticket_type = mediamosa_media::responsetype2tickettype($response_type);
+
+    // Is a public link?
+    if ($is_public) {
+      $ticket_id = $mediafile_id;
+    }
+    else {
+      // Create ticket.
+      $ticket_id = mediamosa_media_ticket::create($app_id, $ticket_type, $user_id, $mediafile_id);
+    }
+
+    // Need s3 object.
+    $s3 = $this->get_s3();
+
+    // Get bucket.
+    $bucket = $this->get_bucket();
+
+    // Get mediafile path.
+    $filename = $this->get_mediafile_path();
+
+    // Need expire time (in minutes).
+    switch ($ticket_type) {
+      case mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD:
+        $expire = mediamosa_media_ticket::get_ticket_expiration_download();
+        break;
+
+      case mediamosa_media_ticket::TICKET_TYPE_STILL:
+        $expire = mediamosa_media_ticket::get_ticket_expiration_still();
+        break;
+
+      default:
+      case mediamosa_media_ticket::TICKET_TYPE_VIEW:
+        $expire = mediamosa_media_ticket::get_ticket_expiration_view();
+        break;
+    }
+
+    // Convert to UTC since.
+    $expire = gmmktime() + ($expire * 60);
+
+    // Get play url.
+    $url = $s3->get_object_url($bucket, $filename, $expire);
+
+    // Return the information needed.
+    return array(
+      mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID => $ticket_id,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME => $filename,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_LINK => FALSE,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD => $url,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_IS_PUBLIC => $is_public,
+    );
   }
 
   // ------------------------------------------------------ Abstract IO Methods.
@@ -731,7 +825,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *   values should be set to a rational value (usually 0).
 	 */
 	public function url_stat($path, $flags) {
-		// Defaults
+  	// Defaults
 		$out = array();
 		$out[0] = $out['dev'] = 0;
 		$out[1] = $out['ino'] = 0;
@@ -890,7 +984,105 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 	 * @return string
    *   The PCRE-compatible version of the token.
 	 */
-	public static function quotemeta($str) {
+	public function quotemeta($str) {
 		return str_replace('\\\\', '\\', quotemeta(str_replace('/', '\/', $str)));
 	}
+
+  /**
+   * Test if the file exists.
+   *
+   * @return boolean
+   *   Returns TRUE when file exists.
+   */
+  public function file_exists() {
+    try {
+      // Need S3 object.
+      $s3 = $this->get_s3();
+
+      // Get bucket.
+      $bucket = $this->get_bucket();
+
+      // Get path.
+      $filename = $this->get_mediafile_path();
+
+      // Get file status.
+      if ($s3->if_object_exists($bucket, $filename)) {
+        return TRUE;
+      }
+
+      // Stat the file.
+      $stat = $this->url_stat($this->uri, STREAM_URL_STAT_QUIET);
+
+      // Check the file flag.
+      return (is_array($stat) && (($stat['mode'] & mediamosa_io::STAT_IFDIR) == mediamosa_io::STAT_IFDIR));
+    }
+    catch (Exception $e) {
+      // If we fail, better not act on the exception. Log it.
+      mediamosa_watchdog::log_mediafile($this->get_mediafile_id(), "Caught exception: unable test file exists for mediafile with ID: '@mediafile_id'; @message", array('@mediafile_id' => $this->get_mediafile_id(), '@message' => $e->getMessage()), WATCHDOG_ALERT);
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Set ACL on S3.
+   *
+   * @param boolean $is_public
+   *   Is either public or private.
+   *
+   * @return CFResponse
+   *   The CFResponse or FALSE.
+   */
+  public function set_acl($is_public) {
+    try {
+      // Need S3 object.
+      $s3 = $this->get_s3();
+
+      // Get bucket.
+      $bucket = $this->get_bucket();
+
+      // Get path.
+      $filename = $this->get_mediafile_path();
+
+      // Set ACL on file.
+      return $s3->set_object_acl($bucket, $filename, $is_public ? MediaMosaAmazonS3::ACL_PUBLIC : MediaMosaAmazonS3::ACL_PRIVATE);
+    }
+    catch (Exception $e) {
+      // If we fail, better not act on the exception. Log it.
+      mediamosa_watchdog::log_mediafile($this->get_mediafile_id(), "Caught exception: unable to set S3 ACL on mediafile with ID: '@mediafile_id'; @message", array('@mediafile_id' => $this->get_mediafile_id(), '@message' => $e->getMessage()), WATCHDOG_ALERT);
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Get ACL status on S3.
+   *
+   * @return string
+   *   Is either MediaMosaAmazonS3::ACL_PUBLIC or
+   *   MediaMosaAmazonS3::ACL_PRIVATE.
+   */
+  public function get_acl() {
+    // Need S3 object.
+    $s3 = $this->get_s3();
+
+    // Get bucket.
+    $bucket = $this->get_bucket();
+
+    // Get path.
+    $filename = $this->get_mediafile_path();
+
+    // Set ACL on file.
+    $response = $s3->get_object_acl($bucket, $filename);
+
+    $is_public = FALSE;
+    foreach ($response->body->xpath('AccessControlList/Grant/Grantee') as $grantee) {
+      if (isset($grantee->URI) && $grantee->URI == MediaMosaAmazonS3::USERS_ALL) {
+        $is_public = TRUE;
+        break;
+      }
+    }
+
+    return $is_public ? MediaMosaAmazonS3::ACL_PUBLIC : MediaMosaAmazonS3::ACL_PRIVATE;
+  }
 }

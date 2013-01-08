@@ -84,7 +84,7 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
         $link_target = readlink(mediamosa_io::realpath($link_uri));
 
         // Ok, symlink points to us, we can savely remove the symlink.
-        if (fileinode($link_target) == $inode) {
+        if (@fileinode($link_target) == $inode) {
           mediamosa_io::unlink($link_uri);
         }
       }

@@ -63,6 +63,7 @@ function mediamosa_storage_transition_schema() {
     'primary key' => array(mediamosa_storage_transition_db::MEDIAFILE_ID, mediamosa_storage_transition_db::MD5),
     'indexes' => array(
       'idx_fs' => array(mediamosa_storage_transition_db::FILESIZE),
+      'idx_ac' => array(mediamosa_storage_transition_db::ACCESSED),
     ),
   );
 

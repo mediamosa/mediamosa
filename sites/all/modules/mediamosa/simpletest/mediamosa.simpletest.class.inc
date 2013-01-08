@@ -202,29 +202,29 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Clean up...
     $this->unlinks = array();
 
-    // Our tables are not dropped because simpletest uses a test profile in
-    // which our tables are not present. So we need to do it ourselfs.
-    // We'll only drop tables from this simpletest.
-    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
-
-    // Get tables that match our pattern.
-    $tables = db_find_tables($prefix);
-
-    $matches = $ret = array();
-    foreach ($tables as $table) {
-      // Make sure we drop correct; tables MUST start with simpletest.
-      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
-        list(, $name) = explode('mediamosa_', $table, 2);
-
-        // If the drop fails then we consider that its already dropped.
-        try {
-          db_drop_table('mediamosa_' . $name);
-        }
-        catch (PDOException $e) {
-          // ignore.
-        }
-      }
-    }
+//    // Our tables are not dropped because simpletest uses a test profile in
+//    // which our tables are not present. So we need to do it ourselfs.
+//    // We'll only drop tables from this simpletest.
+//    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
+//
+//    // Get tables that match our pattern.
+//    $tables = db_find_tables($prefix);
+//
+//    $matches = $ret = array();
+//    foreach ($tables as $table) {
+//      // Make sure we drop correct; tables MUST start with simpletest.
+//      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
+//        list(, $name) = explode('mediamosa_', $table, 2);
+//
+//        // If the drop fails then we consider that its already dropped.
+//        try {
+//          db_drop_table('mediamosa_' . $name);
+//        }
+//        catch (PDOException $e) {
+//          // ignore.
+//        }
+//      }
+//    }
 
     // Dump the log.
     $this->dump_watchdog();
@@ -552,6 +552,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Perform the CURL request.
     $result = $this->curlExec($curl_opts);
+
+    // Clear cache files. REST call might have removed files.
+    mediamosa_io::clearstatcache();
 
     // Parse the headers and get the body.
     $lines = explode("\n", $result);

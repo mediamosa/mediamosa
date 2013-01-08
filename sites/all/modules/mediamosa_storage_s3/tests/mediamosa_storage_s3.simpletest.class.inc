@@ -13,6 +13,13 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   protected $s3 = NULL;
 
+  /**
+   * Random number to make bucket ID more random.
+   *
+   * @var string
+   */
+  protected $random;
+
   // -------------------------------------------------------------- Constructor.
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
@@ -33,6 +40,9 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
       parent::setUp();
       return;
     }
+
+    // Create random number.
+    $this->random = rand(1000, 9999);
 
     $mediamosa_storage_s3_vars = array();
     $variables = db_select('variable', 'v')
@@ -97,6 +107,9 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
           }
 
           $this->assert($this->s3->if_bucket_exists($this->getBucketName()), 'Bucket exists.');
+
+          // Store original external.
+          variable_set('mediamosa_storage_original_local', FALSE);
         }
       }
       catch (mediamosa_storage_s3_exception $e) {
@@ -149,7 +162,7 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
    *   The specific bucket type.
    */
   protected function getBucketName() {
-    return variable_get('mediamosa_storage_s3_bucket_name', 'mediamosasimpletests3') . $this->testId;
+    return variable_get('mediamosa_storage_s3_bucket_name', 'mediamosasimpletests3') . '-' . $this->random . '-' . $this->testId;
   }
 
   /**

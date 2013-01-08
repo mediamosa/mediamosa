@@ -10,6 +10,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
    * Name / ID of the module.
    */
   const NAME = 's3';
+  const SCHEME = 'mediamosa-storage-s3';
 
   // -------------------------------------------------------------- Constructor.
   /**
@@ -69,20 +70,20 @@ class mediamosa_storage_s3 extends mediamosa_storage {
     return array();
   }
 
-  // ---------------------------------------------------------------- Functions.
   /**
    * Get the default scheme.
    *
    * @param boolean $is_still
-   *   Is mount point for still?
+   *   Is mount point for still? Does not apply for external locations.
    *
    * @return string
    *   The uri of the moint point to store.
    */
   public function get_scheme($is_still = FALSE) {
-    return 'mediamosa-storage-s3';
+    return self::SCHEME;
   }
 
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the S3 regions.
    *
@@ -182,4 +183,37 @@ class mediamosa_storage_s3 extends mediamosa_storage {
 
     return TRUE;
   }
+
+  /**
+   * Test if the mount point points to S3.
+   *
+   * @param string $mount_point
+   *   The mount point to check.
+   *
+   * @return boolean
+   *   Returns TRUE when hosted on S3.
+   */
+  public static function mediafile_is_s3($mount_point) {
+    return mediamosa_unicode::substr($mount_point, 0, strlen(self::SCHEME)) == self::SCHEME;
+  }
+
+  /**
+   * Test if the mediafile is public or private.
+   *
+   * @param array $mediafile
+   *   The mediafile to test.
+   *
+   * @return boolean
+   *   Returns TRUE when public.
+   *
+   */
+  public static function mediafile_is_public($mediafile) {
+    try {
+      return mediamosa_media::is_public($mediafile, FALSE);
+    }
+    catch(mediamosa_exception $e) {
+      return FALSE;
+    }
+  }
+
 }

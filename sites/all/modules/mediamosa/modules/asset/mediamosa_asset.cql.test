@@ -5,10 +5,7 @@
  */
 
 class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
-
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'CQL - Asset search and properties',
@@ -17,7 +14,33 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
+  // Test for wrong escape bug.
+  public function testCQL_Exact() {
+    // Create asset.
+    $asset_id = $this->createAsset(array(mediamosa_rest_call_asset_create::USER_ID => 'user_foo'));
+
+    // Mediafile.
+    $this->createMediafile($asset_id, array(mediamosa_rest_call_asset_metadata_create::USER_ID => 'user_foo'));
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id,
+      array(
+        mediamosa_rest_call_asset_metadata_create::USER_ID => 'user_foo',
+        'title' => 'user_foo',
+      )
+    );
+
+    // Should find it.
+    $this->cql_do_search_test_assets_1('title == "^user_foo^"', array($asset_id => TRUE));
+
+    // Should find it.
+    $this->cql_do_search_test_assets_1('title = "user_foo"', array($asset_id => TRUE));
+
+    // Should find it.
+    $this->cql_do_search_test_assets_1('owner_id == "^user_foo^"', array($asset_id => TRUE));
+  }
+
   // Test unappropriate flag (16710).
   public function testCQL_UnAppropriate() {
 

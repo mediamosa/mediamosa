@@ -432,7 +432,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     // Check watermark id, if exists.
     if ($watermark_id) {
-      mediamosa_asset_mediafile::must_exists_quick($watermark_id, $app_id);
+      mediamosa_asset_mediafile::must_exists_cached($watermark_id, $app_id);
     }
 
     // Get params.

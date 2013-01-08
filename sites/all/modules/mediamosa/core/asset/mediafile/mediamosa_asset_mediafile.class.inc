@@ -88,6 +88,13 @@ class mediamosa_asset_mediafile {
    *     Get only the original mediafiles.
    *   - exclude_stills (default: FALSE)
    *     Do not include stills.
+   *   - get_all_children (default: FALSE)
+   *     Include any children, in case of asset parenting (future, used).
+   *     Provide in case asset parenting is enabled and you need all mediafiles,
+   *     e.g. in case of ACL rules changes.
+   *   - return_resource (default: FALSE)
+   *     Returns an DB resource instead of array with mediafile ID as key. This
+   *     will prevent memory problems with larger results.
    *
    * @return array
    *   An associative array where key is the mediafile ID.
@@ -97,6 +104,8 @@ class mediamosa_asset_mediafile {
     $options += array(
       'get_originals_only' => FALSE,
       'exclude_stills' => FALSE,
+      'get_all_children' => FALSE,
+      'return_resource' => FALSE,
     );
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
@@ -111,6 +120,11 @@ class mediamosa_asset_mediafile {
     // Exclude stills?
     if ($options['exclude_stills']) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    }
+
+    // Return resource.
+    if ($options['return_resource']) {
+      return $query->execute();
     }
 
     return $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
@@ -248,7 +262,7 @@ class mediamosa_asset_mediafile {
    * @return boolean
    *   Returns TRUE when mediafile exists.
    */
-  public static function must_exists_quick($mediafile_id, $app_id = 0) {
+  public static function must_exists_cached($mediafile_id, $app_id = 0) {
     // Store when we tested.
     $mediafile_exists = &drupal_static(__FUNCTION__, array());
     if (isset($mediafile_exists[$mediafile_id . '/' . $app_id])) {

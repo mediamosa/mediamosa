@@ -398,8 +398,8 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    // Keep in mind that with less slots, this needs to be 12.
-    $max_runs = 12;
+    // Keep in mind that with less slots, this needs to be 18.
+    $max_runs = 18;
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.

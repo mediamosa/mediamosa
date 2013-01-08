@@ -174,12 +174,12 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
     }
 
     // Check the mediafile.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     // Check watermark id, if exists.
     if ($watermark_id) {
       $ticket = mediamosa_media_ticket::get_valid($ticket_id, mediamosa_media_ticket_db::TICKET_TYPE_STILL);
-      mediamosa_asset_mediafile::must_exists_quick($watermark_id, $ticket[mediamosa_media_ticket_db::APP_ID]);
+      mediamosa_asset_mediafile::must_exists_cached($watermark_id, $ticket[mediamosa_media_ticket_db::APP_ID]);
     }
 
     $still_parameters = array(

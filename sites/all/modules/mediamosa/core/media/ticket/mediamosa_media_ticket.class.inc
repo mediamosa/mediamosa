@@ -151,7 +151,7 @@ class mediamosa_media_ticket {
   }
 
   /**
-   * Cleanup expired ticket.
+   * Cleanup expired tickets by type.
    *
    * Cleans up expired tickets symlinks and removes expired tickets from
    * database.
@@ -167,7 +167,7 @@ class mediamosa_media_ticket {
    *
    * @throws mediamosa_exception_program_error
    */
-  public static function ticket_expire($type, $mindepth = 4, $maxdepth = 4, array $args = array()) {
+  public static function ticket_cleanup_by_type($type, $mindepth = 4, $maxdepth = 4, array $args = array()) {
     // Get media path.
     $path = mediamosa_storage::get_realpath_media_ticket();
 
@@ -208,8 +208,7 @@ class mediamosa_media_ticket {
     // Remove the symlinks.
     mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
 
-    // Now the ticket dir. We increase the expire here so we are sure the
-    // contents is empty.
+    // Now remove the ticket dir.
     $args['-maxdepth']--;
     $args['-mindepth']--;
 
@@ -242,8 +241,11 @@ class mediamosa_media_ticket {
       self::TICKET_TYPE_STILL,
       self::TICKET_TYPE_VIEW,
     ) as $type) {
-      self::ticket_expire($type);
+      self::ticket_cleanup_by_type($type);
     }
+
+    // Clear our stat cache, 'find' exec does not clear our cache.
+    mediamosa_io::clearstatcache();
   }
 
   /**

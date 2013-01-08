@@ -108,5 +108,8 @@ class mediamosa_asset_mediafile_still_style {
         )
       )
     );
+
+    // Clear stat cache, find does not clear our cache.
+    mediamosa_io::clearstatcache();
   }
 }

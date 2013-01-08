@@ -443,7 +443,7 @@ class mediamosa_asset_mediafile_metadata {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
 
     // Make sure it exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     $fields = array();
     if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {

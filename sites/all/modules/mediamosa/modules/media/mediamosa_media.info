@@ -13,12 +13,13 @@ dependencies[] = mediamosa
 files[] = mediamosa_media.rest.class.inc
 
 ; Tests
-files[] = mediamosa_media.acl.test
+files[] = mediamosa_media.download.test
 files[] = mediamosa_media.permanent_link.test
 files[] = mediamosa_media.profile.test
 files[] = mediamosa_media.stills.test
 files[] = mediamosa_media.stills_download.test
 files[] = mediamosa_media.test
+files[] = mediamosa_media.timerestrictions.test
 
 ; Tests ticket
 files[] = ticket/mediamosa_media_ticket.cleanup.test

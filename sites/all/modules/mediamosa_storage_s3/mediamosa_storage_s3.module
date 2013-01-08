@@ -38,6 +38,69 @@ function mediamosa_storage_s3_mediamosa_storage_info() {
 }
 
 /**
+ * Implements hook_mediamosa_acl().
+ */
+function mediamosa_storage_s3_mediamosa_acl(array $object, $op, $acl_type, $app_id, $user_id, $is_app_admin, array $acl_data = array()) {
+  try {
+    switch ($acl_type) {
+      case mediamosa_acl::ACL_TYPE_ASSET:
+        // Asset ACL change, process all mediafiles under asset.
+        $mediafiles = mediamosa_asset_mediafile::get_by_asset_id(
+          $acl_data[$object[mediamosa_asset_db::ID]],
+          array(),
+          array(
+            'get_all_children' => TRUE,
+            'return_resource' => TRUE,
+          )
+        );
+
+        // Now set or remove ACL on S3 (if on S3).
+        foreach ($mediafiles as $mediafile) {
+          if (mediamosa_storage_s3::mediafile_is_s3($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+            // Get the public status.
+            $is_public = mediamosa_storage_s3::mediafile_is_public($mediafile);
+
+            // Get uri.
+            $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+            // Need wrapper.
+            $wrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($mediafile_uri);
+
+            // Set ACL based on is public value.
+            $wrapper->set_acl($is_public);
+          }
+        }
+        break;
+
+      case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+        if (mediamosa_storage_s3::mediafile_is_s3($object[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+          // Get the public status.
+          $is_public = mediamosa_storage_s3::mediafile_is_public($object);
+
+          // Get uri.
+          $mediafile_uri = mediamosa_storage::get_uri_mediafile($object);
+
+          // Need wrapper.
+          $wrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($mediafile_uri);
+
+          // Set ACL based on is public value.
+          $wrapper->set_acl($is_public);
+        }
+        break;
+
+
+      case mediamosa_acl::ACL_TYPE_COLLECTION:
+        // Don't care.
+        break;
+    }
+  }
+  catch (mediamosa_exception $e) {
+    // Ignore, exception is logged. Can not have this hook throw exceptions
+    // higher.
+  }
+}
+
+/**
  * Implements hook_mediamosa_storage_profile_load().
  */
 function mediamosa_storage_s3_mediamosa_storage_profile_load($node) {

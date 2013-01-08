@@ -776,25 +776,17 @@ class mediamosa_asset_mediafile_still {
         // Remove all tickets symlinks.
         mediamosa_io::exec(
           strtr(
-            'find @media_ticket_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
+            'find @media_ticket_location -maxdepth 4 -mindepth 4 -name "@wildmatch*" -type l -delete',
             array(
-              '@media_ticket_location' => mediamosa_storage::get_realpath_media_ticket(),
+              '@media_ticket_location' => mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_media_ticket()) . 'still',
               '@wildmatch' => $ticket_id,
             )
           )
         );
       }
 
-      // Remove all permanent symlinks.
-      mediamosa_io::exec(
-        strtr(
-          'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
-          array(
-            '@media_location' => mediamosa_storage::get_realpath_media(),
-            '@wildmatch' => $mediafile['mediafile_id'],
-          )
-        )
-      );
+      // Remove public (permenant) link.
+      mediamosa_media::remove_public_link($mediafile['app_id'], $mediafile['mediafile_id']);
 
       // Remove stills.
       mediamosa_io::unlink($still_uri);

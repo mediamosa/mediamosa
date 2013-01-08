@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Represents the HTTP helper class.
  */
 class mediamosa_http {
@@ -394,6 +371,9 @@ class mediamosa_http {
     $result = curl_exec($curl_handle);
     curl_close($curl_handle);
 
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
+
     return $result;
   }
 
@@ -687,6 +667,9 @@ class mediamosa_http {
       $response .= fread($fp, 1024);
     }
     fclose($fp);
+
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
 
     // Parse response headers from the response body.
     list($response, $result->data) = explode("\r\n\r\n", $response, 2);

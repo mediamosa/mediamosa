@@ -4,20 +4,19 @@
  * Unittests for media play acl.
  */
 
-class MediaMosaMediaAclTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Media - Media play acl tests',
-      'description' => 'Testing asset mediafile media play ACL related functions and rest calls.',
+      'name' => 'Media - Media play time restrictions tests',
+      'description' => 'Testing asset mediafile media play time restrictions related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 
   // -------------------------------------------------------------------- Tests.
-  // Testing asset mediafile delete, see: ticket 69.
-  function testPlayProxyAcl() {
+  function testPlayProxyTimeRestrictions() {
 
     // Get the test file.
     $upload = $this->uploadTestFile(array('downloadable' => TRUE));

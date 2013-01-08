@@ -98,7 +98,7 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
 
     // Validate the mediafile_path part.
     if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "'"));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
     }
 
     // Return parts.
@@ -125,7 +125,7 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^.*[a-zA-Z0-9](/[a-zA-Z0-9]+)?$#';
+    $reg = '#^([a-zA-Z0-9](/[a-zA-Z0-9]+)?)?$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }
@@ -139,6 +139,35 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
   public function is_local() {
     return FALSE;
   }
+
+  /**
+   * Process media view request.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
+   * @param array $mediafile
+   *   The mediafile to process.
+   * @param string $response_type
+   *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   *
+   * @return array
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
+   *   - 'ticket_id'
+   *     The ticket ID used.
+   *   - 'link'
+   *     The symbolic link complete path.
+   *   - 'filename'
+   *     The filename of the media.
+   *   - 'server_uri_build'
+   *     The finished server uri.
+   */
+   public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+     throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile[mediamosa_asset_mediafile_db::ID], '@reason' => 'view response not supported by streamer.'));
+   }
 
   // --------------------------------------------------- Must implement methods.
   /**

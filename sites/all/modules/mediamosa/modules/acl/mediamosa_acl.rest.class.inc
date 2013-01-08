@@ -942,7 +942,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     $app_id = reset($app_ids);
 
     // Make sure the media file exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id, $app_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id, $app_id);
 
     $app_ids = $this->get_param_value('acl_app');
     $a_acl_user_ids = $this->get_param_value('acl_user');
@@ -1069,7 +1069,7 @@ class mediamosa_rest_call_acl_mediafile_delete_rights extends mediamosa_rest_cal
     $app_id = reset($app_ids);
 
     // Make sure the media file exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id, $app_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id, $app_id);
 
     // Get the media file
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);

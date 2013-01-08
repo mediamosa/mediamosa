@@ -365,6 +365,28 @@ class mediamosa_io {
     // Either scheme:/ or '' (will add '/' because of implode).
     $uri_scheme = ($uri_scheme == '' ? '' : ($uri_scheme . ':/'));
 
+
+    // Precreate scheme location.
+    try {
+      if (!empty($uri_scheme) && !self::file_exists($uri_scheme . '/')) {
+        if (!drupal_mkdir($uri_scheme . '/', $mode, TRUE)) {
+          throw new mediamosa_exception_error(
+            mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+            array(
+              '@location' => self::realpath_safe($uri_scheme . '/'),
+              '@reason' => mediamosa::last_php_error_message(),
+            )
+          );
+        }
+        // Set mode again.
+        drupal_chmod($uri_scheme . '/', $mode);
+      }
+    }
+    catch (mediamosa_exception $e) {
+      // Catch invalid uri errors. Some streamwrapper do not allow using the
+      // stream instance with only the scheme.
+    }
+
     // Split up on separator(s).
     $parts = preg_split('/[' . preg_quote($separators, '/') . ']/', $uri_path, -1, PREG_SPLIT_NO_EMPTY);
 
@@ -745,7 +767,7 @@ class mediamosa_io {
     }
 
     // Need wrapper method.
-    return $wrapper && method_exists($wrapper, 'is_file') ? $wrapper->is_file($uri) : is_file($uri);
+    return $wrapper && method_exists($wrapper, 'is_file') ? $wrapper->is_file() : is_file($uri);
   }
 
   /**
@@ -767,7 +789,7 @@ class mediamosa_io {
     }
 
     // Need wrapper method.
-    return $wrapper && method_exists($wrapper, 'is_dir') ? $wrapper->is_dir($uri) : is_dir($uri);
+    return $wrapper && method_exists($wrapper, 'is_dir') ? $wrapper->is_dir() : is_dir($uri);
   }
 
   /**
@@ -780,11 +802,16 @@ class mediamosa_io {
    *   Returns TRUE when file exists.
    */
   public static function file_exists($uri) {
-    // File exists needs clear cache.
-    //self::clearstatcache();
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return file_exists($uri);
+    }
 
-    // Test it.
-    return file_exists($uri);
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'file_exists') ? $wrapper->file_exists() : file_exists($uri);
   }
 
   /**
@@ -811,7 +838,7 @@ class mediamosa_io {
     }
 
     // Need wrapper method.
-    return $wrapper && method_exists($wrapper, 'filesize') ? $wrapper->filesize($uri) : filesize($uri);
+    return $wrapper && method_exists($wrapper, 'filesize') ? $wrapper->filesize() : filesize($uri);
   }
 
   /**

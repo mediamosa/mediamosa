@@ -9,24 +9,7 @@
  * Some abstract functions can not be used and will throw exceptions when tried.
  */
 
-class mediamosa_storage_transition/* extends mediamosa_storage*/ {
-  // ------------------------------------------------------------------- Consts.
-  // -------------------------------------------------------------- Constructor.
-  /**
-   * Overrule constructor, as we are not really an storage object.
-   *
-   * @param object|integer $storage_profile
-   *   Storage profile node or nid.
-   *
-   * @param $uri
-   *   Optional uri to the storage object
-   */
-  public function __construct(array $storage_profile) {
-    $this->storage_profile = FALSE;
-    $this->storage_profile_apps = FALSE;
-    $this->storage_profile_apps_stills = FALSE;
-  }
-
+class mediamosa_storage_transition {
   // ------------------------------------------------------------------ Methods.
   /**
    * Return with uri of the profile mount point.
@@ -54,10 +37,6 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
   public function get_storage_options() {
     throw new mediamosa_exception_program_error('The usage of ' . __CLASS__ . '::' . __FUNCTION__ . '() is not supported in this class.');
   }
-
-//  public function get_upload_parameters($app_id, $user_id, $group_id) {
-//    throw new mediamosa_exception_program_error('The usage of ' . __CLASS__ . '::' . __FUNCTION__ . '() is not supported in this class.');
-//  }
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -430,11 +409,13 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
    *
    * @param string $mediafile_id
    *   The ID of mediafile to move.
+   * @param boolean $move
+   *   Move to transition, else copy.
    *
    * @return string
    *   The transition URI.
    */
-  public static function mediafile_local_move_to_transition($mediafile_id) {
+  public static function mediafile_local_to_transition($mediafile_id, $move = TRUE) {
     // Get current location.
     $source_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
 
@@ -455,10 +436,16 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
     // Create directory.
     mediamosa_io::mkdir(mediamosa_io::dirname($transition_uri));
 
-    // Ok move it, will replace any file already there.
-    mediamosa_io::rename($source_uri, $transition_uri);
+    if ($move) {
+      // Ok move it, will replace any file already there.
+      mediamosa_io::rename($source_uri, $transition_uri);
+    }
+    else {
+      // Copy it, will replace any file already there.
+      mediamosa_io::copy($source_uri, $transition_uri);
+    }
 
-    // Move done, register the new file so transition will keep it for a
+    // Move/copy done, register the new file so transition will keep it for a
     // while. Register function will check if location of the file is correct
     // and will move file if md5 in uri does not match file. It expects that
     // the MD5 of the file is correct.
@@ -471,10 +458,126 @@ class mediamosa_storage_transition/* extends mediamosa_storage*/ {
     $transition_md5 = $mediamosa_io_streamwrapper_transition->get_md5_from_uri();
 
     // Ok, now set the MD5 for this mediafile or else we will never find this
-    // downloaded file later.
+    // file later.
     mediamosa_asset_mediafile_metadata::create_mediafile_metadata_char($mediafile_id, $transition_md5, mediamosa_asset_mediafile_metadata::MD5);
 
     // Return the transition uri.
     return $transition_uri;
+  }
+
+  /**
+   * Return the total file size known of the transition files.
+   *
+   * @return integer
+   *   The total file size of the files under transition.
+   */
+  public static function get_total_used_size() {
+    $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
+    $query->addExpression('SUM(filesize)', 'total_filesize');
+    return $query->execute()
+      ->fetchfield();
+  }
+
+  /**
+   * Clean up our transition files.
+   */
+  public static function clean_up($max_remove = 20) {
+    // Get setting.
+    $lifetime_days = variable_get('mediamosa_storage_transition_max_lifetime_days', 14);
+
+    // Zero means off.
+    if (!$lifetime_days) {
+      // Get time 14 days ago.
+      $time = strtotime(sprintf('-%d day', $lifetime_days));
+
+      // Into DB date.
+      $access_date = gmdate('Y-m-d H:i:s', $time);
+
+      // Collect mediafile IDs of transition files that are no longer needed and
+      // are passed the max. life time.
+      $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
+      $mediafile_ids = $query
+        ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
+        ->condition('st.' . mediamosa_storage_transition_db::ACCESSED, $access_date, '<')
+        ->range(0, $max_remove)
+        ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
+        ->execute()
+        ->fetchCol();
+
+      // Remove these.
+      foreach ($mediafile_ids as $mediafile_id) {
+        // Lower remove.
+        $max_remove--;
+
+        // Get transition uri.
+        $transition_uri = self::build_transition_uri($mediafile_id);
+
+        // Unregister the transition.
+        self::unregister_transition_file($transition_uri);
+      }
+    }
+
+    // Always remove transition files when they no longer exist in the mediafile
+    // table.
+    if ($max_remove) {
+      $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
+      $query->leftJoin(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', 'mf.mediafile_id = st.mediafile_id');
+      $mediafile_ids = $query
+        ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
+        ->isNull('mf.' . mediamosa_asset_mediafile_db::ID)
+        ->range(0, $max_remove)
+        ->execute()
+        ->fetchCol();
+
+      // Remove these.
+      foreach ($mediafile_ids as $mediafile_id) {
+        // Lower remove.
+        $max_remove--;
+
+        // Get transition uri.
+        $transition_uri = self::build_transition_uri($mediafile_id);
+
+        // Unregister the transition.
+        self::unregister_transition_file($transition_uri);
+      }
+    }
+
+//    // See if we are over limit with space.
+//    if (self::get_total_used_size() > (variable_get('mediamosa_storage_transition_max_size_gb', '50') * 1024 * 1024)) {
+//      if ($max_remove) {
+//        // Ok, remove files we don't need.
+//        $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
+//        $query->join(
+//          mediamosa_job_db::TABLE_NAME,
+//          'j',
+//          'j.mediafile_id = st.mediafile_id AND j1.status IN (:finished, :failed, :canceled)',
+//          array(
+//            ':finished' => mediamosa_job_db::JOB_STATUS_FINISHED,
+//            ':failed' => mediamosa_job_db::JOB_STATUS_FAILED,
+//            ':canceled' => mediamosa_job_db::JOB_STATUS_CANCELLED,
+//          )
+//        );
+//        $query->join(
+//          mediamosa_job_db::TABLE_NAME,
+//          'j2',
+//          'j2.mediafile_id = st.mediafile_id AND j2.status NOT IN (:finished, :failed, :canceled)',
+//          array(
+//            ':finished' => mediamosa_job_db::JOB_STATUS_FINISHED,
+//            ':failed' => mediamosa_job_db::JOB_STATUS_FAILED,
+//            ':canceled' => mediamosa_job_db::JOB_STATUS_CANCELLED,
+//          )
+//        );
+//        $query
+//          ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
+//
+//          ->condition($subquery)
+//          ->orderBy(mediamosa_job_db::ID, 'ASC')
+//          ->groupBy(mediamosa_job_db::ASSET_ID)
+//          ->range(0, $max_remove)
+//          ->execute()
+//          ->fetchCol();
+//        }
+//
+//    }
   }
 }

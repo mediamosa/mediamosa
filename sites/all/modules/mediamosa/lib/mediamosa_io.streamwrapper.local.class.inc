@@ -260,6 +260,87 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     return $md5s[$this->uri];
   }
 
+  /**
+   * Process media view request.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
+   * @param array $mediafile
+   *   The mediafile to process.
+   * @param string $response_type
+   *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   *
+   * @return array
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
+   *   - 'ticket_id'
+   *     The ticket ID used.
+   *   - 'link'
+   *     The symbolic link complete path.
+   *   - 'filename'
+   *     The filename of the media.
+   *   - 'server_uri_build'
+   *     The finished server uri.
+   *   - 'is_public'
+   *     Public urls have no ACL rules.
+   */
+   public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+
+    // Get the stuff we need.
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+    $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
+
+    // Make sure the physical file exists.
+    mediamosa_storage::file_must_exist($mediafile);
+
+    // Get the permanent status, public mediafiles can be public.
+    $is_public = mediamosa_media::is_public($mediafile, $is_app_admin);
+
+    // Get the filename.
+    $filename = mediamosa_media::get_media_filename($mediafile);
+
+    // Is a public link?
+    if ($is_public) {
+      $ticket_id = $mediafile_id;
+
+      // Get the paths needed for the symlink.
+      $link = mediamosa_storage::get_realpath_media_permanent_file($app_id, $ticket_id, $filename);
+      $path = mediamosa_storage::get_path_media_permanent_file($app_id, $ticket_id, $filename);
+    }
+    else {
+      // Convert to ticket type.
+      $ticket_type = mediamosa_media::responsetype2tickettype($response_type);
+
+      // Create ticket.
+      $ticket_id = mediamosa_media_ticket::create($app_id, $ticket_type, $user_id, $mediafile_id);
+
+      // Get the paths needed for the symlink.
+      $link = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
+      $path = mediamosa_storage::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
+    }
+
+    // Create the symlink.
+    mediamosa_media::handle_media_symlink($this->uri, $link);
+
+    // Get the streaming server URI.
+    $server_uri = mediamosa_media::get_server_uri($mediafile_id, $uri, $response_type);
+
+    // Rebuild uri with path.
+    $server_uri_build = strtr($server_uri, array(mediamosa_media::PARAM_URI_TICKET => $path));
+
+    // Return the information needed.
+    return array(
+      mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID => $ticket_id,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME => $filename,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_LINK => $link,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri_build,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_IS_PUBLIC => $is_public,
+    );
+  }
+
   // ------------------------------------------------------------------ Methods.
   /**
    * Get the root of the storage setting for linux.

@@ -418,7 +418,7 @@ abstract class mediamosa_storage {
     }
 
     // Move file to transition. Returns the new location.
-    $destination_uri = mediamosa_storage_transition::mediafile_local_move_to_transition($mediafile_id);
+    $destination_uri = mediamosa_storage_transition::mediafile_local_to_transition($mediafile_id);
 
     // New location for mediafile is transition.
     $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
@@ -484,7 +484,6 @@ abstract class mediamosa_storage {
   public static function get_uri_mediafile($mediafile) {
     // MediaFile ID?
     if (is_string($mediafile)) {
-      // @todo: not cached.
       $mediafile = mediamosa_asset_mediafile::must_exists($mediafile);
     }
 
@@ -514,12 +513,12 @@ abstract class mediamosa_storage {
   /**
    * Check if physical file is found.
    *
-   * @param string $mediafile_id
-   *   The mediafile to check.
+   * @param array|string $mediafile
+   *   The mediafile to check. Either ID or mediafile array.
    */
-  public static function file_must_exist($mediafile_id) {
+  public static function file_must_exist($mediafile) {
     // Check if still file exists.
-    $file = self::get_uri_mediafile($mediafile_id);
+    $file = self::get_uri_mediafile($mediafile);
     if (!mediamosa_io::file_exists($file)) {
       throw new mediamosa_exception_error_file_not_found(array('@filename' => $file));
     }
@@ -883,7 +882,7 @@ abstract class mediamosa_storage {
    *   The FTP location in uri.
    */
   public static function get_realpath_ftp() {
-    return mediamosa_io::realpath('mediamosa-storage://ftp/');
+    return mediamosa_io::realpath('mediamosa-storage://ftp');
   }
 
   /**

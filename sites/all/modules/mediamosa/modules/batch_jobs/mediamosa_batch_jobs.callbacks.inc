@@ -109,7 +109,7 @@ function mediamosa_batch_jobs_delete_confirm(&$form_state) {
  */
 function mediamosa_batch_jobs_delete_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
-    $filename = mediamosa_storage::get_realpath_ftp() . '/' . urldecode($form_state['values']['batch']);
+    $filename = mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_ftp()) . urldecode($form_state['values']['batch']);
     if (mediamosa_io::file_exists($filename)) {
       unlink($filename);
     }

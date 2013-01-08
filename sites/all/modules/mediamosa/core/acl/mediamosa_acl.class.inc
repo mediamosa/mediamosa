@@ -598,10 +598,9 @@ class mediamosa_acl {
    * @param string $user_id
    * @param string $acl_type
    * @param array $object
-   *  Make sure its an object that is within the same app_id as the user
-   *  Or else it will be denied access
-   * @param array $app_ids
-   *  Reserved, not supported yet.
+   *   The object to process ACL on.
+   * @param array $app_id_slaves
+   *   Add master-slave link.
    * @param array $acl_user_ids
    * @param array $acl_group_ids
    * @param array $acl_domains
@@ -611,11 +610,11 @@ class mediamosa_acl {
    *  For future expansion
    * @param array $is_app_admin
    */
-  public static function rights_set($app_id, $user_id, $acl_type, array $object, array $app_ids, array $acl_user_ids, array $acl_group_ids, array $acl_domains, array $acl_realms, $replace = TRUE, array $rights = array(mediamosa_acl::RIGHT_ACCESS), $is_app_admin = FALSE) {
+  public static function rights_set($app_id, $user_id, $acl_type, array $object, array $app_id_slaves, array $acl_user_ids, array $acl_group_ids, array $acl_domains, array $acl_realms, $replace = TRUE, array $rights = array(mediamosa_acl::RIGHT_ACCESS), $is_app_admin = FALSE) {
     assert(count($rights));
     assert($acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE || $acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_COLLECTION); // media files for now
 
-    assert(!is_null($app_ids));
+    assert(!is_null($app_id_slaves));
     assert(!is_null($acl_user_ids));
     assert(!is_null($acl_group_ids));
     assert(!is_null($acl_domains));
@@ -651,13 +650,12 @@ class mediamosa_acl {
 
     // Replace old existing rights.
     if ($replace) {
-      mediamosa_acl::rights_clear($app_id, $user_id, $acl_type, $object, $is_app_admin);
+      mediamosa_acl::rights_clear($app_id, $user_id, $acl_type, $object, $is_app_admin, FALSE);
     }
     else {
       // Get ACL rights, evaluate rights->isprotected.
       list(, $rights_set_user_usergroup, $rights_set_domain_realm) = mediamosa_acl::is_protected_get($app_id, $user_id, $acl_type, $object, $is_app_admin);
     }
-
 
     $result = array();
 
@@ -665,21 +663,21 @@ class mediamosa_acl {
     // Master / Slave;
     // Only the owner can share his media to another app
     // The other app is then called 'master', and the media shared is the slave.
-    foreach ($app_ids as $app_id_master) {
+    foreach ($app_id_slaves as $app_id_slave) {
 
       try {
-        mediamosa_acl_app_master_slave::create($acl_object_id, $acl_type, $app_id_master, $app_id);
+        mediamosa_acl_app_master_slave::create($acl_object_id, $acl_type, $app_id_slave, $app_id);
 
         $result[] = array(
           'type' => mediamosa_acl::ACL_NAME_TYPE_APP,
-          'value' => $app_id_master,
+          'value' => $app_id_slave,
           'a_error' => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
         $result[] = array(
           'type' => mediamosa_acl::ACL_NAME_TYPE_APP,
-          'value' => $app_id_master,
+          'value' => $app_id_slave,
           'a_error' => $e->mediamosa_exception_error_array_get(),
         );
       }
@@ -843,12 +841,6 @@ class mediamosa_acl {
             ->fields($fields)
             ->condition(mediamosa_asset_mediafile_db::ID, $acl_object_id)
             ->execute();
-
-          // ACL status changed, remove possible public link.
-          mediamosa_media::remove_public_link($app_id, $acl_object_id);
-
-          // Reindex the asset using the mediafile ID.
-          mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
           break;
 
         case mediamosa_acl::ACL_TYPE_ASSET:
@@ -876,12 +868,6 @@ class mediamosa_acl {
             ->fields($fields)
             ->condition(mediamosa_asset_db::ID, $acl_object_id)
             ->execute();
-
-          // ACL status changed, remove possible perm. link.
-          mediamosa_media::remove_public_link_asset($acl_object_id);
-
-          // Reindex the asset.
-          mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
           break;
 
         case mediamosa_acl::ACL_TYPE_COLLECTION:
@@ -892,11 +878,40 @@ class mediamosa_acl {
       }
     }
 
+    // Process the ACL change.
+    if ($rights_set || $replace) {
+      switch ($acl_type) {
+        case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+          $object = mediamosa_asset_mediafile::get($acl_object_id);
+          break;
+
+        case mediamosa_acl::ACL_TYPE_ASSET:
+          $object = mediamosa_asset::get($acl_object_id);
+          break;
+
+        case mediamosa_acl::ACL_TYPE_COLLECTION:
+          $object = mediamosa_collection::get($acl_object_id);
+          break;
+      }
+
+      $acl_data = array(
+        'app_id_slaves' => $app_id_slaves,
+        'acl_user_ids' => $acl_user_ids,
+        'acl_group_ids' => $acl_group_ids,
+        'acl_domains' => $acl_domains,
+        'acl_realms' => $acl_realms,
+        'rights' => $rights,
+      );
+
+      // Call our hook for ACL changes.
+      module_invoke_all('mediamosa_acl', $object, ($replace ? 'replace' : 'add'), $acl_type, $app_id, $user_id, $is_app_admin, $acl_data);
+    }
+
     return $result;
   }
 
   /**
-   * Remove rights from object.
+   * Remove all ACL rules from object.
    *
    * @param integer $app_id
    *   The application ID.
@@ -909,8 +924,12 @@ class mediamosa_acl {
    *   An assocative array with owner, app and mediafile IDs data.
    * @param boolean $is_app_admin
    *   Overrulling of owner check.
+   * @param boolean $process_clear
+   *   Process the ACL clear, this is called with FALSE when ACL set call is
+   *   used to clear the ACL rules first. Because the ACL set function also
+   *   calls the hook (with 'replace'), there no need to do this twice.
    */
-  public static function rights_clear($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE) {
+  public static function rights_clear($app_id, $user_id, $acl_type, array $object, $is_app_admin = FALSE, $process_clear = TRUE) {
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
         $owner_id = $object['owner_id'];
@@ -983,7 +1002,7 @@ class mediamosa_acl {
       ':acl_object_id' => $acl_object_id,
     ));
 
-    // Remove the master / slave link, only the original app_id kan remove
+    // Remove the master / slave link, only the original app_id can remove
     // these.
     mediamosa_db::db_query('DELETE FROM {mediamosa_acl_app_master_slave} WHERE acl_object_type = :acl_object_type AND acl_object_id = :acl_object_id AND app_id_master > 0 AND app_id_slave = :app_id_slave', array(
       ':acl_object_type' => $acl_type,
@@ -991,23 +1010,24 @@ class mediamosa_acl {
       ':app_id_slave' => $app_id,
     ));
 
-    // Reindex object.
-    switch ($acl_type) {
-      case mediamosa_acl::ACL_TYPE_MEDIAFILE:
-        // ACL status changed, remove possible perm. link.
-        mediamosa_media::remove_public_link($object_app_id, $acl_object_id);
+    if ($process_clear) {
+      // Process the ACL change.
+      switch ($acl_type) {
+        case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+          $object = mediamosa_asset_mediafile::get($acl_object_id);
+          break;
 
-        // Reindex the asset using the mediafile ID.
-        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
-        break;
+        case mediamosa_acl::ACL_TYPE_ASSET:
+          $object = mediamosa_asset::get($acl_object_id);
+          break;
 
-      case mediamosa_acl::ACL_TYPE_ASSET:
-        // ACL status changed, remove possible perm. link.
-        mediamosa_media::remove_public_link_asset($acl_object_id);
+        case mediamosa_acl::ACL_TYPE_COLLECTION:
+          $object = mediamosa_collection::get($acl_object_id);
+          break;
+      }
 
-        // Reindex the asset using the mediafile ID.
-        mediamosa_asset::mediamosa_asset_reindex(array($acl_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
-        break;
+      // Call our hook for ACL changes.
+      module_invoke_all('mediamosa_acl', $object, 'clear', $acl_type, $app_id, $user_id, $is_app_admin);
     }
   }
 
@@ -1253,7 +1273,7 @@ class mediamosa_acl {
    * @param boolean $do_master_slave_null
    * @param string $app_id_table_prefix
    */
-  public static function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  public static function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain = NULL, $acl_realm = NULL, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     if (empty($slaves)) {

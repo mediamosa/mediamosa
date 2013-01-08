@@ -14,6 +14,13 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
    */
   protected $s3 = NULL;
 
+  /**
+   * Random number to make bucket ID more random.
+   *
+   * @var string
+   */
+  protected $random;
+
   // ---------------------------------------------------------------- Functions.
   /**
    * Implements getInfo().
@@ -43,6 +50,9 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
       parent::setUp();
       return;
     }
+
+    // Create random number.
+    $this->random = rand(1000, 9999);
 
     $mediamosa_storage_s3_vars = array();
     $variables = db_select('variable', 'v')
@@ -159,7 +169,7 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
    *   The specific bucket type.
    */
   protected function getBucketName() {
-    return variable_get('mediamosa_storage_s3_bucket_name', 'mediamosasimpletests3') . $this->testId;
+    return variable_get('mediamosa_storage_s3_bucket_name', 'mediamosasimpletests3') . '-' . $this->random . '-' . $this->testId;
   }
 
   /**

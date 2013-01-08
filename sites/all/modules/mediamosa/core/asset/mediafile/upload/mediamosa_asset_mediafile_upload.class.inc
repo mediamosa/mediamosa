@@ -100,7 +100,7 @@ class mediamosa_asset_mediafile_upload {
     $fields = array(
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
       mediamosa_asset_mediafile_db::FILENAME => ($is_method_put ? $filename_put : $_FILES['file']['name']),
-      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => $transcode_inherits_acl ? mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE : mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
     );
 
@@ -115,7 +115,7 @@ class mediamosa_asset_mediafile_upload {
     // Update the job.
     mediamosa_job::update_progress_upload($job_id, $file_size);
 
-    //Relocate mediafile if final storage location is not local.
+    // Relocate mediafile if final storage location is not local.
     mediamosa_storage::relocate_mediafile_to_external($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], TRUE);
 
     // Trigger URL.
@@ -178,7 +178,7 @@ class mediamosa_asset_mediafile_upload {
     mediamosa_user::must_have_user_quota($app_id, $ticket[mediamosa_media_ticket_db::OWNER_ID], $ticket[mediamosa_media_ticket_db::GROUP_ID]);
 
     // Check if mediafile exists.
-    mediamosa_asset_mediafile::must_exists_quick($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+    mediamosa_asset_mediafile::must_exists_cached($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
 
     // Must be on.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));

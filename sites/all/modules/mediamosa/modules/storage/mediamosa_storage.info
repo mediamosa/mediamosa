@@ -9,6 +9,8 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_storage.rest.class.inc
-files[] = mediamosa_storage.test.class.inc
 files[] = profile/mediamosa_storage_profile.inc
 files[] = profile/app/mediamosa_storage_profile_app.inc
+
+; Test files.
+files[] = transition/mediamosa_storage_transition.test

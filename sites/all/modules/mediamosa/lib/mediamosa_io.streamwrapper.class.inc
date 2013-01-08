@@ -29,6 +29,15 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   const STATIC_MD5S = 'mediamosa_io_streamwrapper::md5';
   const MD5_DEFAULT = '00000000000000000000000000000000';
 
+  /**
+   * Key values result for media_view().
+   */
+  const MEDIA_VIEW_TICKET_ID = 'ticket_id';
+  const MEDIA_VIEW_FILENAME = 'filename';
+  const MEDIA_VIEW_LINK = 'link';
+  const MEDIA_VIEW_SERVER_URI_BUILD = 'server_uri_build';
+  const MEDIA_VIEW_IS_PUBLIC = 'is_pubic';
+
   // --------------------------------------------------------------------- Vars.
   /**
    * The MD5 of the file.
@@ -128,6 +137,33 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    */
   abstract public function md5_file();
 
+  /**
+   * Process media view request.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
+   * @param array $mediafile
+   *   The mediafile to process.
+   * @param string $response_type
+   *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   *
+   * @return array
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
+   *   - 'ticket_id'
+   *     The ticket ID used.
+   *   - 'link'
+   *     The symbolic link complete path.
+   *   - 'filename'
+   *     The filename of the media.
+   *   - 'server_uri_build'
+   *     The finished server uri.
+   */
+  abstract public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin);
+
   // -------------------------------------------------------- Hotfix IO methods.
   /**
    * Tells whether the filename is a regular file.
@@ -175,11 +211,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   }
 
   /**
-   * Tells whether the filename is a directory.
-   *
-   * As current minimum version of PHP 5.2.4 streams do not work with is_dir(),
-   * will support it through mediamosa_io::is_dir(). It will only work when
-   * called by mediamosa_io::is_dir().
+   * Get the filesize of the file.
    *
    * @return integer
    *   Returns the size of the file in bytes, or FALSE.
@@ -195,6 +227,17 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
 
     // Check the file flag.
     return $stat['size'];
+  }
+
+  /**
+   * Test if the file exists.
+   *
+   * @return boolean
+   *   Returns TRUE when file exists.
+   */
+  public function file_exists() {
+    // Use normal PHP version.
+    return file_exists($this->uri);
   }
 
   //
@@ -492,7 +535,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * @return string
    *   The mediafile ID uri part.
    */
-  static public function create_uri_mediafile_id_path($mediafile_id) {
+  public static function create_uri_mediafile_id_path($mediafile_id) {
     return empty($mediafile_id) ? '' : ('/-/' . $mediafile_id[0] . '/' . $mediafile_id);
   }
 }

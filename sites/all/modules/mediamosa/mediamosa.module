@@ -25,6 +25,30 @@ function mediamosa_mediamosa_storage_info() {
 }
 
 /**
+ * Implements hook_mediamosa_acl().
+ */
+function mediamosa_mediamosa_acl(array $object, $op, $acl_type, $app_id, $user_id, $is_app_admin, array $acl_data = array()) {
+  // Any change will trigger reindex object.
+  switch ($acl_type) {
+    case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+      // ACL status changed, remove possible perm. link.
+      mediamosa_media::remove_public_link($object['app_id'], $object['mediafile_id']);
+
+      // Reindex the asset using the mediafile ID.
+      mediamosa_asset_mediafile::mediamosa_asset_reindex(array($object['mediafile_id']), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
+      break;
+
+    case mediamosa_acl::ACL_TYPE_ASSET:
+      // ACL status changed, remove possible perm. link.
+      mediamosa_media::remove_public_link_asset($object['asset_id']);
+
+      // Reindex the asset using the mediafile ID.
+      mediamosa_asset::mediamosa_asset_reindex(array($object['asset_id']), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
+      break;
+  }
+}
+
+/**
  * Implements hook_stream_wrappers().
  */
 function mediamosa_stream_wrappers() {
@@ -240,7 +264,6 @@ function mediamosa_permission() {
       'title' => t('Update MediaMosa configuration (webservices)'),
       'description' => t($text_edit_switch, array('@type' => 'webservices')),
     ),
-
   );
 
   // Add the roles of the apps.
@@ -704,7 +727,7 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('MediaMosa temporary system path'),
     '#description' => t('The linux temporary system path'),
     '#required' => TRUE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary', '/srv/mediamosa'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary', '/srv/mediamosa/data/transcode'),
   );
 
   $form['settings_storage']['temporary']['mediamosa_current_mount_point_temporary_windows'] = array(
@@ -712,13 +735,13 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('MediaMosa temporary system path windows'),
     '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
     '#required' => FALSE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary_windows', '\\'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary_windows', '\\data\transcode'),
   );
 
   $form['settings_storage']['transition'] = array(
     '#type' => 'fieldset',
     '#title' => t('Temporary system path'),
-    '#description' => t('The transition file system path is the location where MediaMosa stores files for transcoding and still generation of external sources. The location of the transition directory must be located on an shared location, accessable to all job servers. The default location is on the shared mount point.'),
+    '#description' => t('The transition file system path is the location where MediaMosa stores downloaded files for transcoding and still generation of external sources. The location of the transition directory must be located on an shared location and accessable to all job servers. The default location is on the shared mount point. <em>The transition location is only used when using external storage like Amazon S3.</em>'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
@@ -726,9 +749,9 @@ function mediamosa_mediamosa_configuration_collect() {
   $form['settings_storage']['transition']['mediamosa_current_mount_point_transition'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa transition system path'),
-    '#description' => t('The lin'),
+    '#description' => t('The linux path for transition directory. The location of the transition directory must be located on an shared location, accessable to all job servers'),
     '#required' => TRUE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition', '/srv/mediamosa'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition', '/srv/mediamosa/data/transition'),
   );
 
   $form['settings_storage']['transition']['mediamosa_current_mount_point_transition_windows'] = array(
@@ -736,7 +759,23 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('MediaMosa transition system path windows'),
     '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
     '#required' => FALSE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition_windows', '\\'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition_windows', '\\data\transition'),
+  );
+
+  $form['settings_storage']['transition']['mediamosa_storage_transition_max_size_gb'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition maximum size (gigabytes)'),
+    '#description' => t('The maximum size is not an exact size. It can and will in some cases go over the maximum size, although for a short time (few minutes). We recommend around 25gb as minimum value, for larger installations up to 100gb. The more size, the less download traffic is needed for external sources.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_storage_transition_max_size_gb', '50'),
+  );
+
+  $form['settings_storage']['transition']['mediamosa_storage_transition_max_lifetime_days'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition maximum lifetime files (days)'),
+    '#description' => t('Files will be kept for the maximum of given days that the file was not accessed. However, files will be removed sooner if space when needed. We recommend 7 days as minimum value.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_storage_transition_max_lifetime_days', '14'),
   );
 
   $form['settings_mediamosa'] = array(
@@ -747,7 +786,7 @@ function mediamosa_mediamosa_configuration_collect() {
   );
 
   // Get all installed search engines.
-  $mediamosa_search_engines = module_invoke_all('mediamosa_search_engine');
+  $mediamosa_search_engines = module_invoke_all('mediamosa_search_engine_info');
   $options = array();
   foreach ($mediamosa_search_engines as $name => $mediamosa_search_engine) {
     $options[$name] = $mediamosa_search_engine['title'];
@@ -836,6 +875,15 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
     if ($running_jobs) {
       form_set_error('mediamosa_current_mount_point', t('You can not change any of the file system settings if there are running jobs. There are currently @count running job(s).', array('@count' => $running_jobs)));
     }
+  }
+
+  // Must not be lower than 1.
+  if ($form_state['values']['mediamosa_storage_transition_max_lifetime_days'] < 1) {
+    form_set_error('mediamosa_storage_transition_max_lifetime_days', t('Must be larger than 0'));
+  }
+
+  if ($form_state['values']['mediamosa_storage_transition_max_size_gb'] < 10) {
+    form_set_error('mediamosa_storage_transition_max_size_gb', t('Must be larger or equal than 10'));
   }
 }
 
@@ -947,6 +995,9 @@ function mediamosa_cron() {
     return;
   }
 
+  // Call the clear up function of transition files.
+  mediamosa_storage_transition::clean_up();
+
   try {
     /*
      * Clean up our extra data on watchdog entries in mediamosa_watchdog.
@@ -968,9 +1019,9 @@ function mediamosa_cron() {
 }
 
 /**
- * Implements hook_mediamosa_search_engine().
+ * Implements hook_mediamosa_search_engine_info().
  */
-function mediamosa_mediamosa_search_engine() {
+function mediamosa_mediamosa_search_engine_info() {
 
   // Return the information about the default search engine.
   return array('mediamosa_search' => array(

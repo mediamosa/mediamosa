@@ -13,6 +13,11 @@
   playproxy, all other code does not look at the stored mount point.
 
 
+You need to use mediamosa_io::clearstatcache() when;
+
+1. Your process uses external program to delete files, e.g. 'find' with delete.
+2. The REST call you call might delete files (another process).
+
 
 MediaMosa 3.4.x-dev (build 1975, inuits branch)
 -----------------------------------------------
@@ -113,6 +118,13 @@ MediaMosa 3.4.x-dev (build 1975, inuits branch)
 - Removed usage of the static:: (loose static option of PHP5.3) and rewrite into
   method usage.
 - Fixed bug in mediamosa_io::mkdir() when uri contained mediafile ID splitter.
+- Renamed hook 'hook_mediamosa_search_engine' to
+  'hook_mediamosa_search_engine_info'.
+- Functions that can call REST calls now clear the file cache afterwards using
+  mediamosa_io::clearstatcache(). As REST calls might delete files and that
+  status of the file is not changed after the REST call returns.
+- Fixed CQL bug that cause underscores (_) to be LIKE escape on an normal =
+  operator.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

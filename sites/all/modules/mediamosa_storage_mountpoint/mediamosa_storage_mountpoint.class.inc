@@ -13,7 +13,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
 
   // -------------------------------------------------------------- Constructor.
   /**
-   * Main constructor
+   * Main constructor.
    *
    * @param object|integer $storage_profile
    *   Storage profile node or nid

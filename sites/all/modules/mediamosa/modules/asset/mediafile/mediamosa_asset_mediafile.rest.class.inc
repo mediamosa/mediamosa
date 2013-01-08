@@ -101,7 +101,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     $show_stills = $this->get_param_value(self::SHOW_STILLS);
 
     // Must exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     // Must have access.
     mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile_id, $app_ids);

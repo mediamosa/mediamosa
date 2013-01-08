@@ -63,7 +63,7 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
 
-    // Add mediafile clean up and get the first transcoded mediafile.
+    // Get the first transcoded mediafile.
     $mediafile_id_transcoded = NULL;
     foreach ($asset['mediafiles'] as $mediafile) {
       if (isset($mediafile[0])) {
@@ -73,9 +73,6 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
             break 2;
           }
         }
-      }
-      else {
-        $this->addToCleanUp($mediafile['mediafile_id']);
       }
     }
 

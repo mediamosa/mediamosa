@@ -48,14 +48,6 @@ class mediamosa_media {
    */
   const VIDEO_CODEC_H264 = 'h264';
 
-  /**
-   * Key values result for process_media_view().
-   */
-  const MEDIA_VIEW_TICKET_ID = 'ticket_id';
-  const MEDIA_VIEW_FILENAME = 'filename';
-  const MEDIA_VIEW_LINK = 'link';
-  const MEDIA_VIEW_SERVER_URI_BUILD = 'server_uri_build';
-
   // ---------------------------------------------------------------- Functions.
   /**
    * Build the filename for source (/data) and symlink (/media).
@@ -126,7 +118,7 @@ class mediamosa_media {
    *     ERRORCODE_FILE_NOT_FOUND
    *     ERRORCODE_UNABLE_TO_CREATE_SYMLINK
    */
-  protected static function handle_media_symlink($target, $link) {
+  public static function handle_media_symlink($target, $link) {
     // Create the symlink, if not already. In most cases, its either already
     // been created (mean while during this call) or its the first call.
     if (mediamosa_io::file_exists($link)) {
@@ -353,7 +345,7 @@ class mediamosa_media {
    *   Is app admin.
    *
    * @return array
-   *   An associative array; (see mediamosa_media::MEDIA_VIEW_*)
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
    *   - 'ticket_id'
    *     The ticket ID used.
    *   - 'link'
@@ -363,82 +355,15 @@ class mediamosa_media {
    *   - 'server_uri_build'
    *     The finished server uri.
    */
-  static public function process_media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+  public static function process_media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+    // Get normal uri to mediafile.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
-    // Get the stuff we need.
-    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
-    $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
+    // Need streamwrapper.
+    $wrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($mediafile_uri);
 
-    // Make sure the physical file exists.
-    mediamosa_storage::file_must_exist($mediafile_id);
-
-    // Get the permanent status, public mediafiles can be public.
-    $is_public = mediamosa_media::is_public($mediafile, $is_app_admin);
-
-    // Get the filename.
-    $filename = self::get_media_filename($mediafile);
-
-    // Get target file.
-    $target_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
-
-    // Only store temporary tickets.
-    // Is a permanent link?
-    if ($is_public) {
-      $ticket_id = $mediafile_id;
-
-      // Get the paths needed for the symlink.
-      $link = mediamosa_storage::get_realpath_media_permanent_file($app_id, $ticket_id, $filename);
-      $path = mediamosa_storage::get_path_media_permanent_file($app_id, $ticket_id, $filename);
-    }
-    else {
-      $responsetype2tickettype = array(
-        mediamosa_media::RESPONSE_STILL => mediamosa_media_ticket::TICKET_TYPE_STILL,
-        mediamosa_media::RESPONSE_DOWNLOAD => mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD,
-        mediamosa_media::RESPONSE_METAFILE => mediamosa_media_ticket::TICKET_TYPE_VIEW,
-        mediamosa_media::RESPONSE_OBJECT => mediamosa_media_ticket::TICKET_TYPE_VIEW,
-        mediamosa_media::RESPONSE_URI => mediamosa_media_ticket::TICKET_TYPE_VIEW,
-      );
-
-      // Convert to ticket type.
-      $ticket_type = isset($responsetype2tickettype[$response_type]) ? $responsetype2tickettype[$response_type] : FALSE;
-
-      // Just in case.
-      if (empty($ticket_type)) {
-        throw new mediamosa_exception_program_error(
-          'Unknown response type @type used in @func on line @line, file @file.',
-          array(
-            '@type' => $response_type,
-            '@line' => __LINE__,
-            '@func' => __FUNCTION__,
-            '@file' => __FILE__,
-          )
-        );
-      }
-
-      // Create ticket.
-      $ticket_id = mediamosa_media_ticket::create($app_id, $ticket_type, $user_id, $mediafile_id);
-
-      // Get the paths needed for the symlink.
-      $link = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
-      $path = mediamosa_storage::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
-    }
-
-    // Create the symlink.
-    self::handle_media_symlink($target_uri, $link);
-
-    // Get the streaming server URI.
-    $server_uri = self::get_server_uri($mediafile_id, $uri, $response_type);
-
-    // Rebuild uri with path.
-    $server_uri_build = strtr($server_uri, array(self::PARAM_URI_TICKET => $path));
-
-    // Return the information needed.
-    return array(
-      self::MEDIA_VIEW_TICKET_ID => $ticket_id,
-      self::MEDIA_VIEW_FILENAME => $filename,
-      self::MEDIA_VIEW_LINK => $link,
-      self::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri_build,
-    );
+    // Create the media view.
+    return $wrapper->media_view($app_id, $user_id, $mediafile, $response_type, $is_app_admin);
   }
 
   /**
@@ -460,6 +385,30 @@ class mediamosa_media {
     }
 
     return mediamosa_server::get_server_by_responsetype($response_type, $mediafile_id);
+  }
+
+  /**
+   * Convert response type into ticket type.
+   *
+   * @param string $response_type
+   *   The response type to convert.
+   *
+   * @return string
+   *   The ticket type.
+   */
+  public static function responsetype2tickettype($response_type) {
+    $responsetype2tickettype = array(
+      mediamosa_media::RESPONSE_STILL => mediamosa_media_ticket::TICKET_TYPE_STILL,
+      mediamosa_media::RESPONSE_DOWNLOAD => mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD,
+      mediamosa_media::RESPONSE_METAFILE => mediamosa_media_ticket::TICKET_TYPE_VIEW,
+      mediamosa_media::RESPONSE_OBJECT => mediamosa_media_ticket::TICKET_TYPE_VIEW,
+      mediamosa_media::RESPONSE_URI => mediamosa_media_ticket::TICKET_TYPE_VIEW,
+    );
+
+    assert(isset($responsetype2tickettype[$response_type]));
+
+    // Convert to ticket type.
+    return $responsetype2tickettype[$response_type];
   }
 
   /**
@@ -486,19 +435,19 @@ class mediamosa_media {
    * @throws mediamosa_exception_error
    */
   public static function do_response_download($app_id, $user_id, $is_app_admin, $mediafile) {
-    // Build the mediaview.
-    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_DOWNLOAD, $is_app_admin);
-
     if (!$is_app_admin) {
       if (!mediamosa_lib::boolstr2bool($mediafile[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE])) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED);
       }
     }
 
+    // Build the mediaview.
+    $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_DOWNLOAD, $is_app_admin);
+
     return array(
-      'output' => $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD],
+      'output' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD],
       'content_type' => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'mime_type'),
-      'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
+      'ticket_id' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID],
     );
   }
 
@@ -539,7 +488,7 @@ class mediamosa_media {
     $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_METAFILE, $is_app_admin);
 
     // Get server uri build.
-    $server_uri_build = $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
+    $server_uri_build = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD];
 
     // Get the container type.
     $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'container_type');
@@ -684,7 +633,7 @@ class mediamosa_media {
     return array(
       'output' => $output,
       'content_type' => $container_type,
-      'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
+      'ticket_id' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID],
     );
   }
 
@@ -726,7 +675,7 @@ class mediamosa_media {
     $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mediafile, self::RESPONSE_OBJECT, $is_app_admin);
 
     // Get server uri build.
-    $server_uri_build = $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
+    $server_uri_build = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD];
 
     // Default type for objects.
     $content_type = 'text/html';
@@ -849,10 +798,10 @@ class mediamosa_media {
           $output_asx = strtr($output_asx, $variables);
 
           // Same filename, extension .asx.
-          $filename_asx = mediamosa_io::get_base_filename(mediamosa_io::basename($media_view[self::MEDIA_VIEW_FILENAME])) . '.asx';
+          $filename_asx = mediamosa_io::get_base_filename(mediamosa_io::basename($media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME])) . '.asx';
 
           // Get the filename for the asx file.
-          $file_asx = mediamosa_storage::get_realpath_object_file($app_id, $media_view[self::MEDIA_VIEW_TICKET_ID], $filename_asx);
+          $file_asx = mediamosa_storage::get_realpath_object_file($app_id, $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID], $filename_asx);
 
           // Create a possible app_id directory.
           mediamosa_io::mkdir(mediamosa_io::dirname($file_asx));
@@ -874,24 +823,37 @@ class mediamosa_media {
               $server_uri = self::get_server_uri($mediafile[mediamosa_asset_mediafile_db::ID], '', self::RESPONSE_STILL);
 
               // Path to object file.
-              // @todo: rewrite to stream wrapper URL.
-              $path = mediamosa_storage::get_path_media_object_file($app_id, $media_view[self::MEDIA_VIEW_TICKET_ID], $filename_asx);
+              $path = mediamosa_storage::get_path_media_object_file($app_id, $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID], $filename_asx);
 
               // Rebuild uri with path.
               $server_uri_build = strtr($server_uri, array(self::PARAM_URI_TICKET => $path));
 
-              // Need new view link.
-              $link = mediamosa_io::dirname($media_view[self::MEDIA_VIEW_LINK]) . '/' . $filename_asx;
+              // Is a public link?
+              if ($media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_IS_PUBLIC]) {
+                $ticket_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+
+                // Get the paths needed for the symlink.
+                $link = mediamosa_storage::get_realpath_media_permanent_file($app_id, $ticket_id, $filename_asx);
+              }
+              else {
+                // Convert to ticket type.
+                $ticket_type = mediamosa_media::responsetype2tickettype(self::RESPONSE_OBJECT);
+
+                // Get the paths needed for the symlink.
+                $link = mediamosa_storage::get_realpath_media_ticket_file($app_id, $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID], $filename_asx, $ticket_type);
+              }
 
               // The current symlink now points to the mediafile, must change it
               // to the object file.
-              mediamosa_io::unlink($link);
+              if (!empty($media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_LINK])) {
+                mediamosa_io::unlink($media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_LINK]);
+              }
 
               // Add symlink, if not already (= perm).
               if (!mediamosa_io::file_exists($link)) {
                 // Create new symlink.
                 if (!mediamosa_io::symlink($file_asx, $link)) {
-                  throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $media_view[self::MEDIA_VIEW_LINK]));
+                  throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_LINK]));
                 }
               }
             }
@@ -918,7 +880,7 @@ class mediamosa_media {
     return array(
       'output' => $output,
       'content_type' => $content_type,
-      'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
+      'ticket_id' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID],
     );
   }
 
@@ -947,7 +909,7 @@ class mediamosa_media {
    *
    * @throws mediamosa_exception_error
    */
-  static public function do_response_still($app_id, $user_id, $is_app_admin, $still, array $filtered_stills = array()) {
+  public static function do_response_still($app_id, $user_id, $is_app_admin, $still, array $filtered_stills = array()) {
 
     // Build the mediaview.
     $media_view = mediamosa_media::process_media_view($app_id, $user_id, $still, mediamosa_media::RESPONSE_STILL, $is_app_admin);
@@ -965,14 +927,14 @@ class mediamosa_media {
       }
 
       // Add still ticket.
-      $filtered_stills[$key]['still_ticket'] = $filtered_media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
-      $filtered_stills[$key]['ticket'] = $filtered_media_view[self::MEDIA_VIEW_TICKET_ID];
+      $filtered_stills[$key]['still_ticket'] = $filtered_media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD];
+      $filtered_stills[$key]['ticket'] = $filtered_media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID];
     }
 
     $response = array(
-      'output' => $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD],
+      'output' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD],
       'content_type' => mediamosa_asset_mediafile::get_mime_type($still[mediamosa_asset_mediafile_db::ID]),
-      'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
+      'ticket_id' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID],
     );
 
     // Add possible stills to response.
@@ -1040,7 +1002,7 @@ class mediamosa_media {
     $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'container_type');
 
     // Get the uri.
-    $output = $media_view[self::MEDIA_VIEW_SERVER_URI_BUILD];
+    $output = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD];
     if ($container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_FLV) {
       $output = strtr($output, array(self::PARAM_URI_SCRIPT => 'StroboScope.php?file='));
     }
@@ -1048,7 +1010,7 @@ class mediamosa_media {
     return array(
       'output' => $output,
       'content_type' => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'mime_type'),
-      'ticket_id' => $media_view[self::MEDIA_VIEW_TICKET_ID],
+      'ticket_id' => $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID],
     );
   }
 

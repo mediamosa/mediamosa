@@ -256,7 +256,7 @@ class MediaMosaAmazonS3 extends AmazonS3 {
    *   file extension.
    * @return type
    */
-  public function _upload($bucket, $source_uri, $dest_path, $md5, $mediafile_id, $content_type = '') {
+  public function _upload($bucket, $source_uri, $dest_path, $md5, $mediafile_id, $acl = MediaMosaAmazonS3::ACL_PRIVATE, $content_type = '') {
     // Get the realpath.
     $source_filename = mediamosa_io::realpath($source_uri);
 
@@ -270,7 +270,7 @@ class MediaMosaAmazonS3 extends AmazonS3 {
       'fileUpload' => $source_filename,
       'partSize' => 40 * 1024 * 1024,
       'contentType' => $content_type,
-      'acl' => MediaMosaAmazonS3::ACL_PRIVATE,
+      'acl' => $acl,
       'storage' => MediaMosaAmazonS3::STORAGE_STANDARD
     ));
 

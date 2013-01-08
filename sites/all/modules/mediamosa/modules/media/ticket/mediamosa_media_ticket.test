@@ -155,6 +155,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
         case 'plain':
           // Play proxy function tests if we get ok.
           break;
+
         case 'metafile':
           $test_string = '<asx version="3.0">';
           // Check the output.
@@ -175,7 +176,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         default:
           // Test the output, do output call.
-          $output = str_replace('/still/', '/simpletest/still/', $output);
+          $output = str_replace('/media/', '/simpletest/media/', $output);
 
           // Get the file.
           $result = mediamosa_http::drupal_http_request($output);
@@ -185,6 +186,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
             $result->code == 200,
             t("File exists (@subject): '@url' (code = @code)", array('@subject' => $subject, '@url' => $output, '@code' => $result->code))
           );
+          break;
       }
     }
   }

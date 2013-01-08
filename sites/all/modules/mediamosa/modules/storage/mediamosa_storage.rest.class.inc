@@ -178,7 +178,7 @@ class mediamosa_rest_call_storage_move extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_JOBS, $app_ids);
 
     // Make sure the mediafile exists, does not return the mediafile.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id, $app_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id, $app_id);
 
     // Create the job.
     $job_id = mediamosa_job::create_job_media_move($app_id, $user_id, $is_app_admin, $mediafile_id, $storage_profile_app_id, $path);

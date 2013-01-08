@@ -585,7 +585,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     // Check watermark id, if exists.
     if ($watermark_id) {
-      mediamosa_asset_mediafile::must_exists_quick($watermark_id, $app_id);
+      mediamosa_asset_mediafile::must_exists_cached($watermark_id, $app_id);
     }
 
     if (in_array($job_type, array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_UPLOAD))) {
@@ -840,7 +840,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
 
     // Must exists.
-    mediamosa_asset_mediafile::must_exists_quick($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     // Get the jobs from the user.
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, FALSE, $mediafile_id);

@@ -157,18 +157,24 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         // Get the mediafile.
         $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
-        // Might already been deleted.
-        if ($mediafile && mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile))) {
-// @todo: remove from release.
-//          // Delete uploaded file by deleting the mediafile.
-//          mediamosa_asset_mediafile::delete($mediafile_id);
-// @todo: remove from release.
+        try {
+          if ($mediafile) {
+            // Get URI.
+            $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
-          // Check if the file has been deleted.
-// @todo: remove from release.
-//          $uri = mediamosa_storage::get_uri_mediafile($mediafile);
-//          $this->assertFalse(mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile)), t("File '@uri' (@path) has been deleted.", array('@uri' => $uri, '@path' => mediamosa_io::realpath_safe($uri))));
-// @todo: remove from release.
+            // Might already been deleted.
+            if (mediamosa_io::file_exists($mediafile_uri)) {
+              // Delete uploaded file by deleting the mediafile.
+              mediamosa_asset_mediafile::delete($mediafile_id);
+
+              // Check if the file has been deleted.
+              $uri = mediamosa_storage::get_uri_mediafile($mediafile);
+              $this->assertFalse(mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile)), t("File '@uri' (@path) has been deleted.", array('@uri' => $uri, '@path' => mediamosa_io::realpath_safe($uri))));
+            }
+          }
+        }
+        catch (Exception $e) {
+          mediamosa_watchdog::log_mediafile($mediafile_id, $e->getMessage());
         }
       }
     }
@@ -679,7 +685,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $filename = empty($filename) ? self::getTestVideo() : $filename;
 
     // Get the filesize of the original.
-    $filesize_original = filesize($filename);
+    $filesize_original = mediamosa_io::filesize($filename);
 
     // URL.
     $action = $uploadticket['action'];
@@ -2216,8 +2222,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Do Post call.
     $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
-    // Get the new mediafile_id.
-    $this->assertTrue(TRUE, 'Response: ' . print_r($response, TRUE));
+    // Response dump.
+    $this->var_export($response);
 
     // Check response.
     switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
