@@ -695,7 +695,7 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('MediaMosa storage file system path windows'),
     '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
     '#required' => FALSE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\\\'),
   );
 
   $form['settings_storage']['mount-point']['mediamosa_current_mount_point_stills'] = array(
@@ -711,7 +711,7 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('MediaMosa storage file system path windows for stills'),
     '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers, specificly still images. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
     '#required' => FALSE,
-    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_stills_windows', '\\'),
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_stills_windows', '\\\\'),
   );
 
   $form['settings_storage']['temporary'] = array(

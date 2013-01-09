@@ -413,6 +413,11 @@ class mediamosa_job_server {
 
     // Now execute analyse directly, as its really fast.
     if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
+// @todo: remove from release.
+      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+      mediamosa_debug::log_export($mediafile_id_src);
+// @todo: remove from release.
+
       $analyse_result = mediamosa_asset_mediafile::analyse(0, $mediafile_id_src, $execution_string);
 
       $link_asset = self::get_asset_link($job_id);

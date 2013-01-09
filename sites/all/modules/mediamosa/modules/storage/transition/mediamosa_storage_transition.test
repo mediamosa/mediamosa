@@ -38,7 +38,8 @@ class MediaMosaMediaStorageTransitionTestCaseEga extends MediaMosaTestCaseEgaJob
 
     // Set up for test.
     variable_set('mediamosa_storage_transition_max_lifetime_days', 3);
-    variable_set('mediamosa_storage_transition_max_size_gb', 2);
+    // Size during test is in Mb.
+    variable_set('mediamosa_storage_transition_max_size_gb', 20);
 
     // Add our mediafiles to transition.
     $mediafile_ids = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
@@ -52,19 +53,21 @@ class MediaMosaMediaStorageTransitionTestCaseEga extends MediaMosaTestCaseEgaJob
     }
 
     // Expect 15 files.
-    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField() == 15,'15 files in transition');
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 15, sprintf('%d files in transition', $files));
 
     // Show total used size.
-    $this->pass(mediamosa_storage_transition::get_total_used_size());
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
 
     // Run script. All files should still be there.
     mediamosa_storage_transition::clean_up();
 
     // Show total used size.
-    $this->pass(mediamosa_storage_transition::get_total_used_size());
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
 
     // Expect 15 files.
-    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField() == 15,'15 files in transition');
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 15, sprintf('%d files in transition', $files));
 
     // Get one mediafile ID.
     $mediafile_id = array_pop($mediafile_ids);
@@ -83,16 +86,16 @@ class MediaMosaMediaStorageTransitionTestCaseEga extends MediaMosaTestCaseEgaJob
     mediamosa_storage_transition::clean_up();
 
     // Show total used size.
-    $this->pass(mediamosa_storage_transition::get_total_used_size());
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
 
-//    // Expect 14 files.
-//    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField() == 14,'14 files in transition');
-//
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 14, sprintf('%d files in transition', $files));
+
 //    // Is really gone?
 //    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)->countQuery()->execute()->fetchField() == 0, 'Right file removed.');
 //
 //    // Now set max gb on 1 gb.
-//    variable_set('mediamosa_storage_transition_max_size_gb', 1);
+//    variable_set('mediamosa_storage_transition_max_size_gb', 10);
 //
 //    $gone = array();
 //    $mediafile_id = array_shift($mediafile_ids);

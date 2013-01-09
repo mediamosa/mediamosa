@@ -73,6 +73,6 @@ class mediamosa_io_streamwrapper_local_temporary extends mediamosa_io_streamwrap
       return mediamosa_storage::trim_uri(parent::get_storage_path_windows()) . 'data/transcode';
     }
 
-    return mediamosa::variable_get('mediamosa_current_mount_point_temporary_windows', '\\');
+    return mediamosa::variable_get('mediamosa_current_mount_point_temporary_windows', '\\\\');
   }
 }

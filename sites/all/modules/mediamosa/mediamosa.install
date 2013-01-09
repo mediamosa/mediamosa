@@ -237,7 +237,7 @@ function mediamosa_requirements($phase) {
  *   The current mount point.
  */
 function _mediamosa_update_helper_get_mountpoint() {
-  return rtrim(mediamosa::is_windows_platform() ? mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\') : mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa'), '/');
+  return rtrim(mediamosa::is_windows_platform() ? mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\\\') : mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa'), '/');
 }
 
 
@@ -3703,6 +3703,15 @@ function mediamosa_update_7146() {
  */
 function mediamosa_update_7147() {
 
+  variable_set('mediamosa_current_mount_point_stills', variable_get('mediamosa_current_mount_point', '/srv/mediamosa'));
+  variable_set('mediamosa_current_mount_point_stills_windows', variable_get('mediamosa_current_mount_point_windows', '\\\\'));
+
+  variable_set('mediamosa_current_mount_point_temporary', mediamosa_storage::trim_uri(variable_get('mediamosa_current_mount_point', '/srv/mediamosa')) . 'data/transcode');
+  variable_set('mediamosa_current_mount_point_temporary_windows', variable_get('mediamosa_current_mount_point_windows', '\\\\'));
+
+  variable_set('mediamosa_current_mount_point_transition', mediamosa_storage::trim_uri(variable_get('mediamosa_current_mount_point', '/srv/mediamosa')) . 'data/transition');
+  variable_set('mediamosa_current_mount_point_transition_windows', variable_get('mediamosa_current_mount_point_windows', '\\\\'));
+
   // Destination.
   $data_destination_mf = mediamosa_storage_local::SCHEME_STILLS . '://';
 
@@ -3995,7 +4004,7 @@ function mediamosa_update_7155() {
 function mediamosa_update_7156() {
   // Get root.
   $mountpoint = mediamosa_storage::trim_uri(variable_get('mediamosa_current_mount_point', '/srv/mediamosa'), '');
-  $mountpoint_windows = variable_get('mediamosa_current_mount_point_windows', '\\');
+  $mountpoint_windows = variable_get('mediamosa_current_mount_point_windows', '\\\\');
 
   variable_set('mediamosa_current_mount_point_stills', $mountpoint);
   variable_set('mediamosa_current_mount_point_stills_windows', $mountpoint_windows);

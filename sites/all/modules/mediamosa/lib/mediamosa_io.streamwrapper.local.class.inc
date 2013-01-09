@@ -369,7 +369,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
       return $wrapper->get_storage_path_windows();
     }
 
-    return mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\');
+    return mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\\\');
   }
 
   // ------------------------------------------------------- Basic IO overrides.

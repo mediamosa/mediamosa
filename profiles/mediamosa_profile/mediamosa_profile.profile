@@ -310,9 +310,9 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   variable_set('mediamosa_current_mount_point_transition', $mount_point . 'data/transition/');
 
   // Profile does not does not handle Windows installations.
-  variable_set('mediamosa_current_mount_point_windows', '\\');
-  variable_set('mediamosa_current_mount_point_temporary_windows', '\\');
-  variable_set('mediamosa_current_mount_point_transition_windows', '\\');
+  variable_set('mediamosa_current_mount_point_windows', '\\\\');
+  variable_set('mediamosa_current_mount_point_temporary_windows', '\\\\');
+  variable_set('mediamosa_current_mount_point_transition_windows', '\\\\');
 
   // Setup the mountpoint.
   mediamosa_profile::setup_mountpoint();

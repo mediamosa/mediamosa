@@ -486,7 +486,7 @@ class mediamosa_storage_transition {
     $lifetime_days = variable_get('mediamosa_storage_transition_max_lifetime_days', 14);
 
     // Zero means off.
-    if (!$lifetime_days) {
+    if ($lifetime_days > 0) {
       // Get time 14 days ago.
       $time = strtotime(sprintf('-%d day', $lifetime_days));
 
@@ -503,7 +503,10 @@ class mediamosa_storage_transition {
         ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
         ->execute()
         ->fetchCol();
-
+// @todo: remove from release.
+      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+      mediamosa_debug::log_export($mediafile_ids);
+// @todo: remove from release.
       // Remove these.
       foreach ($mediafile_ids as $mediafile_id) {
         // Lower remove.
@@ -528,7 +531,10 @@ class mediamosa_storage_transition {
         ->range(0, $max_remove)
         ->execute()
         ->fetchCol();
-
+// @todo: remove from release.
+      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+      mediamosa_debug::log_export($mediafile_ids);
+// @todo: remove from release.
       // Remove these.
       foreach ($mediafile_ids as $mediafile_id) {
         // Lower remove.
@@ -542,42 +548,51 @@ class mediamosa_storage_transition {
       }
     }
 
-//    // See if we are over limit with space.
-//    if (self::get_total_used_size() > (variable_get('mediamosa_storage_transition_max_size_gb', '50') * 1024 * 1024)) {
-//      if ($max_remove) {
-//        // Ok, remove files we don't need.
-//        $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
-//        $query->join(
-//          mediamosa_job_db::TABLE_NAME,
-//          'j',
-//          'j.mediafile_id = st.mediafile_id AND j1.status IN (:finished, :failed, :canceled)',
-//          array(
-//            ':finished' => mediamosa_job_db::JOB_STATUS_FINISHED,
-//            ':failed' => mediamosa_job_db::JOB_STATUS_FAILED,
-//            ':canceled' => mediamosa_job_db::JOB_STATUS_CANCELLED,
-//          )
-//        );
-//        $query->join(
-//          mediamosa_job_db::TABLE_NAME,
-//          'j2',
-//          'j2.mediafile_id = st.mediafile_id AND j2.status NOT IN (:finished, :failed, :canceled)',
-//          array(
-//            ':finished' => mediamosa_job_db::JOB_STATUS_FINISHED,
-//            ':failed' => mediamosa_job_db::JOB_STATUS_FAILED,
-//            ':canceled' => mediamosa_job_db::JOB_STATUS_CANCELLED,
-//          )
-//        );
-//        $query
-//          ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
-//
-//          ->condition($subquery)
-//          ->orderBy(mediamosa_job_db::ID, 'ASC')
-//          ->groupBy(mediamosa_job_db::ASSET_ID)
-//          ->range(0, $max_remove)
-//          ->execute()
-//          ->fetchCol();
-//        }
-//
-//    }
+    $max_size_gb = variable_get('mediamosa_storage_transition_max_size_gb', '50');
+
+    // Size is in megabytes in simpletest (to enable testing).
+    $max_size_gb = $max_size_gb * (mediamosa::in_simpletest_sandbox() ? 1048576 : 1073741824);
+
+    // See if we are over limit with space.
+    if ($max_remove && self::get_total_used_size() > $max_size_gb) {
+      // Subselect mediafiles that I can use (as these mediafile have no running
+      // jobs).
+      $subquery = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
+      $subquery->join(mediamosa_storage_transition_db::TABLE_NAME, 'st', 'st.mediafile_id = j.mediafile_id');
+      $subquery
+        ->fields('j', array(mediamosa_job_db::MEDIAFILE_ID))
+        ->condition(
+          mediamosa_job_db::JOB_STATUS,
+          array(
+            mediamosa_job_db::JOB_STATUS_CANCELLING,
+            mediamosa_job_db::JOB_STATUS_INPROGRESS,
+            mediamosa_job_db::JOB_STATUS_WAITING,
+          )
+        );
+
+      $mediafile_ids = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')
+        ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
+        ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $subquery, 'NOT IN')
+        ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
+        ->groupBy(mediamosa_storage_transition_db::MEDIAFILE_ID)
+        ->range(0, $max_remove)
+        ->execute()
+        ->fetchCol();
+// @todo: remove from release.
+      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+      mediamosa_debug::log_export($mediafile_ids);
+// @todo: remove from release.
+      // Remove these.
+      foreach ($mediafile_ids as $mediafile_id) {
+        // Lower remove.
+        $max_remove--;
+
+        // Get transition uri.
+        $transition_uri = self::build_transition_uri($mediafile_id);
+
+        // Unregister the transition.
+        self::unregister_transition_file($transition_uri);
+      }
+    }
   }
 }
