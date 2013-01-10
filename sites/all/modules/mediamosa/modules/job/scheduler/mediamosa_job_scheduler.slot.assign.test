@@ -1,0 +1,153 @@
+<?php
+/**
+ * @file
+ * Job tests for transcode jobs.
+ */
+
+class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - slot assign tests',
+      'description' => 'Testing how scheduler assigns certain jobs to servers.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+    );
+  }
+
+  public function setUp() {
+
+    // Call parent first.
+    parent::setUp();
+
+    // Create upload file.
+    $this->upload = $this->uploadTestFile(array('filename' => self::getTestVideo()));
+
+    $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAll();
+    $job_server = reset($job_servers);
+
+    // Set all job proc. on off.
+    mediamosa_db::db_update(mediamosa_server_db::TABLE_NAME)
+      ->fields(array(mediamosa_server_db::SERVER_STATUS => mediamosa_server_db::SERVER_STATUS_OFF))
+      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR)
+      ->execute();
+
+    // Get URL of the current server, stripped from schema.
+    $server_url = url('', array('absolute' => TRUE));
+    $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/');
+
+    // Create 4 job servers for each type. The urls don't exists, but that does
+    // not matter.
+    $default_servers = array(
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 1', 1, 'TRANSFER', '', 'APC', ''),
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 2', 1, 'ANALYSE', '', 'APC', ''),
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 3', 1, 'ffmpeg', '', 'APC', ''),
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 4', 1, 'STILL', '', 'APC', ''),
+    );
+
+    foreach ($default_servers as $default_server) {
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[8]);
+
+      $node->{mediamosa_server_db::VERSION} = $default_server[0];
+      $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[1];
+      $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[2];
+      $node->{mediamosa_server_db::SERVER_URI} = $default_server[3];
+      $node->{mediamosa_server_db::SERVER_PATH} = $default_server[4];
+      $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
+      $node->{mediamosa_server_db::MIME_TYPE} = $default_server[6];
+      $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[7];
+      $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[8];
+      $node->{mediamosa_server_db::SLOTS} = (int) $default_server[9];
+      $node->{mediamosa_server_db::TOOLS} = $default_server[10];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[11];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[12];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[13];
+
+      $node = node_save($node);
+    }
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testSlotAssign() {
+    // Get servers
+    $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAllAssoc(mediamosa_server_db::TOOLS);
+    $this->var_export($job_servers);
+
+    $mediafile_id = $this->upload['mediafile_id'];
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    // Show the mediafile.
+    $this->var_export($mediafile);
+
+    // Create analyse job.
+    $this->createMediafileAnalyse($mediafile_id);
+
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Create analyse job.
+    $this->createMediafileStill($mediafile_id);
+
+    $job_type2tool = array(
+      mediamosa_job_db::JOB_TYPE_ANALYSE => 'ANALYSE',
+      mediamosa_job_db::JOB_TYPE_RETRANSCODE => 'ffmpeg',
+      mediamosa_job_db::JOB_TYPE_TRANSCODE => 'ffmpeg',
+      mediamosa_job_db::JOB_TYPE_STILL => 'STILL',
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD => 'TRANSFER',
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD => 'TRANSFER',
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE => 'TRANSFER',
+    );
+
+    foreach ($job_servers as $tools => $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
+
+      $tools = explode('|', $tools);
+
+      $this->assert(in_array($job_type2tool[$job['job_type']], $tools), t("Tool '@tool' matches '@job_type'.", array('@tool' => implode('|', $tools), '@job_type' => $job['job_type'])));
+    }
+
+    $this->doQueueCycle();
+
+    // Job 2.
+    foreach ($job_servers as $tools => $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->assertFalse($job, 'Can not create job on job server.' );
+    }
+
+    $this->doQueueCycle();
+
+    // Job 3.
+    foreach ($job_servers as $tools => $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->assertFalse($job, 'Can not create job on job server.' );
+    }
+
+    $this->doQueueCycle();
+
+    // Job 4.
+    foreach ($job_servers as $tools => $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->assertFalse($job, 'Can not create job on job server.' );
+    }
+
+    $this->doQueueCycleAll();
+
+    // Job 5.
+    foreach ($job_servers as $tools => $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->assertFalse($job, 'Can not create job on job server.' );
+    }
+
+    // Nothing in mediamosa_job_server.
+    $this->assert(mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')->countQuery()->execute()->fetchField() == 0, 'No more jobs on servers');
+
+    // All finished
+    $this->assert(mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'js')->condition(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_FINISHED , '!=')->countQuery()->execute()->fetchField() == 0, 'All Jobs are finished.');
+  }
+}
