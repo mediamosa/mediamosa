@@ -121,10 +121,10 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
 
     $mediafile_path = empty($matches['mediafile_path']) ? '' : trim($matches['mediafile_path'], '\/');
 
-    // Validate the mediafile_path part.
-    if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
-    }
+//    // Validate the mediafile_path part.
+//    if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
+//      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
+//    }
 
     // Return parts.
     return array(

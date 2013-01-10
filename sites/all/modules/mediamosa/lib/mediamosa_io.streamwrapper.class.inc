@@ -361,7 +361,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * @throws mediamosa_exception_error
    */
   public function get_parts($uri, $part = '') {
-    if (!isset($uri)) {
+    if (empty($uri)) {
       $uri = $this->uri;
     }
 

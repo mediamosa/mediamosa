@@ -21,35 +21,6 @@ function _mediamosa_job_server_install() {
   _mediamosa_job_server_analyse_install();
   _mediamosa_job_server_still_install();
   _mediamosa_job_server_transcode_install();
-
-  // @todo
-  return;
-
-  // Now create the tables in optional sub-databases.
-  global $databases;
-  if (!isset($databases['jobserver']) && !isset($databases['jobserver']['default']) && !isset($databases['jobserver']['default']['mediamosa_jobserver_dbs'])) {
-    return;
-  }
-
-  foreach ($databases['jobserver']['default']['mediamosa_jobserver_dbs'] as $to_dbname) {
-    $old_db = mediamosa_db::db_set_active($to_dbname);
-
-    try {
-      // Create our table(s).
-      mediamosa::drupal_install_schema(mediamosa_job_server_db::TABLE_NAME);
-
-      // Create child tables;
-      _mediamosa_job_server_analyse_install();
-      _mediamosa_job_server_still_install();
-      _mediamosa_job_server_transcode_install();
-    }
-    catch (Exception $e) {
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    mediamosa_db::db_set_active($old_db);
-  }
 }
 
 /**

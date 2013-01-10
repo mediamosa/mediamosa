@@ -698,7 +698,6 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *
    * This method is called in response to php:rename(). Both uris must be on
    * the same location.
-   *
 	 *
 	 * @param string $path_from
    *   The URL to the current file.
@@ -714,15 +713,15 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 
     $from_bucket_name = $this->get_bucket($this->get_parts($path_from, 'path'));
     $to_bucket_name = $this->get_bucket($this->get_parts($path_to, 'path'));
-    $from_object_name = $this->get_bucket($this->get_parts($path_from, 'mediafile_path'));
-    $to_object_name = $this->get_bucket($this->get_parts($path_to, 'mediafile_path'));
+    $from_object_name = $this->get_parts($path_from, 'mediafile_path');
+    $to_object_name = $this->get_parts($path_to, 'mediafile_path');
 
 		$response = $s3->copy_object(
 			array('bucket' => $from_bucket_name, 'filename' => $from_object_name),
-			array('bucket' => $to_bucket_name,   'filename' => $to_object_name  )
+			array('bucket' => $to_bucket_name, 'filename' => $to_object_name)
 		);
 
-		if ($response->isOK()) {
+    if ($response->isOK()) {
 			return $s3->delete_object($from_bucket_name, $from_object_name)->isOK();
 		}
 

@@ -149,10 +149,8 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
     }
 
     $this->assert($response->isOK(), t('Response S3 OK, got code @code', array('@code' => $response->status)));
-//    if (!$response->isOK()) {
-      $this->var_export($response->header, 'S3Response Header');
-      $this->var_export($response->body, 'S3Response Body');
-  //  }
+    $this->var_export($response->header, 'S3Response Header');
+    $this->var_export($response->body, 'S3Response Body');
   }
 
   /**

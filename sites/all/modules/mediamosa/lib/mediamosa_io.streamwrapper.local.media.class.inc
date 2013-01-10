@@ -30,7 +30,7 @@ class mediamosa_io_streamwrapper_local_media extends mediamosa_io_streamwrapper_
    * Validate the uri format.
    *
    * Expects;
-   * mediafile_id[0]/mediafile_id
+   * app_id/mediafile_id[0]/mediafile_id
    *
    * @param string $mediafile_path
    *   The mediafile path to validate.
@@ -39,7 +39,7 @@ class mediamosa_io_streamwrapper_local_media extends mediamosa_io_streamwrapper_
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^.*[a-zA-Z0-9]/[a-zA-Z0-9]+/[^/]+$#';
+    $reg = '#^[a-zA-Z0-9]/[a-zA-Z0-9]+/[^/]+$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }

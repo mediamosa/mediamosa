@@ -1,5 +1,5 @@
 name = "Storage"
 description = "The storage and mount settings. Keep this module turned off, will be removed in later versions."
 package = "MediaMosa - Maintenance - Configuration"
-version = "7.x-3.5"
+version = "deprecated"
 core = 7.x

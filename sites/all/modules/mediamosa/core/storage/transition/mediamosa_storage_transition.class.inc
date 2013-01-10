@@ -503,10 +503,7 @@ class mediamosa_storage_transition {
         ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
         ->execute()
         ->fetchCol();
-// @todo: remove from release.
-      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-      mediamosa_debug::log_export($mediafile_ids);
-// @todo: remove from release.
+
       // Remove these.
       foreach ($mediafile_ids as $mediafile_id) {
         // Lower remove.
@@ -531,10 +528,7 @@ class mediamosa_storage_transition {
         ->range(0, $max_remove)
         ->execute()
         ->fetchCol();
-// @todo: remove from release.
-      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-      mediamosa_debug::log_export($mediafile_ids);
-// @todo: remove from release.
+
       // Remove these.
       foreach ($mediafile_ids as $mediafile_id) {
         // Lower remove.
@@ -578,10 +572,7 @@ class mediamosa_storage_transition {
         ->range(0, $max_remove)
         ->execute()
         ->fetchCol();
-// @todo: remove from release.
-      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-      mediamosa_debug::log_export($mediafile_ids);
-// @todo: remove from release.
+
       // Remove these.
       foreach ($mediafile_ids as $mediafile_id) {
         // Lower remove.

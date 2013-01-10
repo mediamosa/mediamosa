@@ -235,7 +235,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^.*[a-zA-Z0-9](/[a-zA-Z0-9]+)?$#';
+    $reg = '#^([a-zA-Z0-9](/[a-zA-Z0-9]+(/\.[a-zA-Z0-9]+)?)?)?$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }

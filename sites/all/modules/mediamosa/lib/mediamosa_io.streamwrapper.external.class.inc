@@ -97,9 +97,9 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
     $mediafile_path = empty($matches['mediafile_path']) ? '' : trim($matches['mediafile_path'], '\/');
 
     // Validate the mediafile_path part.
-    if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
-    }
+//    if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
+//      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', '" . $mediafile_path . "'"));
+//    }
 
     // Return parts.
     return array(
@@ -114,7 +114,7 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
    * Validate the uri format.
    *
    * Expects;
-   * mediafile_id[0]/mediafile_id
+   * mediafile_id[0]/mediafile_id[.ext]
    *
    * Remember that mediafile_id is optional.
    *
@@ -125,7 +125,7 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^([a-zA-Z0-9](/[a-zA-Z0-9]+)?)?$#';
+    $reg = '#^([a-zA-Z0-9](/[a-zA-Z0-9]+(/\.[a-zA-Z0-9]+)?)?)?$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }

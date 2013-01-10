@@ -413,11 +413,6 @@ class mediamosa_job_server {
 
     // Now execute analyse directly, as its really fast.
     if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
-// @todo: remove from release.
-      mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-      mediamosa_debug::log_export($mediafile_id_src);
-// @todo: remove from release.
-
       $analyse_result = mediamosa_asset_mediafile::analyse(0, $mediafile_id_src, $execution_string);
 
       $link_asset = self::get_asset_link($job_id);
@@ -1356,10 +1351,7 @@ class mediamosa_job_server {
     $mediamosa_io_streamwrapper_destination = mediamosa_io::require_stream_wrapper_instance_by_uri($destination_uri);
 
     // Now upload file.
-    mediamosa_storage::mediafile_copy($source_uri, $destination_uri . '.copy');
-
-    // Rename.
-    mediamosa_io::rename($destination_uri . '.copy', $destination_uri);
+    mediamosa_storage::mediafile_copy($source_uri, $destination_uri);
 
     // Done, update the new location.
     mediamosa_storage::mediafile_update_mointpoint($mediafile, $mediamosa_io_streamwrapper_destination->get_uri_mount_point());

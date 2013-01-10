@@ -206,10 +206,15 @@ class mediamosa_server {
   /**
    * Get all enabled servers (either ON or CLOSE) based on given type.
    *
-   * @param array $server_types (optional)
-   *  The types to retrieve.
+   * @param array $server_types
+   *   (optional) The types to retrieve.
+   * @param array $enabled_status
+   *   The statuses to check for enabled.
+   *
+   * @return SelectQuery
+   *   The found enabled servers.
    */
-  public static function get_enabled(array $server_types = array()) {
+  public static function get_enabled(array $server_types = array(), array $enabled_status = array(mediamosa_server_db::SERVER_STATUS_ON, mediamosa_server_db::SERVER_STATUS_CLOSE)) {
     $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
       ->fields('ms');
 
@@ -219,30 +224,48 @@ class mediamosa_server {
     }
 
     return $query
-      ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_OFF, '!=')
+      ->condition(mediamosa_server_db::SERVER_STATUS, $enabled_status, 'IN')
       ->orderBy(mediamosa_server_db::SERVER_TYPE)
       ->execute();
   }
 
   /**
    * Get all enabled processing servers (either ON or CLOSE).
+   *
+   * @param array $enabled_status
+   *   The statuses to check for enabled.
+   *
+   * @return SelectQuery
+   *   The found enabled servers.
    */
-  public static function get_enabled_job_processor($server_types = array()) {
-    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR));
+  public static function get_enabled_job_processor(array $enabled_status = array(mediamosa_server_db::SERVER_STATUS_ON, mediamosa_server_db::SERVER_STATUS_CLOSE)) {
+    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR), $enabled_status);
   }
 
   /**
    * Get all enabled download servers.
+   *
+   * @param array $enabled_status
+   *   The statuses to check for enabled.
+   *
+   * @return SelectQuery
+   *   The found enabled servers.
    */
-  public static function get_enabled_download() {
-    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD));
+  public static function get_enabled_download(array $enabled_status = array(mediamosa_server_db::SERVER_STATUS_ON, mediamosa_server_db::SERVER_STATUS_CLOSE)) {
+    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD), $enabled_status);
   }
 
   /**
    * Get all enabled still servers.
+   *
+   * @param array $enabled_status
+   *   The statuses to check for enabled.
+   *
+   * @return SelectQuery
+   *   The found enabled servers.
    */
-  public static function get_enabled_still() {
-    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_STILL));
+  public static function get_enabled_still(array $enabled_status = array(mediamosa_server_db::SERVER_STATUS_ON, mediamosa_server_db::SERVER_STATUS_CLOSE)) {
+    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_STILL), $enabled_status);
   }
 
   /**
