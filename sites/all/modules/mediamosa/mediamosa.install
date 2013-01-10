@@ -4050,3 +4050,34 @@ function mediamosa_update_7158() {
   // Done.
   return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
 }
+
+/**
+ * Enable file transfer jobs on all (enabled) job servers.
+ */
+function mediamosa_update_7159() {
+  // Get all job servers we need.
+  $job_servers = mediamosa_server::get_enabled_job_processor();
+
+  // Now give each transfer job type.
+  foreach ($job_servers as $job_server) {
+    // Get tools.
+    $job_tools = explode('|', $job_server[mediamosa_server_db::TOOLS]);
+
+    // Add file transfer.
+    $job_tools[] = mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER;
+
+    // Unique tools
+    $job_tools = array_unique($job_tools);
+
+    // Load the job server.
+    $node_job_server = node_load($job_server[mediamosa_server_db::NID]);
+
+    // Set new tool set.
+    $node_job_server->{mediamosa_server_db::TOOLS} = implode('|', $job_tools);
+
+    // Save.
+    node_save($node_job_server);
+  }
+
+  return t('Your job processor servers have now file transfer enabled on all job servers.');
+}
