@@ -116,7 +116,7 @@ class mediamosa_asset_mediafile_upload {
     mediamosa_job::update_progress_upload($job_id, $file_size);
 
     // Relocate mediafile if final storage location is not local.
-    mediamosa_storage::relocate_mediafile_to_external($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], TRUE);
+    mediamosa_storage::relocate_mediafile($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], TRUE);
 
     // Trigger URL.
     self::trigger_completion_url($completed_url);

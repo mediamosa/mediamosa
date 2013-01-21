@@ -4081,3 +4081,16 @@ function mediamosa_update_7159() {
 
   return t('Your job processor servers have now file transfer enabled on all job servers.');
 }
+
+/**
+ * Remove the 'is_default_profile' flag from storage profiles, its no longer
+ * used.
+ */
+function mediamosa_update_7160() {
+  if (db_index_exists('mediamosa_storage_profile', 'idx_app_isdefault')) {
+    db_drop_index('mediamosa_storage_profile', 'idx_app_isdefault');
+  }
+  if (db_field_exists('mediamosa_storage_profile', 'is_default_profile')) {
+    db_drop_field('mediamosa_storage_profile', 'is_default_profile');
+  }
+}

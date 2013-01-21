@@ -14,7 +14,6 @@ function _mediamosa_storage_local_install() {
   $node->{mediamosa_storage_profile_db::APP_ID} = 0;
   $node->{mediamosa_storage_profile_db::VERSION} = 0;
   $node->{mediamosa_storage_profile_db::PROFILE} = 'MediaMosa local storage';
-  $node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} = mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE;
   node_save($node);
 }
 

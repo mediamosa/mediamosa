@@ -230,6 +230,29 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Upload the file.
     $s3->_upload($bucket, $source_uri, $path, $source_md5, $mediafile_id, $acl, $content_type);
 
+    // Filename might not match because of md5 name in transition_uri, and
+    // upload is with destination path.
+    $filename_source = mediamosa_io::basename($source_uri);
+    $filename_dest = $this->get_mediafile_id();
+    if ($filename_source != $filename_dest) {
+      $response = $s3->copy_object(
+        array('bucket' => $bucket, 'filename' => $path . '/' . $filename_source),
+        array('bucket' => $bucket, 'filename' => $path . '/' . $filename_dest)
+      );
+
+      if ($response->isOK()) {
+        return $s3->delete_object($bucket, $path . '/' . $filename_source)->isOK();
+      }
+    }
+// @todo: remove from release.
+    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_debug::log_export($this->uri);
+// @todo: remove from release.
+
+    if (!$this->file_exists()) {
+      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("destination file '@uri' (@path) was not found; move failed.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri)))));
+    }
+
     // Set the MD5.
     $this->setMD5($source_md5);
   }

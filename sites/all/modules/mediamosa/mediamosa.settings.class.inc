@@ -163,11 +163,11 @@ class mediamosa_settings {
 
   // UI settings.
   const UI_TAB_WEIGHT_LIST = -10; // Weights of tab items. -10 left, +10 right.
-  const UI_TAB_WEIGHT_VIEW = -6;
-  const UI_TAB_WEIGHT_EDIT = -4;
-  const UI_TAB_WEIGHT_ADD = -9;
-  const UI_TAB_WEIGHT_DELETE = -3;
-  const UI_TAB_WEIGHT_REVISIONS = 0;
+  const UI_TAB_WEIGHT_VIEW = -10;
+  const UI_TAB_WEIGHT_EDIT = 0;
+  const UI_TAB_WEIGHT_ADD = -20;
+  const UI_TAB_WEIGHT_DELETE = 1;
+  const UI_TAB_WEIGHT_REVISIONS = 2;
 
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';

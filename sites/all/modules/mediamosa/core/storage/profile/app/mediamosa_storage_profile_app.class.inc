@@ -14,7 +14,8 @@ class mediamosa_storage_profile_app {
    * Get storage profile app.
    *
    * @param integer $profile_app_id
-   *   Storage profile app ID.
+   *   Storage profile app ID. This is the ID of the profile; its origin is
+   *   table mediamosa_storage_profile->storage_profile_id.
    *
    * @return array
    *   The storage profile app or FALSE.

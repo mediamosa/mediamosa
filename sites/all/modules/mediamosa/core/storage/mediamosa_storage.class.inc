@@ -405,7 +405,7 @@ abstract class mediamosa_storage {
    * @param boolean $is_new
    *   Will alter the sannas location to transition if TRUE.
    */
-  public static function relocate_mediafile_to_external($app_id, $mediafile_id, $is_new) {
+  public static function relocate_mediafile($app_id, $mediafile_id, $is_new) {
     // Need (new) destination uri.
     $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id);
 
@@ -487,12 +487,12 @@ abstract class mediamosa_storage {
       $mediafile = mediamosa_asset_mediafile::must_exists($mediafile);
     }
 
-    // If no mount point, then assign one.
+    // If no mount point, then always assign default.
     if (empty($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
-      $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::create_local_mount_point_uri($mediafile[mediamosa_asset_mediafile_db::APP_ID], $mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+      $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::get_uri_data();
     }
 
-    return self::trim_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile[mediamosa_asset_mediafile_db::ID]);
+    return self::trim_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT], '') . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**
@@ -1010,7 +1010,8 @@ abstract class mediamosa_storage {
       mediamosa_watchdog::log('Not coping mediafile; source and target are the same.');
       return;
     }
-
+    mediamosa_watchdog::log('source:' . $source_uri);
+    mediamosa_watchdog::log('dest:' . $destination_uri);
     // Find the stream wrapper.
     $mediamosa_io_streamwrapper_source = mediamosa_io::require_stream_wrapper_instance_by_uri($source_uri);
 
@@ -1072,5 +1073,101 @@ abstract class mediamosa_storage {
     // Remove old file. If the file is in use somewhere else, it will fail but
     // is not fatal.
     mediamosa_io::unlink($source_uri);
+  }
+
+  /**
+   * Collect information about current mediafile locations.
+   *
+   * @param integer $app_id
+   *   The application ID.
+   * @param boolean $is_still
+   *   Select either stills or mediafiles.
+   *
+   * @return array
+   *   An associative array storage location.
+   */
+  public static function app_collect_storage_locations($app_id, $is_still = FALSE) {
+
+    // Collect the storage locations.
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->addExpression('COUNT(' . mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT . ')', 'count');
+    $query->addField('mf', mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT);
+    $query->addField('mf', mediamosa_asset_mediafile_db::IS_STILL);
+    $query->condition(mediamosa_asset_mediafile_db::APP_ID, $app_id);
+    $query->condition(mediamosa_asset_mediafile_db::IS_STILL, $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE : mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    $query->groupBy(mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT);
+    $result = $query->execute();
+
+    // Get the storage profile app for this client application.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    // Build up the mount point uri.
+    $app_uri = self::get_mount_point_uri_by_storage_profile_app($storage_profile_app, $is_still);
+    $app_scheme = mediamosa_io::get_uri_scheme($app_uri);
+
+    // In case of unknown.
+    $unknown = array(
+      'name' => t('Unknown storage profile'),
+      'description' => t("Storage profile '@uri' not registered."),
+    );
+
+    // Get the wrappers.
+    $wrappers = file_get_stream_wrappers();
+
+    $storage = array();
+    $total = 0;
+    $total_to_move = 0;
+    foreach ($result as $mount_point) {
+      // If for some reason the mountpoint is empty, assume default.
+      if (empty($mount_point[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+        $mount_point[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = mediamosa_storage::get_uri_data();
+      }
+
+      // Get uri of the grouped mediafiles.
+      $uri = $mount_point[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT];
+      $scheme = mediamosa_io::get_uri_scheme($uri);
+
+      // Create wrapper.
+      $wrapper = isset($wrappers[$scheme]) ? $wrappers[$scheme] : $unknown;
+      $wrapper_instance = mediamosa_io::find_stream_wrapper_instance_by_uri($uri);
+
+      // Check for storage profile.
+      if ($wrapper_instance) {
+        $storage_profile_id = $wrapper_instance->get_storage_profile_id();
+        try {
+          mediamosa_storage_profile::must_exists($storage_profile_id);
+        }
+        catch (mediamosa_exception $e) {
+          $wrapper_instance = FALSE;
+        }
+      }
+
+      $storage[$uri]['wrapper_instance'] = $wrapper_instance;
+
+      $is_local = $wrapper_instance ? (method_exists($wrapper_instance, 'is_local') ? $wrapper_instance->is_local() : TRUE) : FALSE;
+      $storage[$uri]['is_local'] = $is_local;
+      $path = $is_local ? $wrapper_instance->realpath() : '';
+      $storage[$uri]['path'] = $path;
+
+      if (empty($storage[$uri]['count'])) {
+        $storage[$uri]['count'] = $mount_point['count'];
+      }
+      else {
+        $storage[$uri]['count'] += $mount_point['count'];
+      }
+
+      $total += $mount_point['count'];
+
+      $storage[$uri]['name'] = $wrapper['name'];
+      $storage[$uri]['description'] = strtr($wrapper['description'], array('@uri' => $uri));
+
+      $storage[$uri]['movable'] = FALSE;
+      if ($app_uri != $uri) {
+        $storage[$uri]['movable'] = TRUE;
+        $total_to_move += $mount_point['count'];
+      }
+    }
+
+    return array('data' => $storage, 'total' => $total, 'total_to_move' => $total_to_move, 'app_scheme' => $app_scheme, 'app_uri' => $app_uri);
   }
 }

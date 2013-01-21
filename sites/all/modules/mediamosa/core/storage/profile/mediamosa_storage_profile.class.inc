@@ -31,25 +31,14 @@ class mediamosa_storage_profile {
   /**
    * Get the default storage profile.
    *
-   * @param integer $app_id
-   *   (optional) Application ID.
-   * @param array $fields
-   *   (optional) Selection of columns.
-   *
    * @return array
    *   An associative array with all profile attributes.
+   *
+   * @see mediamosa_storage_profile::get()
    */
-  public static function get_default($app_id = 0, array $fields = array()) {
-    $storage_profile = mediamosa_db::db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
-      ->fields('sp', $fields)
-      ->condition(mediamosa_storage_profile_db::APP_ID, array_unique(array(0, $app_id)), 'IN')
-      ->condition(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE, mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE)
-      ->orderBy(mediamosa_storage_profile_db::APP_ID, 'DESC')
-      ->range(0, 1)
-      ->execute()
-      ->fetchAssoc();
-
-    return $storage_profile;
+  public static function get_default() {
+    // Default is always profile 1.
+    return self::get(self::DEFAULT_STORAGE_PROFILE_ID);
   }
 
   /**
@@ -82,19 +71,6 @@ class mediamosa_storage_profile {
     // Order from app_id 0 and higher.
     $query->orderBy(mediamosa_storage_profile_db::APP_ID, 'ASC');
     return $query->execute();
-  }
-
-  /**
-   * Reset the default storage profile
-   *
-   * @param $app_id
-   *   Application ID
-   */
-  public static function reset_default($app_id) {
-    mediamosa_db::db_update(mediamosa_storage_profile_db::TABLE_NAME)
-      ->condition(mediamosa_storage_profile_db::APP_ID, $app_id)
-      ->fields(array(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE => mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE))
-      ->execute();
   }
 
   /**

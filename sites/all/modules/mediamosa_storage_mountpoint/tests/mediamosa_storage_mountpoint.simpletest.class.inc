@@ -47,7 +47,6 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
     $node->{mediamosa_storage_profile_db::APP_ID} = $app_id;
     $node->{mediamosa_storage_profile_db::VERSION} = 0;
     $node->{mediamosa_storage_profile_db::PROFILE} = 'MediaMosa Mount Point storage';
-    $node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} = mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE;
     $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT} = $wrapper->get_storage_path_linux();
     $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS} = $wrapper->get_storage_path_windows();
     node_save($node);

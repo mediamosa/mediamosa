@@ -463,7 +463,7 @@ class mediamosa_tool_ffmpeg {
 
     // Combine the string (only for linux, windows does not generate stills).
     if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_realpath_data(), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
+      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);
     }
@@ -471,7 +471,7 @@ class mediamosa_tool_ffmpeg {
       $size_explode = explode('x', $size);
       $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
       $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_realpath_data(), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
+      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
       round($duration * $framerate), $frametime, $duration, 1);
     }
     $execution_string .= ' > /dev/null &';

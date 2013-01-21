@@ -27,9 +27,6 @@ function mediamosa_storage_profile_update($node) {
     mediamosa_storage_profile_insert($node);
   }
   else {
-    // If this profile is set as default, then reset the rest to FALSE.
-    _mediamosa_storage_profile_update_isdefault($node);
-
     // Get the field names of the table.
     $names = mediamosa_storage_profile_db::get_fields();
 
@@ -48,9 +45,6 @@ function mediamosa_storage_profile_update($node) {
  * Implements hook_insert().
  */
 function mediamosa_storage_profile_insert($node) {
-  // If this profile is set als default, then reset the rest to FALSE.
-  _mediamosa_storage_profile_update_isdefault($node);
-
   // If just inserting another revision, don't trigger hook_mediamosa_storage_profile_insert
   $trigger_hook_mediamosa_storage_profile_insert = empty($node->{mediamosa_storage_profile_db::ID});
 
@@ -95,17 +89,6 @@ function mediamosa_storage_profile_delete($node) {
  */
 function mediamosa_storage_profile_node_revision_delete($node) {
   mediamosa_node_revision::delete_revision($node);
-}
-
-/**
- * If this profile is set als default, then reset the rest to FALSE
- *
- * @param object $node
- */
-function _mediamosa_storage_profile_update_isdefault($node) {
-  if ($node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} == mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE) {
-    mediamosa_storage_profile::reset_default($node->{mediamosa_storage_profile_db::APP_ID});
-  }
 }
 
 /**
@@ -240,15 +223,6 @@ function mediamosa_storage_profile_form($node, $form_state) {
     '#description' => t('The name of this storage profile.'),
     '#default_value' => mediamosa_node::default_value('title', $node),
     '#maxlength' => mediamosa_storage_profile_db::PROFILE_LENGTH,
-  );
-
-  $form['required'][mediamosa_storage_profile_db::IS_DEFAULT_PROFILE] = array(
-    '#title' => t('Is this the default profile?'),
-    '#type' => 'select',
-    '#default_value' => mediamosa_node::default_value(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE, $node),
-    '#options' => array(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE => t('Yes'), mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE => t('No')),
-    '#required' => TRUE,
-    '#description' => t('If no storage profile is selected for client application, the default profile will be used.'),
   );
 
   // Storage type specific parameters

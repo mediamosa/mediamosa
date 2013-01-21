@@ -538,4 +538,23 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   public static function create_uri_mediafile_id_path($mediafile_id) {
     return empty($mediafile_id) ? '' : ('/-/' . $mediafile_id[0] . '/' . $mediafile_id);
   }
+
+  /**
+   * Find the wrapper and return its info.
+   *
+   * @param string $uri
+   *   The uri of the wrapper to find.
+   *
+   * @return array|FALSE
+   *   Either array with info or FALSE.
+   */
+  public static function get_wrapper_info($uri) {
+    // Get the wrappers.
+    $wrappers = file_get_stream_wrappers();
+
+    // Get scheme.
+    $scheme = file_uri_scheme($uri);
+
+    return isset($wrappers[$scheme]) ? $wrappers[$scheme] : FALSE;
+  }
 }

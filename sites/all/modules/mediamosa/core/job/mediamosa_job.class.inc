@@ -220,6 +220,39 @@ class mediamosa_job {
   }
 
   /**
+   * Returns the number jobs of certain type.
+   *
+   * @param integer $app_id
+   * @param array $job_types
+   *   (optional) The job types to count.
+   * @param array $job_status
+   *   (optional) The job status. default: waiting, inprogess, cancelling.
+   *
+   * @return integer
+   *   The number of jobs found.
+   *
+   * @index app_id, job_status, job_type
+   */
+  public static function count_application_jobs_by_type($app_id, array $job_types = array(), $job_status = array(mediamosa_job_db::JOB_STATUS_WAITING, mediamosa_job_db::JOB_STATUS_CANCELLING, mediamosa_job_db::JOB_STATUS_INPROGRESS)) {
+    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->condition(mediamosa_job_db::APP_ID, $app_id);
+
+    if (!empty($job_status)) {
+      $query->condition(mediamosa_job_db::JOB_STATUS, $job_status);
+    }
+    if (!empty($job_types)) {
+      $query->condition(mediamosa_job_db::JOB_TYPE, $job_types);
+    }
+
+    // Do count.
+    return $query
+      ->groupBy(mediamosa_job_db::JOB_TYPE)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+  }
+
+  /**
    * Store the error description.
    *
    * @param integer $job_id
@@ -472,6 +505,9 @@ class mediamosa_job {
    */
   public static function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array(), $priority = NULL) {
     if (self::is_still_creatable($mediafile_id)) {
+      // Create mediadownload job.
+      self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
+
       // Create job.
       $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
 

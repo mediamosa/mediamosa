@@ -152,6 +152,28 @@ class mediamosa_io {
    * @throws mediamosa_exception_error
    */
   public static function require_stream_wrapper_instance_by_uri($uri) {
+    // Find it.
+    $instance = self::find_stream_wrapper_instance_by_uri($uri);
+    if (!$instance) {
+      // Fatal, need it.
+      throw new mediamosa_exception_error_streamwrapper_not_found(array('@uri' => $uri));
+    }
+
+    return $instance;
+  }
+
+  /**
+   * Return the stream wrapper using the file uri.
+   *
+   * Works fine with all Drupal wrappers.
+   *
+   * @param string $uri
+   *   The file uri.
+   *
+   * @return mediamosa_io_streamwrapper
+   *   The stream wrapper instance or FALSE.
+   */
+  public static function find_stream_wrapper_instance_by_uri($uri) {
     // Get scheme.
     $scheme = self::get_uri_scheme($uri);
 
@@ -164,8 +186,7 @@ class mediamosa_io {
       }
     }
 
-    // Fatal, need it.
-    throw new mediamosa_exception_error_streamwrapper_not_found(array('@uri' => $uri));
+    return FALSE;
   }
 
   /**

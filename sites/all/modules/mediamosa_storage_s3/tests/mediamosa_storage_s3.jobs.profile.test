@@ -37,7 +37,7 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     // My app ID.
     $app_id = $this->a_app['app_id'];
 
-    // Create default profile.
+    // Create default profile and attach it to our app.
     $this->createS3Profile();
 
     // Get my default app storage.
@@ -83,15 +83,6 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     $this->file_exists($uri_original);
     $this->file_exists($uri_transcode);
 
-return;
-
-
-
-
-
-
-
-
     // Get the asset.
     $mediafile = $this->getMediafile($mediafile_id);
     $this->var_export($mediafile);
@@ -104,21 +95,6 @@ return;
     $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
 
     $this->var_export($destination_uri);
-
-    // Now upload to S3 with job.
-    $job_id = $this->doMediafileMove($mediafile_id, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
-
-    // Wait for it to complete.
-    // Parse the queue.
-    $this->doQueueCycleAll();
-
-    // Get the job.
-    $job = $this->getJob($job_id);
-
-    // Must be finished.
-    foreach ($job->get()->xpath('items/item') as $job_item) {
-      $this->assert($job_item->status == mediamosa_job_db::JOB_STATUS_FINISHED, 'All jobs are finished.');
-    }
 
     // Check if the mediafile is present on s3.
     $this->file_exists($destination_uri, 'File on S3 exists');

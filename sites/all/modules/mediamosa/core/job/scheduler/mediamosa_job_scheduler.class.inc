@@ -460,7 +460,7 @@ class mediamosa_job_scheduler {
       ->execute();
 
     //  Relocate mediafile if final storage location is not local.
-    mediamosa_storage::relocate_mediafile_to_external($job_info['app_id'], $mediafile_id_dest, TRUE);
+    mediamosa_storage::relocate_mediafile($job_info['app_id'], $mediafile_id_dest, TRUE);
 
     // Perform a post transcode, if supported.
     if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_transcode')) {

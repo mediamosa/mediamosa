@@ -28,7 +28,6 @@ function _mediamosa_storage_profile_list() {
     array('data' => t('Storage profile id'), 'field' => 'sp.' . mediamosa_storage_profile_db::ID),
     array('data' => t('Profile'), 'field' => 'sp.' . mediamosa_storage_profile_db::PROFILE),
     array('data' => t('Type'), 'field' => 'sp.' . mediamosa_storage_profile_db::TYPE),
-    array('data' => t('Is Default'), 'field' => 'sp.' . mediamosa_storage_profile_db::IS_DEFAULT_PROFILE),
     array('data' => t('App owner'), 'field' => 'sp.' . mediamosa_storage_profile_db::APP_ID),
     t('Operations')
   );
@@ -75,7 +74,6 @@ function _mediamosa_storage_profile_list() {
       'storage_profile_id' => $storage_profile[mediamosa_storage_profile_db::ID],
       'title' => array('data' => l($storage_profile[mediamosa_storage_profile_db::PROFILE], 'admin/mediamosa/config/storage_profile/' . $storage_profile[mediamosa_storage_profile_db::NID]), 'field' => $storage_profile[mediamosa_storage_profile_db::PROFILE]),
       'type' => $types[$storage_profile[mediamosa_storage_profile_db::TYPE]]['name'],
-    	'default' => $storage_profile[mediamosa_storage_profile_db::IS_DEFAULT_PROFILE],
       'owner' => $owner,
       empty($actions) ? '-' : implode(' | ', $actions),
     );
@@ -187,14 +185,14 @@ function _mediamosa_storage_profile_app_options($app_id) {
 
   // Get the storage profiles.
   // @todo: access check?
-  $storage_profiles = mediamosa_storage_profile::get_all($app_id, array(mediamosa_storage_profile_db::ID, mediamosa_storage_profile_db::PROFILE, mediamosa_storage_profile_db::IS_DEFAULT_PROFILE));
+  $storage_profiles = mediamosa_storage_profile::get_all($app_id, array(mediamosa_storage_profile_db::ID, mediamosa_storage_profile_db::PROFILE));
 
   foreach ($storage_profiles as $storage_profile) {
     foreach (mediamosa_storage_profile::get_storage_options($storage_profile[mediamosa_storage_profile_db::ID]) as $key => $label) {
       $options[$storage_profile[mediamosa_storage_profile_db::PROFILE]][$key] = $label;
 
       // Find the first default.
-      if (!$default_storage_option && $storage_profile[mediamosa_storage_profile_db::IS_DEFAULT_PROFILE] == mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE) {
+      if ($storage_profile[mediamosa_storage_profile_db::ID] == mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID) {
         $default_storage_option = $key;
       }
     }

@@ -485,6 +485,9 @@ class mediamosa_asset_mediafile_still {
     mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($still_id, $metadatas);
 
     mediamosa_job::post_create_job_finished($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, '', $still_parameters);
+
+    //  Relocate still if final storage location is not local.
+    mediamosa_storage::relocate_mediafile($app_id, $still_id, TRUE);
   }
 
   /**

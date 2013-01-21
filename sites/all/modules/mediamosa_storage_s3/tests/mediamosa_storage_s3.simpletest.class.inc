@@ -127,13 +127,14 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
   protected function tearDown() {
     // Do tear down.
     parent::tearDown();
-
-    if ($this->s3 && $this->s3->if_bucket_exists($this->getBucketName())) {
-      $this->assert($this->s3->if_bucket_exists($this->getBucketName()), 'Bucket exists.');
-
-      // Remove our test bucket.
-      $this->isOKS3Response($this->s3->delete_bucket($this->getBucketName(), TRUE));
-    }
+// @todo: remove from release.
+//    if ($this->s3 && $this->s3->if_bucket_exists($this->getBucketName())) {
+//      $this->assert($this->s3->if_bucket_exists($this->getBucketName()), 'Bucket exists.');
+//
+//      // Remove our test bucket.
+//      $this->isOKS3Response($this->s3->delete_bucket($this->getBucketName(), TRUE));
+//    }
+// @todo: remove from release.
   }
 
   /**
@@ -182,7 +183,6 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
     $node->{mediamosa_storage_profile_db::APP_ID} = $app_id;
     $node->{mediamosa_storage_profile_db::VERSION} = 0;
     $node->{mediamosa_storage_profile_db::PROFILE} = 'MediaMosa S3 storage';
-    $node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} = mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE;
     $node->{mediamosa_storage_s3_db::KEY} = $mediamosa_storage_s3_simpletest_aws_key;
     $node->{mediamosa_storage_s3_db::SECRET} = $mediamosa_storage_s3_simpletest_aws_secret;
     node_save($node);

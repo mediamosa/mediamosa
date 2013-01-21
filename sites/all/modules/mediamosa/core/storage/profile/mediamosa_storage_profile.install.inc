@@ -87,13 +87,6 @@ function mediamosa_storage_profile_schema() {
         'length' => mediamosa_storage_profile_db::TYPE_LENGTH,
         'description' => 'Profile type.',
       ),
-      mediamosa_storage_profile_db::IS_DEFAULT_PROFILE => array(
-        'description' => 'Indicates if the profile is the default profile.',
-        'type' => "enum('" . implode("','", array(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE, mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE, mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_TRUE)) . "')",
-        'default' => mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE,
-      ),
       mediamosa_storage_profile_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
@@ -111,9 +104,6 @@ function mediamosa_storage_profile_schema() {
     'unique keys' => array(
       'uni_appid_profile' => array(mediamosa_storage_profile_db::APP_ID, mediamosa_storage_profile_db::PROFILE),
       'uni_nid' => array(mediamosa_storage_profile_db::NID),
-    ),
-    'indexes' => array(
-      'idx_app_isdefault' => array(mediamosa_storage_profile_db::APP_ID, mediamosa_storage_profile_db::IS_DEFAULT_PROFILE),
     ),
   );
 

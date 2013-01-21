@@ -256,3 +256,22 @@ tr.simpletest-debug.odd {
 tr.simpletest-debug.even {
   background: #fff !important;
 }
+
+div.mediamosa-vtabs-submit-text {
+  padding: 8px;
+  font-weight: bold;
+}
+
+th.mediamosa-app-storage-count, th.mediamosa-app-storage-valid {
+  width: 80px;
+  text-align: center;
+}
+
+td.item-center {
+  text-align: center;
+}
+
+th.mediamosa-app-storage-name,
+th.mediamosa-app-storage-location {
+  width: 25%;
+}

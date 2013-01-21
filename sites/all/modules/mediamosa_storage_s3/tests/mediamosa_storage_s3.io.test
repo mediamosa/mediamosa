@@ -191,7 +191,6 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
     $node->{mediamosa_storage_profile_db::APP_ID} = $app_id;
     $node->{mediamosa_storage_profile_db::VERSION} = 0;
     $node->{mediamosa_storage_profile_db::PROFILE} = 'MediaMosa S3 storage';
-    $node->{mediamosa_storage_profile_db::IS_DEFAULT_PROFILE} = mediamosa_storage_profile_db::IS_DEFAULT_PROFILE_FALSE;
     $node->{mediamosa_storage_s3_db::KEY} = $mediamosa_storage_s3_simpletest_aws_key;
     $node->{mediamosa_storage_s3_db::SECRET} = $mediamosa_storage_s3_simpletest_aws_secret;
     node_save($node);

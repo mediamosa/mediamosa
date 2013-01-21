@@ -20,7 +20,7 @@ function mediamosa_storage_s3_stream_wrappers() {
       'name' => t('MediaMosa storage S3 mount point location'),
       'class' => 'mediamosa_storage_s3_streamwrapper',
       'description' => t('The remote storage stream wrapper for Amazon S3 for storing MediaFiles.'),
-      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+      'type' => STREAM_WRAPPERS_HIDDEN,
     ),
   );
 

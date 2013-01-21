@@ -22,9 +22,6 @@ class mediamosa_storage_profile_db {
   const PROFILE_LENGTH = 100;
   const TYPE = 'storage_profile_type';
   const TYPE_LENGTH = 100;
-  const IS_DEFAULT_PROFILE = 'is_default_profile';
-  const IS_DEFAULT_PROFILE_TRUE = 'TRUE';
-  const IS_DEFAULT_PROFILE_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
 
