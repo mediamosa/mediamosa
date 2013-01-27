@@ -63,8 +63,7 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
 
     // Create the destination uri.
-    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
-
+    $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id);
     $this->var_export($destination_uri);
 
     // Now upload to S3 with job.

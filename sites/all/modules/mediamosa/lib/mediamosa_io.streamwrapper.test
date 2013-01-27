@@ -79,11 +79,11 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
     $path_prefix = mediamosa_storage::trim_uri($wrapper->get_storage_path_linux());
 
     // Now do real path and check result.
-    $path = mediamosa_io::realpath('mediamosa-storage-data://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id));
+    $path = mediamosa_io::realpath('mediamosa-storage-data://' . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
     $to = $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id;
     $this->assert($path == $to, t('mediamosa-storage-data:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
 
-    $path = mediamosa_io::realpath('mediamosa-storage-stills://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id));
+    $path = mediamosa_io::realpath('mediamosa-storage-stills://' . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
     $to = $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id;
     $this->assert($path == $to, t('mediamosa-storage-stills:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
 
@@ -96,10 +96,10 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
     $this->assert($path == $to, t('mediamosa-storage-transition:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
 
     $mediafile_id = 'doesnotexists';
-    $path = mediamosa_io::realpath('mediamosa-storage-data://'  . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id));
+    $path = mediamosa_io::realpath('mediamosa-storage-data://'  . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
     $this->assert($path == $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, t('mediamosa-storage-data:// must translate to @to, got @got', array('@to' => $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, '@got' => $path)));
 
-    $path = mediamosa_io::realpath('mediamosa-storage-stills://'  . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id));
+    $path = mediamosa_io::realpath('mediamosa-storage-stills://'  . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
     $this->assert($path == $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, t('mediamosa-storage-stills:// must translate to @to, got @got', array('@to' => $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, '@got' => $path)));
 
     $path = mediamosa_io::realpath('mediamosa-storage-temporary://' . $mediafile_id);

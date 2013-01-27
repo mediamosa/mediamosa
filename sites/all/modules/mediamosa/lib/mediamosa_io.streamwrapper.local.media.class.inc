@@ -27,6 +27,19 @@ class mediamosa_io_streamwrapper_local_media extends mediamosa_io_streamwrapper_
   }
 
   /**
+   * Create the complete URI for the mediafile.
+   *
+   * @param string|array $mediafile
+   *   The mediafile array or string ID.
+   *
+   * @return string
+   *   The complete local uri.
+   */
+  public function create_storage_uri($mediafile) {
+    throw new mediamosa_exception_program_error('Not an storage stream wrapper.');
+  }
+
+  /**
    * Validate the uri format.
    *
    * Expects;

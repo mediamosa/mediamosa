@@ -1341,7 +1341,7 @@ class mediamosa_job_server {
     $is_still = mediamosa_asset_mediafile::is_still($mediafile);
 
     // Get current transition location.
-    $source_uri = mediamosa_storage::get_uri_transition_links() . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+    $source_uri = mediamosa_storage::get_uri_transition_links() . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id);
 
     // Need destination storage location.
     $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id, $is_still);

@@ -127,14 +127,13 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
   protected function tearDown() {
     // Do tear down.
     parent::tearDown();
-// @todo: remove from release.
-//    if ($this->s3 && $this->s3->if_bucket_exists($this->getBucketName())) {
-//      $this->assert($this->s3->if_bucket_exists($this->getBucketName()), 'Bucket exists.');
-//
-//      // Remove our test bucket.
-//      $this->isOKS3Response($this->s3->delete_bucket($this->getBucketName(), TRUE));
-//    }
-// @todo: remove from release.
+
+    if ($this->s3 && $this->s3->if_bucket_exists($this->getBucketName())) {
+      $this->assert($this->s3->if_bucket_exists($this->getBucketName()), 'Bucket exists.');
+
+      // Remove our test bucket.
+      $this->isOKS3Response($this->s3->delete_bucket($this->getBucketName(), TRUE));
+    }
   }
 
   /**

@@ -168,8 +168,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
               mediamosa_asset_mediafile::delete($mediafile_id);
 
               // Check if the file has been deleted.
-              $uri = mediamosa_storage::get_uri_mediafile($mediafile);
-              $this->assertFalse(mediamosa_io::file_exists(mediamosa_storage::get_uri_mediafile($mediafile)), t("File '@uri' (@path) has been deleted.", array('@uri' => $uri, '@path' => mediamosa_io::realpath_safe($uri))));
+              $this->assertFalse(mediamosa_io::file_exists($mediafile_uri), t("File '@uri' (@path) has been deleted.", array('@uri' => $mediafile_uri, '@path' => mediamosa_io::realpath_safe($mediafile_uri))));
+            }
+            else {
+              $this->pass(t("Wanted to delete file '@uri' (@path), but was already deleted.", array('@uri' => $mediafile_uri, '@path' => mediamosa_io::realpath_safe($mediafile_uri))));
             }
           }
         }

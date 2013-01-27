@@ -666,10 +666,6 @@ class mediamosa_asset {
       $asset_ids,
       $app_ids,
       $acl_user_id,
-      $granted,
-      $acl_group_ids,
-      $acl_domain,
-      $acl_realm,
       $is_app_admin,
       $show_stills,
       $show_collections,
@@ -697,10 +693,6 @@ class mediamosa_asset {
     array $asset_ids,
     array $app_ids,
     $acl_user_id,
-    $granted,
-    array $acl_group_ids,
-    $acl_domain,
-    $acl_realm,
     $is_app_admin,
     $show_stills = TRUE,
     $show_collections = FALSE,
@@ -749,7 +741,7 @@ class mediamosa_asset {
       }
     }
 
-    // has_streamable_mediafiles.
+    // Has streamable mediafiles.
     if ($add_has_streamable_mediafiles) {
       $result = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
         ->fields(

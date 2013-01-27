@@ -814,6 +814,34 @@ class mediamosa_io {
   }
 
   /**
+   * Test if uri is located on local space.
+   *
+   * @param string $uri
+   *   The uri to file or dir.
+   *
+   * @return boolean
+   *   Returns TRUE for local.
+   */
+  public static function is_local($uri) {
+    // When not uri, expect local.
+    if (!self::is_uri($uri)) {
+      return TRUE;
+    }
+
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return TRUE; // No stream wrapper, expect local.
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'is_local') ? $wrapper->is_local() : TRUE;
+
+  }
+
+  /**
    * Test if file is exists.
    *
    * @param string $uri
@@ -1048,37 +1076,6 @@ class mediamosa_io {
    */
   public static function disk_usage_recursive($directory) {
     return self::disk_usage($directory, TRUE);
-  }
-
-  /**
-   * Determine Mime type of a file.
-   *
-   * @param string $uri
-   *   File to get the mimetype of.
-   */
-  public static function get_mime_type($uri) {
-    // Convert.
-    $realpath = self::realpath($uri);
-
-    $type = '';
-
-    // First try the finfo_file() function.
-    if (function_exists('finfo_file')) {
-      $finfo = finfo_open(FILEINFO_MIME_TYPE);
-      $type = finfo_file($finfo, $realpath);
-      finfo_close($finfo);
-    }
-
-    // Step 2: use the "file" command.
-    if (!$type || $type == 'application/octet-stream') {
-      $return_var = -1;
-      $file_mime = mediamosa_io::exec('file -b -L --mime-type ' . escapeshellarg($realpath), $return_var);
-      if ($return_var == '0' && $file_mime != '') {
-        $type = $file_mime;
-      }
-    }
-
-    return $type;
   }
 
   /**

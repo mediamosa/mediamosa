@@ -284,7 +284,7 @@ class mediamosa_storage_transition {
       }
     }
 
-    return 'mediamosa-storage-transition://' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id) . '/' . $md5;
+    return 'mediamosa-storage-transition://' . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $md5;
   }
 
   /**

@@ -215,5 +215,4 @@ class mediamosa_storage_s3 extends mediamosa_storage {
       return FALSE;
     }
   }
-
 }

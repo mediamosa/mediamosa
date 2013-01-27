@@ -209,9 +209,6 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get bucket.
     $bucket = $this->get_bucket();
 
-    // Get path.
-    $path = mediamosa_io::dirname($this->get_mediafile_path());
-
     // Need mediafile_id as filename.
     $mediafile_id = $this->get_mediafile_id();
 
@@ -228,26 +225,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $acl = mediamosa_storage_s3::mediafile_is_public($mediafile) ? MediaMosaAmazonS3::ACL_PUBLIC : MediaMosaAmazonS3::ACL_PRIVATE;
 
     // Upload the file.
-    $s3->_upload($bucket, $source_uri, $path, $source_md5, $mediafile_id, $acl, $content_type);
-
-    // Filename might not match because of md5 name in transition_uri, and
-    // upload is with destination path.
-    $filename_source = mediamosa_io::basename($source_uri);
-    $filename_dest = $this->get_mediafile_id();
-    if ($filename_source != $filename_dest) {
-      $response = $s3->copy_object(
-        array('bucket' => $bucket, 'filename' => $path . '/' . $filename_source),
-        array('bucket' => $bucket, 'filename' => $path . '/' . $filename_dest)
-      );
-
-      if ($response->isOK()) {
-        return $s3->delete_object($bucket, $path . '/' . $filename_source)->isOK();
-      }
-    }
-// @todo: remove from release.
-    mediamosa_debug::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_debug::log_export($this->uri);
-// @todo: remove from release.
+    $s3->_upload($bucket, $source_uri, $this->get_mediafile_path(), $source_md5, $mediafile_id, $acl, $content_type);
 
     if (!$this->file_exists()) {
       throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("destination file '@uri' (@path) was not found; move failed.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri)))));
@@ -298,15 +276,6 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Convert to ticket type.
     $ticket_type = mediamosa_media::responsetype2tickettype($response_type);
 
-    // Is a public link?
-    if ($is_public) {
-      $ticket_id = $mediafile_id;
-    }
-    else {
-      // Create ticket.
-      $ticket_id = mediamosa_media_ticket::create($app_id, $ticket_type, $user_id, $mediafile_id);
-    }
-
     // Need s3 object.
     $s3 = $this->get_s3();
 
@@ -316,27 +285,39 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get mediafile path.
     $filename = $this->get_mediafile_path();
 
-    // Need expire time (in minutes).
-    switch ($ticket_type) {
-      case mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD:
-        $expire = mediamosa_media_ticket::get_ticket_expiration_download();
-        break;
+    // Is a public link?
+    if ($is_public) {
+      $ticket_id = $mediafile_id;
 
-      case mediamosa_media_ticket::TICKET_TYPE_STILL:
-        $expire = mediamosa_media_ticket::get_ticket_expiration_still();
-        break;
-
-      default:
-      case mediamosa_media_ticket::TICKET_TYPE_VIEW:
-        $expire = mediamosa_media_ticket::get_ticket_expiration_view();
-        break;
+      // Get play url.
+      $url = $s3->get_object_url($bucket, $filename);
     }
+    else {
+      // Create ticket.
+      $ticket_id = mediamosa_media_ticket::create($app_id, $ticket_type, $user_id, $mediafile_id);
 
-    // Convert to UTC since.
-    $expire = gmmktime() + ($expire * 60);
+      // Need expire time (in minutes).
+      switch ($ticket_type) {
+        case mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD:
+          $expire = mediamosa_media_ticket::get_ticket_expiration_download();
+          break;
 
-    // Get play url.
-    $url = $s3->get_object_url($bucket, $filename, $expire);
+        case mediamosa_media_ticket::TICKET_TYPE_STILL:
+          $expire = mediamosa_media_ticket::get_ticket_expiration_still();
+          break;
+
+        default:
+        case mediamosa_media_ticket::TICKET_TYPE_VIEW:
+          $expire = mediamosa_media_ticket::get_ticket_expiration_view();
+          break;
+      }
+
+      // Convert to UTC since.
+      $expire = gmmktime() + ($expire * 60);
+
+      // Get play url.
+      $url = $s3->get_object_url($bucket, $filename, $expire);
+    }
 
     // Return the information needed.
     return array(

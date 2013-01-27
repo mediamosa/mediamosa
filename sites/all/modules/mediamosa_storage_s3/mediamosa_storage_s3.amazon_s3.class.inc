@@ -244,8 +244,8 @@ class MediaMosaAmazonS3 extends AmazonS3 {
    *   The bucket name.
    * @param string $source_uri
    *   The uri of the file to upload. URI must be local.
-   * @param string $dest_path
-   *   The destination path on S3.
+   * @param string $dest_filename
+   *   The destination file on S3.
    * @param string $md5
    *   The MD5 of the file. This will be checked after upload against the etag
    *   of the result XML, must match.
@@ -256,7 +256,7 @@ class MediaMosaAmazonS3 extends AmazonS3 {
    *   file extension.
    * @return type
    */
-  public function _upload($bucket, $source_uri, $dest_path, $md5, $mediafile_id, $acl = MediaMosaAmazonS3::ACL_PRIVATE, $content_type = '') {
+  public function _upload($bucket, $source_uri, $dest_filename, $md5, $mediafile_id, $acl = MediaMosaAmazonS3::ACL_PRIVATE, $content_type = '') {
     // Get the realpath.
     $source_filename = mediamosa_io::realpath($source_uri);
 
@@ -266,7 +266,7 @@ class MediaMosaAmazonS3 extends AmazonS3 {
     // Get content type based on extension.
     $content_type = empty($content_type) ? mediamosa_mimetype::extension2mimetype(mediamosa_io::get_ext($filename)) : $content_type;
 
-    $response = $this->create_mpu_object($bucket, mediamosa_storage::trim_uri($dest_path) . $filename, array(
+    $response = $this->create_mpu_object($bucket, $dest_filename, array(
       'fileUpload' => $source_filename,
       'partSize' => 40 * 1024 * 1024,
       'contentType' => $content_type,
@@ -279,7 +279,7 @@ class MediaMosaAmazonS3 extends AmazonS3 {
     // Check if upload matches our expected md5.
     if ($md5_upload != $md5) {
       // Remove the file, md5 not correct.
-      $this->delete_object($bucket, mediamosa_storage::trim_uri($dest_path) . $filename);
+      $this->delete_object($bucket, $dest_filename);
 
       mediamosa_watchdog::log("Upload to S3 failed for mediafile with ID '@id', MD5 checksum did not match.", array('@id' => $mediafile_id));
 
@@ -299,18 +299,18 @@ class MediaMosaAmazonS3 extends AmazonS3 {
    *   The bucket name.
    * @param string $source_filename
    *   The complete path of file to download.
-   * @param string $dest_path
+   * @param string $dest_filename
    *   The destination path where the file should be stored locally.
    *
    * @return CFResponse
    *   The S3 response object.
    */
-  public function _download($bucket, $source_filename, $dest_path) {
+  public function _download($bucket, $source_filename, $dest_filename) {
     // Make sure directory exists.
-    mediamosa_io::mkdir(mediamosa_io::dirname($dest_path));
+    mediamosa_io::mkdir(mediamosa_io::dirname($dest_filename));
 
     return $this->get_object($bucket, $source_filename, array(
-      'fileDownload' => $dest_path,
+      'fileDownload' => $dest_filename,
     ));
   }
 

@@ -74,7 +74,7 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
       $mediafile_id = $this->get_mediafile_id();
 
       // Build up the link.
-      $link_uri = 'mediamosa-storage-transition-links://' . self::create_uri_mediafile_id_path($mediafile_id);
+      $link_uri = 'mediamosa-storage-transition-links://' . self::create_mediafile_path($mediafile_id);
 
       if (mediamosa_io::file_exists($link_uri)) {
         // Need to identify the file.
@@ -126,7 +126,7 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
     $mediafile_id = $this->get_mediafile_id();
 
     // Build up the link.
-    $link_uri = 'mediamosa-storage-transition-links://' . self::create_uri_mediafile_id_path($mediafile_id);
+    $link_uri = 'mediamosa-storage-transition-links://' . self::create_mediafile_path($mediafile_id);
 
     // Remove it before we attempt to create it.
     mediamosa_io::unlink($link_uri);

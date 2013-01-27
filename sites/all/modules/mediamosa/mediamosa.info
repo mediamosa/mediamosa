@@ -329,3 +329,4 @@ files[] = mediamosa.environment.test
 files[] = lib/mediamosa_io.test
 files[] = lib/mediamosa_io.streamwrapper.test
 files[] = lib/mediamosa.lib.test
+files[] = lib/mediamosa_mimetype.test

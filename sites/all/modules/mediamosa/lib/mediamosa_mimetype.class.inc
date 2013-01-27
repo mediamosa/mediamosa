@@ -57,4 +57,44 @@ class mediamosa_mimetype {
 
     return FALSE;
   }
+
+  /**
+   * Determine Mime type of a file.
+   *
+   * @todo: move to wrapper.
+   *
+   * @param string $uri
+   *   File to get the mimetype of.
+   *
+   * @return string
+   *   The mime type.
+   */
+  public static function get_mime_type($uri) {
+    // Get the local file.
+    $realpath = mediamosa_io::realpath($uri);
+
+    $return_var = -1;
+    $file_mime = reset(mediamosa_io::exec('file -b -L --mime-type ' . escapeshellarg($realpath), $return_var));
+    if ($file_mime == 'application/octet-stream') {
+      $result = reset(mediamosa_io::exec('file -L ' . escapeshellarg($realpath), $return_var));
+
+      $matches = array();
+      $reg = '#^(?P<filename>.*): (?P<filetype>.*)$#';
+      if (preg_match($reg, $result, $matches)) {
+        // Some specific detection.
+        switch ($matches['filetype']) {
+          case 'Microsoft ASF':
+            return 'video/x-msvideo';
+
+          case 'Macromedia Flash Video':
+            return 'video/x-flv';
+
+          case 'video/mp4':
+            return 'video/mp4';
+        }
+      }
+    }
+
+    return $file_mime;
+  }
 }

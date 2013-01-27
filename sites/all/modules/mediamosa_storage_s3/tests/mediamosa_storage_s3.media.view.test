@@ -24,8 +24,6 @@ class MediaMosaS3MediaViewTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     return array();
   }
 
-  // ---------------------------------------------------------------- Functions.
-
   // -------------------------------------------------------------------- Tests.
   public function testPlayProxy() {
     // If s3 object is missing, stop the test.

@@ -54,6 +54,23 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
   }
 
   /**
+   * Create the complete URI for the mediafile.
+   *
+   * @param string|array $mediafile
+   *   The mediafile array or string ID.
+   *
+   * @return string
+   *   The complete local uri.
+   */
+  public function create_storage_uri($mediafile) {
+    // Get mediafile ID.
+    $mediafile_id = is_string($mediafile) ? $mediafile : $mediafile[mediamosa_asset_mediafile_db::ID];
+
+    // Return letter/mediafile for local data paths.
+    return $this->get_uri_mount_point() . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id);
+  }
+
+  /**
    * Test if the current path/file is local or external (like Amazon S3).
    *
    * @return boolean
@@ -176,7 +193,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    * Validate the uri format.
    *
    * Expects;
-   * {scheme}://[/{path}][/-/{mediafile_path}]
+   * {scheme}://[{path}][/-/{mediafile_path}]
    *
    * @param string $uri
    *   The uri to validate.
@@ -218,6 +235,20 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
       'path' => empty($matches['path']) ? '' : trim($matches['path'], '\/'),
       'mediafile_path' => empty($matches['mediafile_path']) ? '' : trim($matches['mediafile_path'], '\/'),
     );
+  }
+
+  /**
+   * Create the uri of the current mediafile.
+   *
+   * @param array $mediafile
+   *   The mediafile array
+   *
+   * @return string
+   *   The location of the mediafile.
+   *
+   */
+  public function get_uri_mediafile(array $mediafile) {
+    return mediamosa_storage::trim_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT], '') . mediamosa_io_streamwrapper::create_mediafile_path($mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**
@@ -293,7 +324,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
     $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
 
-    // Make sure the physical file exists.
+    // Make sure the physical file exists (local check only).
     mediamosa_storage::file_must_exist($mediafile);
 
     // Get the permanent status, public mediafiles can be public.

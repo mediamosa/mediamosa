@@ -59,6 +59,29 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   abstract public function create_storage_object(array $storage_profile);
 
   /**
+   * Create the complete URI for the mediafile.
+   *
+   * @param string|array $mediafile
+   *   The mediafile array or string ID.
+   *
+   * @return string
+   *   The complete local/external uri.
+   */
+  abstract public function create_storage_uri($mediafile);
+
+  /**
+   * Create the uri of the current mediafile.
+   *
+   * @param array $mediafile
+   *   The mediafile array
+   *
+   * @retrun string
+   *   The location of the mediafile.
+   *
+   */
+  abstract public function get_uri_mediafile(array $mediafile);
+
+  /**
    * Test if the current path/file is local or external (like Amazon S3).
    *
    * @return boolean
@@ -535,7 +558,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * @return string
    *   The mediafile ID uri part.
    */
-  public static function create_uri_mediafile_id_path($mediafile_id) {
+  public static function create_mediafile_path($mediafile_id) {
     return empty($mediafile_id) ? '' : ('/-/' . $mediafile_id[0] . '/' . $mediafile_id);
   }
 

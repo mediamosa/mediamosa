@@ -14,17 +14,17 @@
  * Uri:
  * {scheme}://{storage_profile_id}/[path][/-/mediafile_path].
  *
- * Difference with local wrapper is that storage_profile_id in uri is required.
+ * Difference with local wrapper:
+ *   storage_profile_id in uri is required.
+ *   The mediafile path contains 3 (optional) parts.
+ *   If mediafile path contains filename it must have a extension.
+ *     [[[mediafile_id{0}]/[mediafile_id]]/[filename.ext]]
  *
  * Make sure you implement unlink with the following code;
  *
  *   // Make sure md5file is recalculated now this file is removed.
  *   $md5s = &drupal_static(self::STATIC_MD5S, array());
  *   unset($md5s[$uri]);
- *
- * Do not call $this->unlink($uri) when you want to unlink your file, always
- * use mediamosa_io::unlink() as it will clear some cache that is not cleared
- * when calling this->unlink() version.
  */
 
 /**
@@ -97,7 +97,7 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
    *   Returns the uri to the local file.
    */
   public function get_uri_local_file() {
-    return 'mediamosa-storage-data:///-/s/something.txt';
+    return 'mediamosa-storage-data:///-/s/something/something.txt';
   }
 
   /**

@@ -130,7 +130,7 @@ class MediaMosaMkdir extends MediaMosaTestCase {
     $this->assertEqual($perms, '0775', "Testing chmod rights of baz after mkdir('bazuri/bar/foo'): $perms");
 
     // Call mkdir with mediafile ID.
-    $uri = $storage . mediamosa_io_streamwrapper::create_uri_mediafile_id_path(mediamosa_db::uuid($app_id));
+    $uri = $storage . mediamosa_io_streamwrapper::create_mediafile_path(mediamosa_db::uuid($app_id));
     $this->pass($uri);
     mediamosa_io::mkdir($uri, TRUE, 0775);
 
@@ -141,7 +141,7 @@ class MediaMosaMkdir extends MediaMosaTestCase {
     $perms = substr(sprintf('%o', fileperms($realpath)), -4);
     $this->assertEqual($perms, '0775', "Testing chmod rights of foo after mkdir('" . $uri . "'): $perms");
 
-    $uri = $storage . '2' . mediamosa_io_streamwrapper::create_uri_mediafile_id_path(mediamosa_db::uuid($app_id));
+    $uri = $storage . '2' . mediamosa_io_streamwrapper::create_mediafile_path(mediamosa_db::uuid($app_id));
     $this->pass($uri);
     mediamosa_io::mkdir($uri, TRUE, 0775);
 

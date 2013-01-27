@@ -41,7 +41,7 @@ class MediaMosaS3BasicTestCaseEga extends MediaMosaS3BaseTestCaseEga {
     $md5 = mediamosa_io::md5_file($source_filename);
 
     // Do upload.
-    $this->isOKS3Response($this->s3->_upload($this->getBucketName(), $source_filename, $filename[0], $md5, 'got no mediafile id'));
+    $this->isOKS3Response($this->s3->_upload($this->getBucketName(), $source_filename, $filename[0] . '/' . $filename, $md5, 'got no mediafile id'));
 
     // Need path + name.
     $source_filename = $filename[0] . '/' . $filename;

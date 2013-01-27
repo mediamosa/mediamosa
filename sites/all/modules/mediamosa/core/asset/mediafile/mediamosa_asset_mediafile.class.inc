@@ -49,18 +49,72 @@ class mediamosa_asset_mediafile {
   /**
    * Get the filename from the mediafile.
    *
-   * @param string $mediafile_id
-   *   The mediafile ID.
+   * @param array $mediafile_id
+   *   The mediafile array.
    * @param string $filename
    *   The filename to use as default.
    *
    * @return string|FALSE
    *   The filename or FALSE.
    */
-  public static function get_filename($mediafile) {
+  public static function get_filename(array $mediafile) {
     // See if we can find the filename.
     return $mediafile[mediamosa_asset_mediafile_db::FILENAME] != '' ? $mediafile[mediamosa_asset_mediafile_db::FILENAME] : $mediafile[mediamosa_asset_mediafile_db::ID];
   }
+
+  /**
+   * Find the first parent mediafile that has an filename.
+   *
+   * @param string $still_id
+   *   The still ID.
+   * @param boolean $parent
+   *   (default: FALSE) You must ignore this setting, as its used internally.
+   *
+   * @return string
+   *   The filename.
+   */
+  public static function get_parent_filename($mediafile_id, $parent = FALSE) {
+    // Get mediafile data.
+    $mediafile = self::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, mediamosa_asset_mediafile_db::FILENAME));
+
+    // Has a filename.
+    if ($mediafile[mediamosa_asset_mediafile_db::FILENAME] != '') {
+      return $mediafile[mediamosa_asset_mediafile_db::FILENAME];
+    }
+
+    // Has parent?
+    if ($mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != '') {
+      $filename = self::get_parent_filename($mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE], TRUE);
+
+      // Return filename or fall back on ID as filename.
+      return empty($filename) ? $mediafile_id : $filename;
+    }
+
+    return $parent ? FALSE : $mediafile_id;
+  }
+
+  /**
+   * Create a filename with valid extension.
+   *
+   * @param string $destination_uri
+   *   Location of the file.
+   * @param string $base_filename
+   *   The filename without extension. Can be in some case the mediafile ID.
+   *
+   * @return type
+   */
+  public static function create_filename($destination_uri, $base_filename) {
+    // Get mimetype.
+    $mimetype = mediamosa_mimetype::get_mime_type($destination_uri);
+
+    // Get extension.
+    $ext = self::get_file_extension_by_mimetype($mimetype);
+
+    // Return the filename.
+    return $base_filename . '.' . $ext;
+  }
+
+
 
   /**
    * Get the asset_id of the mediafile.
@@ -319,6 +373,8 @@ class mediamosa_asset_mediafile {
           mediamosa_asset_mediafile_db::ID,
           mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
           mediamosa_asset_mediafile_db::IS_STILL,
+          mediamosa_asset_mediafile_db::FILENAME,
+          mediamosa_asset_mediafile_db::FILE_EXTENSION,
         )
       )
       ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN')
@@ -1010,11 +1066,13 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    *   The mediafile.
+   * @param string $default
+   *  The default value for extension when not available.
    *
    * @return string
-   *   The file extension (e.g. 'jpeg') without the dot or FALSE.
+   *   The file extension (e.g. 'jpeg') without the dot or FALSE ($default).
    */
-  public static function get_file_extension(array $mediafile) {
+  public static function get_file_extension(array $mediafile, $default = FALSE) {
 
     // Get container type.
     $container_type = self::get_container_type($mediafile[mediamosa_asset_mediafile_db::ID]);
@@ -1052,7 +1110,7 @@ class mediamosa_asset_mediafile {
       return $hotfixes[$file_ext];
     }
 
-    return empty($file_ext) ? FALSE : $file_ext;
+    return empty($file_ext) ? $default : $file_ext;
   }
 
   /**

@@ -373,17 +373,21 @@ class mediamosa_asset_mediafile_still {
     // Mime type.
     $mime_type = $size['mime'];
 
-    // Set file_type of still based on the mime type of the image.
-    $pos = strrpos($mime_type, '/');
-    $file_extension = ($pos === FALSE ? '' : mediamosa_unicode::substr($mime_type, $pos + 1));
+    // Get file extension based on the mime type of the image.
+    $file_extension = mediamosa_mimetype::mimetype2extension($mime_type);
 
     // Get file size of still.
     $file_size = mediamosa_io::filesize($still_new_uri);
+
+    // Get parent filename.
+    $filename = mediamosa_io::get_base_filename(mediamosa_asset_mediafile::get_parent_filename($still_id));
+    $filename = $file_extension == '' ? $filename : ($filename . '.' . $file_extension);
 
     // Get MD5.
     $md5 = mediamosa_io::md5_file($still_new_uri);
 
     if ($still_default) {
+      assert($mediafile_id_source != '');
       $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
       // Clear the earlier default mark on the video (media) file.
       mediamosa_db::db_query(
@@ -415,6 +419,7 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::OWNER_ID => $owner_id,
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
         mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id, TRUE),
+        mediamosa_asset_mediafile_db::FILENAME => $filename,
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
         mediamosa_asset_mediafile_db::IS_STILL => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $mediafile_id_source,

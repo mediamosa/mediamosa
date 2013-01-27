@@ -176,7 +176,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         default:
           // Test the output, do output call.
-          $output = str_replace('/media/', '/simpletest/media/', $output);
+          $output = str_replace('/media/', '/media/simpletest/media/', $output);
 
           // Get the file.
           $result = mediamosa_http::drupal_http_request($output);

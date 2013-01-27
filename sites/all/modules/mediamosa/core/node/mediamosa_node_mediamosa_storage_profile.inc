@@ -117,7 +117,6 @@ function mediamosa_storage_profile_view($node, $view_mode = 'full') {
     array(t('Storage profile id'), check_plain($node->storage_profile_id)),
     array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : t('Unknown or deleted application')),
     array(t('Type'), $types[$node->{mediamosa_storage_profile_db::TYPE}]['name']),
-    array(t('Is default profile'), t(drupal_ucfirst(drupal_strtolower($node->is_default_profile)))),
   );
 
   // Storage type specific parameters
@@ -169,7 +168,6 @@ function mediamosa_storage_profile_form($node, $form_state) {
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
-    $node->is_default_profile = 'FALSE';
     $node->file_extension = '';
 
     // Only administrators may add global profiles.

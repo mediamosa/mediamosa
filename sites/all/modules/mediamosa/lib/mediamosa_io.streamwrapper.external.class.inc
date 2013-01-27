@@ -10,7 +10,17 @@
  * Uri:
  * {scheme}://{storage_profile_id}[/path][/-/mediafile_path].
  *
- * Difference with local wrapper is that storage_profile_id in uri is required.
+ * Difference with local wrapper:
+ *   storage_profile_id in uri is required.
+ *   The mediafile path contains 3 (optional) parts.
+ *   If mediafile path contains filename it must have a extension.
+ *     [[[mediafile_id{0}]/[mediafile_id]]/[filename.ext]]
+ *
+ * Make sure you implement unlink with the following code;
+ *
+ *   // Make sure md5file is recalculated now this file is removed.
+ *   $md5s = &drupal_static(self::STATIC_MD5S, array());
+ *   unset($md5s[$uri]);
  */
 
 abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwrapper {
@@ -55,6 +65,45 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
   }
 
   // --------------------------------------------------------- Abstract methods.
+  /**
+   * Create the complete URI for the mediafile.
+   *
+   * @param string|array $mediafile
+   *   The mediafile array or string ID.
+   *
+   * @return string
+   *   The complete local uri.
+   */
+  public function create_storage_uri($mediafile) {
+    if (is_string($mediafile)) {
+      // The mediafile.
+      $mediafile = mediamosa_asset_mediafile::get($mediafile);
+    }
+
+    // Need filename.
+    $filename = empty($mediafile[mediamosa_asset_mediafile_db::FILENAME]) ? $mediafile[mediamosa_asset_mediafile_db::ID] : $mediafile[mediamosa_asset_mediafile_db::FILENAME];
+
+    // Return letter/mediafile/filename for external paths.
+    return mediamosa_storage::trim_uri($this->get_uri_mount_point(), '') . mediamosa_io_streamwrapper::create_mediafile_path($mediafile[mediamosa_asset_mediafile_db::ID]) . '/' . $filename;
+  }
+
+  /**
+   * Create the uri of the current mediafile.
+   *
+   * @param array $mediafile
+   *   The mediafile array
+   *
+   * @retrun string
+   *   The location of the mediafile.
+   *
+   */
+  public function get_uri_mediafile(array $mediafile) {
+    // Need filename.
+    $filename = empty($mediafile[mediamosa_asset_mediafile_db::FILENAME]) ? $mediafile[mediamosa_asset_mediafile_db::ID] : $mediafile[mediamosa_asset_mediafile_db::FILENAME];
+
+    return mediamosa_storage::trim_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT], '') . mediamosa_io_streamwrapper::create_mediafile_path($mediafile[mediamosa_asset_mediafile_db::ID]) . '/' . $filename;
+  }
+
   /**
    * Validate the uri format.
    *
@@ -111,12 +160,13 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
   }
 
   /**
-   * Validate the uri format.
+   * Validate the uri mediafile path format.
    *
    * Expects;
-   * mediafile_id[0]/mediafile_id[.ext]
+   * [[[mediafile_id{0}]/[mediafile_id]]/[filename.ext]]
    *
-   * Remember that mediafile_id is optional.
+   * The [] means optional.
+   * Filename extension is required.
    *
    * @param string $mediafile_path
    *   The mediafile path to validate.
@@ -125,7 +175,7 @@ abstract class mediamosa_io_streamwrapper_external extends mediamosa_io_streamwr
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
-    $reg = '#^([a-zA-Z0-9](/[a-zA-Z0-9]+(/\.[a-zA-Z0-9]+)?)?)?$#';
+    $reg = '#^(?:([a-zA-Z0-9])?(?:/([a-zA-Z0-9]+)?(?:/([^/]+\.[^/]+)?)?)?)?$#';
     $matches = array();
     return preg_match($reg, $mediafile_path, $matches);
   }

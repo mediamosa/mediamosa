@@ -126,6 +126,20 @@ MediaMosa 3.4.x-dev (build 1975, inuits branch)
 - Fixed CQL bug that cause underscores (_) to be LIKE escape on an normal =
   operator.
 - Added test for slot job assign function.
+- Added move mediafiles to other storage profiles UI for mediafile and stills.
+  The move medialfiles UI can be found under 'storage' tab of its client
+  application.
+- Fixed creation and analyze of stills on external locations (S3).
+- Fixed upload and download of stills on external locations (S3).
+- File checks on must exists of physical files are skipped on external locations
+  for sake of speed.
+- External locations (e.g. Amazon S3) now contain filename with extension
+  instead of only mediafile_id[0]/mediafile_id as letter/filename.
+- The field filename is now always set (if filename is available) with the
+  correct extension.
+- Fixed automated simpletest to run simpletests that are not extended on our
+  simpletest class.
+- Added new test for mime-type detection from our test files.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

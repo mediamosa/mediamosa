@@ -1,0 +1,39 @@
+<?php
+/**
+ * @file
+ * Mimetype unit tests.
+ */
+
+class MediaMosaMimeTypeTestCase extends MediaMosaTestCase {
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa library - Mimetype tests',
+      'description' => 'Test for mime type detection.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * The mime type test.
+   */
+  public function testMimeType() {
+    $to_test = array(
+      DRUPAL_ROOT . '/' . $this->getTestImage_BlobGif() => 'image/gif',
+      DRUPAL_ROOT . '/' . $this->getTestImage_Jpg() => 'image/jpeg',
+      DRUPAL_ROOT . '/' . $this->getTestImage_Png() => 'image/png',
+      DRUPAL_ROOT . '/' . $this->getTestVideo_ogg() => 'application/ogg',
+      DRUPAL_ROOT . '/' . $this->getTestVideo_wmv() => 'video/x-ms-asf',
+    );
+
+    // Now test our files.
+    foreach ($to_test as $file => $expected_mime_type) {
+      $mime_type = mediamosa_mimetype::get_mime_type($file);
+      $this->assert($mime_type == $expected_mime_type, t("Mimetype '@mime_type' of '@file' matches expected '@expected_mime_type'", array('@mime_type' => $mime_type, '@file' => $file, '@expected_mime_type' => $expected_mime_type)));
+    }
+  }
+}

@@ -164,6 +164,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     if (mediamosa_io::file_exists($log)) {
       $found = 0;
       foreach (file($log) as $line) {
+        $match = array();
         if (preg_match('/\[.*?\] (.*?): (.*?) in (.*) on line (\d+)/', $line, $match)) {
           // Parse PHP fatal errors for example: PHP Fatal error: Call to
           // undefined function break_me() in /path/to/file.php on line 17
@@ -202,42 +203,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Clean up...
     $this->unlinks = array();
 
-//    // Our tables are not dropped because simpletest uses a test profile in
-//    // which our tables are not present. So we need to do it ourselfs.
-//    // We'll only drop tables from this simpletest.
-//    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
-//
-//    // Get tables that match our pattern.
-//    $tables = db_find_tables($prefix);
-//
-//    $matches = $ret = array();
-//    foreach ($tables as $table) {
-//      // Make sure we drop correct; tables MUST start with simpletest.
-//      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
-//        list(, $name) = explode('mediamosa_', $table, 2);
-//
-//        // If the drop fails then we consider that its already dropped.
-//        try {
-//          db_drop_table('mediamosa_' . $name);
-//        }
-//        catch (PDOException $e) {
-//          // ignore.
-//        }
-//      }
-//    }
-
     // Dump the log.
     $this->dump_watchdog();
 
     // Call parent.
     parent::tearDown();
-  }
-
-  /**
-   * Return my assertions.
-   */
-  public function get_assertions() {
-    return $this->assertions;
   }
 
   /**
@@ -914,6 +884,16 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * file.
    */
   protected function getTestVideo() {
+    return $this->getTestVideo_wmv();
+  }
+
+  /**
+   * Return the path+filename to the test video.
+   *
+   * Changing this file will have an effect on some tests, as some expect this
+   * file.
+   */
+  protected function getTestVideo_wmv() {
     $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/test_video.wmv';
     $this->pass(t('Got test video @video.', array('@video' => $filename)));
     return $filename;

@@ -404,7 +404,7 @@ class mediamosa_job_scheduler {
         'filename' => $new_filename,
         'transcode_profile_id' => $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],
         'tool' => $job_transcode[mediamosa_job_transcode_db::TOOL],
-        'file_extension' => $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION],
+        'file_extension' => $job_transcode[mediamosa_job_transcode_db::FILE_EXTENSION],
         'command' => $job_transcode[mediamosa_job_transcode_db::COMMAND],
         'mediafile_id' => $job_transcode[mediamosa_asset_mediafile_db::ID],
       );

@@ -76,9 +76,15 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
       }
     }
 
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile_transcoded = mediamosa_asset_mediafile::get($mediafile_id_transcoded);
+
+    $filename = mediamosa_asset_mediafile::get_filename($mediafile);
+    $filename_transcoded = mediamosa_asset_mediafile::get_filename($mediafile_transcoded);
+
     // Check if files are on s3.
-    $uri_original = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
-    $uri_transcode = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id_transcoded);
+    $uri_original = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $filename;
+    $uri_transcode = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id_transcoded) . '/' . $filename_transcoded;
 
     $this->file_exists($uri_original);
     $this->file_exists($uri_transcode);
@@ -92,8 +98,7 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
 
 
     // Create the destination uri.
-    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
-
+    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $filename;
     $this->var_export($destination_uri);
 
     // Check if the mediafile is present on s3.

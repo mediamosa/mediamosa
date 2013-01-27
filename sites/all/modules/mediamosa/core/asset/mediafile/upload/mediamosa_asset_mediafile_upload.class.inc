@@ -96,10 +96,14 @@ class mediamosa_asset_mediafile_upload {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
     }
 
+    $filename = mediamosa_io::get_base_filename($is_method_put ? $filename_put : $_FILES['file']['name']);
+    $filename = mediamosa_asset_mediafile::create_filename($destination_uri, $filename);
+
     // Update the mediafile.
     $fields = array(
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
-      mediamosa_asset_mediafile_db::FILENAME => ($is_method_put ? $filename_put : $_FILES['file']['name']),
+      mediamosa_asset_mediafile_db::FILENAME => $filename,
+      mediamosa_asset_mediafile_db::FILE_EXTENSION => mediamosa_unicode::substr(mediamosa_io::get_ext($filename), 0, mediamosa_asset_mediafile_db::FILE_EXTENSION_LENGTH),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => $transcode_inherits_acl ? mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE : mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
     );

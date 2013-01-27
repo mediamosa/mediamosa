@@ -45,7 +45,7 @@ class MediaMosaStorageMountPointIOTestCaseEga extends MediaMosaStorageMountPoint
     $mediafile = $this->getMediafile($mediafile_id);
     $this->var_export($mediafile);
 
-    $source_uri = mediamosa_storage::trim_uri($this->getMediafileMountPoint($mediafile_id)) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
+    $source_uri = mediamosa_storage::trim_uri($this->getMediafileMountPoint($mediafile_id)) . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id);
     $this->assert($source_uri == mediamosa_storage::get_uri_mediafile($mediafile_id), 'Uri build is same as product');
     $this->var_export($source_uri);
 
@@ -93,16 +93,16 @@ class MediaMosaStorageMountPointIOTestCaseEga extends MediaMosaStorageMountPoint
     }
 
     // File must exists at destination.
-    $this->file_exists($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id), 'File was copied.');
+    $this->file_exists($destination_uri . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id), 'File was copied.');
 
     // And source must be gone...
     $this->file_not_exists($source_uri, 'File was moved.');
 
     // Check if the copy is ok.
-    $this->file_is_same($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id), $md5);
+    $this->file_is_same($destination_uri . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id), $md5);
 
-    $new_uri = $this->getMediafileMountPoint($mediafile_id) . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id);
-    $this->assert($destination_uri . mediamosa_io_streamwrapper::create_uri_mediafile_id_path($mediafile_id) == $new_uri, t("New mountpount is set and correct ('@new_uri' <-> '@destination_uri'", array('@new_uri' => $new_uri, '@destination_uri' => $destination_uri)));
+    $new_uri = $this->getMediafileMountPoint($mediafile_id) . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id);
+    $this->assert($destination_uri . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) == $new_uri, t("New mountpount is set and correct ('@new_uri' <-> '@destination_uri'", array('@new_uri' => $new_uri, '@destination_uri' => $destination_uri)));
     $this->var_export($new_uri);
   }
 }
