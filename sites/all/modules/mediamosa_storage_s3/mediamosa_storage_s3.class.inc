@@ -142,9 +142,8 @@ class mediamosa_storage_s3 extends mediamosa_storage {
     // Test the AWS connection
     try {
       $s3 = new MediaMosaAmazonS3(array('key' => $key, 'secret' => $secret));
-      $user_id = $s3->get_canonical_user_id();
-      if (!$user_id['id']) {
-        throw new mediamosa_storage_s3_exception('The S3 access credentials are invalid');
+      if (!$s3) {
+        throw new mediamosa_storage_s3_exception('Unable to create S3 object');
       }
     }
     catch (RequestCore_Exception $e){

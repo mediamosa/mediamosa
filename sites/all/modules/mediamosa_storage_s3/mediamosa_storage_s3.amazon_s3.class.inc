@@ -222,6 +222,72 @@ class MediaMosaAmazonS3 extends AmazonS3 {
     return $this->complete_multipart_upload($bucket, $filename, $upload_id, $parts);
   }
 
+  /**
+   * Generate a URL for the Amazon S3 object for download.
+   *
+	 * Gets the web-accessible URL for the Amazon S3 object or generates a
+   * time-limited signed request for a private file.
+   *
+   * Overruled to allow faster lookups.
+	 *
+	 * @param string $bucket
+   *   The name of the bucket to use.
+	 * @param string $filename
+   *   The file name for the Amazon S3 object.
+	 * @param integer|string $preauth
+   *   (optional) Specifies that a presigned URL for this request should be
+   *   returned. May be passed as a number of seconds since UNIX Epoch, or any
+   *   string compatible with strtotime().
+	 * @param array $opt
+   *   (optional) An associative array;
+   *     - https boolean
+   *       (optional) Set to TRUE if you would like the URL be in https mode.
+   *       Otherwise, the default behavior is always to use http regardless of
+   *       your SSL settings.
+   *     - method string
+   *       (optional) The HTTP method to use for the request. Defaults to a
+   *       value of GET.
+	 * 	   - response array
+   *       (optional) Allows adjustments to specific response headers. Pass an
+   *       associative array where each key is one of the following:
+   *       cache-control, content-disposition, content-encoding,
+   *       content-language, content-type, expires. The expires value should use
+   *       gmdate() and be formatted with the DATE_RFC2822 constant.
+	 * 	   - torrent boolean
+   *       (optional) A value of TRUE will return a URL to a torrent of the
+   *       Amazon S3 object. A value of FALSE will return a non-torrent URL.
+   *       Defaults to FALSE.
+	 * 	   - versionId string
+   *       (optional) The version of the object. Version IDs are returned in the
+   *       x-amz-version-id header of any previous object-related request.
+	 * 	   - returnCurlHandle boolean
+   *       (optional) A private toggle specifying that the cURL handle be
+   *       returned rather than actually completing the request. This toggle is
+   *       useful for manually managed batch requests.
+   *
+	 * @return string
+   *   The file URL, with authentication and/or torrent parameters if requested.
+   *
+	 * @link http://docs.amazonwebservices.com/AmazonS3/latest/dev/S3_QSAuth.html
+   *       Using Query String Authentication.
+	 */
+//	public function get_object_url($bucket, $filename, $preauth = 0, $opt = NULL) {
+//    // Any expire?
+//    if ($preauth) {
+//      return parent::get_object_url($bucket, $filename, $preauth, $opt);
+//    }
+//
+//    // No expire, create public link.
+//    $url = variable_get('mediamosa_storage_s3_object_url', 'http://{bucket}.s3.amazonaws.com/{filename}');
+//
+//    $replace = array(
+//      '{bucket}' => $bucket,
+//      '{filename}' => $filename,
+//    );
+//
+//    return strtr($url, $replace);
+//  }
+
   // --------------------------------------------------------- Helper functions.
   /**
    * Check the response.
