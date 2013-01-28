@@ -474,14 +474,28 @@ class mediamosa_storage_transition {
   public static function get_total_used_size() {
     $query = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st');
     $query->addExpression('SUM(filesize)', 'total_filesize');
-    return $query->execute()
+    return (int) $query->execute()
       ->fetchfield();
   }
 
   /**
    * Clean up our transition files.
+   *
+   * @param integer $max_remove
+   *   The maximum of file to remove during this call.
+   *
+   * @return
+   *   The actual number of removed files.
    */
   public static function clean_up($max_remove = 20) {
+    // Already running?
+    if (!lock_acquire(__CLASS__ . '::' . __FUNCTION__, 60.0)) {
+      return;
+    }
+
+    // So we know how many removed.
+    $starting_max_remove = $max_remove;
+
     // Get setting.
     $lifetime_days = variable_get('mediamosa_storage_transition_max_lifetime_days', 14);
 
@@ -567,8 +581,8 @@ class mediamosa_storage_transition {
       $mediafile_ids = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')
         ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
         ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $subquery, 'NOT IN')
-        ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
         ->groupBy(mediamosa_storage_transition_db::MEDIAFILE_ID)
+        ->orderBy(mediamosa_storage_transition_db::ACCESSED, 'ASC')
         ->range(0, $max_remove)
         ->execute()
         ->fetchCol();
@@ -583,7 +597,18 @@ class mediamosa_storage_transition {
 
         // Unregister the transition.
         self::unregister_transition_file($transition_uri);
+
+        // Only remove what is needed.
+        if (self::get_total_used_size() < $max_size_gb) {
+          break;
+        }
       }
     }
+
+    // Unlock.
+    lock_release(__CLASS__ . '::' . __FUNCTION__);
+
+    // Return the number removed.
+    return $starting_max_remove - $max_remove;
   }
 }

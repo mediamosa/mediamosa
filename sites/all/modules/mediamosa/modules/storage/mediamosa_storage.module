@@ -44,6 +44,14 @@ function mediamosa_storage_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
   );
 
+  $rest_calls['cron/storage/transition'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_storage_transition',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
   return $rest_calls;
 }
 
@@ -85,6 +93,14 @@ function mediamosa_storage_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
   <job_id>4539</job_id>
 </item>',
+  );
+
+  $rest_calls['cron/storage/transition'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Run the cron cycle for storage transition.',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for storage transition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
   return $rest_calls;
@@ -250,4 +266,30 @@ function mediamosa_storage_node_access($node, $op, $account) {
 
   // If we have the permission, then we allow the action.
   return _mediamosa_user_access($permission_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Trigger the server REST CRONs based on the server settings.
+ */
+function mediamosa_storage_cron() {
+
+  try {
+    // If we are in simpletest, this cron will generate problems because its
+    // triggered during install and we are still not finished.
+    if (mediamosa::in_simpletest_sandbox()) {
+      return;
+    }
+
+    $start = time();
+    mediamosa_debug::log('mediamosa_storage_cron started.', array(), 'job_cron');
+
+    // Trigger cron uri.
+    mediamosa_http::do_internal_call_cron('internal/cron/storage/transition', TRUE);
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_storage_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_storage_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
 }

@@ -187,3 +187,27 @@ class mediamosa_rest_call_storage_move extends mediamosa_rest_call {
     $mediamosa->add_item(array('job_id' => $job_id));
   }
 }
+
+/**
+ * URI: /cron/storage/transition
+ * Method: GET
+ */
+class mediamosa_rest_call_cron_storage_transition extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Methods.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Clean up.
+    mediamosa_storage_transition::clean_up();
+
+    // Set ok.
+    $mediamosa->set_result_okay();
+  }
+}
