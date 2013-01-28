@@ -52,13 +52,13 @@ function _mediamosa_server_install() {
 
     array(2, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'flv', '',
-      "<script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
+      "<script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer-3.2.7.swf\", {
+          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -125,14 +125,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/ogg' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer-3.2.7.swf\", {
+          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -167,14 +167,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/webm' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer-3.2.7.swf\", {
+          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -210,14 +210,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/example/flowplayer-3.2.6.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer-3.2.7.swf\", {
+          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,

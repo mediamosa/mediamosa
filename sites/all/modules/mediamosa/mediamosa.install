@@ -3908,6 +3908,7 @@ function mediamosa_update_7150() {
   // Enable new module 'mediamosa_media'.
   module_enable(array('mediamosa_media'));
 }
+
 /**
  * This update has been removed and will not run.
  */
@@ -4092,5 +4093,32 @@ function mediamosa_update_7160() {
   }
   if (db_field_exists('mediamosa_storage_profile', 'is_default_profile')) {
     db_drop_field('mediamosa_storage_profile', 'is_default_profile');
+  }
+}
+
+/**
+ * Update streaming servers object code to use updated flowplayer.
+ */
+function mediamosa_update_7161() {
+  // Get all streaming servers.
+  $servers = db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+    ->fields('ms')
+    ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_STREAMING)
+    ->execute();
+
+  $replace = array(
+    'mmplayer/flowplayer/example/flowplayer-3.2.6.min.js' => 'mmplayer/flowplayer/flowplayer.min.js',
+    'mmplayer/flowplayer/flowplayer-3.2.7.swf' => 'mmplayer/flowplayer/flowplayer.swf',
+  );
+
+  // Update the streaming server object codes.
+  foreach ($servers as $server) {
+    $object_code = strtr($server->{mediamosa_server_db::OBJECT_CODE}, $replace);
+    if ($server->{mediamosa_server_db::OBJECT_CODE} != $object_code) {
+      // Get the server node.
+      $node_server = node_load($server->{mediamosa_server_db::NID});
+      $node_server->{mediamosa_server_db::OBJECT_CODE} = $object_code;
+      node_save($node_server);
+    }
   }
 }
