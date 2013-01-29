@@ -1,25 +1,5 @@
-- Download servers will use the /media URL instead of /download.
 
-
-@todo:
-- check if /media is available on main url, as /media might be marked as
-  download REST call.
-- Current 3.2 release does not hide the other profiles(!) during install.
-- Mount point question; creation of still (see
-  mediamosa_asset_mediafile_still::create()) stores the mount point. This is a
-  real problem when moving the mount point. Same for storing transcoded
-  mediafiles and upload.
-- The stored mount point is only used once when creating the ticket link during
-  playproxy, all other code does not look at the stored mount point.
-
-
-You need to use mediamosa_io::clearstatcache() when;
-
-1. Your process uses external program to delete files, e.g. 'find' with delete.
-2. The REST call you call might delete files (another process).
-
-
-MediaMosa 3.4.x-dev (build 1975, inuits branch)
+MediaMosa 3.4.x-dev (build 2003, inuits branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -135,11 +115,19 @@ MediaMosa 3.4.x-dev (build 1975, inuits branch)
   for sake of speed.
 - External locations (e.g. Amazon S3) now contain filename with extension
   instead of only mediafile_id[0]/mediafile_id as letter/filename.
-- The field filename is now always set (if filename is available) with the
-  correct extension.
+- The field filename in mediamosa_asset_mediafile table is now always set (if
+  filename is available) with the correct extension.
 - Fixed automated simpletest to run simpletests that are not extended on our
   simpletest class.
 - Added new test for mime-type detection from our test files.
+- Updated flowplayer to latest.
+- Updated video-js to latest.
+- Added latest jwplayer into own mmplayer subdir. Keeping old version in
+  mmplayer root until we replace it.
+- Updated installer for streaming servers for using new flowplayer.
+- Added update hook for streaming servers for using new flowplayer.
+- Drastically improved response time when doing calls to Amazon S3. View calls
+  went from 1+ seconds to 0.08 second due to S3 object creation bug.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
