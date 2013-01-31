@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * MediaMosa server installation profile.
+ * MediaMosa installation profile.
  */
 
 // Include our helper class as autoloader is not up yet.
@@ -149,28 +149,24 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
    <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.</p>
    <p>This version of MediaMosa will also work with !postgresql.</p>
    <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'mediamosa' before proceeding.</p>
-    <pre>
-        # The password entries below needs to be changed.<br />
-        <br />
-        # Create the database.<br />
-        CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
-        <br />
-        # Create localhost access for user 'mediamosa'.<br />
-        CREATE USER 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa';<br />
-        <br />
-        # Now grant usage for user 'mediamosa' on the 'mediamosa' database.<br />
-        GRANT USAGE ON mediamosa.* TO 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
-        <br />
-        GRANT ALL ON mediamosa.* TO 'mediamosa'@'localhost';<br />
-    </pre>
-    <p>
-        You may change the 'mediamosa' database prefix and the database user name.<br />
-        <br />
-        If you want to migrate your current MediaMosa v1.7 database to the new 3.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
-   ", array(
-    '!mysql' => l('MySQL', 'mysql.com', array('absolute' => TRUE)),
-    '!mariadb' => l('MariaDB', 'mariadb.org/', array('absolute' => TRUE)),
-    '!postgresql' => l('PostgreSQL', 'www.postgresql.org', array('absolute' => TRUE))
+   <pre>
+# The password entries below needs to be changed.
+
+# Create the database.
+CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;
+
+# Create localhost access for user 'mediamosa'.
+CREATE USER 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa';
+
+# Now grant usage for user 'mediamosa' on the 'mediamosa' database.
+GRANT USAGE ON mediamosa.* TO 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+
+GRANT ALL ON mediamosa.* TO 'mediamosa'@'localhost';
+   </pre>
+You can change the 'mediamosa' database prefix and the database user name.", array(
+    '!mysql' => mediamosa_profile::l('MySQL', 'http://mysql.com', array('external' => TRUE, 'absolute' => TRUE)),
+    '!mariadb' => mediamosa_profile::l('MariaDB', 'http://mariadb.org', array('external' => TRUE, 'absolute' => TRUE)),
+    '!postgresql' => mediamosa_profile::l('PostgreSQL', 'http://www.postgresql.org', array('external' => TRUE, 'absolute' => TRUE))
    ))
   );
 }

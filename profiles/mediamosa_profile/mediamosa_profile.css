@@ -15,3 +15,7 @@
 .status-value {
   width: 80px;
 }
+
+pre {
+  font-size: 1em!important;
+}

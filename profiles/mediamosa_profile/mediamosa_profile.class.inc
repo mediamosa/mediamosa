@@ -40,6 +40,19 @@ class mediamosa_profile {
   }
 
   /**
+   * Create a link.
+   *
+   * Because l() function will break installation when database is not present,
+   * will just do it ourself.
+   */
+  public static function l($text, $path, array $options = array()) {
+    $options['alias'] = TRUE;
+    return l($text, $path, $options);
+
+    return '<a href="' . check_plain(url($path, $options)) . '"' . drupal_attributes($options['attributes']) . '>' . ($options['html'] ? $text : check_plain($text)) . '</a>';
+  }
+
+  /**
    * Retrieve the server domain and path.
    *
    * @return string
@@ -87,7 +100,7 @@ class mediamosa_profile {
   public static function trim_uri($uri) {
     return drupal_substr($uri, -3) != '://' ? rtrim($uri, '/') . '/' : $uri;
   }
-  
+
   /**
    * Test if given command is installed / found.
    *
