@@ -1,5 +1,5 @@
 
-MediaMosa 3.4.x-dev (build 2003, inuits branch)
+MediaMosa 3.4.x-dev (build 2004, inuits branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
