@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Asset browser.
@@ -522,7 +497,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
       $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
     }
 
-    $variables['properties'][t('Autorisarion rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
+    $variables['properties'][t('Autorisation rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
   }
 
   return theme('mediamosa_maintenance_browse_properties', $variables);
@@ -652,12 +627,14 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
-
+    
     // Mediafile properties.
     $rows = array();
     $rows[] = array(t('Mediafile id'), $item['mediafile_id']);
+    $rows[] = array(t('Mount pount uri'), $item['sannas_mount_point']);
     $rows[] = array(t('Owner id'), $item['owner_id']);
     $rows[] = array(t('Group id'), $item['group_id']);
+    $rows[] = array(t('MD5'), $item['metadata']['md5']);
     $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
     $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
     $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');

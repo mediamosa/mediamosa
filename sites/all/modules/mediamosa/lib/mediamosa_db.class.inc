@@ -4,29 +4,6 @@
  * Our DB layer between MediaMosa and Drupal DB.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_db {
   // ------------------------------------------------------------------ Consts.
   const LIMIT = 'limit';
@@ -427,15 +404,78 @@ class mediamosa_db {
 
   /**
    * Enrich the updated fields.
-   * Only when table has an 'changed' field(!).
    *
-   * @param array $a_fields
+   * Only when table has an 'changed' field.
+   *
+   * @param array $fields
+   *   The fields to enrich for update.
+   *
    * @return array
+   *   The result fields.
    *
    */
   public static function db_update_enrich(array $fields) {
     $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
     return $fields;
+  }
+
+ /**
+   * Returns a new MergeQuery object for the active database.
+   *
+   * Allows you to do an update and an insert. However, Drupal does not seems to
+   * work with the MySQL INSERT ON DUPLICATE KEY UPDATE, which is kinda bad
+   * because the current implementation will never be MASTER<->MASTER safe.
+   *
+   * Use ->fields() when you wish a UPDATE or INSERT.
+   *
+   * @code
+   * MERGE INTO table_name_1 USING table_name_2 ON (condition)
+   *   WHEN MATCHED THEN
+   *   UPDATE SET column1 = value1 [, column2 = value2 ...]
+   *   WHEN NOT MATCHED THEN
+   *   INSERT (column1 [, column2 ...]) VALUES (value1 [, value2 ...
+   * @endcode
+   *
+   * @code
+   *   mediamosa_db::db_merge('example')
+   *     ->key(array('name' => $name))
+   *     ->fields(array(
+   *       'field1' => $value1,
+   *       'field2' => $value2,
+   *     ))
+   *     ->execute();
+   * @endcode
+   *
+   * Use ->insertFields to insert and not to update; this is useful when the row
+   * is unique. With ->insertfields, the row is inserted when row does not
+   * exist.
+   *
+   * @code
+   *   mediamosa_db::db_merge('example')
+   *     ->key(array('name' => $name))
+   *     ->insertFields(array(
+   *       'field1' => $value1,
+   *       'field2' => $value2,
+   *     ))
+   *     ->execute();
+   * @endcode
+   *
+   * @param string $table
+   *   The table into which to merge.
+   * @param array $options
+   *   A array of options to control how the query operates.
+   *
+   * @return MergeQuery
+   *   A new MergeQuery object for this connection.
+   *
+   * @see db_merge()
+   */
+  public static function db_merge($table, array $options = array()) {
+    // Increase query count.
+    self::query_count(1);
+
+    // Call db_select function and attach ouy select extender.
+    return db_merge($table, $options);
   }
 
   /**
@@ -547,9 +587,9 @@ class mediamosa_db {
 
   /**
    * Install the foreign keys.
-   * Drupal 7 at this time only describes how it wants to implement foreign keys in
-   * their schema layer. For now we will add foreign keys ourselfs after creation of
-   * the table.
+   * Drupal 7 at this time only describes how it wants to implement foreign keys
+   * in their schema layer. For now we will add foreign keys ourselfs after
+   * creation of the table.
    *
    * @param array $schema
    */
@@ -576,12 +616,13 @@ class mediamosa_db {
             '#foreign_column' => $foreign_column,
           )
         );
-
+watchdog('foo', $query);
         try {
           db_query($query);
         }
         catch (PDOException $e) {
-          // We do not using mediamosa::log() here because it might be inaccessible during install.
+          // We are not using mediamosa::log() here because it might be
+          // inaccessible during install.
           watchdog('Mediamosa',
             "Failed to create foreign key 'fk_@table_name_@column' on table '@table_name', query; '@query', message: @message.",
             array(
@@ -642,6 +683,9 @@ class mediamosa_db {
       if (is_null($value)) {
         $query->isNull($column);
       }
+      elseif (is_array($value)) {
+        $query->condition($column, $value, 'IN');
+      }
       else {
         $query->condition($column, $value);
       }
@@ -668,7 +712,8 @@ class mediamosa_db {
 
     $row = self::db_get_assoc($table_name, $columns_and);
     if ($row) {
-      return $row; // exists
+      // Exists.
+      return $row;
     }
 
     // Custom error supplied?
@@ -705,6 +750,8 @@ class mediamosa_db {
       case mediamosa_asset_metadata_property_db::TABLE_NAME:
       case mediamosa_asset_metadata_property_group_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR, array(), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
+      case mediamosa_storage_profile_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_PROFILE_NOT_FOUND, array('@profile_id' => $columns_and[mediamosa_storage_profile_db::ID]), mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error);
     }
 
     assert(0);

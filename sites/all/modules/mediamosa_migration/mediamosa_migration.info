@@ -1,5 +1,5 @@
 name = "MediaMosa - database migration 1.7.x to 3.x"
 description = "This module is no longer supported and needs to be turned-off. In the next release, this module will be removed."
 package = "MediaMosa - Misc"
-version = 7.x-3.2.2
+version = 7.x-3.4.0
 core = 7.x

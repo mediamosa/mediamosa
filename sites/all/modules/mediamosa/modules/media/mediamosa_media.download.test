@@ -1,0 +1,146 @@
+<?php
+/**
+ * @file
+ * MediaMosa Storage / SAN/NAS unittests.
+ */
+
+class MediaMosaMediaDownloadTestCase extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Download test',
+      'description' => 'Test downloading of files with tickets.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+    );
+  }
+
+  function setUp() {
+    // Get the current mediamosa server content.
+    $servers = mediamosa_server::search();
+
+    parent::setUp('mediamosa_asset');
+
+    // Truncate current and insert new.
+    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+
+    // Copy the current servers to sandbox.
+    foreach ($servers as $server) {
+      db_insert(mediamosa_server_db::TABLE_NAME)
+        ->fields($server)
+        ->execute();
+    }
+  }
+
+  function testUploadAndDownload() {
+
+    $app = $this->createApp();
+    $app_id = $app[mediamosa_app_db::APP_ID];
+    $ticket_id = mediamosa_db::uuid(1);
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Change the filename to something that is really horrible.
+    $filename = "plus'q %20uote.bin";
+    $this->updateMediafile($mediafile_id, array('filename' => $filename));
+
+    $mediafile = $this->getMediafile($mediafile_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+    // Create ticket.
+    $media_view = mediamosa_media::process_media_view($app_id, self::SIMPLETEST_USER_ID, $mediafile, mediamosa_media::RESPONSE_DOWNLOAD, FALSE);
+    $this->var_export($media_view);
+    $ticket_id = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID];
+    $filename = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME];
+
+    $download_servers = mediamosa_server::get_enabled_download();
+    $this->assertTrue(!empty($download_servers), t('@num enabled download server(s) found.', array('@num' => $download_servers->rowCount())));
+
+    foreach ($download_servers as $download_server) {
+      $this->var_export($download_server);
+      $this->var_export(mediamosa_server::get_server_url($download_server));
+      $url = str_replace('{TICKET}', 'simpletest/media/' . $app_id . '/' . $mediafile_id[0] . '/' . $mediafile_id . '/' . rawurlencode($filename), mediamosa_server::get_server_url($download_server));
+
+      $this->pass('URL: ' . $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test video from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // print header.
+      $this->var_export($result->headers);
+
+      $this->var_export(mediamosa_io::filesize($mediafile_uri), 'File original size');
+      $this->var_export(strlen($result->data), 'File download size');
+
+      if (strlen($result->data) < mediamosa_io::filesize($mediafile_uri)) {
+        $this->var_export_fail($result->data);
+      }
+
+      // What we got downloaded, must be the same in size.
+      $this->assertTrue(mediamosa_io::filesize($mediafile_uri) == strlen($result->data), 'Download size matches the original media size.');
+
+      unset($result);
+    }
+
+    // Again but with ACL. Download calls now need ticket ID and 'download' type
+    // in url.
+    //
+    // Add ACL rule.
+    $parameters = array(
+      'acl_domain' => 'foo.nl',
+    );
+    $this->setMediafileAcl($mediafile_id, $parameters);
+
+
+    $mediafile = $this->getMediafile($mediafile_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+    // Create ticket.
+    $media_view = mediamosa_media::process_media_view($app_id, self::SIMPLETEST_USER_ID, $mediafile, mediamosa_media::RESPONSE_DOWNLOAD, FALSE);
+    $this->var_export($media_view);
+    $ticket_id = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID];
+    $filename = $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME];
+
+    $download_servers = mediamosa_server::get_enabled_download();
+    $this->assertTrue(!empty($download_servers), t('@num enabled download server(s) found.', array('@num' => $download_servers->rowCount())));
+
+    foreach ($download_servers as $download_server) {
+      $this->var_export($download_server);
+      $this->var_export(mediamosa_server::get_server_url($download_server));
+      $url = str_replace('{TICKET}', 'simpletest/media/ticket/download/' . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . rawurlencode($filename), mediamosa_server::get_server_url($download_server));
+
+      $this->pass('URL: ' . $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test video from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // print header.
+      $this->var_export($result->headers);
+
+      $this->var_export(mediamosa_io::filesize($mediafile_uri), 'File original size');
+      $this->var_export(strlen($result->data), 'File download size');
+
+      if (strlen($result->data) < mediamosa_io::filesize($mediafile_uri)) {
+        $this->var_export_fail($result->data);
+      }
+
+      // What we got downloaded, must be the same in size.
+      $this->assertTrue(mediamosa_io::filesize($mediafile_uri) == strlen($result->data), 'Download size matches the original media size.');
+
+      unset($result);
+    }
+  }
+}

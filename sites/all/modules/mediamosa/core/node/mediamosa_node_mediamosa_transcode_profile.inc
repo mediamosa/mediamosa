@@ -1,35 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * hook_load / -update / -delete / -insert hooks for node type mediamosa_transcode_profile.
  */
-
- /**
-  * @file
-  * hook_load / -update / -delete / -insert hooks for node type mediamosa_transcode_profile.
-  *
-  *
-  */
 
 /**
  * Implements hook_load().
@@ -86,7 +59,7 @@ function _mediamosa_transcode_profile_do_command($node) {
  * Implements hook_update().
  */
 function mediamosa_transcode_profile_update($node) {
-  if ($node->revision) {
+  if (!empty($node->revision)) {
     mediamosa_transcode_profile_insert($node);
   }
   else {
@@ -274,7 +247,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
   );
 
-  $tools = module_invoke_all('mediamosa_tool_info');
+  $tools = mediamosa_server_tool::get_server_tools();
   $options = array();
   foreach ($tools as $tool_id => $tool) {
     $options[$tool_id] = $tool['name'];

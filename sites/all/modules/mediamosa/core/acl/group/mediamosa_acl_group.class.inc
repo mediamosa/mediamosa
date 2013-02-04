@@ -176,30 +176,30 @@ class mediamosa_acl_group {
    * Create hostname(s) for acl group.
    *
    * @param integer $app_id
+   *   The application ID.
    * @param string $group_name
-   * @param array $a_host_names
+   *   The group name for hostnames.
+   * @param array $host_names
+   *   The hostnames to create.
    * @return array
    */
-  static function create_hostnames_for_group($app_id, $group_name, array $a_host_names) {
-    // Lets make sure its not an array here.
-    assert(!is_array($app_id));
-
-    $a_group = mediamosa_acl_group::get_by_group_name(array($app_id), $group_name);
-    if (!$a_group) {
+  static function create_hostnames_for_group($app_id, $group_name, array $host_names) {
+    $group = mediamosa_acl_group::get_by_group_name(array($app_id), $group_name);
+    if (!$group) {
       throw new mediamosa_exception_error_acl_group_not_found(array('@group' => $group_name));
     }
 
-    $acl_group_id = $a_group[mediamosa_acl_group_db::ID];
-    $host_type_group = $a_group[mediamosa_acl_group_db::ACL_GROUP_TYPE];
+    $acl_group_id = $group[mediamosa_acl_group_db::ID];
+    $host_type_group = $group[mediamosa_acl_group_db::ACL_GROUP_TYPE];
 
-    $a_result = array();
-    foreach ($a_host_names as $host_name) {
+    $result = array();
+    foreach ($host_names as $host_name) {
       $host_name = trim($host_name);
 
       $acl_type = mediamosa_acl::is_realm($host_name) ? 'REALM' : 'DOMAIN';
 
       if ($acl_type != $host_type_group) {
-        $a_error = mediamosa_error::error_code_find(
+        $error = mediamosa_error::error_code_find(
           mediamosa_error::ERRORCODE_HOSTNAME_TYPE_NO_MATCH_GROUP_TYPE,
           array(
             '@hostname' => $host_name,
@@ -209,11 +209,11 @@ class mediamosa_acl_group {
           )
         );
 
-        $a_result[] = array(
+        $result[] = array(
           'hostname' => $host_name,
           'result' => mediamosa_response::ERROR,
-          'result_id' => $a_error[mediamosa_error_db::CODE],
-          'result_description' => $a_error[mediamosa_error_db::MESSAGE],
+          'result_id' => $error[mediamosa_error_db::CODE],
+          'result_description' => $error[mediamosa_error_db::MESSAGE],
         );
 
         // skip.
@@ -229,7 +229,7 @@ class mediamosa_acl_group {
             mediamosa_acl_name_db::ACL_NAME => $host_name
           )
       )) {
-        $a_error = mediamosa_error::error_code_find(
+        $error = mediamosa_error::error_code_find(
           mediamosa_error::ERRORCODE_HOSTNAME_ALREADY_IN_GROUP,
           array(
             '@hostname' => $host_name,
@@ -237,15 +237,15 @@ class mediamosa_acl_group {
           )
         );
 
-        $a_result[] = array(
+        $result[] = array(
           'hostname' => $host_name,
           'result' => mediamosa_response::ERROR,
-          'result_id' => $a_error[mediamosa_error_db::CODE],
-          'result_description' => $a_error[mediamosa_error_db::MESSAGE],
+          'result_id' => $error[mediamosa_error_db::CODE],
+          'result_description' => $error[mediamosa_error_db::MESSAGE],
         );
       }
       else {
-        $a_fields = array(
+        $fields = array(
           mediamosa_acl_name_db::APP_ID => $app_id,
           mediamosa_acl_name_db::ACL_TYPE => $host_type_group,
           mediamosa_acl_name_db::ACL_GROUP_ID => $acl_group_id,
@@ -253,10 +253,10 @@ class mediamosa_acl_group {
         );
 
         mediamosa_db::db_insert(mediamosa_acl_name_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->execute();
 
-        $a_result[] = array(
+        $result[] = array(
           'hostname' => $host_name,
           'result' => mediamosa_response::SUCCESS,
           'result_id' => mediamosa_error::ERRORCODE_OKAY,
@@ -265,7 +265,7 @@ class mediamosa_acl_group {
       }
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
@@ -273,21 +273,21 @@ class mediamosa_acl_group {
    *
    * @param integer $app_id
    * @param string $group_name
-   * @param array $a_host_names
+   * @param array $host_names
    */
-  static function delete_hostname_for_group($app_id, $group_name, array $a_host_names) {
+  static function delete_hostname_for_group($app_id, $group_name, array $host_names) {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 
-    $a_group = mediamosa_acl_group::get_by_group_name(array($app_id), $group_name);
-    if (!$a_group) {
+    $group = mediamosa_acl_group::get_by_group_name(array($app_id), $group_name);
+    if (!$group) {
       throw new mediamosa_exception_error_acl_group_not_found(array('@group' => $group_name));
     }
 
-    $acl_group_id = $a_group[mediamosa_acl_group_db::ID];
+    $acl_group_id = $group[mediamosa_acl_group_db::ID];
 
-    $a_result = array();
-    foreach ($a_host_names as $acl_name) {
+    $result = array();
+    foreach ($host_names as $acl_name) {
       $acl_name = trim($acl_name);
 
       $acl_type = mediamosa_acl::is_realm($acl_name) ? 'REALM' : 'DOMAIN';
@@ -295,7 +295,7 @@ class mediamosa_acl_group {
       try {
         mediamosa_acl_name::delete($app_id, $acl_type, $acl_name, $acl_group_id);
 
-        $a_result[] = array(
+        $result[] = array(
           'hostname' => $acl_name,
           'result' => mediamosa_response::SUCCESS,
           'result_id' => mediamosa_error::ERRORCODE_OKAY,
@@ -303,16 +303,16 @@ class mediamosa_acl_group {
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_error = $e->mediamosa_exception_error_array_get();
-        $a_result[] = array(
+        $error = $e->mediamosa_exception_error_array_get();
+        $result[] = array(
           'hostname' => $acl_name,
           'result' => mediamosa_response::ERROR,
-          'result_id' => $a_error[mediamosa_error_db::CODE],
-          'result_description' => $a_error[mediamosa_error_db::MESSAGE],
+          'result_id' => $error[mediamosa_error_db::CODE],
+          'result_description' => $error[mediamosa_error_db::MESSAGE],
         );
       }
     }
 
-    return $a_result;
+    return $result;
   }
 }

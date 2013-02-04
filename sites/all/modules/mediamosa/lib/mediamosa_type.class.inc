@@ -3,30 +3,6 @@
  * @file
  * The mediamosa TYPE class.
  */
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_type {
 
   // ------------------------------------------------------------------ Consts.
@@ -91,6 +67,9 @@ class mediamosa_type {
     if (is_null($mixed_param_value)) {
       return NULL;
     }
+
+    // Here for preg_match().
+    $matches = array();
 
     // Now based on type, check contents when needed.
     switch ($param_type) {
@@ -159,20 +138,23 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_JOB:
-        $a_job_types = array(
+        $job_types = array(
           mediamosa_job_db::JOB_TYPE_ANALYSE,
           mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
           mediamosa_job_db::JOB_TYPE_STILL,
           mediamosa_job_db::JOB_TYPE_TRANSCODE,
           mediamosa_job_db::JOB_TYPE_RETRANSCODE,
-          mediamosa_job_db::JOB_TYPE_UPLOAD
+          mediamosa_job_db::JOB_TYPE_UPLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+          mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
         );
 
-        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $a_job_types)) {
+        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $job_types)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE);
         }
 
-        $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
+        $checked_param_value = (string) mediamosa_unicode::strtoupper($mixed_param_value);
         break;
 
       case mediamosa_sdk::TYPE_JOB_STATUS:
@@ -244,20 +226,26 @@ class mediamosa_type {
         $checked_param_value = (string) $mixed_param_value;
         break;
 
-      // Check ticket id for downloads.
-      case mediamosa_sdk::TYPE_TICKET_ID:
-        if (preg_match("@^([a-zA-Z0-9]+)(\\.asx)?$@", $mixed_param_value, $matches) !== 1) {
+      case mediamosa_sdk::TYPE_MEDIAFILE_ID_PREFIX:
+      case mediamosa_sdk::TYPE_TICKET_ID_PREFIX:
+        if (preg_match("@^([a-zA-Z0-9])?$@", $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
         $checked_param_value = (string) $mixed_param_value;
         break;
 
-      // Extended format for filenames; mediafile_id[,style_id][.ext].
-      case mediamosa_sdk::TYPE_MEDIAFILE_STR:
-      // Extended format for filenames; ticket_id[,style_id][.ext].
-      case mediamosa_sdk::TYPE_MEDIATICKET_STR:
-        if (preg_match('@^([a-zA-Z0-9]+)(,[0-9]+)?(\.[a-zA-Z0-9]+)?$@', $mixed_param_value, $matches) !== 1) {
+      // Check ticket id for downloads.
+      case mediamosa_sdk::TYPE_TICKET_ID:
+        if (preg_match("@^([a-zA-Z0-9]+)?$@", $mixed_param_value, $matches) !== 1) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string) $mixed_param_value;
+        break;
+
+      case mediamosa_sdk::TYPE_MEDIAFILE_ID:
+        if (preg_match('@^([a-zA-Z0-9]+)?$@', $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
@@ -281,7 +269,6 @@ class mediamosa_type {
       case mediamosa_sdk::TYPE_USER_ID:
       case mediamosa_sdk::TYPE_GROUP_ID:
       case mediamosa_sdk::TYPE_ASSET_ID:
-      case mediamosa_sdk::TYPE_MEDIAFILE_ID:
       case mediamosa_sdk::TYPE_COLLECTION_ID:
       case mediamosa_sdk::TYPE_BATCH_ID:
         $checked_param_value = (string) $mixed_param_value;
@@ -468,24 +455,6 @@ class mediamosa_type {
         $checked_param_value = (string) $mixed_param_value;
         break;
 
-        // FIXME: need something for the .group types?
-/*
-      case mediamosa_sdk::TYPE_REALM:
-        if (!mediamosa_acl::is_group_realm($mixed_param_value)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
-        $checked_param_value = (string) $mixed_param_value;
-        break;
-
-      case mediamosa_sdk::TYPE_DOMAIN:
-        if (!mediamosa_acl::is_group_domain($mixed_param_value)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
-        $checked_param_value = (string) $mixed_param_value;
-        break;
-*/
       case mediamosa_sdk::TYPE_OPERATOR:
         if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), array('OR', 'AND'))) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));

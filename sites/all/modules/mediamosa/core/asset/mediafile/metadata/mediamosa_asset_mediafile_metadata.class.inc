@@ -1,35 +1,13 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
   * Metadata functions.
   */
 class mediamosa_asset_mediafile_metadata {
 
+  /**
+   * Properties.
+   */
   const VIDEO_CODEC = 'video_codec';
   const VIDEO_CODEC_LENGTH = 50;
   const COLORSPACE = 'colorspace';
@@ -51,6 +29,7 @@ class mediamosa_asset_mediafile_metadata {
   const BPP = 'bpp';
   const BPP_LENGTH = 5;
   const FILESIZE = 'filesize';
+  const MD5 = 'md5';
   const MIME_TYPE = 'mime_type';
   const MIME_TYPE_LENGTH = 80;
   const IS_HINTED = 'is_hinted';
@@ -73,7 +52,18 @@ class mediamosa_asset_mediafile_metadata {
   const STILL_DEFAULT_TRUE = 'TRUE';
   const STILL_DEFAULT_FALSE = 'FALSE';
 
-  // ------------------------------------------------------------------ Static Function.
+  /**
+   * Common video container types
+   */
+  const CONTAINER_TYPE_WMV = 'asf';
+  const CONTAINER_TYPE_MP3 = 'mp3';
+  const CONTAINER_TYPE_MP4 = 'mov;mp4;m4a;3gp;3g2;mj2';
+  const CONTAINER_TYPE_FLV = 'flv';
+  const CONTAINER_TYPE_OGG = 'ogg';
+  const CONTAINER_TYPE_WEBM = 'webm';
+  const CONTAINER_TYPE_MATROSKA_WEBM = 'matroska;webm';
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the mediafile metadata.
    *
@@ -99,15 +89,24 @@ class mediamosa_asset_mediafile_metadata {
 
   /**
    * Test if mediafile can be played.
+   *
    * Will throw an exception when failure.
    *
    * @param string $mediafile_id
+   *   The mediafile ID.
+   *
+   * @throws mediamosa_exception_error
    */
-  public static function is_playable($mediafile_id) { // media_management_is_playable.
-    $value = self::get_mediafile_metadata($mediafile_id, 'mime_type', mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+  public static function is_playable($mediafile_id) {
+    // Get the mimetype.
+    $mimetype = mediamosa_asset_mediafile::get_mime_type($mediafile_id);
 
-    if ($value == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
+    if ($mimetype == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile has an empty filesize.'));
+    }
+
+    if (empty($mimetype)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile is not analysed.'));
     }
   }
 
@@ -154,14 +153,21 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Fill the mediafile metadata.
    *
-   * @param $still_id
-   * @param $width
+   * @param string $still_id
+   *   The still ID.
+   * @param integer $width
+   *   The width of the still.
    * @param $height
-   * @param $filesize
-   * @param $mime
+   *   The height of the still.
+   * @param integer $filesize
+   *   The size of the file in bytes.
+   * @param string $mime
+   *   The content-type (mime-type).
    * @param $file_type
+   * @param string $md5
+   *   The MD5 of the file.
    */
-  public static function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type) {
+  public static function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type, $md5) {
     // Create mediafile metadata.
     $fields = array(
       array(
@@ -174,11 +180,15 @@ class mediamosa_asset_mediafile_metadata {
         'prop_name' => mediamosa_asset_mediafile_metadata::HEIGHT,
         'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
       ),
-      //mediamosa_asset_mediafile_metadata_db::BPP => '',
       array(
         'value' => $filesize,
         'prop_name' => mediamosa_asset_mediafile_metadata::FILESIZE,
         'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+      ),
+      array(
+        'value' => $md5,
+        'prop_name' => mediamosa_asset_mediafile_metadata::MD5,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
       ),
       array(
         'value' => $mime,
@@ -211,85 +221,104 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
-   * Parse and store the returned string from analyse.
+   * Parse and store the returned data from the analyse.
    *
-   * 1.x: _vpx_jobhandler_parse_metadata
+   * @param string mediafile_id
+   *   The mediafile ID.
+   * @param array $metadata
+   *   The name-value pair array.
    *
-   * @param mediafile_id
-   * @param string $analyse_result
+   * @return string
+   *   The ffmpeg output.
    */
-  public static function parse_store_metadata($mediafile_id, $analyse_result) {
-    // Basic values.
-    $type_int = mediamosa_asset_mediafile_metadata_property_db::TYPE_INT;
-    $type_char = mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR;
-    $type_datetime = mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME;
+  public static function store_metadata($mediafile_id, array $metadata) {
+    // Remove current metadata.
+    self::delete_by_mediafileid($mediafile_id);
 
-    $a_metadata = mediamosa_lib::create_named_array($analyse_result, "\n", ': ');
+    // Store basic information.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
 
+    // Get the filesize.
+    $filesize = mediamosa_io::filesize($mediafile_uri);
+
+    // Get the md5.
+    $md5 = mediamosa_io::md5_file($mediafile_uri);
+
+    // Create filesize metadata.
+    self::create_mediafile_metadata_int($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
+
+    // Create md5 metadata.
+    self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
+
+    // Store analyse.
+    //
     // MIME-type.
-    $value = isset($a_metadata['MIME-type']) ? $a_metadata['MIME-type'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::MIME_TYPE, $type_char);
+    $value = isset($metadata['MIME-type']) ? $metadata['MIME-type'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::MIME_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // Video-codec.
-    $value = isset($a_metadata['Video-codec']) ? $a_metadata['Video-codec'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::VIDEO_CODEC, $type_char);
+    $value = isset($metadata['Video-codec']) ? $metadata['Video-codec'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::VIDEO_CODEC, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // Video-colorspace.
-    $value = isset($a_metadata['Video-colorspace']) ? $a_metadata['Video-colorspace'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::COLORSPACE, $type_char);
+    $value = isset($metadata['Video-colorspace']) ? $metadata['Video-colorspace'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::COLORSPACE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // Video-size.
-    list($width, $height) = isset($a_metadata['Video-size']) ? explode('x', $a_metadata['Video-size']) : array(0, 0);
-    self::create_mediafile_metadata($mediafile_id, $width, mediamosa_asset_mediafile_metadata::WIDTH, $type_int);
-    self::create_mediafile_metadata($mediafile_id, $height, mediamosa_asset_mediafile_metadata::HEIGHT, $type_int);
+    list($width, $height) = isset($metadata['Video-size']) ? explode('x', $metadata['Video-size']) : array(0, 0);
+    self::create_mediafile_metadata($mediafile_id, $width, mediamosa_asset_mediafile_metadata::WIDTH, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    self::create_mediafile_metadata($mediafile_id, $height, mediamosa_asset_mediafile_metadata::HEIGHT, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
 
     // Video-framespersecond.
-    $fps = isset($a_metadata['Video-framespersecond']) ? $a_metadata['Video-framespersecond'] : '';
-    self::create_mediafile_metadata($mediafile_id, $fps, mediamosa_asset_mediafile_metadata::FPS, $type_char);
+    $fps = isset($metadata['Video-framespersecond']) ? $metadata['Video-framespersecond'] : '';
+    self::create_mediafile_metadata($mediafile_id, $fps, mediamosa_asset_mediafile_metadata::FPS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // Audio-codec.
-    $value = isset($a_metadata['Audio-codec']) ? $a_metadata['Audio-codec'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::AUDIO_CODEC, $type_char);
+    $value = isset($metadata['Audio-codec']) ? $metadata['Audio-codec'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::AUDIO_CODEC, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // Audio-frequency.
-    $value = isset($a_metadata['Audio-frequency']) ? $a_metadata['Audio-frequency'] : '0';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::SAMPLE_RATE, $type_int);
+    $value = isset($metadata['Audio-frequency']) ? $metadata['Audio-frequency'] : '0';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::SAMPLE_RATE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
 
     // Audio-channels.
-    $value = isset($a_metadata['Audio-channels']) ? $a_metadata['Audio-channels'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CHANNELS, $type_char);
+    $value = isset($metadata['Audio-channels']) ? $metadata['Audio-channels'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CHANNELS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // file-duration.
-    $value = isset($a_metadata['File-duration']) ? $a_metadata['File-duration'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::FILE_DURATION, $type_char);
+    $value = isset($metadata['File-duration']) ? $metadata['File-duration'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // container.
-    $value = isset($a_metadata['File-type']) ? $a_metadata['File-type'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, $type_char);
+    $value = isset($metadata['File-type']) ? $metadata['File-type'] : '';
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // file-bitrate.
-    $bitrate = isset($a_metadata['File-bitrate']) ? intval($a_metadata['File-bitrate']) : '0';
+    $bitrate = isset($metadata['File-bitrate']) ? intval($metadata['File-bitrate']) : '0';
     if ($bitrate) {
       // Don't store invalid data.
-      self::create_mediafile_metadata($mediafile_id, $bitrate, mediamosa_asset_mediafile_metadata::BITRATE, $type_int);
+      self::create_mediafile_metadata($mediafile_id, $bitrate, mediamosa_asset_mediafile_metadata::BITRATE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     }
 
     // bpp.
-    $value = (string)self::calculate_bpp($width, $height, $fps, $bitrate);
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::BPP, $type_char);
+    $value = (string) self::calculate_bpp($width, $height, $fps, $bitrate);
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::BPP, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // is hinted.
-    $value = isset($a_metadata['Is-hinted']) ? $a_metadata['Is-hinted'] : 'no';
+    $value = isset($metadata['Is-hinted']) ? $metadata['Is-hinted'] : 'no';
     $value = strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_HINTED, $type_char);
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_HINTED, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // has inserted extra metadata.
-    $value = isset($a_metadata['Is-inserted-md']) ? $a_metadata['Is-inserted-md'] : 'no';
+    $value = isset($metadata['Is-inserted-md']) ? $metadata['Is-inserted-md'] : 'no';
     $value = strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD, $type_char);
+    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // The output of ffmpeg.
-    $ffmpeg_output = isset($a_metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $a_metadata['ffmpeg-output'])) : '';
+    $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $metadata['ffmpeg-output'])) : '';
+
+    // Update statistics.
+    mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
 
     // Done.
     return $ffmpeg_output;
@@ -298,28 +327,20 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Store the analyse result in the mediafile metadata.
    *
-   * 1.x: _vpx_jobhandler_update_analyse_job_info_to_mediafile
-   *
-   * @param $job_id
-   * @param $analyse_result
+   * @param integer $job_id
+   *   The job ID.
+   * @param array $analyse_result
+   *   The result of the analyse.
    */
-  public static function store_analyse($job_id, $analyse_result) {
+  public static function store_analyse($job_id, array $analyse_result) {
     // Get the job.
     $job = mediamosa_job::get($job_id);
 
-    // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($job[mediamosa_job_db::MEDIAFILE_ID]));
-
+    // Get the mediafile_id.
     $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_ID];
 
-    // We don't remove any previous metadatas.
-    //self::delete_all_mediafile_metadata($mediafile_id);
-
     // Parse and store metadata from the analyse result.
-    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
-
-    // Create filesize metadata.
-    self::create_mediafile_metadata($mediafile_id, (int)$filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $ffmpeg_output = self::store_metadata($mediafile_id, $analyse_result);
 
     // Store in error description.
     mediamosa_job::store_error_description($job_id, $ffmpeg_output);
@@ -335,8 +356,8 @@ class mediamosa_asset_mediafile_metadata {
         mediamosa_job::create_job_still($job[mediamosa_job_db::APP_ID], $job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $still_parameters);
       }
       catch (mediamosa_exception_error_still_is_not_creatable $e) {
-        // The still is not creatable from the mediafile. Eg. it is an audio file.
-        // Do nothing.
+        // The still is not creatable from the mediafile. Eg. it is an audio
+        // file. Do nothing.
       }
     }
   }
@@ -345,17 +366,11 @@ class mediamosa_asset_mediafile_metadata {
    * Store the analyse result in the mediafile metadata without running or
    * during a job.
    *
-   * @param $analyse_result
+   * @param array $analyse_result
    */
-  public static function store_analyse_without_job($job_id, $analyse_result, $mediafile_id) {
-    // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id));
-
+  public static function store_analyse_without_job($job_id, array $analyse_result, $mediafile_id) {
     // Parse and store metadata from the analyse result.
-    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
-
-    // Create filesize metadata.
-    self::create_mediafile_metadata($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $ffmpeg_output = self::store_metadata($mediafile_id, $analyse_result);
 
     // Store in error description.
     mediamosa_job::store_error_description($job_id, $ffmpeg_output);
@@ -363,46 +378,50 @@ class mediamosa_asset_mediafile_metadata {
     $job = mediamosa_job::get($job_id, array(mediamosa_job_db::MEDIAFILE_DEST));
     // Is it a retranscode job?
     if ($job[mediamosa_job_db::MEDIAFILE_DEST]) {
-      $mediafile_dest = $job[mediamosa_job_db::MEDIAFILE_DEST];
-      // Delete the original.
-      mediamosa_asset_mediafile::delete($mediafile_dest);
+      // Get the realpath before we remove the mediafile from database.
+      $mediafile_realpath_dest = mediamosa_storage::get_realpath_mediafile($job[mediamosa_job_db::MEDIAFILE_DEST]);
+
+      // Delete the original so it can be overwritten.
+      mediamosa_asset_mediafile::delete($job[mediamosa_job_db::MEDIAFILE_DEST]);
+
       // Move the file.
       mediamosa_io::move(
-        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id),
-        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_dest)
+        mediamosa_storage::get_uri_mediafile($mediafile_id),
+        $mediafile_realpath_dest
       );
 
-      mediamosa_db::db_query("SET foreign_key_checks = 0");
-      // Update mediamosa_asset_mediafile table.
-      mediamosa_asset_mediafile::update_mediafile_id($mediafile_id, $mediafile_dest);
-      // Update mediamosa_asset_mediafile_metadata table.
-      self::update_mediafile_id($mediafile_id, $mediafile_dest);
-      mediamosa_db::db_query("SET foreign_key_checks = 1");
+      // Turn off foreign keys so we can move mediafile data and metadata.
+      mediamosa_db::db_query('SET foreign_key_checks = 0');
 
-      // Update the mediafile_id.
-      $mediafile_id = $mediafile_dest;
+      // Update mediamosa_asset_mediafile table.
+      mediamosa_asset_mediafile::update_mediafile_id($mediafile_id, $job[mediamosa_job_db::MEDIAFILE_DEST]);
+
+      // Update mediamosa_asset_mediafile_metadata table.
+      self::move_mediafile_metadata($mediafile_id, $job[mediamosa_job_db::MEDIAFILE_DEST]);
+
+      // And turn it back on.
+      mediamosa_db::db_query('SET foreign_key_checks = 1');
+
+      // Take the new mediafile_id.
+      $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_DEST];
     }
 
     // Normalize to asset.
     mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
-
-    // Update statistics
-    mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
   }
 
   /**
-   * Update the mediafile_id.
+   * Move the technical metadata from one mediafile to another.
    *
-   * @param mediafile_id
-   * @param mediafile_dest
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string $mediafile_id_dest
+   *   The mediafile ID of the destination.
    */
-  public static function update_mediafile_id($mediafile_id, $mediafile_dest) {
-    $fields = array(
-      mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_dest,
-    );
+  public static function move_mediafile_metadata($mediafile_id, $mediafile_id_dest) {
     // Build the query.
     mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-      ->fields($fields)
+      ->fields(array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_id_dest))
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
   }
@@ -410,15 +429,21 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Create mediafile metadata value.
    *
-   * @param mediafile_id
-   * @param value Value of the metadata
-   * @param prop_name Property name
-   * @param type Type of the property
+   * @param string $mediafile_id
+   * @param string|integer $value
+   *   The value of the metadata property.
+   * @param $prop_name Property name
+   *   The name of the property.
+   * @param string $type
+   *   Type of the property.
+   *
+   * @see mediamosa_asset_mediafile_metadata_property_db::TYPE_*.
    */
   public static function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
 
-    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    // Make sure it exists.
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     $fields = array();
     if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
@@ -445,28 +470,26 @@ class mediamosa_asset_mediafile_metadata {
       throw new mediamosa_exception_program_error('Invalid mediafile metadata type (@type)!', array('@type' => $type));
     }
 
-    $num_updated = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+    // Either update or insert.
+    mediamosa_db::db_merge(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->key(array(
+        mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_asset_mediafile_metadata_db::PROP_ID => $prop_id,
+      ))
       ->fields($fields)
-      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
-      ->condition(mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
+      ->updateFields($fields)
       ->execute();
-
-    if (!$num_updated) {
-      $fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $mediafile_id;
-      $fields[mediamosa_asset_mediafile_metadata_db::PROP_ID] = $prop_id;
-
-      $metadata_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-        ->fields($fields)
-        ->execute();
-    }
   }
 
   /**
    * Create mediafile metadata value - INT.
    *
-   * @param mediafile_id
-   * @param value Value of the metadata
-   * @param prop_name Property name
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string|integer $value
+   *   The value of the metadata.
+   * @param string $prop_name
+   *   The name of the Property.
    */
   public static function create_mediafile_metadata_int($mediafile_id, $value, $prop_name) {
     self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
@@ -511,35 +534,42 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Get mediafile metadata value.
    *
-   * @param mediafile_id
+   * @param string mediafile_id
    *   Unique id for the mediafile
-   * @param prop_name
+   * @param string prop_name
    *   Property name
-   * @param type
+   * @param string type
    *   Type of the property
    *
-   * @return
+   * @return string|NULL
    *   Property value, or NULL when not found.
    *
    * @throws mediamosa_exception_program_error()
    */
   public static function get_mediafile_metadata($mediafile_id, $prop_name, $type) {
-    // Cache the call to this function.
-    static $mediafile_metadata = array();
+    // Cache for faster lookups.
+    $mediafile_metadata = &drupal_static('mediamosa_asset_mediafile_metadata', array());
 
-    // @todo: this needs to go. Replace it with throw exception.
-    if (!$mediafile_id || !$prop_name || !$type) {
-      return;
-    }
-
-    // Don't let it grow to much, pop the first from the array to keep mem in
-    // check.
-    if (count($mediafile_metadata) > 50) {
-      array_shift($mediafile_metadata);
+    // Is required.
+    if (empty($mediafile_id) || empty($prop_name) || empty($type)) {
+      throw new mediamosa_exception_program_error(
+        'Missing required input in @func, on line @line in file @file',
+        array(
+          '@func' => __FUNCTION__,
+          '@line' => __LINE__,
+          '@file' => __FILE__,
+        )
+      );
     }
 
     // Check if metadata for this mediafile exists.
     if (!isset($mediafile_metadata[$mediafile_id])) {
+      // Don't let it grow to much, pop the first from the array to keep mem in
+      // check.
+      if (count($mediafile_metadata) > 50) {
+        array_shift($mediafile_metadata);
+      }
+
       // Default empty.
       $mediafile_metadata[$mediafile_id] = array();
 
@@ -639,6 +669,8 @@ class mediamosa_asset_mediafile_metadata {
    * @todo: Get rid of the calls to get_property by joining in the first query
    *        with the property table.
    *
+   *        Make it work with get_mediafile_metadata().
+   *
    * @param mediafile_id
    *   Unique id for the mediafile.
    *
@@ -658,8 +690,11 @@ class mediamosa_asset_mediafile_metadata {
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
 
+    // Hotfix for cache.
+    $reset_cache = TRUE;
     foreach ($result as $row) {
-      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
+      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], $reset_cache);
+      $reset_cache = FALSE;
 
       // TODO: same prop_name with different types.
       if ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
@@ -683,10 +718,14 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Delete mediafile metadata value.
    *
-   * @param mediafile_id Unique id for the mediafile
-   * @param prop_name Property name
-   * @param type Type of the property
-   * @return Number of deleted records, or FALSE in case of validation error
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string $prop_name
+   *   The property name.
+   * @param string Type of the property
+   *
+   * @return integer
+   *   The number of deleted records or FALSE.
    */
   public static function delete_mediafile_metadata($mediafile_id, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
@@ -694,42 +733,53 @@ class mediamosa_asset_mediafile_metadata {
       return FALSE;
     }
 
-    $num_deleted = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+    // Reset static cache.
+    $mediafile_metadata = &drupal_static('mediamosa_asset_mediafile_metadata', array());
+    unset($mediafile_metadata[$mediafile_id]);
+
+    return mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->condition(mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
       ->execute();
-
-    return $num_deleted;
   }
 
   /**
    * Delete all the metadata value of mediafile.
-   * @param mediafile_id Unique id for the mediafile
+   *
+   * @param string $mediafile_id
+   *   The MediaFile ID to remove metadata from.
+   *
+   * @return integer
+   *   The number of metadata properties deleted.
    */
   public static function delete_all_mediafile_metadata($mediafile_id) {
-    $num_deleted = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+    // Reset static cache.
+    $mediafile_metadata = &drupal_static('mediamosa_asset_mediafile_metadata', array());
+    unset($mediafile_metadata[$mediafile_id]);
+
+    return mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
-
-    return $num_deleted;
   }
 
   /**
    * Get all the technical metadata values of asset.
    *
    * @param asset_id
-   *  The asset.
+   *   The asset ID.
    *
-   * @return
-   *  Value of the properties in an associative array.
+   * @return string
+   *   Values of the properties in an associative array.
    */
   public static function get_all_mediafile_metadata_for_asset($asset_id) {
+    // Result.
     $values = array();
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
-    $query->fields('mf');
-    $result = $query->fields('mfm', array(
+    $result = $query
+      ->fields('mf')
+      ->fields('mfm', array(
         mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
         mediamosa_asset_mediafile_metadata_db::PROP_ID,
         mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
@@ -744,22 +794,11 @@ class mediamosa_asset_mediafile_metadata {
         continue;
       }
 
+      // Get property.
       $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
 
-      // TODO: same prop_name with different types.
-      if ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
-        $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_CHAR];
-      }
-      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
-        $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_INT];
-      }
-      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
-        $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME];
-      }
-      else {
-        // Shouldn't be here.
-        assert(0);
-      }
+      // Store.
+      $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[$prop['type']];
 
       // Get mediafile.
       $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['mediafile'] = $row;
@@ -767,6 +806,4 @@ class mediamosa_asset_mediafile_metadata {
 
     return $values;
   }
-
-
 }

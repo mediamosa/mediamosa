@@ -1,38 +1,11 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for openAPI output formats.
  */
 
-/**
-  * @file
-  * Unittests for openAPI output formats.
-  */
 class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
-
-  // ------------------------------------------------------------------ Members.
-
-  // ----------------------------------------------------------------- Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'OpenAPI output test',
@@ -100,6 +73,7 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_ATOM,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
+
     // Check response.
     // Dump the response.
     $this->assertTrue(TRUE, print_r($assets, TRUE));
@@ -111,9 +85,10 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_RSS,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
-    // Check response.
-    // Dump the response.
-    $this->assertTrue(TRUE, print_r($assets, TRUE));
+
+    // Dump.
+    $this->var_export($assets);
+
     // Check.
     $this->assertTrue(isset($assets['channel']), 'RSS has the "channel" element.');
 
@@ -123,9 +98,10 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_XML,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
-    // Check response.
-    // Dump the response.
-    $this->assertTrue(TRUE, print_r($assets, TRUE));
+
+    // Dump.
+    $this->var_export($assets);
+
     // Check.
     $this->assertTrue(isset($assets['items']), 'XML has the "items" element.');
   }

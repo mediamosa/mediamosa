@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * REST calls for automated simpletest page.
  */
-
- /**
-  * @file
-  * REST calls for automated simpletest page.
-  */
 
 /**
  * URI: /cron/simpletests
@@ -153,7 +128,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
   // Rest vars;
   const CLASS_NAME = 'class_name';
 
-  // ------------------------------------------------------- Functions (public).
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
@@ -167,6 +142,24 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  /**
+   * Get test results for $test_id.
+   *
+   * @param integer $test_id
+   *   The test_id to retrieve results of.
+   *
+   * @return array
+   *   Array of results grouped by test_class.
+   */
+  function simpletest_result_get($test_id) {
+    return mediamosa_db::db_select('simpletest', 's')
+      ->fields('s')
+      ->condition('test_id', $test_id)
+      ->orderBy('test_class')
+      ->orderBy('message_id')
+      ->execute();
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -212,18 +205,24 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
 
       // Run.
       $start = microtime(TRUE);
-      $my_simpletest->runSafe();
+      // Use runSafe() when available.
+      if (method_exists($my_simpletest, 'runSafe')) {
+        $my_simpletest->runSafe();
+      }
+      else {
+        $my_simpletest->run();
+      }
       $end = microtime(TRUE);
 
       // Store results.
       $item['results'] = $my_simpletest->results;
       $item['started'] = $start;
       $item['ended'] = $end;
-      $assertions = $my_simpletest->get_assertions();
-
-      // Now add the messages.
-      foreach ($assertions as $num => $assertion) {
-        $item['assertions']['assertion']['#' . serialize(array('id' => $num + 1))] = $assertion;
+      $assertions = self::simpletest_result_get($test_id);
+      if ($assertions) {
+        foreach ($assertions as $num => $assertion) {
+          $item['assertions']['assertion']['#' . serialize(array('id' => $num + 1))] = $assertion;
+        }
       }
 
       // Fix.

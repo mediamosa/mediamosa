@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Core - Open source media management and distribution platform.
@@ -38,6 +13,107 @@ require_once 'core/node/mediamosa_node.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_app.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
+
+/**
+ * Implements hook_mediamosa_storage_info().
+ */
+function mediamosa_mediamosa_storage_info() {
+  return array(mediamosa_storage_local::NAME => array(
+    'name' => t('MediaMosa local storage'),
+    'description' => t('The normal local MediaMosa storage.'),
+  ));
+}
+
+/**
+ * Implements hook_mediamosa_acl().
+ */
+function mediamosa_mediamosa_acl(array $object, $op, $acl_type, $app_id, $user_id, $is_app_admin, array $acl_data = array()) {
+  // Any change will trigger reindex object.
+  switch ($acl_type) {
+    case mediamosa_acl::ACL_TYPE_MEDIAFILE:
+      // ACL status changed, remove possible perm. link.
+      mediamosa_media::remove_public_link($object['app_id'], $object['mediafile_id']);
+
+      // Reindex the asset using the mediafile ID.
+      mediamosa_asset_mediafile::mediamosa_asset_reindex(array($object['mediafile_id']), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
+      break;
+
+    case mediamosa_acl::ACL_TYPE_ASSET:
+      // ACL status changed, remove possible perm. link.
+      mediamosa_media::remove_public_link_asset($object['asset_id']);
+
+      // Reindex the asset using the mediafile ID.
+      mediamosa_asset::mediamosa_asset_reindex(array($object['asset_id']), mediamosa_settings::SEARCH_INDEX_TYPE_ACL);
+      break;
+  }
+}
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function mediamosa_stream_wrappers() {
+  $wrappers = array();
+
+  // Do not use our stream wrappers during update and at the point our stream
+  // wrappers are not known.
+  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update' && drupal_get_installed_schema_version('mediamosa', TRUE) < 7142) {
+    return $wrappers;
+  }
+
+  // Our MediaMosa Stream Wrappers.
+  $wrappers = array(
+    'mediamosa-storage' => array(
+      'name' => t('MediaMosa storage local mount point location'),
+      'class' => 'mediamosa_io_streamwrapper_local',
+      'description' => t('All local files and symbolic links used by MediaMosa.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-data' => array(
+      'name' => t('MediaMosa storage data local mount point location'),
+      'class' => 'mediamosa_io_streamwrapper_local_data',
+      'description' => t('Local storage of the mediafiles.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-stills' => array(
+      'name' => t('MediaMosa storage local mount point location for stills'),
+      'class' => 'mediamosa_io_streamwrapper_local_stills',
+      'description' => t('Local storage of the stills.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-media' => array(
+      'name' => t('MediaMosa storage media local mount point location'),
+      'class' => 'mediamosa_io_streamwrapper_local_media',
+      'description' => t('All local files and symbolic links used by MediaMosa.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-temporary' => array(
+      'name' => t('Temporary MediaMosa files'),
+      'class' => 'mediamosa_io_streamwrapper_local_temporary',
+      'description' => t('Temporary local files for transcoding and still generation.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-transition' => array(
+      'name' => t('Transition MediaMosa files'),
+      'class' => 'mediamosa_io_streamwrapper_local_transition',
+      'description' => t('Transitional local files for temporary usage and kept as long as the transition diskspace allows it.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-transition-links' => array(
+      'name' => t('Transition MediaMosa links'),
+      'class' => 'mediamosa_io_streamwrapper_local_transition_links',
+      'description' => t('Transitional links are symlinks to transition files.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+    'mediamosa-storage-simpletest' => array(
+      'name' => t('MediaMosa storage simpletest mount point location'),
+      'class' => 'mediamosa_storage_simpletest_stream_wrapper',
+      'description' => t('All files and symbolic links used by MediaMosa during Simpletest.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
+  );
+
+  return $wrappers;
+}
 
 /**
  * Implements hook_permission().
@@ -176,6 +252,10 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa configuration (transcode profiles)'),
       'description' => t($text_view_switch, array('@type' => 'transcode profiles')),
     ),
+    mediamosa_permission::ACCESS_CONFIG_STORAGE_PROFILES => array(
+      'title' => t('Access MediaMosa configuration (storage profiles)'),
+      'description' => t($text_view_switch, array('@type' => 'storage profiles')),
+    ),
     mediamosa_permission::ACCESS_CONFIG_WEBSERVICES => array(
       'title' => t('Access MediaMosa configuration (webservices)'),
       'description' => t($text_view_switch, array('@type' => 'webservices')),
@@ -184,7 +264,6 @@ function mediamosa_permission() {
       'title' => t('Update MediaMosa configuration (webservices)'),
       'description' => t($text_edit_switch, array('@type' => 'webservices')),
     ),
-
   );
 
   // Add the roles of the apps.
@@ -251,7 +330,7 @@ function _mediamosa_user_access($perms, $one_part_test = FALSE) {
   $perms .= '|';
 
   // If part of role is there
-  foreach ($user->roles as $rid => $role) {
+  foreach (array_keys($user->roles) as $rid) {
     foreach ($role_permissions[$rid] as $role_permission => $switch) {
       if (empty($switch)) {
         continue;
@@ -359,6 +438,35 @@ function mediamosa_mediamosa_metadata_info() {
 }
 
 /**
+ * Implements hook_mediamosa_tool_info().
+ *
+ * @return array
+ *   An array filled with information about the tools.
+ */
+function mediamosa_mediamosa_tool_info() {
+  return array(
+    mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER => array(
+      'name' => t('File transfer'),
+      'description' => t('The server tool that uploads, downloads and moves files from external storage like S3, YouTube etc.'),
+      // Temporary solution till 3.6.
+      'is_full_tool' => FALSE,
+    ),
+    mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_ANALYSE => array(
+      'name' => t('Analyse media'),
+      'description' => t('The analyse tool is used to generate technical metadata.'),
+      // Temporary solution till 3.6.
+      'is_full_tool' => FALSE,
+    ),
+    mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_STILL => array(
+      'name' => t('Generate stills'),
+      'description' => t('These tools generate images (stills) to represent the media as an image. e.g. thumbnail.'),
+      // Temporary solution till 3.6.
+      'is_full_tool' => FALSE,
+    ),
+  );
+}
+
+/**
  * Format the MediaMosa version text.
  */
 function theme_mediamosa_version($variables) {
@@ -425,6 +533,15 @@ function mediamosa_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+
+  $rest_calls['job/$job_id/execute'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_job_execute',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
     mediamosa_rest_call::NO_USER_ABORT => TRUE,
   );
@@ -528,6 +645,17 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
 </items>',
   );
 
+  $rest_calls['job/$job_id/execute'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Execute the job.',
+    mediamosa_rest_call::DESCRIPTION => 'The page call will execute the job. Is only available for specific job types (for now). Use HEAD method to trigger the call. With the HEAD method, the webserver will not wait for the call to complete.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/job/2234/execute [GET]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+  </item>
+</items>',
+  );
+
   return $rest_calls;
 }
 
@@ -537,6 +665,119 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
 function mediamosa_mediamosa_configuration_collect() {
 
   $form = array();
+
+  $form['settings_storage'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('File system'),
+    '#description' => t('<b>The file system settings should not be changed during normal operations</b>. Make sure all jobs are finished before changing any of these settings.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_storage']['mount-point'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Mount point'),
+    '#description' => t('The mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this file system path needs to be available for all servers (i.e. through NFS).'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_storage']['mount-point']['mediamosa_current_mount_point'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files. It should be writable by MediaMosa.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa'),
+  );
+
+  $form['settings_storage']['mount-point']['mediamosa_current_mount_point_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path windows'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
+    '#required' => FALSE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\\\'),
+  );
+
+  $form['settings_storage']['mount-point']['mediamosa_current_mount_point_stills'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path for stills'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files, specificly still images. It should be writable by MediaMosa.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_stills', '/srv/mediamosa'),
+  );
+
+  $form['settings_storage']['mount-point']['mediamosa_current_mount_point_stills_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa storage file system path windows for stills'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers, specificly still images. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
+    '#required' => FALSE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_stills_windows', '\\\\'),
+  );
+
+  $form['settings_storage']['temporary'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Temporary system path'),
+    '#description' => t('The temporary file system path is the location where MediaMosa stores temporary files for transcoding and still generation. The location of the temporary directory must be located on an shared location, accessable to all job servers. The default location is on the shared mount point.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_storage']['temporary']['mediamosa_current_mount_point_temporary'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa temporary system path'),
+    '#description' => t('The linux temporary system path'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary', '/srv/mediamosa/data/transcode'),
+  );
+
+  $form['settings_storage']['temporary']['mediamosa_current_mount_point_temporary_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa temporary system path windows'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
+    '#required' => FALSE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temporary_windows', '\\data\transcode'),
+  );
+
+  $form['settings_storage']['transition'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Temporary system path'),
+    '#description' => t('The transition file system path is the location where MediaMosa stores downloaded files for transcoding and still generation of external sources. The location of the transition directory must be located on an shared location and accessable to all job servers. The default location is on the shared mount point. <em>The transition location is only used when using external storage like Amazon S3.</em>'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['settings_storage']['transition']['mediamosa_current_mount_point_transition'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition system path'),
+    '#description' => t('The linux path for transition directory. The location of the transition directory must be located on an shared location, accessable to all job servers'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition', '/srv/mediamosa/data/transition'),
+  );
+
+  $form['settings_storage']['transition']['mediamosa_current_mount_point_transition_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition system path windows'),
+    '#description' => t('An existing local file system path for storing MediaMosa related files for Windows OS based servers. It should be writable by MediaMosa. (use UNC path like \\\\server\\share\\file_path).'),
+    '#required' => FALSE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_transition_windows', '\\data\transition'),
+  );
+
+  $form['settings_storage']['transition']['mediamosa_storage_transition_max_size_gb'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition maximum size (gigabytes)'),
+    '#description' => t('The maximum size is not an exact size. It can and will in some cases go over the maximum size, although for a short time (few minutes). We recommend around 25gb as minimum value, for larger installations up to 100gb. The more size, the less download traffic is needed for external sources.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_storage_transition_max_size_gb', '50'),
+  );
+
+  $form['settings_storage']['transition']['mediamosa_storage_transition_max_lifetime_days'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa transition maximum lifetime files (days)'),
+    '#description' => t('Files will be kept for the maximum of given days that the file was not accessed. However, files will be removed sooner if space when needed. We recommend 7 days as minimum value.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_storage_transition_max_lifetime_days', '14'),
+  );
+
   $form['settings_mediamosa'] = array(
     '#type' => 'fieldset',
     '#title' => t('Miscellaneous'),
@@ -545,7 +786,7 @@ function mediamosa_mediamosa_configuration_collect() {
   );
 
   // Get all installed search engines.
-  $mediamosa_search_engines = module_invoke_all('mediamosa_search_engine');
+  $mediamosa_search_engines = module_invoke_all('mediamosa_search_engine_info');
   $options = array();
   foreach ($mediamosa_search_engines as $name => $mediamosa_search_engine) {
     $options[$name] = $mediamosa_search_engine['title'];
@@ -600,12 +841,49 @@ function mediamosa_mediamosa_configuration_collect() {
  * Implements hook_mediamosa_configuration_validate().
  */
 function mediamosa_mediamosa_configuration_validate($form, $form_state) {
-//  global $databases;
 
   // Use normal so schema might be empty.
   $parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);
   if (!isset($parse_url['scheme']) || !in_array($parse_url['scheme'], array('http', 'https'))) {
     form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
+  }
+
+  // Get the path based on OS.
+  $path = mediamosa::is_windows_platform() ? $form_state['values']['mediamosa_current_mount_point_windows'] : $form_state['values']['mediamosa_current_mount_point'];
+  if (!empty($path) && !mediamosa_io::is_writable($path)) {
+    drupal_set_message(t('<em>Warning, your !os MediaMosa storage file system path is not writable.</em>', array('!os' => mediamosa::is_windows_platform() ? 'Windows' : 'Linux')), 'warning');
+  }
+
+  $wrapper_local = new mediamosa_io_streamwrapper_local();
+  $wrapper_local_stills = new mediamosa_io_streamwrapper_local_stills();
+  $wrapper_local_temporary = new mediamosa_io_streamwrapper_local_temporary();
+  $wrapper_local_transition = new mediamosa_io_streamwrapper_local_transition();
+  if (
+    $wrapper_local->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point'] ||
+    $wrapper_local->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_windows'] ||
+    $wrapper_local_stills->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_stills'] ||
+    $wrapper_local_stills->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_stills_windows'] ||
+    $wrapper_local_temporary->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_temporary'] ||
+    $wrapper_local_temporary->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_temporary_windows'] ||
+    $wrapper_local_transition->get_storage_path_linux() != $form_state['values']['mediamosa_current_mount_point_transition'] ||
+    $wrapper_local_transition->get_storage_path_windows() != $form_state['values']['mediamosa_current_mount_point_transition_windows']
+  ) {
+    // Get the running jobs.
+    $running_jobs = mediamosa_job::has_running_jobs();
+
+    // Check if any jobs are running.
+    if ($running_jobs) {
+      form_set_error('mediamosa_current_mount_point', t('You can not change any of the file system settings if there are running jobs. There are currently @count running job(s).', array('@count' => $running_jobs)));
+    }
+  }
+
+  // Must not be lower than 1.
+  if ($form_state['values']['mediamosa_storage_transition_max_lifetime_days'] < 1) {
+    form_set_error('mediamosa_storage_transition_max_lifetime_days', t('Must be larger than 0'));
+  }
+
+  if ($form_state['values']['mediamosa_storage_transition_max_size_gb'] < 10) {
+    form_set_error('mediamosa_storage_transition_max_size_gb', t('Must be larger or equal than 10'));
   }
 }
 
@@ -695,7 +973,7 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
         $query->condition($or);
       }
       if (!empty($_SESSION['mediamosa_watchdog_overview_filter']['asset_id']) || !empty($_SESSION['mediamosa_watchdog_overview_filter']['mediafile_id'])) {
-        $table_alias = $query->join(mediamosa_watchdog_db::TABLE_NAME, 'mw', 'w.wid = mw.wid');
+        $query->join(mediamosa_watchdog_db::TABLE_NAME, 'mw', 'w.wid = mw.wid');
         if (!empty($_SESSION['mediamosa_watchdog_overview_filter']['asset_id'])) {
           $query->condition(mediamosa_watchdog_db::ASSET_ID, '%' . mediamosa_db::db_like($_SESSION['mediamosa_watchdog_overview_filter']['asset_id']) . '%', 'LIKE');
         }
@@ -716,6 +994,9 @@ function mediamosa_cron() {
   if (mediamosa::in_simpletest_sandbox()) {
     return;
   }
+
+  // Call the clear up function of transition files.
+  mediamosa_storage_transition::clean_up();
 
   try {
     /*
@@ -738,13 +1019,43 @@ function mediamosa_cron() {
 }
 
 /**
- * Implements hook_mediamosa_search_engine().
+ * Implements hook_mediamosa_search_engine_info().
  */
-function mediamosa_mediamosa_search_engine() {
+function mediamosa_mediamosa_search_engine_info() {
 
   // Return the information about the default search engine.
   return array('mediamosa_search' => array(
     'title' => t('MediaMosa default search'),
     'description' => t('The default search engine for searching in MediaMosa. This search engine is always available.'),
   ));
+}
+
+/**
+ * Implements hook_file_mimetype_mapping_alter().
+ */
+function mediamosa_file_mimetype_mapping_alter(&$mapping) {
+  if (array_search('video/webm', $mapping['mimetypes']) === FALSE) {
+    // Add missing mimetypes.
+    $mapping['mimetypes'][] = 'video/webm';
+    $mapping['mimetypes'][] = 'audio/webm';
+  }
+
+  // Webm.
+  $webm = array_search('video/webm', $mapping['mimetypes']);
+
+  // Check if video/webm is already added.
+  $mapping['extensions']['webm'] = $webm;
+}
+
+/**
+ * Implements hook_mediamosa_storage_profile_view().
+ * Needs to appear being mediamosa_storage_local
+ */
+function mediamosa_storage_local_mediamosa_storage_profile_view($node, $view_mode = 'full') {
+  $wrapper = new mediamosa_io_streamwrapper_local();
+  $rows = array(
+    array(t('Linux Mount Point'), check_plain($wrapper->get_storage_path_linux())),
+    array(t('Windows Mount Point'), check_plain($wrapper->get_storage_path_windows())),
+  );
+  return $rows;
 }

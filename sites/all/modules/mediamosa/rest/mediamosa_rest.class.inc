@@ -150,7 +150,8 @@ class mediamosa_rest {
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
           $regex_array[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
 
-          // Replace + for space, seems arg() does urldecode the %## values into chars, but not the + into spaces.
+          // Replace + for space, seems arg() does urldecode the %## values into
+          // chars, but not the + into spaces.
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = str_replace('+', ' ', ($request_uris[$pos]));
         }
         else {
@@ -185,7 +186,8 @@ class mediamosa_rest {
     }
 
     if (!$rest_call_return) {
-      return FALSE; // Not found.
+      // Not found.
+      return FALSE;
     }
 
     mediamosa_debug::log("Matched URI '@uri' to REST call '@rest_uri'", array('@uri' => $request_uri_cpy, '@rest_uri' => $rest_call_return[mediamosa_rest_call::URI]));
@@ -224,7 +226,7 @@ class mediamosa_rest {
     return $rest_call;
   }
 
-  // ------------------------------------------------------------------ Public Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get a list of REST calls registered with our drupal hook.
    *

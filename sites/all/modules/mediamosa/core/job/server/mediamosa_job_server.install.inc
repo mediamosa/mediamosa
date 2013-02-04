@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Install for mediamosa_job_server table.
  */
+
 require_once 'mediamosa_job_server_db.class.inc';
 
 require_once 'analyse/mediamosa_job_server_analyse.install.inc';
@@ -45,35 +21,6 @@ function _mediamosa_job_server_install() {
   _mediamosa_job_server_analyse_install();
   _mediamosa_job_server_still_install();
   _mediamosa_job_server_transcode_install();
-
-  // @todo
-  return;
-
-  // Now create the tables in optional sub-databases.
-  global $databases;
-  if (!isset($databases['jobserver']) && !isset($databases['jobserver']['default']) && !isset($databases['jobserver']['default']['mediamosa_jobserver_dbs'])) {
-    return;
-  }
-
-  foreach ($databases['jobserver']['default']['mediamosa_jobserver_dbs'] as $to_dbname) {
-    $old_db = mediamosa_db::db_set_active($to_dbname);
-
-    try {
-      // Create our table(s).
-      mediamosa::drupal_install_schema(mediamosa_job_server_db::TABLE_NAME);
-
-      // Create child tables;
-      _mediamosa_job_server_analyse_install();
-      _mediamosa_job_server_still_install();
-      _mediamosa_job_server_transcode_install();
-    }
-    catch (Exception $e) {
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    mediamosa_db::db_set_active($old_db);
-  }
 }
 
 /**
@@ -130,10 +77,10 @@ function mediamosa_job_server_schema() {
         'default' => '0.000',
       ),
       mediamosa_job_server_db::JOB_TYPE => array(
-        'description' => 'The status of the job.',
-        'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'description' => 'The type of the job.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
         'default' => mediamosa_job_server_db::JOB_TYPE_UPLOAD,
       ),
       mediamosa_job_server_db::PROGRESS_ID => array(

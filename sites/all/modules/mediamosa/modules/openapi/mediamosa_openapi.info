@@ -3,7 +3,7 @@
 name = "OpenAPI"
 description = "The OpenAPI module enables different open applications in MediaMosa. Eg. RSS feed, ATOM, JSON."
 package = "MediaMosa - Modules"
-version = 7.x-3.2.2
+version = 7.x-3.4.0
 core = 7.x
 
 ; Dependencies (module names)

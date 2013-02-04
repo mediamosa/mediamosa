@@ -1,33 +1,11 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
- * Unicode library is our layer for supporting charsets. MediaMosa only supports UTF8 for now.
+ * Unicode library is our layer for supporting charsets.
+ *
+ * MediaMosa only supports UTF8.
  */
+
 class mediamosa_unicode {
 
   /**
@@ -128,16 +106,45 @@ class mediamosa_unicode {
   }
 
   /**
-   * Format date
+   * Formats a date, using a date type or a custom date format string.
+   *
+   * @param $timestamp
+   *   A UNIX timestamp to format.
+   * @param $type
+   *   (optional) The format to use, one of:
+   *   - 'short', 'medium', or 'long' (the corresponding built-in date formats).
+   *   - The name of a date type defined by a module in hook_date_format_types(),
+   *     if it's been assigned a format.
+   *   - The machine name of an administrator-defined date format.
+   *   - 'custom', to use $format.
+   *   Defaults to 'medium'.
+   * @param $format
+   *   (optional) If $type is 'custom', a PHP date format string suitable for
+   *   input to date(). Use a backslash to escape ordinary text, so it does not
+   *   get interpreted as date format characters.
+   * @param $timezone
+   *   (optional) Time zone identifier, as described at
+   *   http://php.net/manual/en/timezones.php Defaults to the time zone used to
+   *   display the page.
+   * @param $langcode
+   *   (optional) Language code to translate to. Defaults to the language used to
+   *   display the page.
+   *
+   * @return
+   *   A translated date string in the requested format.
    */
   public static function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date($timestamp, $type, $format, $timezone, $langcode);
   }
 
   /**
-   * Return an array with any multi-byte value that XML can not handle. Good
-   * test for this is reading the XML into the SimpleTest class. Will fail if
-   * any of these chars are used.
+   * Return an array with any multi-byte value that XML can not handle.
+   *
+   * Good test for this is reading the XML into the SimpleTest class. Will fail
+   * if any of these chars are used.
+   *
+   * @return array
+   *   The invalid characters.
    */
   public static function get_invalid_char_str() {
     static $invalid_char = array();

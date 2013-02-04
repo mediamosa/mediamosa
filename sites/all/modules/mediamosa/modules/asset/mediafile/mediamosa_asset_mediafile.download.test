@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for mediafile download.
  */
 
-/**
-  * @file
-  * Unittests for mediafile download.
-  */
 class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -51,45 +27,40 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     // Make a mediafile with is_downloadable = TRUE.
     //
 
-    // Create an asset.
-    $asset_id = $this->createAsset();
-
-    // Create a mediafile.
-    $a_parameters = array(
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'TRUE',
-    );
-    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+    $upload = $this->uploadTestFile(array('downloadable' => TRUE));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Get the mediafile.
-    $a_mediafile = $this->getMediafile($mediafile_id);
+    $mediafile = $this->getMediafile($mediafile_id);
 
     // Check the values.
-    foreach ($a_parameters as $key => $value) {
+    foreach (array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE) as $key => $value) {
       $this->assertTrue(
-        $a_mediafile[$key] == $value,
+        $mediafile[$key] == $value,
         t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
       );
     }
 
     // Touch a temporary mediafile.
-    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
-    $is_touched = mediamosa_io::touch($filename);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+    $is_touched = mediamosa_io::touch($mediafile_uri);
     $this->assertTrue(
       $is_touched,
-      t('Create an empty mediafile on SAN/NAS: @filename', array('@filename' => $filename))
+      t('Create an empty mediafile on SAN/NAS: @filename', array('@filename' => mediamosa_io::realpath_safe($mediafile_uri)))
     );
 
     // Ask mediafile download url.
-    $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile.download.test', 82, $asset_id, $a_parameters);
+    $xml = $this->do_media_view($asset_id, $parameters);
 
     // Check the download url.
-    $download = $a_xml['items']['item']['output'];
+    $download = (string) $xml->items->item->output;
     $this->assertTrue(
-      $download && is_string($download),
+      !empty($download),
       t('Download url is exists: @download', array('@download' => $download))
     );
 
@@ -98,28 +69,28 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     //
 
     // Change the mediafile.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'FALSE',
     );
-    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+    $this->updateMediafile($mediafile_id, $parameters);
 
     // Get the mediafile.
-    $a_mediafile = $this->getMediafile($mediafile_id);
+    $mediafile = $this->getMediafile($mediafile_id);
 
     // Check the values.
-    foreach ($a_parameters as $key => $value) {
+    foreach ($parameters as $key => $value) {
       $this->assertTrue(
-        $a_mediafile[$key] == $value,
+        $mediafile[$key] == $value,
         t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
       );
     }
 
     // Ask mediafile download url.
-    $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile.download.test', 121, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
 
     //
     // Delete temporary items.
@@ -128,8 +99,8 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     // Delete the temporary mediafile.
     if ($is_touched) {
       $this->assertTrue(
-        mediamosa_io::unlink($filename),
-        t('Delete the mediafile on SAN/NAS: @filename', array('@filename' => $filename))
+        mediamosa_io::unlink($mediafile_uri),
+        t('Delete the mediafile on SAN/NAS: @filename', array('@filename' => mediamosa_io::realpath_safe($mediafile_uri)))
       );
     }
   }

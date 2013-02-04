@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Jobs module.
@@ -298,7 +273,32 @@ The analyse process also determines if the file needs to be hinted. If the ega s
 
   $rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the job listing of the given asset ID.',
-    mediamosa_rest_call::DESCRIPTION => nl2br(mediamosa_io::file_get_contents(drupal_get_path('module', 'mediamosa') . '/docs/joblist_cql.txt')),
+    mediamosa_rest_call::DESCRIPTION => nl2br('Returns a listing of all the jobs belonging to the asset.
+
+CQL usage examples:
+  * mediafile_id == "^1234^"
+    It searches the jobs of mediafile_id = 1234.
+
+  * status == "^FAILED^"
+    It searches the jobs where the status = FAILED.
+
+  * progress > "0.500" OR progress == "0.000"
+    It searches the jobs where the progress bigger than 0.5 or equal to 0.
+
+  * priority >= "0"
+    It searches the jobs where the priority is bigger than zero.
+
+  * job_type == "^UPLOAD^"
+    It searches the jobs where the type = UPLOAD.
+
+  * finished >= "2010-07-21 12:44:45" AND finished < "2010-07-22 15:32:43"
+    It searches the jobs where the finished parameter is between this to date.
+
+  * create_still == "TRUE"
+    It searches the jobs where the create_still parameter is TRUE.
+
+  * hint == "TRUE"
+    It searches the jobs where the hint parameter is TRUE.'),
     mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/joblist?user_id=usertest',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>

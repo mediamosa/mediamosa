@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for mediafile functions.
  */
 
-/**
-  * @file
-  * Unittests for mediafile functions.
-  */
 class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
@@ -42,8 +18,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
   }
 
   // ------------------------------------------------------------------ Tests.
-
-  // Testing asset mediafile delete, see: ticket 206.
+  // Testing asset mediafile delete.
   function testMediafileFunction() {
 
     //
@@ -209,22 +184,22 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     $a_asset = $this->getAsset($asset_id);
 
     // Collect the mediafile_ids
-    $a_mf = array();
+    $mediafile_still = array();
     foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
-      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
+      $mediafile_still[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
     }
 
     // Check the result
     $this->assertTrue(
-      count($a_mf) == 2,
+      count($mediafile_still) == 2,
       t("We have 2 mediafiles")
     );
     $this->assertTrue(
-      in_array($mediafile_id, $a_mf),
+      in_array($mediafile_id, $mediafile_still),
       t("Original mediafile_id is exists")
     );
     $this->assertTrue(
-      in_array($mediafile_id_not_original, $a_mf),
+      in_array($mediafile_id_not_original, $mediafile_still),
       t("Not original mediafile_id is exists")
     );
 
@@ -262,18 +237,18 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
       unset($a_asset['mediafiles']['mediafile']);
       $a_asset['mediafiles']['mediafile'][0] = $tmp;
     }
-    $a_mf = array();
+    $mediafile_still = array();
     foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
-      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
+      $mediafile_still[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
     }
 
     // Check the result
     $this->assertTrue(
-      count($a_mf) == 1,
+      count($mediafile_still) == 1,
       t("We have 1 mediafile")
     );
     $this->assertTrue(
-      in_array($mediafile_id_2, $a_mf),
+      in_array($mediafile_id_2, $mediafile_still),
       t("The mediafile_id is exists")
     );
     $this->assertTrue(
@@ -286,9 +261,9 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     //
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -297,21 +272,21 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     $this->doQueueCycleAll();
 
     // Get the stills.
-    $a_stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
 
     // Get first array.
-    $a_stills = $a_stills[0];
-    $still_mediafile_id = $a_stills['stills']['still_id'];
+    $stills = $stills[0];
+    $still_mediafile_id = $stills['stills']['still_id'];
 
     // Get still.
     // show_stills = NULL.
-    $a_mf = $this->getMediafile($mediafile_id);
-    //$this->var_export($a_mf);
+    $mediafile_still = $this->getMediafile($mediafile_id);
+    //$this->var_export($mediafile_still);
 
     // Check the response.
     $this->assertTrue(
-      isset($a_mf['still']),
+      isset($mediafile_still['still']),
       t("Is still exists?")
     );
 
@@ -320,11 +295,11 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     $a_parameters = array(
       mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
     );
-    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+    $mediafile_still = $this->getMediafile($mediafile_id, $a_parameters);
 
     // Check the response.
     $this->assertTrue(
-      isset($a_mf['still']),
+      isset($mediafile_still['still']),
       t("Is still exists?")
     );
 
@@ -333,11 +308,11 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     $a_parameters = array(
       mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
     );
-    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+    $mediafile_still = $this->getMediafile($mediafile_id, $a_parameters);
 
     // Check the response.
     $this->assertFalse(
-      isset($a_mf['still']),
+      isset($mediafile_still['still']),
       t("Is still not exists?")
     );
   }

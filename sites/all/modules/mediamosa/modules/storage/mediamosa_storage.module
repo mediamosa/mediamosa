@@ -1,0 +1,295 @@
+<?php
+/**
+ * @file
+ * MediaMosa storage.
+ */
+
+require_once 'profile/mediamosa_storage_profile.inc';
+
+/**
+ * Implements hook_help().
+ */
+function mediamosa_storage_help($path, $arg) {
+
+  switch ($path) {
+    case 'admin/mediamosa/config/storage_profile':
+      return '<p>' . t('Storage profiles are used by client applications to store their media files. There are different storage modules available to allow different types of storage like local mountpoints and cloud storage. If no storage profile has been selected for a certain client app, the default profile will be used.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_storage_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+  $rest_calls['storage/$mediafile_id/download'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_download',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+  $rest_calls['storage/$mediafile_id/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+  $rest_calls['storage/$mediafile_id/move'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_storage_move',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+  );
+
+  $rest_calls['cron/storage/transition'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_storage_transition',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_storage',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::NO_USER_ABORT => TRUE,
+  );
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_storage_mediamosa_register_rest_call_doc() {
+
+  $rest_calls = array();
+  $rest_calls['storage/$mediafile_id/download'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Download a mediafile from its location and put it in the transition area. The download will be registered and kept for a period of time.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/download [POST] user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will download the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+  $rest_calls['storage/$mediafile_id/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Upload the mediafile from transition area to the mediafile location. This call is more an update or replacement of the mediafile with the version in the transition area.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/upload [POST] user_id=foo&storage_profile_id=1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will upload the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+  $rest_calls['storage/$mediafile_id/move'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Move a mediafile from one storage profile location to another storage profile location. The move operation is done using upload and download jobs. When the physical is succesfully copied to the destination, the source is removed and the location description in the database is changed to the new location.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/move [POST] user_id=foo&storage_profile_id=1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The job ID of the job that will move the mediafile.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>4539</job_id>
+</item>',
+  );
+
+  $rest_calls['cron/storage/transition'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Run the cron cycle for storage transition.',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for storage transition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_storage_permission() {
+  $permissions = array();
+
+  // Get all the apps.
+  $apps = mediamosa_app::get_all_apps_cached();
+
+  // Build access permission for each storage module
+  $types = module_invoke_all('mediamosa_storage_info');
+  foreach ($types as $key => $type) {
+    $permissions[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|add'] = array(
+      'title' => t('Access ' . $type['name'] . ' for all apps'),
+      'description' => t('Enables the user to use ' . $type['name'] . ' fr all client applications.'),
+    );
+    foreach ($apps as $app) {
+      $permissions[mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $key . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
+        'title' => t('Storage owner of client application ' . $app[mediamosa_app_db::APP_NAME]),
+        'description' => t('Making the user storage owner of this client application will give access to the storage profile of its client application.'),
+      );
+    }
+  }
+  return $permissions;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_storage_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/storage_profile'] = array(
+    'title' => 'Storage profiles',
+    'description' => 'Storage profiles are used by client application to store their media files. There are different storage modules available to allow different types of storage like local mountpoints and cloud storage.',
+    'page callback' => '_mediamosa_storage_profile_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_STORAGE_PROFILES),
+  );
+
+  $items['admin/mediamosa/config/storage_profile/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/add'] = array(
+    'title' => 'Add',
+    'description' => 'Add a new storage profile.',
+    'page callback' => '_mediamosa_storage_profile_add_page',
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  // Add each storage type to the menu
+  // TODO: review access callback
+  $types = module_invoke_all('mediamosa_storage_info');
+  // Never allow to add extra local storage
+  unset($types[mediamosa_storage_local::NAME]);
+
+  foreach ($types as $key => $type) {
+    $items['admin/mediamosa/config/storage_profile/add/' . $key] = array(
+      'title' => $type['name'],
+      'title callback' => 'check_plain',
+    	'description' => $type['description'],
+      'page callback' => '_mediamosa_storage_profile_add_page',
+    	'page arguments' => array(5),
+    	'access callback' => 'node_access',
+      'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE),
+      'file' => 'node.pages.inc',
+      'file path' => drupal_get_path('module', 'node'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+    );
+  }
+
+  $items['admin/mediamosa/config/storage_profile/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_storage_profile_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/storage_profile/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_storage_node_access($node, $op, $account) {
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support our type.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // Prevent standard storgae from being deleted
+  if ($node->{mediamosa_storage_profile_db::TYPE} == mediamosa_storage_local::NAME && $op == 'delete') {
+    return NODE_ACCESS_DENY;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the permission we need.
+  $permission_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|storage|' . $node->{mediamosa_storage_profile_db::TYPE} . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|' . $op;
+
+  // If we have the permission, then we allow the action.
+  return _mediamosa_user_access($permission_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Trigger the server REST CRONs based on the server settings.
+ */
+function mediamosa_storage_cron() {
+
+  try {
+    // If we are in simpletest, this cron will generate problems because its
+    // triggered during install and we are still not finished.
+    if (mediamosa::in_simpletest_sandbox()) {
+      return;
+    }
+
+    $start = time();
+    mediamosa_debug::log('mediamosa_storage_cron started.', array(), 'job_cron');
+
+    // Trigger cron uri.
+    mediamosa_http::do_internal_call_cron('internal/cron/storage/transition', TRUE);
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_storage_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_storage_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
+}

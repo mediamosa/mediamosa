@@ -35,7 +35,7 @@ class MediaMosaAssetCQLMediafileDurationTestCaseEga extends MediaMosaTestCaseEga
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'CQL - sort on "mediafile_duration"',
+      'name' => 'CQL - Sort on "mediafile_duration"',
       'description' => 'Testing CQL sort on "mediafile_duration" related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
     );

@@ -18,8 +18,11 @@ function mediamosa_migration_enable() {
  */
 function mediamosa_migration_update_7000() {
   if (module_exists('mediamosa_migration')) {
-    // Disable our module.
+    // Disable module.
     module_disable(array('mediamosa_migration'));
+
+    // Uninstall module
+    drupal_uninstall_modules(array('mediamosa_migration'));
 
     return 'The MediaMosa migration module has been disabled, as its no longer supported.';
   }

@@ -1,0 +1,117 @@
+<?php
+/**
+ * @file
+ * Basic view, download test using the asset/view call for S3.
+ */
+
+// Registry indexes all .test files, while the base is not indexed (module is
+// not on.
+if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaS3MediaACLTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
+      return array(
+        'name' => 'MediaMosa Storage - Amazon S3 ACL tests',
+        'description' => 'Test if ACL are set/unset on mediafiles at S3.',
+        'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      );
+    }
+    return array();
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testACL() {
+    // If s3 object is missing, stop the test.
+    if (!$this->s3) {
+      return;
+    }
+
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Create default profile.
+    $this->createS3Profile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+    $this->var_export($storage_profile_app);
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if (!$mediafile_id_transcoded && $mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break 2;
+          }
+        }
+      }
+    }
+
+    // Found transcode.
+    $this->assertFalse(is_null($mediafile_id_transcoded), 'Found transcoded mediafile');
+
+    // Get the mediafile.
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id_transcoded);
+
+    // Mediafile must be public (in DB).
+    $this->assertTrue(mediamosa_media::is_public($mediafile, FALSE), 'Mediafile is public (DB)');
+
+    // Get uri.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+    $this->pass($mediafile_uri, 'MediaFile URI');
+
+    // Need wrapper.
+    $wrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($mediafile_uri);
+
+    // S3 must also be on public.
+    $this->assertTrue($wrapper->get_acl() == MediaMosaAmazonS3::ACL_PUBLIC, 'S3: Is public');
+
+    // Set to private.
+    $wrapper->set_acl(FALSE);
+    $this->assertTrue($wrapper->get_acl() == MediaMosaAmazonS3::ACL_PRIVATE, 'S3: Is private');
+
+    // Set to public.
+    $wrapper->set_acl(TRUE);
+    $this->assertTrue($wrapper->get_acl() == MediaMosaAmazonS3::ACL_PUBLIC, 'S3: Is public');
+
+    // Now set ACL on mediafile.
+    $this->setMediafileAcl(
+      $mediafile_id_transcoded,
+      array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => '@foo.nl')
+    );
+
+    // Must be private.
+    $this->assertTrue($wrapper->get_acl() == MediaMosaAmazonS3::ACL_PRIVATE, 'S3: Is private');
+
+    // Now clear ACL on mediafile.
+    $this->deleteMediafileAcl($mediafile_id_transcoded);
+
+    // S3 must also be on public.
+    $this->assertTrue($wrapper->get_acl() == MediaMosaAmazonS3::ACL_PUBLIC, 'S3: Is public again');
+  }
+}

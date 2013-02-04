@@ -133,7 +133,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Update the asset.
     $a_parameters = array(
-      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
     );
     $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
@@ -144,7 +144,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Update the asset.
     $a_parameters = array(
-      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
       mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
     );
     $response = $this->updateAsset($asset_id, $a_parameters);
@@ -154,7 +154,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Check the result.
     $test = array(
-      mediamosa_asset_db::IS_UNAPPROPRIATE => mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE,
+      mediamosa_asset_db::IS_INAPPROPRIATE => mediamosa_asset_db::IS_INAPPROPRIATE_TRUE,
     );
     foreach ($test as $key => $value) {
       $this->assertTrue(

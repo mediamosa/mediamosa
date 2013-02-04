@@ -946,14 +946,14 @@ class mediamosa_solr {
 
     $document->is_empty_asset = $asset_for_index['asset'][mediamosa_asset_db::IS_EMPTY_ASSET] == mediamosa_asset_db::IS_EMPTY_ASSET_FALSE ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE;
     $document->isprivate = $asset_for_index['asset'][mediamosa_asset_db::ISPRIVATE] == mediamosa_asset_db::ISPRIVATE_TRUE ? mediamosa_asset_db::ISPRIVATE_TRUE : mediamosa_asset_db::ISPRIVATE_FALSE;
-    $document->is_unappropriate = $asset_for_index['asset'][mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE ? mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE : mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE;
+    $document->is_unappropriate = $asset_for_index['asset'][mediamosa_asset_db::IS_INAPPROPRIATE] == mediamosa_asset_db::IS_INAPPROPRIATE_TRUE ? mediamosa_asset_db::IS_INAPPROPRIATE_TRUE : mediamosa_asset_db::IS_INAPPROPRIATE_FALSE;
     $document->is_external = $asset_for_index['asset'][mediamosa_asset_db::IS_EXTERNAL] == mediamosa_asset_db::IS_EXTERNAL_TRUE ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE;
 
     // Collection ids. collid_isprivate_isunappropriate_
     if (!empty($asset_for_index['collections'])) {
       foreach ($asset_for_index['collections'] as $coll_id => $collection) {
         $isprivate = $collection[mediamosa_collection_db::ISPRIVATE] == mediamosa_collection_db::ISPRIVATE_TRUE ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
-        $is_unappropriate = $collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+        $is_unappropriate = $collection[mediamosa_collection_db::IS_INAPPROPRIATE] == mediamosa_collection_db::IS_INAPPROPRIATE_TRUE ? mediamosa_collection_db::IS_INAPPROPRIATE_TRUE : mediamosa_collection_db::IS_INAPPROPRIATE_FALSE;
         $coll_ids[] = $coll_id;
         $coll_ids_ext[] = implode('_', array($coll_id, $isprivate, $is_unappropriate));
         $coll_id_owners[] = implode('_', array($coll_id, mediamosa_solr_apache_solr_service::filterDelimeters($collection[mediamosa_collection_db::OWNER_ID])));

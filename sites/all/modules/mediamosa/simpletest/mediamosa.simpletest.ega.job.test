@@ -1,39 +1,10 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Test on the simple test job sub functions.
  */
 
-
 class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
-
-  // ------------------------------------------------------------------ Members.
-
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
@@ -43,7 +14,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
   }
 
-  // -------------------------------------------------------- Test still delete.
+  // -------------------------------------------------------------------- Tests.
   public function testStillDelete() {
 
     //
@@ -62,19 +33,16 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     $this->doQueueCycleAll();
 
     // Get the stills.
-    $a_stills = $this->getMediafileStill($mediafile_id);
+    $stills = $this->getMediafileStill($mediafile_id);
 
     // Check the output
-    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
 
     // Get first array.
-    $a_stills = $a_stills[0];
-
-    // Still list.
-    $a_still_list = $a_stills['stills'];
+    $stills = $stills[0];
 
     // Still id.
-    $still_id = $a_stills['stills']['still_id'];
+    $still_id = $stills['stills']['still_id'];
 
     //
     // Check.
@@ -94,18 +62,21 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     );
 
     // File check.
-    $file = mediamosa_configuration_storage::data_still_get_file($still_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($still_id);
     $this->assertTrue(
-      mediamosa_io::file_exists($file, TRUE),
-      t("file lookup on @file.", array('@file' => $file))
+      mediamosa_io::file_exists($mediafile_uri),
+      t("file lookup on @file.", array('@file' => mediamosa_io::realpath_safe($mediafile_uri)))
     );
 
     //
     // Delete still.
     //
 
+    // File check for later check.
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($still_id);
+
     // Delete still.
-    $response = $this->deleteStill($asset_id);
+    $this->deleteStill($asset_id);
 
     //
     // Check.
@@ -124,14 +95,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
       t("database lookup on still_id = @still_id (count = @count).", array('@still_id' => $still_id, '@count' => $count))
     );
 
-    // File check.
-    $file = mediamosa_configuration_storage::data_still_get_file($still_id);
-    /*
-     * Removed for problems with timed san nas deletes.
-    $this->assertFalse(
-      mediamosa_io::file_exists($file, TRUE),
-      t("file lookup on @file.", array('@file' => $file))
-    );
-    */
+    // Check file is gone.
+    $this->file_not_exists($mediafile_uri);
   }
 }

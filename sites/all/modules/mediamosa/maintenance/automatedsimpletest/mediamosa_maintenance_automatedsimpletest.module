@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The automated simpletest module.
  */
-
- /**
-  * @file
-  * The automated simpletest module.
-  */
 
 /**
  * Implements hook_menu().
@@ -96,6 +71,13 @@ function mediamosa_maintenance_automatedsimpletest_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/mediamosa/simpletests/%/seed/type'] = array(
+    'page callback' => '_mediamosa_maintenance_automatedsimpletest_seed_type',
+    'page arguments' => array(3),
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -103,8 +85,6 @@ function mediamosa_maintenance_automatedsimpletest_menu() {
  * Implements hook_help().
  */
 function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
-  global $base_url;
-
   // Separate switch for warning on multi pages.
   switch ($path) {
     case 'admin/mediamosa/simpletests':
@@ -118,20 +98,24 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa/simpletests':
-      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
+      $type = mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST;
       break;
 
     case 'admin/mediamosa/simpletests/normal':
-      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
+      $type = mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL;
       break;
 
     case 'admin/mediamosa/simpletests/slow':
-      $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
+      $type = mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW;
       break;
   }
 
-  if (isset($interval)) {
+
+  if (isset($type)) {
     $content = array();
+
+    // Set interval.
+    $interval = variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', $type);
 
     if ($interval < 1) {
       $content[] = '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned off, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
@@ -143,21 +127,21 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
     // Get the possible current running test.
     $test_running = variable_get('mediamosa_automatedsimpletest_timeout_tests_running');
     $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+    $link = l(t('re-queue all listed tests'), 'admin/mediamosa/simpletests/' . $type . '/seed/type', array('query' => drupal_get_destination()));
     if (!empty($test_running)) {
       $class_name = $test_running['class'];
-      $started = $test_running['started'];
 
       $info = call_user_func(array($class_name, 'getInfo'));
       if (!empty($info)) {
-        $content[] = '<p>' . t("Queued @queued test(s). Running test <b>'@name'</b>.", array('@name' => $info['name'], '@queued' => count($queue))) . '</p>';
+        $content[] = '<p>' . t("Queued @queued test(s), !requeue. Running test <b>'@name'</b>.", array('@name' => $info['name'], '@queued' => count($queue), '!requeue' => $link)) . '</p>';
       }
       else {
-        $content[] = '<p>' . t("Queued @queued test(s). Unknown test running!", array('@queued' => count($queue))) . '</p>';
+        $content[] = '<p>' . t("Queued @queued test(s), !requeue. Unknown test running!", array('@queued' => count($queue), '!requeue' => $link)) . '</p>';
       }
 
     }
     else {
-      $content[] = '<p>' . t("Queued @queued test(s). No test running.", array('@queued' => count($queue))) . '</p>';
+      $content[] = '<p>' . t("Queued @queued test(s), !requeue. No test running.", array('@queued' => count($queue), '!requeue' => $link)) . '</p>';
     }
 
     return implode('', $content);
@@ -493,7 +477,6 @@ function _mediamosa_maintenance_automatedsimpletest_details($name) {
 
   // Get the result.
   $tests = mediamosa_maintenance_automatedsimpletest::get_test_results();
-  //$tests = isset($tests['tests']) ? $tests['tests'] : array();
 
   // Find it.
   $found_test = NULL;
@@ -529,14 +512,14 @@ function _mediamosa_maintenance_automatedsimpletest_details($name) {
     }
   }
 
-  $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found.'));
-
-  return $content;
+  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found.'));
 }
 
 /**
  * Reseed the given test in the test queue.
+ *
  * @param string $name
+ *   The name of the test to (re)start.
  */
 function _mediamosa_maintenance_automatedsimpletest_seed($name) {
   // Get all tests.
@@ -575,7 +558,7 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
 
     if (!in_array($class_name, $queue)) {
       drupal_set_message(t('Test add to queue.'));
-      $queue = array_merge(array($class_name), $queue);
+      $queue[] = $class_name;
 
       // Set the queue.
       variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
@@ -583,6 +566,53 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
     else {
       drupal_set_message(t('Test is already queued.'), 'warning');
     }
+  }
+
+  drupal_goto('admin/mediamosa/simpletests');
+}
+
+/**
+ * Restart specific type.
+ *
+ * @param string $type
+ *   The type to restart.
+ */
+function _mediamosa_maintenance_automatedsimpletest_seed_type($type) {
+  // Get all tests.
+  $all_tests = mediamosa_maintenance_automatedsimpletest::get_default_tests();
+
+  $runs = array(
+    mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL => mediamosa_settings::MEDIAMOSA_RUN_3_HOURS,
+    mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+  );
+
+  $added = 0;
+  if (isset($runs[$type])) {
+    $type = $runs[$type];
+
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+
+    if (isset($all_tests[$type])) {
+      foreach ($all_tests[$type] as $class_name => $info) {
+        if (empty($info['automatic_run_disabled']) && !in_array($class_name, $queue)) {
+          $added++;
+          $queue[] = $class_name;
+        }
+      }
+    }
+  }
+
+  if (!$added) {
+    drupal_set_message(t('No tests where queued.'));
+  }
+  else {
+    // Set the queue.
+    variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
+
+    $text = format_plural($added, '1 test added to queue.', '@count tests added to queue.');
+    drupal_set_message($text);
   }
 
   drupal_goto('admin/mediamosa/simpletests');

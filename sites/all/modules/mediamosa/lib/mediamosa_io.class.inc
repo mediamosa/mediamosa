@@ -1,45 +1,312 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * In and out file library layer.
  */
 
- /**
-  * @file
-  * In and out file library layer.
-  */
-
 class mediamosa_io {
+  // ------------------------------------------------------------------- Consts.
+  /**
+   * PHP:stat() mode values; Mask for all types. Octal value.
+   */
+  const STAT_IFMT = 0170000;
 
+  /**
+   * PHP:stat() mode values; Type: socket. Octal value.
+   */
+  const STAT_IFSOCK = 0140000;
+  /**
+   * PHP:stat() mode values; Type: symbolic link. Octal value.
+   */
+  const STAT_IFLNK = 0120000;
+
+  /**
+   * PHP:stat() mode values; Type: regular file. Octal value.
+   */
+  const STAT_IFREG = 0100000;
+
+  /**
+   * PHP:stat() mode values; Type: block device. Octal value.
+   */
+  const STAT_IFBLK = 0060000;
+
+  /**
+   * PHP:stat() mode values; Type: directory. Octal value.
+   */
+  const STAT_IFDIR = 0040000;
+
+  /**
+   * PHP:stat() mode values; Type: character device. Octal value.
+   */
+  const STAT_IFCHR = 0020000;
+
+  /**
+   * PHP:stat() mode values; Type: fifo. Octal value.
+   */
+  const STAT_IFIFO = 0010000;
+
+  /**
+   * PHP:stat() mode values; Set-uid bit. Octal value.
+   */
+  const STAT_ISUID = 0004000;
+
+  /**
+   * PHP:stat() mode values; Set-gid bit. Octal value.
+   */
+  const STAT_ISGID = 0002000;
+
+  /**
+   * PHP:stat() mode values; Sticky bit. Octal value.
+   */
+  const STAT_ISVTX = 0001000;
+
+  /**
+   * PHP:stat() mode values; Mask for owner permissions. Octal value.
+   */
+  const STAT_IRWXU = 00700;
+
+  /**
+   * PHP:stat() mode values; Owner: read permission. Octal value.
+   */
+  const STAT_IRUSR = 00400;
+  /**
+   * PHP:stat() mode values; Owner: write permission. Octal value.
+   */
+  const STAT_IWUSR = 00200;
+
+  /**
+   * PHP:stat() mode values; Owner: execute permission. Octal value.
+   */
+  const STAT_IXUSR = 00100;
+
+  /**
+   * PHP:stat() mode values; Mask for group permissions. Octal value.
+   */
+  const STAT_IRWXG = 00070;
+
+  /**
+   * PHP:stat() mode values; Group: read permission. Octal value.
+   */
+  const STAT_IRGRP = 00040;
+
+  /**
+   * PHP:stat() mode values; Group: write permission. Octal value.
+   */
+  const STAT_IWGRP = 00020;
+
+  /**
+   * PHP:stat() mode values; Group: execute permission. Octal value.
+   */
+  const STAT_IXGRP = 00010;
+
+  /**
+   * PHP:stat() mode values; Mask for others permissions. Octal value.
+   */
+  const STAT_IRWXO = 00007;
+
+  /**
+   * PHP:stat() mode values; Others: read permission. Octal value.
+   */
+  const STAT_IROTH = 00004;
+
+  /**
+   * PHP:stat() mode values; Others: write permission. Octal value.
+   */
+  const STAT_IWOTH = 00002;
+
+  /**
+   * PHP:stat() mode values; Others: execute permission. Octal value.
+   */
+  const STAT_IXOTH = 00001;
+
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Log for mediamosa_io.
    *
    * @param string $message
+   *   The message to store in the log. Keep $message translatable
+   *   by not concatenating dynamic values into it! Variables in the
+   *   message should be added by using placeholder strings alongside
+   *   the variables argument to declare the value of the placeholders.
    * @param array $variables
-   * @param string $severity
+   *   Array of variables to replace in the message on display or
+   *   NULL if message is already translated or not possible to
+   *   translate.
    */
   public static function log($message, array $variables = array()) {
     mediamosa_debug::log($message, $variables, 'mediamosa_io');
+  }
+
+  /**
+   * Return the stream wrapper using the file uri.
+   *
+   * Works fine with all Drupal wrappers.
+   *
+   * @param string $uri
+   *   The file uri.
+   *
+   * @return mediamosa_io_streamwrapper
+   *   The stream wrapper instance.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public static function require_stream_wrapper_instance_by_uri($uri) {
+    // Find it.
+    $instance = self::find_stream_wrapper_instance_by_uri($uri);
+    if (!$instance) {
+      // Fatal, need it.
+      throw new mediamosa_exception_error_streamwrapper_not_found(array('@uri' => $uri));
+    }
+
+    return $instance;
+  }
+
+  /**
+   * Return the stream wrapper using the file uri.
+   *
+   * Works fine with all Drupal wrappers.
+   *
+   * @param string $uri
+   *   The file uri.
+   *
+   * @return mediamosa_io_streamwrapper
+   *   The stream wrapper instance or FALSE.
+   */
+  public static function find_stream_wrapper_instance_by_uri($uri) {
+    // Get scheme.
+    $scheme = self::get_uri_scheme($uri);
+
+    if (!empty($scheme)) {
+      $class = file_stream_wrapper_get_class($scheme);
+      if (class_exists($class)) {
+        $instance = new $class();
+        $instance->setUri($uri);
+        return $instance;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Test if uri is realpath or uri format.
+   *
+   * @param string $uri
+   *   The uri to test.
+   *
+   * @return boolean
+   *   Returns TRUE when uri.
+   */
+  public static function is_uri($uri) {
+    return self::get_uri_scheme($uri) != '';
+  }
+
+  /**
+   * Return the scheme of the uri.
+   *
+   * @param string $uri
+   *   The uri.
+   *
+   * @return string
+   *   The uri scheme, like 'mediamosa-storage' or ''.
+   */
+  public static function get_uri_scheme($uri) {
+    $position = strpos($uri, '://');
+    return $position ? substr($uri, 0, $position) : '';
+  }
+
+  /**
+   * Return the path of the uri.
+   *
+   * @param string $uri
+   *   The uri.
+   *
+   * @return string
+   *   The (trimmed) path.
+   */
+  public static function get_uri_path($uri) {
+    $position = strpos($uri, '://');
+    return $position ? trim(substr($uri, $position + 3), '\/') : '';
+  }
+
+  /**
+   * Returns the absolute local filesystem path of a stream URI.
+   *
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path.
+   *
+   * @return string
+   *   The absolute local filesystem path, or FALSE on failure.
+   *
+   * @throws mediamosa_exception_error_file_not_found()
+   */
+  public static function realpath($uri) {
+    // Empty uri is always fatal.
+    if (empty($uri)) {
+      throw new mediamosa_exception_program_error('URI value is required for realpath.');
+    }
+
+    // No scheme, then its already in realpath.
+    if (self::get_uri_scheme($uri) == '') {
+      // Is already realpath.
+      return $uri;
+    }
+
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return $uri;
+    }
+
+    // Call realpath().
+    $realpath = $wrapper->realpath();
+
+    // Make sure it never returns root.
+    if ($realpath == DIRECTORY_SEPARATOR || empty($realpath)) {
+      throw new mediamosa_exception_error_file_not_found("The mediamosa_io::realpath() functions was not able to translate uri '@uri', realpath translated this to: '@realpath'.", array('@uri' => $uri, '@realpath' => $realpath));
+    }
+
+    // Done.
+    return $realpath;
+  }
+
+  /**
+   * Returns the absolute local filesystem path of a stream URI.
+   *
+   * Is exception safe and should be used for watchdog calls.
+   *
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path.
+   *
+   * @return string
+   *   The realpath or $uri when failure.
+   *
+   * @see realpath()
+   */
+  public static function realpath_safe($uri) {
+    try {
+      return self::realpath($uri);
+    }
+    catch (Exception $e) {
+      return $uri;
+    }
+  }
+
+  /**
+   * Returns the absolute URL version of a stream URI.
+   *
+   * @param string $uri
+   *   A stream wrapper URI or a filesystem path, possibly including one or more
+   *   symbolic links.
+   *
+   * @return string
+   *   The absolute URL or FALSE on failure.
+   */
+  public static function realurl($uri) {
+    return file_create_url($uri);
   }
 
   /**
@@ -50,103 +317,172 @@ class mediamosa_io {
    * sannas mount point as a basis, so it never tries to create a directory
    * outside this tree.
    *
-   * @param string $pathname
-   *  Path of the directory to create.
-   * @param bool $recursive
-   *  Enable recursive to create the sub maps required to create directory.
-   * @param int $mode
-   *  Default mode value for created directory, defaults to mode 0775.
+   * @param string $uri
+   *   The uri of the directory to create.
+   * @param boolean $recursive
+   *   Enable recursive to create the sub maps required to create directory.
+   * @param integer $mode
+   *   Default mode value for created directory, defaults to mode 0775.
+   *
+   * @return boolean
+   *   Return TRUE or throws exception.
+   *
+   * @throws mediamosa_exception_error()
+   *   - ERRORCODE_DIR_UNABLE_TO_CREATE
    */
-  public static function mkdir($pathname, $recursive = TRUE, $mode = 0775) {
-    // Log it.
-    mediamosa_debug::log('Creating directory :@dir, recursive: @recursive', array('@dir' => $pathname,  '@recursive' => $recursive ? 'Yes' : 'No'));
-
-    // Already exists? Then don't try to create.
-    if (file_exists($pathname) && is_dir($pathname)) {
-      return TRUE; // Return TRUE for unit test.
+  public static function mkdir($uri, $recursive = TRUE, $mode = NULL) {
+    // Reuse mode from drupal.
+    if (!isset($mode)) {
+      $mode = variable_get('file_chmod_directory', 0775);
     }
 
-    // first determine sannas mount point.
-    $sannas = rtrim(mediamosa_configuration_storage::mount_point_get(), DIRECTORY_SEPARATOR); // remove possible trailing slash.
-    $pathname = rtrim($pathname, DIRECTORY_SEPARATOR); // remove possible trailing slash.
-    $sannas_depth = count(explode(DIRECTORY_SEPARATOR, $sannas));
+    // Already exists? Then don't try to create.
+    if (self::file_exists($uri)) {
+      if (!self::is_dir($uri)) {
+        throw new mediamosa_exception_error(
+          mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+          array(
+            '@location' => self::realpath_safe($uri),
+            '@reason' => 'can not create dir, target exists and is file type',
+          )
+        );
+      }
 
-    $dirs = explode(DIRECTORY_SEPARATOR, $pathname);
-    $count = count($dirs);
+      // Exists & is dir.
+      return;
+    }
 
-    $path = $sannas; // we start with sannas mount point.
-    for ($i = $sannas_depth; $i < $count; $i++) {
-      $path .= DIRECTORY_SEPARATOR . $dirs[$i];
-      if (!is_dir($path)) {
-        if (!drupal_mkdir($path)) {
+    // Not recursive?
+    if (!$recursive) {
+      if (!drupal_mkdir($uri, $mode)) {
+        throw new mediamosa_exception_error(
+          mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+          array(
+            '@location' => self::realpath_safe($uri),
+            '@reason' => mediamosa::last_php_error_message(),
+          )
+        );
+      }
+      // Set mode again.
+      drupal_chmod($uri, $mode);
+
+      // Directory created.
+      return TRUE;
+    }
+
+    $separators = '/';
+    if (DIRECTORY_SEPARATOR != '/') {
+      // For Windows OS add special separator.
+      $separators .= DIRECTORY_SEPARATOR;
+    }
+
+    // We do our own recursive mkdir here; as it does not correctly sets chmod
+    // recursively.
+    $uri_scheme = self::get_uri_scheme($uri);
+
+    // Get path without scheme.
+    $uri_path = ($uri_scheme == '' ? trim($uri, $separators) : self::get_uri_path($uri));
+
+    // Either scheme:/ or '' (will add '/' because of implode).
+    $uri_scheme = ($uri_scheme == '' ? '' : ($uri_scheme . ':/'));
+
+
+    // Precreate scheme location.
+    try {
+      if (!empty($uri_scheme) && !self::file_exists($uri_scheme . '/')) {
+        if (!drupal_mkdir($uri_scheme . '/', $mode, TRUE)) {
           throw new mediamosa_exception_error(
             mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
             array(
-              '@location' => $path,
-              '@reason' => mediamosa::last_php_error_message()
+              '@location' => self::realpath_safe($uri_scheme . '/'),
+              '@reason' => mediamosa::last_php_error_message(),
             )
           );
         }
-        drupal_chmod($path, 0775);
+        // Set mode again.
+        drupal_chmod($uri_scheme . '/', $mode);
       }
     }
+    catch (mediamosa_exception $e) {
+      // Catch invalid uri errors. Some streamwrapper do not allow using the
+      // stream instance with only the scheme.
+    }
+
+    // Split up on separator(s).
+    $parts = preg_split('/[' . preg_quote($separators, '/') . ']/', $uri_path, -1, PREG_SPLIT_NO_EMPTY);
+
+    // Path to rebuild.
+    $path = array($uri_scheme);
+
+    // Now do recursive on the parts.
+    for ($x = 0; $x < count($parts); $x++) {
+      $part = $parts[$x];
+      // No empty parts.
+      if ($part === '') {
+        continue;
+      }
+
+      // The '-' will happen because our stream uri have '/-/' as path <->
+      // mediafile_path seperator.
+      if ($part == '-') {
+        if (!isset($parts[++$x])) {
+          continue;
+        }
+        $path[] = '/' . $part;
+        $part = $parts[$x];
+      }
+
+      $path[] = $part;
+      $uri = implode($path, DIRECTORY_SEPARATOR);
+
+      if (!self::file_exists($uri)) {
+        if (!drupal_mkdir($uri, $mode, TRUE)) {
+          throw new mediamosa_exception_error(
+            mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
+            array(
+              '@location' => self::realpath_safe($uri),
+              '@reason' => mediamosa::last_php_error_message(),
+            )
+          );
+        }
+        // Set mode again.
+        drupal_chmod($uri, $mode);
+      }
+    }
+
     return TRUE;
   }
 
   /**
    * Deletes a file.
    *
-   * @param string $filename
-   *  The file to delete.
+   * @param string $uri
+   *   A URI or pathname.
+   *
+   * @return boolean
+   *   Return TRUE on success or FALSE with failure.
    */
-  public static function unlink($filename) {
-    if (!file_exists($filename)) {
+  public static function unlink($uri) {
+    if (!self::file_exists($uri)) {
       return TRUE;
     }
 
-    return @unlink($filename);
+    // Make sure md5 is recalculated next time.
+    $md5_file = &drupal_static('mediamosa_io::md5file', array());
+    unset($md5_file[$uri]);
+
+    // Remove file.
+    return drupal_unlink($uri);
   }
 
   /**
-   * Remove complete style directory with content.
+   * Tells whether the filename is a symbolic link.
    *
-   * @param string $dir
-   * @param string $style
+   * @param string $uri
+   *   The uri of the link to test.
    */
-  public static function delete_style_directory($dir, $style = NULL) {
-    if (!is_dir($dir)) {
-      return;
-    }
-
-    // Security checks before we do anything.
-
-    // Relative path is not allowed.
-    if (drupal_substr($dir, 0, 1) != '/') {
-      return;
-    }
-
-    $dir_array = explode(DIRECTORY_SEPARATOR, $dir);
-    $dir_count = count($dir_array);
-
-    // Directory parts.
-    // /SANNAS/still_links/style/style_name/
-    // /SANNAS/data/still/style/style_name/
-    if ($dir_count < 6) {
-      return;
-    }
-
-    // It should be /.../style/style_name/.
-    if ($dir_array[$dir_count - 3] != mediamosa_settings::STILL_LINK_STYLE_LOCATION && $dir_array[$dir_count - 3] != mediamosa_settings::STILL_DATA_STYLE_LOCATION) {
-      return;
-    }
-
-    // The last part should be the style name.
-    if (!$style || $dir_array[$dir_count - 2] != $style) {
-      return;
-    }
-
-    $command = 'rm -r ' . escapeshellarg($dir);
-    $last_line = mediamosa_io::exec($command, $output, $return_var);
+  public static function is_link($uri) {
+    return is_link($uri);
   }
 
   /**
@@ -155,23 +491,18 @@ class mediamosa_io {
   public static function clearstatcache() {
     clearstatcache();
   }
-  /**
-   * Gets file size.
-   */
-  public static function filesize($filename) {
-    // Filesize needs clear cache.
-    self::clearstatcache();
-
-    return file_exists($filename) ? filesize($filename) : FALSE;
-  }
 
   /**
    * Return the filename without extension.
    *
    * @param string $filename
+   *   The filename to process.
+   *
+   * @return string
+   *   The filename without extension.
    */
   public static function get_base_filename($filename) {
-    $last_dot = strripos($filename, '.'); // 0-index
+    $last_dot = strripos($filename, '.');
 
     return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
   }
@@ -179,10 +510,14 @@ class mediamosa_io {
   /**
    * Return the file extension (excluding the dot, like 'jpg' or 'mp4').
    *
-   * @param $filename
+   * @param string $filename
+   *   The filename to get extension from.
+   *
+   * @return string
+   *   The file extension without the dot or ''.
    */
   public static function get_ext($filename) {
-    $last_dot = strripos($filename, '.'); // 0-index
+    $last_dot = strripos($filename, '.');
 
     return $last_dot === FALSE && ($last_dot + 1) != mediamosa_unicode::strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
   }
@@ -190,103 +525,145 @@ class mediamosa_io {
   /**
    * Returns directory name component of path.
    *
-   * @param $path
+   * @param string $path
+   *   The path to process.
+   *
+   * @return string
+   *   The directory name component.
    */
   public static function dirname($path) {
-    return dirname($path);
+    return drupal_dirname($path);
   }
 
   /**
    * Returns trailing name component of path.
    *
-   * @param $path
-   *   A path.
-   * @param $suffix
-   *  If the name component ends in suffix this will also be cut off (optional).
+   * @param string $uri
+   *   A uri.
+   * @param string $suffix
+   *   (optional) If the name component ends in suffix this will also be cut
+   *   off.
    *
-   * @return
+   * @return string
    *   Returns the base name of the given path.
    */
-  public static function basename($path, $suffix = '') {
-    return basename($path);
+  public static function basename($uri, $suffix = '') {
+    return drupal_basename($uri, $suffix);
   }
 
   /**
    * Move one file to other file (rename).
    *
-   * @param string $old_name
-   * @param string $new_name
+   * Notes;
+   * It will not move local to external locations.
+   * It will not move across different external locations.
+   * You can only move files externally when source and destination are the
+   * same location.
+   * You can move files across local locations.
    *
-   * @return bool
+   * @param string $from_uri
+   *   Rename from name.
+   * @param string $to_uri
+   *   Rename to name.
+   *
+   * @return boolean
+   *   Returns TRUE when successful.
    */
-  public static function rename($old_name, $new_name) {
+  public static function rename($from_uri, $to_uri) {
     $success = FALSE;
     $message = 'cause unknown';
-    try {
-      // Make sure dest. map exists.
-      $dirname = dirname($new_name);
-      self::mkdir($dirname, TRUE);
 
-      $success = rename($old_name, $new_name);
+    try {
+      $mediamosa_io_streamwrapper_from = NULL;
+      $mediamosa_io_streamwrapper_to = NULL;
+
+      // Create wrapper when we can. If we can not, its a local path.
+      if (self::is_uri($from_uri)) {
+        $mediamosa_io_streamwrapper_from = mediamosa_io::require_stream_wrapper_instance_by_uri($from_uri);
+      }
+
+      // Create wrapper when we can. If we can not, its a local path.
+      if (self::is_uri($to_uri)) {
+        $mediamosa_io_streamwrapper_to = mediamosa_io::require_stream_wrapper_instance_by_uri($to_uri);
+      }
+
+      // What is local?
+      $from_is_local = !$mediamosa_io_streamwrapper_from || ($mediamosa_io_streamwrapper_from && $mediamosa_io_streamwrapper_from->is_local());
+      $to_is_local = !$mediamosa_io_streamwrapper_to || ($mediamosa_io_streamwrapper_to && $mediamosa_io_streamwrapper_to->is_local());
+
+      // Is both local?
+      if ($from_is_local && $to_is_local) {
+        // Both are local.
+        //
+        // Make sure dest. map exists.
+        self::mkdir(self::dirname($to_uri), TRUE);
+
+        // To realpath.
+        $from_realpath = mediamosa_io::realpath($from_uri);
+        $to_realpath = mediamosa_io::realpath($to_uri);
+
+        // Rename.
+        $success = rename($from_realpath, $to_realpath);
+      }
+      elseif (!$from_is_local && !$to_is_local) {
+        // Both external, must be same location. Compare storage profile ID.
+        if ($mediamosa_io_streamwrapper_from->get_storage_profile_id() != $mediamosa_io_streamwrapper_to->get_storage_profile_id()) {
+          // Both external, but not same location.
+          throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t('cannot rename a file across external wrapper types')));
+        }
+
+        // Same location external, we can rename.
+        //
+        // Make sure dest. map exists.
+        self::mkdir(self::dirname($to_uri), TRUE);
+
+        // Rename using the streamwrapper.
+        $success = $mediamosa_io_streamwrapper_from->rename($from_uri, $to_uri);
+      }
+      else {
+        // One external, one local, not allowed.
+        throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t('cannot rename a file across wrapper types')));
+      }
     }
     catch (Exception $e) {
       $message = $e->getMessage();
     }
 
-    if (!$success) {
-      self::log("Renaming file '@old_name' to '@new_name' failed, @message.", array('@old_name' => $old_name, '@new_name' => $new_name, '@message' => $message));
+    if (!$success || !self::file_exists($to_uri)) {
+      self::log("Renaming file '@old_name' to '@new_name' failed, @message.",
+        array(
+          '@old_name' => $from_uri,
+          '@new_name' => $to_uri,
+          '@message' => $message,
+        )
+      );
     }
     else {
-      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => $old_name, '@new_name' => $new_name));
+      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => mediamosa_io::realpath_safe($from_uri), '@new_name' => mediamosa_io::realpath_safe($to_uri)));
     }
 
     return $success;
   }
 
   /**
-   * Execute an external program
+   * Execute an external program.
    *
-   * @param $str
+   * @param string $command
+   *   The command that will be executed.
+   * @param int $return_var
+   *   If the return_var argument is present along with the output argument,
+   *   then the return status of the executed command will be written to this
+   *   variable.
+   *
+   * @return array
+   *   Array filled with every line of output from the command. Trailing
+   *   whitespace, such as \n, is not included in this array.
    */
-  public static function exec($command, array &$output = NULL, &$return_var = NULL) {
+  public static function exec($command, &$return_var = NULL) {
     self::log("Executing command '@command'.", array('@command' => $command));
-    return exec($command, $output, $return_val);
-  }
-
-  /**
-   * Test if file is exists.
-   *
-   * @param string $filename
-   */
-  public static function file_exists($filename, $do_sleep = FALSE) {
-    // File exists needs clear cache.
-    self::clearstatcache();
-
-    // Sleep, so file_exists may read non-cache.
-    if ($do_sleep) {
-      sleep(2);
-    }
-
-    // Test it.
-    return file_exists($filename);
-  }
-
-  /**
-   * Test if file is a symbolic link.
-   *
-   * @param string $filename
-   */
-  public static function is_link($filename) {
-    return is_link($filename);
-  }
-
-  /**
-   * Test if path is a directory.
-   *
-   * @param string $path
-   */
-  public static function is_dir($path) {
-    return is_dir($path);
+    $output = array();
+    exec($command, $output, $return_var);
+    return $output;
   }
 
   /**
@@ -300,7 +677,7 @@ class mediamosa_io {
       $link = str_replace(DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $link);
 
       // Get path.
-      $target_path = is_file($target) ? self::dirname($target) : $target;
+      $target_path = self::is_file($target) ? self::dirname($target) : $target;
 
       // Strip /.
       $target_path = trim($target_path, DIRECTORY_SEPARATOR);
@@ -317,9 +694,8 @@ class mediamosa_io {
 
       // If root is not the same, then related .. comes in front.
       if (!empty($target_parts) && $target_parts[0] == $link_parts[0]) {
-        // Flag if both path have a common start point.
-        $relative_count = FALSE;
-        for ($x = 0; $x < count($target_parts) && $x < count($link_parts); $x++) {
+        $max_parts = min(count($target_parts), count($link_parts));
+        for ($x = 0; $x < $max_parts; $x++) {
           if ($target_parts[$x] != $link_parts[$x]) {
             break;
           }
@@ -330,7 +706,7 @@ class mediamosa_io {
       }
 
       // Rebuild target.
-      $target = str_repeat('..' . DIRECTORY_SEPARATOR, count($link_parts)) . implode(DIRECTORY_SEPARATOR, $target_parts) . (is_file($target) ? DIRECTORY_SEPARATOR . self::basename($target) : '');
+      $target = (count($link_parts) ? str_repeat('..' . DIRECTORY_SEPARATOR, count($link_parts)) : '.') . implode(DIRECTORY_SEPARATOR, $target_parts) . (self::is_file($target) ? DIRECTORY_SEPARATOR . self::basename($target) : '');
     }
 
     return $target;
@@ -339,73 +715,214 @@ class mediamosa_io {
   /**
    * Create a symbolic link.
    *
-   * @param string $target
-   *  Target file.
-   * @param string $link
-   *  Link to file to create.
+   * @param string $target_uri
+   *   Target file.
+   * @param string $link_uri
+   *   Link to file to create.
    */
-  public static function symlink($target, $link, $make_relative = TRUE) {
+  public static function symlink($target_uri, $link_uri, $make_relative = TRUE) {
+    $target = self::realpath($target_uri);
+    $link = self::realpath($link_uri);
+    if (empty($target) || empty($link)) {
+      self::log('Unable to create symlink (realpath fails); link: @link, target: @target', array('@link' => $link, '@target' => $target));
+      return FALSE;
+    }
+
     if ($make_relative) {
       // Make symlinks targets relative.
       $target = self::symlink_absolute2relative($target, $link);
     }
 
-    mediamosa_debug::log('Creating symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
-    return symlink($target, $link);
+    self::log('Creating symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
+    $result = symlink($target, $link);
+    if (!$result) {
+      self::log('Failed to create symlink; link: @link, target: @target', array('@link' => $link, '@target' => $target));
+    }
+
+    return $result;
   }
 
   /**
    * Tells whether a file exists and is readable.
    *
-   * @param string $filename
+   * @param string $uri
+   *   The uri to test.
+   *
+   * @return boolean
+   *   Returns TRUE if the file or directory specified by filename exists and is
+   *   readable, FALSE otherwise.
    */
-  public static function is_readable($filename) {
-    return is_readable($filename);
+  public static function is_readable($uri) {
+    return is_readable($uri);
   }
-
 
   /**
    * Tells whether the filename is writable.
    *
-   * @param string $filename
+   * @param string $uri
+   *   The uri to test.
+   *
+   * @return boolean
+   *   Returns TRUE if the filename exists and is writable.
    */
-  public static function is_writable($filename) {
-    return is_writable($filename);
+  public static function is_writable($uri) {
+    return is_writable($uri);
   }
 
   /**
    * Tells whether the filename is a regular file.
    *
-   * @param string $filename
+   * @param string $uri
+   *   The file to check.
+   *
+   * @return boolean
+   *   Returns TRUE when file, FALSE otherwise.
    */
-  public static function is_file($filename) {
-    return is_file($filename);
+  public static function is_file($uri) {
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return is_file($uri);
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'is_file') ? $wrapper->is_file() : is_file($uri);
+  }
+
+  /**
+   * Test if path is a directory.
+   *
+   * @param string $uri
+   *   The path to test.
+   *
+   * @return boolean
+   *   Returns TRUE when dir, FALSE otherwise.
+   */
+  public static function is_dir($uri) {
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return is_dir($uri);
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'is_dir') ? $wrapper->is_dir() : is_dir($uri);
+  }
+
+  /**
+   * Test if uri is located on local space.
+   *
+   * @param string $uri
+   *   The uri to file or dir.
+   *
+   * @return boolean
+   *   Returns TRUE for local.
+   */
+  public static function is_local($uri) {
+    // When not uri, expect local.
+    if (!self::is_uri($uri)) {
+      return TRUE;
+    }
+
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return TRUE; // No stream wrapper, expect local.
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'is_local') ? $wrapper->is_local() : TRUE;
+
+  }
+
+  /**
+   * Test if file is exists.
+   *
+   * @param string $uri
+   *   The file/path to test.
+   *
+   * @return boolean
+   *   Returns TRUE when file exists.
+   */
+  public static function file_exists($uri) {
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return file_exists($uri);
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'file_exists') ? $wrapper->file_exists() : file_exists($uri);
+  }
+
+  /**
+   * Gets file size.
+   *
+   * @param string $uri
+   *   The file location.
+   *
+   * @return integer|boolean
+   *   The size of the file or FALSE.
+   */
+  public static function filesize($uri) {
+    // Must exists.
+    if (!self::file_exists($uri)) {
+      return FALSE;
+    }
+
+    try {
+      // Get wrapper.
+      $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
+    }
+    catch (mediamosa_exception_error_streamwrapper_not_found $e) {
+      return filesize($uri);
+    }
+
+    // Need wrapper method.
+    return $wrapper && method_exists($wrapper, 'filesize') ? $wrapper->filesize() : filesize($uri);
   }
 
   /**
    * Sets access and modification time of file.
    *
-   * @param string $filename
-   *  The name of the file being touched.
+   * @param string $uri
+   *   The uri of the file being touched.
    * @param integer $time
-   *  The touch time. If time  is not supplied, the current system time is used.
+   *   The touch time. If time  is not supplied, the current system time is
+   *   used.
    * @param integer $atime
-   *  If present, the access time of the given filename is set to the value of atime.
-   *  Otherwise, it is set to time.
+   *   If present, the access time of the given filename is set to the value of
+   *   atime. Otherwise, it is set to time.
    */
-  public static function touch($filename, $time = NULL, $atime = NULL) {
+  public static function touch($uri, $time = NULL, $atime = NULL) {
     if (!isset($time)) {
       $time = time();
     }
 
-    return @touch($filename, $time, $atime);
+    // Touch does not realpath.
+    $uri = self::realpath($uri);
+
+    return touch($uri, $time, $atime);
   }
 
   /**
    * Makes a copy of the file source to dest.
    *
+   * Warning: If the destination file already exists, it will be overwritten.
+   *
    * @param string $source
+   *   Path to the source file.
    * @param string $dest
+   *   The destination path. If dest is a URL, the copy operation may fail if
+   *   the wrapper does not support overwriting of existing files.
    */
   public static function copy($source, $dest) {
     return @copy($source, $dest);
@@ -414,52 +931,82 @@ class mediamosa_io {
   /**
    * Move the file source to dest.
    *
-   * @param string $source
-   * @param string $dest
+   * @param string $source_uri
+   *   Source name uri.
+   * @param string $dest_uri
+   *   Destination name uri.
+   *
+   * @return boolean
+   *   Returns TRUE for succes, FALSE otherwise.
    */
-  public static function move($source, $dest) {
-    @rename($source, $dest);
-
-    //self::unlink($source);
+  public static function move($source_uri, $dest_uri) {
+    return @rename(self::realpath($source_uri), self::realpath($dest_uri));
   }
 
   /**
-   * File scan directory.
+   * Finds all files that match a given mask in a given directory.
    *
-   * @param dir
-   * @param mask
-   * @param options
-   * @param depth
+   * Directories and files beginning with a period are excluded; this
+   * prevents hidden files and directories (such as SVN working directories)
+   * from being scanned.
+   *
+   * @param string $dir
+   *   The base directory or URI to scan, without trailing slash.
+   * @param string $mask
+   *   The preg_match() regular expression of the files to find.
+   * @param array $options
+   *   An associative array of additional options, with the following elements:
+   *   - 'nomask': The preg_match() regular expression of the files to ignore.
+   *     Defaults to '/(\.\.?|CVS)$/'.
+   *   - 'callback': The callback function to call for each match. There is no
+   *     default callback.
+   *   - 'recurse': When TRUE, the directory scan will recurse the entire tree
+   *     starting at the provided directory. Defaults to TRUE.
+   *   - 'key': The key to be used for the returned associative array of files.
+   *     Possible values are 'uri', for the file's URI; 'filename', for the
+   *     basename of the file; and 'name' for the name of the file without the
+   *     extension. Defaults to 'uri'.
+   *   - 'min_depth': Minimum depth of directories to return files from.
+   *     Defaults to 0.
+   * @param integer $depth
+   *   Current depth of recursion. This parameter is only used internally and
+   *   should not be passed in.
+   *
+   * @return array
+   *   An associative array (keyed on the chosen key) of objects with 'uri',
+   *   'filename', and 'name' members corresponding to the matching files.
    */
   public static function file_scan_directory($dir, $mask, $options = array(), $depth = 0) {
     return file_scan_directory($dir, $mask, $options, $depth);
   }
 
   /**
-   * File get content.
+   * Returns available space on filesystem or disk partition.
    *
-   * @param filename
+   * Given a file name instead of a directory, the behaviour of the
+   * function is unspecified and may differ between operating systems and
+   * PHP versions.
+   *
+   * @param string $uri
+   *   A directory of the filesystem or disk partition.
+   *
+   * @return float
+   *   The number of available bytes as a float or FALSE on failure.
+   *
+   * @link http://php.net/manual/en/function.disk-free-space.php
    */
-  public static function file_get_contents($filename) {
-    return file_get_contents($filename);
+  public static function disk_free_space($uri) {
+    return disk_free_space(mediamosa_io::realpath($uri));
   }
 
   /**
    * Returns available space on filesystem or disk partition.
    *
-   * @param string $directory
+   * @param string $uri
+   *   The directory to get totals from.
    */
-  public static function disk_free_space($directory) {
-    return disk_free_space($directory);
-  }
-
-  /**
-   * Returns available space on filesystem or disk partition.
-   *
-   * @param string $directory
-   */
-  public static function disk_total_space($directory) {
-    return disk_total_space($directory);
+  public static function disk_total_space($uri) {
+    return disk_total_space(mediamosa_io::realpath($uri));
   }
 
   /**
@@ -467,16 +1014,16 @@ class mediamosa_io {
    *
    * Also returns its default stdio / strerr output in $exec_output
    *
-   * @param $command
-   *  Command to test.
-   * @param $exec_output
-   *  Gets the output of stdio/stderr
-   * @param $allowed_ret_values
-   *  List of return values that indicate command is installed. Most programs
-   *  will use exit(0) as indication that it was run. Some use exit(1) or higher
-   *  as exit value.
+   * @param string $command
+   *   Command to test.
+   * @param string $exec_output
+   *   Gets the output of stdio/stderr
+   * @param array $allowed_ret_values
+   *   List of return values that indicate command is installed. Most programs
+   *   will use exit(0) as indication that it was run. Some use exit(1) or
+   *   higher as exit value.
    */
-  public static function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
+  public static function command_installed($command, &$exec_output, array $allowed_ret_values = array(0)) {
     $exec_output = array();
     $ret_val = 0;
     exec($command . ' 2>/dev/null', $exec_output, $ret_val);
@@ -498,7 +1045,7 @@ class mediamosa_io {
    * Calculate the space used by a directory.
    */
   public static function disk_usage($directory, $recursive = FALSE) {
-    if (is_file($directory)) {
+    if (self::is_file($directory)) {
       return filesize($directory);
     }
 
@@ -511,10 +1058,10 @@ class mediamosa_io {
         }
 
         $entry_path = $directory . '/' . $entry;
-        if (is_file($entry_path)) {
+        if (self::is_file($entry_path)) {
           $disk_usage += filesize($entry_path);
         }
-        elseif ($recursive && is_dir($entry_path)) {
+        elseif ($recursive && self::is_dir($entry_path)) {
           $disk_usage += self::disk_usage($entry_path, TRUE);
         }
       }
@@ -532,56 +1079,33 @@ class mediamosa_io {
   }
 
   /**
-   * Determine Mime type of a file.
+   * Examines a file object.
    *
-   * @param $filename
-   *  file to get the mimetype of.
-   * @param $default
-   *  In case this function cannot determine a mime-type,
-   *  $default is returned.
-   */
-  public static function get_mimetype($filename) {
-    $type = NULL;
-
-    // First try the finfo_file() function.
-    if (function_exists('finfo_file')) {
-      $finfo = finfo_open(FILEINFO_MIME_TYPE);
-      $type = finfo_file($finfo, $filename);
-      finfo_close($finfo);
-    }
-    // Step 2: use the "file" command.
-    if (!$type || $type == 'application/octet-stream') {
-      $file_mime = exec('file -b -L --mime-type ' . escapeshellarg($filename), $output, $return_var);
-      if ($return_var == '0' && $file_mime) {
-        $type = $file_mime;
-      }
-    }
-    return $type;
-  }
-
-  /**
-   * Examines a file object and returns appropriate content headers for
-   * download.
+   * Returns appropriate content headers for download.
    *
    * Based on Drupal's version 'file_get_content_headers()'. We also re-use the
    * file_inline_types variable.
    *
-   * @param $file
-   *   A file object.
+   * @param string $filename
+   *   The filename.
    *
-   * @return
+   * @return array
    *   An associative array of headers.
    *
    * @see file_get_content_headers()
    */
   public static function file_get_content_headers($filename, $mimetype) {
-    $content_length = filesize($filename);
+    $content_length = self::filesize($filename);
     $last_modified = filemtime($filename);
     $filename = mime_header_encode($filename);
     $mimetype = mime_header_encode($mimetype);
 
     // Serve images, text, and flash content for display rather than download.
-    $inline_types = variable_get('file_inline_types', array('^text/', '^image/', 'flash$'));
+    $inline_types = variable_get('file_inline_types', array(
+      '^text/',
+      '^image/',
+      'flash$',
+    ));
     $disposition = 'attachment';
     foreach ($inline_types as $inline_type) {
       // Exclamation marks are used as delimiters to avoid escaping slashes.
@@ -601,17 +1125,16 @@ class mediamosa_io {
   }
 
   /**
-   * Transfer file using HTTP to client. In future we will use scheme wrappers
-   * for files.
+   * Transfer file using HTTP to client.
    *
    * Based on Drupal's file_transfer().
    *
-   * @param $file
+   * @param string $uri
    *   String specifying the file URI to transfer.
-   * @param $headers
+   * @param array $headers
    *   An array of HTTP headers to send along with file.
    */
-  public static function file_transfer($file, $headers) {
+  public static function file_transfer($uri, array $headers) {
     if (ob_get_level()) {
       ob_end_clean();
     }
@@ -622,7 +1145,7 @@ class mediamosa_io {
     drupal_send_headers();
 
     // Transfer file in chunks to save memory usage.
-    $fd = fopen($file, 'rb');
+    $fd = fopen($uri, 'rb');
     if ($fd) {
       while (!feof($fd)) {
         print fread($fd, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
@@ -631,5 +1154,63 @@ class mediamosa_io {
 
       drupal_exit();
     }
+  }
+
+  /**
+   * Calculate the MD5 of the file.
+   *
+   * @param string $uri
+   *   The uri.
+   *
+   * @return string
+   *   The MD5 string (16 chars).
+   */
+  public static function md5_file($uri) {
+    // Cache.
+    $md5_files = &drupal_static('mediamosa_io::md5file', array());
+
+    // Get realpath.
+    $realpath = self::realpath($uri);
+
+    // See of cached version.
+    if (isset($md5_files[$realpath])) {
+      return $md5_files[$realpath];
+    }
+
+    // Keep mem in check.
+    if (count($md5_files) == 1000) {
+      array_pop($md5_files);
+    }
+
+    // Use realpath, because this is always end product.
+    $md5_files[$realpath] = md5_file($realpath);
+
+    return $md5_files[$realpath];
+  }
+
+  /**
+   * Reads entire file into a string.
+   *
+   * @param string $uri
+   *   Uri of the file to read.
+   * @param boolean $use_include_path
+   *   As of PHP 5 the FILE_USE_INCLUDE_PATH can be used to trigger include path
+   *   search.
+   * @param resource $context
+   *   A valid context resource created with stream_context_create(). If you
+   *   the filters.
+   *   don't need to use a custom context, you can skip this parameter by NULL.
+   * @param integer $offset
+   *   The offset where the reading starts on the original stream.
+   * @param integer $maxlen
+   *   Maximum length of data read. The default is to read until end of file is
+   *   reached. Note that this parameter is applied to the stream processed by
+   *
+   * @return string
+   *   The function returns the read data or FALSE on failure. Becareful with
+   *   memory.
+   */
+  public static function file_get_contents($uri, $use_include_path = FALSE, $context = NULL, $offset = -1, $maxlen = NULL) {
+    return file_get_contents(self::realpath($uri), $use_include_path, $context, $offset, $maxlen);
   }
 }

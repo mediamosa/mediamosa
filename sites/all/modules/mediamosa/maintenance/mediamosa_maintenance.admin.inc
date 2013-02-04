@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Provide a single block from the administration menu as a page.
  * This function is often a destination for these blocks.
  * For example, 'admin/structure/types' needs to have a destination to be valid
@@ -180,7 +157,7 @@ function theme_mediamosa_maintenance_table($variables) {
   $build['table'] = theme('table', $variables);
 
   if (!empty($variables['note'])) {
-    $build['note'] = '<div align="right"><sup><small>' . check_plain($variables['note']) . '</small></sup><div>';
+    $build['note'] = '<div align="right"><sup><small>' . check_plain($variables['note']) . '</small></sup></div>';
   }
 
   if (!empty($variables['caption_bottom'])) {

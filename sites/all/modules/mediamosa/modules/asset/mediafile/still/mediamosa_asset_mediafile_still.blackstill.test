@@ -61,7 +61,7 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
   //  $this->pass(t('Got test video for black still @video.', array('@video' => $filename)));
   //  $upload = $this->uploadTestFile($filename);
 
-    $upload = $this->uploadTestFile($this->getTestVideo_BlackStill());
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
@@ -102,14 +102,14 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $still_list = $stills['stills'];
 
     // Get the created still.
-    $filename_still = mediamosa_configuration_storage::mediafile_still_filename_get($still_list['still_id']);
+    $still_uri = mediamosa_storage::get_uri_mediafile($still_list['still_id']);
 
     // Check filename.
-    $this->assertTrue($filename_still, strtr('Got generated still filename: @filename', array('@filename' => $filename_still)));
-    $this->assertTrue(mediamosa_io::file_exists($filename_still, TRUE), t('Found the generated still.'));
+    $this->assertTrue($still_uri, strtr('Got generated still filename: @uri (@path)', array('@uri' => $still_uri, '@path' => mediamosa_io::realpath_safe($still_uri))));
+    $this->assertTrue(mediamosa_io::file_exists($still_uri), t('Found the generated still.'));
 
     // Check the image
-    $im = mediamosa_gd::imagecreatefromjpeg($filename_still);
+    $im = mediamosa_gd::imagecreatefromjpeg($still_uri);
 
     // Check generation.
     $this->assertTrue($im !== FALSE, 'Got image from still.');
@@ -123,6 +123,6 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     }
 
     // Delete still.
-    $response = $this->deleteStill($asset_id);
+    $this->deleteStill($asset_id);
   }
 }

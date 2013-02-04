@@ -134,6 +134,7 @@ function mediamosa_tool_ffmpeg_install() {
 
     // ogg.
     array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
+    // Changing default: change MediaMosaTestCaseEgaJob::SIMPLETEST_PROFILE_ID_DEFAULT too.
     array('Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
     array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
   );

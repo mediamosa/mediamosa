@@ -1,7 +1,7 @@
 name = "MediaMosa SDK"
 description = "The MediaMosa software development kit contains a collection of modules and classes used for creating Drupal websites supporting MediaMosa."
 package = "MediaMosa - SDK"
-version = 7.x-3.1
+version = 7.x-3.4
 core = 7.x
 
 ; Used files.

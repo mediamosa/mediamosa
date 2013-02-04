@@ -1,0 +1,16 @@
+name = "Storage profiles"
+description = "The storage module handles different storage profiles."
+package = "MediaMosa - Modules"
+version = 7.x-3.4
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_storage.rest.class.inc
+files[] = profile/mediamosa_storage_profile.inc
+files[] = profile/app/mediamosa_storage_profile_app.inc
+
+; Test files.
+files[] = transition/mediamosa_storage_transition.test

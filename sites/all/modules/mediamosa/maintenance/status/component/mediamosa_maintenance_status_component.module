@@ -1,36 +1,7 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The status commponent module.
- */
-
-/**
- * Constants.
  */
 
 /**
@@ -55,7 +26,7 @@ function mediamosa_maintenance_status_component_generate() {
   $results = array();
 
   // Get the mount point. The mount point always ends with DIRECTORY_SEPARATOR.
-  $mount_point = mediamosa_configuration_storage::mount_point_get();
+  $mount_point = mediamosa_storage::get_uri();
 
   // ------------------------------------------------------- SANNAS mount point.
   $results['mount_set'] = array(
@@ -71,22 +42,21 @@ function mediamosa_maintenance_status_component_generate() {
   );
 
   // --------------------------------------------------- SANNAS media/.htaccess.
-  $path = mediamosa_configuration_storage::media_get_path();
+  $path = mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_media());
   $found = mediamosa_io::file_exists($path . '.htaccess');
 
   // Create when missing.
   if (!$found && is_writable($mount_point)) {
     // Make the [mount_point]/media directory.
-    mediamosa_io::mkdir($path);
-    mediamosa_io::mkdir($path . 'ticket' . DIRECTORY_SEPARATOR);
-    $found = mediamosa_configuration_storage::file_create_htaccess($path, mediamosa_configuration_storage::media_get_htaccess_contents());
+    mediamosa_io::mkdir($path . 'ticket/');
+    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
   }
 
   $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
   foreach ($htaccess as $key => $line) {
     $htaccess[$key] = trim($line, "\n\r\t ");
   }
-  $htaccess_org = explode("\n", trim(mediamosa_configuration_storage::media_get_htaccess_contents()));
+  $htaccess_org = explode("\n", trim(mediamosa_storage::file_get_media_htaccess_contents()));
   foreach ($htaccess_org as $key => $line) {
     $htaccess_org[$key] = trim($line, "\n\r\t ");
   }
@@ -97,47 +67,44 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => !$contents && $found ? _mediamosa_maintenance_status_okwarning(FALSE) : _mediamosa_maintenance_status_okerror($found && $contents),
   );
   if (!$found || !$contents) {
-    $variables = array('%directory' => $path, '@path' => $path . '.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_configuration_storage::media_get_htaccess_contents())));
+    $variables = array('%directory' => $path, '@path' => $path . '/.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_media_htaccess_contents())));
     $results['mount_media_htaccess']['description'] = t("Warning: Couldn't find .htaccess file in location @path (or with correct contents).<br />Please create a .htaccess file in your %directory directory which contains the following lines: <br /><code>!htaccess</code>", $variables);
   }
 
   // --------------------------------------------------- SANNAS Structure check.
   $checks = array(
-    'is_structured' => array(),
-    'is_writeable' => array(),
+    'not_structured' => array(),
+    'not_writeable' => array(),
   );
 
-  $dirs = array('data', 'data/stills', 'data/transcode', 'links', 'download_links', 'media', 'media/ticket', 'ftp');
+  $dirs = array('data', 'data/transcode', 'data/transition', 'media', 'media/ticket', 'ftp');
   foreach ($dirs as $dir) {
-    $checks = _mediamosa_maintenance_status_component_directory($mount_point . $dir, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
   }
 
-  $maps = array(
-    '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  );
-  foreach ($maps as $map) {
-    _mediamosa_maintenance_status_component_directory($mount_point . 'data' . DIRECTORY_SEPARATOR . $map, $checks);
-    _mediamosa_maintenance_status_component_directory($mount_point . 'data' . DIRECTORY_SEPARATOR . 'stills' . DIRECTORY_SEPARATOR . $map, $checks);
+  // We store each file in separate directories based on the first letter of the
+  // file. We need to create these directories.
+  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for ($x = 0; $x < strlen($prefixes); $x++) {
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $prefixes[$x], $checks);
   }
 
   $results['mount_structure'] = array(
     'title' => t('SANNAS stucture'),
-    'value' => empty($checks['is_structured']) ? t('Good') : t('Failures'),
-    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_structured'])),
+    'value' => empty($checks['not_structured']) ? t('Good') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['not_structured'])),
   );
-  if (!empty($checks['is_structured'])) {
-    $results['mount_structure']['description'] = '<pre>' . implode("\n", $checks['is_structured']) . '</pre>';
+  if (!empty($checks['not_structured'])) {
+    $results['mount_structure']['description'] = '<pre>' . implode("\n", $checks['not_structured']) . '</pre>';
   }
 
   $results['mount_writeable'] = array(
     'title' => t('SANNAS writable'),
-    'value' => empty($checks['is_structured']) ? t('Writable') : t('Failures'),
-    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_writeable'])),
+    'value' => empty($checks['not_structured']) ? t('Writable') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['not_writeable'])),
   );
-  if (!empty($checks['is_writeable'])) {
-    $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['is_writeable']) . '</pre>';
+  if (!empty($checks['not_writeable'])) {
+    $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['not_writeable']) . '</pre>';
   }
 
   $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
@@ -154,7 +121,8 @@ function mediamosa_maintenance_status_component_generate() {
       fclose($handle);
     }
 
-    unlink($filename);
+    // Delete the file.
+    mediamosa_io::unlink($filename);
   }
 
   // Note; you can not rename the key 'mount_rea_write' (!).
@@ -174,13 +142,13 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
   );
 
-  if (!empty($mount_point) && is_dir($mount_point)) {
-    $du_simpletest = mediamosa_io::disk_usage_recursive(mediamosa_configuration_storage::mount_point_get(TRUE));
+  if (!empty($mount_point) && mediamosa_io::is_dir($mount_point)) {
+    $du_simpletest = mediamosa_io::disk_usage_recursive(mediamosa_storage::get_uri_simpletest());
     $results['du_simpletest'] = array(
       'title' => t('Simpletest diskusage'),
       'value' => format_size($du_simpletest),
       'severity' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
-      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove their files automaticly. An administrator needs to clean up directory '@simpletest_dir'", array('@simpletest_dir' => mediamosa_configuration_storage::mount_point_get(TRUE))) : '',
+      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'.", array('@simpletest_dir' => mediamosa_io::realpath_safe(mediamosa_storage::get_uri_simpletest()))) : '',
     );
   }
 
@@ -193,21 +161,20 @@ function mediamosa_maintenance_status_component_generate() {
 }
 
 /**
- * Directory check helper.
+ * Check for failures. $checks is filled with any directory that has failures.
+ * When $checks is empty, then there are no errors.
  *
- * @param $directory string
- * @param $checks['is_structured'] string
- * @param $checks['is_writeable'] string
+ * @param $directory
+ * @param $checks['not_structured']
+ * @param $checks['not_writeable']
  */
-function _mediamosa_maintenance_status_component_directory($directory, $checks) {
+function _mediamosa_maintenance_status_component_directory($directory, &$checks) {
   if (!mediamosa_io::is_dir($directory)) {
-    $checks['is_structured'][] = $directory;
+    $checks['not_structured'][] = $directory;
   }
   if (!is_writable($directory)) {
-    $checks['is_writeable'][] = $directory;
+    $checks['not_writeable'][] = $directory;
   }
-
-  return $checks;
 }
 
 /**
@@ -240,7 +207,10 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect($reset 
  */
 function mediamosa_maintenance_status_component_mediamosa_status_collect_realtime() {
 
-  // -------------------------------------------------- Check Drupal status page
+  // Empty first.
+  $results = array();
+
+  // ------------------------------------------------- Check Drupal status page.
   $results['update_db'] = array(
     'title' => t('Drupal status page'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,

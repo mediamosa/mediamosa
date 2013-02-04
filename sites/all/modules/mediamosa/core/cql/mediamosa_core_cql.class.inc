@@ -4,29 +4,6 @@
  * The parent main class for MediaMosa CQL.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 define('MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING', 'use_having');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN', 'column');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT', 'table_for_sort');
@@ -54,37 +31,37 @@ class mediamosa_core_cql {
    *  Value to compare.
    * @param unknown_type $type
    *  Type of param.
-   * @param array $a_translate_to
+   * @param array $translate_to
    *  Extra array to translate name.
    */
 
-  public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $a_translate_to = array()) {
-    $a_or = array();
+  public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $translate_to = array()) {
+    $or = array();
 
-    if (isset($a_translate_to[$name])) {
-      $name = $a_translate_to[$name];
+    if (isset($translate_to[$name])) {
+      $name = $translate_to[$name];
     }
 
-    $a_or = array();
+    $or = array();
 
     switch ($type) {
       case mediamosa_sdk::TYPE_SEARCH_STRING:
         switch ($match) {
           case 'exact':
             foreach ($values as $value) {
-              $a_or[] = $name . ' == "^' . addslashes($value) . '^"';
+              $or[] = $name . ' == "^' . addslashes($value) . '^"';
             }
             break;
 
           case 'begin':
             foreach ($values as $value) {
-              $a_or[] = $name . ' == "^' . addslashes($value) . '"';
+              $or[] = $name . ' == "^' . addslashes($value) . '"';
             }
             break;
 
           case 'contains':
             foreach ($values as $value) {
-              $a_or[] = $name . ' = "' . addslashes($value) . '"';
+              $or[] = $name . ' = "' . addslashes($value) . '"';
             }
             break;
         }
@@ -92,13 +69,13 @@ class mediamosa_core_cql {
 
       case mediamosa_sdk::TYPE_SEARCH_INT:
         foreach ($values as $value) {
-          $a_or[] = $name . ' == ' . intval($value);
+          $or[] = $name . ' == ' . intval($value);
         }
         break;
 
       case mediamosa_sdk::TYPE_SEARCH_BOOL:
         foreach ($values as $value) {
-          $a_or[] = $name . ' == "' . addslashes($value) . '"';
+          $or[] = $name . ' == "' . addslashes($value) . '"';
         }
         break;
 
@@ -106,13 +83,13 @@ class mediamosa_core_cql {
         foreach ($values as $value) {
           if (strpos($value, '|') === FALSE) {
             $value = mediamosa_datetime::date8601_to_timestamp($value, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-            $a_or[] = $name . ' == "' . addslashes($value) . '"';
+            $or[] = $name . ' == "' . addslashes($value) . '"';
           }
           else {
             list($v1, $v2) = explode('|', $value, 2);
             $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
             $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_sdk::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-            $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
+            $or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
           }
         }
         break;
@@ -122,7 +99,7 @@ class mediamosa_core_cql {
         break;
     }
 
-    return (count($a_or) > 1 ? '(' : '') . implode(' OR ', $a_or) . (count($a_or) > 1 ? ')' : '');
+    return (count($or) > 1 ? '(' : '') . implode(' OR ', $or) . (count($or) > 1 ? ')' : '');
   }
 
   /**
@@ -447,6 +424,19 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
+   * Check if operator is a like operator.
+   *
+   * @param string $like
+   *   The operator, e.g. '=' or 'LIKE'.
+   *
+   * @return boolean
+   *   Returns TRUE when operator is 'LIKE' (or 'NOT LIKE').
+   */
+  protected function mediamosa_cql_is_like($like) {
+    return (strtolower($like) == 'like' || strtolower($like) == 'not like');
+  }
+
+  /**
    * DB escape string
    *
    * @param string $str
@@ -705,7 +695,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       case mediamosa_sdk::TYPE_INT:
         $str_quotes = '';
         if ($str_relation != 'within') {
-          $str_search_term = (int)$str_search_term; // make sure its an integer.... :)
+          $str_search_term = (int) $str_search_term; // make sure its an integer.... :)
         }
         break;
       case mediamosa_sdk::TYPE_DATETIME:
@@ -781,7 +771,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
             $tmp = array();
             foreach ($a_words as $str_word) {
-              $tmp[] = sprintf('%d', (int)$str_word);
+              $tmp[] = sprintf('%d', (int) $str_word);
             }
 
             if (count($tmp)  == 1) {
@@ -791,6 +781,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
               $a_sub_parts[] = sprintf('%s IN(%s)', $str_table_column, implode(',', $tmp));
             }
             break;
+
           default:
             foreach ($a_words as $str_word) {
               if (trim($str_word) == '') {
@@ -824,23 +815,41 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $do_null = TRUE;
       case '==':
       case 'adj':
+        // Check if we can use escape_like().
+        $is_like = $this->mediamosa_cql_is_like($str_like);
+
         if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
         }
 
         if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 1)), $str_quotes);
+          $str_search_term = mediamosa_unicode::substr($str_search_term, 1);
+
+          if ($is_like) {
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
+          }
+          else {
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape($str_search_term), $str_quotes);
+          }
         }
         elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 0, -1)), $str_quotes);
+          $str_search_term = mediamosa_unicode::substr($str_search_term, 0, -1);
+
+          if ($is_like) {
+            $a_sub_parts[] = sprintf("%s%s %s %s%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
+          }
+          else {
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape($str_search_term), $str_quotes);
+          }
         }
         else {
           if ($o_cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
             $ancor_right = $ancor_left = '%';
-            $str_compare = $str_like;
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $ancor_right, $str_quotes);
           }
-
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%s%s%s", $str_binary, $str_table_column, $str_compare, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $ancor_right, $str_quotes);
+          else {
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%s%s%s", $str_binary, $str_table_column, $str_compare, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape($str_search_term), $ancor_right, $str_quotes);
+          }
         }
         break;
       case '>':
@@ -1279,7 +1288,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_INT,
               ),
               'is_unappropriate' => array(
-                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::IS_UNAPPROPRIATE,
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::IS_INAPPROPRIATE,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL,

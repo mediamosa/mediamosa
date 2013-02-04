@@ -1,0 +1,79 @@
+<?php
+/**
+ * @file
+ * Unittests for media play profile play request.
+ */
+
+class MediaMosaMediaProfileTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Profile play request tests',
+      'description' => 'Testing asset mediafile play profile play request related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testPlayProfile() {
+
+    // Upload a test file.
+    $response = $this->uploadTestFile();
+    $asset_id = $response['asset_id'];
+    $mediafile_id = $response['mediafile_id'];
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));
+
+    // Update mediafile.
+    $parameters = array(
+      mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $parameters);
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Ask mediafile download url, incorrect.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id . 'i',
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND));
+
+    // Ask mediafile download url, incorrect.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id . '_incorrect', $parameters, array(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND));
+
+    // Get the mediafile.
+    //$a_mediafile = $this->getMediafile($mediafile_id);
+    // Dump the content.
+    //$this->var_export($a_mediafile);
+
+    // Ask mediafile download url with profile id.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::PROFILE_ID => mt_rand(1, 9999),
+      mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID));
+
+    // Ask mediafile download url with tag.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::TAG => mt_rand(1, 9999),
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG));
+  }
+}

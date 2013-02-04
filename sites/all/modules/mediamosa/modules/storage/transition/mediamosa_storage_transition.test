@@ -1,0 +1,160 @@
+<?php
+/**
+ * @file
+ * Test for transition object.
+ */
+
+class MediaMosaMediaStorageTransitionTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa Storage - Transition space',
+      'description' => 'Testing transition auto manage functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testStorageTransition() {
+    // Upload 15 files (14902200 bytes, 14,2mb).
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile();
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Set up for test.
+    variable_set('mediamosa_storage_transition_max_lifetime_days', 3);
+    // Size during test is in Mb.
+    variable_set('mediamosa_storage_transition_max_size_gb', 20);
+
+    // Add our mediafiles to transition.
+    $mediafile_ids = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
+      ->fields('am', array(mediamosa_asset_mediafile_db::ID))
+      ->execute()
+      ->fetchCol();
+
+    // Copy & register at transition.
+    foreach ($mediafile_ids as $mediafile_id_tmp) {
+      mediamosa_storage_transition::mediafile_local_to_transition($mediafile_id_tmp, FALSE);
+    }
+
+    // Expect 15 files.
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 15, sprintf('%d files in transition, expecting 15', $files));
+
+    // Show total used size.
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
+
+    // Run script. All files should still be there.
+    $this->assertTrue(mediamosa_storage_transition::clean_up() == 0, 'Clean up removed no files.');
+
+    // Show total used size.
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
+
+    // Expect 15 files.
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 15, sprintf('%d files in transition, expecting 15', $files));
+
+    // Get one mediafile ID.
+    $mediafile_id = array_pop($mediafile_ids);
+
+    // Now put one of the files access last week.
+    $date = gmdate('Y-m-d H:i:s', strtotime('-1 week'));
+    mediamosa_db::db_update(mediamosa_storage_transition_db::TABLE_NAME)
+      ->fields(array(mediamosa_storage_transition_db::ACCESSED => $date))
+      ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+
+    // Not gone yet.
+    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)->countQuery()->execute()->fetchField() == 1, 'Right file present.');
+
+    // Run script. Should remove 1.
+    $this->assertTrue(mediamosa_storage_transition::clean_up() == 1, 'Clean up removed 1 file.');
+
+    // Show total used size.
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
+
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 14, sprintf('%d files in transition, expecting 14', $files));
+
+    // Is really gone?
+    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)->countQuery()->execute()->fetchField() == 0, 'Right file removed.');
+
+    // Size during test is in Mb.
+    variable_set('mediamosa_storage_transition_max_size_gb', 10);
+
+    // Run script. Should remove 4.
+    $this->assertTrue(mediamosa_storage_transition::clean_up() == 4, 'Clean up removed 4 files.');
+
+    // Show total used size.
+    $this->pass(t('Total size: @size.', array('@size' => mediamosa_storage_transition::get_total_used_size())));
+
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 10, sprintf('%d files in transition, expecting 10', $files));
+
+    // Get remaining mediafiles.
+    $mediafile_ids = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')
+      ->fields('st', array(mediamosa_storage_transition_db::MEDIAFILE_ID))
+      ->execute()
+      ->fetchCol();
+
+    // Final test. Put some files on access in the past, some must be removed,
+    // others not.
+    $gone = array();
+    $mediafile_id = array_shift($mediafile_ids);
+    $gone[] = $mediafile_id;
+
+    // Now put one of the files access 6 days ago.
+    $date = gmdate('Y-m-d H:i:s', strtotime('-6 day'));
+    mediamosa_db::db_update(mediamosa_storage_transition_db::TABLE_NAME)
+      ->fields(array(mediamosa_storage_transition_db::ACCESSED => $date))
+      ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+
+    $mediafile_id = array_pop($mediafile_ids);
+    $gone[] = $mediafile_id;
+
+    // Now put one of the files access 4 days ago.
+    $date = gmdate('Y-m-d H:i:s', strtotime('-4 day'));
+    mediamosa_db::db_update(mediamosa_storage_transition_db::TABLE_NAME)
+      ->fields(array(mediamosa_storage_transition_db::ACCESSED => $date))
+      ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+
+    $mediafile_id = array_shift($mediafile_ids);
+
+    // Now put one of the files access 2 days ago.
+    $date = gmdate('Y-m-d H:i:s', strtotime('-2 day'));
+    mediamosa_db::db_update(mediamosa_storage_transition_db::TABLE_NAME)
+      ->fields(array(mediamosa_storage_transition_db::ACCESSED => $date))
+      ->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+
+    // Run script. Should remove some of the mediafiles.
+    $this->assertTrue(mediamosa_storage_transition::clean_up() == 2, 'Clean up removed 2 files.');
+
+    // Make unique.
+    $gone = array_unique($gone);
+    $this->assertTrue(count($gone) == 2, 'Expecting 2 mediafile ids in gone array.');
+
+    $files = mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->countQuery()->execute()->fetchField();
+    $this->assertTrue($files == 8, sprintf('%d files in transition, expecting 8', $files));
+
+    // Is really gone?
+    $this->assertTrue(mediamosa_db::db_select(mediamosa_storage_transition_db::TABLE_NAME, 'st')->condition(mediamosa_storage_transition_db::MEDIAFILE_ID, $gone, 'IN')->countQuery()->execute()->fetchField() == 0, 'Correct files removed.');
+  }
+}

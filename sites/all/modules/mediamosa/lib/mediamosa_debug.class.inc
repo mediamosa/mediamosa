@@ -4,29 +4,6 @@
  * Debug class.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_debug {
   /**
    * Default debug logger, logs only in debug mode (level 5, normal).
@@ -72,7 +49,15 @@ class mediamosa_debug {
    */
   public static function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     if (self::is_debug_normal()) {
-      mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
+      if (is_resource($data)) {
+        mediamosa_watchdog::log(print_r($data, TRUE), array(), $severity, $type);
+      }
+      elseif (is_bool($data)) {
+        mediamosa_watchdog::log($data ? 'TRUE' : 'FALSE', array(), $severity, $type);
+      }
+      else {
+        mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
+      }
     }
   }
 

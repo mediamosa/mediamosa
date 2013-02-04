@@ -14,7 +14,6 @@ class mediamosa_connector_response {
   const VERSION_INFO = 'info';
 
   // --------------------------------------------------------------------- Vars.
-  // Store the SimpleXML here.
   /**
    * The SimpleXMLElement object.
    *
@@ -67,6 +66,9 @@ class mediamosa_connector_response {
   // ---------------------------------------------------------------- Functions.
   /**
    * Return the stored XML (if any).
+   *
+   * @return SimpleXMLElement
+   *   The generated SimpleXMLElement object or FALSE.
    */
   public function get() {
     return $this->xml;

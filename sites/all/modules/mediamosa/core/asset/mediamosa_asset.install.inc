@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The installation file of the asset module.
  */
-
- /**
-  * @file
-  * The installation file of the asset module.
-  */
 
 require_once 'mediamosa_asset.class.inc';
 require_once 'mediamosa_asset_db.class.inc';
@@ -190,12 +165,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => 'The date and time when asset was changed last.',
       ),
-      mediamosa_asset_db::IS_UNAPPROPRIATE => array(
+      mediamosa_asset_db::IS_INAPPROPRIATE => array(
         'description' => 'If the asset has unappropieate contents.',
-        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_INAPPROPRIATE_FALSE, mediamosa_asset_db::IS_INAPPROPRIATE_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
-        'default' => mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_INAPPROPRIATE_FALSE, mediamosa_asset_db::IS_INAPPROPRIATE_TRUE)) . "')",
+        'default' => mediamosa_asset_db::IS_INAPPROPRIATE_FALSE,
       ),
       mediamosa_asset_db::IS_EXTERNAL => array(
         'description' => 'If the asset has external contents.',
@@ -245,7 +220,7 @@ function mediamosa_asset_schema() {
       'idx_app_priv_unapp_emptyasset' => array( // Main search index.
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::ISPRIVATE,
-        mediamosa_asset_db::IS_UNAPPROPRIATE,
+        mediamosa_asset_db::IS_INAPPROPRIATE,
         mediamosa_asset_db::IS_EMPTY_ASSET,
       ),
       'idx_' . mediamosa_asset_db::VIDEOTIMESTAMP => array(mediamosa_asset_db::VIDEOTIMESTAMP),

@@ -205,7 +205,7 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#maxlength' => mediamosa_tool_params_db::NICE_PARAMETER_LENGTH,
   );
 
-  $tools = module_invoke_all('mediamosa_tool_info');
+  $tools = mediamosa_server_tool::get_server_tools();
   $options = array();
   foreach ($tools as $tool_id => $tool) {
     $options[$tool_id] = $tool['name'];
@@ -317,7 +317,7 @@ function mediamosa_tool_params_validate($node) {
   }
 
   // Tool.
-  $tools = module_invoke_all('mediamosa_tool_info');
+  $tools = mediamosa_server_tool::get_server_tools();
   if (empty($tools[$node->{mediamosa_tool_params_db::TOOL}])) {
     form_set_error(mediamosa_tool_params_db::TOOL, t('This tool is either not enabled or does not exists.'));
   }

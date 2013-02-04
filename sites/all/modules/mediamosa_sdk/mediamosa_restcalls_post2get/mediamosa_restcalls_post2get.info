@@ -1,7 +1,7 @@
 name = "MediaMosa - REST remapper POST to GET"
 description = "Copies and remaps all REST POST calls to /post2get/[REST CALL] and makes them GET. The existing POST variants are left unchanged. <b>Do not enable this module if you do not need it, for developers intended only.</b>"
 package = "MediaMosa - SDK"
-version = 7.x-3.0
+version = 7.x-3.4
 core = 7.x
 
 ; Dependencies (module names)

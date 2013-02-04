@@ -9,7 +9,6 @@
 
 /**
  * Static functions used by node type mediamosa_app.
- *
  */
 class mediamosa_node_mediamosa_app {
   /**
@@ -67,6 +66,12 @@ function mediamosa_app_load(&$nodes) {
 
     // Make sure timezone is set.
     $nodes[$key]->{mediamosa_app_db::TIMEZONE} = empty($nodes[$key]->{mediamosa_app_db::TIMEZONE}) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $nodes[$key]->{mediamosa_app_db::TIMEZONE};
+
+    // Load default storage uri if storage module is enabled
+    if (module_exists('mediamosa_storage')) {
+      $nodes[$key]->{mediamosa_app_db::STORAGE_URI} = mediamosa_storage_profile_app::get_default_uri($node->{mediamosa_app_db::APP_ID});
+      $nodes[$key]->{mediamosa_app_db::STORAGE_STILLS_URI} = mediamosa_storage_profile_app::get_default_uri_stills($node->{mediamosa_app_db::APP_ID});
+    }
   }
 }
 
@@ -95,6 +100,11 @@ function mediamosa_app_update($node) {
 
     // Update webservice.
     _mediamosa_app_update_webservice($node);
+
+    // Update default storage uri if storage module is enabled.
+    if (module_exists('mediamosa_storage')) {
+      mediamosa_storage_profile_app::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_URI}, $node->{mediamosa_app_db::STORAGE_STILLS_URI});
+    }
   }
 }
 
@@ -119,12 +129,18 @@ function mediamosa_app_insert($node) {
 
   // Update webservice.
   _mediamosa_app_update_webservice($node);
+
+  // Update default storage uri if storage module is enabled.
+  if (module_exists('mediamosa_storage') && !empty($node->{mediamosa_app_db::STORAGE_URI}) && !empty($node->{mediamosa_app_db::STORAGE_STILLS_URI})) {
+    mediamosa_storage_profile_app::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_URI}, $node->{mediamosa_app_db::STORAGE_STILLS_URI});
+  }
 }
 
 /**
  * Update the webservice link.
  *
  * @param object $node
+ *   The node.
  */
 function _mediamosa_app_update_webservice($node) {
 
@@ -146,6 +162,9 @@ function _mediamosa_app_update_webservice($node) {
  * Implements hook_delete().
  */
 function mediamosa_app_delete($node) {
+  // Delete storage mappings if storage module enabled
+  mediamosa_storage_profile_app::delete_for_app(mediamosa_app_db::APP_ID);
+
   // Delete revisions.
   mediamosa_node_revision::delete_ex($node, mediamosa_app_db::TABLE_NAME);
 }
@@ -188,7 +207,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     $allow_masterslave_apps[] = strtr('@app_name (@app_id)', array('@app_name' => $app[mediamosa_app_db::APP_NAME], '@app_id' => $app[mediamosa_app_db::APP_ID]));
   }
 
-  // Default parameters
+  // Default parameters.
   $rows = array(
     array(t('Name'), check_plain($node->title)),
     array(t('Application ID'), check_plain($node->{mediamosa_app_db::APP_ID})),
@@ -205,6 +224,12 @@ function mediamosa_app_view($node, $view_mode = 'full') {
   // Add timestamps.
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
+
+  // Add default storage mapping uri if mediamosa_storage module enabled.
+  if (module_exists('mediamosa_storage')) {
+    array_splice($rows, 2, 0, array(array(t('Default storage location'), check_plain(mediamosa_storage_profile_app::get_view_for_app($node->{mediamosa_app_db::APP_ID})))));
+    array_splice($rows, 3, 0, array(array(t('Default storage location (stills)'), check_plain(mediamosa_storage_profile_app::get_view_for_app($node->{mediamosa_app_db::APP_ID}, TRUE)))));
+  }
 
   $rows_contact = array(
     array(t('Technical name'), check_plain($node->technical_name)),
@@ -315,12 +340,21 @@ function mediamosa_app_form($node, &$form_state) {
 
   $form = array();
 
+  // Create group.
+  $form['mediamosa_app'] = array(
+    '#type' => 'vertical_tabs',
+  );
+  $form['mediamosa_app_contact'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
   $form['client_application'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#title' => t('Client application'),
-    '#description' => t('Settings for client application.')
+    '#description' => t('Settings for client application.'),
+    '#group' => 'mediamosa_app',
   );
 
   $form['client_application']['title'] = array( // app_name.
@@ -402,12 +436,46 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 
+  if (module_exists('mediamosa_storage')) {
+    $form['storage'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Storage settings'),
+      '#description' => t('Configure the storage location of the media files for this application.'),
+      '#group' => 'mediamosa_app',
+    );
+
+    // Get options for select.
+    $storage_uri_options = _mediamosa_storage_profile_app_options(mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node, 0));
+    $default_storage_option = $storage_uri_options['#default_storage_option'];
+    unset($storage_uri_options['#default_storage_option']);
+
+    $form['storage'][mediamosa_app_db::STORAGE_URI] = array(
+      '#type' => 'select',
+      '#title' => t('Storage location media files'),
+      '#description' => t('Default storage location for media files.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STORAGE_URI, $node, $default_storage_option),
+      '#options' => $storage_uri_options,
+      '#required' => FALSE,
+    );
+    $form['storage'][mediamosa_app_db::STORAGE_STILLS_URI] = array(
+      '#type' => 'select',
+      '#title' => t('Storage location stills'),
+      '#description' => t('Default storage location for stills.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STORAGE_STILLS_URI, $node, $default_storage_option),
+      '#options' => $storage_uri_options,
+      '#required' => FALSE,
+    );
+  }
+
   $form['masterslave'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Master/slave settings'),
-    '#description' => t('Control which other clientapplications can slave asset to this application'),
+    '#description' => t('Control which other client applications can slave asset(s) to this application.'),
+    '#group' => 'mediamosa_app',
   );
 
   $form['masterslave'][mediamosa_app_db::ALLOW_MASTERSLAVE_APPS] = array(
@@ -425,7 +493,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('OAI Interface settings'),
-    '#description' => t('')
+    '#description' => t(''),
+    '#group' => 'mediamosa_app',
   );
   $form['oai'][mediamosa_app_db::IS_METADATA_PUBLIC] = array(
     '#type' => 'select',
@@ -447,7 +516,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('oAuth settings'),
-    '#description' => t('')
+    '#description' => t(''),
+    '#group' => 'mediamosa_app',
   );
   $form['oauth'][mediamosa_app_db::OAUTH_CONSUMER_KEY] = array(
     '#type' => 'textfield',
@@ -474,7 +544,7 @@ function mediamosa_app_form($node, &$form_state) {
   }
   */
 
-  $tools = module_invoke_all('mediamosa_tool_info');
+  $tools = mediamosa_server_tool::get_server_tools();
   foreach ($tools as $tool_id => $tool) {
     $options[$tool_id] = $tool['name'];
   }
@@ -484,7 +554,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Tool selection'),
-    '#description' => t('')
+    '#description' => t(''),
+    '#group' => 'mediamosa_app',
   );
   $default_value = mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, array());
   $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
@@ -499,8 +570,9 @@ function mediamosa_app_form($node, &$form_state) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => t('Still'),
-    '#description' => t('')
+    '#title' => t('Still generation settings'),
+    '#description' => t(''),
+    '#group' => 'mediamosa_app',
   );
 
   $tool = mediamosa_transcode_profile::get_by_tool(NULL, 'ffmpeg', 'size')->fetchAll();
@@ -565,7 +637,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Transcoding'),
-    '#description' => t('Transcoding settings for this client application.')
+    '#description' => t('Transcoding settings for this client application.'),
+    '#group' => 'mediamosa_app',
   );
 
   $transcoding_pos = array();
@@ -623,7 +696,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('URLs'),
-    '#description' => t('URLs shown in the asset settings.')
+    '#description' => t('URLs shown in the asset settings.'),
+    '#group' => 'mediamosa_app',
   );
 
   $form['urls'][mediamosa_app_db::DOWNLOAD_URL] = array(
@@ -650,7 +724,7 @@ function mediamosa_app_form($node, &$form_state) {
   $form['urls'][mediamosa_app_db::VIEW_ASSET_URL] = array(
     '#type' => 'textfield',
     '#title' => t('View asset url'),
-    '#description' => t('Shown by OAI, field \'Resource Identifier\'. Available tags: {asset_id}.'),
+    '#description' => t("Shown by OAI, field 'Resource Identifier'. Available tags: {asset_id}."),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::VIEW_ASSET_URL, $node),
     '#maxlength' => mediamosa_app_db::VIEW_ASSET_URL_LENGTH,
   );
@@ -672,7 +746,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Webservices'),
-    '#description' => t('Availibility per web service for this client application.')
+    '#description' => t('Availibility per web service for this client application.'),
+    '#group' => 'mediamosa_app',
   );
 
   // Dynamicly add fields for webservice handles
@@ -694,7 +769,7 @@ function mediamosa_app_form($node, &$form_state) {
       $form['webservice']['webservice_' . $handle] = array(
         '#type' => 'select',
         '#title' => $handle,
-        '#description' => t('Availibility of web service \'' . $handle . '\' for this client application.'),
+        '#description' => t("Availibility of web service '" . $handle . "' for this client application."),
         '#default_value' => 'TRUE',
         '#options' => array(mediamosa_webservice_app_db::STATUS_TRUE => t('Enabled'), mediamosa_webservice_app_db::STATUS_FALSE => t('Disabled')),
       );
@@ -715,7 +790,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Technical Contact'),
-    '#description' => t('Technical contact person for this client application.')
+    '#description' => t('Technical contact person for this client application.'),
+    '#group' => 'mediamosa_app_contact',
   );
 
   $form['technical'][mediamosa_app_db::TECHNICAL_NAME] = array(
@@ -747,7 +823,8 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Administrative Contact'),
-    '#description' => t('Administrative contact person for this client application.')
+    '#description' => t('Administrative contact person for this client application.'),
+    '#group' => 'mediamosa_app_contact',
   );
 
   $form['administrative'][mediamosa_app_db::ADMINISTRATIVE_NAME] = array(

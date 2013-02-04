@@ -1,41 +1,14 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The job server module.
  */
-
- /**
-  * @file
-  * The job server module.
-  */
-
 
 /**
  * URI: /server/joblist
  * Method: GET
  *
  * Internal only.
- *
  */
 class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -52,9 +25,6 @@ class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
-
     $jobs = mediamosa_job_server::search();
 
     foreach ($jobs as $job) {
@@ -70,7 +40,7 @@ class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
  * Internal only.
  */
 class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const JOB_ID = 'job_id';
   const JOB_TYPE = 'job_type';
@@ -100,11 +70,11 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
   const WATERMARK_V_ALIGN = 'watermark_v_align';
   const WATERMARK_H_ALIGN = 'watermark_h_align';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -242,12 +212,12 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -267,7 +237,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         break;
 
       case mediamosa_job_server_db::JOB_TYPE_STILL:
-        $a_still_parameters = array(
+        $still_parameters = array(
           'still_type' => $this->get_param_value(self::STILL_TYPE),
           'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
           'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
@@ -287,12 +257,12 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
 
         // Get params.
         $frametime = $this->get_param_value(self::FRAMETIME);
-        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id));
+        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id));
         $h_padding = $this->get_param_value(self::H_PADDING);
         $v_padding = $this->get_param_value(self::V_PADDING);
         $blackstill_check = $this->get_param_value(self::BLACKSTILL_CHECK);
 
-        mediamosa_job_server::create_job_still($job_id, $mediafile_id_src, $frametime, $size, $h_padding, $v_padding, $blackstill_check, $a_still_parameters);
+        mediamosa_job_server::create_job_still($job_id, $mediafile_id_src, $frametime, $size, $h_padding, $v_padding, $blackstill_check, $still_parameters);
         break;
 
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
@@ -310,7 +280,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
     }
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -328,9 +298,9 @@ class mediamosa_rest_call_jobserver_job_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -346,7 +316,7 @@ class mediamosa_rest_call_jobserver_job_delete extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.

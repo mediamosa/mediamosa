@@ -1,0 +1,91 @@
+<?php
+/**
+ * @file
+ * Install, update, and uninstall functions for the mediamosa mountpoint storage module.
+ */
+
+require_once 'mediamosa_storage_s3_db.class.inc';
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_storage_s3_install() {
+  // Create our table(s).
+  mediamosa::drupal_install_schema('mediamosa_storage_s3');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function mediamosa_storage_s3_uninstall() {
+  // Delete all nodes for this storage type
+  $result = db_select(mediamosa_storage_s3_db::TABLE_NAME, 'p')
+    ->fields('p', array(mediamosa_storage_profile_db::NID))
+    ->execute();
+
+  foreach ($result as $record) {
+    node_delete($record->{mediamosa_storage_profile_db::NID});
+  }
+
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema('mediamosa_storage_s3');
+
+  // Remove our variables.
+  $result = db_select('variable', 'v')
+    ->fields('v', array('name'))
+    ->condition('name', db_like('mediamosa_storage_s3_') . '%', 'LIKE')
+    ->execute();
+
+  foreach ($result as $row) {
+    variable_del($row->name);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_storage_s3_schema() {
+
+  $schema = array();
+  $schema[mediamosa_storage_s3_db::TABLE_NAME] = array(
+    'description' => 'The mountpoint storage table.',
+    'fields' => array(
+      mediamosa_storage_s3_db::NID => array(
+        'description' => 'The Drupal node id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      mediamosa_storage_s3_db::VID => array(
+        'description' => 'The Drupal node revision id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      mediamosa_storage_s3_db::PROFILE_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The parent storage profile id.',
+      ),
+      mediamosa_storage_s3_db::KEY => array(
+        'type' => 'varchar',
+        'length' => mediamosa_storage_s3_db::KEY_LENGTH,
+        'not null' => TRUE,
+  			'description' => 'AWS access key id.',
+      ),
+      mediamosa_storage_s3_db::SECRET => array(
+        'type' => 'varchar',
+        'length' => mediamosa_storage_s3_db::SECRET_LENGTH,
+        'not null' => TRUE,
+  			'description' => 'AWS secret access key.',
+      ),
+    ),
+    'primary key' => array(mediamosa_storage_profile_db::NID),
+    'foreign keys' => array(
+      mediamosa_storage_s3_db::PROFILE_ID => array(mediamosa_storage_profile_db::TABLE_NAME => mediamosa_storage_profile_db::ID),
+    ),
+  );
+
+  return $schema;
+}

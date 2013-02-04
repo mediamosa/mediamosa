@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * MediaMosa still watermark unittests.
@@ -44,6 +19,8 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
    * The still upload test.
    */
   function testStillWatermark() {
+    // Get app ID.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
     // Base values.
     $order = 0;
@@ -53,8 +30,9 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     $still = $this->uploadTestStill($order, $default, self::getTestImage_NotBlackJpg());
 
     // Upload watermark.
-    //$watermark = $this->uploadTestStillAttach($order, $default, self::getTestImage_Png());
     $watermark = $this->uploadTestStillAttach($order, $default, self::getTestImage_Jpg());
+
+    $this->var_export($watermark);
 
     // Watermarking still image.
     $parameters = array(
@@ -65,7 +43,7 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
       mediamosa_rest_call_set_still_watermark::WATERMARK_H_ALIGN => mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
     );
     $still_id_watermarked = $this->watermarkStill($still['still_id'], $watermark['still_id'], $parameters);
-    $still_id_watermarked_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_watermarked);
+    $still_uri_watermarked = mediamosa_storage::get_uri_mediafile($still_id_watermarked);
 
     // Reproduce the process.
 
@@ -103,13 +81,13 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
 
     // Save image.
     $still_id_new = mediamosa_db::uuid($still_id_watermarked);
-    $still_filename_new = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_new);
+    $still_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $still_id_new);
 
     // Create possible missing directories.
-    mediamosa_io::mkdir(mediamosa_io::dirname($still_filename_new));
+    mediamosa_io::mkdir(mediamosa_io::dirname($still_uri));
 
     // Write still.
-    mediamosa_gd::imagejpeg($dest, $still_filename_new, mediamosa_asset_mediafile_still::SAVE_QUALITY);
+    mediamosa_gd::imagejpeg($dest, $still_uri, mediamosa_asset_mediafile_still::SAVE_QUALITY);
 
     $this->verbose(t('Control still id = @still_id, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct', array(
       '@still_id' => $still_id_new,
@@ -122,14 +100,13 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
       '@pct' => $pct,
     )));
 
-    // Destroye resources.
+    // Destroy resources.
     mediamosa_gd::imagedestroy($dest);
     mediamosa_gd::imagedestroy($src);
 
-
     // Check the two watermarked stills.
-    $im_rest = mediamosa_gd::imagecreatefromjpeg($still_id_watermarked_filename);
-    $im_self = mediamosa_gd::imagecreatefromjpeg($still_filename_new);
+    $im_rest = mediamosa_gd::imagecreatefromjpeg($still_uri_watermarked);
+    $im_self = mediamosa_gd::imagecreatefromjpeg($still_uri);
 
     // Check generation.
     $this->assertTrue($im_rest !== FALSE, 'Got image from still, REST created.');
@@ -148,14 +125,11 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
       )));
     }
 
-    // Destroye resources.
+    // Destroy resources.
     mediamosa_gd::imagedestroy($im_rest);
     mediamosa_gd::imagedestroy($im_self);
 
     // Check the two watermarked still.
-    $this->assertTrue(crc32(file_get_contents($still_id_watermarked_filename)) == crc32(file_get_contents($still_filename_new)), t('The watermarked stills are identical'));
-
-    // Remove test image.
-    mediamosa_io::unlink($still_filename_new);
+    $this->assertTrue(crc32(mediamosa_io::file_get_contents($still_uri_watermarked)) == crc32(mediamosa_io::file_get_contents($still_uri)), t('The watermarked stills are identical'));
   }
 }

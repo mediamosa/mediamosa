@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Jobserver still functions.
  */
+
 class mediamosa_job_server_still {
 
   static function get($jobserver_id, $fields = array()) {
@@ -70,14 +46,14 @@ class mediamosa_job_server_still {
     // Check the generated stills
     $i = 1;
     $pixel_rgb = NULL;
-    $destination = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-    while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
-      $source = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+    $destination = mediamosa_storage::get_realpath_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+    while (mediamosa_io::file_exists(mediamosa_storage::get_realpath_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
+      $source = mediamosa_storage::get_realpath_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
       $im = mediamosa_gd::imagecreatefromjpeg($source);
 
       if ($im) {
         // Calculate the color variation.
-        $size = mediamosa_gd::getimagesize($source);
+        $size = mediamosa_gd::get_image_size($source);
         $rgb = mediamosa_gd::imagecolorat($im, ($size[0] >> 1), ($size[1] >> 1));
         $r = ($rgb >> 16) & 0xFF;
         $g = ($rgb >> 8) & 0xFF;

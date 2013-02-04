@@ -1,15 +1,5 @@
-; $Id$
-
 name = "Storage"
-description = "The storage and mount settings."
+description = "The storage and mount settings. Keep this module turned off, will be removed in later versions."
 package = "MediaMosa - Maintenance - Configuration"
-version = 7.x-3.2.2
+version = "deprecated"
 core = 7.x
-
-; Dependencies (module names)
-dependencies[] = mediamosa
-dependencies[] = mediamosa_configuration
-
-; Used files.
-files[] = mediamosa_configuration_storage.rest.class.inc
-files[] = mediamosa_configuration_storage.test

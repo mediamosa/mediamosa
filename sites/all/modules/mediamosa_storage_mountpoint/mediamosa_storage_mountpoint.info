@@ -1,0 +1,18 @@
+name = "Mountpoint storage module"
+description = "The MediaMosa mountpoint storage module allows to setup mount point storage per client application."
+package = "MediaMosa - Storage"
+version = 7.x-3.4
+core = 7.x
+
+; Dependencies (module names).
+dependencies[] = mediamosa
+dependencies[] = mediamosa_storage
+
+; Used files.
+files[] = mediamosa_storage_mountpoint.class.inc
+files[] = mediamosa_storage_mountpoint_db.class.inc
+files[] = mediamosa_storage_mountpoint.streamwrapper.class.inc
+files[] = tests/mediamosa_storage_mountpoint.simpletest.class.inc
+
+; Tests.
+files[] = tests/mediamosa_storage_mountpoint.jobs.test

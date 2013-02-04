@@ -1,0 +1,131 @@
+<?php
+/**
+ * @file
+ * Basic test for S3.
+ */
+
+// Registry indexes all .test files, while the base is not indexed (module is
+// not on.
+if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
+      return array(
+        'name' => 'MediaMosa Storage - Amazon S3 jobs profile test',
+        'description' => 'Test if upload is correctly uploaded to S3 after local upload.',
+        'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      );
+    }
+    return array();
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Test auto upload to s3.
+   */
+  public function testJobsProfile() {
+    // If s3 object is missing, stop the test.
+    if (!$this->s3) {
+      return;
+    }
+
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Create default profile and attach it to our app.
+    $this->createS3Profile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+    $this->var_export($storage_profile_app);
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Get the first transcoded mediafile.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if (!$mediafile_id_transcoded && $mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break 2;
+          }
+        }
+      }
+    }
+
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile_transcoded = mediamosa_asset_mediafile::get($mediafile_id_transcoded);
+
+    $filename = mediamosa_asset_mediafile::get_filename($mediafile);
+    $filename_transcoded = mediamosa_asset_mediafile::get_filename($mediafile_transcoded);
+
+    // Check if files are on s3.
+    $uri_original = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $filename;
+    $uri_transcode = 'mediamosa-storage-s3://' . $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID] . '/' . $storage_profile_app[mediamosa_storage_profile_app_db::PATH] . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id_transcoded) . '/' . $filename_transcoded;
+
+    $this->file_exists($uri_original);
+    $this->file_exists($uri_transcode);
+
+    // Get the asset.
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+
+    // At this point our mediafile is local, we haven't attached the S3 profile
+    // on our App. Will do that now.
+
+
+    // Create the destination uri.
+    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $filename;
+    $this->var_export($destination_uri);
+
+    // Check if the mediafile is present on s3.
+    $this->file_exists($destination_uri, 'File on S3 exists');
+
+    // Get metadata.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'Found FPS metadata.');
+    $this->var_export($metadata);
+
+    // Remove one not important metadata, so we know analyse happened.
+    mediamosa_asset_mediafile_metadata::delete_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FPS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+
+    // Get metadata.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(!isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'FPS metadata is gone.');
+    $this->var_export($metadata);
+
+    // Create analyse job.
+    $this->createMediafileAnalyse($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get metadata, see if fps is back.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'Found FPS metadata again, analyse worked.');
+    $this->var_export($metadata);
+  }
+}

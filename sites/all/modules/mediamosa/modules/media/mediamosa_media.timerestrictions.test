@@ -1,0 +1,172 @@
+<?php
+/**
+ * @file
+ * Unittests for media play acl.
+ */
+
+class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Media play time restrictions tests',
+      'description' => 'Testing asset mediafile media play time restrictions related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testPlayProxyTimeRestrictions() {
+
+    // Get the test file.
+    $upload = $this->uploadTestFile(array('downloadable' => TRUE));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Check if file is created.
+    mediamosa_storage::file_must_exist($mediafile_id);
+
+    //
+    // Test with the play_restriction_end is in the past.
+    // Expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('-1 week'));
+    $end_time = date('Y-m-d H:i:s', strtotime('-1 day'));
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($parameters as $key => $value) {
+      $this->assertTrue(
+        $asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
+
+    // Check the function directly.
+    $start_time = time() - (7*24*60*60); // One week in the past.
+    $end_time = time() - (24*60*60); // One day in the past.
+    try {
+      $result = mediamosa_media::check_time_restrictions($start_time, $end_time);
+      $this->fail(t('The check_time_restrictions() accepted the wrong value.'));
+    }
+    catch (Exception $e) {
+      $this->assertTrue(
+        $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_END,
+        t('The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_END error.')
+      );
+    }
+
+    //
+    // Test with the play_restriction_start is in the future.
+    // Expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('+1 day'));
+    $end_time = date('Y-m-d H:i:s', strtotime('+1 week'));
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($parameters as $key => $value) {
+      $this->assertTrue(
+        $asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
+
+    // Check the function directly.
+    $start_time = time() + (24*60*60); // One day in the future.
+    $end_time = time() + (7*24*60*60); // One week in the future.
+    try {
+      $result = mediamosa_media::check_time_restrictions($start_time, $end_time);
+      $this->fail(t('The check_time_restrictions() accepted the wrong value.'));
+    }
+    catch (Exception $e) {
+      $this->assertTrue(
+        $e->getCode() == mediamosa_error::ERRORCODE_TIME_RESTRICTION_START,
+        t('The check_time_restrictions() bounced back the ERRORCODE_TIME_RESTRICTION_START error.')
+      );
+    }
+
+    //
+    // Test with correct data.
+    // play_restriction_start is in the past.
+    // play_restriction_end is in the future.
+    // Don't expect an error.
+    //
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $end_time = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $response = $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check the values.
+    foreach ($parameters as $key => $value) {
+      $this->assertTrue(
+        $asset[$key] == $value,
+        t("The @key has the good value (@value) after change.", array('@key' => $key, '@value' => $value))
+      );
+    }
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Check the function directly.
+    $start_time = time() - (24*60*60); // One day in the past.
+    $end_time = time() + (24*60*60); // One day in the future.
+    try {
+      $result = mediamosa_media::check_time_restrictions($start_time, $end_time);
+      $this->pass(t('The check_time_restrictions() accepted the good values.'));
+    }
+    catch (Exception $e) {
+      $this->fail(t("The check_time_restrictions() doesn't accepted the good values."));
+    }
+  }
+}

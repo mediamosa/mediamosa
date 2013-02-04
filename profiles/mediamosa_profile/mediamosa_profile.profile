@@ -7,6 +7,9 @@
 // Include our helper class as autoloader is not up yet.
 require_once('mediamosa_profile.class.inc');
 
+require_once 'sites/all/modules/mediamosa/core/storage/mediamosa_storage.class.inc';
+
+
 /**
  * Implements hook_install_tasks().
  */
@@ -20,14 +23,14 @@ function mediamosa_profile_install_tasks() {
 
   // Setup the tasks.
   return array(
-    'mediamosa_profile_metadata_support_form' => array(
-      'display_name' => st('Metadata support'),
-      'type' => 'form',
-    ),
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+    ),
+    'mediamosa_profile_metadata_support_form' => array(
+      'display_name' => st('Metadata support'),
+      'type' => 'form',
     ),
     'mediamosa_profile_apache_settings_form' => array(
       'display_name' => st('Apache settings'),
@@ -74,8 +77,9 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
 }
 
 /**
- * Get the mount point.
- * Task callback.
+ * Implements hook_form().
+ *
+ * Select the metadata set(s).
  */
 function mediamosa_profile_metadata_support_form() {
   $form = array();
@@ -182,6 +186,8 @@ function system_form_install_configure_form_alter(&$form, &$form_state, $form_id
 }
 
 /**
+ * Implements hook_form().
+ *
  * Show a checklist of the installation.
  */
 function mediamosa_profile_php_settings_form($form, &$form_state, &$install_state) {
@@ -230,7 +236,7 @@ function mediamosa_profile_php_settings_form($form, &$form_state, &$install_stat
 }
 
 /**
- * Validate.
+ * Implements hook_validate().
  */
 function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
   // Get the requirements.
@@ -246,7 +252,6 @@ function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
 
 /**
  * Get the mount point.
- * Task callback.
  */
 function mediamosa_profile_storage_location_form() {
   $form = array();
@@ -261,7 +266,7 @@ function mediamosa_profile_storage_location_form() {
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa SAN/NAS Mount point'),
-    '#description' => st('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
+    '#description' => st('Make sure the webserver user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
   );
@@ -274,57 +279,48 @@ function mediamosa_profile_storage_location_form() {
   return $form;
 }
 
+/**
+ * Implements hook_validate().
+ */
 function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
-  $values = $form_state['values'];
+  // Get the mount point.
+  $mount_point = $form_state['values']['current_mount_point'];
 
-  if (trim($values['current_mount_point']) == '') {
+  if (trim($mount_point) == '') {
     form_set_error('current_mount_point', t("The current Linux mount point can't be empty."));
   }
-  elseif (!is_dir($values['current_mount_point'])) {
+  elseif (!is_dir($mount_point)) {
     form_set_error('current_mount_point', t('The current Linux mount point is not a directory.'));
   }
-  elseif (!is_writable($values['current_mount_point'])) {
+  elseif (!is_writable($mount_point)) {
     form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the webserver (@server_software).', array('@server_software' => $_SERVER['SERVER_SOFTWARE'])));
   }
 }
 
+/**
+ * Implements hook_submit().
+ */
 function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
-  // Get the form values.
-  $values = $form_state['values'];
+  // Get the mount point and make sure it ends with '/'.
+  $mount_point = mediamosa_profile::trim_uri($form_state['values']['current_mount_point']);
 
   // Set our variables.
-  variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
+  variable_set('mediamosa_current_mount_point', $mount_point);
+  variable_set('mediamosa_current_mount_point_temporary', $mount_point . 'data/transcode/');
+  variable_set('mediamosa_current_mount_point_transition', $mount_point . 'data/transition/');
 
   // Profile does not does not handle Windows installations.
-  variable_set('mediamosa_current_mount_point_windows', '\\');
+  variable_set('mediamosa_current_mount_point_windows', '\\\\');
+  variable_set('mediamosa_current_mount_point_temporary_windows', '\\\\');
+  variable_set('mediamosa_current_mount_point_transition_windows', '\\\\');
 
-  // Inside the storage location, create a MediaMosa storage structure.
-  mediamosa_profile::mountpoint_mkdir('data');
-  mediamosa_profile::mountpoint_mkdir('data/stills');
-
-  // We store each file in separate directories based on the first letter of the
-  // file. We need to create these directories.
-  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ';
-  for ($x = 0; $x < strlen($prefixes); $x++) {
-    mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
-    mediamosa_profile::mountpoint_mkdir('data/stills/' . $prefixes{$x});
-  }
-
-  // Other.
-  mediamosa_profile::mountpoint_mkdir('data/transcode');
-  mediamosa_profile::mountpoint_mkdir('links');
-  mediamosa_profile::mountpoint_mkdir('download_links');
-  mediamosa_profile::mountpoint_mkdir('ftp');
-
-  // /media is replacing /still_links.
-  mediamosa_profile::mountpoint_mkdir('media');
-  mediamosa_profile::mountpoint_mkdir('media/ticket');
-
-  // Create the htaccess file to protected the media directory.
-  mediamosa_configuration_storage::file_create_htaccess($values['current_mount_point'] . '/media', mediamosa_configuration_storage::media_get_htaccess_contents());
+  // Setup the mountpoint.
+  mediamosa_profile::setup_mountpoint();
 }
 
 /**
+ * Implements hook_form().
+ *
  * Information about cron, apache and migration.
  */
 function mediamosa_profile_cron_settings_form() {
@@ -359,6 +355,10 @@ function mediamosa_profile_cron_settings_form() {
     '#value' => t('Continue'),
   );
 
+  // Reset static for 'file_get_stream_wrappers' to solve issue of invoke
+  // stream_wrappers for mediamosa in drush
+  drupal_static_reset('file_get_stream_wrappers');
+
   // Flush all.
   drupal_flush_all_caches();
 
@@ -366,8 +366,9 @@ function mediamosa_profile_cron_settings_form() {
 }
 
 /**
+ * Implements hook_form().
+ *
  * Information about cron, apache and migration.
- * Task callback.
  */
 function mediamosa_profile_apache_settings_form() {
   $form = array();
@@ -406,7 +407,7 @@ function mediamosa_profile_apache_settings_form() {
 <p>The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p>
 <p><li>Restart your Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>
 ', array(
-      '!mount_point' => $mount_point,
+      '!mount_point' => mediamosa_profile::trim_uri($mount_point, ''),
       '!server_name_clean' => $server_name,
       '!document_root' => DRUPAL_ROOT,
       '!rel_directory' => url(),
@@ -441,10 +442,11 @@ function mediamosa_profile_apache_settings_form() {
         Allow from 127.0.0.1
      </Directory>
 
-    # ticket
-    Alias /ticket !mount_point/links
-    <Directory !mount_point/links>
+    # Media
+    Alias /media !mount_point/media
+    <Directory !mount_point/media>
       Options FollowSymLinks
+      AllowOverride All
       Order deny,allow
       Allow from All
     </Directory>
@@ -565,7 +567,7 @@ function mediamosa_profile_apache_settings_form() {
     array(
       '!server_name_clean' => $server_name_clean,
       '!document_root' => DRUPAL_ROOT,
-      '!mount_point' => $mount_point,
+      '!mount_point' => mediamosa_profile::trim_uri($mount_point, ''),
     )
   );
 
@@ -580,14 +582,14 @@ function mediamosa_profile_apache_settings_form() {
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => '<b>' . t("Single server / domain setup.") . '</b>',
-      'advanced' => '<b>' . t("Multiple server / domain setup.") . '</b>',
+      'simple' => '<b>' . t('Single server / domain setup (testing setup).') . '</b>',
+      'advanced' => '<b>' . t('Multiple server / domain setup (production setup).') . '</b>',
     ),
   );
 
   $form['apache']['local'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Single server / domain setup.'),
+    '#title' => t('Single server / domain setup (testing setup).'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'simple'),
@@ -600,7 +602,7 @@ function mediamosa_profile_apache_settings_form() {
 
   $form['apache']['multi'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Multi server/domain setup.'),
+    '#title' => t('Multi server/domain setup (production setup).'),
     '#states' => array(
       'visible' => array(   // action to take.
         ':input[name="localhost"]' => array('value' => 'advanced'),
@@ -619,12 +621,18 @@ function mediamosa_profile_apache_settings_form() {
   return $form;
 }
 
+/**
+ * Implements hook_validate().
+ */
 function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
   if (!in_array($form_state['values']['localhost'], array('simple', 'advanced'))) {
     form_set_error('', t('You must choose a setup.'));
   }
 }
 
+/**
+ * Implements hook_submit().
+ */
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   // Get current url.
   $server_name = mediamosa_profile::get_server_name();

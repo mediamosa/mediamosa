@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Represents the HTTP helper class.
  */
 class mediamosa_http {
@@ -131,6 +108,55 @@ class mediamosa_http {
 
     // Now build url.
     return $return_parts ? array('host' => implode('', $result['host']), 'uri' => implode('', $result['uri'])) : (implode('', $result['host']) . implode('', $result['uri']));
+  }
+
+  /**
+   * Wrapper around http_build_query().
+   *
+   * @param array $query
+   *   The query to rebuild.
+   *
+   * @return string
+   *   The URL encoded string.
+   */
+  public static function http_build_query(array $query) {
+    return strtr(http_build_query($query, '', '&'), array('%5B' => '[', '%5D' => ']', '%5b' => '[', '%5d' => ']'));
+  }
+
+  /**
+   * Slitup the query string.
+   *
+   * Opposite of http_build_query().
+   *
+   * @param string $query_str
+   *   The query string to split.
+   *
+   * @param array
+   *   The result array.
+   */
+  public static function parse_query($query_str) {
+    // Split the url.
+    $query = array();
+
+    // Split values.
+    foreach (explode('&', $query_str) as $valuepair) {
+      if (strpos($valuepair, '=')) {
+        list($name, $value) = explode('=', $valuepair, 2);
+        $query[urldecode($name)][] = urldecode($value);
+      }
+      else {
+        $query[urldecode($valuepair)][] = '';
+      }
+    }
+
+    // Now make single item queries with 0 keys no array.
+    foreach ($query as $name => $value) {
+      if (count($value) == 1 && key($value) == 0) {
+        $query[$name] = reset($value);
+      }
+    }
+
+    return $query;
   }
 
   /**
@@ -260,33 +286,26 @@ class mediamosa_http {
    * Do call to URL using CURL lib.
    *
    * @param string $url
+   *   The URL to call.
    * @param array $options
-   *  Extra options;
-   *   - header:
-   *     name => value pair for http header.
-   *   - use_curlproxy
-   *     set to TRUE to enable call through curlproxy (if specified).
-   *   - do_internal
-   *     Add the internal pass to the header. Remember to add /internal yourself to the url.
-   *   - do_head
-   *     true to trigger call.
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *     - do_head
+   *       Set to TRUE to do HEAD instead of GET.
    */
   public static function do_call($url, array $options = array()) {
-    $options['do_head'] = FALSE;
-    return self::do_head_call($url, $options);
-  }
-
-  /**
-   * Do a head call.
-   * Triggers the URL without getting or waiting for the output.
-   */
-  public static function do_head_call($url, array $options = array()) {
     // Set defaults.
     $options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
       'do_internal' => FALSE,
-      'do_head' => TRUE,
+      'do_head' => FALSE,
     );
 
     $curlproxy_http = NULL;
@@ -352,14 +371,53 @@ class mediamosa_http {
     $result = curl_exec($curl_handle);
     curl_close($curl_handle);
 
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
+
     return $result;
+  }
+
+  /**
+   * Do a head call.
+   *
+   * Triggers the URL without getting or waiting for the output.
+   *
+   * @param string $url
+   *   The URL to call.
+   * @param array $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *
+   * @see do_call()
+   */
+  public static function do_head_call($url, array $options = array()) {
+    $options['do_head'] = TRUE;
+    mediamosa_debug::log('Doing HEAD call to @url', array('@url' => $url));
+    $data = self::do_call($url, $options);
+    mediamosa_debug::log('Done HEAD call to @url', array('@url' => $url));
+    return $data;
   }
 
   /**
    * Wrapper for internal HEAD calls.
    *
    * @param $url
+   *   The URL to call, prefix url with /internal.
    * @param $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *
+   * @see do_head_call()
+   * @see do_call()
    */
   public static function do_head_internal_call($url, array $options = array()) {
     $options['do_internal'] = TRUE;
@@ -609,6 +667,9 @@ class mediamosa_http {
       $response .= fread($fp, 1024);
     }
     fclose($fp);
+
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
 
     // Parse response headers from the response body.
     list($response, $result->data) = explode("\r\n\r\n", $response, 2);

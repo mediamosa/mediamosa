@@ -1,0 +1,190 @@
+<?php
+/**
+ * @file
+ * Basic stream wrapper tests.
+ */
+
+// Need for test.
+
+class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa library - Library stream wrapper tests',
+      'description' => 'Testing the steam wrapper classes.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
+    );
+  }
+
+  /**
+   * Testing;
+   *
+   * unlink()
+   * mkdir()
+   * touch()
+   */
+  public function testStreamWrappers() {
+    $uuid = mediamosa_db::uuid(1);
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+    $mediafile_id = $upload['mediafile_id'];
+
+    $this->var_export($upload);
+
+    // Test some paths if we can create, detected and remove.
+    $paths = array(
+      mediamosa_storage::get_uri_mediafile_path($mediafile_id),
+      mediamosa_storage::get_uri_media_ticket(),
+      mediamosa_storage::get_uri_temporary(),
+    );
+
+    $this->var_export($paths);
+
+    foreach ($paths as $path) {
+      $this->pass(t('Trying to create directory; @path', array('@path' => $path)));
+
+      // Create location first.
+      $this->mkdir($path);
+
+      $path .= '/' . $uuid;
+
+      $this->pass(t('Trying to create file; @path', array('@path' => $path)));
+
+      $this->touch($path);
+      $this->unlink($path);
+    }
+
+    // Test for mount pount creation.
+    $mount_point = mediamosa_storage::create_local_mount_point_uri($app_id);
+    $this->assert($mount_point == 'mediamosa-storage-data://', t("Mount point matches default, got '@mountpoint'", array('@mountpoint' => $mount_point)));
+
+    // Get local storage profile.
+    $storage_profile = $this->getStorageProfile(1);
+
+    // Create class object.
+    $storage_profile_object = mediamosa_storage_profile::create_storage_instance_by_profile($storage_profile);
+
+    $mount_point = $storage_profile_object->build_mount_point_uri(1, 'global');
+    $mount_point_stills = $storage_profile_object->build_mount_point_uri(1, 'global', TRUE);
+
+    $this->assert($mount_point == 'mediamosa-storage-data://', t("Mount point matches default, got '@mountpoint'", array('@mountpoint' => $mount_point)));
+    $this->assert($mount_point_stills == 'mediamosa-storage-stills://', t("Mount point stills matches default, got '@mountpoint'", array('@mountpoint' => $mount_point_stills)));
+
+//    // Create storage profile app and attach it to default.
+//    $this->attachStorageProfile($app_id, 1, 'data', 1, 'data/stills');
+
+    $wrapper = new mediamosa_io_streamwrapper_local();
+    $path_prefix = mediamosa_storage::trim_uri($wrapper->get_storage_path_linux());
+
+    // Now do real path and check result.
+    $path = mediamosa_io::realpath('mediamosa-storage-data://' . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
+    $to = $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-data:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-stills://' . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
+    $to = $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-stills:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-temporary://' . $mediafile_id);
+    $to = $path_prefix . 'data/transcode/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-temporary:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-transition://' . $mediafile_id);
+    $to = $path_prefix . 'data/transition/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-transition:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $mediafile_id = 'doesnotexists';
+    $path = mediamosa_io::realpath('mediamosa-storage-data://'  . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
+    $this->assert($path == $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, t('mediamosa-storage-data:// must translate to @to, got @got', array('@to' => $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-stills://'  . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id));
+    $this->assert($path == $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, t('mediamosa-storage-stills:// must translate to @to, got @got', array('@to' => $path_prefix . 'data/' . $mediafile_id[0] . '/' . $mediafile_id, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-temporary://' . $mediafile_id);
+    $to = $path_prefix . 'data/transcode/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-temporary:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $path = mediamosa_io::realpath('mediamosa-storage-transition://' . $mediafile_id);
+    $to = $path_prefix . 'data/transition/' . $mediafile_id;
+    $this->assert($path == $to, t('mediamosa-storage-transition:// must translate to @to, got @got', array('@to' => $to, '@got' => $path)));
+
+    $this->assert(mediamosa_io::dirname('mediamosa-storage-data://s/sV5jcXWTGwBCoNuiotTzLXfX') == 'mediamosa-storage-data://s', 'Dirname test ok');
+    $this->assert(mediamosa_io::basename('mediamosa-storage-data://s/sV5jcXWTGwBCoNuiotTzLXfX') == 'sV5jcXWTGwBCoNuiotTzLXfX', 'Basename test ok');
+
+    // Check the preg_match split up of the uri.
+    $tests = array(
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => 'foo',
+        'mediafile_path' => 'boo',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => 'foo',
+        'mediafile_path' => '',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => '',
+        'mediafile_path' => 'boo',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => '',
+        'mediafile_path' => '',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => 'something/foo',
+        'mediafile_path' => 's/someid/somethingextra',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => '',
+        'mediafile_path' => 's/someid/somethingextra',
+      ),
+      array(
+        'scheme' => 'mediamosa-storage-data',
+        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'path' => '',
+        'mediafile_path' => 's/someid/somethingextra',
+      ),
+   );
+
+    foreach ($tests as $test) {
+      // Rebuild.
+      $uri = $test['scheme'] . '://' . (empty($test['path']) ? '' : ('/' .  $test['path'])) . (empty($test['mediafile_path']) ? '': ('/-/' . $test['mediafile_path']));
+      $mediamosa_io_streamwrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($uri);
+
+      $result = $mediamosa_io_streamwrapper->get_parts($uri);
+
+      // Rebuild result.
+      $uri_result = $result['scheme'] . '://' . (empty($result['path']) ? '' : ('/' .  $result['path'])) . (empty($result['mediafile_path']) ? '': ('/-/' . $result['mediafile_path']));
+
+      $this->assert($uri == $uri_result && $result['storage_profile_id'] == mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID, t("Uris are the same; '@uri' <-> '@uri_result'.", array('@uri' => $uri, '@uri_result' => $uri)));
+    }
+
+//    $streamwrapper_external = new mediamosa_io_streamwrapper_external_example();
+//    foreach ($tests as $test) {
+//      // Make sure its not default.
+//      $test['storage_profile_id'] = mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID + 1;
+//
+//      // Rebuild.
+//      $uri = $test['scheme'] . '://' . $test['storage_profile_id'] . (empty($test['path']) ? '' : ('/' .  $test['path'])) . (empty($test['mediafile_path']) ? '': ('/-/' . $test['mediafile_path']));
+//      $result = $streamwrapper_external->get_parts($uri);
+//
+//      // Rebuild result.
+//      $uri_result = $result['scheme'] . '://' . $result['storage_profile_id'] . (empty($result['path']) ? '' : ('/' .  $result['path'])) . (empty($result['mediafile_path']) ? '': ('/-/' . $result['mediafile_path']));
+//
+//      $this->assert($uri == $uri_result, t("Uris are the same; '@uri' <-> '@uri_result'.", array('@uri' => $uri, '@uri_result' => $uri)));
+//    }
+  }
+}

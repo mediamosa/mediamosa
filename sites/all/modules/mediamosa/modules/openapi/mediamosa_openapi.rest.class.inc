@@ -1,34 +1,8 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * OpenAPI rest calls.
  */
-
 
 /**
  * URI: /openapi/search
@@ -553,45 +527,44 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     }
 
     // We don't know, who the owner the page (USER_OWNER), that the current user visit.
-    // The klient application should change it to the appropriate user.
+    // The client application should change it to the appropriate user.
     if ($user_id_parameter && $user_id_parameter != self::USER_OWNER) {
       // Me and viewer is the current user.
       if ($user_id_parameter == self::USER_ME || $user_id_parameter == self::USER_VIEWER) {
         $user_id_parameter = $user_id;
       }
-      if (!$user_id_parameter) {
-        //$user_id_parameter = 'anonymous';
-      }
       if ($user_id_parameter) {
-        $cql[] = 'owner_id="' . $user_id_parameter . '"';
+        $cql[] = 'owner_id=="^' . $user_id_parameter . '^"';
       }
     }
 
-    if ($group_id) {
+    if ($group_id != '') {
       if ($user_id_parameter && $user_id_parameter!= self::USER_OWNER && $group_id == self::GROUP_SELF) {
         // Get the group_id.
         $a_user = mediamosa_user::get($user_id_parameter, $app_id);
 
         if (isset($a_user['group_id']) && !empty($a_user['group_id'])) {
           $group_id = mediamosa_user::get_primary_group($app_id, $user_id_parameter);
-          $cql[] = 'group_id="' . $group_id . '"';
+          if ($group_id != '') {
+            $cql[] = 'group_id=="^' . $group_id . '^"';
+          }
         }
       }
       if ($group_id != self::GROUP_SELF) {
-        $cql[] = 'group_id="' . $group_id . '"';
+        $cql[] = 'group_id=="^' . $group_id . '^"';
       }
     }
 
-    if ($asset_id) {
-      $cql[] = 'asset_id="' . $asset_id . '"';
+    if ($asset_id != '') {
+      $cql[] = 'asset_id=="^' . $asset_id . '^"';
     }
 
     if ($appid_parameter) {
       $cql[] = 'app_id="' . $appid_parameter . '"';
     }
 
-    if ($mediafile_id) {
-      $cql[] = 'mediafile_id="' . $mediafile_id . '"';
+    if ($mediafile_id != '') {
+      $cql[] = 'mediafile_id=="^' . $mediafile_id . '^"';
     }
 
     // Gluing CQL.
@@ -984,7 +957,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       mediamosa_asset_mediafile_db::GROUP_ID => NULL,
       mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => NULL,
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
       mediamosa_asset_mediafile_db::FILENAME => NULL,
       mediamosa_asset_mediafile_db::URI => $url,
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
@@ -1320,7 +1293,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
     // Mediafile check / create.
     if ($mediafile_id) {
       // If we have mediafile_id, the mediafile must exists.
-      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+      mediamosa_asset_mediafile::must_exists_cached($mediafile_id, $app_id);
     }
     else {
       // New mediafile.
@@ -1333,7 +1306,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
         mediamosa_asset_mediafile_db::GROUP_ID => NULL,
         mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
         mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => NULL,
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
         mediamosa_asset_mediafile_db::FILENAME => NULL,
         mediamosa_asset_mediafile_db::URI => $url,
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
@@ -1411,10 +1384,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
       $job_id = mediamosa_job::create_job_upload($app_id,  $asset[mediamosa_asset_db::OWNER_ID], $asset[mediamosa_asset_db::GROUP_ID], $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
 
       // Build the filename.
-      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
-
-      // Create possible missing directories.
-      mediamosa_io::mkdir(mediamosa_io::dirname($filename));
+      $filename = mediamosa_storage::get_realpath_mediafile($mediafile_id);
 
       if ($post_upload) {
         // POST: file in the data.
@@ -1454,7 +1424,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
 
       // Update the mediafile.
       $fields = array(
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
         mediamosa_asset_mediafile_db::FILENAME => $filename,
         mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
         mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE,

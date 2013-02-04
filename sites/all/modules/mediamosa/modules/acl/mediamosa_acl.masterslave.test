@@ -4,32 +4,7 @@
  * Unittests for ACL.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
-
-  // ------------------------------------------------------------------ Members.
 
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
@@ -289,7 +264,6 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Tests.
   // Test if not original is masterslaved.
-  /*
   function testAcl_MasterSlave_Non_Original() {
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
@@ -313,7 +287,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     // Create transcode job.
-    $job_id = $this->createMediafileTranscode($mediafile_id);
+    $job_id = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -392,5 +366,4 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
     // All with 'aap' in title.
     $this->cql_do_search_test_assets_2('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
   }
-  */
 }

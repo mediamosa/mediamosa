@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * MediaMosa Library.
@@ -172,6 +171,8 @@ class mediamosa_sdk {
   const ERRORCODE_UNKNOWN_JOB_PROGRESS = 1155;
   const ERRORCODE_STILL_IS_NOT_CREATABLE = 1156;
   const ERRORCODE_CREATING_DERIVATIVE = 1157;
+  const ERRORCODE_STILL_FILE_NOT_FOUND = 1158;
+  const ERRORCODE_STILL_FAILED_TO_CREATE = 1159;
 
   const ERRORCODE_STARTING_JOB_FAILED = 1301;
 
@@ -200,6 +201,8 @@ class mediamosa_sdk {
   const ERRORCODE_USERMAN_GROUP_EXISTS = 1903;
   const ERRORCODE_USERMAN_USER_EXISTS = 1904;
   const ERRORCODE_IS_UNAPPROPRIATE = 1905;
+  // 4.0.
+  const ERRORCODE_IS_INAPPROPRIATE = 1905;
 
   // @deprecated use ERRORCODE_INVALID_TICKET instead.
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
@@ -208,6 +211,16 @@ class mediamosa_sdk {
   const ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID = 2100;
 
   const ERRORCODE_INVALID_REST_CALL = 3000;
+
+  // Storage related errorcodes.
+  const ERRORCODE_STORAGE_CLASS_NOT_FOUND = 4000;
+  const ERRORCODE_STORAGE_PROFILE_NOT_FOUND = 4001;
+  const ERRORCODE_STORAGE_STREAMWRAPPER_NOT_FOUND = 4002;
+  const ERRORCODE_STORAGE_IO_ACCESS_ERROR = 4003;
+  const ERRORCODE_STORAGE_IO_ERROR = 4004;
+  const ERRORCODE_STORAGE_STREAMWRAPPER_NO_REALPATH = 4005;
+  const ERRORCODE_STORAGE_CHECKSUM_FAILURE = 4006;
+  const ERRORCODE_STORAGE_EXTERNAL_FILE_NOT_FOUND_LOCAL = 4007;
 
   // ---------------------------------------------------------------- Var Types.
   // Do not make the ID value longer than 32 characters.
@@ -251,13 +264,13 @@ class mediamosa_sdk {
   const TYPE_GROUP_ID                    = 'GROUP_ID';
   const TYPE_ASSET_ID                    = 'ASSET_ID';
   const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
+  const TYPE_MEDIAFILE_ID_PREFIX         = 'MEDIAFILE_ID_PREFIX';
   const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
-  const TYPE_MEDIAFILE_STR               = 'MEDIAFILE_STR'; // format: mediafile_id[,style][.ext] used for /media calls.
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
   const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
   const TYPE_TICKET_ID                   = 'TICKET_ID';
-  const TYPE_MEDIATICKET_STR             = 'MEDIATICKET_STR'; // extension on ticket ID, see TYPE_MEDIAFILE.
+  const TYPE_TICKET_ID_PREFIX            = 'TICKET_ID_PREFIX';
   const TYPE_JOB_ID                      = 'JOB_ID';
 
   const TYPE_DOMAIN                      = 'DOMAIN';

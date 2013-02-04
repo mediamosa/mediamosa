@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
-  * Global settings file. (1.x replacement for shared_defines).
+  * Global settings file.
   */
+
 class mediamosa_settings {
 
   // ------------------------------------------------------------------ Consts.
@@ -71,27 +47,6 @@ class mediamosa_settings {
   const ATOM_ENTRY_ID = 'MediaMosa:asset:';
   // RSS.
   const RSS_GENERATOR = 'MediaMosa RSS API';
-
-  // Path / SAN NAS Settings.
-  const SAN_NAS_DATA_FOLDER = 'data';
-  const SAN_NAS_STILLS_FOLDER = 'stills';
-  const SAN_NAS_TRANSCODE_FOLDER = 'transcode';
-
-  const SAN_NAS_MEDIA_FOLDER = 'media';
-  const SAN_NAS_TICKET_FOLDER = 'ticket';
-
-  // Ticket locations.
-  const PLAY_TICKET_LOCATION = 'links';
-  const DOWNLOAD_TICKET_LOCATION = 'download_links';
-  const STILL_TICKET_LOCATION = 'still_links';
-  const STILL_DATA_STYLE_LOCATION = 'style';
-  const STILL_LINK_STYLE_LOCATION = 'style';
-
-  // Expiration settings, in seconds.
-  const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
-  const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
-  const TICKET_EXPIRATION_STILL = 600; // 10 minutes
-  const TICKET_EXPIRATION_UPLOAD = 86400; // 24 hours
 
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
@@ -200,18 +155,6 @@ class mediamosa_settings {
   // found.
   const STATUS_MAX_TABLES = 800;
 
-  // FTP root directory under SAN/NAS.
-  const FTP_ROOT_DIR = 'ftp';
-
-  // FTP history directory under FTP_ROOT.
-  const FTP_HISTORY_DIR = 'history';
-
-  // FTP upload directory under FTP_ROOT.
-  const FTP_UPLOAD_DIR = 'upload';
-
-  // Current job.
-  const FTP_CURRENT_JOB_DIR = 'current.txt';
-
   // History extention.
   const FTP_HISTORY_EXTENTION = 'history';
 
@@ -220,11 +163,11 @@ class mediamosa_settings {
 
   // UI settings.
   const UI_TAB_WEIGHT_LIST = -10; // Weights of tab items. -10 left, +10 right.
-  const UI_TAB_WEIGHT_VIEW = -6;
-  const UI_TAB_WEIGHT_EDIT = -4;
-  const UI_TAB_WEIGHT_ADD = -9;
-  const UI_TAB_WEIGHT_DELETE = -3;
-  const UI_TAB_WEIGHT_REVISIONS = 0;
+  const UI_TAB_WEIGHT_VIEW = -10;
+  const UI_TAB_WEIGHT_EDIT = 0;
+  const UI_TAB_WEIGHT_ADD = -20;
+  const UI_TAB_WEIGHT_DELETE = 1;
+  const UI_TAB_WEIGHT_REVISIONS = 2;
 
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';
@@ -285,33 +228,17 @@ class mediamosa_settings {
   /**
    * Return the filename of the transcode  lua file.
    */
-  public static function ffmpeg_transcode_file() {
+  public static function lua_transcode_script() {
     // FFMPEG_TRANSCODE_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
 
   /**
-   * Return the filename of the windows transcode lha file.
-   */
-  public static function windows_transcode_file() {
-    // WINDOWS_TRANSCODE_FILE.
-    return 'start /min c:\lua\lua5.1 c:\lua\vpx-transcode-wmv.lua';
-  }
-
-  /**
    * Return the filename of the analyse lha file.
    */
-  public static function analyse_file() {
+  public static function lua_analyse_script() {
     // ANALYSE_FILE.
     return self::lua_base_get() . 'vpx-analyse';
-  }
-
-  /**
-   * Return the filename of the transcode lha file.
-   */
-  public static function still_file() {
-    // STILL_FILE.
-    return self::lua_base_get() . 'vpx-transcode';
   }
 
   /**

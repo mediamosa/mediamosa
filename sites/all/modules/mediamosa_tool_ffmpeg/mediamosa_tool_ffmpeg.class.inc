@@ -1,34 +1,11 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * FFmpeg tool functions.
  */
+
 class mediamosa_tool_ffmpeg {
+  // ------------------------------------------------------------------- Consts.
   /**
    * Name / ID of the module.
    */
@@ -44,7 +21,7 @@ class mediamosa_tool_ffmpeg {
    */
   const BLACK_STILL_INTERVAL = 30;
 
-  // ------------------------------------------------------- Functions (static).
+  // ---------------------------------------------------------------- Functions.
   /**
    * Test if ffmpeg uses -padtop or -vf=pad function in this version.
    *
@@ -289,8 +266,8 @@ class mediamosa_tool_ffmpeg {
 
         case 'SCENE':
           mediamosa_job_server::log_mediafile($mediafile_id_source, 'Scene detection starts');
-          $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
-          $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_source);
+          $destination_path = mediamosa_storage::get_realpath_temporary();
+          $input = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
           // Clean up I.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
@@ -314,24 +291,22 @@ class mediamosa_tool_ffmpeg {
           mediamosa_io::exec($order);
 
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.wmv');
-
   // Hot fix - end
 
           $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id_source . '_list.el', $destination_path . $mediafile_id_source . '_scene.avi');
           mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
           mediamosa_io::exec($order);
 
-          $output = NULL;
           $order = sprintf('cat %s', $destination_path . $mediafile_id_source . '_list.el');
           //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
-          mediamosa_io::exec($order, $output);
+          $output = mediamosa_io::exec($order);
           //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('output = %s', print_r($output, TRUE)));
 
           // Clean up II.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_list.el');
 
           // Analyze
-          if ($output && is_array($output) && $output != array()) {
+          if (!empty($output)) {
             //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Output is array with data'));
 
             // tbr & map from the best stream
@@ -340,9 +315,9 @@ class mediamosa_tool_ffmpeg {
             $kbs = NULL;
             $order = sprintf('ffmpeg -i %s 2>&1', $input);
             //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
-            $details = array();
-            mediamosa_io::exec($order, $details);
-            //mediamosa_job_server::log_mediafile($mediafile_id_source, 'Details: '. print_r($details, TRUE));
+            $details = mediamosa_io::exec($order);
+
+            $regs = $reg_kbs = $reg_map = array();
             foreach ($details as $line) {
               if (stripos($line, ' Stream ') !== FALSE && stripos($line, ' Video: ') !== FALSE) {
                 if (preg_match('/Stream #[0-9]*\.([0-9]*)/', $line, $reg_map) && preg_match('/ ([0-9]*) kb\/s/', $line, $reg_kbs)) {
@@ -431,7 +406,7 @@ class mediamosa_tool_ffmpeg {
               // This version is creating stills for the analysed file
               //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id_source .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION .".jpeg");
               mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
-              mediamosa_io::exec($order, $details);
+              $details = mediamosa_io::exec($order);
               //mediamosa_job_server::log_mediafile($mediafile_id_source, 'Details: '. print_r($details, TRUE));
 
               mediamosa_io::unlink($my_file);
@@ -488,7 +463,7 @@ class mediamosa_tool_ffmpeg {
 
     // Combine the string (only for linux, windows does not generate stills).
     if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-      $execution_string = sprintf('%s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $job_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
+      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
       round($duration * $framerate),
       $frametime, $duration, $framerate);
     }
@@ -496,7 +471,7 @@ class mediamosa_tool_ffmpeg {
       $size_explode = explode('x', $size);
       $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
       $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-      $execution_string = sprintf('%s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
+      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
       round($duration * $framerate), $frametime, $duration, 1);
     }
     $execution_string .= ' > /dev/null &';

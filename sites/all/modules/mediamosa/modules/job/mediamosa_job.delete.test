@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Job tests for deleted jobs.
  */
-
- /**
-  * @file
-  * Job tests for deleted jobs.
-  */
 
 /**
   * @file
@@ -40,7 +15,7 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'JOB - delete with mediafile test',
+      'name' => 'JOB - Delete mediafile test',
       'description' => 'Deleting an asset with running jobs.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );
@@ -54,9 +29,9 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Delete a mediafile with a running job.
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -71,9 +46,9 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Delete an asset with a running job.
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -87,6 +62,5 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Delete the mediafile_id from the clean up.
     $this->deleteFromCleanUp($mediafile_id);
-
   }
 }

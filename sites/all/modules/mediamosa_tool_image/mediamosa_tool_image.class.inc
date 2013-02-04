@@ -1,33 +1,9 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Image tool functions.
  */
+
 class mediamosa_tool_image {
   /**
    * Mime type: image/tiff
@@ -74,8 +50,6 @@ class mediamosa_tool_image {
     $job_server = mediamosa_job_server::get($jobserver_job_id);
     $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
 
-    $execution_string = '';
-
     if ($job_server_still) {
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE]; // wxh
       $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
@@ -85,19 +59,18 @@ class mediamosa_tool_image {
       $parameter_string[] = '-resize ' . $size;
 
       // Source.
-      $mediafile_source = mediamosa_configuration_storage::mediafile_filename_get(array(mediamosa_asset_mediafile_db::ID => $mediafile_id_source));
+      $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
       // Dest.
-      $mediafile_dest = mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg");
+      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
       $options = array(
         '@mediafile_dest' => $mediafile_dest,
         '@mediafile_source' => $mediafile_source,
         '@parameter_string' => implode(' ', $parameter_string),
-        '@status_file' => mediamosa_configuration_storage::status_file_location_get($job_id),
+        '@status_file' => mediamosa_storage::get_realpath_status_file($job_id),
       );
 
-      // mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get()
       return strtr('convert @mediafile_source @parameter_string @mediafile_dest; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file', $options);
     }
 

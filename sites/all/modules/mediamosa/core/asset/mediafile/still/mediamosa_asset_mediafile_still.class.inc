@@ -1,34 +1,9 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Stills are now mediafiles, so code for still have been moved
+ * under mediafile.
  */
-
- /**
-  * @file
-  * Stills are now mediafiles, so code for still have been moved
-  * under mediafile.
-  */
 
 class mediamosa_asset_mediafile_still {
   // ------------------------------------------------------------------ Constants.
@@ -105,43 +80,143 @@ class mediamosa_asset_mediafile_still {
   }
 
   /**
-   * Get the image types.
+   * The still file and db entry must exist.
    *
-   * @return array $types
+   * @param string $still_id
+   *   The mediafile ID of the still to check.
+   * @param string $app_id
+   *   (optional) The app ID of the still.
+   *
+   * @param array
+   *   The still (mediafile) array.
+   *
+   * @throws mediamosa_exception_error
    */
-  public static function get_types() {
-    // Assign usefull values for the third index of getimagesize() function.
-    $types = array(
-      1 => 'GIF',
-      2 => 'JPG',
-      3 => 'PNG',
-      4 => 'SWF',
-      5 => 'PSD',
-      6 => 'BMP',
-      7 => 'TIFF(intel byte order)',
-      8 => 'TIFF(motorola byte order)',
-      9 => 'JPC',
-      10 => 'JP2',
-      11 => 'JPX',
-      12 => 'JB2',
-      13 => 'SWC',
-      14 => 'IFF',
-      15 => 'WBMP',
-      16 => 'XBM',
-    );
+  public static function still_must_exist($still_id, $app_id = NULL) {
+    // Get the still mediafile.
+    $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
 
-    return $types;
+    // Get path to still.
+    $still_uri = mediamosa_storage::get_uri_mediafile($still);
+
+    if (!mediamosa_io::file_exists($still_uri)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_FILE_NOT_FOUND, array('@mediafile_id' => $still_id, '@path' => $still_uri));
+    }
+
+    return $still;
   }
+
+  /**
+   * Get the default image size setting.
+   *
+   * Provide application ID when possible, client applications can override
+   * default.
+   *
+   * @param integer $app_id
+   *   (optional) The client application ID.
+   *
+   * @return string
+   *   The default image size in WxH format.
+   */
+  public static function get_default_image_size($app_id) {
+    $default_image_size = mediamosa_app::get_still_default_size($app_id);
+
+    // Either return the application settings or the default.
+    return $default_image_size ? $default_image_size : mediamosa_settings::STILL_DEFAULT_SIZE;
+  }
+
+  /**
+   * Returns the best width and height, based on default and input.
+   *
+   * @param string $size
+   *   (optional) In WxH format.
+   * @param integer $width
+   *   (optional) The width.
+   * @param integer $height
+   *   (optional) The height.
+   * @param string $default_size
+   *   In WxH format.
+   *
+   * @return array
+   *   returns array(width, height), use list($width, $height).
+   */
+  public static function process_image_size($size = '', $width = 0 , $height = 0, $default_size = mediamosa_settings::STILL_DEFAULT_SIZE) {
+    // If width and height is not set, try to use size.
+    if (empty($width) && empty($height)) {
+      if (empty($size)) {
+        $size = $default_size;
+      }
+
+      $matches = array();
+      preg_match('/^([0-9]+)x([0-9]+)$/', $size, $matches);
+      if (!empty($matches)) {
+        $size_width = $matches[1];
+        $size_height = $matches[2];
+
+        if ($size_width >= 0 && $size_height >= 0) {
+          $width = $size_width;
+          $height = $size_height;
+        }
+      }
+    }
+
+    return array($width, $height);
+  }
+
+  /**
+   * Process and return the order and selection range.
+   *
+   * @param string $range
+   *   The range value, like 1,4-5 or 3-5
+   *
+   * @return array
+   *   The order array, generated from $range.
+   */
+  public static function process_still_range($range) {
+    $order = array();
+
+    // Any value?
+    if (empty($range)) {
+      return $order;
+    }
+
+    // Single number?
+    if (is_numeric($range)) {
+      return array($range);
+    }
+
+    foreach (explode(',', $range) as $range) {
+      if (is_numeric($range)) {
+        $order[] = $range;
+      }
+      else {
+        list($low, $high) = explode('-', $range, 2);
+        if (isset($low) && isset($high)) {
+          list($low, $high) = array(min(abs($low), abs($high)), max(abs($low), abs($high)));
+          for ($i = $low; $i <= $high; $i++) {
+            $order[] = $i;
+          }
+        }
+      }
+    }
+
+    return $order;
+  }
+
   /**
    * Create watermark.
    *
    * @param string $still_id
+   *   The still ID to create watermark on.
    * @param int $app_id
+   *   The application ID.
    * @param array $still_parameters
+   *   The still parameters.
    * @param boolean $create_new_still
+   *   The create new still file, instead of overwriting on current.
    *
-   * @return boolean
-   *   FALSE, in case of error, TRUE, in case of success, $still_id_new, in case of $create_new_still == TRUE
+   * @return string
+   *   The ID of the still with the watermark.
    */
   public static function create_watermark($still_id, $app_id, $still_parameters, $create_new_still = FALSE) {
 
@@ -158,68 +233,43 @@ class mediamosa_asset_mediafile_still {
     )));
 
     // Watermark image must exists.
-    $watermark = mediamosa_asset_mediafile::get($still_parameters[self::WATERMARK_ID], $app_id, array(), mediamosa_asset_mediafile_db::IS_STILL_TRUE);
-    if (empty($watermark[mediamosa_asset_mediafile_db::ID])) {
-      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Watermark id is not exist.'));
+    try {
+      $watermark = self::still_must_exist($still_parameters[self::WATERMARK_ID], $app_id);
+    }
+    catch (mediamosa_exception $e) {
+      self::log('Watermark MediaFile (ID: @id) was not found in database, exception message; @message.', array('@id' => $still_parameters[self::WATERMARK_ID], '@message' => $e->getMessage()));
       return;
     }
+
+    // Get the still mediafile.
+    $still = self::still_must_exist($still_id);
 
     // Get path to still.
-    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+    $still_uri = mediamosa_storage::get_uri_mediafile($still);
 
     // Get path to watermark.
-    $watermark_filename = mediamosa_configuration_storage::mediafile_still_filename_get($watermark[mediamosa_asset_mediafile_db::ID]);
+    $watermark_uri = mediamosa_storage::get_uri_mediafile($watermark);
 
-    $still_size = mediamosa_gd::getimagesize($still_filename);
-    if (!$still_size) {
-      self::log_mediafile($still_id, t('Watermark getimagesize error (still).'));
+    // Create still surface.
+    $image_result = mediamosa_gd::imagecreate($still_uri);
+    if (!is_resource($image_result)) {
+      self::log_mediafile($still_id, 'Watermark not created, unable to create PNG or JPG surface from still image (@filename).', array('@filename' => mediamosa_io::realpath_safe($still_uri)));
       return;
     }
 
-    $watermark_size = mediamosa_gd::getimagesize($watermark_filename);
-    if (!$watermark_size) {
-      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Watermark getimagesize error (watermark).'));
+    $image_watermark = mediamosa_gd::imagecreate($watermark_uri);
+    if (!is_resource($image_result)) {
+      self::log_mediafile($still_parameters[self::WATERMARK_ID], 'Watermark not created, unable to create PNG or JPG surface from watermark image (@filename).', array('@filename' => mediamosa_io::realpath_safe($watermark_uri)));
       return;
-    }
-
-    // Check the image types.
-    $types = self::get_types();
-    if (empty($types[$still_size[2]]) || empty($types[$watermark_size[2]])) {
-      self::log(t('Image type is not suitable for watermarking'));
-      return;
-    }
-    if ($types[$still_size[2]] != self::IMAGE_TYPE_JPG && $types[$still_size[2]] != self::IMAGE_TYPE_PNG) {
-      self::log_mediafile($still_id, t('Image type is not suitable for watermarking (still)'));
-      return;
-    }
-    if ($types[$watermark_size[2]] != self::IMAGE_TYPE_JPG && $types[$watermark_size[2]] != self::IMAGE_TYPE_PNG) {
-      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Image type is not suitable for watermarking (watermark)'));
-      return;
-    }
-
-    // Destination.
-    if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
-      $dest = mediamosa_gd::imagecreatefromjpeg($still_filename);
-    }
-    else {
-      $dest = mediamosa_gd::imagecreatefrompng($still_filename);
-    }
-
-    // Watermark.
-    if ($types[$watermark_size[2]] == self::IMAGE_TYPE_JPG) {
-      $src = mediamosa_gd::imagecreatefromjpeg($watermark_filename);
-    }
-    else {
-      $src = mediamosa_gd::imagecreatefrompng($watermark_filename);
     }
 
     // Values.
     $dst_x = 0;
     $dst_y = 0;
-    $src_x = 0;
-    $src_y = 0;
-    $src_w = mediamosa_gd::imagesx($src);
-    $src_h = mediamosa_gd::imagesy($src);
+    $image_watermark_x = 0;
+    $image_watermark_y = 0;
+    $image_watermark_w = mediamosa_gd::imagesx($image_watermark);
+    $image_watermark_h = mediamosa_gd::imagesy($image_watermark);
     $pct = $still_parameters[self::WATERMARK_PCT];
 
     // Destination x calculation.
@@ -227,7 +277,7 @@ class mediamosa_asset_mediafile_still {
       $dst_x = $still_parameters[self::WATERMARK_DST_X];
     }
     else {
-      $dst_x = mediamosa_gd::imagesx($dest) - $src_w - $still_parameters[self::WATERMARK_DST_X];
+      $dst_x = mediamosa_gd::imagesx($image_result) - $image_watermark_w - $still_parameters[self::WATERMARK_DST_X];
     }
 
     // Destination y calculation.
@@ -235,50 +285,48 @@ class mediamosa_asset_mediafile_still {
       $dst_y = $still_parameters[self::WATERMARK_DST_Y];
     }
     else {
-      $dst_y = mediamosa_gd::imagesy($dest) - $src_h - $still_parameters[self::WATERMARK_DST_Y];
+      $dst_y = mediamosa_gd::imagesy($image_result) - $image_watermark_h - $still_parameters[self::WATERMARK_DST_Y];
     }
 
     // Copymerge.
-    self::log_debug_high(t('Call imagecopymerge. (dest = @dest, src = @src, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct)', array(
-      '@dest' => print_r($dest, TRUE),
-      '@src' => print_r($src, TRUE),
+    self::log_debug_high(t('Calling imagecopymerge. (dest = @dest, src = @src, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct)', array(
+      '@dest' => print_r($image_result, TRUE),
+      '@src' => print_r($image_watermark, TRUE),
       '@dst_x' => print_r($dst_x, TRUE),
       '@dst_y' => print_r($dst_y, TRUE),
-      '@src_x' => print_r($src_x, TRUE),
-      '@src_y' => print_r($src_y, TRUE),
-      '@src_w' => print_r($src_w, TRUE),
-      '@src_h' => print_r($src_h, TRUE),
+      '@src_x' => print_r($image_watermark_x, TRUE),
+      '@src_y' => print_r($image_watermark_y, TRUE),
+      '@src_w' => print_r($image_watermark_w, TRUE),
+      '@src_h' => print_r($image_watermark_h, TRUE),
       '@pct' => print_r($pct, TRUE),
     )));
-    mediamosa_gd::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+
+    mediamosa_gd::imagecopymerge($image_result, $image_watermark, $dst_x, $dst_y, $image_watermark_x, $image_watermark_y, $image_watermark_w, $image_watermark_h, $pct);
 
     // Save image.
     if ($create_new_still) {
       // New still.
       $still_id_new = mediamosa_db::uuid($app_id);
-      $still_filename_new = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_new);
+      $still_new_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $still_id_new, TRUE);
 
       // Create possible missing directories.
-      mediamosa_io::mkdir(mediamosa_io::dirname($still_filename_new));
-    }
-    // Write still.
-    if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
-      mediamosa_gd::imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
-    }
-    else {
-      mediamosa_gd::imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
+      mediamosa_io::mkdir(mediamosa_io::dirname($still_new_uri));
     }
 
-    // Destroye resources.
-    mediamosa_gd::imagedestroy($dest);
-    mediamosa_gd::imagedestroy($src);
+    // Create new image file.
+    assert(mediamosa_gd::image($image_result, mediamosa_gd::get_image_type($still_uri), ($create_new_still ? $still_new_uri : $still_uri), self::SAVE_QUALITY));
 
-    // Response the new still id.
-    if ($create_new_still) {
-      return $still_id_new;
+    // New file?
+    if (!mediamosa_io::file_exists($create_new_still ? $still_new_uri : $still_uri)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_FILE_NOT_FOUND, array('@mediafile_id' => $create_new_still ? $still_id_new : $still_id, '@path' => $create_new_still ? $still_new_uri : $still_uri));
     }
 
-    return TRUE;
+    // Destroy resources.
+    mediamosa_gd::imagedestroy($image_result);
+    mediamosa_gd::imagedestroy($image_watermark);
+
+    // Return the new still ID or TRUE.
+    return $create_new_still ? $still_id_new : $still_id;
   }
 
   /**
@@ -299,11 +347,11 @@ class mediamosa_asset_mediafile_still {
   public static function create($asset_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
-    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+    $still_new_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $still_id, TRUE);
 
     // Check if still exists.
-    if (!mediamosa_io::file_exists($still_filename)) {
-      mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File not exists.', $still_parameters);
+    if (!mediamosa_io::file_exists($still_new_uri)) {
+      mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File does not exists.', $still_parameters);
 
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
@@ -311,7 +359,7 @@ class mediamosa_asset_mediafile_still {
     // Handle watermark.
     self::create_watermark($still_id, $app_id, $still_parameters);
 
-    $size = mediamosa_gd::getimagesize($still_filename);
+    $size = mediamosa_gd::get_image_size($still_new_uri);
     if (!$size) {
       mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
 
@@ -325,14 +373,21 @@ class mediamosa_asset_mediafile_still {
     // Mime type.
     $mime_type = $size['mime'];
 
-    // Set file_type of still based on the mime type of the image.
-    $pos = strrpos($mime_type, '/');
-    $file_extension = ($pos === FALSE ? '' : mediamosa_unicode::substr($mime_type, $pos + 1));
+    // Get file extension based on the mime type of the image.
+    $file_extension = mediamosa_mimetype::mimetype2extension($mime_type);
 
     // Get file size of still.
-    $file_size = mediamosa_io::filesize($still_filename);
+    $file_size = mediamosa_io::filesize($still_new_uri);
+
+    // Get parent filename.
+    $filename = mediamosa_io::get_base_filename(mediamosa_asset_mediafile::get_parent_filename($still_id));
+    $filename = $file_extension == '' ? $filename : ($filename . '.' . $file_extension);
+
+    // Get MD5.
+    $md5 = mediamosa_io::md5_file($still_new_uri);
 
     if ($still_default) {
+      assert($mediafile_id_source != '');
       $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
       // Clear the earlier default mark on the video (media) file.
       mediamosa_db::db_query(
@@ -363,7 +418,8 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::APP_ID => $app_id,
         mediamosa_asset_mediafile_db::OWNER_ID => $owner_id,
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id, TRUE),
+        mediamosa_asset_mediafile_db::FILENAME => $filename,
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
         mediamosa_asset_mediafile_db::IS_STILL => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $mediafile_id_source,
@@ -390,11 +446,15 @@ class mediamosa_asset_mediafile_still {
         'prop_name' => mediamosa_asset_mediafile_metadata::HEIGHT,
         'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
       ),
-      //mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE => '',
       array(
         'value' => $file_size,
         'prop_name' => mediamosa_asset_mediafile_metadata::FILESIZE,
         'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+      ),
+      array(
+        'value' => $md5,
+        'prop_name' => mediamosa_asset_mediafile_metadata::MD5,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
       ),
       array(
         'value' => $mime_type,
@@ -430,6 +490,9 @@ class mediamosa_asset_mediafile_still {
     mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($still_id, $metadatas);
 
     mediamosa_job::post_create_job_finished($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, '', $still_parameters);
+
+    //  Relocate still if final storage location is not local.
+    mediamosa_storage::relocate_mediafile($app_id, $still_id, TRUE);
   }
 
   /**
@@ -510,106 +573,57 @@ class mediamosa_asset_mediafile_still {
   }
 
   /**
-   * Find all stills of an asset.
-   *
-   * @param string $asset_id
-   * @return array
-   */
-  public static function find_asset_all_still($asset_id) {
-    $still_ids = mediamosa_db::db_query(
-      "SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
-      WHERE #asset_id = :asset_id AND #is_still = :is_still_true",
-      array(
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-        ':asset_id' => $asset_id,
-        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
-        ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
-      )
-    )->fetchCol();
-    return $still_ids;
-  }
-
-  /**
    * Find default still or at least the first one you find.
    *
    * @param string $asset_id
-   * @return string
+   *   The asset ID to get default still from.
+   *
+   * @return array
+   *   The found mediafile still or FALSE.
    */
   public static function find_default($asset_id) {
 
     // Try default 1st.
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
-    $still_id = mediamosa_db::db_query_range(
-      'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
-      JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
-      WHERE m.#asset_id = :asset_id AND m.#is_still = :is_still_true AND mm.#still_default = :still_default_true AND mm.#prop_id = :prop_id
-      ORDER BY mm.#metadata_id DESC',
-      0,
-      1,
-      array(
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-        ':asset_id' => $asset_id,
-        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
-        ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
-        '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
-        ':prop_id' => $prop_id,
-        '#still_default' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
-        ':still_default_true' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT_TRUE,
-        '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
-      )
-    )->fetchField();
+
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfmd', 'mfmd.mediafile_id = mf.mediafile_id');
+    $still = $query
+      ->fields('mf')
+      ->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE)
+      ->condition('mfmd.' . mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
+      ->condition('mfmd.' . mediamosa_asset_mediafile_metadata_db::VAL_CHAR, mediamosa_asset_mediafile_metadata::STILL_DEFAULT_TRUE)
+      ->orderBy('mfmd.' . mediamosa_asset_mediafile_metadata_db::ID, 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchAssoc();
 
     // Not found? Try any.
-    if (!$still_id) {
-      $still_id = mediamosa_db::db_query_range(
-        "SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
-        JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
-        WHERE m.#asset_id = :asset_id AND m.#is_still = :is_still_true
-        ORDER BY mm.#metadata_id DESC",
-        0,
-        1,
-        array(
-          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-          ':asset_id' => $asset_id,
-          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
-          ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
-          '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
-        )
-      )->fetchField();
+    if (!$still) {
+      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+      $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfmd', 'mfmd.mediafile_id = mf.mediafile_id');
+      $still = $query
+        ->fields('mf')
+        ->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+        ->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE)
+        ->orderBy('mfmd.' . mediamosa_asset_mediafile_metadata_db::ID, 'DESC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchAssoc();
     }
 
     // Check if the still id is in the database
-    if (!$still_id) {
+    if (!$still) {
       // There isn't any still
-      return;
+      return FALSE;
     }
 
     // Check if the still is ok.
-    self::check($still_id);
+    mediamosa_storage::file_must_exist($still[mediamosa_asset_mediafile_db::ID]);
 
-    // Return our ID.
-    return $still_id;
-  }
-
-  /**
-   * Check if still file is available.
-   *
-   * @param string $still_id
-   */
-  public static function check($still_id) {
-    // Check if still file exists.
-    $filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
-    if (!file_exists($filename)) {
-      throw new mediamosa_exception_error_file_not_found(array('@filename' => $filename));
-    }
+    // Return our mediafile still array.
+    return $still;
   }
 
   /**
@@ -634,59 +648,56 @@ class mediamosa_asset_mediafile_still {
    *   mediamosa_error::ERRORCODE_CREATING_DERIVATIVE
    */
   public static function image_style_create_derivative($mediafile_id, $style_id) {
-    // The original still.
-    $source_still = mediamosa_configuration_storage::data_still_get_file($mediafile_id);
-    if (mediamosa_io::file_exists($source_still)) {
-      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id)); // not found?
-    }
-
     // Validate the style.
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+    // The original still.
+    $still_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+    if (mediamosa_io::file_exists($still_uri)) {
+      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
+    }
 
     // Make sure the mediafile is a still.
     if ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] != mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
       throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
     }
 
-    // Need app_id.
-    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
-
     // Get the style.
-    $still_style = mediamosa_asset_mediafile_still_style::get($style_id, $app_id);
+    $still_style = mediamosa_asset_mediafile_still_style::get($style_id, $mediafile[mediamosa_asset_mediafile_db::APP_ID]);
     if (!$still_style) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => $source_still));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => mediamosa_io::realpath_safe($still_uri)));
     }
 
     // The [mount_point]/data/still version does not have a extension (like the
     // original).
-    $mediafile_str = mediamosa_asset_mediafile_media::mediafile_str_build($mediafile_id, '', $style_id);
+    $filename = mediamosa_media::filename_build($mediafile_id, '', $style_id);
 
     // The destination still.
-    $destination_still = mediamosa_configuration_storage::data_still_get_file($mediafile_str);
+    $destination_still_uri = mediamosa_storage::create_local_mediafile_uri($mediafile[mediamosa_asset_mediafile_db::APP_ID], $filename, TRUE);
 
     // Create the derivative if not already.
-    if (!mediamosa_io::file_exists($destination_still)) {
+    if (!mediamosa_io::file_exists($destination_still_uri)) {
       // Load the style.
       $style_array = image_style_load($style_id);
       if (!empty($style_array)) {
         // Create the resized image.
-        if (!image_style_create_derivative($style_array, $source_still, $destination_still)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => $source_still));
+        if (!image_style_create_derivative($style_array, mediamosa_io::realpath($still_uri), $destination_still_uri)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style_id, '@path' => mediamosa_io::realpath_safe($still_uri)));
         }
       }
     }
 
-    return $destination_still;
+    return mediamosa_io::realpath($destination_still_uri);
   }
 
   /**
    * Delete a still from database and file.
    *
-   * @param $asset_id
+   * @param string $asset_id
    *  The asset_id. (will remove all stills from this asset_id).
-   * @param $mediafile_id
+   * @param string $mediafile_id
    *  Remove specific from Mediafile parent.
-   * @param $still_id
+   * @param string $still_id
    *  Remove specific still.
    */
   public static function delete($asset_id, $mediafile_id = '', $still_id = '') {
@@ -752,52 +763,41 @@ class mediamosa_asset_mediafile_still {
     $mediafile_ids = array();
     foreach ($mediafiles as $mediafile) {
       // Build the path and filename of the still.
-      $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($mediafile['mediafile_id'], $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      $still_uri = mediamosa_storage::get_uri_mediafile($mediafile);
       if (isset($mediafile_id) && $mediafile_id) {
-        mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $mediafile_filename), $asset_id);
+        mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @filename', array('@filename' => $still_uri), $asset_id);
       }
 
       // Remove data from SAN/NAS.
 
       // Ticket part.
-      $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
+      $query = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 't');
       $query
-        ->condition('t.' . mediamosa_ticket_db::MEDIAFILE_ID, $mediafile['mediafile_id'])
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
-        ->fields('t', array(mediamosa_ticket_db::ID,));
+        ->condition('t.' . mediamosa_media_ticket_db::MEDIAFILE_ID, $mediafile['mediafile_id'])
+        ->condition('t.' . mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::TICKET_TYPE_STILL)
+        ->fields('t', array(mediamosa_media_ticket_db::ID,));
       $result = $query->execute();
       foreach ($result as $record) {
         // Ticket.
-        $ticket_id = $record[mediamosa_ticket_db::ID];
-
-        // Get the app id.
-        $app_id = $record[mediamosa_ticket_db::APP_ID];
+        $ticket_id = $record[mediamosa_media_ticket_db::ID];
 
         // Remove all tickets symlinks.
         mediamosa_io::exec(
           strtr(
-            'find @media_ticket_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
+            'find @media_ticket_location -maxdepth 4 -mindepth 4 -name "@wildmatch*" -type l -delete',
             array(
-              '@media_ticket_location' => mediamosa_configuration_storage::media_get_ticket_path(),
+              '@media_ticket_location' => mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_media_ticket()) . 'still',
               '@wildmatch' => $ticket_id,
             )
           )
         );
       }
 
-      // Remove all permanent symlinks.
-      mediamosa_io::exec(
-        strtr(
-          'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
-          array(
-            '@media_location' => mediamosa_configuration_storage::media_get_path(),
-            '@wildmatch' => $mediafile['mediafile_id'],
-          )
-        )
-      );
+      // Remove public (permenant) link.
+      mediamosa_media::remove_public_link($mediafile['app_id'], $mediafile['mediafile_id']);
 
       // Remove stills.
-      mediamosa_io::unlink($still_filename);
+      mediamosa_io::unlink($still_uri);
 
       // Collect the mediafile id of the still.
       $mediafile_ids[] = $mediafile['mediafile_id'];
@@ -820,9 +820,9 @@ class mediamosa_asset_mediafile_still {
         ->execute();
 
       // Remove tickets.
-      mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME)
-        ->condition(mediamosa_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
-        ->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
+      mediamosa_db::db_delete(mediamosa_media_ticket_db::TABLE_NAME)
+        ->condition(mediamosa_media_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
+        ->condition(mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::TICKET_TYPE_STILL)
         ->execute();
     }
 
@@ -904,19 +904,15 @@ class mediamosa_asset_mediafile_still {
   /**
    * Remove the style files of an specific style.
    *
+   * @todo: needs work.
    */
   public static function delete_files($app_id) {
-    // Get media path, remove the symlinks.
-    $media_app_path = mediamosa_configuration_storage::media_get_path($app_id);
-
-    // Remove originals.
   }
 
   /**
    * Set the default still.
-   * 1.x: _media_management_set_still_default
+   *
    * FIXME: the mediafile id unused.
-   * 2.x: no longer returns TRUE by default.
    *
    * @param integer $app_id
    *  Application ID.
@@ -996,45 +992,5 @@ class mediamosa_asset_mediafile_still {
         ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
       )
     );
-  }
-
-  /**
-   * Remove the permanent symlink to a still.
-   *
-   * @param string $still_id
-   */
-  public static function remove_permanent_link($app_id, $still_id) {
-    // Remove permanent stills.
-    mediamosa_io::exec(
-      strtr(
-        'find @media_location -maxdepth 2 -mindepth 2 -name "@wildmatch*" -type l -delete',
-        array(
-          '@media_location' => mediamosa_configuration_storage::media_get_path($app_id),
-          '@wildmatch' => $still_id,
-        )
-      )
-    );
-  }
-
-  /**
-   * Test if a permanent still link can be made.
-   *
-   * @param string $still_id
-   *
-   * @throws mediamosa_exception_error_is_unappropriate
-   *         Will throw mediamosa_exception_error_is_unappropriate when your
-   *         still link is not allowed.
-   */
-  public static function is_still_permanent($still_id, $is_app_admin = FALSE) {
-    // Protected mediafiles (stills) can not be permanent.
-    try {
-      return !mediamosa_asset_mediafile::is_mediafile_protected($still_id, $is_app_admin);
-    }
-    catch (mediamosa_exception_error_is_unappropriate $e) {
-      throw $e;
-    }
-    catch (mediamosa_exception $e) {
-      return FALSE;
-    }
   }
 }

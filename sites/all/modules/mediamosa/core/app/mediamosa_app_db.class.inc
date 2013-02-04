@@ -1,42 +1,18 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * App database class object.
  */
+
 class mediamosa_app_db {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Table name;
   const TABLE_NAME = 'mediamosa_app';
 
   // Database fields;
-  const NID = 'nid';  // 1.x - caid
+  const NID = 'nid';
   const VID = 'vid';
-  const APP_ID = 'app_id'; // 1.x id (this is the APP_ID)
+  const APP_ID = 'app_id';
   const APP_NAME = 'app_name';
   const APP_NAME_LENGTH = 30;
   const TRANSCODING_POSITION_FROM = 'transcoding_position_from';
@@ -107,7 +83,11 @@ class mediamosa_app_db {
   const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
   const TOOL_ANALYSE = 'tool_analyse';
 
-  // ------------------------------------------------------------------ Functions.
+  // Pseudo fields; these are not stored or are part of the installation.
+  const STORAGE_URI = 'storage_uri';
+  const STORAGE_STILLS_URI = 'storage_stills_uri';
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Returns all fields.
    */
@@ -115,7 +95,7 @@ class mediamosa_app_db {
     require_once 'mediamosa_app.install.inc';
 
     // Get the schema.
-    $a_schema = mediamosa_app_schema();
-    return array_keys($a_schema[mediamosa_app_db::TABLE_NAME]['fields']);
+    $schema = mediamosa_app_schema();
+    return array_keys($schema[mediamosa_app_db::TABLE_NAME]['fields']);
   }
 }

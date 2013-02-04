@@ -1,0 +1,50 @@
+<?php
+/**
+ * @file
+ * Provide tests.
+ *
+ * @author Jimmy Berry ("boombatower", http://drupal.org/user/214218)
+ */
+
+class AWSSDKUnitTest extends DrupalUnitTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'AWS SDK',
+      'description' => 'Ensure that AWS SDK libraries integration and configuration work properly.',
+      'group' => 'AWS SDK',
+    );
+  }
+
+  /**
+   * Ensure that AWS SDK libraries integration and configuration work properly.
+   */
+  function testLibrary() {
+    // Set AWS SDK setting for checking later.
+    global $conf;
+    $conf['aws_key'] = '1337';
+    $conf['aws_secret'] = 'secret';
+
+    // Ensure the requirements check out properly and configuration settings
+    // were success loaded since awssdk_requirements() checks for them.
+    require_once 'includes/install.inc';
+    $requirements = awssdk_requirements('runtime');
+    if (!$this->assertEqual($requirements['awssdk']['severity'], REQUIREMENT_OK, 'AWS SDK library loaded and compatible.')) {
+      return;
+    }
+
+    // Ensure the version detection pattern works.
+    $info = libraries_load('awssdk');
+    $this->assertTrue($info['version'], 'Version detected (' . $info['version'] . ').');
+
+    // Ensure that the integration file was loaded.
+    $this->assertTrue(defined('CFRUNTIME_NAME') && CFRUNTIME_NAME == 'aws-sdk-php', 'Library integration file sdk.class.php loaded.');
+
+    // Ensure that the configuration was merged with the defaults and loaded.
+    $config = awssdk_config_load();
+    $this->assertEqual($config['key'], $conf['aws_key'], 'Configured setting for key overwrote default setting.');
+    $this->assertEqual($config['secret'], $conf['aws_secret'], 'Configured setting for secret overwrote default setting.');
+
+    $this->assertEqual($config['default_cache_config'], '', 'Configured default for default_cache_config provided.');
+    $this->assertEqual($config['certificate_authority'], FALSE, 'Configured default for certificate_authority provided.');
+  }
+}

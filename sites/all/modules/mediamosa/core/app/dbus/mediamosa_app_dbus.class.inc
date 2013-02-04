@@ -10,6 +10,7 @@ class mediamosa_app_dbus {
   const APP_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
   const APP_AUTH_SERVER_GUID = 'server_guid';
 
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the shared key for the application.
    *

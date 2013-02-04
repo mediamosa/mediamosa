@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The install file for asset media still style.
@@ -54,7 +29,7 @@ function _mediamosa_asset_mediafile_still_style_uninstall() {
 function mediamosa_asset_mediafile_still_style_schema() {
 
   $schema[mediamosa_asset_mediafile_still_style_db::TABLE_NAME] = array(
-  'description' => 'The asset mediafile still style table.',
+    'description' => 'The asset mediafile still style table.',
     'fields' => array(
       mediamosa_asset_mediafile_still_style_db::ID => array(
         'type' => 'varbinary',
@@ -73,10 +48,6 @@ function mediamosa_asset_mediafile_still_style_schema() {
     'indexes' => array(
       'idx_' . mediamosa_asset_mediafile_still_style_db::APP_ID => array(mediamosa_asset_mediafile_still_style_db::APP_ID),
     ),
-    //'foreign keys' => array(
-    //  mediamosa_asset_mediafile_still_style_db::ID => array('image_styles' => 'name'),
-    //  mediamosa_asset_mediafile_still_style_db::APP_ID => array(mediamosa_app_db::TABLE_NAME => mediamosa_app_db::APP_ID),
-    //),
   );
 
   return $schema;

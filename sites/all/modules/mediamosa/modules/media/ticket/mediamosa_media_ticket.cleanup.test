@@ -1,0 +1,126 @@
+<?php
+/**
+ * @file
+ * Play proxy still unittests.
+ */
+
+class MediaMosaMediaTicketCleanupTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Ticket / files cleanup',
+      'description' => 'Tests if the media tickets are cleaned up and temporary files are removed when deleted.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+    );
+  }
+
+  /**
+   * Check ticket and files cleanup.
+   */
+  public function testMediaTicketCleanup() {
+    // App ids.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg(), 'transcode_inherits_acl' => TRUE, 'downloadable' => TRUE, 'transcode' => array($this->getDefaultTranscodeProfile())));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create still.
+    $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $stills = reset($stills);
+    $this->var_export($stills);
+    $this->assertTrue(isset($stills['stills']['still_id']), 'Found one still.');
+
+    $still = $stills['stills'];
+    $this->var_export($still);
+
+    // Protect original and still with ACL so we get ticket links.
+    $this->setMediafileAcl($mediafile_id, array('acl_user_id' => 'johndoe'));
+    $this->setMediafileAcl($still['still_id'], array('acl_user_id' => 'johndoe'));
+
+    // Got 3 ticket types to clean up;
+    // VIEW, DOWNLOAD and STILL.
+    //
+    // First need to create the ticket links.
+
+    // View still.
+    $parameters = array(
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $response_uri = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->var_export($response_uri);
+
+    // Download still.
+    $response_download = $this->do_media_view_download($asset_id, $mediafile_id);
+    $this->var_export($response_download);
+
+    // View still .
+    $response_still = $this->do_media_view_still($asset_id);
+    $this->var_export($response_still);
+
+    // Get ticket IDs.
+    $tickets = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt', array(mediamosa_media_ticket_db::ID, mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::MEDIAFILE_ID, mediamosa_media_ticket_db::ISSUED))
+      ->execute()
+      ->fetchAllAssoc(mediamosa_media_ticket_db::ID);
+
+    $this->var_export($tickets);
+    $this->assert(count($tickets) == 3, 'Found 3 tickets');
+
+    // Check if 3 types ticket links exists.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]] = mediamosa_asset_mediafile::get($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_exists($uri);
+    }
+
+    $this->pass('Cleanup pass 1');
+
+    // Now run cleanup.
+    mediamosa_media_ticket::ticket_cleanup();
+
+    // All tickets should be still here.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_exists($uri);
+    }
+
+    // Now run cleanup but put expire on 0.
+    variable_set('mediamosa_ticket_expiration_view', 1);
+    variable_set('mediamosa_ticket_expiration_download', 1);
+    variable_set('mediamosa_ticket_expiration_still', 1);
+
+    $this->pass('Cleanup pass 2');
+
+    // Wait 2 minutes so tickets timeout.
+    drupal_set_time_limit(120);
+    sleep(120);
+
+    // Clean up for real.
+    mediamosa_media_ticket::ticket_cleanup();
+
+    // All tickets should be gone.
+    foreach ($tickets as $ticket_id => $ticket) {
+      $filename = mediamosa_media::get_media_filename($mediafile[$ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]]);
+      $uri = mediamosa_storage::get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket[mediamosa_media_ticket_db::TICKET_TYPE]);
+      $this->file_not_exists($uri);
+    }
+
+    // All tickets should be gone.
+    $tickets = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt', array(mediamosa_media_ticket_db::ID, mediamosa_media_ticket_db::TICKET_TYPE, mediamosa_media_ticket_db::MEDIAFILE_ID, mediamosa_media_ticket_db::ISSUED))
+      ->execute()
+      ->fetchAllAssoc(mediamosa_media_ticket_db::ID);
+
+    $this->var_export($tickets);
+    $this->assert(count($tickets) == 0, 'Found no tickets');
+  }
+}

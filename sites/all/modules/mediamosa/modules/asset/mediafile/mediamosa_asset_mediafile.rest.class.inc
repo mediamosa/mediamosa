@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The REST calls of the mediamosa_asset_mediafile module.
  */
-
- /**
-  * @file
-  * The REST calls of the mediamosa_asset_mediafile module.
-  */
 
 /**
  * URI: /mediafile/count
@@ -41,9 +16,9 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
@@ -63,7 +38,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -96,9 +71,9 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -114,7 +89,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -122,14 +97,11 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 
     $app_ids = $this->get_param_value_app();
 
-    // Get the 1st app.
-    $app_id = reset($app_ids);
-
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $show_stills = $this->get_param_value(self::SHOW_STILLS);
 
     // Must exists.
-    mediamosa_asset_mediafile::must_exists($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     // Must have access.
     mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile_id, $app_ids);
@@ -160,9 +132,9 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -188,7 +160,7 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
@@ -209,7 +181,6 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
 
     // Create output.
     $items = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai);
-
 
     // Add to response.
     if (!empty($items['mediafile'])) {
@@ -235,9 +206,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
-
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -262,11 +231,11 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
@@ -330,7 +299,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
     $count = $query->countQuery()->execute()->fetchField();
 
-    // Moet een subasset zijn en alleen deze mediafile als kind.
+    // Must be subasset or is this the only child?
     $delete_asset = (!is_null($a_asset['parent_id']) && $count == 1);
 
     if ($delete == self::DELETE_CASCADE) {
@@ -356,7 +325,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
       mediamosa_asset_mediafile::set_new_original($mediafile_id, $new_original);
     }
 
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
 
     // update de timestamps van de asset
     mediamosa_asset::update_asset_timestamps($a_asset[mediamosa_asset_db::ID]);
@@ -384,9 +353,9 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -409,7 +378,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         ),
         self::IS_DOWNLOADABLE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
+          self::VAR_DESCRIPTION => 'Mediafile can be downloaded. Only in combination with filename; must be FALSE when URI is used.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_ORIGINAL_FILE => array(
@@ -430,7 +399,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         ),
         self::SANNAS_MOUNT_POINT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The location path of the file.',
+          self::VAR_DESCRIPTION => 'The location path of the file. Only used in combination with filename.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::MEDIAFILE_ID => array(
@@ -447,18 +416,17 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
-    $is_original_file = $this->get_param_value(self::IS_ORIGINAL_FILE);
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
@@ -481,10 +449,10 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     }
 
     // Must exists.
-    $a_asset = mediamosa_asset::must_exists($asset_id);
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Check owner of parent asset, need ownership.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Want to copy these fields to new mediafile.
     $params = array(
@@ -517,7 +485,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
 
     // Ok add to output.
-    $o_mediamosa->add_item(array('mediafile_id' => $mediafile_id));
+    $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
 
     // Done.
   }
@@ -542,9 +510,9 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
@@ -586,11 +554,11 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
@@ -633,6 +601,6 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $fields);
 
     // Set all OK.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

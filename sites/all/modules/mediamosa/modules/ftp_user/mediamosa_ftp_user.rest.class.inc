@@ -1,34 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
- /**
-  * @file
-  *
-  */
-
 /**
  * @file
  * FTP users module
@@ -43,9 +13,6 @@ define('MEDIAMOSA_FTP_CREDENTIAL_LENGTH', 8);
  *      /ftp/list (deprecated)
  *
  * Method: GET
- *
- * 1.x: ftp_user_list
- *
  */
 class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -88,9 +55,6 @@ class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
  *      /ftp/create
  *
  * Method: POST
- *
- * 1.x: ftp_user_create
- *
  */
 class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -146,10 +110,10 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
 
     // Create FTP dir.
-    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . '/' . mediamosa_configuration_storage::ftp_location_get() . '/' . $username;
+    $user_home_dir = mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_ftp()) . $username;
 
     try {
-      mediamosa_io::mkdir($user_home_dir, TRUE, 0775);
+      mediamosa_io::mkdir($user_home_dir);
     }
     catch (mediamosa_exception $e) {
       // Ignore.

@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Jobs Module REST calls.
  */
-
- /**
-  * @file
-  * Jobs Module REST calls.
-  */
 
 /**
  * URI: /job/$job_id/status
@@ -153,8 +128,8 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Get params.
     $job_id = $this->get_param_value(self::JOB_ID);
@@ -173,10 +148,10 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
     mediamosa_job::must_exists($job_id);
 
     // Get complete job.
-    $a_job_ext = mediamosa_job::get_job_ext($job_id);
+    $job_ext = mediamosa_job::get_job_ext($job_id);
 
     // Update the job.
-    mediamosa_job::update_status($a_job_ext, $status, $progress, $error_description);
+    mediamosa_job::update_status($job_ext, $status, $progress, $error_description);
 
     // Set Ok.
     $mediamosa->set_result_okay();
@@ -242,8 +217,8 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Get params.
@@ -259,7 +234,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     }
 
     // Create it.
-    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), $priority, $hint);
+    $job_id = mediamosa_job::create_job_analyse($app_id, $user_id, $is_app_admin, $mediafile_id, $priority, $hint);
 
     // Add job_id.
     $mediamosa->add_item(array('job_id' => $job_id));
@@ -305,8 +280,8 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $job_id = $this->get_param_value(self::JOB_ID);
     $uploaded_file_size = $this->get_param_value(self::UPLOADED_FILE_SIZE);
@@ -563,8 +538,8 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
@@ -588,7 +563,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
       'start_frame' => $this->get_param_value(self::START_FRAME),
       'end_frame' => $this->get_param_value(self::END_FRAME),
-      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id)),
+      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id)),
       'h_padding' => $this->get_param_value(self::H_PADDING),
       'v_padding' => $this->get_param_value(self::V_PADDING),
       'tag' => $this->get_param_value(self::TAG),
@@ -603,21 +578,21 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     );
 
     // Webservice must be enabled.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_JOBS, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_JOBS, $app_ids);
 
     // Make sure the mediafile exists, returns the mediafile.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Check watermark id, if exists.
     if ($watermark_id) {
-      mediamosa_asset_mediafile::must_exists($watermark_id, $app_id);
+      mediamosa_asset_mediafile::must_exists_cached($watermark_id, $app_id);
     }
 
     if (in_array($job_type, array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_UPLOAD))) {
       mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
     }
 
-    if (!empty($a_mediafile[mediamosa_asset_mediafile_db::URI])) {
+    if (!empty($mediafile[mediamosa_asset_mediafile_db::URI])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE, array('@mediafile_id' => $mediafile_id));
     }
 
@@ -639,7 +614,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         break;
 
       default:
-        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
+        $job_id = mediamosa_job::create_job($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority);
         break;
     }
 
@@ -681,8 +656,8 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $user_id = $this->get_param_value(self::USER_ID);
@@ -693,22 +668,22 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     // Get the count.
     $mediamosa->item_count_total = $result->found_rows;
 
-    foreach ($result as $a_row) {
-      $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
+    foreach ($result as $row) {
+      $started_unix = isset($row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($row[mediamosa_job_db::STARTED]) : '';
 
-      $a_job = array();
+      $job = array();
 
-      $a_job['id'] = $a_row[mediamosa_job_db::ID];
-      $a_job['owner'] = $a_row[mediamosa_job_db::OWNER_ID];
-      $a_job['status'] = $a_row[mediamosa_job_db::JOB_STATUS];
-      $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
-      $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
-      $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
-      $a_job['started_unix'] = $started_unix;
-      $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
+      $job['id'] = $row[mediamosa_job_db::ID];
+      $job['owner'] = $row[mediamosa_job_db::OWNER_ID];
+      $job['status'] = $row[mediamosa_job_db::JOB_STATUS];
+      $job['progress'] = $row[mediamosa_job_db::PROGRESS];
+      $job['priority'] = $row[mediamosa_job_db::PRIORITY];
+      $job['job_type'] = $row[mediamosa_job_db::JOB_TYPE];
+      $job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
+      $job['started_unix'] = $started_unix;
+      $job['error_description'] = $row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $mediamosa->add_item($a_job);
+      $mediamosa->add_item($job);
     }
   }
 }
@@ -718,9 +693,6 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
  * Method: GET
  *
  * Return list of jobs based on asset_id
- *
- * 1.x: vpx_jobscheduler_get_asset_job_list
- *
  */
 class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -780,8 +752,8 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
-    $a_app_ids = $this->get_param_value_app();
-    $first_app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $first_app_id = reset($app_ids);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -790,35 +762,33 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $offset =  $this->get_param_value_offset();
 
     // Must exist.
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // We show all data is it is app_admin or first element in application ID array is zero.
     $is_full_access = $is_app_admin || ($first_app_id == 0);
 
-    $item_count_total = NULL;
-
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($a_app_ids, $user_id, $is_full_access, FALSE, $asset_id, '', $cql, $limit, $offset);
+    $result = mediamosa_job::get_job_list($app_ids, $user_id, $is_full_access, FALSE, $asset_id, '', $cql, $limit, $offset);
 
     // Get the count.
     $mediamosa->item_count_total = $result->found_rows;
 
-    foreach ($result as $a_row) {
-      $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
+    foreach ($result as $row) {
+      $started_unix = isset($row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($row[mediamosa_job_db::STARTED]) : '';
 
-      $a_job = array();
+      $job = array();
 
-      $a_job['id'] = $a_row[mediamosa_job_db::ID];
-      $a_job['owner'] = $a_row[mediamosa_job_db::OWNER_ID];
-      $a_job['status'] = $a_row[mediamosa_job_db::JOB_STATUS];
-      $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
-      $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
-      $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
-      $a_job['started_unix'] = $started_unix;
-      $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
+      $job['id'] = $row[mediamosa_job_db::ID];
+      $job['owner'] = $row[mediamosa_job_db::OWNER_ID];
+      $job['status'] = $row[mediamosa_job_db::JOB_STATUS];
+      $job['progress'] = $row[mediamosa_job_db::PROGRESS];
+      $job['priority'] = $row[mediamosa_job_db::PRIORITY];
+      $job['job_type'] = $row[mediamosa_job_db::JOB_TYPE];
+      $job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
+      $job['started_unix'] = $started_unix;
+      $job['error_description'] = $row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $mediamosa->add_item($a_job);
+      $mediamosa->add_item($job);
     }
   }
 }
@@ -862,15 +832,15 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
 
     // Must exists.
-    mediamosa_asset_mediafile::must_exists($mediafile_id);
+    mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     // Get the jobs from the user.
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, FALSE, $mediafile_id);
@@ -879,22 +849,22 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     $mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
-    foreach ($result as $a_row) {
-      $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
+    foreach ($result as $row) {
+      $started_unix = isset($row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($row[mediamosa_job_db::STARTED]) : '';
 
-      $a_job = array();
+      $job = array();
 
-      $a_job['id'] = $a_row[mediamosa_job_db::ID];
-      $a_job['owner'] = $a_row[mediamosa_job_db::OWNER_ID];
-      $a_job['status'] = $a_row[mediamosa_job_db::JOB_STATUS];
-      $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
-      $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
-      $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
-      $a_job['started_unix'] = $started_unix;
-      $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
+      $job['id'] = $row[mediamosa_job_db::ID];
+      $job['owner'] = $row[mediamosa_job_db::OWNER_ID];
+      $job['status'] = $row[mediamosa_job_db::JOB_STATUS];
+      $job['progress'] = $row[mediamosa_job_db::PROGRESS];
+      $job['priority'] = $row[mediamosa_job_db::PRIORITY];
+      $job['job_type'] = $row[mediamosa_job_db::JOB_TYPE];
+      $job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
+      $job['started_unix'] = $started_unix;
+      $job['error_description'] = $row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $mediamosa->add_item($a_job);
+      $mediamosa->add_item($job);
     }
   }
 }
@@ -941,8 +911,8 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = FALSE; //$this->get_param_value(self::IS_APP_ADMIN); (not supplied).
 
     $user_id = $this->get_param_value(self::USER_ID);
@@ -958,22 +928,22 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
     $mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
-    foreach ($result as $a_row) {
-      $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
+    foreach ($result as $row) {
+      $started_unix = isset($row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($row[mediamosa_job_db::STARTED]) : '';
 
-      $a_job = array();
+      $job = array();
 
-      $a_job['id'] = $a_row[mediamosa_job_db::ID];
-      $a_job['owner'] = $a_row[mediamosa_job_db::OWNER_ID];
-      $a_job['status'] = $a_row[mediamosa_job_db::JOB_STATUS];
-      $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
-      $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
-      $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
-      $a_job['started_unix'] = $started_unix;
-      $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
+      $job['id'] = $row[mediamosa_job_db::ID];
+      $job['owner'] = $row[mediamosa_job_db::OWNER_ID];
+      $job['status'] = $row[mediamosa_job_db::JOB_STATUS];
+      $job['progress'] = $row[mediamosa_job_db::PROGRESS];
+      $job['priority'] = $row[mediamosa_job_db::PRIORITY];
+      $job['job_type'] = $row[mediamosa_job_db::JOB_TYPE];
+      $job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
+      $job['started_unix'] = $started_unix;
+      $job['error_description'] = $row[mediamosa_job_db::ERROR_DESCRIPTION];
 
-      $mediamosa->add_item($a_job);
+      $mediamosa->add_item($job);
     }
   }
 }
@@ -1034,8 +1004,6 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
  * Create a retranscode job.
  */
 class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job_create {
-  // ------------------------------------------------------------------- Consts.
-
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = parent::get_var_setup();
@@ -1166,9 +1134,9 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     }
     // If there isn't size, we get the still default size of application.
     if (!$this->isset_given_param(self::SIZE)) {
-      $a_app_ids = $this->get_param_value_app();
-      $app_id = reset($a_app_ids);
-      $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_value($app_id));
+      $app_ids = $this->get_param_value_app();
+      $app_id = reset($app_ids);
+      $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_size($app_id));
     }
 
     unset($var_setup[self::VARS][self::FRAMETIME]);
@@ -1224,9 +1192,6 @@ class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_
  * Method: POST
  *
  * Cancel job.
- *
- * 1.x: vpx_jobscheduler_cancel_job
- *
  */
 class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -1261,9 +1226,8 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $job_id = $this->get_param_value(self::JOB_ID);
@@ -1281,7 +1245,7 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
 
-  // ------------------------------------------------------- Functions (public).
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1306,7 +1270,7 @@ class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_cron_jobserver extends mediamosa_rest_call {
 
-  // ------------------------------------------------------- Functions (public).
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = array();
 

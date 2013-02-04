@@ -1,0 +1,193 @@
+<?php
+/**
+  * @file
+  * Unittests for media play ticket mechanisme.
+  */
+
+class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Ticket tests',
+      'description' => 'Testing asset mediafile media play ticket mechanisme related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testBugReportMediaMosaOrgTicket422() {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create 2 mediafiles.
+    $mediafile_id_1 = $this->createMediafile($asset_id);
+    $mediafile_id_2 = $this->createMediafile($asset_id);
+
+    // Upload 2 mediafiles.
+    $filename_1 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1, $this->getTestVideo(), self::SIMPLETEST_USER_ID, array('transcode_inherits_acl' => TRUE));
+    $filename_2 = $this->uploadTestFileForMediafile($asset_id, $mediafile_id_2, $this->getTestVideo_ogg(), self::SIMPLETEST_USER_ID, array('transcode_inherits_acl' => TRUE));
+    assert(!empty($filename_1));
+    assert(!empty($filename_2));
+
+    // Set ACL so we have tickets.
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user_id' => 'johndoe'));
+    $this->setMediafileAcl($mediafile_id_2, array('acl_user_id' => 'johndoe'));
+
+    // Now transcode both.
+    //
+    // Create transcode job.
+    $job_id_1 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $job_id_2 = $this->createMediafileTranscode($mediafile_id_2, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    assert($job_id_1);
+    assert($job_id_2);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Get default profile ID.
+    $default_profile_id = $this->getDefaultProfileId($asset['app_id']);
+
+    // Get the mediafile_ids.
+    $mediafile_ids = array();
+
+    // Add mediafile clean up.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          // Get the transcodes.
+          if (!in_array($mediafile_child['mediafile_id'], array($mediafile_id_1, $mediafile_id_2))) {
+            $mediafile_ids[$mediafile_child['mediafile_id']] = $mediafile_child['mediafile_id'];
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+        // Get the transcodes.
+        if (!in_array($mediafile['mediafile_id'], array($mediafile_id_1, $mediafile_id_2))) {
+          $mediafile_ids[$mediafile['mediafile_id']] = $mediafile['mediafile_id'];
+        }
+      }
+    }
+
+    $this->var_export($mediafile_ids, 'Transcode mediafiles');
+
+    // 2 transcodes must be found.
+    $this->assertEqual(count($mediafile_ids), 2, 'Found 2 transcodes.');
+
+    // Ok try to play them.
+    $parameters = array(
+      mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
+      mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
+    );
+    $xml = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    $this->var_export($xml);
+
+    $parameters = array(
+      mediamosa_rest_call_media_view::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
+      mediamosa_rest_call_media_view::PROFILE_ID => $default_profile_id,
+    );
+    $xml = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Now get the tickets from the database.
+    $result = mediamosa_db::db_select(mediamosa_media_ticket_db::TABLE_NAME, 'mt')
+      ->fields('mt')
+      ->condition(mediamosa_media_ticket_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
+      ->execute()
+      ->fetchAll();
+
+    $this->var_export($result, 'Ticket DB dump');
+
+    // Now remove found mediafile ids.
+    foreach ($result as $ticket) {
+      unset($mediafile_ids[$ticket['mediafile_id']]);
+    }
+
+    // All tickets must be used for all mediafile_ids.
+    $this->assertTrue(!count($mediafile_ids), 'All mediafiles got tickets');
+  }
+
+  // Testing mediafile media play ticket, see: ticket 72.
+  function testPlayProxyTicketMechanisme() {
+
+    // Preparation.
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+    $filename = $upload['filename'];
+    assert(!empty($filename));
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+    assert($job_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Update mediafile.
+    $parameters = array(
+      mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $parameters);
+    assert($response);
+
+    // Play proxy create ticket.
+
+    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
+      // Ask mediafile download url.
+      $parameters = array(
+        mediamosa_rest_call_media_view::RESPONSE => $subject,
+        mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      );
+      $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+      $output = (string) $xml->items->item->output;
+
+      switch ($subject) {
+        case 'plain':
+          // Play proxy function tests if we get ok.
+          break;
+
+        case 'metafile':
+          $test_string = '<asx version="3.0">';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Mediafile output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+
+        case 'object':
+          $test_string = '<object id=';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Object output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+
+        default:
+          // Test the output, do output call.
+          $output = str_replace('/media/', '/media/simpletest/media/', $output);
+
+          // Get the file.
+          $result = mediamosa_http::drupal_http_request($output);
+
+          // Check response.
+          $this->assertTrue(
+            $result->code == 200,
+            t("File exists (@subject): '@url' (code = @code)", array('@subject' => $subject, '@url' => $output, '@code' => $result->code))
+          );
+          break;
+      }
+    }
+  }
+}

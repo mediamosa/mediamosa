@@ -132,12 +132,12 @@ function mediamosa_collection_schema() {
         'default' => NULL,
         'description' => 'The date and time when asset was changed last.',
       ),
-      mediamosa_collection_db::IS_UNAPPROPRIATE => array(
+      mediamosa_collection_db::IS_INAPPROPRIATE => array(
         'description' => 'If the collection has unappropieate contents.',
-        'type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE, mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_INAPPROPRIATE_FALSE, mediamosa_collection_db::IS_INAPPROPRIATE_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE, mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE)) . "')",
-        'default' => mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_INAPPROPRIATE_FALSE, mediamosa_collection_db::IS_INAPPROPRIATE_TRUE)) . "')",
+        'default' => mediamosa_collection_db::IS_INAPPROPRIATE_FALSE,
       ),
       mediamosa_collection_db::PUBLIC_ASSIGN => array(
         'description' => 'If the collection public assigned.',
@@ -155,7 +155,7 @@ function mediamosa_collection_schema() {
       'idx_' . mediamosa_collection_db::GROUP_ID => array(mediamosa_collection_db::GROUP_ID),
       'idx_' . mediamosa_collection_db::CREATED => array(mediamosa_collection_db::CREATED),
       'idx_' . mediamosa_collection_db::CHANGED => array(mediamosa_collection_db::CHANGED),
-      'idx_' . mediamosa_collection_db::IS_UNAPPROPRIATE => array(mediamosa_collection_db::IS_UNAPPROPRIATE),
+      'idx_' . mediamosa_collection_db::IS_INAPPROPRIATE => array(mediamosa_collection_db::IS_INAPPROPRIATE),
     ),
   );
 

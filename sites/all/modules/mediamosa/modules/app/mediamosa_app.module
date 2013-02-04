@@ -92,7 +92,10 @@ function mediamosa_app_help($path, $arg) {
 
     case 'admin/mediamosa/config/app/%/metadata/tag':
       return '<p>' . t('Every application can have its own metadata definitions, these are unique for the application. These metadata fields can also be set with the REST call /metadata_tag/') . '</p>';
-  }
+
+    case 'admin/mediamosa/config/app/%/storage':
+      return '<p>' . t("Here you see a listing of the mediafiles and stills of this application. You can move all mediafiles and stills to the current selected storage location. Press on the tabs to select either the mediafiles or stills. The files will be moved using the job server and will take some time depending on the total size and number of the files. You must have at least one job server with file transfer enabled, else nothing will be moved. The storage location where the file are moved can be changed on the application edit tab and under 'storage'.") . '</p>';
+   }
 }
 
 /**
@@ -104,7 +107,7 @@ function mediamosa_app_menu() {
   $items['admin/mediamosa/config/app'] = array(
     'title' => 'Client applications',
     'description' => 'List all MediaMosa Client Applications.',
-    'page callback' => '_mediamosa_app_list',
+    'page callback' => 'mediamosa_app_listing_form',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_APPS),
     'file' => 'mediamosa_app.admin.inc',
@@ -179,6 +182,51 @@ function mediamosa_app_menu() {
     'file path' => drupal_get_path('module', 'mediamosa') . '/core/node',
   );
 
+  $items['admin/mediamosa/config/app/%node/storage'] = array(
+    'title' => 'Storage',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_storage_form', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'mediamosa_app.admin.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT + 1,
+  );
+  $items['node/%node/storage'] = array(
+    'title' => 'Storage',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_storage_form', 1),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'mediamosa_app.admin.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT + 1,
+  );
+
+  $items['admin/mediamosa/config/app/%node/storage/stills/confirm'] = array(
+    'title' => 'Storage',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_storage_form_confirm', 4, 'stills'),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'mediamosa_app.admin.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT + 2,
+  );
+
+  $items['admin/mediamosa/config/app/%node/storage/mediafiles/confirm'] = array(
+    'title' => 'Storage',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_app_storage_form_confirm', 4, 'mediafiles'),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'mediamosa_app.admin.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT + 2,
+  );
+
   $items['admin/mediamosa/config/app/%node/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
@@ -208,15 +256,6 @@ function mediamosa_app_menu() {
     'page callback' => '_mediamosa_app_ajax_generate_shared_key',
     'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['admin/mediamosa/config/app/%node/metadata_tag/%/delete'] = array(
-    'page callback' => '_mediamosa_app_form_metadata_delete',
-    'access callback' => TRUE,
-    'page arguments' => array(4, 6),
-    'access callback' => 'node_access',
-    'access arguments' => array('update', 4),
     'type' => MENU_CALLBACK,
   );
 

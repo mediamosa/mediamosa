@@ -1,38 +1,15 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ * @file
+ * A basic class to create DB Queries.
+ * Although in future we should use db_ classes of drupal 7 instead (see
+ * mediamosa_db).
  *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @deprecated: Do not use this library, will be removed in 3.5.
  */
 
 class mediamosa_db_query {
-
-  /**
-  * @file
-  * A basic class to create DB Queries.
-  * Although in future we should use db_ classes of drupal 7 instead (see mediamosa_db).
-  */
-
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Select options
   const SQL_CALC_FOUND_ROWS = 'SQL_CALC_FOUND_ROWS';
 
@@ -52,7 +29,7 @@ class mediamosa_db_query {
   const OFFSET = 'offset';
   const ALLOW_DISTINCT = 'allow_distinct';
 
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Create the WHERE syntax
    *
@@ -355,4 +332,3 @@ class mediamosa_db_query {
     return mediamosa_unicode::substr(urldecode($url['path']), 1);
   }
 }
-

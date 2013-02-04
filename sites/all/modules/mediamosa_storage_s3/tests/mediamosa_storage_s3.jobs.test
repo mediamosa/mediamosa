@@ -1,0 +1,111 @@
+<?php
+/**
+ * @file
+ * Basic test for S3.
+ */
+
+// Registry indexes all .test files, while the base is not indexed (module is
+// not on.
+if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
+      return array(
+        'name' => 'MediaMosa Storage - Amazon S3 jobs test',
+        'description' => 'Tests for Amazon S3 jobs upload and download.',
+        'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      );
+    }
+    return array();
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Test upload and download jobs.
+   */
+  public function testJobs() {
+    // If s3 object is missing, stop the test.
+    if (!$this->s3) {
+      return;
+    }
+
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Do upload.
+    $upload = $this->uploadTestFile();
+//    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Now transcode local file.
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+
+    // At this point our mediafile is local, we haven't attached the S3 profile
+    // on our App. Will do that now.
+
+    // Create default profile.
+    $this->createS3Profile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    // Create the destination uri.
+    $destination_uri = mediamosa_storage::create_storage_uri($app_id, $mediafile_id);
+    $this->var_export($destination_uri);
+
+    // Now upload to S3 with job.
+    $job_id = $this->doMediafileMove($mediafile_id, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
+
+    // Wait for it to complete.
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the job.
+    $job = $this->getJob($job_id);
+
+    // Must be finished.
+    foreach ($job->get()->xpath('items/item') as $job_item) {
+      $this->assert($job_item->status == mediamosa_job_db::JOB_STATUS_FINISHED, 'All jobs are finished.');
+    }
+
+    // Check if the mediafile is present on s3.
+    $this->file_exists($destination_uri, 'File on S3 exists');
+
+    // Get metadata.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'Found FPS metadata.');
+    $this->var_export($metadata);
+
+    // Remove one not important metadata, so we know analyse happened.
+    mediamosa_asset_mediafile_metadata::delete_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FPS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+
+    // Get metadata.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(!isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'FPS metadata is gone.');
+    $this->var_export($metadata);
+
+    // Create analyse job.
+    $this->createMediafileAnalyse($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get metadata, see if fps is back.
+    $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
+    $this->assertTrue(isset($metadata[mediamosa_asset_mediafile_metadata::FPS]), 'Found FPS metadata again, analyse worked.');
+    $this->var_export($metadata);
+  }
+}

@@ -1,40 +1,16 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The MediaMosa error class.
  */
-class mediamosa_error extends mediamosa_sdk {
 
-  // ------------------------------------------------------------------ Static Function.
+class mediamosa_error extends mediamosa_sdk {
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the listing of the error code table.
    *
    * @return array
+   *   The error code listing.
    */
   public static function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC, $errorcode = 0) {
     static $codes = NULL;
@@ -43,7 +19,8 @@ class mediamosa_error extends mediamosa_sdk {
       $codes[$order_by][$order_direction] = mediamosa_db::db_select(mediamosa_error_db::TABLE_NAME, 'e')
         ->fields('e')
         ->orderBy($order_by, $order_direction)
-        ->execute()->fetchAllAssoc($order_by, PDO::FETCH_ASSOC);
+        ->execute()
+        ->fetchAllAssoc($order_by, PDO::FETCH_ASSOC);
     }
 
     // If errorcode was specified, get that one specific.
@@ -62,31 +39,47 @@ class mediamosa_error extends mediamosa_sdk {
   }
 
   /**
-   * Find the error code.
+   * Find the error code and its textual message.
    *
-   * @param integer $code
-   * @return array
+   * @param integer $errorcode
+   *   The mediamosa error code.
+   * @param $args
+   *   An associative array of replacements to make. Occurrences in $string of
+   *   any key in $args are replaced with the corresponding value.
+   * @param boolean $return_default
+   *   If code can not be found, it either return a default error or boolean
+   *   FALSE.
+   *
+   * @return array|boolean
+   *   Either returns an associative array or FALSE depending on argument
+   *   $return_default;
+   *   - 'message'
+   *     The error code message.
+   *   - 'code'
+   *     The mediamosa error code.
+   *
+   * @see mediamosa_sdk
    */
-  public static function error_code_find($errorcode, $tags = array(), $fail = FALSE) {
-
+  public static function error_code_find($errorcode, $args = array(), $return_default = TRUE) {
     // Get the current listing.
     $code = self::error_code_list(mediamosa_error_db::CODE, mediamosa_type::ORDER_DIRECTION_ASC, $errorcode);
 
     // Do we find the error?
     if (!isset($code[$errorcode])) {
-      if ($fail) {
-        return FALSE;
+      if ($return_default) {
+        return array(
+          mediamosa_error_db::MESSAGE => strtr('Server error; Unable to find error code: @errorcode', array('@errorcode' => $errorcode)),
+          mediamosa_error_db::CODE => self::HTTP_INTERNAL_SERVER_ERROR,
+        );
       }
 
-      return array(
-        mediamosa_error_db::MESSAGE => strtr('Server error; Unable to find error code: @errorcode', array('@errorcode' => $errorcode)),
-        mediamosa_error_db::CODE => self::HTTP_INTERNAL_SERVER_ERROR,
-      );
+      // Return FALSE that we failed to find it.
+      return FALSE;
     }
 
     // Fill message with tags.
-    if (!empty($tags)) {
-      $code[$errorcode][mediamosa_error_db::MESSAGE] = strtr($code[$errorcode][mediamosa_error_db::MESSAGE], $tags);
+    if (!empty($args)) {
+      $code[$errorcode][mediamosa_error_db::MESSAGE] = strtr($code[$errorcode][mediamosa_error_db::MESSAGE], $args);
     }
 
     return $code[$errorcode];
@@ -96,18 +89,28 @@ class mediamosa_error extends mediamosa_sdk {
    * Find the error code and the description.
    *
    * @param integer $errorcode
-   * @return array
+   *   The mediamosa error code.
+   * @param $args
+   *   An associative array of replacements to make. Occurrences in $string of
+   *   any key in $args are replaced with the corresponding value.
+   *
+   * @return string
+   *   The error code message.
    */
   public static function error_code_find_description($errorcode, $tags = array()) {
     $code = self::error_code_find($errorcode, $tags);
 
-    return ($code ? $code[mediamosa_error_db::MESSAGE] : 'Description not available.');
+    return ($code ? $code[mediamosa_error_db::MESSAGE] : 'Description unavailable.');
   }
 
   /**
    * Get errorcode by row id.
    *
    * @param integer $id
+   *   The row ID.
+   *
+   * @return array
+   *  The error code row.
    */
   public static function get($id) {
     return mediamosa_db::db_select(mediamosa_error_db::TABLE_NAME, 'e')

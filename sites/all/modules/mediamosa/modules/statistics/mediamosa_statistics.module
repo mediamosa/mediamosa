@@ -572,7 +572,7 @@ function mediamosa_statistics_mediamosa_configuration_validate($form, $form_stat
   $timezone = $form_state['values']['mediamosa_statistics_streaming_log_timezone'];
   $ticket = $form_state['values']['mediamosa_statistics_streaming_log_ticket'];
   if ($path) {
-    if (!is_dir($path) || !is_readable($path)) {
+    if (!mediamosa_io::is_dir($path) || !mediamosa_io::is_readable($path)) {
       form_set_error('mediamosa_statistics_streaming_log_path', t('The streaming log path is not valid.'));
     }
     if (!$timezone) {

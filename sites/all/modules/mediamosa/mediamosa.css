@@ -1,5 +1,3 @@
-/* $Id: $ */
-
 TH.simpletest_test {
   width: 300px;
 }
@@ -208,3 +206,72 @@ SMALL {
   background-position:0px -180px;
 }
 
+/*
+ Changes to the simple test listing.
+ */
+td.simpletest-test-label {
+  width: 500px;
+}
+
+td.simpletest-test-label label {
+  font-weight: normal;
+}
+
+#edit-object-code {
+  font-size:11px;
+  font-family: monospace;
+}
+
+/*
+ Fix problem with rubik and messages in simpletest report.
+ */
+tr.simpletest-pass.even td, tr.simpletest-pass.odd td,
+tr.simpletest-fail.even td, tr.simpletest-fail.odd td,
+tr.simpletest-exception.even td, tr.simpletest-exception.odd td,
+tr.simpletest-debug.even td, tr.simpletest-debug.odd td {
+  background: none !important;
+}
+
+tr.simpletest-pass.odd {
+  background: #b6ffb6 !important;
+}
+tr.simpletest-pass.even {
+  background: #9bff9b !important;
+}
+tr.simpletest-fail.odd {
+  background: #ffc9c9 !important;
+}
+tr.simpletest-fail.even {
+  background: #ffacac !important;
+}
+tr.simpletest-exception.odd {
+  background: #f4ea71 !important;
+}
+tr.simpletest-exception.even {
+  background: #f5e742 !important;
+}
+tr.simpletest-debug.odd {
+  background: #eee !important;
+}
+tr.simpletest-debug.even {
+  background: #fff !important;
+}
+
+div.mediamosa-vtabs-submit-text {
+  padding: 8px;
+  font-weight: bold;
+}
+
+th.mediamosa-app-storage-count, th.mediamosa-app-storage-valid {
+  width: 80px;
+  text-align: center;
+}
+
+td.item-center {
+  text-align: center;
+}
+
+th.mediamosa-app-storage-name,
+th.mediamosa-app-storage-location {
+  width: 25%;
+}

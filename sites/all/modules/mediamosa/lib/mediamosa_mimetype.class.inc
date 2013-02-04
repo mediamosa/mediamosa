@@ -1,42 +1,21 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Mimetype related functions.
  */
+
 class mediamosa_mimetype {
   // ---------------------------------------------------------------- Functions.
   /**
    * Translate the file extension to a mimetype.
    *
-   * @param $extension
+   * This translation back is not reliable as some extensions can have more than
+   * 1 mime-type, like webm has an video/webm and audio/webm variant.
+   *
+   * @param string $extension
    *   The extension to map to mimetype.
    *
-   * @return
+   * @return string
    *   Returns the found mimetype or application/octet-stream.
    */
   public static function extension2mimetype($extension) {
@@ -54,18 +33,68 @@ class mediamosa_mimetype {
   /**
    * Try to match mime-type to ext.
    *
-   * @param $mimetype
+   * @param string $mimetype
+   *   The mimetype.
+   *
+   * @return string|boolean
+   *    The file extension or FALSE on failure.
    */
   public static function mimetype2extension($mimetype) {
+    // Do not convert default.
+    if ($mimetype == 'application/octet-stream') {
+      return FALSE;
+    }
+
     // Re-use the Drupal mimetype library.
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();
 
+    // Give prio on last ext; use array_keys() in reverse.
     $ext_id = array_search($mimetype, $mapping['mimetypes']);
     if ($ext_id !== FALSE) {
-      return array_search($ext_id, $mapping['extensions']);
+      return reset(array_reverse(array_keys($mapping['extensions'], $ext_id)));
     }
 
     return FALSE;
+  }
+
+  /**
+   * Determine Mime type of a file.
+   *
+   * @todo: move to wrapper.
+   *
+   * @param string $uri
+   *   File to get the mimetype of.
+   *
+   * @return string
+   *   The mime type.
+   */
+  public static function get_mime_type($uri) {
+    // Get the local file.
+    $realpath = mediamosa_io::realpath($uri);
+
+    $return_var = -1;
+    $file_mime = reset(mediamosa_io::exec('file -b -L --mime-type ' . escapeshellarg($realpath), $return_var));
+    if ($file_mime == 'application/octet-stream') {
+      $result = reset(mediamosa_io::exec('file -L ' . escapeshellarg($realpath), $return_var));
+
+      $matches = array();
+      $reg = '#^(?P<filename>.*): (?P<filetype>.*)$#';
+      if (preg_match($reg, $result, $matches)) {
+        // Some specific detection.
+        switch ($matches['filetype']) {
+          case 'Microsoft ASF':
+            return 'video/x-msvideo';
+
+          case 'Macromedia Flash Video':
+            return 'video/x-flv';
+
+          case 'video/mp4':
+            return 'video/mp4';
+        }
+      }
+    }
+
+    return $file_mime;
   }
 }

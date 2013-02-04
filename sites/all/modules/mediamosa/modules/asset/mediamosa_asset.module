@@ -1,35 +1,10 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The asset module.
  */
 
-/*
+/**
  * Implements hook_cron().
  */
 function mediamosa_asset_cron() {
@@ -400,6 +375,14 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+//  // Create ticket for upload.
+//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
+//    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_create',
+//    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+//    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+//    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+//  );
+
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
@@ -585,22 +568,6 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  // Play a mediafile.
-  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-  );
-
-  // Play a mediafile.
-  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-  );
-
   $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -630,87 +597,6 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
-
-  // Download file.
-  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-  // Allowed on POST as well.
-  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
-
-  // Media.
-  $rest_calls['media/$filename'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-  // Media, replacement of /still (deprecated).
-  $rest_calls['media/$app_id/$mediafile_str_prefix/$mediafile_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_media',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-  $rest_calls['media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_media',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-  // Media, replacement of /still (deprecated).
-  $rest_calls['still/$app_id/$mediafile_str_prefix/$mediafile_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_media',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-  // Media, replacement of /still (deprecated).
-  $rest_calls['still/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_media',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_MEDIA,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
-  );
-
-    // In sandbox we have /still as special REST call so we don't have problems
-  // with apache alias on /still.
-  if (mediamosa::get()->in_simpletest_sandbox()) {
-    $rest_calls['media/simpletest/media/$app_id/$mediafile_str_prefix/$mediafile_str'] = $rest_calls['media/$app_id/$mediafile_str_prefix/$mediafile_str'];
-    $rest_calls['media/simpletest/media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'] = $rest_calls['media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'];
-  }
 
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
@@ -1837,6 +1723,23 @@ tag=Best',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
+//  // Create ticket for upload.
+//  //TODO: update the doc of the following rest call
+//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
+//  mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
+//  mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+//  mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload/create',
+//  mediamosa_rest_call::RESPONSE_FIELDS => array(),
+//  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+//  <item id="1">
+//    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
+//    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
+//    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+//    <progress_id>1234567</progress_id>
+//  </item>
+//</items>',
+//  );
+
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
@@ -2071,31 +1974,6 @@ user_id = "username"',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
-  // Play a mediafile.
-  $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Play a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/k1QmUkhpAvRNU9mBl871oQfq/play<br /><br />mediafile_id = "T2hLaHNlDROR6UTYJFn2b8Cz"<br />user_id = "testuser"<br />response = "download"',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-  <item id="1">
-    <output>http://mediamosa.local/download/T2hLaHNlDROR6UTYJFn2b8Cz/Filename_not_set</output>
-    <content_type></content_type>
-    <ticket_id>T2hLaHNlDROR6UTYJFn2b8Cz</ticket_id>
-  </item>
-</items>',
-  );
-
-  // Play a mediafile.
-  $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Play a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
-
-  // @TODO!
   $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Upload a mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
@@ -2121,43 +1999,6 @@ user_id=admin',
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
-  // Download file.
-  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Download a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/j89y492b84/foo.mpg',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
-  );
-
-  // Allowed on POST as well.
-  $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
-
-  // Media.
-  $rest_calls['media/$app_id/$mediafile_str_prefix/$mediafile_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Serves mediafiles directly.',
-    mediamosa_rest_call::DESCRIPTION => 'Serves mediafiles using the REST interface.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'This rest call will return the mediafile.',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the mediafile.',
-  );
-  $rest_calls['media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Serves mediafiles directly.',
-    mediamosa_rest_call::DESCRIPTION => 'Serves mediafiles using the REST interface. The mediafiles are served using the ticket system. These mediafiles are considered temporary as long as the ticket exists.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'This rest call will return the mediafile foo.',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the mediafile.',
-  );
-
-  // Compatable with /still.
-  $rest_calls['still/$app_id/$mediafile_str_prefix/$mediafile_str'][mediamosa_rest_call::METHOD_GET] = $rest_calls['media/$app_id/$mediafile_str_prefix/$mediafile_str'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['still/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'][mediamosa_rest_call::METHOD_GET] = $rest_calls['media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'][mediamosa_rest_call::METHOD_GET];
-
-  if (mediamosa::get()->in_simpletest_sandbox()) {
-    $rest_calls['media/simpletest/media/$app_id/$mediafile_str_prefix/$mediafile_str'] = $rest_calls['media/$app_id/$mediafile_str_prefix/$mediafile_str'];
-    $rest_calls['media/simpletest/media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'] = $rest_calls['media/ticket/$app_id/$mediaticket_str_prefix/$mediaticket_str'];
-  }
-
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve the upload progress.',
@@ -2177,7 +2018,7 @@ user_id=admin',
 function mediamosa_asset_mediamosa_configuration_collect() {
   $form['settings_supplement'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Supplement settings'),
+    '#title' => t('Asset supplement settings'),
     '#description' => t('You can set maximum supplement size for assets here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,

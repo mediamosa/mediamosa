@@ -83,7 +83,7 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->uploadTestFileForMediafile($asset_id, $mediafile_id_1);
 
     // Create still job.
-    $job_id = $this->createMediafileStill($mediafile_id_1);
+    $this->createMediafileStill($mediafile_id_1);
 
     // Parse the queue.
     $this->doQueueCycleAll();

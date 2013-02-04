@@ -1,0 +1,70 @@
+<?php
+/**
+ * @file
+ * Basic test for S3.
+ */
+
+// Weird bug, loads this test file while module is off, ending up with fatal
+// error.
+if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
+  return;
+}
+
+class MediaMosaS3BasicTestCaseEga extends MediaMosaS3BaseTestCaseEga {
+  // ------------------------------------------------------------------ Methods.
+  public static function getInfo() {
+    // Only available when these are set.
+    if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
+      return array(
+        'name' => 'MediaMosa Storage - Amazon S3 basic test',
+        'description' => 'Tests for Amazon S3 basic testing.',
+        'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      );
+    }
+    return array();
+  }
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Test basic upload.
+   */
+  public function testUploadDownload() {
+    // If s3 object is missing, stop the test.
+    if (!$this->s3) {
+      return;
+    }
+
+    // Get the test file name for upload.
+    $source_filename = DRUPAL_ROOT . '/' . $this->getTestVideo();
+    $filename = mediamosa_io::basename($source_filename);
+
+    $md5 = mediamosa_io::md5_file($source_filename);
+
+    // Do upload.
+    $this->isOKS3Response($this->s3->_upload($this->getBucketName(), $source_filename, $filename[0] . '/' . $filename, $md5, 'got no mediafile id'));
+
+    // Need path + name.
+    $source_filename = $filename[0] . '/' . $filename;
+
+    // Get headers.
+    $response = $this->s3->_headers($this->getBucketName(), $source_filename);
+
+    // Get file headers.
+    $this->var_export($response);
+
+    // Check md5.
+    $this->assertTrue($md5 == $this->s3->_getMD5($this->getBucketName(), $source_filename), 'MD5 checksum match');
+
+    // Now download the file again.
+    $dest_path = mediamosa_storage::get_realpath_transition();
+    $this->isOKS3Response($this->s3->_download($this->getBucketName(), $source_filename, $dest_path . '/' . $this->testId . '/' . $filename));
+
+    // Get bucket headers.
+    $this->var_export($this->s3->get_object_filesize($this->getBucketName(), $source_filename));
+
+    // Check if file is present and remove it again.
+    if ($this->file_exists($dest_path .  '/' . $this->testId . '/' . $filename)) {
+      $this->unlink($dest_path .  '/' . $this->testId . '/' . $filename);
+    }
+  }
+}

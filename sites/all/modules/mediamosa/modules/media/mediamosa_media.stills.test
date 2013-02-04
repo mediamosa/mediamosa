@@ -1,0 +1,136 @@
+<?php
+/**
+ * @file
+ * Assets without still won't give back still links.
+ */
+
+class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Still Play calls',
+      'description' => 'Execute PlayProxy calls to receive stills.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testMediaPlayStills() {
+
+    //
+    // Set up Egas.
+    //
+
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    //
+    // Set up still.
+    //
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    //
+    // No stills.
+    //
+
+    // Expecting no stills.
+    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Expecting no stills.
+    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+
+    //
+    // With stills.
+    //
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+    assert($job_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Expecting one still.
+    $stills = (array) $this->getAssetStill($asset_id);
+
+    // Check the output
+    $this->assertTrue(count($stills) == 1, strtr('Expecting one still, found @count.', array('@count' => count($stills))));
+
+    // Get the still.
+    $still = reset($stills);
+
+    // Get the mediafile ID.
+    $mediafile_id_still = $still['stills']['mediafile_id'];
+
+    $this->assertTrue($mediafile_id_still, 'Got mediafile ID.');
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Expecting no stills.
+    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Now do a media play call to still (as app 1).
+    $response = $this->do_media_view_still($asset_id);
+
+    $this->var_export($response, 'response');
+
+    // Now master slave the still.
+    $this->setMediafileAcl($mediafile_id_still, array('acl_app' => array($app_id_2)));
+
+    // Expecting one still.
+    $stills = (array) $this->getAssetStill($asset_id);
+
+    // Check the output
+    $this->assertTrue(count($stills) == 1, strtr('Expecting one still with own app, found @count.', array('@count' => count($stills))));
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // The following lines will work when master-slaving the mediafile still is
+    // fixed.
+
+    // Expecting one still.
+ //   $stills = (array) $this->getAssetStill($asset_id);
+
+    // Check the output
+ //   $this->assertTrue(count($stills) == 1, strtr('Expecting one still using other app, found @count.', array('@count' => count($stills))));
+
+
+  }
+}

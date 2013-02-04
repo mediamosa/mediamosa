@@ -1,41 +1,14 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ * @file
+ * Unit test for User / Group quota.
  *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * Coversion of;
+ * trac_tickets_250
  */
 
- /**
-  * @file
-  * Unit test for User / Group quota.
-  * Coversion of;
-  * trac_tickets_250
-  */
-
 class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
-
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'User/Group - extended quota tests',
@@ -44,7 +17,7 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
   public function testUserGroupQuota() {
 
     // Set up.
@@ -141,9 +114,6 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
         $quotum - $filesize_mb >= 0 ? mediamosa_error::ERRORCODE_OKAY : mediamosa_error::ERRORCODE_NOT_ENOUGH_FREE_QUOTA
       );
       $uploadticket = $this->createMediafileUploadTicket($mediafile_id, $parameters, $expected_result_ids);
-
-      // Delete metadata.
-      mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
     }
   }
 }

@@ -1,0 +1,26 @@
+name = "Amazon S3 storage module"
+description = "The MediaMosa Amazon S3 storage module."
+package = "MediaMosa - Storage"
+version = 7.x-3.4
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_storage
+dependencies[] = awssdk (>=5.1)
+
+; Used files.
+files[] = mediamosa_storage_s3.amazon_s3.class.inc
+files[] = mediamosa_storage_s3.class.inc
+files[] = mediamosa_storage_s3.exception.class.inc
+files[] = mediamosa_storage_s3.streamwrapper.class.inc
+files[] = mediamosa_storage_s3_db.class.inc
+files[] = tests/mediamosa_storage_s3.simpletest.class.inc
+
+; Test.
+files[] = tests/mediamosa_storage_s3.acl.test
+files[] = tests/mediamosa_storage_s3.basic.test
+files[] = tests/mediamosa_storage_s3.io.test
+files[] = tests/mediamosa_storage_s3.jobs.profile.test
+files[] = tests/mediamosa_storage_s3.jobs.test
+files[] = tests/mediamosa_storage_s3.media.view.test
