@@ -197,8 +197,8 @@ function mediamosa_app_menu() {
     'title' => 'Storage',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_app_storage_form', 1),
-    'access callback' => 'node_access',
-    'access arguments' => array('update', 1),
+    'access callback' => '_mediamosa_app_storage_node_access',
+    'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'mediamosa_app.admin.inc',
@@ -260,4 +260,17 @@ function mediamosa_app_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Check on node update access and correct node type.
+ *
+ * @param object $node
+ *   The node object.
+ *
+ * @return boolean
+ *   TRUE when access, FALSE otherwise.
+ */
+function _mediamosa_app_storage_node_access($node) {
+  return $node->type == mediamosa_node::MEDIAMOSA_NODE_TYPE_APP && node_access('update', $node);
 }

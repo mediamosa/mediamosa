@@ -145,6 +145,7 @@ MediaMosa 3.4.x-dev (build 2006, master branch)
 - Added update hook for streaming servers for using new flowplayer.
 - Drastically improved response time when doing calls to Amazon S3. View calls
   went from 1+ seconds to 0.08 second due to S3 object creation bug.
+- Showing 'storage' tab on nodes that are not type storage application.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
