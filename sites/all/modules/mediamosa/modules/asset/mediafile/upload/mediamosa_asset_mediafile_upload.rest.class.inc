@@ -43,13 +43,11 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
   const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
 
-  private $a_metadata_definitions_full = NULL;
-
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -72,7 +70,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -110,6 +108,42 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
         'server_id' => $server_upload[mediamosa_server_db::NID],
       )
     );
+  }
+}
+
+class mediamosa_rest_call_asset_mediafile_upload_options extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const UPLOAD_TICKET = 'upload_ticket';
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::UPLOAD_TICKET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
+          self::VAR_DESCRIPTION => 'The ID that has been given to enable the upload.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    // Ticket id.
+    $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+
+    // Check if ticket exists.
+    if (mediamosa_media_ticket::get_valid_upload($ticket_id)) {
+      $this->add_header_access_control_allow_origin();
+    }
   }
 }
 
@@ -156,11 +190,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   const ORDER = 'order';
   const DEFAULT_ = 'default';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::UPLOAD_TICKET => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
@@ -324,7 +358,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -387,8 +421,10 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     // With PUT only.
     $filename_put = $this->is_method_put() ? $this->get_param_value(self::FILENAME) : NULL;
 
-    // Frametime (point of still in media).
-    $frametime = $this->get_param_value(self::FRAMETIME);
+    if ($this->is_method_put()) {
+      // With PUT only.
+      $filename_put = $this->get_param_value(self::FILENAME);
+    }
 
     try {
       if ($still_upload) {
@@ -424,6 +460,9 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       // Lets create error output then.
       throw $e;
     }
+
+    // Success, add allow origin header.
+    $this->add_header_access_control_allow_origin();
 
     // Redirect when needed.
     if ($this->isset_param(self::REDIRECT_URI)) {

@@ -527,13 +527,14 @@ class mediamosa {
    * Removed theme function here too.
    *
    * @param string $string
-   *  Message.
+   *   Message.
    * @param array $args
-   *  Optional arguments.
+   *   Optional arguments.
    * @param string $langcode
-   *  Language (ignored).
+   *   Language (ignored).
+   *
    * @return string.
-   *  Formatted string.
+   *   Formatted string.
    */
   public static function t($string, $args = array(), $langcode = FALSE) {
     assert($langcode || $langcode === FALSE);

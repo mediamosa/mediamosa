@@ -65,6 +65,10 @@ abstract class mediamosa_rest_call {
   // call.
   const METHOD_HEAD = 'HEAD';
 
+  // Type OPTIONS is used rarely. For now we use it for verifing cross domain
+  // uploads calls from ajax front-ends.
+  const METHOD_OPTIONS = 'OPTIONS';
+
   const CLASS_NAME = 'class_name';
   const CLASS_FILE_NAME = 'class_file_name';
 
@@ -288,7 +292,7 @@ abstract class mediamosa_rest_call {
     $this->validate_rest_args($var_setup);
 
     // Convert input datetime to UTC based on the app timezone.
-    $this->appdate2utc_rest_args($var_setup);
+    $this->appdate2utc_rest_args();
 
     // Call the function.
     $this->do_call();
@@ -300,6 +304,11 @@ abstract class mediamosa_rest_call {
    * Do authorize app.
    */
   private function do_app_authorized() {
+    // If we are internal or external, we dont care.
+    if ($this->is_internal() || $this->is_external()) {
+      return;
+    }
+
     // Run the app_authorized hook. One TRUE is authorized.
     $results = module_invoke_all('mediamosa_app_authorized');
     $authorized = FALSE;
@@ -310,10 +319,6 @@ abstract class mediamosa_rest_call {
       }
     }
 
-    // If we are internal or external, we dont care.
-    if ($this->is_internal() || $this->is_external()) {
-      return;
-    }
 
     if (!$authorized) {
       throw new mediamosa_exception_error_authentication_failure();
@@ -391,7 +396,8 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => $limit_default,
-      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+       // Once set, dont change.
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES,
       self::VAR_DESCRIPTION => mediamosa::t('Limit of the items of the result set.'),
       self::VAR_RANGE_START => 0,
       self::VAR_RANGE_END => $limit_max,
@@ -402,7 +408,8 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 0,
-      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+      // Once set, dont change.
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES,
       self::VAR_DESCRIPTION => mediamosa::t('The starting items position in the result set.'),
     );
 
@@ -421,6 +428,16 @@ abstract class mediamosa_rest_call {
    */
   protected function is_external() {
     return ((count($this->{self::URI_REQUEST}) && $this->{self::URI_REQUEST}[0] == 'external') || $this->{self::BEHAVE_AS_EXTERNAL});
+  }
+
+  /**
+   * Add access control allow origin header.
+   *
+   * Only call this function when the current call is allowed for cross domain.
+   * Used for upload calls and OPTIONS calls.
+   */
+  protected function add_header_access_control_allow_origin() {
+    header('Access-Control-Allow-Origin: *');
   }
 
   /**
@@ -453,10 +470,11 @@ abstract class mediamosa_rest_call {
    *   Provide current array to merge.
    * @param string $default_order_by
    *  Default field to order on.
-   * @param array $a_allowed_values_order_by
+   * @param array $allowed_values_order_by
    *  array containing allowed values.
    * @param string $default_order_direction
    *  ASC (default) / DESC direction.
+   *
    * @return array
    *  Returns the altered $var_setup.
    */
@@ -491,24 +509,30 @@ abstract class mediamosa_rest_call {
 
   /**
    * Turn on or off the check for unspecified.
-   * @param $bool
+   *
+   * This flag will enable to throw exception when any _GET or _POST var that is
+   * not specified in the var setup of the REST call object.
+   *
+   * @param boolean $check_for_unspecified
+   *   Supply TRUE when check for unspecified is unabled.
    */
-  public function set_check_for_unspecified($bool) {
-    $this->check_for_unspecified = $bool;
+  public function set_check_for_unspecified($check_for_unspecified) {
+    $this->check_for_unspecified = $check_for_unspecified;
   }
 
   /**
    * Retrieve the value of a supplied parameter.
    *
    * @param string $param
+   *   Name of the parameter.
    * @param bool $translate_bool
    *  Translate the bool to string variant.
-   * @param array $a_translate_bool
+   * @param array $translate_bools
    *  Array containing mapping to TRUE / FALSE string values.
    *  default: array(FALSE => 'FALSE', TRUE => 'TRUE')
    * @return mixed
    */
-  public function get_param_value($param, $translate_bool = FALSE, array $a_translate_bool = array(FALSE => 'FALSE', TRUE => 'TRUE')) {
+  public function get_param_value($param, $translate_bool = FALSE, array $translate_bools = array(FALSE => 'FALSE', TRUE => 'TRUE')) {
     if (!isset($this->rest_args[$param])) {
       throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
     }
@@ -522,15 +546,21 @@ abstract class mediamosa_rest_call {
       $this->rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 
-    return ($translate_bool && is_bool($this->rest_args[$param][self::PARAM_VALUE])) ? $a_translate_bool[$this->rest_args[$param][self::PARAM_VALUE]] : $this->rest_args[$param][self::PARAM_VALUE];
+    return ($translate_bool && is_bool($this->rest_args[$param][self::PARAM_VALUE])) ? $translate_bools[$this->rest_args[$param][self::PARAM_VALUE]] : $this->rest_args[$param][self::PARAM_VALUE];
   }
 
   /**
    * Retrieve the original value of a supplied parameter.
    *
+   * The original value is always the value that was submitted to the REST call
+   * by either GET or POST. If the param value is overwritten after the GET and
+   * POST is processed, this value will still contain the original value.
+   *
    * @param string $param
+   *   The name of the parameter.
    *
    * @return mixed
+   *   The original value of the supplied parameter.
    */
   public function get_param_value_org($param) {
     if (!isset($this->rest_args[$param])) {
@@ -542,10 +572,13 @@ abstract class mediamosa_rest_call {
 
   /**
    * Set the value of the supplied parameter.
+   *
    * Use only internally, expected to be correct value, not value checked.
    *
    * @param string $param
+   *   The name of the parameter.
    * @param mixed $value
+   *   The value to store.
    */
   public function set_param_value($param, $value) {
     if (isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
@@ -567,6 +600,7 @@ abstract class mediamosa_rest_call {
    * Unset param from var listing.
    *
    * @param string $param
+   *   The name of the parameter.
    */
   public function unset_param($param) {
     $this->set_param_value($param, NULL);
@@ -576,29 +610,39 @@ abstract class mediamosa_rest_call {
    * Will return TRUE if the param is set (by any means set)
    *
    * @param string $param
+   *   The name of the parameter.
+   *
    * @return boolean
+   *   Returns TRUE when value is set.
    */
   public function isset_param($param) {
     return isset($this->rest_args[$param]) && isset($this->rest_args[$param][self::PARAM_VALUE]);
   }
 
   /**
-   * Will return TRUE if the param was set by POST/GET/URI.
+   * Check if the value was set by POST/GET/URI.
+   *
    * If the param is set any other way (like default value or set_param), it
    * will return FALSE.
    *
    * @param string $param
+   *   The name of the parameter.
+   *
    * @return boolean
+   *   Will return TRUE if the param was set by POST/GET/URI.
    */
   public function isset_given_param($param) {
     return isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_ISSET_GIVEN];
   }
 
   /**
-   * Will return TRUE if the param was set by default and not by input.
+   * Will return TRUE if the param was set by default and not by GET/POST/URI.
    *
    * @param string $param
+   *   The name of the parameter.
+   *
    * @return boolean
+   *   Returns TRUE is value was set by default value.
    */
   public function isset_default_param($param) {
     return isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_ISSET_DEFAULT];
@@ -608,7 +652,10 @@ abstract class mediamosa_rest_call {
    * Will return TRUE if the param is empty.
    *
    * @param string $param
+   *   The name of the parameter.
+   *
    * @return boolean
+   *   Returns TRUE when value is 'empty'.
    */
   public function empty_param($param) {
     if (!self::isset_param($param)) {
@@ -629,6 +676,11 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns the app_ids param value (always array).
+   *
+   * The first app_id in the array is the main application (the caller).
+   *
+   * @return array
+   *   The app_ids.
    */
   public function get_param_value_app() {
     // Get the environment setting.
@@ -637,13 +689,19 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns the offset param value.
+   *
+   * @return integer
+   *   The offset in the resultset.
    */
   public function get_param_value_offset() {
     return $this->get_param_value(self::OFFSET);
   }
 
   /**
-   * Returns the offset param value.
+   * Returns the limit param value.
+   *
+   * @return integer
+   *   The maximum items returned in the resultset.
    */
   public function get_param_value_limit() {
     return $this->get_param_value(self::LIMIT);
@@ -651,6 +709,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns the order_by param value.
+   *
+   * @return string
+   *   The order by value.
    */
   public function get_param_value_order_by() {
     return $this->get_param_value(self::ORDER_BY);
@@ -658,6 +719,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns the order_direction param value.
+   *
+   * @return string
+   *   Either 'ASC' or 'DESC'.
    */
   public function get_param_value_order_direction() {
     return $this->get_param_value(self::ORDER_DIRECTION);
@@ -665,9 +729,14 @@ abstract class mediamosa_rest_call {
 
   /**
    * Return from $_GET / $_POST the value, if found.
+   *
    * Use this function if you need to go before the REST call process_rest_args.
    *
    * @param string $param
+   *   The name of the parameter.
+   *
+   * @return mixed
+   *   The value of the parameter.
    */
   public static function get_param_value_global($param) {
     // Is mediamosa_params is set, we take priority on those.
@@ -686,9 +755,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Return the method used on this REST call.
-   * @NOTE: This means you can not hack the METHOD here, it depends on
-   *        the assumsion the HTTP_METHOD does match the method specified
-   *        in the REST description array.
+   *
+   * @return string
+   *   The method used.
    */
   public function get_method() {
     return $this->{self::METHOD};
@@ -696,6 +765,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns TRUE / FALSE if method used is POST.
+   *
+   * @return boolean
+   *   Returns TRUE when POST.
    */
   public function is_method_post() {
     return $this->get_method() == self::METHOD_POST;
@@ -703,6 +775,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns TRUE / FALSE if method used is GET.
+   *
+   * @return boolean
+   *   Returns TRUE when GET.
    */
   public function is_method_get() {
     return $this->get_method() == self::METHOD_GET;
@@ -710,6 +785,9 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns TRUE / FALSE if method used is DELETE.
+   *
+   * @return boolean
+   *   Returns TRUE when DELETE.
    */
   public function is_method_delete() {
     return $this->get_method() == self::METHOD_DELETE;
@@ -717,10 +795,24 @@ abstract class mediamosa_rest_call {
 
   /**
    * Returns TRUE / FALSE if method used is PUT.
+   *
+   * @return boolean
+   *   Returns TRUE when PUT.
    */
   public function is_method_put() {
     return $this->get_method() == self::METHOD_PUT;
   }
+
+  /**
+   * Returns TRUE / FALSE if method used is OPTIONS.
+   *
+   * @return boolean
+   *   Returns TRUE when OPTIONS.
+   */
+  public function is_method_options() {
+    return $this->get_method() == self::METHOD_OPTIONS;
+  }
+
   // ---------------------------------------------------- Functions (protected).
   /**
    * Process the supplied parameters.
@@ -970,9 +1062,10 @@ abstract class mediamosa_rest_call {
   /**
    * Convert incoming dates to UTC.
    *
-   * @param array $var_setup
+   * Based on client application timezone, the incoming dates are converted into
+   * UTC.
    */
-  protected function appdate2utc_rest_args(array $var_setup) {
+  protected function appdate2utc_rest_args() {
 
     // Get the timezone.
     $timezone = mediamosa::get_environment_timezone();
