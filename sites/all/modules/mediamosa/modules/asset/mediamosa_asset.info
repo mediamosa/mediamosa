@@ -55,6 +55,7 @@ files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.test
 ; Mediafile Upload.
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.rest.class.inc
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.test
+files[] = mediafile/upload/mediamosa_asset_mediafile_upload_ticket.test
 
 ; Metadata.
 files[] = metadata/mediamosa_asset_metadata.rest.class.inc

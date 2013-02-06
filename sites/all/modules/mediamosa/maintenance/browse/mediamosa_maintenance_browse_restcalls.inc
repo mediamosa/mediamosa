@@ -57,12 +57,14 @@ function _mediamosa_maintenance_browse_restcalls_filters() {
         mediamosa_rest_call::METHOD_GET => t('GET'),
         mediamosa_rest_call::METHOD_POST => t('POST'),
         mediamosa_rest_call::METHOD_PUT => t('PUT'),
+        mediamosa_rest_call::METHOD_OPTIONS => t('OPTIONS'),
       ),
       'default' => array(
         mediamosa_rest_call::METHOD_DELETE => mediamosa_rest_call::METHOD_DELETE,
         mediamosa_rest_call::METHOD_GET => mediamosa_rest_call::METHOD_GET,
         mediamosa_rest_call::METHOD_POST => mediamosa_rest_call::METHOD_POST,
         mediamosa_rest_call::METHOD_PUT => mediamosa_rest_call::METHOD_PUT,
+        mediamosa_rest_call::METHOD_OPTIONS => mediamosa_rest_call::METHOD_OPTIONS,
       ),
     ),
     mediamosa_rest_call::VERSION => array(

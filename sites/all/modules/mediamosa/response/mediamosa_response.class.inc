@@ -29,6 +29,9 @@ class mediamosa_response extends mediamosa {
   // Media (new 3.1)
   const RESPONSE_TYPE_MEDIA = 'media';
 
+  // No response, HTTP header only.
+  const RESPONSE_TYPE_VOID = 'void';
+
   // ------------------------------------------------------------------ Members
   // The stored response.
   protected $response = array();
@@ -196,7 +199,6 @@ class mediamosa_response extends mediamosa {
       // We redirect and exit.
       exit();
     }
-    // oAuth exceptions.
     catch (OAuthException $e) {
       print($e->getMessage());
       exit();
@@ -359,7 +361,6 @@ class mediamosa_response extends mediamosa {
     return $output;
   }
 
-
   /**
    * Generate output.
    */
@@ -415,6 +416,10 @@ class mediamosa_response extends mediamosa {
         case mediamosa_response::RESPONSE_TYPE_XML_OEMBED:
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml_oembed();
+          break;
+
+        case mediamosa_response::RESPONSE_TYPE_VOID:
+          $output = '';
           break;
 
         default:
@@ -1032,6 +1037,7 @@ class mediamosa_response extends mediamosa {
    * Generate the XML output.
    *
    * @return string
+   *   The generated XML.
    */
   public function generate_xml() {
 
@@ -1074,7 +1080,6 @@ class mediamosa_response extends mediamosa {
       }
     }
 
-    $item_counter = 1;
     foreach ($this->response['items'] as $item) {
       $this->generate_xml_add_child($dom_document, $dom_element_items, 'item', $item);
     }

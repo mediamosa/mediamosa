@@ -18,13 +18,11 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
   const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
 
-  private $a_metadata_definitions_full = NULL;
-
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -47,7 +45,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -88,116 +86,42 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
   }
 }
 
-///**
-// * URI: /mediafile/$mediafile_id/upload/create
-// *
-// * Method: POST
-// */
-//class mediamosa_rest_call_asset_mediafile_upload_create extends mediamosa_rest_call {
-//  // ------------------------------------------------------------------ Consts.
-//  // Rest vars;
-//  const MEDIAFILE_ID = 'mediafile_id';
-//  const USER_ID = 'user_id';
-//  const GROUP_ID = 'group_id';
-//
-//  private $a_metadata_definitions_full = NULL;
-//
-//  // ------------------------------------------------------------------ Get Var Setup.
-//  public function get_var_setup() {
-//    $a_var_setup = array(
-//      self::VARS => array(
-//        self::MEDIAFILE_ID => array(
-//          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
-//          self::VAR_DESCRIPTION => 'ID of an original file (then it is without transcode) or empty mediafile.',
-//          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-//          self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
-//        ),
-//        self::USER_ID => array(
-//          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-//          self::VAR_DESCRIPTION => 'User id, determined to check whether the applicant has the rights and quotas to upload the mediafile.',
-//          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-//          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
-//        ),
-//        self::GROUP_ID => array(
-//          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-//          self::VAR_DESCRIPTION => 'Group id, used for any quota check..',
-//          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
-//        ),
-//      )
-//    );
-//
-//    // Enrich with required REST vars.
-//    return self::get_var_setup_default($a_var_setup);
-//  }
-//
-//  // ------------------------------------------------------------------ Do Call.
-//  public function do_call() {
-//    if (module_exists('mediamosa_storage')) {
-//      $this->storage_module_call();
-//    }
-//    else {
-//      $this->standard_ticket_call();
-//    }
-//  }
-//
-//  private function storage_module_call() {
-//    $mediamosa = mediamosa::get();
-//
-//    // Get the app_id.
-//    $app_ids = $this->get_param_value_app();
-//    $app_id = reset($app_ids);
-//
-//    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
-//    $user_id = $this->get_param_value(self::USER_ID);
-//    $group_id = $this->get_param_value(self::GROUP_ID);
-//
-//    // Decide which storage class to use
-//    $mediafile = mediamosa_storage_profile_app::get_mediafile_object($mediafile_id);
-//    $mediafile = mediamosa_storage::create_instance_for_mediafile($mediafile_id);
-//
-//    // Set response.
-//    $mediamosa->add_item($mediafile->get_upload_parameters($app_id, $user_id, $group_id));
-//  }
-//
-//  private function standard_ticket_call() {
-//    $mediamosa = mediamosa::get();
-//
-//    // Get the app_id.
-//    $app_ids = $this->get_param_value_app();
-//    $app_id = reset($app_ids);
-//
-//    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
-//    $user_id = $this->get_param_value(self::USER_ID);
-//    $group_id = $this->get_param_value(self::GROUP_ID);
-//
-//    // Decide which storage class to use
-//
-//
-//    // Create.
-//    $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
-//
-//    // Get serverupload.
-//    $server_upload = mediamosa_server::get_random_upload();
-//
-//    if (!$server_upload) {
-//      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_SERVER_UPLOAD_NOT_FOUND);
-//    }
-//
-//    // Generate unique ID.
-//    $uuid = rand(1000000, 9999999);
-//
-//    // Set response.
-//    $mediamosa->add_item(
-//    array(
-//          'action' => strtr(mediamosa_server::get_server_url($server_upload), array('{TICKET}' => $ticket_id, '{PROGRESS_ID}' => $uuid)),
-//          'uploadprogress_url' => strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS], array('{PROGRESS_ID}' => $uuid, '{SERVER_ID}' => $server_upload[mediamosa_server_db::NID])),
-//          'ticket_id' => $ticket_id,
-//          'progress_id' => $uuid,
-//          'server_id' => $server_upload[mediamosa_server_db::NID],
-//    )
-//    );
-//  }
-//}
+class mediamosa_rest_call_asset_mediafile_upload_options extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const UPLOAD_TICKET = 'upload_ticket';
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::UPLOAD_TICKET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
+          self::VAR_DESCRIPTION => 'The ID that has been given to enable the upload.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    // Ticket id.
+    $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+
+    // Check if ticket exists.
+    if (mediamosa_media_ticket::get_valid_upload($ticket_id)) {
+      $this->add_header_access_control_allow_origin();
+    }
+  }
+}
+
 
 /**
  * URI: /mediafile/upload
@@ -242,11 +166,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   const ORDER = 'order';
   const DEFAULT_ = 'default';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::UPLOAD_TICKET => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
@@ -410,7 +334,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -473,7 +397,8 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $filename_put = NULL;
 
     if ($this->is_method_put()) {
-      $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
+      // With PUT only.
+      $filename_put = $this->get_param_value(self::FILENAME);
     }
 
     try {
@@ -483,7 +408,8 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         // Add still_id to output.
         $mediamosa->add_item(array('still_id' => $still_id));
       }
-      else { // Normal upload.
+      else {
+        // Normal upload.
         mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $trancode_profiles, $retranscode, $transcode_inherits_acl, $create_still, $still_parameters, $completed_transcoding_url);
       }
     }
@@ -497,6 +423,9 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       // Lets create error output then.
       throw $e;
     }
+
+    // Success, add allow origin header.
+    $this->add_header_access_control_allow_origin();
 
     // Redirect when needed.
     if ($this->isset_param(self::REDIRECT_URI)) {

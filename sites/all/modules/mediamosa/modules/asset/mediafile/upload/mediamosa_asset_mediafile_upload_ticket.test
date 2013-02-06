@@ -1,0 +1,67 @@
+<?php
+/**
+ * @file
+ * Upload test of files (videos / stills).
+ */
+
+class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ----------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - upload crossdomain test',
+      'description' => 'Test if OPTIONS calls are handled for crossdomain checks.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test if crossdomain is allowed for valid upload tickets.
+   */
+  function testUploadCrossdomain() {
+    // Create asset and mediafile.
+    $asset_id = $this->createAsset();
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create upload ticket.
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id, array(mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => self::SIMPLETEST_USER_ID));
+
+    // Get upload url.
+    $action = $uploadticket['action'];
+    $this->var_export($action);
+
+    $options = array(
+      'method' => 'OPTIONS',
+    );
+
+    $response = mediamosa_http::drupal_http_request($action, $options);
+    $this->var_export($response->headers);
+    $this->var_export($response->data);
+
+    // Must contain 'access-control-allow-origin' => '*';
+    $this->assertTrue(isset($response->headers['access-control-allow-origin']));
+
+    // Rebuild url.
+    $parse_url = mediamosa_http::parse_url($action);
+    $parse_url['query'] = mediamosa_http::parse_query(empty($parse_url['query']) ? '' : $parse_url['query']);
+    $this->var_export($parse_url);
+
+    // Rebuild with invalid ticket.
+    $parse_url['query']['upload_ticket'] = str_shuffle($parse_url['query']['upload_ticket']);
+    $parse_url['query'] = mediamosa_http::http_build_query($parse_url['query']);
+
+    // Rebuild.
+    $action = mediamosa_http::build_url($parse_url);
+
+    $response = mediamosa_http::drupal_http_request($action, $options);
+    $this->var_export($response->headers);
+    $this->var_export($response->data);
+
+    // Must not contain 'access-control-allow-origin' => '*';
+    $this->assertFalse(isset($response->headers['access-control-allow-origin']));
+  }
+}

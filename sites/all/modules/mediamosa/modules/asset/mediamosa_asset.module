@@ -375,14 +375,6 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-//  // Create ticket for upload.
-//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
-//    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_create',
-//    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-//    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
-//    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
-//  );
-
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
@@ -610,6 +602,21 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
   );
 
+  // OPTIONS type for verifing crossdomain.
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_options',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_4_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_UPLOAD),
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_VOID,
+  );
+
+  // Same OPTIONS for this uri.
+  $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
 
   return $rest_calls;
 }
@@ -1723,23 +1730,6 @@ tag=Best',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
-//  // Create ticket for upload.
-//  //TODO: update the doc of the following rest call
-//  $rest_calls['mediafile/$mediafile_id/upload/create'][mediamosa_rest_call::METHOD_POST] = array(
-//  mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
-//  mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
-//  mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload/create',
-//  mediamosa_rest_call::RESPONSE_FIELDS => array(),
-//  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-//  <item id="1">
-//    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
-//    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
-//    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
-//    <progress_id>1234567</progress_id>
-//  </item>
-//</items>',
-//  );
-
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
@@ -2007,6 +1997,18 @@ user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '{"status":1,"percentage":-1,"message":"Uploading"}',
   );
+
+  $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS] = array(
+    mediamosa_rest_call::TITLE => 'Options call for upload.',
+    mediamosa_rest_call::DESCRIPTION => 'Used to return if upload is allowed for domain.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[OPTIONS] mediafile/upload',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  // Options call mediafile.
+  $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
 
   return $rest_calls;
 }

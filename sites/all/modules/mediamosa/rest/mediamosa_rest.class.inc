@@ -1,35 +1,11 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The REST class object contains the REST layer;
  * translates uri into rest call functions and handles all out going data
  * and errors.
  */
+
 class mediamosa_rest {
   // ------------------------------------------------------------------ Consts
 
@@ -190,7 +166,7 @@ class mediamosa_rest {
       return FALSE;
     }
 
-    mediamosa_debug::log("Matched URI '@uri' to REST call '@rest_uri'", array('@uri' => $request_uri_cpy, '@rest_uri' => $rest_call_return[mediamosa_rest_call::URI]));
+    mediamosa_debug::log("Matched URI '@uri' to REST call '@rest_uri' [@method]", array('@uri' => $request_uri_cpy, '@rest_uri' => $rest_call_return[mediamosa_rest_call::URI], '@method' => $request_method));
 
     // Store the original.
     $rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
@@ -206,7 +182,7 @@ class mediamosa_rest {
    */
   public static function set_default_rest_call(array $rest_call) {
     // Make sure all are valid values.
-    assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
+    assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT, mediamosa_rest_call::METHOD_OPTIONS)));
     assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::STATUS_DISABLED)));
     assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]));
     assert(isset($rest_call[mediamosa_rest_call::MODULE_NAME]));
@@ -406,7 +382,7 @@ class mediamosa_rest {
    * Dispatch the REST request execution.
    *
    * @param array $rest_call
-   *  Array containing the data needed to run the REST call.
+   *   Array containing the data needed to run the REST call.
    */
   final public function process_call(array $rest_call) {
     // Get the mediamosa object.
@@ -469,5 +445,4 @@ class mediamosa_rest {
     // Return the var setup.
     return $the_rest_call->get_var_setup();
   }
-
 }

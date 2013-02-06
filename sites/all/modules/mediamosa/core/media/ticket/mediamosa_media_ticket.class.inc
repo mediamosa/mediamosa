@@ -271,9 +271,12 @@ class mediamosa_media_ticket {
    * Get the uploadticket, but make sure its not timed-out.
    *
    * @param $ticket_id
-   *  The ticket ID to get.
+   *   The ticket ID to get.
    * @param string $ticket_type
-   *  Matching ticket type.
+   *   Matching ticket type.
+   * 
+   * @return array|FALSE
+   *   Either array with ticket info or FALSE when ticket is no longer valid.
    */
   public static function get_valid($ticket_id, $ticket_type) {
 
@@ -320,6 +323,10 @@ class mediamosa_media_ticket {
    * Wrapper for upload type.
    *
    * @param string $ticket_id
+   *   The ticket ID.
+   *
+   * @return array|FALSE
+   *   Either array with ticket info or FALSE when ticket is no longer valid.
    */
   public static function get_valid_upload($ticket_id) {
     return self::get_valid($ticket_id, mediamosa_media_ticket_db::TICKET_TYPE_UPLOAD);
