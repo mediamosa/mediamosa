@@ -88,7 +88,7 @@ class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
     $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
     $response = $this->restCall('login', 'POST', $post_data);
 
-    $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::get_server_guid(), 'Login fase 2 success');
+    $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::APP_AUTH_SERVER_GUID, 'Login fase 2 success');
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
 
     // Now test with suppling wrong password.

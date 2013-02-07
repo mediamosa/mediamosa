@@ -186,12 +186,12 @@ function theme_mediamosa_connector_call($variables) {
     '#title' => '[' . $log['method'] . '] ' . $log['url'] . ' (' . $log['result_id'] . (empty($log['result_description']) ? '' : ': ' . $log['result_description']) . '), (' .  $log['response_time'] . ' sec)',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#attributes' => array('class' => array('collapsible collapsed')),
+    '#attributes' => array('class' => array('collapsible collapsed'), 'style' => 'height:auto;'),
     '#attached' => array('library' => array(array('system', 'drupal.collapse'))),
   );
 
   $form['restcall']['data'] = array(
-    '#prefix' => '<pre><div align="left">',
+    '#prefix' => '<pre style="font-family:Fixed, monospace;font-size:12px;"><div align="left" class="mediamosa-connector-data">',
     '#suffix' => '</div></pre>',
     '#markup' => highlight_string($log['data'], TRUE),
   );

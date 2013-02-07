@@ -304,7 +304,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // We must call parent to skip the different session stuff.
     $response = parent::restCall('login', 'POST', $post_data);
 
-    $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::get_server_guid(), 'Login fase 2 success');
+    $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_dbus::APP_AUTH_SERVER_GUID, 'Login fase 2 success');
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
 
     // Store session stuff so we can switch sessions during REST calls.
