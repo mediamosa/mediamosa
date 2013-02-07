@@ -154,6 +154,16 @@ MediaMosa 3.4.x-dev (build 2008, master branch)
 - Added unit test for 'Access-Control-Allow-Origin'.
 - Extended REST browser for method OPTIONS.
 - Extended REST layer to allow empty responses (HTTP header only).
+- Cleaned up the code of the DBus authentication class (mediamosa_app_dbus).
+- UI of asset and collection browse has been improved.
+- Created COPYRIGHT.MediaMosa.txt to root of module. Will replace all source
+  header copyrights.
+- Fixed wrong message about deleted app on transcode profile, while transcode
+  profile was global.
+- Any anonymous access is now always denied to admin, users must login. Switch
+  is stored in variable named 'mediamosa_deny_anonymous' and set to TRUE.
+- Added extra check on install profile for mountpoint exists.
+- Fixed Rubik theme not to use hidden copy of the action form on the same page.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

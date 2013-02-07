@@ -1,7 +1,7 @@
 <?php
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 2008);
+define('MEDIAMOSA_BUILD', 2010);
 define('MEDIAMOSA_VERSION', '3.4.x');
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-dev');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-development');
@@ -35,6 +35,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_3_0 = '2.3.0';
   const MEDIAMOSA_VERSION_3_0_0 = '3.0.0';
   const MEDIAMOSA_VERSION_3_4_0 = '3.4.0';
+  const MEDIAMOSA_VERSION_3_5_0 = '3.5.0';
 
   // Used for APPs.
   const LATEST = 'LATEST';
@@ -53,7 +54,7 @@ class mediamosa_version {
    * @return array
    */
   public static function get_version($version) {
-    list($major, $minor, $release) = preg_split("/[.:]+/", $version, 3) + array(0 => 1, 1 => 0, 2 => 0);
+    list($major, $minor, $release) = preg_split('/[.:]+/', $version, 3) + array(0 => 1, 1 => 0, 2 => 0);
     return array(
       self::MAJOR => (int) $major,
       self::MINOR => (int) $minor,
@@ -68,11 +69,11 @@ class mediamosa_version {
    * @return array
    */
   public static function get_current_version($return_full = FALSE) {
-    list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
+    list($major, $minor, $release, $build, $info) = preg_split('/[.:-]+/', ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
-      self::MAJOR => $major,
-      self::MINOR => $minor,
-      self::RELEASE => $release,
+      self::MAJOR => (int) $major,
+      self::MINOR => (int) $minor,
+      self::RELEASE => (int) $release,
       self::BUILD => $build,
       self::INFO => $info,
     );
