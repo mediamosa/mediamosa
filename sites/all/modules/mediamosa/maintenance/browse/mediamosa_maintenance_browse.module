@@ -128,7 +128,6 @@ function mediamosa_maintenance_browse_menu() {
     'title' => 'Asset browser',
     'description' => 'View assets currently in our database.',
     'page callback' => '_mediamosa_browse_asset_page',
-    'page arguments' => array('list'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
@@ -366,14 +365,6 @@ function mediamosa_maintenance_browse_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TESTING),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_simpletest.inc',
-  );
-
-  $items['admin/mediamosa/browse/js/collection/searchparameters'] = array(
-    'page callback' => '_ajax_browse_collection_search_parameters',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-    'file' => 'mediamosa_maintenance_browse_collection.inc',
   );
 
   $items['admin/mediamosa/browse/js/asset/searchparameters'] = array(
