@@ -699,4 +699,14 @@ class mediamosa {
   public static function is_windows_platform() {
     return (mediamosa_unicode::substr(PHP_OS, 0, 3) == 'WIN');
   }
+
+  /**
+   * Deny any access for anonymous.
+   *
+   * @return boolean
+   *   TRUE when access for anonymous is denied.
+   */
+  public static function deny_anonymous() {
+    return variable_get('mediamosa_deny_anonymous', TRUE);
+  }
 }

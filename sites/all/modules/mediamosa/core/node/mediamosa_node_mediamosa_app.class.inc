@@ -1033,9 +1033,11 @@ function mediamosa_app_metadata_tag_form($form, &$form_state, $node) {
     '#value' => $node->app_id,
   );
 
-
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Add new tag'));
+
+  // Form action, but do not repeat below.
   $form['actions']['#type'] = 'actions';
+  $form['actions']['#mediamosa_no_clone'] = TRUE;
 
   // Show as settings form look.
   $form['#theme'] = 'system_settings_form';
