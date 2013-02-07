@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2006, master branch)
+MediaMosa 3.4.x-dev (build 2008, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -146,6 +146,14 @@ MediaMosa 3.4.x-dev (build 2006, master branch)
 - Drastically improved response time when doing calls to Amazon S3. View calls
   went from 1+ seconds to 0.08 second due to S3 object creation bug.
 - Showing 'storage' tab on nodes that are not type storage application.
+- Added OPTIONS method to REST layer.
+- Added OPTIONS rest calls for upload ticket REST calls. Will add
+  'Access-Control-Allow-Origin' to header when upload ticket is valid.
+- Added 'Access-Control-Allow-Origin' to result header when upload POST/PUT was
+  successful.
+- Added unit test for 'Access-Control-Allow-Origin'.
+- Extended REST browser for method OPTIONS.
+- Extended REST layer to allow empty responses (HTTP header only).
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
