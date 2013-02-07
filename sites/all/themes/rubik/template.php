@@ -468,7 +468,7 @@ function rubik_admin_drilldown_menu_item_link($link) {
 function rubik_preprocess_textfield(&$vars) {
   if ($vars['element']['#size'] >= 30 && empty($vars['element']['#field_prefix']) && empty($vars['element']['#field_suffix'])) {
     $vars['element']['#size'] = '';
-    if (!isset($vars['element']['#attributes']['class']) 
+    if (!isset($vars['element']['#attributes']['class'])
       || !is_array($vars['element']['#attributes']['class'])) {
        $vars['element']['#attributes']['class'] = array();
     }
@@ -514,11 +514,13 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
+
+  if (!empty($elements['#mediamosa_no_clone'])) {
+    return;
+  }
+
   // Unique ID.
   $elements['#id'] = "{$elements['#id']}-{$instance}";
-
-  // Hide. Still no idea why we clone.
-  $elements['#attributes'] = array('style' => 'display:none');
 
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
@@ -535,15 +537,8 @@ function rubik_render_clone($elements) {
   return drupal_render($elements);
 }
 
-/**
- * @todo: fix on rubik theme.
- */
 function _rubik_render_clone(&$elements, $instance) {
-
   foreach (element_children($elements) as $key) {
-    unset($elements[$key]);
-    continue;
-
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
     }
