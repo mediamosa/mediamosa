@@ -289,11 +289,14 @@ function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
   if (trim($mount_point) == '') {
     form_set_error('current_mount_point', t("The current Linux mount point can't be empty."));
   }
+  elseif (!file_exists($mount_point)) {
+    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') can not be found.", array('@mount_point' => $mount_point)));
+  }
   elseif (!is_dir($mount_point)) {
-    form_set_error('current_mount_point', t('The current Linux mount point is not a directory.'));
+    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') is not a directory.", array('@mount_point' => $mount_point)));
   }
   elseif (!is_writable($mount_point)) {
-    form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the webserver (@server_software).', array('@server_software' => $_SERVER['SERVER_SOFTWARE'])));
+    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') is not writeable for the webserver (@server_software).", array('@server_software' => $_SERVER['SERVER_SOFTWARE'], '@mount_point' => $mount_point)));
   }
 }
 
