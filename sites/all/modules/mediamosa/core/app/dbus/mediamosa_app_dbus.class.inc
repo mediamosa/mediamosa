@@ -1,91 +1,88 @@
 <?php
 /**
  * @file
- * The APP authentication class.
+ * The client application DBus authentication class.
  */
 
 class mediamosa_app_dbus {
-  // End User Application authentication settings.
+  // ------------------------------------------------------------------- Consts.
+  // Client Application authentication settings.
   const APP_AUTH_CONTEXT = 'vpx';
   const APP_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
   const APP_AUTH_SERVER_GUID = 'server_guid';
 
   // ---------------------------------------------------------------- Functions.
   /**
-   * Get the shared key for the application.
+   * Get the shared key for the (active) application.
    *
    * @param string $name
-   *   Client application name.
+   *   The name of the client app.
    *
    * @return string
-   *   The shared key.
+   *   The shared key (password).
    */
   public static function get_shared_key($name) {
-    return mediamosa_db::db_query(
-      "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = :active_true",
-      array(
-        '#shared_key' => mediamosa_app_db::SHARED_KEY,
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
-        '#name' => mediamosa_app_db::APP_NAME,
-        ':name' => $name,
-        '#active' => mediamosa_app_db::ACTIVE,
-        ':active_true' => mediamosa_app_db::ACTIVE_TRUE,
-      )
-    )->fetchField();
-  }
-
-  /**
-   * Returns the server guid.
-   */
-  public static function get_server_guid() {
-    return self::APP_AUTH_SERVER_GUID;
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', array(mediamosa_app_db::SHARED_KEY))
+      ->condition(mediamosa_app_db::APP_NAME, $name)
+      ->condition(mediamosa_app_db::ACTIVE, mediamosa_app_db::ACTIVE_TRUE)
+      ->fetchField();
   }
 
   /**
    * Test if application is enabled (active).
    *
+   * @todo: move to lower mediamosa_app class.
+   *
    * @param string $name
-   *   Client application name.
+   *   The name of the application.
    *
    * @return boolean
-   *   whether app is active or not.
+   *   Returns TRUE when app is active OR FALSE when not.
    */
   public static function is_app_active($name) {
-    return mediamosa_db::db_query(
-      "SELECT #active FROM {#table_name} WHERE #name = :name",
-      array(
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
-        '#name' => mediamosa_app_db::APP_NAME,
-        ':name' => $name,
-        '#active' => mediamosa_app_db::ACTIVE,
-      )
-    )->fetchField() == mediamosa_app_db::ACTIVE_TRUE ? TRUE : FALSE;
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', array(mediamosa_app_db::ACTIVE))
+      ->condition(mediamosa_app_db::APP_NAME, $name)
+      ->fetchField() == mediamosa_app_db::ACTIVE_TRUE;
   }
 
-
   /**
-   * Get the app.
+   * Get the client app.
+   *
+   * @todo: remove and use mediamos_app::get_by_name function directly.
    *
    * @param string $name
-   *   Client application name.
+   *   The name of the app to get.
    *
    * @return array
-   *   Client application information.
+   *   The client app or FALSE.
    */
   public static function get_app($name) {
     return mediamosa_app::get_by_name($name);
   }
 
   /**
+   * Get the secret random phrase.
+   *
+   * @return string
+   *   The secret phrase.
+   */
+  protected static function get_secret_phrase() {
+    return self::APP_AUTH_SECRET_PHRASE;
+  }
+
+  /**
    * A (cookie) ID authentication method.
    *
    * @param string $command
-   *   .
+   *   The DBus command, either 'AUTH' or 'DATA'.
    * @param string $param
-   *   .
+   *   The DBus command parameter.
    *
-   * @return string
-   *   Returns error string, data string or boolean TRUE.
+   * @return string | boolean
+   *   The DBus response (string) or boolean for failure status. Will return
+   *   FALSE when authentication failed, TRUE when success.
    */
   public static function dbus_cookie_sha1($command, $param) {
 
@@ -98,11 +95,8 @@ class mediamosa_app_dbus {
 
         $_SESSION['mediamosa_dbus']['username'] = $param;
         $_SESSION['mediamosa_dbus']['cookie_id'] = 0;
-        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::APP_AUTH_SECRET_PHRASE);
-        return
-          'DATA ' . self::APP_AUTH_CONTEXT . ' ' .
-          $_SESSION['mediamosa_dbus']['cookie_id'] . ' ' .
-          $_SESSION['mediamosa_dbus']['challenge'];
+        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::get_secret_phrase());
+        return 'DATA ' . self::APP_AUTH_CONTEXT . ' 0 ' . $_SESSION['mediamosa_dbus']['challenge'];
 
       case 'DATA':
         $cookie = self::get_shared_key($_SESSION['mediamosa_dbus']['username']);
@@ -117,13 +111,14 @@ class mediamosa_app_dbus {
    * Process the incoming DBUS line.
    *
    * @param string $line
-   *   dbus line.
+   *   The incoming DBUS line.
    *
    * @return string
-   *   a SUCCESS or REJECTED string.
+   *   The DBus result string.
    */
   public static function app_dbus_protocol($line) {
-    // Initialize identification.
+    // We could extend with more than one authentication method if SHA1 might
+    // no longer be safe enough.
     $auth_methods = array(
       'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1',
     );
@@ -147,6 +142,7 @@ class mediamosa_app_dbus {
     switch ($command) {
       case 'AUTH':
         if ($param == '') {
+          // Reject and return space speparated available methods.
           return 'REJECTED ' . implode(' ', array_keys($auth_methods));
         }
 
@@ -154,9 +150,6 @@ class mediamosa_app_dbus {
         if (!isset($auth_methods[$mechanism])) {
           return 'ERROR unknown mechanism';
         }
-
-        // Will assert if not exists.
-        assert(method_exists('mediamosa_app_dbus', $auth_methods[$mechanism]));
 
         $_SESSION['mediamosa_dbus']['mechanism'] = $auth_methods[$mechanism];
         $_SESSION['mediamosa_dbus']['username'] = FALSE;
@@ -170,7 +163,7 @@ class mediamosa_app_dbus {
         }
 
         // Check if chosen mechanism is available.
-        if ($_SESSION['mediamosa_dbus']['mechanism'] == FALSE) {
+        if (empty($_SESSION['mediamosa_dbus']['mechanism']) || !isset($auth_methods[$_SESSION['mediamosa_dbus']['mechanism']])) {
           return 'ERROR mechanism not specified';
         }
 
@@ -180,30 +173,32 @@ class mediamosa_app_dbus {
           array($command, $param)
         );
 
-        if (!is_bool($result)) {
+        // When a string is returned, we do the same.
+        if (is_string($result)) {
           return $result;
         }
 
+        // FALSE means failure.
         if (!$result) {
           $_SESSION['mediamosa_dbus']['mechanism'] = FALSE;
           $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
           return 'REJECTED';
         }
 
-        $a_app = mediamosa_app_dbus::get_app($_SESSION['mediamosa_dbus']['username']);
-        // All ok?
-        if (!$a_app) {
+        // App found?
+        $app = mediamosa_app_dbus::get_app($_SESSION['mediamosa_dbus']['username']);
+        if (!$app) {
           unset($_SESSION['mediamosa_dbus']);
           return 'ERROR database error';
         }
 
-        // Set the identification in session.
+        // Store the identification in session.
         $_SESSION['mediamosa_app'] = array(
-          'app_id' => $a_app[mediamosa_app_db::APP_ID],
-          'name' => $a_app[mediamosa_app_db::APP_NAME],
+          'app_id' =>  $app[mediamosa_app_db::APP_ID],
+          'name' => $app[mediamosa_app_db::APP_NAME],
         );
 
-        return 'OK ' . self::get_server_guid();
+        return 'OK ' . self::APP_AUTH_SERVER_GUID;
 
       case 'BEGIN':
         if ($_SESSION['mediamosa_app'] == FALSE) {
