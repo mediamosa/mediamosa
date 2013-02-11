@@ -585,6 +585,10 @@ class mediamosa_job {
         return;
       }
     }
+    else {
+      // Is local, no need to download.
+      return;
+    }
 
     // Create job.
     return self::create_job(
