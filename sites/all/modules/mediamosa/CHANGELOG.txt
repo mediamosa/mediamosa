@@ -163,7 +163,10 @@ MediaMosa 3.4.x-dev (build 2008, master branch)
 - Any anonymous access is now always denied to admin, users must login. Switch
   is stored in variable named 'mediamosa_deny_anonymous' and set to TRUE.
 - Added extra check on install profile for mountpoint exists.
-- Fixed Rubik theme not to use hidden copy of the action form on the same page.
+- Fixed Rubik theme not to use hidden copy of the action form on the same page
+  when form was used as parameters form.
+- Media download job is no longer created when file is stored locally.
+- Fixed bugs in merged code of dbus class.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
