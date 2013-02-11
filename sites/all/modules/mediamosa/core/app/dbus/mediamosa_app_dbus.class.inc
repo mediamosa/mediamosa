@@ -26,6 +26,7 @@ class mediamosa_app_dbus {
       ->fields('app', array(mediamosa_app_db::SHARED_KEY))
       ->condition(mediamosa_app_db::APP_NAME, $name)
       ->condition(mediamosa_app_db::ACTIVE, mediamosa_app_db::ACTIVE_TRUE)
+      ->execute()
       ->fetchField();
   }
 
@@ -44,6 +45,7 @@ class mediamosa_app_dbus {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
       ->fields('app', array(mediamosa_app_db::ACTIVE))
       ->condition(mediamosa_app_db::APP_NAME, $name)
+      ->execute()
       ->fetchField() == mediamosa_app_db::ACTIVE_TRUE;
   }
 
@@ -126,9 +128,9 @@ class mediamosa_app_dbus {
     // Make sure session is clean.
     if (!isset($_SESSION['mediamosa_dbus'])) {
       $_SESSION['mediamosa_dbus'] = array(
-        'mechanism'  => FALSE,
-        'challenge'  => FALSE,
-        'username'   => '',
+        'mechanism' => FALSE,
+        'challenge' => FALSE,
+        'username' => '',
       );
     }
 
@@ -151,7 +153,7 @@ class mediamosa_app_dbus {
           return 'ERROR unknown mechanism';
         }
 
-        $_SESSION['mediamosa_dbus']['mechanism'] = $auth_methods[$mechanism];
+        $_SESSION['mediamosa_dbus']['mechanism'] = $mechanism;
         $_SESSION['mediamosa_dbus']['username'] = FALSE;
         $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
         $param = $init;
@@ -169,7 +171,7 @@ class mediamosa_app_dbus {
 
         // Call the chosen method.
         $result = call_user_func_array(
-          array('mediamosa_app_dbus', $_SESSION['mediamosa_dbus']['mechanism']),
+          array('mediamosa_app_dbus', $auth_methods[$_SESSION['mediamosa_dbus']['mechanism']]),
           array($command, $param)
         );
 
