@@ -376,7 +376,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);
     $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
     $tag = $this->get_param_value(self::TAG);
-    $trancode_profiles = $this->get_param_value(self::TRANSCODE);
+    $transcode_profiles = $this->get_param_value(self::TRANSCODE);
     $retranscode = $this->get_param_value(self::RETRANSCODE);
 
     // Is still upload?
@@ -384,21 +384,34 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $order = $this->get_param_value(self::ORDER);
     $default = $this->get_param_value(self::DEFAULT_);
 
-    $filename_put = NULL;
+    // With PUT only.
+    $filename_put = $this->is_method_put() ? $this->get_param_value(self::FILENAME) : NULL;
 
-    if ($this->is_method_put()) {
-      $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
-    }
+    // Frametime (point of still in media).
+    $frametime = $this->get_param_value(self::FRAMETIME);
 
     try {
       if ($still_upload) {
-        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default, $still_parameters, $this->get_param_value(self::FRAMETIME));
+        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still('file', $ticket_id, $filename_put, $tag, $completed_url, $order, $default, $still_parameters, $frametime);
 
         // Add still_id to output.
         $mediamosa->add_item(array('still_id' => $still_id));
       }
-      else { // Normal upload.
-        mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $trancode_profiles, $retranscode, $transcode_inherits_acl, $create_still, $still_parameters, $completed_transcoding_url);
+      else {
+        // Normal upload.
+        mediamosa_asset_mediafile_upload::handle_upload(
+          'file',
+          $ticket_id,
+          $filename_put,
+          $tag,
+          $completed_url,
+          $transcode_profiles,
+          $transcode_inherits_acl,
+          $retranscode,
+          $completed_transcoding_url,
+          $create_still,
+          $still_parameters
+        );
       }
     }
     catch (Exception $e) {

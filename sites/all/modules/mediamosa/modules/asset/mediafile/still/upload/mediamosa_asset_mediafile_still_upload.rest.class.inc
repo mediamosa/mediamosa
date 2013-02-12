@@ -167,11 +167,8 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
     $default = $this->get_param_value(self::DEFAULT_);
     $watermark_id = $this->get_param_value(self::WATERMARK_ID);
 
-    $filename_put = NULL;
-
-    if ($this->is_method_put()) {
-      $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
-    }
+    // With PUT only.
+    $filename_put = $this->is_method_put() ? $this->get_param_value(self::FILENAME) : NULL;
 
     // Check the mediafile.
     mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -193,7 +190,7 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
     );
 
     try {
-      $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default, $still_parameters);
+      $still_id = mediamosa_asset_mediafile_upload::handle_upload_still('file', $ticket_id, $filename_put, $tag, $completed_url, $order, $default, $still_parameters);
     }
     catch (Exception $e) {
       if ($this->isset_param(self::REDIRECT_URI)) {
