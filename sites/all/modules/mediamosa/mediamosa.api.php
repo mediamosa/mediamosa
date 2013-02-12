@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Hooks provided by the MediaMosa.
+ * API documentation MediaMosa.
  *
  * @todo: doc api hooks;
  *
