@@ -121,32 +121,32 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
     $build['metadata_description'] = '<p>' . check_plain($variables['metadata_description']) . '</p>';
   }
 
-  if (!empty($variables['metadata'])) {
+  $rows = array();
     $header = array(
       t('Property'),
       t('Value'),
     );
 
-    $rows = array();
-    foreach ($variables['metadata'] as $name => $value) {
-      if (is_array($value)) {
-        foreach ($value as $value_2) {
+    if (!empty($variables['metadata'])) {
+      foreach ($variables['metadata'] as $name => $value) {
+        if (is_array($value)) {
+          foreach ($value as $value_2) {
+            $rows[] = array(
+              check_plain($name),
+              check_plain($value_2),
+            );
+          }
+        }
+        else {
           $rows[] = array(
             check_plain($name),
-            check_plain($value_2),
+            check_plain($value),
           );
         }
       }
-      else {
-        $rows[] = array(
-          check_plain($name),
-          check_plain($value),
-        );
-      }
     }
 
-    $build['metadata'] = theme('table', array('header' => $header, 'rows' => $rows));
-  }
+  $build['metadata'] = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('This asset has no metadata')));
 
   if (!empty($variables['collection_assets'])) {
     if (!empty($variables['collection_assets']['title'])) {
@@ -201,8 +201,8 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
  *
  * @param array $row
  */
-function _mediamosa_browse_asset_get_title($asset) {
-  $title = NULL;
+function _mediamosa_browse_asset_get_title($asset, $default = NULL) {
+  $title = $default;
 
   if (isset($asset['dublin_core']['title'])) {
     $title = reset($asset['dublin_core']['title']);

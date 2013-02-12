@@ -206,7 +206,7 @@ function theme_mediamosa_maintenance_pager($variables) {
  * @param $variables
  */
 function theme_l_mediamosa_asset($variables) {
-  return mediamosa_lib::l_asset($variables['id'], empty($variables['title']) ? t('<asset has no title>') : $variables['title']);
+  return mediamosa_lib::l_asset($variables['id'], empty($variables['title']) ? t('@asset_id (asset has no title)', array('@asset_id' => $variables['id'])) : $variables['title']);
 }
 
 /**
