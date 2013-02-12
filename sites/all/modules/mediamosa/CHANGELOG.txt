@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2008, master branch)
+MediaMosa 3.4.x-dev (build 2014, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -167,6 +167,11 @@ MediaMosa 3.4.x-dev (build 2008, master branch)
   when form was used as parameters form.
 - Media download job is no longer created when file is stored locally.
 - Fixed bugs in merged code of dbus class.
+- Improved asset detail browse page.
+- POST upload with files above 2gb will use work around PHP bug. Some re-factor
+  on upload code to make upload handling better.
+- POST upload now correctly processes file upload from Drupal 7.
+
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
