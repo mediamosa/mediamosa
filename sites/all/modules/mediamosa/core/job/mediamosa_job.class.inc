@@ -877,11 +877,16 @@ class mediamosa_job {
    * Create a analyse job, after upload has been completed.
    *
    * @param $job_ext_upload
+   *
+   * @return array
+   *   Either associative array.
+   *   - status
+   *     The status of the job.
+   *   - progress
+   *     Progress value from 0.000 till 1.000.
+   *
    */
   public static function create_analyse_job_with_jobext($job_ext_upload) {
-
-    assert(isset($job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]));
-
     // Get the mediafile ID.
     $mediafile_id = $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID];
 
@@ -899,8 +904,6 @@ class mediamosa_job {
       // Change status to failed.
       return array('status' => mediamosa_job_db::JOB_STATUS_FAILED, 'progress' => '1.000');
     }
-
-    // Do analyse.
 
     // Check if we need to retranscode.
     $retranscode = $job_ext_upload[mediamosa_job_upload_db::RETRANSCODE];
@@ -926,6 +929,9 @@ class mediamosa_job {
 
     // Store it.
     mediamosa_asset_mediafile_metadata::store_analyse($job_ext_upload[mediamosa_job_db::ID], $analyse_result);
+
+    // Success.
+    return array('status' => mediamosa_job_db::JOB_STATUS_FINISHED, 'progress' => '1.000');
   }
 
   /**
@@ -1054,38 +1060,45 @@ class mediamosa_job {
    * Update the status of the job.
    *
    * @param array $job_ext
-   * @param string $progress
+   *   Job to update.
    * @param string $status
+   *   The new status of the job.
+   * @param string $progress
+   *   The progress value from 0.000 till 1.0000.
    * @param string $error_description
+   *   Possible error description.
    */
   public static function update_status(array $job_ext, $status, $progress = '', $error_description = '') {
 
-    /**
-     * If JOB is upload and we are setting the status on FINISHED, then start analyse and transcode jobs.
-     */
-    if ($job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD &&
-        $progress == '1.000' &&
-        $job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED) {
+    // If JOB is upload and we are setting the status on FINISHED, then start
+    // analyse and transcode jobs.
+    if (
+      $job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD &&
+      $job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED &&
+      $progress == '1.000') {
 
       // Create an analyse job.
-      $resp = self::create_analyse_job_with_jobext($job_ext);
-      if (is_array($resp) && isset($resp['status']) && isset($resp['progress'])) {
-        // Job failed.
-        $status = $resp['status'];
-        $progress = $resp['progress'];
+      $job_analyse = self::create_analyse_job_with_jobext($job_ext);
 
-        // generate event upload failed.
-        if (module_exists('rules')) {
-          rules_invoke_event('mediamosa_event_upload_failed', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
-        }
-      }
-      else {
-        // generate event upload finished.
-        if (module_exists('rules')) {
-          rules_invoke_event('mediamosa_event_upload_finished', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
-        }
-        // Start harvesting metadata by tools.
-        self::start_harvesting_metadata_by_tool($job_ext);
+      // Base the new status on the analyse result.
+      $status = $job_analyse['status'];
+
+      // Generate event upload failed.
+      switch ($status) {
+        default:
+          if (module_exists('rules')) {
+            rules_invoke_event('mediamosa_event_upload_failed', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
+          }
+          break;
+
+        case mediamosa_job_db::JOB_STATUS_FINISHED:
+          if (module_exists('rules')) {
+            rules_invoke_event('mediamosa_event_upload_finished', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
+          }
+
+          // Start harvesting metadata by tools.
+          self::start_harvesting_metadata_by_tool($job_ext);
+          break;
       }
     }
 
@@ -1097,11 +1110,11 @@ class mediamosa_job {
         $fields[mediamosa_job_db::PROGRESS] = $progress;
       }
 
-      if (($progress == '1.000') &&
-          ( ($status != mediamosa_job_db::JOB_STATUS_FINISHED) &&
-            ($status != mediamosa_job_db::JOB_STATUS_FAILED) &&
-            ($job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED) &&
-            ($job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FAILED))) {
+      if ($progress == '1.000' &&
+          $status != mediamosa_job_db::JOB_STATUS_FINISHED &&
+          $status != mediamosa_job_db::JOB_STATUS_FAILED &&
+          $job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED &&
+          $job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FAILED) {
         $status = mediamosa_job_db::JOB_STATUS_FINISHED;
       }
     }
@@ -1113,12 +1126,11 @@ class mediamosa_job {
 
     // Finished value.
     if ($job_ext[mediamosa_job_db::FINISHED] == '' &&
-        (($status == mediamosa_job_db::JOB_STATUS_FAILED) ||
-        ($status == mediamosa_job_db::JOB_STATUS_FINISHED) )) {
+       ($status == mediamosa_job_db::JOB_STATUS_FAILED || $status == mediamosa_job_db::JOB_STATUS_FINISHED)) {
       $fields[mediamosa_job_db::FINISHED] = mediamosa_datetime::utc_current_timestamp_now(TRUE);
     }
 
-    // Set status
+    // Set status, when different.
     if ($job_ext[mediamosa_job_db::JOB_STATUS] != $status) {
       $fields[mediamosa_job_db::JOB_STATUS] = $status;
     }
