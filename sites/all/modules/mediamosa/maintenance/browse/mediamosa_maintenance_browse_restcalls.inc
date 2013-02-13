@@ -132,6 +132,7 @@ function mediamosa_maintenance_browse_restcall_filter_form($form) {
   // Show as settings form look.
   $form['#theme'] = 'system_settings_form';
   $form['actions'] = array('#type' => 'actions');
+  $form['actions']['#mediamosa_no_clone'] = TRUE;
 
   $form['actions']['restcall-filters'] = array(
     '#type' => 'fieldset',
@@ -203,7 +204,6 @@ function mediamosa_maintenance_browse_restcall_filter_form_submit($form, &$form_
       if ($_SESSION['mediamosa_restcalls_filter'] != _mediamosa_maintenance_browse_restcalls_filter_default()) {
         unset($_GET['page']);
       }
-
       break;
 
     case t('Reset'):
