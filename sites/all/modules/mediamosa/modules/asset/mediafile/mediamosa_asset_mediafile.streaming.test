@@ -40,6 +40,7 @@ class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create mediafile with file.
     $parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
       mediamosa_rest_call_create_mediafile::URI => 'rtsp://domain.ext/file',
       mediamosa_rest_call_create_mediafile::FILENAME => 'notallowed.mp4',
     );

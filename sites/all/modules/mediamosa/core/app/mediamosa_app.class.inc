@@ -5,7 +5,7 @@
  */
 
 class mediamosa_app {
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the app using the app_id.
    *
@@ -306,5 +306,49 @@ class mediamosa_app {
 
     // Return the apps.
     return $apps[$options['order_by']][$options['order_direction']];
+  }
+
+  /**
+   * Test if application is enabled (active).
+   *
+   * @param string $name
+   *   The name of the application.
+   *
+   * @return boolean
+   *   Returns TRUE when app is active OR FALSE when not.
+   */
+  public static function is_app_active($name) {
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', array(mediamosa_app_db::ACTIVE))
+      ->condition(mediamosa_app_db::APP_NAME, $name)
+      ->execute()
+      ->fetchField() == mediamosa_app_db::ACTIVE_TRUE;
+  }
+
+  /**
+   * Return with the current authenticated client application ID from session.
+   *
+   * @return integer
+   *   The client application ID or FALSE.
+   */
+  public static function get_session_app_id() {
+    return empty($_SESSION['mediamosa_app']['app_id']) ? FALSE : (int) $_SESSION['mediamosa_app']['app_id'];
+  }
+
+  /**
+   * Set the authenticated client application ID in session.
+   *
+   * @param integer $app_id
+   *   The client application ID.
+   */
+  public static function set_session_app_id($app_id) {
+    $_SESSION['mediamosa_app']['app_id'] = (int) $app_id;
+  }
+
+  /**
+   * Logoff the client application from session.
+   */
+  public static function clear_session_app_id() {
+    self::set_session_app_id(0);
   }
 }

@@ -1,40 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Application unit tests.
  */
-
- /**
-  * @file
-  * Application unit tests.
-  */
-
-/**
-  * @file
-  * Unit test for User / Group.
-  * Coversion of;
-  * trac_tickets_28
-  */
 
 class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
 
@@ -141,4 +109,30 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
             'Comparing result of default transcode profile calls: preview_profile_id and transcode/profile/default.');
   }
 
+  /**
+   * Test if internal call without app_id provided fails.
+   */
+  public function testInternalApp() {
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
+    // Create asset.
+    $asset_id = $this->createAsset();
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Without app_id, but with possible session must fail. Session with app_id
+    // must not be allowed to be used. Session was created by calls above.
+    $do_internal = TRUE;
+    $parameters = array(
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafile_id,
+    );
+    $this->createMediafile($asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED), $do_internal);
+
+    $parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $app_id,
+      mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafile_id,
+    );
+    $this->createMediafile($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY), $do_internal);
+  }
 }

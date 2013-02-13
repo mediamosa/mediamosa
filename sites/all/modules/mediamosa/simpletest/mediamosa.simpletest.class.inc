@@ -506,6 +506,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       CURLOPT_HEADER => TRUE,
     );
 
+
     if (strcasecmp($request_method, 'GET') == 0) {
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
@@ -513,9 +514,16 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       );
     }
     else {
+      // Just in case when we use 'app_id'.
+      $parameters_get = array();
+      if (isset($parameters['app_id'])) {
+        $parameters_get['app_id'] = $parameters['app_id'];
+        unset($parameters['app_id']);
+      }
+
       $curl_opts += array(
         CURLOPT_POST => TRUE,
-        CURLOPT_URL => url($uri, array('absolute' => TRUE)),
+        CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $parameters_get)),
         CURLOPT_POSTFIELDS => http_build_query($parameters),
       );
     }

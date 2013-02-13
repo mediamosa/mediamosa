@@ -274,3 +274,23 @@ function mediamosa_app_menu() {
 function _mediamosa_app_storage_node_access($node) {
   return $node->type == mediamosa_node::MEDIAMOSA_NODE_TYPE_APP && node_access('update', $node);
 }
+
+/**
+ * Implements hook_mediamosa_app_authorized().
+ */
+function mediamosa_app_mediamosa_app_authorized() {
+  // White list IP numbers.
+  //
+  // If IP white list is set, then we are 'simulated' authorized for these
+  // IP addresses.
+  $ip_address_whitelists = explode('|', variable_get('mediamosa_debug_ip_whitelist', ''));
+
+  // If our IP address is in the white list, then we are 'authorized', but only
+  // if you also have set the app_id.
+  if (!empty($ip_address_whitelists) && in_array($_SERVER['REMOTE_ADDR'], $ip_address_whitelists) && !empty($_REQUEST['app_id'])) {
+    return TRUE;
+  }
+
+  // Access denied.
+  return FALSE;
+}

@@ -140,6 +140,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
 
     // Update mediafile.
     $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
       mediamosa_rest_call_update_mediafile::FILENAME => 'an_other_filename.ext',
       mediamosa_rest_call_update_mediafile::TRANSCODE_INHERITS_ACL => 'FALSE',
     );
@@ -163,6 +164,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
 
     // Create a not original mediafile with the source mediafile.
     $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
       mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
       mediamosa_rest_call_create_mediafile::FILENAME => 'a_not_existing_name.wmv',
       mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafile_id,
@@ -212,6 +214,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
 
     // Update the asset.
     $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
       mediamosa_rest_call_create_mediafile::URI => 'http://www.streamit.com/test/test.flv',
       mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
     );

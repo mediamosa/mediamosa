@@ -68,32 +68,3 @@ function mediamosa_app_dbus_mediamosa_register_rest_call_doc() {
 
   return $rest_calls;
 }
-
-/**
- * Implements hook_mediamosa_app_authorized().
- */
-function mediamosa_app_dbus_mediamosa_app_authorized() {
-
-  // DBUS.
-
-  // App already logged in?
-  if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
-    $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];
-    return TRUE;
-  }
-
-  // White list.
-
-  // If IP white list is set, then we are 'simulated' authorized.
-  $ip_address_whitelists = explode('|', variable_get('mediamosa_debug_ip_whitelist', ''));
-
-  // If our IP address is in the white list, then we are 'authorized', but only
-  // if you also set the app_id.
-  if (in_array($_SERVER['REMOTE_ADDR'], $ip_address_whitelists) && !empty($_REQUEST['app_id'])) {
-    return TRUE;
-  }
-
-  // Access denied.
-
-  return FALSE;
-}

@@ -253,7 +253,7 @@ abstract class mediamosa_rest_call {
       throw new mediamosa_exception_error_authentication_failure();
     }
 
-    // Do login / authorization, unless the call is an external.
+    // Do login / authorization, unless the call is an internal/external.
     $this->do_app_authorized();
 
     // If we are internal and no app_id is set, we have access to all.
@@ -293,26 +293,33 @@ abstract class mediamosa_rest_call {
    * Do authorize app.
    */
   private function do_app_authorized() {
-    // If we are internal or external, we dont care.
+    // If we are internal or external, return. Remember that we completly ignore
+    // the session application ID as internal or external may not use it.
     if ($this->is_internal() || $this->is_external()) {
+      if ($this->is_external()) {
+        // Make sure app_id can not be used with externals.
+        unset($_REQUEST['app_id'], $_POST['app_id'], $_GET['app_id']);
+      }
       return;
     }
 
-    // Run the app_authorized hook. One TRUE is authorized.
-    // @todo: Rewrite module_invoke_all() into own loop, 1st TRUE is ok.
-    $results = module_invoke_all('mediamosa_app_authorized');
-    $authorized = FALSE;
-    foreach ($results as $result) {
-      if ($result === TRUE) {
-        $authorized = TRUE;
-        break;
+    // App already logged in?
+    $app_id = mediamosa_app::get_session_app_id();
+    if ((int) $app_id > 0) {
+      $_GET['app_id'] = (int) $app_id;
+      return;
+    }
+
+    // Now walk through the app authorized hooks until one returns TRUE.
+    foreach (module_implements('mediamosa_app_authorized') as $module) {
+      $function = $module . '_' . 'mediamosa_app_authorized';
+      if (function_exists($function) && call_user_func_array($function, array()) === TRUE) {
+        return;
       }
     }
 
-
-    if (!$authorized) {
-      throw new mediamosa_exception_error_authentication_failure();
-    }
+    // Not authorized.
+    throw new mediamosa_exception_error_authentication_failure();
   }
 
   /**
@@ -869,7 +876,7 @@ abstract class mediamosa_rest_call {
 
         if (isset($this->rest_args[$key_get])) {
           if ($this->rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->rest_args[$key_get][self::PARAM_VALUE], '@value2' => print_r($value_get, TRUE)));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => print_r($this->rest_args[$key_get][self::PARAM_VALUE], TRUE), '@value2' => print_r($value_get, TRUE)));
           }
 
           continue;
@@ -886,7 +893,7 @@ abstract class mediamosa_rest_call {
 
         if (isset($this->rest_args[$key_post])) {
           if ($this->rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->rest_args[$key_post][self::PARAM_VALUE], '@value2' => print_r($value_post, TRUE)));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => print_r($this->rest_args[$key_post][self::PARAM_VALUE], TRUE), '@value2' => print_r($value_post, TRUE)));
           }
 
           continue;
@@ -981,7 +988,8 @@ abstract class mediamosa_rest_call {
       // If override is set, override the GET/POST/URI input.
       if (isset($var[self::VAR_OVERRIDE_VALUE])) {
         $this->rest_args[$param][self::PARAM_VALUE] = $var[self::VAR_OVERRIDE_VALUE];
-        $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // lets simulate input from GET/POST/URI.
+         // Lets simulate input from GET/POST/URI.
+        $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE;
       }
 
       // Copy Read only status.

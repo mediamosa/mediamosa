@@ -2152,7 +2152,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Create an mediafile
+   * Create an mediafile.
+   * 
    * Based on REST call /mediafile/create (POST)
    */
   protected function createMediafile($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
