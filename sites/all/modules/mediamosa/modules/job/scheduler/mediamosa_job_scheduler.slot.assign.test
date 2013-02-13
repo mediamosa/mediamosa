@@ -72,6 +72,9 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // -------------------------------------------------------------------- Tests.
   public function testSlotAssign() {
+    // Get app id.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
     // Get servers
     $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAllAssoc(mediamosa_server_db::TOOLS);
     $this->var_export($job_servers);
@@ -83,6 +86,20 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Show the mediafile.
     $this->var_export($mediafile);
+
+    // Because we no longer create a download job for local files, will need to
+    // create one here for testing. Does not do anything when local, but thats
+    // fine.
+    return mediamosa_job::create_job(
+      mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+      $app_id,
+      self::SIMPLETEST_USER_ID,
+      FALSE,
+      $mediafile_id,
+      FALSE,
+      array(),
+      0
+    );
 
     // Create analyse job.
     $this->createMediafileAnalyse($mediafile_id);
@@ -102,6 +119,8 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD => 'TRANSFER',
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE => 'TRANSFER',
     );
+
+
 
     foreach ($job_servers as $tools => $job_server) {
       $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
