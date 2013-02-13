@@ -243,7 +243,7 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_colle
   $form['settings_automatedsimpletest'] = array(
     '#type' => 'fieldset',
     '#title' => t('Automated Simpletests'),
-    '#description' => t('The automated simpletests page enables you to see results of the simpletests run at fixed intervals.'),
+    '#description' => t('The automated simpletests page enables you to see results of the simpletests run at fixed intervals. <b>These settings are intended for developers.</b>'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );

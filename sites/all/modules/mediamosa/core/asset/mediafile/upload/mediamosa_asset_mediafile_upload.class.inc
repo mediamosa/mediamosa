@@ -64,6 +64,7 @@ class mediamosa_asset_mediafile_upload {
     }
     elseif (self::is_put_method() && !empty($filename)) {
       $file['size'] = $_SERVER['CONTENT_LENGTH'];
+      $file['error'] = 0;
     }
 
     // Default filename?

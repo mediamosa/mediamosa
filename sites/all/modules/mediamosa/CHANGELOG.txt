@@ -171,7 +171,12 @@ MediaMosa 3.4.x-dev (build 2014, master branch)
 - POST upload with files above 2gb will use work around PHP bug. Some re-factor
   on upload code to make upload handling better.
 - POST upload now correctly processes file upload from Drupal 7.
-
+- Removed die() function from exception catch in oauth module.
+- Internal calls can no longer misuse the saved authenticated session which was
+  saved during previous normal calls (in some rare cases).
+- External calls that provide app_id during its request have the value from
+  app_id removed.
+- Fixed minor selection problem in REST call browser search form.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
