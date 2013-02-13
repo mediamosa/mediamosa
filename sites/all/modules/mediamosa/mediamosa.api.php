@@ -21,7 +21,6 @@
  * hook_mediamosa_status_collect
  * hook_mediamosa_status_collect_realtime
  * hook_mediamosa_response_get
- * hook_mediamosa_app_authorized
  * hook_mediamosa_pass_call_drupal (needs rename).
  */
 
@@ -126,6 +125,23 @@ function hook_mediamosa_search_engine_info() {
  *      mediamosa_acl::RIGHT_ACCESS.
  */
 function hook_mediamosa_acl(array $object, $op, $acl_type, $app_id, $user_id, $is_app_admin, array $acl_data) {
+}
+
+/**
+ * Authorize the client application.
+ *
+ * @return boolean
+ *   Return TRUE when authorized, or FALSE otherwise.
+ */
+function hook_mediamosa_app_authorized() {
+
+  // Simple example to authrize the client application when Drupal user is
+  // logged in.
+  if (user_is_logged_in()) {
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 /**
