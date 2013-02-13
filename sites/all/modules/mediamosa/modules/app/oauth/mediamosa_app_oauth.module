@@ -579,9 +579,8 @@ function mediamosa_app_oauth_mediamosa_app_authorized() {
     }
   }
   catch (OAuthException $e) {
-    print($e->getMessage() . "\n<hr />\n");
-    //print_r($req);
-    die();
+    // Log it.
+    mediamosa_watchdog::log('Caught OAuth exception; @message', array('@message' => $e->getMessage()), WATCHDOG_ALERT);
   }
 
   return FALSE;
