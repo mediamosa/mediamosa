@@ -1,0 +1,6 @@
+[submodule "sites/all/modules/mediamosa_ck"]
+	path = sites/all/modules/mediamosa_ck
+	url = git://github.com/mediamosa/mediamosa-ck.git
+[submodule "sites/all/modules/mediamosa_sdk"]
+	path = sites/all/modules/mediamosa_sdk
+	url = git://github.com/mediamosa/mediamosa-sdk.git
