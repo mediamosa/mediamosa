@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2016, master branch)
+MediaMosa 3.4.x-dev (build 2018, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -177,6 +177,7 @@ MediaMosa 3.4.x-dev (build 2016, master branch)
 - External calls that provide app_id during its request have the value from
   app_id removed.
 - Fixed minor selection problem in REST call browser search form.
+- Added settings page to our unit test testing page.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
