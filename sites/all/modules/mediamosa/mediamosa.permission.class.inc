@@ -65,6 +65,7 @@ class mediamosa_permission {
   const ACCESS_BROWSE_LOG = 'mediamosa|access|browse|log';
   const ACCESS_BROWSE_ERRORCODES = 'mediamosa|access|browse|errorcodes';
   const ACCESS_BROWSE_TESTING = 'mediamosa|access|browse|testing';
+  const ACCESS_BROWSE_TESTING_SETTINGS = 'mediamosa|access|browse|testing|settings';
   const ACCESS_BROWSE_BATCH = 'mediamosa|access|browse|batch';
   const ACCESS_BROWSE_FILE_INTEGRITY = 'mediamosa|access|browse|file_integrity';
   const ACCESS_BROWSE_JOB_FAILURE = 'mediamosa|access|browse|job_failure';

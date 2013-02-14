@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Shows a filtered listing of the simpletests of mediamosa.
@@ -185,4 +160,31 @@ function theme_mediamosa_simpletest_test_table($variables) {
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse_simpletest.css');
 
   return $table;
+}
+
+/**
+ * Provides settings form for SimpleTest variables.
+ *
+ * @ingroup forms
+ * @see simpletest_settings_form_validate()
+ */
+function mediamosa_maintenance_browse_simpletest_settings_form($form, &$form_state) {
+
+  // Include the simple test pages inc file.
+  module_load_include('inc', 'simpletest', 'simpletest.pages');
+
+  // Call original form.
+  return simpletest_settings_form($form, $form_state);
+}
+
+/**
+ * Validation handler for simpletest_settings_form().
+ */
+function mediamosa_maintenance_browse_simpletest_settings_form_validate($form, &$form_state) {
+
+  // Include the simple test pages inc file.
+  module_load_include('inc', 'simpletest', 'simpletest.pages');
+
+  // Call original.
+  simpletest_settings_form_validate($form, $form_state);
 }

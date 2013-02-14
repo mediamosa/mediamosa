@@ -17,31 +17,31 @@ module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenanc
 function mediamosa_maintenance_browse_mediamosa_configuration_collect() {
 
   // Admin only.
-  if (user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
-    $form['mediamosa_maintenance_browse'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Browse settings'),
-      '#description' => t('The browse transcodes deviation pages allow searching for assets that have transcodes that are different from the original, in play length. The settings change the way the search results are searched.'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
+  $form['mediamosa_maintenance_browse'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Browse settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#access' => user_access(mediamosa_permission::ADMIN_MEDIAMOSA),
+  );
 
-    $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_deviation'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Deviation for browse transcode lenth deviation'),
-      '#description' => t('Deviation for browse transcode lenth deviation in percentage. Eg. 10%'),
-      '#required' => TRUE,
-      '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_deviation', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION),
-    );
+  $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_deviation'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Deviation for browse transcode length deviation'),
+    '#description' => t('Deviation for browse transcode length deviation in percentage. Eg. 10%'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_deviation', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DEVIATION),
+    '#access' => user_access(mediamosa_permission::ADMIN_MEDIAMOSA),
+  );
 
-    $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_days'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Days for browse transcode lenth deviation'),
-      '#description' => t('Days for browse transcode lenth deviation. Eg. 14'),
-      '#required' => TRUE,
-      '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_days', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS),
-    );
-  }
+  $form['mediamosa_maintenance_browse']['mediamosa_maintenance_browse_transcode_length_deviation_days'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Days for browse transcode length deviation'),
+    '#description' => t('Days for browse transcode length deviation. Eg. 14'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_maintenance_browse_transcode_length_deviation_days', mediamosa_settings::MAINTENANCE_BROWSE_TRANSCODE_LENGTH_DEVIATION_DAYS),
+    '#access' => user_access(mediamosa_permission::ADMIN_MEDIAMOSA),
+  );
 
   return $form;
 }
@@ -128,6 +128,7 @@ function mediamosa_maintenance_browse_menu() {
     'title' => 'Asset browser',
     'description' => 'View assets currently in our database.',
     'page callback' => '_mediamosa_browse_asset_page',
+    'page arguments' => array('list'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
@@ -141,7 +142,6 @@ function mediamosa_maintenance_browse_menu() {
   $items['admin/mediamosa/browse/asset/%'] = array(
     'title callback' => '_mediamosa_browse_asset_title',
     'title arguments' => array(4),
-    'title' => 'Asset details',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_browse_asset_page_view', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
@@ -357,6 +357,16 @@ function mediamosa_maintenance_browse_menu() {
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+  $items['admin/mediamosa/browse/testing/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_simpletest_settings_form'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TESTING_SETTINGS),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance_browse_simpletest.inc',
+  );
+
   $items['admin/mediamosa/browse/testing/results/%'] = array(
     'title' => 'Test result',
     'page callback' => 'drupal_get_form',
@@ -367,6 +377,14 @@ function mediamosa_maintenance_browse_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_simpletest.inc',
   );
+
+//  $items['admin/mediamosa/browse/js/collection/searchparameters'] = array(
+//    'page callback' => '_ajax_browse_collection_search_parameters',
+//    'delivery callback' => 'ajax_deliver',
+//    'access callback' => TRUE,
+//    'type' => MENU_CALLBACK,
+//    'file' => 'mediamosa_maintenance_browse_collection.inc',
+//  );
 
   $items['admin/mediamosa/browse/js/asset/searchparameters'] = array(
     'page callback' => '_ajax_browse_asset_search_parameters',

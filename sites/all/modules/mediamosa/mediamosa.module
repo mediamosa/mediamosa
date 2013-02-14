@@ -187,6 +187,10 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa browse (testing)'),
       'description' => t($text_view_switch, array('@type' => 'testing')),
     ),
+    mediamosa_permission::ACCESS_BROWSE_TESTING_SETTINGS =>  array(
+      'title' => t('Access MediaMosa browse (testing settings)'),
+      'description' => t($text_view_switch, array('@type' => 'testing settings')),
+    ),
     mediamosa_permission::ACCESS_BROWSE_BATCH =>  array(
       'title' => t('Access MediaMosa browse (batch jobs)'),
       'description' => t($text_view_switch, array('@type' => 'batch jobs')),
