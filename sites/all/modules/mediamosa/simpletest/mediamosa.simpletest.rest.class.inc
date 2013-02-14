@@ -31,7 +31,7 @@ class mediamosa_rest_call_simpletest_whoami extends mediamosa_rest_call {
     // Fill it.
     $item = array(
       'app_id' => $app_id,
-      'mediamosa_dbus' => $_SESSION['mediamosa_dbus'],
+      'mediamosa_app_dbus' => $_SESSION['mediamosa_app_dbus'],
       'cookie' => $_COOKIE,
       'mediamosa_app' => $_SESSION['mediamosa_app'],
     );
