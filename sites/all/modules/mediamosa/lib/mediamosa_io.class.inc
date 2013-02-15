@@ -903,10 +903,6 @@ class mediamosa_io {
    *   atime. Otherwise, it is set to time.
    */
   public static function touch($uri, $time = NULL, $atime = NULL) {
-    if (!isset($time)) {
-      $time = time();
-    }
-
     // Touch does not realpath.
     $uri = self::realpath($uri);
 
