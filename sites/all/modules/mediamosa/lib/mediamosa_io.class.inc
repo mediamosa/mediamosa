@@ -891,22 +891,19 @@ class mediamosa_io {
   }
 
   /**
-   * Sets access and modification time of file.
+   * Create an empty file.
+   *
+   * If file already exists, touch function is skipped.
    *
    * @param string $uri
-   *   The uri of the file being touched.
-   * @param integer $time
-   *   The touch time. If time  is not supplied, the current system time is
-   *   used.
-   * @param integer $atime
-   *   If present, the access time of the given filename is set to the value of
-   *   atime. Otherwise, it is set to time.
+   *   The uri of the file being created.
+   *
+   * @param boolean
+   *   Returns TRUE on success, FALSE otherwise.
    */
   public static function touch($uri, $time = NULL, $atime = NULL) {
     // Touch does not realpath.
-    $uri = self::realpath($uri);
-
-    return touch($uri, $time, $atime);
+    return self::file_exists($uri) ? TRUE : touch(self::realpath($uri));
   }
 
   /**
