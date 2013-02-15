@@ -4122,3 +4122,27 @@ function mediamosa_update_7161() {
     }
   }
 }
+
+/**
+ * New installations could have been created with /download uri instead of
+ * /media. This update will fix this.
+ */
+function mediamosa_update_7162() {
+
+  // Paths to replace.
+  $paths = array(
+    '{base_uri}download/{TICKET}',
+  );
+
+  // Get all servers with matching replacement for ticket url.
+  $nids = mediamosa_db::db_select('mediamosa_server', 's')->fields('s', array('nid'))->condition('server_path', $paths, 'IN')->execute()->fetchCol();
+
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $node) {
+    $node->server_path = '{base_uri}media/{TICKET}';
+    node_save($node);
+  }
+
+  // Done.
+  return strtr("The paths for your download servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
+}

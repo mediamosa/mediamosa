@@ -238,7 +238,7 @@ s1.write('mediaspace');
   <!-- End VideoJS -->",
       'VideoJS player; mp4/h264 videos', 0, '', '', 'APC', ''),
 
-    array(11, 2, 'ON', 'DOWNLOAD', 'http://download.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
+    array(11, 2, 'ON', 'DOWNLOAD', 'http://download.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
     array(12, 0, 'ON', 'STILL', 'http://download.' . $server_url .'/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
     array(13, 0, 'ON', 'JOB_PROCESSOR', 'http://job1.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 1st job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
     array(14, 0, 'OFF', 'JOB_PROCESSOR', 'http://job2.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 2nd job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
