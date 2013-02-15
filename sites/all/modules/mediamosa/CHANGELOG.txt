@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2020, master branch)
+MediaMosa 3.4.x-dev (build 2021, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -179,7 +179,8 @@ MediaMosa 3.4.x-dev (build 2020, master branch)
 - Fixed minor selection problem in REST call browser search form.
 - Added settings page to our unit test testing page.
 - Fixed download server uri to /media (installation + update).
-- Removed system time default for mediamosa_io::touch().
+- The function mediamosa_io::touch() now only creates empty files when file does
+  not exist yet.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
