@@ -944,7 +944,7 @@ class mediamosa_job {
    * @param integer $job_id
    *  The job ID.
    */
-  public static function notify_transcoding($old_status, $new_status, $job_id) {
+  public static function notify_transcoding($old_status, $new_status, $job_id, $mediafile_dest = '') {
     if ($old_status == $new_status) {
       return;
     }
@@ -953,10 +953,15 @@ class mediamosa_job {
 
     if (!empty($job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
       $completed_transcoding_url = $job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
-      self::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
+      // Add the destination mediafile_id if present
+      $mediafile_dest_param = '';
+      if($mediafile_dest != '') {
+        $mediafile_dest_param = '&mediafile_dest=' . $mediafile_dest;
+      }
+      self::log($completed_transcoding_url . $new_status . $mediafile_dest_param, array(), WATCHDOG_NOTICE);
 
       // Do the call (through proxy).
-      mediamosa_http::do_head_call($completed_transcoding_url . $new_status, array('use_curlproxy' => TRUE));
+      mediamosa_http::do_head_call($completed_transcoding_url . $new_status . $mediafile_dest_param, array('use_curlproxy' => TRUE));
     }
   }
 
