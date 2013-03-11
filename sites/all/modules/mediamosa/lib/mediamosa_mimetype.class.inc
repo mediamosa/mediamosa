@@ -52,7 +52,8 @@ class mediamosa_mimetype {
     // Give prio on last ext; use array_keys() in reverse.
     $ext_id = array_search($mimetype, $mapping['mimetypes']);
     if ($ext_id !== FALSE) {
-      return reset(array_reverse(array_keys($mapping['extensions'], $ext_id)));
+      $mimetypes = array_reverse(array_keys($mapping['extensions'], $ext_id));
+      return reset($mimetypes);
     }
 
     return FALSE;
