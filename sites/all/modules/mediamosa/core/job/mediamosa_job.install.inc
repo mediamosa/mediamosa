@@ -97,6 +97,12 @@ function mediamosa_job_schema() {
         'default' => NULL,
         'description' => 'The mediafile destination ID in case of retranscode.',
       ),
+      mediamosa_job_db::FILENAME => array(
+        'type' => 'varbinary',
+        'length' => 255,
+        'default' => NULL,
+        'description' => 'Name of the new mediafile.',
+      ),
       mediamosa_job_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_job_db::OWNER_ID_LENGTH,

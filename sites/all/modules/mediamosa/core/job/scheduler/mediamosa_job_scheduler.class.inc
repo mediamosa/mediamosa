@@ -379,6 +379,7 @@ class mediamosa_job_scheduler {
         mediamosa_job_db::JOB_TYPE,
         mediamosa_job_db::OWNER_ID,
         mediamosa_job_db::APP_ID,
+        mediamosa_job_db::FILENAME,
       ))
       ->fields('mf', array(
         mediamosa_asset_mediafile_db::FILENAME,
@@ -396,7 +397,14 @@ class mediamosa_job_scheduler {
       ->fetchAssoc();
 
     if ($job_transcode) {
-      $new_filename = mediamosa_io::get_base_filename($job_transcode[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+      // Determine new filename.
+      if ($job_transcode[mediamosa_asset_mediafile_db::FILENAME] != '') {
+        $new_filename = $job_transcode[mediamosa_asset_mediafile_db::FILENAME];
+      }
+      else {
+        $new_filename = mediamosa_io::get_base_filename($job_transcode[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+      }
+
       $result = array(
         'asset_id' => $job_transcode[mediamosa_job_db::ASSET_ID],
         'owner' => $job_transcode[mediamosa_job_db::OWNER_ID],
