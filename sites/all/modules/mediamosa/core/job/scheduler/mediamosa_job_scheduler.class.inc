@@ -381,12 +381,13 @@ class mediamosa_job_scheduler {
       ->fetchAssoc();
 
     if ($job_transcode) {
-      // Determine new filename.
-      if ($job_transcode[mediamosa_asset_mediafile_db::FILENAME] != '') {
-        $new_filename = $job_transcode[mediamosa_asset_mediafile_db::FILENAME];
+      // Determine new filename, if a tool has given one, use that.
+      if ($job_transcode[mediamosa_job_db::FILENAME] != '') {
+        $new_filename = $job_transcode[mediamosa_job_db::FILENAME];
       }
       else {
-        $new_filename = mediamosa_io::get_base_filename($job_transcode[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+        // Else make one on the basis of the original.
+        $new_filename = mediamosa_io::get_base_filename($job_transcode['mf_' . mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
       }
 
       $result = array(
