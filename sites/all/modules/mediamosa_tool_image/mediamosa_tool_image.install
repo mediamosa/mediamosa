@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
   * Image tool installer.
@@ -33,10 +8,34 @@
  * Implements hook_install().
  */
 function mediamosa_tool_image_install() {
-  // Transcode profile.
 
+  // Tool parameters.
+  $default_params = array(
+    array('image', 'quality', '-quality', NULL, NULL, NULL, '', 'FALSE', t('Quality is 0 (lowest image quality and highest compression) to 100 (best quality but least effective compression). The default quality is 75. See man convert for more information.')),
+    array('image', 'resize', '-resize', NULL, NULL, NULL, '', 'FALSE', t('Resize an image ({width}x{height}). Default the size of the original. See man convert for more information.')),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($default_params as $default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
+
+    $node = node_save($node);
+  }
+
+  // Transcode profile.
   $default_profiles = array(
     array('convert image', 'FALSE', 'image', 'jpg', ''),
+    array('high quality image', 'FALSE', 'image', 'jpg', 'quality:80;resize:2000x2000\>;'),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -85,7 +84,24 @@ function mediamosa_tool_image_install() {
  * Implements hook_unstall().
  */
 function mediamosa_tool_image_uninstall() {
-  // Do nothing. We don't delete the existing data.
-  // FIXME: Yes we do, thats why we put into a module in the first place. So
-  //        make a uninstaller.
+
+  $query = new EntityFieldQuery();
+  $entities = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('type',
+      array(
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+      ), 'IN')
+    ->execute();
+  $nodes = node_load_multiple(array_keys($entities['node']));
+
+  // Can't add tool=image to FieldQuery, so do it here.
+  foreach ($nodes as $node) {
+    if ($node->tool == 'image') {
+      $nodes_to_delete[] = $node->nid;
+    }
+  }
+  node_delete_multiple($nodes_to_delete);
 }
