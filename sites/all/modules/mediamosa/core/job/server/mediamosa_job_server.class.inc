@@ -838,7 +838,7 @@ class mediamosa_job_server {
             // the data dir in sannas (extra).
             'path_mount_point_data' => mediamosa_storage::get_local_mediafile_path($mediafile),
             // Path to the transcode file.
-            'location_dest_file' => mediamosa_storage::get_realpath_temporary_file($mediafile_id),
+            'location_dest_file' => mediamosa_storage::get_realpath_temporary_file($job_server[mediamosa_job_server_db::JOB_ID]),
             // Location of source mediafile.
             'location_source_file' => mediamosa_storage::get_realpath_mediafile($mediafile),
             // Location of the status_file.

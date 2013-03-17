@@ -98,21 +98,18 @@ class mediamosa_tool_image {
 
     // Build the values.
     $execution_string_options = array(
-      '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['job_id'] . DIRECTORY_SEPARATOR,
-      '@mediafile_location' => $options['location_source_file'],
-      '@mediafile_id' => $options['mediafile_id'],
-      '@mediafile_dest' => $options['job_id'],
+      '@mediafile_source' => $options['location_source_file'],
+      '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
       '@parameter_string' => $options['parameter_string'],
       '@status_file' => $options['status_file'],
     );
 
     // Execution string.
     return strtr(
-      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @mediafile_id.status;' .
-      'mkdir @file_location; cd @file_location; ' .
-      'nice convert @mediafile_location @parameter_string @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; ' .
-      'rm @file_location -r; ' .
-      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;', $execution_string_options);
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+      'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
+      $execution_string_options);
   }
 
   /**
