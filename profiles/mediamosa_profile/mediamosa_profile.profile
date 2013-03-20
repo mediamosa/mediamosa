@@ -488,7 +488,7 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
 
   // We store each file in separate directories based on the first letter of the
   // file. We need to create these directories.
-  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ';
+  $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   for ($x = 0; $x < strlen($prefixes); $x++) {
     _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . $prefixes{$x});
     _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . $prefixes{$x});
