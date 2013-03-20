@@ -1,3 +1,9 @@
+MediaMosa 3.2.3 (build 1888)
+----------------------------
+- Fixed installation profile for missing creating of the 'Y' directory under
+  mountpoint.
+- Added update script for fixing missing directory 'Y' under mountpoint.
+
 MediaMosa 3.2.2 (build 1886)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
