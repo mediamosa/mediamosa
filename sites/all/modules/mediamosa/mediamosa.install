@@ -241,6 +241,20 @@ function mediamosa_requirements($phase) {
 }
 
 /**
+ * Update helper functions.
+ */
+
+/**
+ * Return the current local mountpoint.
+ *
+ * @return string
+ *   The current mount point.
+ */
+function _mediamosa_update_helper_get_mountpoint() {
+  return rtrim(mediamosa::is_windows_platform() ? mediamosa::variable_get('mediamosa_current_mount_point_windows', '\\\\') : mediamosa::variable_get('mediamosa_current_mount_point', '/srv/mediamosa'), '/');
+}
+
+/**
  * Change mediafile metadata STILL_TYPE ENUM value 'SECONDS' to 'SECOND'.
  */
 function mediamosa_update_7000() {
@@ -3348,4 +3362,18 @@ function mediamosa_update_7135() {
       )
     );
   }
+}
+
+/**
+ * Repair possible missing Y directory on storage mount point. Some 2.x or 3.x
+ * installations may be missing the Y directory.
+ */
+function mediamosa_update_7136() {
+  // Get uri to storage.
+  $storage = _mediamosa_update_helper_get_mountpoint() . '/';
+
+  mediamosa_io::mkdir($storage . 'data/Y');
+  mediamosa_io::mkdir($storage . 'data/stills/Y');
+  mediamosa_io::mkdir($storage . 'media/simpletest/data/Y');
+  mediamosa_io::mkdir($storage . 'media/simpletest/data/stills/Y');
 }
