@@ -48,7 +48,60 @@ class mediamosa_asset_mediafile_upload {
    * in that case make sure your REST call does not return XML
    * but redirects to some location.
    *
-   * 1.x: vpx_upload_handle_file
+   * @return array
+   *   An associative array containing;
+   *     - 'name'
+   *       The filename of the uploaded file.
+   *     - 'type'
+   *       The content-type / mime-type of the uploaded file.
+   *     - 'tmp_name'
+   *       The location of the uploaded file.
+   *     - 'error'
+   *       Possible error during upload. Must be 0.
+   *     - 'size'
+   *       The file size.
+   *
+   * @see http://php.net/manual/en/features.file-upload.errors.php.
+   */
+  public static function get_upload_file_info($source, $filename = '') {
+    // Upload file info.
+    $file = array();
+
+    // Make sure $_FILES exists.
+    if (!empty($_FILES)) {
+      if (!empty($_FILES['files']['name'][$source])) {
+        $file = array(
+          'name' => $_FILES['files']['name'][$source],
+          'type' => $_FILES['files']['type'][$source],
+          'tmp_name' => $_FILES['files']['tmp_name'][$source],
+          'error' => $_FILES['files']['error'][$source],
+          'size' => $_FILES['files']['size'][$source],
+        );
+      }
+      elseif (!empty($_FILES[$source])) {
+        $file = $_FILES[$source];
+      }
+    }
+    elseif (self::is_put_method() && !empty($filename)) {
+      $file['size'] = $_SERVER['CONTENT_LENGTH'];
+      $file['error'] = 0;
+    }
+
+    // Default filename?
+    if (!empty($filename)) {
+      $file['name'] = $filename;
+    }
+
+    // Fix PHP file upload 32bit limit.
+    if (!$file['error'] && $file['size'] < 0 && mediamosa_io::is_readable($file['tmp_name'])) {
+      $file['size'] = mediamosa_io::filesize($file['tmp_name']);
+    }
+
+    return $file;
+  }
+
+  /**
+   * Test PUT method.
    *
    */
   public static function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
