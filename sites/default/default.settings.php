@@ -609,3 +609,4 @@ $conf['mediamosa_admin'] = TRUE;
  */
 //                                    1234567890123456 chars max
 $conf['mediamosa_installation_id'] = 'default';
+
