@@ -1279,8 +1279,9 @@ function mediamosa_update_7062() {
   // Moved to 7063.
 }
 
-/*
- * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the old version installed.
+/**
+ * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the
+ * old version installed.
  */
 function mediamosa_update_7063() {
   try {
@@ -3366,30 +3367,17 @@ function mediamosa_update_7135() {
 }
 
 /**
- * Convert current profile commands to new format.
+ * Repair possible missing Y directory on storage mount point. Some 2.x or 3.x
+ * installations may be missing the Y directory.
  */
 function mediamosa_update_7136() {
+  // Get uri to storage.
+  $storage = _mediamosa_update_helper_get_mountpoint() . '/';
 
-  // Get all commands to convert.
-  $nids = db_select('mediamosa_transcode_profile', 'tp')
-    ->fields('tp', array('nid'))
-    ->execute()
-    ->fetchCol();
-
-  // Now loop through the transcode profile nodes and convert them.
-  foreach ($nids as $nid) {
-
-    // Load the profile node.
-    $node = node_load($nid);
-
-    if ($node->command != '') {
-      // Convert.
-      $node->command = mediamosa_transcode_profile::convertOldCommand2NewCommand($node->command);
-
-      // Save the node again.
-      node_save($node);
-    }
-  }
+  mediamosa_io::mkdir($storage . 'data/Y');
+  mediamosa_io::mkdir($storage . 'data/stills/Y');
+  mediamosa_io::mkdir($storage . 'media/simpletest/data/Y');
+  mediamosa_io::mkdir($storage . 'media/simpletest/data/stills/Y');
 }
 
 /**
@@ -3455,6 +3443,27 @@ function _mediamosa_update_helper_convert_command($table_name, $id_name) {
  * restart the update when needed, it will continue where it was.
  */
 function mediamosa_update_7137() {
+  // Get all commands to convert.
+  $nids = db_select('mediamosa_transcode_profile', 'tp')
+    ->fields('tp', array('nid'))
+    ->execute()
+    ->fetchCol();
+
+  // Now loop through the transcode profile nodes and convert them.
+  foreach ($nids as $nid) {
+
+    // Load the profile node.
+    $node = node_load($nid);
+
+    if ($node->command != '') {
+      // Convert.
+      $node->command = mediamosa_transcode_profile::convertOldCommand2NewCommand($node->command);
+
+      // Save the node again.
+      node_save($node);
+    }
+  }
+
   // Update job_server_transcode.
   _mediamosa_update_helper_convert_command('mediamosa_job_server_transcode', 'jobserver_job_id');
 }
@@ -3584,20 +3593,6 @@ function mediamosa_update_7143() {
   // Rebuild again so we are sure whe
   registry_rebuild();
   cache_clear_all();
-}
-
-/**
- * Repair possible missing Y directory on storage mount point. Some 2.x or 3.x
- * installations may be missing the Y directory.
- */
-function mediamosa_update_7144() {
-  // Get uri to storage.
-  $storage = _mediamosa_update_helper_get_mountpoint() . '/';
-
-  mediamosa_io::mkdir($storage . 'data/Y');
-  mediamosa_io::mkdir($storage . 'data/stills/Y');
-  mediamosa_io::mkdir($storage . 'media/simpletest/data/Y');
-  mediamosa_io::mkdir($storage . 'media/simpletest/data/stills/Y');
 }
 
 /**
@@ -3836,7 +3831,7 @@ function mediamosa_update_7149() {
         'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
         array(
           '@ticket_play_location' => $ticket_play_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@wildmatch' => str_repeat('?', mediamosa_sdk::UUID_LENGTH),
         )
       )
     );
@@ -3847,7 +3842,7 @@ function mediamosa_update_7149() {
         'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
         array(
           '@ticket_play_location' => $ticket_play_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@wildmatch' => str_repeat('?', mediamosa_sdk::UUID_LENGTH),
         )
       )
     );
@@ -3866,7 +3861,7 @@ function mediamosa_update_7149() {
         'find @ticket_download_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -delete',
         array(
           '@ticket_download_location' => $ticket_download_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@wildmatch' => str_repeat('?', mediamosa_sdk::UUID_LENGTH),
         )
       )
     );
@@ -3877,7 +3872,7 @@ function mediamosa_update_7149() {
         'find @ticket_download_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -delete',
         array(
           '@ticket_download_location' => $ticket_download_location,
-          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@wildmatch' => str_repeat('?', mediamosa_sdk::UUID_LENGTH),
         )
       )
     );
