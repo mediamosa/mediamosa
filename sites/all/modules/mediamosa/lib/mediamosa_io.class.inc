@@ -901,7 +901,7 @@ class mediamosa_io {
    * @param boolean
    *   Returns TRUE on success, FALSE otherwise.
    */
-  public static function touch($uri, $time = NULL, $atime = NULL) {
+  public static function touch($uri) {
     // Touch does not realpath.
     return self::file_exists($uri) ? TRUE : touch(self::realpath($uri));
   }
