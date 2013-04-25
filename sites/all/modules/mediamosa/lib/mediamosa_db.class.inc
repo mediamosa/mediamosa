@@ -922,10 +922,10 @@ watchdog('foo', $query);
     $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
 
     // Max length 24.
-    $uuid = mediamosa_unicode::substr($hash_62, 0, mediamosa_settings::UUID_LENGTH);
+    $uuid = mediamosa_unicode::substr($hash_62, 0, mediamosa_sdk::UUID_LENGTH);
 
-    // Lets make sure its not shorter than the length of mediamosa_settings::UUID_LENGTH.
-    for ($x = mediamosa_unicode::strlen($uuid); mediamosa_unicode::strlen($uuid) < mediamosa_settings::UUID_LENGTH; $x++) {
+    // Lets make sure its not shorter than the length of mediamosa_sdk::UUID_LENGTH.
+    for ($x = mediamosa_unicode::strlen($uuid); mediamosa_unicode::strlen($uuid) < mediamosa_sdk::UUID_LENGTH; $x++) {
       $uuid .= $conf_31_to_62{rand(0, 61)};
     }
 
@@ -933,10 +933,10 @@ watchdog('foo', $query);
     // sandbox and real live databases like Solr which don't have same level of
     // sandboxing. We prevent this by giving simpletest IDs always end with X.
     if (mediamosa::in_simpletest_sandbox()) {
-      $uuid = substr($uuid, 0, mediamosa_settings::UUID_LENGTH - 1) . 'X';
+      $uuid = substr($uuid, 0, mediamosa_sdk::UUID_LENGTH - 1) . 'X';
     }
     else {
-      $uuid = substr($uuid, -1) == 'X' ? substr($uuid, 0, mediamosa_settings::UUID_LENGTH - 1) . 'Y' : $uuid;
+      $uuid = substr($uuid, -1) == 'X' ? substr($uuid, 0, mediamosa_sdk::UUID_LENGTH - 1) . 'Y' : $uuid;
     }
 
     // Return the new ID.
