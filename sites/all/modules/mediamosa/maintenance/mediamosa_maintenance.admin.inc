@@ -100,7 +100,6 @@ function theme_mediamosa_maintenance_date($variables) {
     default:
       assert(0);
       break;
-
   }
 
   $timestamp = isset($datetime) ? mediamosa_lib::iso8601date_to_unix($datetime) : $timestamp;
@@ -125,13 +124,6 @@ function theme_mediamosa_maintenance_table($variables) {
 
   if (!empty($pager_variables['item_count_total'])) {
     $build['pager_top'] = theme('mediamosa_maintenance_pager', $pager_variables);
-  }
-
-  $table_variables = array();
-  foreach (array('header', 'rows', 'attributes', 'caption', 'colgroups', 'sticky', 'empty') as $var) {
-    if (isset($variables[$var])) {
-      $table_variables[$var] = $variables[$var];
-    }
   }
 
   if (!empty($variables['title'])) {
@@ -199,7 +191,6 @@ function theme_mediamosa_maintenance_pager($variables) {
   return theme('pager', array('quantity' => $quantity));
 }
 
-
 /**
  * Create a link to a asset.
  *
@@ -217,7 +208,6 @@ function theme_l_mediamosa_asset($variables) {
 function theme_l_mediamosa_collection($variables) {
   return mediamosa_lib::l_collection($variables['id'], empty($variables['title']) ? t('<collection has no title>') : $variables['title']);
 }
-
 
 /**
  * Confirm deletion of mediafile.
