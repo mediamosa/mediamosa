@@ -637,6 +637,10 @@ function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
  * Implements hook_submit().
  */
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
+  // Check for https.
+  $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  $scheme = $is_https ? 'https://' : 'http://';
+
   // Get current url.
   $server_name = mediamosa_profile::get_server_name();
 
@@ -646,8 +650,8 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   // Simple type of server? Then change default setup of advanced.
   if (variable_get('mediamosa_apache_setting') == 'simple') {
     // Simple URL for job and app.
-    variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name . '/');
-    variable_set('mediamosa_cron_url_app', 'http://' . $server_name . '/');
+    variable_set('mediamosa_jobscheduler_uri', $scheme . $server_name . '/');
+    variable_set('mediamosa_cron_url_app', $scheme . $server_name . '/');
 
     // Get all mediamosa_server nodes nids, and update server_uri.
     $results = db_select('mediamosa_server', 'ms')
@@ -657,18 +661,22 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     // Walk through the server nodes and save the simple url.
     foreach ($results as $result) {
       $node = node_load($result->{mediamosa_server_db::NID});
-      $node->{mediamosa_server_db::SERVER_URI} = 'http://' . $server_name . '/';
+      $node->{mediamosa_server_db::SERVER_URI} = $scheme . $server_name . '/';
       node_save($node);
     }
   }
   else {
     // Advanced URLs.
-    variable_set('mediamosa_jobscheduler_uri', 'http://job1.' . $server_name . '/');
-    variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . '/');
+    variable_set('mediamosa_jobscheduler_uri', $scheme . 'job1.' . $server_name . '/');
+    variable_set('mediamosa_cron_url_app', $scheme . 'app1.' . $server_name . '/');
   }
 }
 
 function mediamosa_profile_domain_usage_form() {
+  // Check for https.
+  $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  $scheme = $is_https ? 'https://' : 'http://';
+
   $form = array();
 
   $form['domain'] = array(
@@ -681,13 +689,13 @@ function mediamosa_profile_domain_usage_form() {
   $form['domain']['apache_options'] = array(
     '#markup' => st(
     "Your MediaMosa setup is using the '!host' DNS name. All REST interfaces, download and upload URLs use these subdomains in your current setup. We use these subdomains as example; <ul>
-    <li>http://!host/ or http://admin.!host/ as administration front-end.</li>
-    <li>http://app1.!host/ is an application REST interface.</li>
-    <li>http://app2.!host/ is an application REST interface.</li>
-    <li>http://job1.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
-    <li>http://job2.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
-    <li>http://download.!host/ is used for downloading files from MediaMosa.</li>
-    <li>http://upload.!host/ is used for uploading files to MediaMosa.</li>
+    <li>!scheme!host/ or !schemeadmin.!host/ as administration front-end.</li>
+    <li>!schemeapp1.!host/ is an application REST interface.</li>
+    <li>!schemeapp2.!host/ is an application REST interface.</li>
+    <li>!schemejob1.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>!schemejob2.!host/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>!schemedownload.!host/ is used for downloading files from MediaMosa.</li>
+    <li>!schemeupload.!host/ is used for uploading files to MediaMosa.</li>
     </ul>
     In the directory /sites in your MediaMosa installation, each of these DNS names do also exists as an directory, in each an example default.settings.php.<br />
     <br />
@@ -699,6 +707,7 @@ function mediamosa_profile_domain_usage_form() {
     array(
       '!host' => mediamosa_profile::get_host(),
       '!link' => l('Advanced and multisite installation', 'http://drupal.org/node/346385', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)),
+      '!scheme' => $scheme,
     )),
   );
 
