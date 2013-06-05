@@ -112,6 +112,13 @@ function mediamosa_drush_command() {
     ),
   );
 
+  $items['mm-app-mf-list'] = array(
+    'description' => 'Gives a list of all files including path of an application',
+    'arguments' => array(
+      'app_id' => 'App id',
+    ),
+  );
+
   $items['mm-generate-asset'] = array(
     'description' => dt('Generate asset(s). Make sure you run this as the webserver user (www-data, nginx).'),
     'arguments' => array(
@@ -147,6 +154,15 @@ function mediamosa_drush_command() {
     'aliases' => array('mmaclset'),
     'examples' => array(
       'drush mm-acl-set C1IVjPsFefqRNoOSV7jIbZtI foo.nl,bar.nl,@foo.nl' => 'Set the acl rights for domains foo.nl, bar.nl and for realms: @foo.nl.',
+    ),
+  );
+
+  $items['mm-transcode-profiles'] = array(
+    'description' => 'Get a list of all transcode profiles.',
+    'arguments' => array(),
+    'aliases' => array('mmpr', 'mm-transcode-profiles'),
+    'examples' => array(
+      'drush mmpr' => 'Get the list of all available transcode profiles.',
     ),
   );
 
@@ -199,6 +215,8 @@ function mediamosa_drush_command() {
     'aliases' => array('mmstll'),
     'options' => array(
       'priority' => 'Priority of the job, 0 = normal, -100 is maximum priority, 100 is lowest',
+      'still_type' => 'Still generation option (NONE, NORMAL)',
+      'still_per_mediafile' => 'Number of stills per mf (1 is default)',
     ),
     'examples' => array(
       'drush mm-still C1IVjPsFefqRNoOSV7jIbZtI ' => 'Request to generate a still from mediafile id C1IVjPsFefqRNoOSV7jIbZtI.',
@@ -343,17 +361,18 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
   $limit = drush_get_option('limit', 25);
   $offset = drush_get_option('offset', 0);
 
-  $assets = mediamosa_asset_search::asset_search(array($app_id), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, $limit, $offset);
+  $assets = mediamosa_asset_search::asset_search(array($app_id), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, $limit, $offset);
 
-  $rows[] = array('nr', 'Asset_id', 'Title', 'Created');
+  $rows[] = array('nr', 'Asset_id', 'Title', 'Created', 'Protected');
   foreach ($assets['asset_ids'] as $nr => $asset_id) {
     $asset_info = mediamosa_asset::get($asset_id, $app_id);
+
     $title = "";
     $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
     if (isset($metadata['dublin_core']['title']['values'][0])) {
       $title = $metadata['dublin_core']['title']['values'][0];
     }
-    $rows[] = array($nr, $asset_id, $title, $asset_info['created']);
+    $rows[] = array($nr, $asset_id, $title, $asset_info['created'], $asset_info['is_protected']);
   }
   drush_print_table($rows, TRUE);
   drush_print('Total: ' . $assets['total_count']);
@@ -368,12 +387,21 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
  */
 function drush_mediamosa_mm_asset($asset_id = NULL) {
   if ($asset_id == NULL) {
-    // We get the last added asset op app_id.
-    $assets = mediamosa_asset_search::asset_search(array(1), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, 1, 0);
+    $asset_id = 0;
+  }
+  if (is_numeric($asset_id)) {
+    // We get the nth asset from the mm-asset-list.
+    $assets = mediamosa_asset_search::asset_search(array(1), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, 1, $asset_id);
+    if ($assets['total_count'] == 0) {
+      return drush_set_error('', dt('No Asset found.'));
+    }
     if (isset($assets['asset_ids'])) {
       $asset_id = $assets['asset_ids'][0];
     }
     else {
+      return drush_set_error('', dt('Invalid asset_id.'));
+    }
+    if ($asset_id == NULL) {
       return drush_set_error('', dt('Invalid asset_id.'));
     }
   }
@@ -385,10 +413,14 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     mediamosa_asset_db::OWNER_ID,
   );
   $asset = mediamosa_asset::get($asset_id, NULL, $fields);
+
+  if (!$asset) {
+    return drush_set_error('', dt('Invalid asset_id.'));
+  }
+
   foreach ($asset as $name => $value) {
     $rows[] = array($name, $value);
   }
-  $rows[] = array('');
 
   // Show metadata.
   $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
@@ -399,14 +431,15 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
       }
     }
   }
-  $rows[] = array('');
+  drush_print_table($rows, TRUE);
 
   // @todo: collections.
 
   // Show table of mediafiles.
+  $rows = array();
   $rows[] = array('Mediafiles');
   $rows[] = array(
-    'ID', 'Created', 'Profile id', 'Mime Type', 'FileSize', 'Size', 'Filename',
+    'ID', 'Created', 'Profile id', 'Mime Type', 'FileSize', 'Size', 'Filename', 'ACL',
   );
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
@@ -418,17 +451,28 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields, array('orderby' => mediamosa_asset_mediafile_db::CREATED));
 
   foreach ($mediafiles as $mediafile_id => $mediafile) {
+    $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
+    // Get ACL, if any.
+    $acl = '';
+    $acl_rights = mediamosa_acl::rights_get($app_id, $asset['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, TRUE);
+    foreach ($acl_rights as $acl_group) {
+      foreach ($acl_group as $acl_value) {
+        $acl .= $acl_value['name'] . ' ';
+      }
+    }
+    // Rows for drush.
     $rows[] = array(
       $mediafile_id,
       $mediafile[mediamosa_asset_mediafile_db::CREATED],
       $mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID],
       mediamosa_asset_mediafile::get_mime_type($mediafile_id),
-      format_size(mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE)),
+      format_size($filesize),
       mediamosa_asset_mediafile::get_size($mediafile_id),
       $mediafile[mediamosa_asset_mediafile_db::FILENAME],
-      // @todo: acl rights.
+      $acl,
     );
   }
+
   drush_print_table($rows, TRUE);
 }
 
@@ -546,6 +590,34 @@ function drush_mediamosa_mm_app_purge($app_id = NULL) {
     echo ".";
   }
   drush_print('Total deleted assets: ' . $assets['total_count']);
+}
+
+
+/**
+ * Callback function for mm-app-mf-list command.
+ *
+ * Returns a list of filenames (including sannas path)
+ * of one app_id.
+ *
+ * @param int $app_id
+ *   Id of the application..
+ */
+function drush_mediamosa_mm_app_mf_list($app_id = NULL) {
+  if (!(is_numeric($app_id))) {
+    return drush_set_error('', dt('Invalid app_id.'));
+  }
+
+  $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+    ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
+    ->fields('mf', array(mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT))
+    ->fields('mf', array(mediamosa_asset_mediafile_db::IS_STILL))
+    ->condition(mediamosa_asset_mediafile_db::APP_ID, $app_id);
+  $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
+
+  foreach ($mediafiles as $mediafile_id => $mediafile) {
+    echo mediamosa_io::realpath(mediamosa_storage::get_uri_mediafile($mediafile));
+    echo "\n";
+  }
 }
 
 /**
@@ -680,6 +752,29 @@ function drush_mediamosa_mm_generate_asset($number_assets = 1, $number_mediafile
 }
 
 /**
+ * Drush function mediamosa-mm-transcode-profiles.
+ */
+function drush_mediamosa_mm_transcode_profiles() {
+  // Get the listing.
+  $transcode_profiles = mediamosa_transcode_profile::search('');
+  foreach ($transcode_profiles as $transcode_profile) {
+    $default = $transcode_profile['is_default_profile'] == 'TRUE' ? ' (default)' : '';
+    $rows[] = array(
+      $transcode_profile['transcode_profile_id'],
+      $transcode_profile['tool'],
+      $transcode_profile['profile'] . $default,
+    );
+  }
+
+  if (count($rows) > 0) {
+    drush_print_table($rows, TRUE);
+  }
+  else {
+    drush_print("No profiles found.");
+  }
+}
+
+/**
  * Drush function mediamosa-mm-transcode.
  */
 function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
@@ -805,8 +900,8 @@ function drush_mediamosa_mm_still($mediafile_id = NULL, $size = NULL) {
   $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
 
   $still_parameters = array(
-    'still_type' => 'NORMAL',
-    'still_per_mediafile' => 1,
+    'still_type' => drush_get_option('still_type', 'NORMAL'),
+    'still_per_mediafile' => drush_get_option('still_per_mediafile', 1),
     'frametime' => 10,
     'size' => $size,
     'tag' => NULL,
