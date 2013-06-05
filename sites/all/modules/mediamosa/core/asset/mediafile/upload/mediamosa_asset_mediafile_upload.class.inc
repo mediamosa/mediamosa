@@ -53,8 +53,8 @@ class mediamosa_asset_mediafile_upload {
         $file = array(
           'name' => $_FILES['files']['name'][$source],
           'type' => $_FILES['files']['type'][$source],
-          'tmp_name' => $_FILES['files']['type'][$source],
-          'error' => $_FILES['files']['type'][$source],
+          'tmp_name' => $_FILES['files']['tmp_name'][$source],
+          'error' => $_FILES['files']['error'][$source],
           'size' => $_FILES['files']['size'][$source],
         );
       }
