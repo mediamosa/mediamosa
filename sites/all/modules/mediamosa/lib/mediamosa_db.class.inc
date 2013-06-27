@@ -365,13 +365,15 @@ class mediamosa_db {
    * Enrich the created fields.
    * Only when table has an 'changed' field(!).
    *
-   * @param array $a_fields
+   * @param array $fields
+   *   The fields to extend.
+   *
    * @return array
    *
    */
-  public static function db_insert_enrich(array $fields) {
+  public static function db_insert_enrich(array $fields = array()) {
     $fields[mediamosa_db::CREATED] = mediamosa_datetime::utc_current_timestamp_now();
-    $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
+    $fields[mediamosa_db::CHANGED] = $fields[mediamosa_db::CREATED];
     return $fields;
   }
 

@@ -381,19 +381,34 @@ class mediamosa_job {
   }
 
   /**
-   * Create a transcode job
+   * Create a transcode job.
    *
    * @param integer $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $user_id
-   * @param bool $is_app_admin
+   *   The owner of the job.
+   * @param string $group_id
+   *   The group of the user.
+   * @param boolean $is_app_admin
+   *   Is application admin.
    * @param string $mediafile_id
+   *   The source mediafile ID.
+   * @param boolean $create_still
+   *   Create still after transcode.
+   * @param array $still_parameters
+   *   The still parameters for creation of the still.
    * @param string $file_extension
+   *  File extension of the file to transcode.
    * @param string $command
+   *  Set of commands.
    * @param string $tool
+   *  Name of tool to use.
    * @param integer $profile_id
+   *   Possible transcode profile to use.
    * @param string $completed_transcoding_url
+   *   The URL to trigger when job status changes.
    * @param string $priority
+   *   The priority of the job.
    */
   public static function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
 
@@ -410,7 +425,7 @@ class mediamosa_job {
     $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest);
 
     // Create sub transcode job.
-    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id);
+    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id, $mediafile_dest);
 
     return $job_id;
   }
@@ -419,16 +434,31 @@ class mediamosa_job {
    * Create a retranscode job
    *
    * @param integer $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $user_id
-   * @param bool $is_app_admin
+   *   The owner of the job.
+   * @param string $group_id
+   *   The group of the user.
+   * @param boolean $is_app_admin
+   *   Is application admin.
    * @param string $mediafile_id
+   *   The source mediafile ID.
+   * @param boolean $create_still
+   *   Create still after transcode.
+   * @param array $still_parameters
+   *   The still parameters for creation of the still.
    * @param string $file_extension
+   *  File extension of the file to transcode.
    * @param string $command
+   *  Set of commands.
    * @param string $tool
+   *  Name of tool to use.
    * @param integer $profile_id
+   *   Possible transcode profile to use.
    * @param string $completed_transcoding_url
+   *   The URL to trigger when job status changes.
    * @param string $priority
+   *   The priority of the job.
    */
   public static function create_job_retranscode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
     // Must have user_quota.
@@ -469,7 +499,7 @@ class mediamosa_job {
     $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id_source, $create_still, $still_parameters, $priority, FALSE, $mediafile_dest);
 
     // Create sub transcode job.
-    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id_source);
+    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id_source, $mediafile_dest);
 
     return $job_id;
   }
@@ -938,11 +968,13 @@ class mediamosa_job {
    * Trigger completed_transcoding_url.
    *
    * @param string $old_status
-   *  Old status.
+   *   Old status.
    * @param string $new_status
-   *  New status.
+   *   New status.
    * @param integer $job_id
-   *  The job ID.
+   *   The job ID.
+   * @param string $mediafile_dest
+   *
    */
   public static function notify_transcoding($old_status, $new_status, $job_id) {
     if ($old_status == $new_status) {
