@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2021, master branch)
+MediaMosa 3.4.x-dev (build 2023, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -181,6 +181,8 @@ MediaMosa 3.4.x-dev (build 2021, master branch)
 - Fixed download server uri to /media (installation + update).
 - The function mediamosa_io::touch() now only creates empty files when file does
   not exist yet.
+- Extended the transcode completion URL to include the MediaFile ID of the
+  destination mediafile. Fix by mborsten.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
