@@ -294,7 +294,7 @@ class mediamosa_job_scheduler {
         ->execute();
 
       // Trigger url.
-      mediamosa_job::notify_transcoding($job[mediamosa_job_db::JOB_STATUS], (string) $response_data->items->item[$i]->status, (string) $response_data->items->item[$i]->job_id);
+      mediamosa_job::notify_transcoding($job[mediamosa_job_db::JOB_STATUS], (string) $response_data->items->item[$i]->status, (string) $response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_dest);
 
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED ||
           $response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FAILED ||
