@@ -1048,16 +1048,19 @@ class mediamosa_media {
    *   The mediafile to remove link from.
    */
   public static function remove_public_link($app_id, $mediafile_id) {
-    // Remove permanent links of mediafile.
-    mediamosa_io::exec(
-      strtr(
-        'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
-        array(
-          '@media_location' => mediamosa_storage::get_realpath_media_permanent_file($app_id),
-          '@wildmatch' => $mediafile_id,
+    $media_location = mediamosa_storage::get_realpath_media_permanent_file($app_id);
+    if (mediamosa_io::file_exists($media_location)) {
+      // Remove permanent links of mediafile.
+      mediamosa_io::exec(
+        strtr(
+          'find @media_location -maxdepth 3 -mindepth 3 -name "@wildmatch*" -type l -delete',
+          array(
+            '@media_location' => $media_location,
+            '@wildmatch' => $mediafile_id,
+          )
         )
-      )
-    );
+      );
+    }
   }
 
   /**
