@@ -150,6 +150,13 @@ class mediamosa_asset_mediafile {
    *     Returns an DB resource instead of array with mediafile ID as key. This
    *     will prevent memory problems with larger results.
    *
+   * @param string $asset_id
+   *   Asset id of request.
+   * @param array $fields
+   *   Database fields to return.
+   * @param array $options
+   *   Options for query.
+   *
    * @return array
    *   An associative array where key is the mediafile ID.
    */
@@ -158,6 +165,9 @@ class mediamosa_asset_mediafile {
     $options += array(
       'get_originals_only' => FALSE,
       'exclude_stills' => FALSE,
+      'mime_type' => FALSE,
+      'filename' => FALSE,
+      'limit' => FALSE,
       'orderby' => FALSE,
       'get_all_children' => FALSE,
       'return_resource' => FALSE,
@@ -167,20 +177,36 @@ class mediamosa_asset_mediafile {
       ->fields('mf', $fields)
       ->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
 
-    // Need only originals?
+    // Only originals.
     if ($options['get_originals_only']) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
     }
 
-    // Exclude stills?
+    // Skip stills.
     if ($options['exclude_stills']) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
     }
 
-    // Order by?
+    // Mime Type query.
+    if ($options['mime_type']) {
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', sprintf('mfm.mediafile_id = mf.mediafile_id '));
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'mfmp', sprintf('mfmp.prop_id = mfm.prop_id AND mfmp.%s = %d', mediamosa_asset_mediafile_metadata_property_db::NAME, 'mime-type'));
+      $query->condition('mfm.val_char', $options['mime_type']);
+    }
+
+    if ($options['filename']) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::FILENAME, $options['filename'], 'LIKE');
+    }
+
+    if ($options['limit'] && is_numeric($options['limit'])) {
+      $query->range(0, $options['limit']);
+    }
+
+    // Order by.
     if ($options['orderby']) {
       $query->orderBy('mf.' . $options['orderby'], 'ASC');
     }
+
     // Return resource.
     if ($options['return_resource']) {
       return $query->execute();

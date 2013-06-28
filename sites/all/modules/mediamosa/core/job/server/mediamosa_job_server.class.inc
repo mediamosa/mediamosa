@@ -116,40 +116,35 @@ class mediamosa_job_server {
     // Get the current server ID.
     $server_id = mediamosa::get_server_id();
 
-    $run_last = variable_get('mediamosa_jobserver_cron_last_' . $server_id, NULL);
-
-    // may run? (0 - 60 seconds).
-    if (round(REQUEST_TIME - $run_last) < 60) {
-      return; // Still running.
-    }
-
-    // A period of 60 to 120 seconds we wait till its killed (or done running).
-    $run_last = variable_get('mediamosa_jobstatus_cron_running_' . $server_id, NULL);
-    if (round(REQUEST_TIME - $run_last) < 120) {
-      self::log('run_parse_queue() in safety timeout zone.');
+    // Acquire a lock for exclusive run.
+    if (!lock_acquire('mediamosa_job_server_' . $server_id, 59)) {
+      self::log('run_parse_queue() unable to acquire lock.');
       return;
     }
-
-    variable_set('mediamosa_jobserver_cron_last_' . $server_id, REQUEST_TIME);
 
     // Log it.
     self::log_debug('Start parse queue job server');
 
-    // We set this to NULL when we are done.
-    variable_set('mediamosa_jobserver_cron_running_' . $server_id, REQUEST_TIME);
+    // Wait for job_scheduler.
+    sleep(2);
 
-    // Set max run time on 120 sec.
-    drupal_set_time_limit(120);
     for ($x = 0; $x < 6; $x++) {
       $start_at = microtime(TRUE);
 
-      try {
-        // Parse queue.
-        self::parse_queue();
+      // Acquire a lock for exclusive run.
+      if (lock_acquire('mediamosa_job_server_parse_' . $server_id, 120)) {
+        try {
+          // Parse queue.
+          self::parse_queue();
+        }
+        catch (mediamosa_exception $e) {
+          // ignore, its logged
+        }
+
+        // Release lock.
+        lock_release('mediamosa_job_server_parse_' . $server_id);
       }
-      catch (mediamosa_exception $e) {
-        // ignore, its logged
-      }
+
       // Now take the time it took, and subtrac that from 10.
       $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
       self::log_debug_high('Server run_parse_queue: Time to sleep @time', array('@time' => $time_to_sleep));
@@ -161,10 +156,7 @@ class mediamosa_job_server {
     }
 
     // Done.
-    variable_set('mediamosa_server_cron_running_' . $server_id, NULL);
-
-    // Log it.
-    self::log_debug('Ending parse queue job server');
+    lock_release('mediamosa_job_server_' . $server_id);
   }
 
   /**
@@ -846,7 +838,7 @@ class mediamosa_job_server {
             // the data dir in sannas (extra).
             'path_mount_point_data' => mediamosa_storage::get_local_mediafile_path($mediafile),
             // Path to the transcode file.
-            'location_dest_file' => mediamosa_storage::get_realpath_temporary_file($mediafile_id),
+            'location_dest_file' => mediamosa_storage::get_realpath_temporary_file($job_server[mediamosa_job_server_db::JOB_ID]),
             // Location of source mediafile.
             'location_source_file' => mediamosa_storage::get_realpath_mediafile($mediafile),
             // Location of the status_file.

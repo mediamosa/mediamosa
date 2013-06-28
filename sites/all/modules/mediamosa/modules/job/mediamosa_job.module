@@ -19,11 +19,11 @@ function mediamosa_job_cron() {
     $start = time();
     mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
 
-    // Trigger process servers.
-    mediamosa_server::trigger();
-
     // Trigger job scheduler.
     mediamosa_job_scheduler::trigger();
+
+    // Trigger process servers.
+    mediamosa_server::trigger();
 
     // Log it.
     mediamosa_debug::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');

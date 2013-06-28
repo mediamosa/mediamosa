@@ -18,6 +18,8 @@ class mediamosa_job_db {
   const MEDIAFILE_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
   const MEDIAFILE_DEST = 'mediafile_dest';
   const MEDIAFILE_DEST_LENGTH = mediamosa_db::HASH_ID_LENGTH;
+  const FILENAME = 'filename';
+  const FILENAME_LENGTH = 255;
   const OWNER_ID = 'owner';
   const OWNER_ID_LENGTH = 255;
   const JOB_STATUS = 'status';

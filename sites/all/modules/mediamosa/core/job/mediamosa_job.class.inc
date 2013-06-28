@@ -135,6 +135,19 @@ class mediamosa_job {
   }
 
   /**
+   * Get job details by a given asset_id.
+   *
+   * @param integer $asset_id
+   *  The asset ID.
+   */
+  static public function get_by_asset_id($asset_id, array $fields = array()) {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->fields('j', $fields)
+      ->condition(mediamosa_job_db::ASSET_ID, $asset_id)
+      ->execute();
+  }
+
+  /**
    * Test if there are any running jobs.
    *
    * @return integer
@@ -410,19 +423,16 @@ class mediamosa_job {
    * @param string $priority
    *   The priority of the job.
    */
-  public static function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
+  static public function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL, $hint = FALSE, $mediafile_dest = NULL, $filename = '') {
 
     // Must have user_quota.
     mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
-
-    // Must be transcodable.
-    mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
 
     // Create mediadownload job.
     self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
 
     // Create job.
-    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest);
+    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest, $filename);
 
     // Create sub transcode job.
     mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id, $mediafile_dest);
@@ -742,8 +752,9 @@ class mediamosa_job {
    * @param string $mediafile_id
    * @param bool $create_still
    * @param array $still_parameters
+   * @param string $filename
    */
-  public static function create_job($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $hint = FALSE, $mediafile_dest = NULL) {
+  public static function create_job($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $hint = FALSE, $mediafile_dest = NULL, $filename = '') {
 
     // Get the mediafile.
     $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -801,6 +812,7 @@ class mediamosa_job {
       mediamosa_job_db::CREATE_STILL => $create_still ? mediamosa_job_db::CREATE_STILL_TRUE : mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($still_parameters),
       mediamosa_job_db::PROGRESS => '0.000',
+      mediamosa_job_db::FILENAME => $filename,
     );
 
     if (!is_null($hint)) {
@@ -983,9 +995,11 @@ class mediamosa_job {
 
     $job_transcode = mediamosa_job_transcode::get($job_id);
 
-    if (!empty($job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
-      $completed_transcoding_url = $job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
-      self::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
+    $completed_transcoding_url = $job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
+    if (!empty($completed_transcoding_url)) {
+      // Add trailing slash if not given.
+      $completed_transcoding_url .= substr($completed_transcoding_url, -1) == '/' ? '' : '/';
+      self::log('Call to completed transcoding URL: ' . $completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
 
       // Do the call (through proxy).
       mediamosa_http::do_head_call($completed_transcoding_url . $new_status, array('use_curlproxy' => TRUE));

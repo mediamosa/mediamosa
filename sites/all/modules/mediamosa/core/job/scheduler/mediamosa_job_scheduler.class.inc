@@ -140,44 +140,28 @@ class mediamosa_job_scheduler {
       return;
     }
 
-    $run_last = variable_get('mediamosa_jobscheduler_cron_last', NULL);
-
-    // May run? (0 - 60 seconds).
-    if (round(REQUEST_TIME - $run_last) < 60) {
-      // Still running.
+    if (!lock_acquire('mediamosa_job_scheduler', 59)) {
+      self::log('run_parse_queue() unable to acquire lock.');
       return;
     }
-
-    // A period of 60 to 120 seconds we wait till its killed (or done running).
-    $run_last = variable_get('mediamosa_jobstatus_cron_running', NULL);
-    if (round(REQUEST_TIME - $run_last) < 120) {
-      self::log('run_parse_queue() in safety timeout zone.');
-      // In timeout zone.
-      return;
-    }
-
-    // If we get here then we can go.
-    variable_set('mediamosa_jobscheduler_cron_last', REQUEST_TIME);
-
-    // We set this to NULL when we are done.
-    variable_set('mediamosa_jobscheduler_cron_running', REQUEST_TIME);
-
-    // Set max run time on 120 sec.
-    set_time_limit(120);
-
-    // Wait 5 seconds so we match possible job parser.
-    sleep(5);
 
     for ($x = 0; $x < 6; $x++) {
       $start_at = microtime(TRUE);
 
-      try {
-        // Parse queue.
-        self::parse_queue();
+      // Acquire a lock for exclusive run.
+      if (lock_acquire('mediamosa_job_scheduler_parse', 120)) {
+        try {
+          // Parse queue.
+          self::parse_queue();
+        }
+        catch (mediamosa_exception $e) {
+          // ignore, its logged
+        }
+
+        // Release lock.
+        lock_release('mediamosa_job_scheduler_parse');
       }
-      catch (mediamosa_exception $e) {
-        // ignore, its logged.
-      }
+
       // Now take the time it took, and subtrac that from 10.
       $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
       self::log_debug_high('run_parse_queue: Time to sleep @time', array('@time' => $time_to_sleep));
@@ -189,7 +173,7 @@ class mediamosa_job_scheduler {
     }
 
     // Done.
-    variable_set('mediamosa_jobscheduler_cron_running', NULL);
+    lock_release('mediamosa_job_scheduler');
   }
 
   /**
@@ -379,6 +363,7 @@ class mediamosa_job_scheduler {
         mediamosa_job_db::JOB_TYPE,
         mediamosa_job_db::OWNER_ID,
         mediamosa_job_db::APP_ID,
+        mediamosa_job_db::FILENAME,
       ))
       ->fields('mf', array(
         mediamosa_asset_mediafile_db::FILENAME,
@@ -396,7 +381,15 @@ class mediamosa_job_scheduler {
       ->fetchAssoc();
 
     if ($job_transcode) {
-      $new_filename = mediamosa_io::get_base_filename($job_transcode[mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+      // Determine new filename, if a tool has given one, use that.
+      if ($job_transcode[mediamosa_job_db::FILENAME] != '') {
+        $new_filename = $job_transcode[mediamosa_job_db::FILENAME];
+      }
+      else {
+        // Else make one on the basis of the original.
+        $new_filename = mediamosa_io::get_base_filename($job_transcode['mf_' . mediamosa_asset_mediafile_db::FILENAME]) . '.' . $job_transcode[mediamosa_asset_mediafile_db::FILE_EXTENSION];
+      }
+
       $result = array(
         'asset_id' => $job_transcode[mediamosa_job_db::ASSET_ID],
         'owner' => $job_transcode[mediamosa_job_db::OWNER_ID],
