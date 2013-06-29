@@ -183,6 +183,19 @@ MediaMosa 3.4.x-dev (build 2023, master branch)
   not exist yet.
 - Extended the transcode completion URL to include the MediaFile ID of the
   destination mediafile. Fix by mborsten.
+- Fixed bug due to ffmpeg parameter change in -map.
+- Fixed Drush commands for 3.4 version.
+  Plus a small minor enhancements:
+    - Added size parameter to Drush command mm-still.
+    - Drush command mm-job now shows latest job by default.
+    - Added Drush command mm-acl.
+- Added possibility for tools to provide a new filename.
+- Added more options to mediamosa_asset_mediafile::get_by_asset_id().
+- Refactored scheduler/server CRON function to work with Drupal's (un)lock()
+  functions.
+- Added 'resize' and 'quality' as parameters to tool_image.
+- Fixed image generation with latest job_server paths.
+- MediaMosa module is depended on version MediaMosa SDK v3.5 or higher.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------

@@ -15,7 +15,7 @@ dependencies[] = menu
 dependencies[] = dblog
 dependencies[] = image
 dependencies[] = simpletest
-dependencies[] = mediamosa_sdk
+dependencies[] = mediamosa_sdk (>=3.5)
 dependencies[] = mediamosa_connector
 
 ; Used files.
