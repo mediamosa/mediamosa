@@ -4141,3 +4141,23 @@ function mediamosa_update_7162() {
   // Done.
   return strtr("The paths for your download servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
 }
+
+/**
+ * Change the job table to allow the filename to be changed by its tool.
+ */
+function mediamosa_update_7163() {
+ if (!db_field_exists('mediamosa_job', 'filename')) {
+    db_add_field(
+      'mediamosa_job',
+      'filename',
+      array(
+        'after' => 'mediafile_dest',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => 'Name of the new mediafile.',
+      )
+    );
+  }
+}
