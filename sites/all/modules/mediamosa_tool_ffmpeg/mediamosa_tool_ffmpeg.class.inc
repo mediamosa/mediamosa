@@ -394,13 +394,13 @@ class mediamosa_tool_ffmpeg {
 
               // This version is creating stills for the original video
               if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
               else {
                 $size_explode = explode('x', $size);
                 $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
                 $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
 
               // This version is creating stills for the analysed file

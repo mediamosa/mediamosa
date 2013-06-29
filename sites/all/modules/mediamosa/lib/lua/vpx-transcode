@@ -357,6 +357,11 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
 
   local duration = 0
 
+  -- Some ffmpeg version display a dot instead of ':' in map info. The -map parameter
+  -- always expects a ':'. So Replace '.' to ':' in -map parameter.
+  video_stream = string.gsub(video_stream, "%.", ":")
+  audio_stream = string.gsub(audio_stream, "%.", ":")
+
   local second_input = ""
   local precommand = ""
   local jpghelper = ""
@@ -369,7 +374,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     if video_stream ~= "none" and audio_stream ~= "none" then
       if audio_aac_zero then
         second_input = string.format("-i %s", destination_path .. "/" .. hash .. "." .. audio_ext)
-        precommand = string.format("-map %s -map 1.0", video_stream)
+        precommand = string.format("-map %s -map 1:0", video_stream)
       else
         precommand = string.format("-map %s -map %s", video_stream, audio_stream)
       end
@@ -378,7 +383,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     elseif audio_stream ~= "none" then
       if audio_aac_zero then
         second_input = string.format("-i %s", destination_path .. "/" .. hash .. "." .. audio_ext)
-        precommand = "-vn -map 1.0"
+        precommand = "-vn -map 1:0"
       else
         precommand = string.format("-map %s -vn", audio_stream)
       end
