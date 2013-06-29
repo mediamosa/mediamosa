@@ -26,6 +26,17 @@ class mediamosa_tool_image {
   const MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING = '6';
 
   /**
+   * Log for image tool.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_watchdog::log($message, $variables, $severity, 'tool image');
+  }
+
+  /**
    * Returns TRUE when we support this mime-type.
    *
    * @param string $mime_type
@@ -37,10 +48,6 @@ class mediamosa_tool_image {
   /**
    * Generate still.
    *
-   * @deprecated: Although new, its deprecated. We will replace this function
-   *              with generate_still() very soon and no longer rely on exec
-   *              strings return. Rewrite of jobs is planned for v3.5.
-   *
    * @param string $jobserver_job_id
    * @param string $mediafile_id_source
    */
@@ -49,6 +56,8 @@ class mediamosa_tool_image {
     $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
     $job_server = mediamosa_job_server::get($jobserver_job_id);
     $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
+
+    $execution_string = '';
 
     if ($job_server_still) {
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE]; // wxh
@@ -64,25 +73,24 @@ class mediamosa_tool_image {
       // Dest.
       $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
-      $options = array(
+      $execute_string_options = array(
         '@mediafile_dest' => $mediafile_dest,
         '@mediafile_source' => $mediafile_source,
         '@parameter_string' => implode(' ', $parameter_string),
         '@status_file' => mediamosa_storage::get_realpath_status_file($job_id),
       );
 
-      return strtr('convert @mediafile_source @parameter_string @mediafile_dest; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file', $options);
+    // Execution string:
+    return strtr(
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+      'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
+      $execution_string_options);
     }
-
-    return '';
   }
 
   /**
    * Get the exec string for transcoding the file.
-   *
-   * @deprecated: Although new, its deprecated. We will replace this function
-   *              with transcode() very soon and no longer rely on exec
-   *              strings return. Rewrite of jobs is planned for v3.5.
    *
    * @param array $options
    */
@@ -90,20 +98,23 @@ class mediamosa_tool_image {
 
     // Build the values.
     $execution_string_options = array(
-      '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['job_id'] . DIRECTORY_SEPARATOR,
-      '@mediafile_location' => $options['location_source_file'],
-      '@mediafile_id' => $options['mediafile_id'],
-      '@mediafile_dest' => $options['job_id'],
+      '@mediafile_source' => $options['location_source_file'],
+      '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
       '@parameter_string' => $options['parameter_string'],
       '@status_file' => $options['status_file'],
     );
 
     // Execution string.
-    // Go to the subdirectory.
-    // Create jpg from image (eg. from tiff).
-    // Copy the result to transcode directory.
-    // Remove the temporary directory (and files).
-    // Create status file.
-    return strtr('mkdir @file_location; cd @file_location; convert @mediafile_location @parameter_string @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_dest.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;', $execution_string_options);
+    return strtr(
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+      'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
+      $execution_string_options);
+  }
+
+  /**
+   * Hook perform post transcode action.
+   */
+  public static function post_transcode($asset_id, $mediafile_id, $mediafile_id_dest, $file_ext) {
   }
 }
