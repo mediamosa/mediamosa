@@ -135,6 +135,22 @@ class mediamosa_job {
   }
 
   /**
+   * Get job details by a given asset_id.
+   *
+   * @param integer $asset_id
+   *  The asset ID.
+   *
+   * @return DatabaseStatementInterface
+   *   The database result object.
+   */
+  public static function get_by_asset_id($asset_id, array $fields = array()) {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->fields('j', $fields)
+      ->condition(mediamosa_job_db::ASSET_ID, $asset_id)
+      ->execute();
+  }
+
+  /**
    * Test if there are any running jobs.
    *
    * @return integer
