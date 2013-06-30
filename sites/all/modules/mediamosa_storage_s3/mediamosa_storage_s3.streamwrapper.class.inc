@@ -313,7 +313,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       }
 
       // Convert to UTC since.
-      $expire = gmmktime() + ($expire * 60);
+      $expire = time() + ($expire * 60);
 
       // Get play url.
       $url = $s3->get_object_url($bucket, $filename, $expire);
