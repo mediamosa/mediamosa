@@ -323,7 +323,7 @@ function drush_mediamosa_mm_client_app_add($app_id, $name, $password) {
   $node->{mediamosa_app_db::OAUTH_CONSUMER_KEY} = $name;
   $node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET} = user_password();
   node_save($node);
-  drush_print("Application $name added.");
+  drush_print('Application ' . $name . ' added.');
 }
 
 /**
@@ -348,7 +348,7 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
   $rows[] = array('nr', 'Asset_id', 'Title', 'Created');
   foreach ($assets['asset_ids'] as $nr => $asset_id) {
     $asset_info = mediamosa_asset::get($asset_id, $app_id);
-    $title = "";
+    $title = '';
     $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
     if (isset($metadata['dublin_core']['title']['values'][0])) {
       $title = $metadata['dublin_core']['title']['values'][0];
@@ -456,7 +456,7 @@ function drush_mediamosa_mm_asset_delete($asset_id = NULL) {
   if ($asset_id == NULL) {
     return drush_set_error('', dt('Invalid asset_id.'));
   }
-  $asset = mediamosa_asset::delete($asset_id);
+  mediamosa_asset::delete($asset_id);
 }
 
 /**
@@ -543,7 +543,7 @@ function drush_mediamosa_mm_app_purge($app_id = NULL) {
   $assets = mediamosa_search::asset_search(array('app_ids' => array(1), 'limit' => 10000), '');
   foreach ($assets['asset_ids'] as $nr => $asset_id) {
     mediamosa_asset::delete($asset_id);
-    echo ".";
+    print '.';
   }
   drush_print('Total deleted assets: ' . $assets['total_count']);
 }
@@ -574,7 +574,7 @@ function drush_mediamosa_mm_analyse($mediafile_id, $priority = 0) {
 
   $quiet = drush_get_option('quiet', NULL);
   if (!$quiet) {
-    drush_print("Analyse job for mf: " . $mediafile['mediafile_id'] . " requested");
+    drush_print('Analyse job for mf: ' . $mediafile['mediafile_id'] . ' requested');
   }
 }
 
@@ -705,7 +705,7 @@ function drush_mediamosa_mm_transcode($mediafile_id, $transcode_profile = 1) {
     TRUE,
     $mediafile['mediafile_id'],
     FALSE, '', '', '', '', $transcode_profile, '');
-  drush_print("Transcode job for mf: " . $mediafile['mediafile_id'] . " requested with profile id = " . $transcode_profile . ". Job id: " . $job_id . ".");
+  drush_print('Transcode job for mf: ' . $mediafile['mediafile_id'] . ' requested with profile id = ' . $transcode_profile . '. Job id: ' . $job_id . '.');
 }
 
 /**
@@ -731,7 +731,7 @@ function drush_mediamosa_mm_retranscode($mediafile_id) {
     TRUE,
     $mediafile['mediafile_id'],
     FALSE, '', '', '', '', '', '');
-  drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+  drush_print('RE-Transcode job for mf: ' . $mediafile['mediafile_id'] . ' requested. Job id: ' . $job_id . '.');
 }
 
 /**
@@ -747,6 +747,7 @@ function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
     return drush_set_error('', dt('Invalid transcode profile.'));
   }
 
+  $quiet = drush_get_option('quiet', NULL);
   $priority = drush_get_option('priority', '0');
 
   $mm_fields = array(
@@ -772,11 +773,11 @@ function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
     FALSE, '', '', '', '', '', '',
     $priority);
     if (!$quiet) {
-      drush_print("RE-Transcode job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+      drush_print('RE-Transcode job for mf: ' . $mediafile['mediafile_id'] . ' requested. Job id: ' . $job_id . '.');
     }
     $count++;
   }
-  drush_print(strtr("All done. @number retranscodes requested.", array('@number' => $count)));
+  drush_print(strtr('All done. @number retranscodes requested.', array('@number' => $count)));
 }
 
 /**
@@ -825,7 +826,7 @@ function drush_mediamosa_mm_still($mediafile_id = NULL, $size = NULL) {
     $mediafile['mediafile_id'],
     $still_parameters,
     $priority);
-  drush_print("Still job for mf: " . $mediafile['mediafile_id'] . " requested. Job id: " . $job_id . ".");
+  drush_print('Still job for mf: ' . $mediafile['mediafile_id'] . ' requested. Job id: ' . $job_id . '.');
 }
 
 /**
@@ -839,7 +840,7 @@ function drush_mediamosa_mm_jobs() {
   $rows[0] = array('status', 'type', 'number');
   foreach (array('WAITING', 'INPROGRESS', 'FAILED', 'FINISHED') as $status) {
     foreach (array('ANALYSE', 'TRANSCODE', 'STILL') as $job_type) {
-      $jobs = mediamosa_job::get_job_list(NULL, NULL, TRUE, 0, '', '', "status==\"$status\" and job_type==\"$job_type\"");
+      $jobs = mediamosa_job::get_job_list(NULL, NULL, TRUE, 0, '', '', 'status=="' . $status . '" and job_type=="' . $job_type . '"');
       $rows[] = array($job_type, $status, $jobs->found_rows);
     }
   }
@@ -873,7 +874,7 @@ function drush_mediamosa_mm_jobs() {
     drush_print_table($rows, TRUE);
   }
   else {
-    drush_print("No current running jobs.");
+    drush_print('No current running jobs.');
   }
 }
 
@@ -903,7 +904,7 @@ function drush_mediamosa_mm_job($job_id = NULL) {
     drush_print_table($rows, TRUE);
   }
   else {
-    drush_print("No job found.");
+    drush_print('No job found.');
   }
 }
 
@@ -929,7 +930,7 @@ function drush_mediamosa_mm_job_cancel($job_id) {
 
   mediamosa_job::cancel_job($job[mediamosa_job_db::APP_ID], $job_id, $job[mediamosa_job_db::OWNER_ID]);
 
-  drush_print("Job cancel request done: " . print_r($job, TRUE) . ".");
+  drush_print('Job cancel request done: ' . print_r($job, TRUE) . '.');
 }
 
 /**
@@ -974,7 +975,7 @@ function drush_mediamosa_mm_asset_job_queue($asset_id = NULL) {
     drush_print_table($rows, TRUE);
   }
   else {
-    drush_print("No jobs for this asset (yet).");
+    drush_print('No jobs for this asset (yet).');
   }
 }
 
@@ -1050,7 +1051,7 @@ function drush_mediamosa_mm_import_directory($path, $app_id = 1, $owner = 'N.N.'
 
   if (count(scandir($path)) == 2) {
     if (!$quiet) {
-      drush_print("No files found in directory.");
+      drush_print('No files found in directory.');
     }
     else {
       return FALSE;
@@ -1123,7 +1124,7 @@ function drush_mediamosa_mm_import_directory($path, $app_id = 1, $owner = 'N.N.'
     }
   }
   if (!$quiet) {
-    drush_print("import done. New asset_id: $asset_id");
+    drush_print('import done. New asset_id: ' . $asset_id);
   }
 
   // Done.
