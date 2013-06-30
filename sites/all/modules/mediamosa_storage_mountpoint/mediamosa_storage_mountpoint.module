@@ -138,8 +138,8 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_form($node, $for
 }
 
 /**
-* Implements hook_mediamosa_storage_profile_validate().
-*/
+ * Implements hook_mediamosa_storage_profile_validate().
+ */
 function mediamosa_storage_mountpoint_mediamosa_storage_profile_validate($node, $form, $form_state) {
   $mountpoint = $node->{mediamosa_storage_mountpoint_db::MOUNTPOINT};
   if (!is_dir($mountpoint)) {
