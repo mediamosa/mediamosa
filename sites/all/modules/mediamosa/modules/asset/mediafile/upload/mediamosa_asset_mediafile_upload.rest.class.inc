@@ -98,11 +98,13 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     // Generate unique ID.
     $uuid = rand(1000000, 9999999);
 
+    $url = mediamosa_http::expectHTTP($server_upload[mediamosa_server_db::SERVER_URI]);
+    
     // Set response.
     $mediamosa->add_item(
       array(
         'action' => strtr(mediamosa_server::get_server_url($server_upload), array('{TICKET}' => $ticket_id, '{PROGRESS_ID}' => $uuid)),
-        'uploadprogress_url' => strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS], array('{PROGRESS_ID}' => $uuid, '{SERVER_ID}' => $server_upload[mediamosa_server_db::NID])),
+        'uploadprogress_url' => strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS], array('{base_uri}' => $url, '{PROGRESS_ID}' => $uuid, '{SERVER_ID}' => $server_upload[mediamosa_server_db::NID])),
         'ticket_id' => $ticket_id,
         'progress_id' => $uuid,
         'server_id' => $server_upload[mediamosa_server_db::NID],
@@ -141,7 +143,7 @@ class mediamosa_rest_call_asset_mediafile_upload_options extends mediamosa_rest_
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
 
     // Check if ticket exists.
-    if (mediamosa_media_ticket::get_valid_upload($ticket_id)) {
+    if (mediamosa_ticket::get_valid_upload($ticket_id)) {
       $this->add_header_access_control_allow_origin();
     }
   }
