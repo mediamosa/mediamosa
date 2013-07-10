@@ -1,3 +1,24 @@
+MediaMosa 3.2.4 (build 1903)
+----------------------------
+- Fixing minor error in process of $_FILES.
+- Added OPTIONS method to REST layer.
+- Added OPTIONS rest calls for upload ticket REST calls. Will add
+  'Access-Control-Allow-Origin' to header when upload ticket is valid.
+- Added 'Access-Control-Allow-Origin' to result header when upload POST/PUT was
+  successful.
+- Added unit test for 'Access-Control-Allow-Origin'.
+- Extended REST browser for method OPTIONS.
+- Extended REST layer to allow empty responses (HTTP header only).
+- POST upload with files above 2gb will use work around PHP bug. Some re-factor
+  on upload code to make upload handling better.
+- POST upload now correctly processes file upload from Drupal 7.
+- Fixed: JOB common unit test contained an error which resulted in wrong test 
+  results.
+- Added support for Drupals watchdog_exception() function.
+- Fixed: Using E_USER_ERROR const instead wrong E_ERROR code with 
+  error_trigger();
+- Fixed: problem when doing PUT calls during upload test.
+
 MediaMosa 3.2.3 (build 1888)
 ----------------------------
 - Fixed installation profile for missing creating of the 'Y' directory under
