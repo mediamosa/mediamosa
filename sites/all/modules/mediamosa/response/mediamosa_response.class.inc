@@ -223,31 +223,37 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (OAuthException $e) {
+      mediamosa_watchdog::log_exception($e);
       print($e->getMessage());
       exit();
     }
     catch (mediamosa_exception_error_400 $e) {
       // Bad request.
+      mediamosa_watchdog::log_exception($e);
       header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
       exit();
     }
     catch (mediamosa_exception_error_403 $e) {
       // Forbidden
+      mediamosa_watchdog::log_exception($e);
       header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
       exit();
     }
     catch (mediamosa_exception_error_404 $e) {
       // Not found
+      mediamosa_watchdog::log_exception($e);
       header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
       exit();
     }
     catch (mediamosa_exception_error_500 $e) {
       // Internal server error.
+      mediamosa_watchdog::log_exception($e);
       header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error');
       exit();
     }
     catch (mediamosa_exception_error_501 $e) {
       // Not implemented
+      mediamosa_watchdog::log_exception($e);
       header($_SERVER['SERVER_PROTOCOL'] . ' 501 Not Implemented');
       exit();
     }
@@ -263,9 +269,8 @@ class mediamosa_response extends mediamosa {
       $e->mediamosa_exception_rest_response($this);
     }
     catch (PDOException $e) {
-      mediamosa_debug::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       try {
-        mediamosa_watchdog::log_export(strtr('PDOException caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+        mediamosa_watchdog::log_exception($e);
       }
       catch (Exception $e) {
         // ignore.
@@ -274,9 +279,8 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, 'PDOException caught; ' . $e->getMessage() . ",\ntrace; " . $e->getTraceAsString() . ",\nQuery string; " . $e->query_string . ",\nArgs; " . print_r($e->args, TRUE));
     }
     catch (Exception $e) {
-      mediamosa_debug::error_log('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       try {
-        mediamosa_watchdog::log_export(strtr('Exception caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+        mediamosa_watchdog::log_exception($e);
       }
       catch (Exception $e) {
         // ignore.
