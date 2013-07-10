@@ -1,4 +1,4 @@
-MediaMosa 3.2.4 (build 1904)
+MediaMosa 3.2.4 (build 1905)
 ----------------------------
 - Fixing minor error in process of $_FILES.
 - Added OPTIONS method to REST layer.
@@ -21,6 +21,8 @@ MediaMosa 3.2.4 (build 1904)
 - Fixed install of ffmpeg parameters order, fixing problems with ffmpeg wanting 
   some parameters first before others.
 - Fixed timeout on simpletests runs when server is underpowered.
+- Clear messages session variable after each REST call. Fix by Wessel Dankers.
+- Updated mmplayer; videojs (4.1.0), flowplayer (5.3.2).
 
 MediaMosa 3.2.3 (build 1888)
 ----------------------------
