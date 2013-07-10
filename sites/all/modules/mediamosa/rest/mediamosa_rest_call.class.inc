@@ -297,6 +297,9 @@ abstract class mediamosa_rest_call {
     // Call the function.
     $this->do_call();
 
+    // Make sure no error message queue builds up in the session
+    drupal_get_messages();
+    
     return $this->{self::RESPONSE_TYPE};
   }
 
