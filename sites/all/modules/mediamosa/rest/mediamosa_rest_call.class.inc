@@ -304,11 +304,6 @@ abstract class mediamosa_rest_call {
    * Do authorize app.
    */
   private function do_app_authorized() {
-    // If we are internal or external, we dont care.
-    if ($this->is_internal() || $this->is_external()) {
-      return;
-    }
-
     // Run the app_authorized hook. One TRUE is authorized.
     $results = module_invoke_all('mediamosa_app_authorized');
     $authorized = FALSE;
@@ -319,7 +314,11 @@ abstract class mediamosa_rest_call {
       }
     }
 
-
+    // If we are internal or external, we dont care.
+    if ($this->is_internal() || $this->is_external()) {
+      return;
+    }
+    
     if (!$authorized) {
       throw new mediamosa_exception_error_authentication_failure();
     }
