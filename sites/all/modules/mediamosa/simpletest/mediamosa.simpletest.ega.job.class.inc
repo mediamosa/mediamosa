@@ -229,7 +229,8 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    $max_runs = 12; // Keep in mind that with less slots, this needs to be 12.
+    // Keep in mind that with less slots, max_runs needs to be at least 12.
+    $max_runs = 15;
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.
@@ -243,23 +244,25 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
       // Check if the jobs are all done.
       foreach ($a_jobs as $a_job) {
-        if (!in_array($a_job[mediamosa_job_db::JOB_STATUS], array(mediamosa_job_db::JOB_STATUS_FINISHED, mediamosa_job_db::JOB_STATUS_FAILED, mediamosa_job_db::JOB_STATUS_CANCELLED))) {
+        if (!in_array($a_job[mediamosa_job_db::JOB_STATUS], array(
+            mediamosa_job_db::JOB_STATUS_FINISHED, mediamosa_job_db::JOB_STATUS_FAILED, mediamosa_job_db::JOB_STATUS_CANCELLED))) {
           $running_jobs++;
         }
       }
 
       if ($running_jobs) {
         $this->pass(strtr('Found @running running jobs, waiting for next cycle.', array('@running' => $running_jobs)));
-        Sleep(5); // Wait 5 seconds.
+        // Wait 5 seconds.
+        sleep(5);
       }
       else {
-        $this->pass(strtr('No more running jobs found, exiting job cycle.', array('@running' => $running_jobs)));
+        $this->pass('No more running jobs found, exiting job cycle.');
       }
     }
 
     // If we are dead locked, we need to know.
     if ($max_runs < 0) {
-      $this->fail('Job scheduler deadlock; Failed to complete all jobs.');
+      $this->fail(strtr('Job scheduler deadlock; Failed to complete all jobs. Jobs waiting for: @running', array('@running' => $running_jobs)));
     }
   }
 }
