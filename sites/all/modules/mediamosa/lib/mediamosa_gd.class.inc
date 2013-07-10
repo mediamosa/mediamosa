@@ -302,7 +302,7 @@ class mediamosa_gd {
    * @return bool
    *  Returns TRUE on success or FALSE on failure.
    */
-  function imagedestroy($image) {
+  public static function imagedestroy($image) {
     if (!function_exists('imagedestroy')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
     }

@@ -42,7 +42,7 @@ class mediamosa_app_dbus {
    * @param string $name
    * @return string
    */
-  public function get_shared_key($name) {
+  public static function get_shared_key($name) {
     return mediamosa_db::db_query(
       "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = :active_true",
       array(
@@ -69,7 +69,7 @@ class mediamosa_app_dbus {
    * @param string $name
    * @return boolean
    */
-  public function is_app_active($name) {
+  public static function is_app_active($name) {
     return mediamosa_db::db_query(
       "SELECT #active FROM {#table_name} WHERE #name = :name",
       array(
@@ -99,7 +99,7 @@ class mediamosa_app_dbus {
    * @param string $param
    * @return boolean / string
    */
-  function dbus_cookie_sha1($command, $param) {
+  public static function dbus_cookie_sha1($command, $param) {
 
     switch ($command) {
       case 'AUTH':
@@ -131,7 +131,7 @@ class mediamosa_app_dbus {
    * @param string $line
    * @return string
    */
-  public function app_dbus_protocol($line) {
+  public static function app_dbus_protocol($line) {
     // Initialize identification.
     $auth_methods = array(
       'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1'

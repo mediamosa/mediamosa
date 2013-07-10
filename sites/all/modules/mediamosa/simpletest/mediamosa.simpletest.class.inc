@@ -400,11 +400,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param array $options
    * @param array $headers
    */
-  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array()) {
+  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL, $extra_post = NULL) {
     // Just let them know we need the Drupal part.
     $headers[] = mediamosa_settings::X_MEDIAMOSA_DISABLE_APP . ': True';
 
-    return parent::drupalPost($path, $edit, $submit, $options, $headers);
+    return parent::drupalPost($path, $edit, $submit, $options, $headers, $form_html_id, $extra_post);
   }
 
   /**

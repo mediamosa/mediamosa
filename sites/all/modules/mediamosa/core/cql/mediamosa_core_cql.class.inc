@@ -304,7 +304,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   abstract protected function mediamosa_core_cql_context_array_get();
 
   protected $app_ids;
-  public static $search_keywords;
+  public $search_keywords;
   protected $cql_store_stats = FALSE;
 
   /**

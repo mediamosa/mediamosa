@@ -204,7 +204,7 @@ class mediamosa_user_group {
    * @return integer
    *  key value if group exists.
    */
-  function key($app_id, $group_id) {
+  public static function key($app_id, $group_id) {
     $group_key = mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g')
       ->fields('g', array(mediamosa_user_group_db::KEY))
       ->condition(mediamosa_user_group_db::ID, $group_id)

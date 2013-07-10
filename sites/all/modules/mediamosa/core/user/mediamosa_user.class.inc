@@ -293,7 +293,7 @@ class mediamosa_user {
    *
    * @return array
    */
-  function get_diskspace($subject, $id, $app_id) {
+  public static function get_diskspace($subject, $id, $app_id) {
 
     $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     $mbytes = mediamosa_db::db_query(
@@ -469,8 +469,6 @@ class mediamosa_user {
   /**
    * Helper function for collecting data.
    *
-   * 1.x: _user_management_fetch_items
-   *
    * @param $is_users
    *  TRUE for mediamosa_user or FALSE for mediamosa_user_group
    * @param $app_id
@@ -480,7 +478,7 @@ class mediamosa_user {
    * @param $limit
    *  Limit of items in result set.
    */
-  function get_all($is_users, $app_id, $offset, $limit) {
+  public static function get_all($is_users, $app_id, $offset, $limit) {
 
     // Do the query.
     $result = mediamosa_db::db_query_range(
@@ -583,6 +581,4 @@ class mediamosa_user {
 
     return $group_with_highest_quotum;
   }
-
 }
-

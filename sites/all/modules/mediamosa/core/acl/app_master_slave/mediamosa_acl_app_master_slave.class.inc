@@ -94,7 +94,7 @@ class mediamosa_acl_app_master_slave {
    * @param integer $app_id_slave
    * @param array $a_rights (reserved)
    */
-  function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
+  public static function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
 
     // Here to sadisify Zend about unused var.
     assert(is_array($a_rights));
@@ -159,7 +159,7 @@ class mediamosa_acl_app_master_slave {
    * @return array
    *  returns array with info about the slaves
    */
-  function slave_get($mixed_app_id, $acl_object_type, $object_id = NULL) {
+  public static function slave_get($mixed_app_id, $acl_object_type, $object_id = NULL) {
     $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 
     if (isset($object_id)) {
