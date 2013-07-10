@@ -610,7 +610,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       fclose($handle);
 
       // Our upload.
-      $this->pass('PUT request to: ' . $action . '<hr />' . $out);
+      $this->var_export('PUT request to: ' . $action . '<hr />' . $out);
     }
 
     // Add for deletion.
@@ -744,8 +744,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       $action = url($uri, array('query' => $query, 'absolute' => TRUE));
 
-      $old_handle = isset($this->curlHandle) ? $this->curlHandle : NULL;
-
       $this->curlInitialize();
       curl_setopt($this->curlHandle, CURLOPT_BINARYTRANSFER, TRUE);
       curl_setopt($this->curlHandle, CURLOPT_URL, $action);
@@ -758,11 +756,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $out = curl_exec($this->curlHandle);
 
       // Close the curl handle.
-      curl_close($this->curlHandle);
-      unset($this->curlHandle);
-      if ($old_handle) {
-        $this->curlHandle = $old_handle;
-      }
+      $this->curlClose();
 
       // Close the file.
       fclose($handle);
@@ -770,12 +764,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       // Our upload.
       $this->pass('PUT request to: ' . $action);
 
+      $this->var_export($out, 'Put response dump');
+
       // Skip 100 responses.
       while (drupal_substr($out, 0, drupal_strlen('HTTP/1.1 100')) == 'HTTP/1.1 100') {
-        list($dump, $out) = explode("\r\n\r\n", $out, 2);
+        list(, $out) = explode("\r\n\r\n", $out, 2);
       }
-
-      $this->var_export($out, 'Put response dump');
     }
 
     list($response, $data) = explode("\r\n\r\n", $out, 2);
