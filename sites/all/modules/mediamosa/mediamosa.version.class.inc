@@ -23,8 +23,8 @@
  */
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 1888);
-define('MEDIAMOSA_VERSION', '3.2.3');
+define('MEDIAMOSA_BUILD', 1902);
+define('MEDIAMOSA_VERSION', '3.2.4');
 
 // Optional changes:
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD);
@@ -58,6 +58,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_2_0 = '2.2.0';
   const MEDIAMOSA_VERSION_2_3_0 = '2.3.0';
   const MEDIAMOSA_VERSION_3_0_0 = '3.0.0';
+  const MEDIAMOSA_VERSION_3_2_4 = '3.2.4';
 
   // Used for APPs.
   const LATEST = 'LATEST';

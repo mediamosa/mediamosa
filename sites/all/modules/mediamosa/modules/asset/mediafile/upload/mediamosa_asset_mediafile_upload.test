@@ -24,20 +24,13 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Upload test of files (videos / stills).
-  */
-
 /**
   * @file
   * Unittests for upload.
   */
 class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ----------------------------------------------------------------- Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'Mediafile - upload test',
@@ -51,7 +44,7 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
   /**
    * Upload using POST and PUT.
    */
-  function testUploadPost() {
+  public function testUploadPost() {
     // Code moved to lower class so we can use it in other tests that need
     // uploaded test file.
 

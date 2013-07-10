@@ -63,7 +63,7 @@ class mediamosa_asset_mediafile_upload {
       }
     }
     elseif (self::is_put_method() && !empty($filename)) {
-      $file['size'] = $_SERVER['CONTENT_LENGTH'];
+      $file['size'] = (int) $_SERVER['CONTENT_LENGTH'];
       $file['error'] = 0;
     }
 
@@ -138,7 +138,7 @@ class mediamosa_asset_mediafile_upload {
     $is_app_admin = FALSE;
 
     // Get the ticket.
-    $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
+    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
     if (empty($ticket)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
@@ -147,14 +147,14 @@ class mediamosa_asset_mediafile_upload {
     $app_id = $ticket[mediamosa_ticket_db::APP_ID];
 
     // Remove upload ticket.
-    mediamosa_media_ticket::delete($ticket_id);
+    mediamosa_ticket::delete($ticket_id);
 
     // Get the upload file info.
     $upload_file_info = self::get_upload_file_info($source, $filename_put);
     if (empty($upload_file_info)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => 'uploaded file'));
     }
-
+    
     // Create upload job, although its not processed by job servers.
     $job_id = mediamosa_job::create_job_upload(
       $app_id,
@@ -184,17 +184,19 @@ class mediamosa_asset_mediafile_upload {
       mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
 
       // Build the filename.
-      $destination_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
 
       // Create possible missing directories.
-      mediamosa_io::mkdir(mediamosa_io::dirname($destination_uri));
+      mediamosa_io::mkdir(mediamosa_io::dirname($filename));     
 
       if (!empty($filename_put)) {
         // PUT.
-        $success = self::handle_upload_put($destination_uri, $job_id);
+        $success = self::handle_upload_put($filename, $job_id);
+        $filename = $filename_put;
       }
       else {
-        $success = move_uploaded_file($upload_file_info['tmp_name'], mediamosa_io::realpath($destination_uri));
+        $success = move_uploaded_file($upload_file_info['tmp_name'], $filename);
+        $filename = $upload_file_info['name'];
       }
 
       // Enrich completed URL based on success.
@@ -205,14 +207,10 @@ class mediamosa_asset_mediafile_upload {
         // Throw exception.
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
       }
-
-      // Make sure the file extension match its content type.
-      $filename = mediamosa_io::get_base_filename($upload_file_info['name']);
-      $filename = mediamosa_asset_mediafile::create_filename($destination_uri, $filename);
-
+            
       // Update the mediafile.
       $fields = array(
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_storage::create_local_mount_point_uri($app_id),
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
         mediamosa_asset_mediafile_db::FILENAME => $filename,
         mediamosa_asset_mediafile_db::FILE_EXTENSION => mediamosa_unicode::substr(mediamosa_io::get_ext($filename), 0, mediamosa_asset_mediafile_db::FILE_EXTENSION_LENGTH),
         mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
@@ -230,16 +228,15 @@ class mediamosa_asset_mediafile_upload {
       // Update the job.
       mediamosa_job::update_progress_upload($job_id, $upload_file_info['size']);
 
-      // Relocate mediafile if final storage location is not local.
-      mediamosa_storage::relocate_mediafile($app_id, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], TRUE);
-
+      $job_ext = mediamosa_job::get_job_ext($job_id);
+      
       // Trigger URL.
       self::trigger_completion_url($completed_url);
 
       // Start transcodes.
       foreach ($transcode_profiles as $profile_id) {
         try {
-          mediamosa_job::create_job_transcode(
+          $job_id_transcode = mediamosa_job::create_job_transcode(
             $app_id,
             $ticket[mediamosa_ticket_db::OWNER_ID],
             $ticket[mediamosa_ticket_db::GROUP_ID],
@@ -252,6 +249,8 @@ class mediamosa_asset_mediafile_upload {
             $profile_id,
             $completed_transcoding_url
           );
+          
+          $job = mediamosa_job_transcode::get($job_id_transcode);
         }
         catch (mediamosa_exception $e) {
           // ignore.
@@ -311,7 +310,7 @@ class mediamosa_asset_mediafile_upload {
   ) {
 
     // Get the ticket.
-    $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
+    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
     if (!$ticket) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
@@ -323,13 +322,13 @@ class mediamosa_asset_mediafile_upload {
     $app_id = $ticket[mediamosa_ticket_db::APP_ID];
 
     // Remove ticket.
-    mediamosa_media_ticket::delete($ticket_id);
+    mediamosa_ticket::delete($ticket_id);
 
     // Check user quota.
     mediamosa_user::must_have_user_quota($app_id, $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID]);
 
     // Check if mediafile exists.
-    mediamosa_asset_mediafile::must_exists_cached($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
 
     // Must be on.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
@@ -349,7 +348,7 @@ class mediamosa_asset_mediafile_upload {
     $still_id = mediamosa_db::uuid($app_id);
 
     // Get path to still.
-    $still_new_uri = mediamosa_storage::create_local_mediafile_uri($app_id, $still_id, TRUE);
+    $still_new_uri = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
 
     // Create possible missing directories.
     mediamosa_io::mkdir(mediamosa_io::dirname($still_new_uri));
@@ -359,7 +358,7 @@ class mediamosa_asset_mediafile_upload {
       $success = self::handle_upload_put($still_new_uri);
     }
     else {
-      $success = move_uploaded_file($upload_file_info['tmp_name'], mediamosa_io::realpath($still_new_uri));
+      $success = move_uploaded_file($upload_file_info['tmp_name'], $still_new_uri);
     }
 
     // Enrich completed URL based on success.

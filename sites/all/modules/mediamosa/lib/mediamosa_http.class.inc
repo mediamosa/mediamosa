@@ -1,32 +1,11 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * HTTP related functions.
+ */
+
+/**
+ * Represents the HTTP helper class.
  */
 class mediamosa_http {
 
@@ -38,7 +17,21 @@ class mediamosa_http {
   /**
    * Parse a URL and return its components.
    *
+   * Version differs from parse_url(), as it will make sure all keys are set.
+   *
    * @param string $url
+   *   The url to parse.
+   *
+   * @return array
+   *   An associative array is returned with keys;
+   *   - scheme - e.g. http
+   *   - host
+   *   - port
+   *   - user
+   *   - pass
+   *   - path
+   *   - query - after the question mark ?
+   *   - fragment - after the hashmark #
    */
   public static function parse_url($url) {
     $urls = parse_url($url);
@@ -68,11 +61,12 @@ class mediamosa_http {
   /**
    * Opposite of parse_url.
    *
-   * @param $urls
-   * @param $return_parts
+   * @param array $urls
+   *   The array returned by parse_url()
+   * @param string $return_parts
    *  Return the array with host and uri.
    */
-  public static function build_url($urls, $return_parts = FALSE) {
+  public static function build_url(array $urls, $return_parts = FALSE) {
     // We expect these.
     assert(in_array($urls['scheme'], array('ftp', 'http', 'https')));
 
@@ -117,6 +111,55 @@ class mediamosa_http {
   }
 
   /**
+   * Wrapper around http_build_query().
+   *
+   * @param array $query
+   *   The query to rebuild.
+   *
+   * @return string
+   *   The URL encoded string.
+   */
+  public static function http_build_query(array $query) {
+    return strtr(http_build_query($query, '', '&'), array('%5B' => '[', '%5D' => ']', '%5b' => '[', '%5d' => ']'));
+  }
+
+  /**
+   * Splitup the query string.
+   *
+   * Opposite of http_build_query().
+   *
+   * @param string $query_str
+   *   The query string to split.
+   *
+   * @param array
+   *   The result array.
+   */
+  public static function parse_query($query_str) {
+    // Split the url.
+    $query = array();
+
+    // Split values.
+    foreach (explode('&', $query_str) as $valuepair) {
+      if (strpos($valuepair, '=')) {
+        list($name, $value) = explode('=', $valuepair, 2);
+        $query[urldecode($name)][] = urldecode($value);
+      }
+      else {
+        $query[urldecode($valuepair)][] = '';
+      }
+    }
+
+    // Now make single item queries with 0 keys no array.
+    foreach ($query as $name => $value) {
+      if (count($value) == 1 && key($value) == 0) {
+        $query[$name] = reset($value);
+      }
+    }
+
+    return $query;
+  }
+
+  /**
    * Glue part of (parsed) url.
    * @see parse_url()
    *
@@ -142,40 +185,91 @@ class mediamosa_http {
   }
 
   /**
-   * Make sure our URL starts with 'http://' or 'https://'.
+   * Fix our URL to start with 'http://' when missing http schema.
    *
-   * @param unknown_type $url
+   * @param string $url
+   *   The url to check for http / https.
+   *
+   * @return string
+   *   URL including http schema.
    */
-  public static function expect_url($url) {
-    return ( (substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
+  public static function expectHTTP($url) {
+    return ( (drupal_substr($url, 0, 7) != 'http://' && drupal_substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
   }
 
   /**
-   * Do a internal REST call.
+   * Convert uri to url.
    *
-   * @param string $uri
-   * @param string $rest_url
-   * @param array $data
-   * @param $method
+   * Simplefix for invalid chars.
+   */
+  public static function uri2url($uri) {
+    $uri = trim($uri, "/ \n\r\t\0");
+    return self::expectHTTP($uri);
+  }
+
+  /**
+   * Do an internal REST call.
+   *
+   * @param string $host
+   *   The host url.
+   * @param string $rest_uri
+   *   The URI of the REST call. Can only be internal REST allowed calls.
+   * @param string $data
+   *   A string containing the request body. Defaults to NULL.
+   * @param string $method
+   *   The HTTP method.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 3.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 30 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
+   * @return object
+   *   An object which can have one or more of the following parameters:
+   *   - request
+   *       A string containing the request body that was sent.
+   *   - code
+   *       An integer containing the response status code, or the error code if
+   *       an error occurred.
+   *   - protocol
+   *       The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+   *   - status_message
+   *       The status message from the response, if a response was received.
+   *   - redirect_code
+   *       If redirected, an integer containing the initial response status code.
+   *   - redirect_url
+   *       If redirected, a string containing the redirection location.
+   *   - error
+   *       If an error occurred, the error message. Otherwise not set.
+   *   - headers
+   *       An array containing the response headers as name/value pairs.
+   *   - data
+   *       A string containing the response body that was received.
    */
   public static function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET, array $options = array()) {
-    // Make lower case.
-    $host = mediamosa_unicode::strtolower($host);
-
     // Make sure it starts with 'http://'.
-    if (mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('https://')) != 'https://') {
-      $host = 'http://' . $host;
-    }
+    $host = self::expectHTTP(mediamosa_unicode::strtolower($host));
 
     $url = strtr(
       '@host/internal/@rest_uri',
       array(
-        '@host' => $host,
-        '@rest_uri' =>  $rest_uri
+        '@host' => trim($host, '/'),
+        '@rest_uri' => $rest_uri,
       )
     );
 
-    $options += array('method' => $method);
+    // Setup defaults.
+    $options += array(
+      'method' => $method,
+    );
 
     if (isset($data)) {
       $options['data'] = $data;
@@ -192,33 +286,26 @@ class mediamosa_http {
    * Do call to URL using CURL lib.
    *
    * @param string $url
+   *   The URL to call.
    * @param array $options
-   *  Extra options;
-   *   - header:
-   *     name => value pair for http header.
-   *   - use_curlproxy
-   *     set to TRUE to enable call through curlproxy (if specified).
-   *   - do_internal
-   *     Add the internal pass to the header. Remember to add /internal yourself to the url.
-   *   - do_head
-   *     true to trigger call.
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *     - do_head
+   *       Set to TRUE to do HEAD instead of GET.
    */
   public static function do_call($url, array $options = array()) {
-    $options['do_head'] = FALSE;
-    return self::do_head_call($url, $options);
-  }
-
-  /**
-   * Do a head call.
-   * Triggers the URL without getting or waiting for the output.
-   */
-  public static function do_head_call($url, array $options = array()) {
     // Set defaults.
     $options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
       'do_internal' => FALSE,
-      'do_head' => TRUE,
+      'do_head' => FALSE,
     );
 
     $curlproxy_http = NULL;
@@ -284,14 +371,53 @@ class mediamosa_http {
     $result = curl_exec($curl_handle);
     curl_close($curl_handle);
 
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
+
     return $result;
+  }
+
+  /**
+   * Do a head call.
+   *
+   * Triggers the URL without getting or waiting for the output.
+   *
+   * @param string $url
+   *   The URL to call.
+   * @param array $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *     - do_internal
+   *       Add the internal pass to the header. Remember to add /internal
+   *       yourself to the url.
+   *
+   * @see do_call()
+   */
+  public static function do_head_call($url, array $options = array()) {
+    $options['do_head'] = TRUE;
+    mediamosa_debug::log('Doing HEAD call to @url', array('@url' => $url));
+    $data = self::do_call($url, $options);
+    mediamosa_debug::log('Done HEAD call to @url', array('@url' => $url));
+    return $data;
   }
 
   /**
    * Wrapper for internal HEAD calls.
    *
    * @param $url
+   *   The URL to call, prefix url with /internal.
    * @param $options
+   *   Additional options array;
+   *     - header
+   *       name => value pair for http header.
+   *     - use_curlproxy
+   *       set to TRUE to enable call through curlproxy (if specified).
+   *
+   * @see do_head_call()
+   * @see do_call()
    */
   public static function do_head_internal_call($url, array $options = array()) {
     $options['do_internal'] = TRUE;
@@ -353,7 +479,7 @@ class mediamosa_http {
       mediamosa_debug::log('Internal CRON call to @url.', array('@url' => $url));
     }
 
-    // Return the triggert url.
+    // Return the triggered url.
     return $result;
   }
 
@@ -389,6 +515,7 @@ class mediamosa_http {
    *       A float representing the maximum number of seconds the function call
    *       may take. The default is 30 seconds. If a timeout occurs, the error
    *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
    * @return
    *   An object which can have one or more of the following parameters:
    *   - request
@@ -541,6 +668,9 @@ class mediamosa_http {
     }
     fclose($fp);
 
+    // Clear cache files. Call might have removed files.
+    mediamosa_io::clearstatcache();
+
     // Parse response headers from the response body.
     list($response, $result->data) = explode("\r\n\r\n", $response, 2);
     $response = preg_split("/\r\n|\n|\r/", $response);
@@ -647,18 +777,5 @@ class mediamosa_http {
     }
 
     return $result;
-  }
-
-  /**
-   * Port uri to url.
-   * Simplefix, do think it will fix all possible problems.
-   */
-  public static function uri2url($uri) {
-    $uri = trim($uri);
-    if ( (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') && (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('https://')) != 'https://') ){
-      $uri = 'http://' . trim($uri, "/ \n\r\t\0");
-    }
-
-    return $uri;
   }
 }

@@ -427,7 +427,10 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       // With PUT only.
       $filename_put = $this->get_param_value(self::FILENAME);
     }
-
+    
+    // Frametime (point of still in media).
+    $frametime = $this->get_param_value(self::FRAMETIME);    
+    
     try {
       if ($still_upload) {
         $still_id = mediamosa_asset_mediafile_upload::handle_upload_still('file', $ticket_id, $filename_put, $tag, $completed_url, $order, $default, $still_parameters, $frametime);

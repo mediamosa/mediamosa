@@ -87,7 +87,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $url = mediamosa_http::expectHTTP($enabled_server[mediamosa_server_db::SERVER_URI]);
 
             $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url . 'version')));
             $response = mediamosa_http::drupal_http_request($url . 'version', array('method' => 'GET'));
@@ -95,7 +95,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
 
-            $url = mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+            $url = mediamosa_http::expectHTTP($enabled_server[mediamosa_server_db::SERVER_URI]);
             $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $url)));
 
             // Rebuild.
