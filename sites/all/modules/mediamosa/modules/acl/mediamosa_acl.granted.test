@@ -118,7 +118,7 @@ class MediaMosaTestCaseAclGrantedJobTest extends MediaMosaTestCaseEgaJob {
 
     $this->setMediafileAcl($mediafile_id, array('acl_user' => array('johndoe')));
 
-    // protected 1st original.
+    // Protected 1st original.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
     $this->deleteMediafileAcl($mediafile_id);
