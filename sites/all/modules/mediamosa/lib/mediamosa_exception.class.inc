@@ -53,7 +53,7 @@ class mediamosa_exception extends Exception {
       // Get backtrace when you can.
       $backtrace = $this->getTraceAsString();
 
-      if ($log_error) {
+      if ($log_error || mediamosa_debug::is_debug()) {
         mediamosa_watchdog::log(
           '@message (Exception thrown (severity: @severity) on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
           array(
@@ -124,7 +124,7 @@ class mediamosa_exception_error_debug extends mediamosa_exception_error {
   public function __construct($mediamosa_errorcode, $tags = array(), $severity = MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
     parent::__construct($mediamosa_errorcode, $tags, $severity, FALSE);
   }
- }
+}
 
 /**
  * Exceptions extended on mediamosa_exception.
