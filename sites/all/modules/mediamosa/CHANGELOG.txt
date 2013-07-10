@@ -1,4 +1,4 @@
-MediaMosa 3.2.4 (build 1903)
+MediaMosa 3.2.4 (build 1904)
 ----------------------------
 - Fixing minor error in process of $_FILES.
 - Added OPTIONS method to REST layer.
@@ -18,6 +18,9 @@ MediaMosa 3.2.4 (build 1903)
 - Fixed: Using E_USER_ERROR const instead wrong E_ERROR code with 
   error_trigger();
 - Fixed: problem when doing PUT calls during upload test.
+- Fixed install of ffmpeg parameters order, fixing problems with ffmpeg wanting 
+  some parameters first before others.
+- Fixed timeout on simpletests runs when server is underpowered.
 
 MediaMosa 3.2.3 (build 1888)
 ----------------------------
