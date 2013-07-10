@@ -1645,37 +1645,31 @@ class mediamosa_job_scheduler {
    * Check Jobs which have no progress. Change status to FAILED.
    */
   public static function check_upload_timeout() {
+    // Timeout upload jobs in progress and waiting which have no activity.
+    $select_timeouted_jobs = db_select(mediamosa_job_upload_db::TABLE_NAME, 'ju')
+      ->fields('ju', array(mediamosa_job_upload_db::JOB_ID));
+    $select_timeouted_jobs->where('TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), changed)) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_UPLOAD_TIMEOUT));
 
-    // Upload jobs in progress and waiting which have no activity.
-    mediamosa_db::db_query(
-       'UPDATE {#mediamosa_job} SET #job_status = :JOBSTATUS_FAILED, FINISHED = UTC_TIMESTAMP(), error_description = :error_description
-        WHERE #job_status in (:JOBSTATUS_INPROGRESS, :JOBSTATUS_WAITING) AND job_id IN
-        (SELECT job_id FROM {#mediamosa_job_upload} WHERE (UTC_TIMESTAMP() - changed) > #JOB_UPLOAD_TIMEOUT)',
-        array(
-          '#job_status' => mediamosa_job_db::JOB_STATUS,
-          '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-          '#mediamosa_job_upload' => mediamosa_job_upload_db::TABLE_NAME,
-          ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
-          '#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_UPLOAD_TIMEOUT,
-          ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-          ':JOBSTATUS_WAITING' => mediamosa_job_db::JOB_STATUS_WAITING,
-          ':error_description' => strtr('UPLOAD changed timeout expired (#JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_UPLOAD_TIMEOUT)),
-        )
-    );
-    // Jobs with no activity for 3 hours.
-    mediamosa_db::db_query(
-       'UPDATE {#mediamosa_job}
-        SET #job_status = :JOBSTATUS_FAILED, FINISHED = UTC_TIMESTAMP(), error_description = :error_description
-        WHERE #job_status = :JOBSTATUS_INPROGRESS AND (UTC_TIMESTAMP() - changed) > #JOB_JOB_TIMEOUT',
-        array(
-          '#job_status' => mediamosa_job_db::JOB_STATUS,
-          '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-          ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
-          '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT,
-          ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-          ':error_description' => strtr('JOB changed timeout expired (#JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT))
-        )
-    );
+    mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_FAILED,
+        mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+        mediamosa_job_db::ERROR_DESCRIPTION => strtr('Upload job has timed out (max. #JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_UPLOAD_TIMEOUT)),
+      ))
+      ->condition(mediamosa_job_db::JOB_STATUS, array(mediamosa_job_db::JOB_STATUS_INPROGRESS, mediamosa_job_db::JOB_STATUS_WAITING))
+      ->condition(mediamosa_job_db::ID, $select_timeouted_jobs, 'IN')
+      ->execute();
+
+    // Jobs timeout after 3 hours.
+    $query = mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_FAILED,
+        mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+        mediamosa_job_db::ERROR_DESCRIPTION => strtr('Job has timed out (max. #JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_UPLOAD_TIMEOUT)),
+      ))
+      ->condition(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_INPROGRESS);
+    $query->where('TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), changed)) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_JOB_TIMEOUT));
+    $query->execute();
   }
 
   /**
