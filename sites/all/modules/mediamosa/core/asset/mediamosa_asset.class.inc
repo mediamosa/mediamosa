@@ -24,7 +24,7 @@ class mediamosa_asset {
       $asset[$value['propgroup_name']][$key] = NULL;
     }
 
-    // Unset these values, to skip out of output/
+    // Unset these values, to skip out of output.
     unset(
       $asset['parent_id'],
       $asset['asset_property_value'],
@@ -304,34 +304,32 @@ class mediamosa_asset {
   public static function update_asset_info($asset_id) {
 
     // Find the length of the first mediafile.
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->fields('mf', array(mediamosa_asset_mediafile_db::ID));
-    $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
-    $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
-    $query->orderBy('mf.changed');
-    $query->range(0, 1);
-    $mediafile_info = $query->execute()->fetchAssoc();
+    $mediafile_info = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->fields('mf', array(mediamosa_asset_mediafile_db::ID, mediamosa_asset_mediafile_db::FILENAME))
+      ->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE)
+      ->orderBy('mf.changed')
+      ->range(0, 1)
+      ->execute()->fetchAssoc();
 
     $mediafile_id = (empty($mediafile_info[mediamosa_asset_mediafile_db::ID]) ? NULL : $mediafile_info[mediamosa_asset_mediafile_db::ID]);
     if (!empty($mediafile_id)) {
       $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
       $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
-      // Set the length of the 1st original mediafile in the parent asset.
+      $fields = array();
       if (!is_null($file_duration) && !is_null($container_type)) {
-        mediamosa_db::db_query(
-          "UPDATE {#mediamosa_asset} SET #mediafile_duration = :mediafile_duration, #mediafile_container_type = :mediafile_container_type WHERE #asset_id = :asset_id",
-          array(
-            '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-            '#mediafile_duration' => mediamosa_asset_db::MEDIAFILE_DURATION,
-            ':mediafile_duration' => $file_duration,
-            '#mediafile_container_type' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
-            ':mediafile_container_type' => $container_type,
-            '#asset_id' => mediamosa_asset_db::ID,
-            ':asset_id' => $asset_id,
-          )
-        );
+        $fields[mediamosa_asset_db::MEDIAFILE_DURATION] = $file_duration;
+        $fields[mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE] = $container_type;
       }
+
+      // Normalize the original filename.
+      $fields[mediamosa_asset_db::MEDIAFILE_FILENAME] = mediamosa_asset_mediafile::get_filename($mediafile_info);
+
+      db_update(mediamosa_asset_db::TABLE_NAME)
+        ->fields($fields)
+        ->condition(mediamosa_asset_db::ID, $asset_id)
+        ->execute();
     }
 
     // Set the external.

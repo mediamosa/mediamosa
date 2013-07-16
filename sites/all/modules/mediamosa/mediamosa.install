@@ -4161,3 +4161,58 @@ function mediamosa_update_7163() {
     );
   }
 }
+
+/**
+ * Add filename to the asset table for normalizing the filename from the
+ * original mediafiles.
+ */
+function mediamosa_update_7164() {
+  // Create column for mediafile filename on mediafile_asset.
+  if (!db_field_exists('mediamosa_asset', 'mediafile_filename')) {
+    db_add_field('mediamosa_asset', 'mediafile_filename', array(
+      'type' => 'varchar',
+      'length' => 255,
+      'default' => NULL,
+      'description' => 'The normalized filename of the original mediafile.',
+    ));
+  }
+}
+
+/**
+ * Normalize the original mediafile filename to the asset. This allows frontends
+ * to use filenames from search results when no metadata titles are available.
+ * If the update times out, just restart the update process. It will continue
+ * where it stopped.
+ */
+function mediamosa_update_7165() {
+  $max_items = 1000;
+
+  while (TRUE) {
+    $query = db_select('mediamosa_asset_mediafile', 'mf');
+    $query->join('mediamosa_asset', 'a', 'a.asset_id = mf.asset_id');
+    $mediafiles = $query
+      ->fields('mf', array('asset_id', 'filename'))
+      ->condition('mf.is_original_file', 'TRUE')
+      ->isNull('a.mediafile_filename')
+      ->range(0, $max_items)
+      ->execute();
+
+    if (!$mediafiles->rowCount()) {
+      break;
+    }
+
+    // Now update each asset with the missing mediafile filename.
+    foreach ($mediafiles as $mediafile) {
+      db_update('mediamosa_asset')
+        ->fields(array('mediafile_filename' => (is_null($mediafile->filename) ? '' : $mediafile->filename)))
+        ->condition('asset_id', $mediafile->asset_id)
+        ->execute();
+    }
+  }
+
+  // Now replace empty filename into NULLs again.
+  db_update('mediamosa_asset')
+    ->fields(array('mediafile_filename' => NULL))
+    ->condition('mediafile_filename', '')
+    ->execute();
+}
