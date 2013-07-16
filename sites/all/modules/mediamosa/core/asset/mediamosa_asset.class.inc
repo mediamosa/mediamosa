@@ -337,17 +337,20 @@ class mediamosa_asset {
       ->execute()->fetchAssoc();
 
     $mediafile_id = (empty($mediafile_info[mediamosa_asset_mediafile_db::ID]) ? NULL : $mediafile_info[mediamosa_asset_mediafile_db::ID]);
-    $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-    $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+    if (!empty($mediafile_id)) {
+      $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+      $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
-    $fields = array();
-    if (!is_null($file_duration) && !is_null($container_type)) {
-      $fields[mediamosa_asset_db::MEDIAFILE_DURATION] = $file_duration;
-      $fields[mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE] = $container_type;
+      $fields = array();
+      if (!is_null($file_duration) && !is_null($container_type)) {
+        $fields[mediamosa_asset_db::MEDIAFILE_DURATION] = $file_duration;
+        $fields[mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE] = $container_type;
+      }
     }
 
-    // Normalize the original filename.
-    $fields[mediamosa_asset_db::MEDIAFILE_FILENAME] = mediamosa_asset_mediafile::get_filename($mediafile_info);
+    // Normalize the original filename. If we didn't find an original mediafile,
+    // then empty the filename
+    $fields[mediamosa_asset_db::MEDIAFILE_FILENAME] = empty($mediafile_info) ? '' : mediamosa_asset_mediafile::get_filename($mediafile_info);
 
     db_update(mediamosa_asset_db::TABLE_NAME)
       ->fields($fields)

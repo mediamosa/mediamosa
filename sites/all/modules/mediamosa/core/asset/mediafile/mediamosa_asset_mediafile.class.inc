@@ -55,6 +55,22 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Get the filename from the mediafile.
+   *
+   * @param array $mediafile_id
+   *   The mediafile array.
+   * @param string $filename
+   *   The filename to use as default.
+   *
+   * @return string|FALSE
+   *   The filename or FALSE.
+   */
+  public static function get_filename(array $mediafile) {
+    // See if we can find the filename.
+    return $mediafile[mediamosa_asset_mediafile_db::FILENAME] != '' ? $mediafile[mediamosa_asset_mediafile_db::FILENAME] : $mediafile[mediamosa_asset_mediafile_db::ID];
+  }
+
+  /**
    * Get the asset_id of the mediafile.
    *
    * @param string $mediafile_id
