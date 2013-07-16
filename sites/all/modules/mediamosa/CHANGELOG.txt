@@ -1,4 +1,4 @@
-MediaMosa 3.2.4 (build 1905)
+MediaMosa 3.2.4 (build 1906)
 ----------------------------
 - Fixing minor error in process of $_FILES.
 - Added OPTIONS method to REST layer.
@@ -12,17 +12,20 @@ MediaMosa 3.2.4 (build 1905)
 - POST upload with files above 2gb will use work around PHP bug. Some re-factor
   on upload code to make upload handling better.
 - POST upload now correctly processes file upload from Drupal 7.
-- Fixed: JOB common unit test contained an error which resulted in wrong test 
+- Fixed: JOB common unit test contained an error which resulted in wrong test
   results.
 - Added support for Drupals watchdog_exception() function.
-- Fixed: Using E_USER_ERROR const instead wrong E_ERROR code with 
+- Fixed: Using E_USER_ERROR const instead wrong E_ERROR code with
   error_trigger();
 - Fixed: problem when doing PUT calls during upload test.
-- Fixed install of ffmpeg parameters order, fixing problems with ffmpeg wanting 
+- Fixed install of ffmpeg parameters order, fixing problems with ffmpeg wanting
   some parameters first before others.
 - Fixed timeout on simpletests runs when server is underpowered.
 - Clear messages session variable after each REST call. Fix by Wessel Dankers.
 - Updated mmplayer; videojs (4.1.0), flowplayer (5.3.2).
+- The filename of the first original mediafile is now normalized (copied) to the
+  asset table. Allows the filename to be included in the asset output and used
+  by front-ends without retrieving the mediafiles first.
 
 MediaMosa 3.2.3 (build 1888)
 ----------------------------
