@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2023, master branch)
+MediaMosa 3.4.x-dev (build 2028, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -146,14 +146,6 @@ MediaMosa 3.4.x-dev (build 2023, master branch)
 - Drastically improved response time when doing calls to Amazon S3. View calls
   went from 1+ seconds to 0.08 second due to S3 object creation bug.
 - Showing 'storage' tab on nodes that are not type storage application.
-- Added OPTIONS method to REST layer.
-- Added OPTIONS rest calls for upload ticket REST calls. Will add
-  'Access-Control-Allow-Origin' to header when upload ticket is valid.
-- Added 'Access-Control-Allow-Origin' to result header when upload POST/PUT was
-  successful.
-- Added unit test for 'Access-Control-Allow-Origin'.
-- Extended REST browser for method OPTIONS.
-- Extended REST layer to allow empty responses (HTTP header only).
 - Cleaned up the code of the DBus authentication class (mediamosa_app_dbus).
 - UI of asset and collection browse has been improved.
 - Created COPYRIGHT.MediaMosa.txt to root of module. Will replace all source
@@ -168,9 +160,6 @@ MediaMosa 3.4.x-dev (build 2023, master branch)
 - Media download job is no longer created when file is stored locally.
 - Fixed bugs in merged code of dbus class.
 - Improved asset detail browse page.
-- POST upload with files above 2gb will use work around PHP bug. Some re-factor
-  on upload code to make upload handling better.
-- POST upload now correctly processes file upload from Drupal 7.
 - Removed die() function from exception catch in oauth module.
 - Internal calls can no longer misuse the saved authenticated session which was
   saved during previous normal calls (in some rare cases).
@@ -196,6 +185,7 @@ MediaMosa 3.4.x-dev (build 2023, master branch)
 - Added 'resize' and 'quality' as parameters to tool_image.
 - Fixed image generation with latest job_server paths.
 - MediaMosa module is depended on version MediaMosa SDK v3.5 or higher.
+- Clear messages session variable after each REST call. Fix by Wessel Dankers.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
@@ -281,16 +271,50 @@ MediaMosa 3.3.x-dev (build 1910, master branch)
 - Added Drush command to core for adding a client application.
 - Fixed 2 notices with static's and during install.
 
-MediaMosa 3.2.2 (build 1884)
+MediaMosa 3.2.4 (build 1906)
+----------------------------
+- Fixing minor error in process of $_FILES.
+- Added OPTIONS method to REST layer.
+- Added OPTIONS rest calls for upload ticket REST calls. Will add
+  'Access-Control-Allow-Origin' to header when upload ticket is valid.
+- Added 'Access-Control-Allow-Origin' to result header when upload POST/PUT was
+  successful.
+- Added unit test for 'Access-Control-Allow-Origin'.
+- Extended REST browser for method OPTIONS.
+- Extended REST layer to allow empty responses (HTTP header only).
+- POST upload with files above 2gb will use work around PHP bug. Some re-factor
+  on upload code to make upload handling better.
+- POST upload now correctly processes file upload from Drupal 7.
+- Fixed: JOB common unit test contained an error which resulted in wrong test
+  results.
+- Added support for Drupals watchdog_exception() function.
+- Fixed: Using E_USER_ERROR const instead wrong E_ERROR code with
+  error_trigger();
+- Fixed: problem when doing PUT calls during upload test.
+- Fixed install of ffmpeg parameters order, fixing problems with ffmpeg wanting
+  some parameters first before others.
+- Fixed timeout on simpletests runs when server is underpowered.
+- Updated mmplayer; videojs (4.1.0), flowplayer (5.3.2).
+- The filename of the first original mediafile is now normalized (copied) to the
+  asset table. Allows the filename to be included in the asset output and used
+  by front-ends without retrieving the mediafiles first.
+
+MediaMosa 3.2.3 (build 1888)
+----------------------------
+- Fixed installation profile for missing creating of the 'Y' directory under
+  mountpoint.
+- Added update script for fixing missing directory 'Y' under mountpoint.
+
+MediaMosa 3.2.2 (build 1886)
 ----------------------------
 - Extended the logging for REST calls and added filtering to log for specific
   application ID and/or IP address.
-- Fixed: Some installations where no longer able to edit the MediaMosa servers.
+- Fixed: some installations where no longer able to edit the MediaMosa servers.
 - Fixed: In some cases when a REST call was logged, an exception was thrown when
   no application ID was available or set.
 - Fixed: Fixing problem with 1.7 migration module; PDO exception with NULL value
   for metadata name (caused by uppercase name).
-- Upgraded to Drupal 7.14.
+- Upgraded to Drupal 7.14
 - Partial rewrite on ratio calculation function for preventing hangs during
   transcode jobs.
 - Fixed notices when asset search was called with is_oai = TRUE and assets where
@@ -310,6 +334,13 @@ MediaMosa 3.2.2 (build 1884)
 - Fixed 3 more notices for php 5.4.
 - Added a post_transcode hook for tools.
 - Issue #56 (github) by Bigon: Mediamosa shouldn't hardcode path other modules.
+- Fixed: webm files requires extension .webm on play links.
+
+MediaMosa 3.2.3 (build 1888)
+----------------------------
+- Fixed installation profile for missing creating of the 'Y' directory under
+  mountpoint.
+- Added update script for fixing missing directory 'Y' under mountpoint.
 
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
