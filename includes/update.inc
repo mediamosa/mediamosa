@@ -38,7 +38,7 @@ function update_fix_compatibility() {
 }
 
 /**
- * Helper function to test compatibility of a module or theme.
+ * Tests the compatibility of a module or theme.
  */
 function update_check_incompatibility($name, $type = 'module') {
   static $themes, $modules;
@@ -785,12 +785,12 @@ function update_fix_d7_requirements() {
 /**
  * Register the currently installed profile in the system table.
  *
- * Install profiles are now treated as modules by Drupal, and have an upgrade
- * path based on their schema version in the system table.
+ * Installation profiles are now treated as modules by Drupal, and have an
+ * upgrade path based on their schema version in the system table.
  *
- * The install profile will be set to schema_version 0, as it has already been
- * installed. Any other hook_update_N functions provided by the install profile
- * will be run by update.php.
+ * The installation profile will be set to schema_version 0, as it has already
+ * been installed. Any other hook_update_N functions provided by the
+ * installation profile will be run by update.php.
  */
 function update_fix_d7_install_profile() {
   $profile = drupal_get_profile();
@@ -828,10 +828,10 @@ function update_fix_d7_install_profile() {
       'owner' => '',
     );
 
-    // Install profile hooks are always executed last by the module system
+    // Installation profile hooks are always executed last by the module system
     $values['weight'] = 1000;
 
-    // Initializing the system table entry for the install profile
+    // Initializing the system table entry for the installation profile
     db_insert('system')
       ->fields(array_keys($values))
       ->values($values)
@@ -840,7 +840,8 @@ function update_fix_d7_install_profile() {
     // Reset the cached schema version.
     drupal_get_installed_schema_version($profile, TRUE);
 
-    // Load the updates again to make sure the install profile updates are loaded
+    // Load the updates again to make sure the installation profile updates
+    // are loaded.
     drupal_load_updates();
   }
 }
@@ -895,7 +896,7 @@ function update_get_d6_session_name() {
   }
   else {
     // Otherwise use $base_url as session name, without the protocol
-    // to use the same session identifiers across http and https.
+    // to use the same session identifiers across HTTP and HTTPS.
     list( , $session_name) = explode('://', $base_url, 2);
   }
 
@@ -907,7 +908,7 @@ function update_get_d6_session_name() {
 }
 
 /**
- * Perform one update and store the results for display on finished page.
+ * Performs one update and stores the results for display on the results page.
  *
  * If an update function completes successfully, it should return a message
  * as a string indicating success, for example:
@@ -1007,7 +1008,7 @@ function update_do_one($module, $number, $dependency_map, &$context) {
 class DrupalUpdateException extends Exception { }
 
 /**
- * Start the database update batch process.
+ * Starts the database update batch process.
  *
  * @param $start
  *   An array whose keys contain the names of modules to be updated during the
@@ -1077,7 +1078,7 @@ function update_batch($start, $redirect = NULL, $url = NULL, $batch = array(), $
 }
 
 /**
- * Finish the update process and store results for eventual display.
+ * Finishes the update process and stores the results for eventual display.
  *
  * After the updates run, all caches are flushed. The update results are
  * stored into the session (for example, to be displayed on the update results
@@ -1114,7 +1115,7 @@ function update_finished($success, $results, $operations) {
 }
 
 /**
- * Return a list of all the pending database updates.
+ * Returns a list of all the pending database updates.
  *
  * @return
  *   An associative array keyed by module name which contains all information
@@ -1408,7 +1409,7 @@ function update_already_performed($module, $number) {
 }
 
 /**
- * Invoke hook_update_dependencies() in all installed modules.
+ * Invokes hook_update_dependencies() in all installed modules.
  *
  * This function is similar to module_invoke_all(), with the main difference
  * that it does not require that a module be enabled to invoke its hook, only
@@ -1474,17 +1475,3 @@ function update_retrieve_dependencies() {
 
   return $return;
 }
-
-/**
- * @defgroup update-api-6.x-to-7.x Update versions of API functions
- * @{
- * Functions similar to normal API function but not firing hooks.
- *
- * During update, it is impossible to judge the consequences of firing a hook
- * as it might hit a module not yet updated. So simplified versions of some
- * core APIs are provided.
- */
-
-/**
- * @} End of "defgroup update-api-6.x-to-7.x"
- */

@@ -266,13 +266,13 @@ function aggregator_menu() {
 }
 
 /**
- * Title callback: Returns a title for aggregatory category pages.
+ * Title callback: Returns a title for aggregator category pages.
  *
  * @param $category
  *   An aggregator category.
  *
  * @return
- *   An aggregator category title.
+ *   A string with the aggregator category title.
  */
 function _aggregator_category_title($category) {
   return $category['title'];
@@ -534,6 +534,7 @@ function aggregator_save_feed($edit) {
         'url' => $edit['url'],
         'refresh' => $edit['refresh'],
         'block' => $edit['block'],
+        'link' => '',
         'description' => '',
         'image' => '',
       ))
@@ -568,15 +569,13 @@ function aggregator_remove($feed) {
   // Call hook_aggregator_remove() on all modules.
   module_invoke_all('aggregator_remove', $feed);
   // Reset feed.
-  db_merge('aggregator_feed')
-    ->key(array('fid' => $feed->fid))
+  db_update('aggregator_feed')
+    ->condition('fid', $feed->fid)
     ->fields(array(
       'checked' => 0,
       'hash' => '',
       'etag' => '',
       'modified' => 0,
-      'description' => $feed->description,
-      'image' => $feed->image,
     ))
     ->execute();
 }
@@ -724,7 +723,7 @@ function theme_aggregator_block_item($variables) {
 }
 
 /**
- * Safely renders HTML content, as allowed.
+ * Renders the HTML content safely, as allowed.
  *
  * @param $value
  *   The content to be filtered.
@@ -740,7 +739,7 @@ function aggregator_filter_xss($value) {
  * Checks and sanitizes the aggregator configuration.
  *
  * Goes through all fetchers, parsers and processors and checks whether they
- * are available. If one is missing resets to standard configuration.
+ * are available. If one is missing, resets to standard configuration.
  *
  * @return
  *   TRUE if this function resets the configuration; FALSE if not.
@@ -776,7 +775,7 @@ function aggregator_sanitize_configuration() {
  *   Items count.
  *
  * @return
- *   Plural-formatted "@count items"
+ *   A string that is plural-formatted as "@count items".
  */
 function _aggregator_items($count) {
   return format_plural($count, '1 item', '@count items');

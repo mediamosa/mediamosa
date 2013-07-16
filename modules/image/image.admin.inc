@@ -292,7 +292,7 @@ function image_style_name_validate($element, $form_state) {
  * @ingroup forms
  * @see image_style_delete_form_submit()
  */
-function image_style_delete_form($form, $form_state, $style) {
+function image_style_delete_form($form, &$form_state, $style) {
   $form_state['image_style'] = $style;
 
   $replacement_styles = array_diff_key(image_style_options(), array($style['name'] => ''));
@@ -326,7 +326,7 @@ function image_style_delete_form_submit($form, &$form_state) {
 /**
  * Confirmation form to revert a database style to its default.
  */
-function image_style_revert_form($form, $form_state, $style) {
+function image_style_revert_form($form, &$form_state, $style) {
   $form_state['image_style'] = $style;
 
   return confirm_form(

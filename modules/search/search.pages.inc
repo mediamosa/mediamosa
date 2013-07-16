@@ -15,7 +15,6 @@
  */
 function search_view($module = NULL, $keys = '') {
   $info = FALSE;
-  $redirect = FALSE;
   $keys = trim($keys);
   // Also try to pull search keywords out of the $_REQUEST variable to
   // support old GET format of searches for existing links.
@@ -156,5 +155,4 @@ function search_form_submit($form, &$form_state) {
   }
 
   $form_state['redirect'] = $form_state['action'] . '/' . $keys;
-  return;
 }

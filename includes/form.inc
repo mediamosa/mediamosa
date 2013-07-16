@@ -78,7 +78,7 @@
  * the elements and properties of the form. For information on the array
  * components and format, and more detailed explanations of the Form API
  * workflow, see the
- * @link http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html Form API reference @endlink
+ * @link forms_api_reference.html Form API reference @endlink
  * and the
  * @link http://drupal.org/node/37775 Form API documentation section. @endlink
  * In addition, there is a set of Form API tutorials in
@@ -164,6 +164,8 @@ function drupal_get_form($form_id) {
  *       automatically loaded by form_get_cache(). By default the current menu
  *       router item's 'file' definition is added, if any. Use
  *       form_load_include() to add include files from a form constructor.
+ *     - form_id: Identification of the primary form being constructed and
+ *       processed.
  *     - base_form_id: Identification for a base form, as declared in a
  *       hook_forms() implementation.
  *   - rebuild_info: Internal. Similar to 'build_info', but pertaining to
@@ -213,17 +215,15 @@ function drupal_get_form($form_id) {
  *     set.
  *   - values: An associative array of values submitted to the form. The
  *     validation functions and submit functions use this array for nearly all
- *     their decision making. (Note that
- *     @link http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7#tree #tree @endlink
- *     determines whether the values are a flat array or an array whose
- *     structure parallels the $form array.)
- *   - input: The array of values as they were submitted by the user. These are
- *     raw and unvalidated, so should not be used without a thorough
- *     understanding of security implications. In almost all cases, code should
- *     use the data in the 'values' array exclusively. The most common use of
- *     this key is for multi-step forms that need to clear some of the user
- *     input when setting 'rebuild'. The values correspond to $_POST or $_GET,
- *     depending on the 'method' chosen.
+ *     their decision making. (Note that #tree determines whether the values are
+ *     a flat array or an array whose structure parallels the $form array. See
+ *     @link forms_api_reference.html Form API reference @endlink for more
+ *     information.) These are raw and unvalidated, so should not be used
+ *     without a thorough understanding of security implications. In almost all
+ *     cases, code should use the data in the 'values' array exclusively. The
+ *     most common use of this key is for multi-step forms that need to clear
+ *     some of the user input when setting 'rebuild'. The values correspond to
+ *     $_POST or $_GET, depending on the 'method' chosen.
  *   - always_process: If TRUE and the method is GET, a form_id is not
  *     necessary. This should only be used on RESTful GET forms that do NOT
  *     write data, as this could lead to security issues. It is useful so that
@@ -572,7 +572,7 @@ function form_state_keys_no_cache() {
 }
 
 /**
- * Ensures an include file is loaded loaded whenever the form is processed.
+ * Ensures an include file is loaded whenever the form is processed.
  *
  * Example:
  * @code
@@ -721,11 +721,14 @@ function drupal_form_submit($form_id, &$form_state) {
 function drupal_retrieve_form($form_id, &$form_state) {
   $forms = &drupal_static(__FUNCTION__);
 
+  // Record the $form_id.
+  $form_state['build_info']['form_id'] = $form_id;
+
   // Record the filepath of the include file containing the original form, so
   // the form builder callbacks can be loaded when the form is being rebuilt
   // from cache on a different path (such as 'system/ajax'). See
   // form_get_cache().
-  // $menu_get_item() is not available at installation time.
+  // $menu_get_item() is not available during installation.
   if (!isset($form_state['build_info']['files']['menu']) && !defined('MAINTENANCE_MODE')) {
     $item = menu_get_item();
     if (!empty($item['include_file'])) {
@@ -847,7 +850,10 @@ function drupal_process_form($form_id, &$form, &$form_state) {
     // cache when a form is processed, so scenarios that result in
     // the form being built behind the scenes and again for the
     // browser don't increment all the element IDs needlessly.
-    drupal_static_reset('drupal_html_id');
+    if (!form_get_errors()) {
+      // In case of errors, do not break HTML IDs of other forms.
+      drupal_static_reset('drupal_html_id');
+    }
 
     if ($form_state['submitted'] && !form_get_errors() && !$form_state['rebuild']) {
       // Execute form submit handlers.
@@ -977,6 +983,10 @@ function drupal_prepare_form($form_id, &$form, &$form_state) {
     '#value' => $form['#build_id'],
     '#id' => $form['#build_id'],
     '#name' => 'form_build_id',
+    // Form processing and validation requires this value, so ensure the
+    // submitted form value appears literally, regardless of custom #tree
+    // and #parents being set elsewhere.
+    '#parents' => array('form_build_id'),
   );
 
   // Add a token, based on either #token or form_id, to any form displayed to
@@ -1000,6 +1010,10 @@ function drupal_prepare_form($form_id, &$form, &$form_state) {
         '#id' => drupal_html_id('edit-' . $form_id . '-form-token'),
         '#type' => 'token',
         '#default_value' => drupal_get_token($form['#token']),
+        // Form processing and validation requires this value, so ensure the
+        // submitted form value appears literally, regardless of custom #tree
+        // and #parents being set elsewhere.
+        '#parents' => array('form_token'),
       );
     }
   }
@@ -1009,6 +1023,10 @@ function drupal_prepare_form($form_id, &$form, &$form_state) {
       '#type' => 'hidden',
       '#value' => $form_id,
       '#id' => drupal_html_id("edit-$form_id"),
+      // Form processing and validation requires this value, so ensure the
+      // submitted form value appears literally, regardless of custom #tree
+      // and #parents being set elsewhere.
+      '#parents' => array('form_id'),
     );
   }
   if (!isset($form['#id'])) {
@@ -1086,7 +1104,7 @@ function drupal_prepare_form($form_id, &$form, &$form_state) {
  *   A keyed array containing the current state of the form. The current
  *   user-submitted data is stored in $form_state['values'], though
  *   form validation functions are passed an explicit copy of the
- *   values for the sake of simplicity. Validation handlers can also
+ *   values for the sake of simplicity. Validation handlers can also use
  *   $form_state to pass information on to submit handlers. For example:
  *     $form_state['data_for_submission'] = $data;
  *   This technique is useful when validation requires file parsing,
@@ -1160,18 +1178,23 @@ function drupal_validate_form($form_id, &$form, &$form_state) {
 /**
  * Redirects the user to a URL after a form has been processed.
  *
- * After a form was executed, the data in $form_state controls whether the form
- * is redirected. By default, we redirect to a new destination page. The path
- * of the destination page can be set in $form_state['redirect'], as either a
- * string containing the destination or an array of arguments compatible with
- * drupal_goto(). If that is not set, the user is redirected to the current
- * page to display a fresh, unpopulated copy of the form.
+ * After a form is submitted and processed, normally the user should be
+ * redirected to a new destination page. This function figures out what that
+ * destination should be, based on the $form_state array and the 'destination'
+ * query string in the request URL, and redirects the user there.
  *
- * For example, to redirect to 'node':
+ * Usually (for exceptions, see below) $form_state['redirect'] determines where
+ * to redirect the user. This can be set either to a string (the path to
+ * redirect to), or an array of arguments for drupal_goto(). If
+ * $form_state['redirect'] is missing, the user is usually (again, see below for
+ * exceptions) redirected back to the page they came from, where they should see
+ * a fresh, unpopulated copy of the form.
+ *
+ * Here is an example of how to set up a form to redirect to the path 'node':
  * @code
  * $form_state['redirect'] = 'node';
  * @endcode
- * Or to redirect to 'node/123?foo=bar#baz':
+ * And here is an example of how to redirect to 'node/123?foo=bar#baz':
  * @code
  * $form_state['redirect'] = array(
  *   'node/123',
@@ -1184,29 +1207,27 @@ function drupal_validate_form($form_id, &$form, &$form_state) {
  * );
  * @endcode
  *
- * There are several triggers that may prevent a redirection though:
- * - If $form_state['redirect'] is FALSE, a form builder function or form
- *   validation/submit handler does not want a user to be redirected, which
- *   means that drupal_goto() is not invoked. For most forms, the redirection
- *   logic will be the same regardless of whether $form_state['redirect'] is
- *   undefined or FALSE. However, in case it was not defined and the current
- *   request contains a 'destination' query string, drupal_goto() will redirect
- *   to that given destination instead. Only setting $form_state['redirect'] to
- *   FALSE will prevent any redirection.
- * - If $form_state['no_redirect'] is TRUE, then the callback that originally
- *   built the form explicitly disallows any redirection, regardless of the
- *   redirection value in $form_state['redirect']. For example, ajax_get_form()
- *   defines $form_state['no_redirect'] when building a form in an Ajax
- *   callback to prevent any redirection. $form_state['no_redirect'] should NOT
- *   be altered by form builder functions or form validation/submit handlers.
+ * There are several exceptions to the "usual" behavior described above:
  * - If $form_state['programmed'] is TRUE, the form submission was usually
  *   invoked via drupal_form_submit(), so any redirection would break the script
- *   that invoked drupal_form_submit().
- * - If $form_state['rebuild'] is TRUE, the form needs to be rebuilt without
- *   redirection.
+ *   that invoked drupal_form_submit() and no redirection is done.
+ * - If $form_state['rebuild'] is TRUE, the form is being rebuilt, and no
+ *   redirection is done.
+ * - If $form_state['no_redirect'] is TRUE, redirection is disabled. This is
+ *   set, for instance, by ajax_get_form() to prevent redirection in Ajax
+ *   callbacks. $form_state['no_redirect'] should never be set or altered by
+ *   form builder functions or form validation/submit handlers.
+ * - If $form_state['redirect'] is set to FALSE, redirection is disabled.
+ * - If none of the above conditions has prevented redirection, then the
+ *   redirect is accomplished by calling drupal_goto(), passing in the value of
+ *   $form_state['redirect'] if it is set, or the current path if it is
+ *   not. drupal_goto() preferentially uses the value of $_GET['destination']
+ *   (the 'destination' URL query string) if it is present, so this will
+ *   override any values set by $form_state['redirect']. Note that during
+ *   installation, install_goto() is called in place of drupal_goto().
  *
  * @param $form_state
- *   A keyed array containing the current state of the form.
+ *   An associative array containing the current state of the form.
  *
  * @see drupal_process_form()
  * @see drupal_build_form()
@@ -1238,7 +1259,7 @@ function drupal_redirect_form($form_state) {
         $function($form_state['redirect']);
       }
     }
-    drupal_goto($_GET['q']);
+    drupal_goto(current_path(), array('query' => drupal_get_query_parameters()));
   }
 }
 
@@ -2149,12 +2170,12 @@ function form_state_values_clean(&$form_state) {
     // $form_state['values']['foo']['bar'], which is the level where we can
     // unset 'baz' (that is stored in $last_parent).
     $parents = $button['#parents'];
-    $values = &$form_state['values'];
     $last_parent = array_pop($parents);
-    foreach ($parents as $parent) {
-      $values = &$values[$parent];
+    $key_exists = NULL;
+    $values = &drupal_array_get_nested_value($form_state['values'], $parents, $key_exists);
+    if ($key_exists && is_array($values)) {
+      unset($values[$last_parent]);
     }
-    unset($values[$last_parent]);
   }
 }
 
@@ -2339,30 +2360,27 @@ function form_type_tableselect_value($element, $input = FALSE) {
  */
 function form_type_radios_value(&$element, $input = FALSE) {
   if ($input !== FALSE) {
-    // There may not be a submitted value for multiple radio buttons, if none of
-    // the options was checked by default. If there is no submitted input value
-    // for this element (NULL), _form_builder_handle_input_element()
-    // automatically attempts to use the #default_value (if set) or an empty
-    // string (''). However, an empty string would fail validation in
-    // _form_validate(), in case it is not contained in the list of allowed
-    // values in #options.
-    if (!isset($input)) {
-      // Signify a garbage value to disable the #default_value handling and take
-      // over NULL as #value.
-      $element['#has_garbage_value'] = TRUE;
-      // There was a user submission so validation is a must. If this element is
-      // #required, then an appropriate error message will be output. While an
-      // optional #type 'radios' does not necessarily make sense from a user
-      // interaction perspective, there may be use-cases for that and it is not
-      // the job of Form API to artificially limit possibilities.
+    // When there's user input (including NULL), return it as the value.
+    // However, if NULL is submitted, _form_builder_handle_input_element() will
+    // apply the default value, and we want that validated against #options
+    // unless it's empty. (An empty #default_value, such as NULL or FALSE, can
+    // be used to indicate that no radio button is selected by default.)
+    if (!isset($input) && !empty($element['#default_value'])) {
       $element['#needs_validation'] = TRUE;
     }
-    // The value stays the same, but the flags above will ensure it is
-    // processed properly.
     return $input;
   }
-  elseif (isset($element['#default_value'])) {
-    return $element['#default_value'];
+  else {
+    // For default value handling, simply return #default_value. Additionally,
+    // for a NULL default value, set #has_garbage_value to prevent
+    // _form_builder_handle_input_element() converting the NULL to an empty
+    // string, so that code can distinguish between nothing selected and the
+    // selection of a radio button whose value is an empty string.
+    $value = isset($element['#default_value']) ? $element['#default_value'] : NULL;
+    if (!isset($value)) {
+      $element['#has_garbage_value'] = TRUE;
+    }
+    return $value;
   }
 }
 
@@ -3040,7 +3058,6 @@ function form_process_radios($element) {
  */
 function theme_checkbox($variables) {
   $element = $variables['element'];
-  $t = get_t();
   $element['#attributes']['type'] = 'checkbox';
   element_set_attributes($element, array('id', 'name', '#return_value' => 'value'));
 
@@ -3237,21 +3254,6 @@ function theme_container($variables) {
 /**
  * Returns HTML for a table with radio buttons or checkboxes.
  *
- * An example of per-row options:
- * @code
- * $options = array();
- * $options[0]['title'] = "A red row"
- * $options[0]['#attributes'] = array ('class' => array('red-row'));
- * $options[1]['title'] = "A blue row"
- * $options[1]['#attributes'] = array ('class' => array('blue-row'));
- *
- * $form['myselector'] = array (
- * '#type' => 'tableselect',
- * '#title' => 'My Selector'
- * '#options' => $options,
- * );
- * @endcode
- *
  * @param $variables
  *   An associative array containing:
  *   - element: An associative array containing the properties and children of
@@ -3259,7 +3261,35 @@ function theme_container($variables) {
  *     and #js_select. The #options property is an array of selection options;
  *     each array element of #options is an array of properties. These
  *     properties can include #attributes, which is added to the
- *     table row's HTML attributes; see theme_table().
+ *     table row's HTML attributes; see theme_table(). An example of per-row
+ *     options:
+ *     @code
+ *     $options = array(
+ *       array(
+ *         'title' => 'How to Learn Drupal',
+ *         'content_type' => 'Article',
+ *         'status' => 'published',
+ *         '#attributes' => array('class' => array('article-row')),
+ *       ),
+ *       array(
+ *         'title' => 'Privacy Policy',
+ *         'content_type' => 'Page',
+ *         'status' => 'published',
+ *         '#attributes' => array('class' => array('page-row')),
+ *       ),
+ *     );
+ *     $header = array(
+ *       'title' => t('Title'),
+ *       'content_type' => t('Content type'),
+ *       'status' => t('Status'),
+ *     );
+ *     $form['table'] = array(
+ *       '#type' => 'tableselect',
+ *       '#header' => $header,
+ *       '#options' => $options,
+ *       '#empty' => t('No content available.'),
+ *     );
+ *     @endcode
  *
  * @ingroup themeable
  */
@@ -3979,8 +4009,6 @@ function theme_file($variables) {
  */
 function theme_form_element($variables) {
   $element = &$variables['element'];
-  // This is also used in the installer, pre-database setup.
-  $t = get_t();
 
   // This function is invoked as theme wrapper, but the rendered form element
   // may not necessarily have been processed by form_builder().
@@ -4139,7 +4167,7 @@ function _form_set_class(&$element, $class = array()) {
   if (!empty($element['#required'])) {
     $element['#attributes']['class'][] = 'required';
   }
-  if (isset($element['#parents']) && form_get_error($element)) {
+  if (isset($element['#parents']) && form_get_error($element) !== NULL && !empty($element['#validated'])) {
     $element['#attributes']['class'][] = 'error';
   }
 }
@@ -4349,7 +4377,7 @@ function batch_set($batch_definition) {
     }
 
     // Base and default properties for the batch set.
-    // Use get_t() to allow batches at install time.
+    // Use get_t() to allow batches during installation.
     $t = get_t();
     $init = array(
       'sandbox' => array(),

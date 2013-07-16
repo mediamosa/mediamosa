@@ -204,11 +204,11 @@ function image_field_prepare_view($entity_type, $entities, $field, $instances, $
     if (empty($items[$id])) {
       $fid = 0;
       // Use the default for the instance if one is available.
-      if ($instances[$id]['settings']['default_image']) {
+      if (!empty($instances[$id]['settings']['default_image'])) {
         $fid = $instances[$id]['settings']['default_image'];
       }
       // Otherwise, use the default for the field.
-      elseif ($field['settings']['default_image']) {
+      elseif (!empty($field['settings']['default_image'])) {
         $fid = $field['settings']['default_image'];
       }
 
@@ -600,8 +600,11 @@ function theme_image_formatter($variables) {
   $item = $variables['item'];
   $image = array(
     'path' => $item['uri'],
-    'alt' => $item['alt'],
   );
+
+  if (array_key_exists('alt', $item)) {
+    $image['alt'] = $item['alt'];
+  }
 
   if (isset($item['attributes'])) {
     $image['attributes'] = $item['attributes'];
@@ -613,7 +616,7 @@ function theme_image_formatter($variables) {
   }
 
   // Do not output an empty 'title' attribute.
-  if (drupal_strlen($item['title']) > 0) {
+  if (isset($item['title']) && drupal_strlen($item['title']) > 0) {
     $image['title'] = $item['title'];
   }
 
@@ -625,9 +628,11 @@ function theme_image_formatter($variables) {
     $output = theme('image', $image);
   }
 
-  if (!empty($variables['path']['path'])) {
+  // The link path and link options are both optional, but for the options to be
+  // processed, the link path must at least be an empty string.
+  if (isset($variables['path']['path'])) {
     $path = $variables['path']['path'];
-    $options = $variables['path']['options'];
+    $options = isset($variables['path']['options']) ? $variables['path']['options'] : array();
     // When displaying an image inside a link, the html option must be TRUE.
     $options['html'] = TRUE;
     $output = l($output, $path, $options);

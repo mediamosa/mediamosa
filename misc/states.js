@@ -16,10 +16,11 @@ var states = Drupal.states = {
  */
 Drupal.behaviors.states = {
   attach: function (context, settings) {
+    var $context = $(context);
     for (var selector in settings.states) {
       for (var state in settings.states[selector]) {
         new states.Dependent({
-          element: $(selector),
+          element: $context.find(selector),
           state: states.State.sanitize(state),
           constraints: settings.states[selector][state]
         });
@@ -481,8 +482,8 @@ $(document).bind('state:disabled', function(e) {
   if (e.trigger) {
     $(e.target)
       .attr('disabled', e.value)
-      .filter('.form-element')
-        .closest('.form-item, .form-submit, .form-wrapper').toggleClass('form-disabled', e.value);
+        .closest('.form-item, .form-submit, .form-wrapper').toggleClass('form-disabled', e.value)
+        .find('select, input, textarea').attr('disabled', e.value);
 
     // Note: WebKit nightlies don't reflect that change correctly.
     // See https://bugs.webkit.org/show_bug.cgi?id=23789
