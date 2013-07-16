@@ -1,4 +1,4 @@
-MediaMosa 3.2.4 (build 1906)
+MediaMosa 3.2.4 (build 1907)
 ----------------------------
 - Fixing minor error in process of $_FILES.
 - Added OPTIONS method to REST layer.
