@@ -178,6 +178,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => 'The container type length.',
       ),
+      mediamosa_asset_db::MEDIAFILE_FILENAME => array(
+        'type' => 'varchar',
+        'length' => mediamosa_asset_db::MEDIAFILE_FILENAME_LENGTH,
+        'default' => NULL,
+        'description' => 'The normalized filename of the original mediafile.',
+      ),
       mediamosa_asset_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
