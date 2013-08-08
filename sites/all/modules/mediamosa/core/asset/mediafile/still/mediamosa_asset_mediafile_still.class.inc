@@ -653,7 +653,7 @@ class mediamosa_asset_mediafile_still {
 
     // The original still.
     $still_uri = mediamosa_storage::get_uri_mediafile($mediafile);
-    if (mediamosa_io::file_exists($still_uri)) {
+    if (!mediamosa_io::file_exists($still_uri)) {
       throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
     }
 
