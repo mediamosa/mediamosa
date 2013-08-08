@@ -91,7 +91,9 @@ class mediamosa_media {
    */
   public static function filename_parse($filename) {
     $matches = array();
-    if (preg_match('@^([a-zA-Z0-9]+),?([0-9]+)?(\.[a-zA-Z0-9]+)?$@', $filename, $matches)) {
+    // Lowercase alphanumeric characters, numbers, underscores (_),
+    // and hyphens (-) for style names.
+    if (preg_match('@^([a-zA-Z0-9]+),?([a-z_\-0-9]+)?(\.[a-zA-Z0-9]+)?$@', $filename, $matches)) {
       return array(
         $matches[1],
         empty($matches[2]) ? 0 : $matches[2],
