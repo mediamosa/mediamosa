@@ -75,9 +75,11 @@ class mediamosa_mimetype {
     $realpath = mediamosa_io::realpath($uri);
 
     $return_var = -1;
-    $file_mime = reset(mediamosa_io::exec('file -b -L --mime-type ' . escapeshellarg($realpath), $return_var));
+    $exec_string = mediamosa_io::exec('file -b -L --mime-type ' . escapeshellarg($realpath), $return_var);
+    $file_mime = reset($exec_string);
     if ($file_mime == 'application/octet-stream') {
-      $result = reset(mediamosa_io::exec('file -L ' . escapeshellarg($realpath), $return_var));
+      $exec_string = mediamosa_io::exec('file -L ' . escapeshellarg($realpath), $return_var);
+      $result = reset($exec_string);
 
       $matches = array();
       $reg = '#^(?P<filename>.*): (?P<filetype>.*)$#';
