@@ -280,6 +280,35 @@ function mediamosa_drush_command() {
     ),
   );
 
+  $items['mm-servers'] = array(
+    'description' => 'Get the list of MediaMosa servers.',
+    'aliases' => array('mmsrvrs'),
+  );
+
+  $items['mm-server'] = array(
+    'description' => 'Get details of a MediaMosa server.',
+    'arguments' => array(
+      'id' => 'id of the server.',
+    ),
+    'aliases' => array('mmsrvr'),
+  );
+
+  $items['mm-server-enable'] = array(
+    'description' => 'Enable MediaMosa server.',
+    'arguments' => array(
+      'id' => 'id of the server.',
+    ),
+  );
+  $items['mm-server-disable'] = array(
+    'description' => 'Disable MediaMosa server.',
+    'arguments' => array(
+      'id' => 'id of the server.',
+    ),
+  );
+
+  $items['mm-test'] = array(
+    'aliases' => array('mmtst'),
+  );
 
   return $items;
 }
@@ -403,6 +432,11 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     if ($asset_id == NULL) {
       return drush_set_error('', dt('Invalid asset_id.'));
     }
+  }
+
+  // only first letters given, try to find a match.
+  if (strlen($asset_id < 10)) {
+    // We miss a mediamosa_asset func here.
   }
 
   // Show asset details.
@@ -1223,4 +1257,88 @@ function drush_mediamosa_mm_import_directory($path, $app_id = 1, $owner = 'N.N.'
 
   // Done.
   return ($asset_id);
+}
+
+/**
+ * Drush function mm-servers.
+ */
+function drush_mediamosa_mm_servers() {
+  // Get servers.
+  $servers = mediamosa_server::search();
+  $rows = array();
+  $rows[] = array('id', 'Name', 'Type', 'Status');
+  foreach ($servers as $server) {
+    $rows[] = array($server['nid'], $server['server_name'], $server['server_type'], $server['server_status']);
+  }
+  drush_print_table($rows, TRUE);
+}
+
+/**
+ * Drush function mm-server.
+ */
+function drush_mediamosa_mm_server($server_id = NULL) {
+  if ($server_id == NULL) {
+    return drush_set_error('', dt('Invalid server_id.'));
+  }
+
+  // Get servers.
+  $servers = mediamosa_server::search(); // there should be an search criteria here.
+  $rows = array();
+  foreach ($servers as $server) {
+    if ($server['nid'] == $server_id) {
+      $rows[] = array('id', $server['nid']);
+      $rows[] = array('name', $server['server_name']);
+      $rows[] = array('status', $server['server_status']);
+      $rows[] = array('uri', $server['server_uri']);
+      $rows[] = array('path', $server['server_path']);
+      $rows[] = array('containers', $server['containers']);
+      $rows[] = array('mime type', $server['mime_type']);
+      $rows[] = array('object code', '');
+      $object_code = $server['object_code'];
+    }
+  }
+  if ($rows) {
+    drush_print_table($rows, TRUE);
+    drush_print($object_code);
+  }
+  else {
+    drush_print("No results found.");
+  }
+}
+
+/**
+ * Drush function mm-server-enable.
+ */
+function drush_mediamosa_mm_server_enable($server_id = NULL) {
+  if ($server_id == NULL) {
+    return drush_set_error('', dt('Invalid server_id.'));
+  }
+
+  $n = node_load($server_id);
+  $n->server_status = 'ON';
+  node_save($n);
+  drush_print("Server set to ON.");
+}
+
+/**
+ * Drush function mm-server-disable.
+ */
+function drush_mediamosa_mm_server_disable($server_id = NULL) {
+  if ($server_id == NULL) {
+    return drush_set_error('', dt('Invalid server_id.'));
+  }
+
+  $n = node_load($server_id);
+  $n->server_status = 'OFF';
+  node_save($n);
+  drush_print("Server set to OFF.");
+}
+
+/**
+ * Drush function mm-test.
+ */
+function drush_mediamosa_mm_test() {
+
+  drush_print("test done.");
+
 }
