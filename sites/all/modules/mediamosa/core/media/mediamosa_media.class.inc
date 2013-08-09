@@ -66,7 +66,9 @@ class mediamosa_media {
    *   The created mediafile_str.
    */
   public static function filename_build($basename, $extension = '', $style_id = '') {
-    return $basename . (empty($style_id) ? '' : ',' . $style_id) . '.' . $extension;
+    return $basename .
+      (empty($style_id) ? '' : ',' . $style_id) .
+      (empty($extension) ? '' : '.' . $extension);
   }
 
   /**
