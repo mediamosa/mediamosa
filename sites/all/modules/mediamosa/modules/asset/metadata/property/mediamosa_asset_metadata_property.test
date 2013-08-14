@@ -1,8 +1,8 @@
 <?php
 /**
- * @file
- * Unittests for metadata property.
- */
+  * @file
+  * Unittests for metadata property.
+  */
 
 class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
 
@@ -20,7 +20,7 @@ class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
 
   // -------------------------------------------------------------------- Tests.
   /**
-   * Testing asset metadata property, see: ticket 669.
+   * Testing asset metadata property.
    */
   public function testMetadataPropery() {
     // --------------------------------- Create a new asset property definition.
@@ -125,5 +125,57 @@ class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
       isset($response['name']),
       t("After we deleted the asset property we don't have 'name'.")
     );
+  }
+
+  function testCustomMetadataPropery() {
+    // ------------------------------------------------------ Create custom tag.
+    // Property.
+    $definition = 'custom_tag';
+
+    // Type.
+    $type = 'char';
+
+    // Create the metadata definition.
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $this->var_export($response);
+
+    // Check if the mediamosa_asset_metadata_property has the right values.
+    // Name.
+    $this->assertTrue(
+      (string) $response->items->item[0]->prop_name == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => (string) $response->items->item[0]->prop_name))
+    );
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
+    $this->assertTrue(
+      (string) $response->items->item[0]->type == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => (string) $response->items->item[0]->type))
+    );
+
+    // ------------------------------------- Create asset and metadata property.
+    // Create the asset.
+    $asset_id = $this->createAsset();
+
+    // Value.
+    $value = mediamosa_db::uuid(mt_rand(1, 9999));
+
+    // Create asset metadata.
+    $parameters = array(
+      $definition => $value,
+    );
+    $response = $this->createAssetMetadata($asset_id, $parameters);
+
+    // Check the asset property values.
+    $this->assertTrue(
+      (string) $response->items->item[0]->{$definition} == $value,
+      t('Sent and get property has the same value (@sent = @get).', array('@sent' => $value, '@get' => (string) $response->items->item[0]->{$definition}))
+    );
+
+    // -------------------------------------------- Get the asset with metadata.
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Show me the asset.
+    $this->var_export($asset);
   }
 }
