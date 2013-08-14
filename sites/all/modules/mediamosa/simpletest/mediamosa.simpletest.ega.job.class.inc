@@ -411,9 +411,6 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
       // Get all jobs.
       $jobs = mediamosa_job::get_job_list(0, '', TRUE);
 
-      // Dump the current jobs.
-      //$this->var_export($jobs);
-
       // Check if the jobs are all done.
       foreach ($jobs as $job) {
         if (!in_array($job[mediamosa_job_db::JOB_STATUS],
@@ -433,13 +430,13 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
         Sleep(5);
       }
       else {
-        $this->pass(strtr('No more running jobs found, exiting job cycle.', array('@running' => $running_jobs)));
+        $this->pass(strtr('No more running jobs found, exiting job cycle.'));
       }
     }
 
     // If we are dead locked, we need to know.
     if ($max_runs < 0) {
-      $this->fail('Job scheduler deadlock; Failed to complete all jobs.');
+      $this->fail(strtr('Job scheduler deadlock; Failed to complete all jobs. Jobs waiting for: @running', array('@running' => $running_jobs)));
     }
   }
 }

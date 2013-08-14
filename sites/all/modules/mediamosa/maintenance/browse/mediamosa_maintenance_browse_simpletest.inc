@@ -78,8 +78,6 @@ function mediamosa_maintenance_browse_test_form($form) {
  * Clean up simpletest extended to clean up on servers as well.
  */
 function _mediamosa_maintenance_browse_simpletest_clean_environment() {
-  // For custom clean ups.
-
   // Cleanup on our servers.
   mediamosa_server::cleanup_simpletest_enabled_servers();
 

@@ -7,9 +7,7 @@
 
 class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'JOB - common tests',
@@ -18,7 +16,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
 
   /**
    * (see ticket 112)
@@ -36,7 +34,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
     $asset_id = $this->createAsset();
 
     // Create mediafile.
-    $mediafile_id = $this->createMediafile($asset_id);
+    $this->createMediafile($asset_id);
 
     // Create upload job (and job).
     $a_fields = array(
@@ -45,7 +43,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
     $job_id_for_upload = $this->createJob($a_fields);
 
     // Create the upload job child.
-    $upload_job_id = $this->createUploadJob($job_id_for_upload);
+    $this->createUploadJob($job_id_for_upload);
 
     // Create transcode job (and job).
     $a_fields = array(
@@ -54,61 +52,45 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
     $job_id_for_transcode = $this->createJob($a_fields);
 
     // Create transcode job.
-    $transcode_job_id = $this->createTranscodeJob($job_id_for_transcode);
+    $this->createTranscodeJob($job_id_for_transcode);
 
     // Clean up old tickets.
     mediamosa_job_scheduler::check_upload_timeout();
 
     // Check if the job has the INPROGRESS field for upload.
-    $job_status = mediamosa_job::get($job_id_for_upload, array(mediamosa_job_db::JOB_STATUS));
+    $job_status = mediamosa_job::get($job_id_for_upload);
+    $this->var_export($job_status);
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_INPROGRESS,
       t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
     // Check if the job has the INPROGRESS field for transcode.
-    $job_status = mediamosa_job::get($job_id_for_transcode, array(mediamosa_job_db::JOB_STATUS));
+    $job_status = mediamosa_job::get($job_id_for_transcode);
+    $this->var_export($job_status);
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_INPROGRESS,
       t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
-    // Changing the 'changed' field for upload.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(UTC_TIMESTAMP(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
-      WHERE #job_id = :job_id',
-      array(
-        '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-        '#changed' => mediamosa_job_db::CHANGED,
-        '#job_id' => mediamosa_job_db::ID,
-        ':job_id' => $job_id_for_upload,
-        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT - 1,
-      )
-    );
-
-    // Changing the 'changed' field for transcode.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(UTC_TIMESTAMP(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
-      WHERE #job_id = :job_id',
-      array(
-        '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-        '#changed' => mediamosa_job_db::CHANGED,
-        '#job_id' => mediamosa_job_db::ID,
-        ':job_id' => $job_id_for_transcode,
-        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT - 1,
-      )
-    );
-
+    $update_job = mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME);
+    $update_job->expression(mediamosa_job_db::CHANGED, 'DATE_SUB(UTC_TIMESTAMP(), INTERVAL ' . (mediamosa_settings::JOB_JOB_TIMEOUT + 10) . ' SECOND)');
+    $update_job->execute();
+    
     // Clean up old tickets.
     mediamosa_job_scheduler::check_upload_timeout();
 
     // Check if the job has the FAILED field for upload.
-    $job_status = mediamosa_job::get($job_id_for_upload, array(mediamosa_job_db::JOB_STATUS));
+    $job_status = mediamosa_job::get($job_id_for_upload);
+    $this->var_export($job_status);
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_FAILED,
       t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
     // Check if the job has the FAILED field for transcode.
-    $job_status = mediamosa_job::get($job_id_for_transcode, array(mediamosa_job_db::JOB_STATUS));
+    $job_status = mediamosa_job::get($job_id_for_transcode);
+    $this->var_export($job_status);
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_FAILED,
       t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
