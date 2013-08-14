@@ -1,8 +1,8 @@
 <?php
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 2028);
-define('MEDIAMOSA_VERSION', '3.4.x');
+define('MEDIAMOSA_BUILD', 2030);
+define('MEDIAMOSA_VERSION', '3.5.x');
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-dev');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-development');
 
@@ -11,8 +11,7 @@ define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-d
  * Current version description.
  */
 class mediamosa_version {
-
-  // ------------------------------------------------------------------ Constants.
+  // ------------------------------------------------------------------- Consts.
   const MEDIAMOSA_BUILD = MEDIAMOSA_BUILD;
   const MEDIAMOSA_VERSION = MEDIAMOSA_VERSION_SHORT;
   const MEDIAMOSA_VERSION_FULL = MEDIAMOSA_VERSION_FULL;
@@ -46,7 +45,7 @@ class mediamosa_version {
   const BUILD = 'build';
   const INFO = 'info';
 
-  // ------------------------------------------------------------------ Static Function..
+  // ---------------------------------------------------------------- Functions.
   /**
    * Return the array of an version.
    *

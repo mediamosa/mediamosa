@@ -1,4 +1,4 @@
-MediaMosa 3.4.x-dev (build 2028, master branch)
+MediaMosa 3.4.x-dev (build 2030, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -186,6 +186,8 @@ MediaMosa 3.4.x-dev (build 2028, master branch)
 - Fixed image generation with latest job_server paths.
 - MediaMosa module is depended on version MediaMosa SDK v3.5 or higher.
 - Clear messages session variable after each REST call. Fix by Wessel Dankers.
+- Added contrib module ctools v1.3 to distro.
+- Added contrib module views v3.7 to distro.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
