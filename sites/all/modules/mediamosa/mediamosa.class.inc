@@ -44,7 +44,7 @@ class mediamosa {
 
     if ($multibyte != UNICODE_MULTIBYTE) {
       throw new mediamosa_exception_error(
-        mediamosa_error::ERRORCODE_PRECHECK_FAILED,
+        mediamosa_error::HTTP_INTERNAL_SERVER_ERROR,
         array('@message' => 'unicode multibyte is not enabled')
       );
     }
