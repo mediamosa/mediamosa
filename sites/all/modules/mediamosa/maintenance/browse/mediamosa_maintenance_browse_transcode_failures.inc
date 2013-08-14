@@ -14,7 +14,7 @@ function mediamosa_browse_transcode_failures_page($form) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   $build = array();

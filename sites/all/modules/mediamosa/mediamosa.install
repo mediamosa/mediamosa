@@ -4216,3 +4216,19 @@ function mediamosa_update_7165() {
     ->condition('mediafile_filename', '')
     ->execute();
 }
+
+/**
+ * Trigger a menu rebuild.
+ */
+function mediamosa_update_7166() {
+
+  cache_clear_all();
+
+  // Remove us so we are rebuild properly.
+  db_delete('menu_links')
+    ->condition('link_path', 'admin/mediamosa%', 'LIKE')
+    ->execute();
+
+  menu_rebuild();
+  menu_cache_clear_all();
+}

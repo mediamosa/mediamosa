@@ -16,7 +16,7 @@ function mediamosa_maintenance_browse_test_form($form) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
   drupal_set_breadcrumb($breadcrumb);
 
   $form['tests'] = array(
@@ -103,7 +103,7 @@ function mediamosa_maintenance_browse_test_form_submit($form, &$form_state) {
 
   if (!empty($tests_list)) {
     $test_id = simpletest_run_tests($tests_list, 'drupal');
-    $form_state['redirect'] = 'admin/mediamosa/browse/testing/results/' . $test_id;
+    $form_state['redirect'] = 'admin/mediamosa/tools/testing/results/' . $test_id;
   }
   else {
     drupal_set_message(t('No test(s) selected.'), 'error');
@@ -119,9 +119,9 @@ function mediamosa_maintenance_browse_simpletest_result_form($form, &$form_state
   $form = simpletest_result_form($form, $form_state, $test_id);
 
   // Change it.
-  $form['#action'] = url('admin/mediamosa/browse/testing/results/re-run');
+  $form['#action'] = url('admin/mediamosa/tools/testing/results/re-run');
 
-  $form['action']['return']['#href'] = 'admin/mediamosa/browse/testing';
+  $form['action']['return']['#href'] = 'admin/mediamosa/tools/testing';
 
   return $form;
 }
@@ -138,10 +138,10 @@ function mediamosa_maintenance_browse_simpletest_result_form_submit($form, &$for
 
   // Change the redirect.
   if (drupal_substr($form_state['redirect'], 0, drupal_strlen('admin/config/development/testing/results/')) == 'admin/config/development/testing/results/') {
-    $form_state['redirect'] = 'admin/mediamosa/browse/testing/results/' . drupal_substr($form_state['redirect'], drupal_strlen('admin/config/development/testing/results/'));
+    $form_state['redirect'] = 'admin/mediamosa/tools/testing/results/' . drupal_substr($form_state['redirect'], drupal_strlen('admin/config/development/testing/results/'));
   }
   elseif ($form_state['redirect'] == 'admin/config/development/testing') {
-    $form_state['redirect'] = 'admin/mediamosa/browse/testing';
+    $form_state['redirect'] = 'admin/mediamosa/tools/testing';
   }
 
   return $form;

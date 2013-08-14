@@ -9,7 +9,7 @@
  */
 function mediamosa_integrity_check_help($path, $arg) {
   switch ($path) {
-    case 'admin/mediamosa/browse/integrity':
+    case 'admin/mediamosa/content/integrity':
       return '<p>' . t('Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.') . '</p>';
   }
 }
@@ -20,12 +20,12 @@ function mediamosa_integrity_check_help($path, $arg) {
 function mediamosa_integrity_check_menu() {
   $items = array();
 
-  $items['admin/mediamosa/browse/integrity'] = array(
+  $items['admin/mediamosa/content/integrity'] = array(
     'title' => 'File integrity',
     'description' => 'Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.',
     'page callback' => 'mediamosa_integrity_check_page',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_FILE_INTEGRITY),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_FILE_INTEGRITY),
   );
 
   return $items;
@@ -73,7 +73,7 @@ function mediamosa_integrity_check_type_box() {
     '#title' => t('Display list for type'),
     '#default_value' => $type,
     '#options' => $options,
-    '#attributes' => array('onchange' => 'location.href="' . base_path() . 'admin/mediamosa/browse/integrity/" + this.value'),
+    '#attributes' => array('onchange' => 'location.href="' . base_path() . 'admin/mediamosa/content/integrity/" + this.value'),
   );
 
   return $form;
@@ -385,7 +385,7 @@ function mediamosa_integrity_check_start() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   $form = array();
@@ -431,7 +431,7 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
 
     // Set message and goto.
     drupal_set_message(t('Integrity check started'));
-    drupal_goto('admin/mediamosa/browse/integrity');
+    drupal_goto('admin/mediamosa/content/integrity');
     return;
   }
 

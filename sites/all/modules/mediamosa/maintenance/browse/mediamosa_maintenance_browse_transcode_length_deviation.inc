@@ -1,30 +1,5 @@
 <?php
 
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Deviant length transcoding browser.
@@ -36,13 +11,6 @@ define('MEDIAMOSA_BROWSE_TRANSCODE_LENGTH_DEVIATION_PREFIX', 'mediafile_id-');
  * Build the form for browsing transcode length deviation.
  */
 function mediamosa_browse_transcode_length_deviation_page($form) {
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  drupal_set_breadcrumb($breadcrumb);
-
   $build = array();
 
   $build['deviant_length_transcoding_list'] = _mediamosa_browse_transcode_length_deviation_list_form();
@@ -274,7 +242,7 @@ function theme_mediamosa_browse_transcode_length_deviation($variables) {
         'class' => array('simpletest-test-select'),
       );
       $row[] = array(
-        'data' => '<div>' . l(check_plain($asset_id), 'admin/mediamosa/browse/asset/' . $asset_id) . '</label>',
+        'data' => '<div>' . l(check_plain($asset_id), 'admin/mediamosa/content/asset/' . $asset_id) . '</label>',
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(

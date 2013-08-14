@@ -1160,7 +1160,7 @@ MediaMosa 2.2.0 (build 847)
   parameters. Limit is set to maximum of 200 jobs in result. Extended the
   admin documentation for this call for usage of the CQL call, see your
   MediaMosa admin on uri
-  /admin/mediamosa/browse/restcall/asset-%24asset_id-joblist/GET
+  /  admin/mediamosa/tools/restcall/asset-%24asset_id-joblist/GET
   (See ticket #267).
 - Job created in job table for still analyse (See ticket #239).
 - Introduction /collection/{id}/asset/count, and implements numofvideos in

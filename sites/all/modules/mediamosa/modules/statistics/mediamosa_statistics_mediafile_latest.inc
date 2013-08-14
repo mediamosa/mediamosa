@@ -41,7 +41,7 @@ function mediamosa_statistics_mediafile_latest_form() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Statistics'), 'admin/mediamosa/statistics');
+  $breadcrumb[] = l(t('Statistics'), 'admin/mediamosa/reports');
   drupal_set_breadcrumb($breadcrumb);
 
   $build = array();

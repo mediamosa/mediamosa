@@ -99,13 +99,13 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
               }
               $record['action'] = (isset($video->getElementsByTagName('action')->item(0)->nodeValue) ? $video->getElementsByTagName('action')->item(0)->nodeValue : '');
               $record['mediaFile'] = (isset($format->getElementsByTagName('mediaFile')->item(0)->nodeValue) ? $format->getElementsByTagName('mediaFile')->item(0)->nodeValue : '');
-              $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
+              $record['status'] = l(t('Log'), 'admin/mediamosa/tools/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
 
               // Delete doesn't work because the apache user has insufficient rights.
               // @todo: rewrite canceling of queued jobs.
               /*
               if ($type == 'queue') {
-                $record['remove'] = l(t('Delete'), 'admin/mediamosa/browse/ftp_batch/queue/delete/'. urlencode(basename($file->uri)));
+                $record['remove'] = l(t('Delete'), 'admin/mediamosa/tools/ftp_batch/queue/delete/'. urlencode(basename($file->uri)));
               }
               */
               if (!empty($record)) {
@@ -154,14 +154,14 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
       else {
         $usr = mediamosa_unicode::substr(basename(dirname($file->uri)), 0, -3) . '_' . ltrim(mediamosa_unicode::substr(dirname($file->uri), -3), '0');
 
-        $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
+        $record['status'] = l(t('Log'), 'admin/mediamosa/tools/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
       }
 
       // Delete doesn't work because the apache user has insufficient rights.
       // @todo: rewrite canceling of queued jobs.
       /*
       if ($type == 'queue') {
-        $record['remove'] = l(t('Delete'), 'admin/mediamosa/browse/ftp_batch/queue/delete/'. urlencode(basename($file->uri)));
+        $record['remove'] = l(t('Delete'), 'admin/mediamosa/tools/ftp_batch/queue/delete/'. urlencode(basename($file->uri)));
       }
       */
 

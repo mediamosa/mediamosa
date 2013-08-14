@@ -42,7 +42,7 @@ function mediamosa_browse_job_failures_page($form) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   $build = array();
@@ -374,7 +374,7 @@ function theme_mediamosa_browse_job_failures($variables) {
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(
-        'data' => '<div>' . l(check_plain($asset_id), 'admin/mediamosa/browse/asset/' . $asset_id) . '</label>',
+        'data' => '<div>' . l(check_plain($asset_id), 'admin/mediamosa/content/asset/' . $asset_id) . '</label>',
         'class' => array('simpletest-test-label'),
       );
       $row[] = array(

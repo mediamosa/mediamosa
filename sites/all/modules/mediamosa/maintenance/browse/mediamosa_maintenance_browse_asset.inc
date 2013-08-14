@@ -15,7 +15,7 @@ function _mediamosa_browse_asset_page() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   return drupal_get_form('mediamosa_browse_asset_filter_form');
@@ -240,8 +240,8 @@ function _mediamosa_browse_asset_list() {
 
   foreach ($result['items'] as $row) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/browse/asset/' . $row[mediamosa_asset_db::ID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/browse/asset/' . $row[mediamosa_asset_db::ID] . '/delete', $l_options),
+      l(t('Edit'), 'admin/mediamosa/content/asset/' . $row[mediamosa_asset_db::ID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/content/asset/' . $row[mediamosa_asset_db::ID] . '/delete', $l_options),
     );
 
     $rows[] = array(
@@ -387,8 +387,8 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/content/asset');
   drupal_set_breadcrumb($breadcrumb);
 
   // Get the asset.
@@ -805,7 +805,7 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
 
     foreach ($result['items'] as $item) {
       $actions = array(
-        l(t('Remove'), 'admin/mediamosa/browse/collection/' . rawurlencode($item['coll_id']) . '/remove_asset/' . rawurlencode($asset_id), $l_options),
+        l(t('Remove'), 'admin/mediamosa/content/collection/' . rawurlencode($item['coll_id']) . '/remove_asset/' . rawurlencode($asset_id), $l_options),
       );
 
       $title = trim($item['title']);
@@ -916,8 +916,8 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/content/asset');
   drupal_set_breadcrumb($breadcrumb);
 
   // Do REST call.
@@ -925,7 +925,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
 
   if (!mediamosa_response_connector::static_result_okay($result_asset)) {
     drupal_set_message(t('Asset with ID @asset_id does not exists.', array('@asset_id' => $asset_id)), 'warning');
-    drupal_goto('admin/mediamosa/browse/asset');
+    drupal_goto('admin/mediamosa/content/asset');
   }
 
   $asset = reset($result_asset['items']);
@@ -1141,7 +1141,7 @@ function mediamosa_browse_asset_form_submit($form, &$form_state) {
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       drupal_set_message(t('The changes to the asset metadata have been saved.'));
-      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id) . '/edit');
+      drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id) . '/edit');
     }
   }
 
@@ -1186,7 +1186,7 @@ function mediamosa_browse_asset_delete_confirm_form_submit($form, &$form_state) 
     drupal_set_message(t('Unable to find asset.'), 'warning');
 
     // Failed.
-    drupal_goto('admin/mediamosa/browse/asset');
+    drupal_goto('admin/mediamosa/content/asset');
   }
 
   // Delete uri REST call.
@@ -1205,7 +1205,7 @@ function mediamosa_browse_asset_delete_confirm_form_submit($form, &$form_state) 
   $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
 
   if (mediamosa_response_connector::static_result_okay($result)) {
-    drupal_goto('admin/mediamosa/browse/asset');
+    drupal_goto('admin/mediamosa/content/asset');
   }
 
   drupal_goto(mediamosa_settings::get_url_asset($asset_id));

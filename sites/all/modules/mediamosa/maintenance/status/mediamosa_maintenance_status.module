@@ -524,7 +524,7 @@ function _mediamosa_maintenance_status_job_list() {
         $job->{mediamosa_job_db::FINISHED},
         $job->{mediamosa_job_db::ID},
         $job->{mediamosa_job_db::APP_ID},
-        l($job->{mediamosa_job_db::ASSET_ID}, 'admin/mediamosa/browse/asset/' . $job->{mediamosa_job_db::ASSET_ID}),
+        l($job->{mediamosa_job_db::ASSET_ID}, 'admin/mediamosa/content/asset/' . $job->{mediamosa_job_db::ASSET_ID}),
         $job->{mediamosa_job_db::MEDIAFILE_ID},
         $job->{mediamosa_job_db::OWNER_ID},
         $job->{mediamosa_job_db::JOB_STATUS},

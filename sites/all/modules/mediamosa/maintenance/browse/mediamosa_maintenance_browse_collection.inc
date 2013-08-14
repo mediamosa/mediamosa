@@ -14,7 +14,7 @@ function _mediamosa_browse_collection_page($op = 'list') {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   return drupal_get_form('mediamosa_browse_collection_filter_form');
@@ -198,8 +198,8 @@ function _mediamosa_browse_collection_list() {
 
   foreach ($result['items'] as $row) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/browse/collection/' . $row[mediamosa_collection_db::ID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/browse/collection/' . $row[mediamosa_collection_db::ID] . '/delete', $l_options),
+      l(t('Edit'), 'admin/mediamosa/content/collection/' . $row[mediamosa_collection_db::ID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/content/collection/' . $row[mediamosa_collection_db::ID] . '/delete', $l_options),
     );
 
     $title = empty($row['title']) ? NULL : check_plain($row['title']);
@@ -327,8 +327,8 @@ function _mediamosa_browse_collection_page_view($coll_id) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/browse/collection');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/content/collection');
   drupal_set_breadcrumb($breadcrumb);
 
   // Get the collection.
@@ -504,7 +504,7 @@ function mediamosa_browse_collection_delete_confirm_form($form, &$form_state, $c
     drupal_set_message(t('Unable to find collection.'), 'warning');
 
     // Failed.
-    drupal_goto('admin/mediamosa/browse/collection');
+    drupal_goto('admin/mediamosa/content/collection');
   }
 
   $form['coll_id'] = array(
@@ -568,10 +568,10 @@ function mediamosa_browse_collection_delete_confirm_form_submit($form, &$form_st
 
   if (in_array((int)$result->request_result_id, array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT))) {
     drupal_set_message(t('The collection has been deleted.'));
-    drupal_goto('admin/mediamosa/browse/collection');
+    drupal_goto('admin/mediamosa/content/collection');
   }
 
-  drupal_goto('admin/mediamosa/browse/collection/' . rawurlencode($coll_id));
+  drupal_goto('admin/mediamosa/content/collection/' . rawurlencode($coll_id));
 }
 
 /**
@@ -588,7 +588,7 @@ function mediamosa_browse_collection_remove_asset_confirm_form($form, &$form_sta
     drupal_set_message(t('Unable to find collection.'), 'warning');
 
     // Failed.
-    drupal_goto('admin/mediamosa/browse/collection');
+    drupal_goto('admin/mediamosa/content/collection');
   }
 
   $form['coll_id'] = array(
@@ -631,5 +631,5 @@ function mediamosa_browse_collection_remove_asset_confirm_form_submit($form, &$f
     drupal_set_message(t('The asset-collection relation has been removed.'));
   }
 
-  drupal_goto('admin/mediamosa/browse/collection/' . rawurlencode($coll_id));
+  drupal_goto('admin/mediamosa/content/collection/' . rawurlencode($coll_id));
 }

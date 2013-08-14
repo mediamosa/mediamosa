@@ -252,7 +252,7 @@ function _mediamosa_maintenance_mediafile_delete_submit($form, &$form_state) {
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       drupal_set_message(t('Mediafile deleted.'));
-      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+      drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
     }
   }
 
@@ -280,13 +280,13 @@ function _mediamosa_maintenance_mediafile_analyse($asset_id, $mediafile_id) {
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       drupal_set_message(t('Analyse started.'));
-      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+      drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
     }
   }
 
   // Set failed.
   drupal_set_message(t('Failed to start analyse.'));
-  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+  drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
 }
 
 /**
@@ -309,13 +309,13 @@ function mediamosa_maintenance_mediafile_retranscode($asset_id, $mediafile_id) {
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       drupal_set_message(t('Retranscode started.'));
-      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+      drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
     }
   }
 
   // Set failed.
   drupal_set_message(t('Failed to start retranscode.'));
-  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+  drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
 }
 
 /**
@@ -341,7 +341,7 @@ function _mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
 
   // Set failed.
   drupal_set_message(t('Failed to start download.'));
-  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+  drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
 }
 
 /**
@@ -387,7 +387,7 @@ function _mediamosa_maintenance_job_delete_submit($form, &$form_state) {
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       drupal_set_message(t('Job deleted.'));
-      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+      drupal_goto('admin/mediamosa/content/asset/' . rawurlencode($asset_id));
     }
   }
 

@@ -34,9 +34,9 @@ function mediamosa_batch_jobs_queue() {
  */
 function mediamosa_batch_jobs_current() {
   $output = '';
-  if (mediamosa_io::file_exists(mediamosa_storage::get_uri_ftp_history_job())) {
-    $handle = fopen(mediamosa_storage::get_uri_ftp_history_job(), 'r');
-    $filename = trim(fread($handle, filesize(mediamosa_storage::get_uri_ftp_history_job())));
+  if (mediamosa_io::file_exists(mediamosa_storage::get_realpath_ftp_history())) {
+    $handle = fopen(mediamosa_storage::get_realpath_ftp_history(), 'r');
+    $filename = trim(fread($handle, filesize(mediamosa_storage::get_realpath_ftp_history())));
     fclose($handle);
 
     if (mediamosa_io::file_exists($filename)) {
@@ -50,7 +50,7 @@ function mediamosa_batch_jobs_current() {
     $output .= theme('table', array('header' => $headers, 'rows' => $table));
   }
   else {
-    drupal_set_message(t('Currently, there is no active job.'), 'status', FALSE);
+    drupal_set_message(t('There are no active jobs.'), 'status', FALSE);
   }
   return $output;
 }
@@ -95,7 +95,7 @@ function mediamosa_batch_jobs_delete_confirm(&$form_state) {
   return confirm_form(
     $form,
     t('Are you sure you want to delete the following batch: %vuf?', array('%vuf' => $value_vuf)),
-    isset($_GET['destination']) ? $_GET['destination'] : 'admin/mediamosa/browse/ftp_batch/queue',
+    isset($_GET['destination']) ? $_GET['destination'] : 'admin/mediamosa/tools/ftp_batch/queue',
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
@@ -115,7 +115,7 @@ function mediamosa_batch_jobs_delete_confirm_submit($form, &$form_state) {
     }
   }
 
-  $form_state['redirect'] = 'admin/mediamosa/browse/ftp_batch/queue';
+  $form_state['redirect'] = 'admin/mediamosa/tools/ftp_batch/queue';
 }
 
 /**
@@ -133,7 +133,7 @@ function mediamosa_batch_jobs_log() {
   drupal_set_title(t('Log') . ' ' . $filename);
 
   $body = nl2br(htmlentities(file_get_contents($path)));
-  $body .= l(t('Return to batch job queue'), 'admin/mediamosa/browse/ftp_batch/queue');
+  $body .= l(t('Return to batch job queue'), 'admin/mediamosa/tools/ftp_batch/queue');
 
   return $body;
 }

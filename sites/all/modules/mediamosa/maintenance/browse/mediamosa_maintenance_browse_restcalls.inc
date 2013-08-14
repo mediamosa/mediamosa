@@ -12,7 +12,7 @@ function _mediamosa_maintenance_browse_restcall_page() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
   drupal_set_breadcrumb($breadcrumb);
 
   // Add our CSS.
@@ -377,7 +377,7 @@ function _mediamosa_maintenance_browse_restcall_list() {
       }
 
       $rows[] = array(
-        l(t('/' . $uri), 'admin/mediamosa/browse/restcall/' . str_replace('/', '-', $uri) . '/' . urlencode($method)) . ' ' . implode(' ', $warnings),
+        l(t('/' . $uri), 'admin/mediamosa/tools/restcall/' . str_replace('/', '-', $uri) . '/' . urlencode($method)) . ' ' . implode(' ', $warnings),
         array('data' => implode(',', $for_interface), 'class' => 'header-interface'),
         array('data' => $method, 'class' => 'header-method'),
         array('data' => $rest_call[mediamosa_rest_call::STATUS], 'class' => 'header-status'),
@@ -414,8 +414,8 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Rest calls browser'), 'admin/mediamosa/browse/restcall');
+  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
+  $breadcrumb[] = l(t('Rest calls browser'), 'admin/mediamosa/tools/restcall');
   drupal_set_breadcrumb($breadcrumb);
 
   $uri = str_replace('-', '/', $uri);

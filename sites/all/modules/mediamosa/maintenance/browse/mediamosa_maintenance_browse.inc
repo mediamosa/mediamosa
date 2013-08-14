@@ -169,7 +169,7 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
     if (isset($variables['collection_assets']['assets'])) {
       foreach ($variables['collection_assets']['assets'] as $asset) {
         $actions = array(
-          l(t('Remove'), 'admin/mediamosa/browse/collection/' . rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
+          l(t('Remove'), 'admin/mediamosa/content/collection/' . rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
         );
 
         $rows[] = array(
@@ -206,6 +206,10 @@ function _mediamosa_browse_asset_get_title($asset, $default = NULL) {
 
   if (isset($asset['dublin_core']['title'])) {
     $title = reset($asset['dublin_core']['title']);
+  }
+
+  if (!empty($asset['mediafile_filename'])) {
+    $title = reset($asset['mediafile_filename']);
   }
 
   return $title;

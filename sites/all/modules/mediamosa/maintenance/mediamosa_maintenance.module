@@ -26,23 +26,40 @@ function mediamosa_maintenance_menu() {
     'weight' => -20,
   );
 
-  $items['admin/mediamosa/browse'] = array(
-    'title' => 'Browse',
-    'description' => 'Browse through assets, mediafiles or even our REST call documentation.',
+  $items['admin/mediamosa/content'] = array(
+    'title' => 'Content',
+    'description' => 'View the MediaMosa content.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => '_mediamosa_maintenance_admin_page',
-    'page arguments' => array('admin/mediamosa/browse'),
+    'page arguments' => array('admin/mediamosa/content'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT),
     'position' => 'left',
     'weight' => -10,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
-  $items['admin/mediamosa/browse/list'] = array(
+  $items['admin/mediamosa/content/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/tools'] = array(
+    'title' => 'Tools',
+    'description' => 'Collection of the MediaMosa tools.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/tools'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT),
+    'position' => 'left',
+    'weight' => -10,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
+  $items['admin/mediamosa/tools/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
 
   $items['admin/mediamosa/config'] = array(
     'title' => 'Configuration',

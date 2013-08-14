@@ -1,28 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
 
 /**
  * Implements hook_cron().
@@ -366,23 +342,23 @@ function mediamosa_statistics_help($path, $arg) {
   global $base_url;
 
   switch ($path) {
-    case 'admin/mediamosa/statistics':
+    case 'admin/mediamosa/reports':
       return '<p>' . t('Browse through collected statistics of MediaMosa.') . '</p>';
-    case 'admin/mediamosa/statistics/latestmediafiles':
+    case 'admin/mediamosa/reports/latestmediafiles':
       return '<p>' . t('This page displays a list of the 150 latest uploaded mediafiles.') . '</p>';
-    case 'admin/mediamosa/statistics/popularmediafiles':
+    case 'admin/mediamosa/reports/popularmediafiles':
       return '<p>' . t('This page displays a list of the 150 popular uploaded mediafiles.') . '</p>';
-    case 'admin/mediamosa/statistics/latestcollections':
+    case 'admin/mediamosa/reports/latestcollections':
       return '<p>' . t('This page displays a list of the 150 latest created collections.') . '</p>';
-    case 'admin/mediamosa/statistics/popularcollections':
+    case 'admin/mediamosa/reports/popularcollections':
       return '<p>' . t('This page displays a list of the 150 popular collections.') . '</p>';
-    case 'admin/mediamosa/statistics/diskspaceusage':
+    case 'admin/mediamosa/reports/diskspaceusage':
       return '<p>' . t('This page displays a list of the disk usage per container.') . '</p>';
-    case 'admin/mediamosa/statistics/streamrequests':
+    case 'admin/mediamosa/reports/streamrequests':
       return '<p>' . t('This page displays a list of requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.') . '</p>';
-    case 'admin/mediamosa/statistics/popularstreams':
+    case 'admin/mediamosa/reports/popularstreams':
       return '<p>' . t('This page displays a list of the most popular requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.') . '</p>';
-    case 'admin/mediamosa/statistics/searchwords':
+    case 'admin/mediamosa/reports/searchwords':
       return '<p>' . t('This page displays a list of the 150 most searched words for a period.') . '</p>';
 
   }
@@ -394,24 +370,24 @@ function mediamosa_statistics_help($path, $arg) {
 function mediamosa_statistics_menu() {
   $items = array();
 
-  $items['admin/mediamosa/statistics'] = array(
-    'title' => 'Statistics',
+  $items['admin/mediamosa/reports'] = array(
+    'title' => 'Reports',
     'description' => 'Browse through collected statistics of MediaMosa.',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_STATS),
     'page callback' => '_mediamosa_maintenance_admin_page',
-    'page arguments' => array('admin/mediamosa/statistics'),
+    'page arguments' => array('admin/mediamosa/reports'),
     'file' => 'mediamosa_maintenance.admin.inc',
     'file path' => drupal_get_path('module', 'mediamosa_maintenance'),
     'type' => MENU_LOCAL_TASK,
     'weight' => -5,
   );
-  $items['admin/mediamosa/statistics/list'] = array(
-    'title' => 'Browse through collected statistics of MediaMosa.',
+  $items['admin/mediamosa/reports/list'] = array(
+    'title' => 'View reports of MediaMosa\'s content.',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/statistics/latestmediafiles'] = array(
+  $items['admin/mediamosa/reports/latestmediafiles'] = array(
     'title' => 'Overview of latest mediafiles',
     'description' => 'This page displays a list of the 150 latest uploaded mediafiles.',
     'page callback' => 'mediamosa_statistics_mediafile_latest_form',
@@ -419,26 +395,26 @@ function mediamosa_statistics_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATS_LATEST_MEDIAFILES),
     'file' => 'mediamosa_statistics_mediafile_latest.inc',
   );
-  $items['admin/mediamosa/statistics/latestmediafiles/list'] = array(
+  $items['admin/mediamosa/reports/latestmediafiles/list'] = array(
     'title' => 'Overview of latest mediafiles',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   /*
-  $items['admin/mediamosa/statistics/popularmediafiles'] = array(
+  $items['admin/mediamosa/reports/popularmediafiles'] = array(
     'title' => 'Overview of popular mediafiles',
     'description' => 'This page displays a list of the 150 popular uploaded mediafiles.',
     'page callback' => 'mediamosa_statistics_mediafile_popular_form',
     'access arguments' => array('access mediamosa statistics'),
     'file' => 'mediamosa_statistics_mediafile_popular.inc',
   );
-  $items['admin/mediamosa/statistics/popularmediafiles/list'] = array(
+  $items['admin/mediamosa/reports/popularmediafiles/list'] = array(
     'title' => 'Overview of popular mediafiles',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
    */
 
-  $items['admin/mediamosa/statistics/latestcollections'] = array(
+  $items['admin/mediamosa/reports/latestcollections'] = array(
     'title' => 'Overview of latest collections',
     'description' => 'This page displays a list of the 150 latest created collections.',
     'page callback' => 'mediamosa_statistics_collection_latest_form',
@@ -446,26 +422,26 @@ function mediamosa_statistics_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATS_LATEST_COLLECTIONS),
     'file' => 'mediamosa_statistics_collection_latest.inc',
   );
-  $items['admin/mediamosa/statistics/latestcollections/list'] = array(
+  $items['admin/mediamosa/reports/latestcollections/list'] = array(
     'title' => 'Overview of latest mediafiles',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   /*
-  $items['admin/mediamosa/statistics/popularcollections'] = array(
+  $items['admin/mediamosa/reports/popularcollections'] = array(
     'title' => 'Overview of popular collections',
     'description' => 'This page displays a list of the 150 popular collections.',
     'page callback' => 'mediamosa_statistics_collection_popular_form',
     'access arguments' => array('access mediamosa statistics'),
     'file' => 'mediamosa_statistics_collection_popular.inc',
   );
-  $items['admin/mediamosa/statistics/popularcollections/list'] = array(
+  $items['admin/mediamosa/reports/popularcollections/list'] = array(
     'title' => 'Overview of popular collections',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
    */
 
-  $items['admin/mediamosa/statistics/diskspaceusage'] = array(
+  $items['admin/mediamosa/reports/diskspaceusage'] = array(
     'title' => 'Overview of diskspace used',
     'description' => 'This page displays a list of the disk usage per container.',
     'page callback' => 'mediamosa_statistics_diskspaceused_form',
@@ -473,12 +449,12 @@ function mediamosa_statistics_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATS_DISKSPACE_USED),
     'file' => 'mediamosa_statistics_diskspaceusage.inc',
   );
-  $items['admin/mediamosa/statistics/diskspaceusage/list'] = array(
+  $items['admin/mediamosa/reports/diskspaceusage/list'] = array(
     'title' => 'Overview of diskspace used',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/statistics/streamrequests'] = array(
+  $items['admin/mediamosa/reports/streamrequests'] = array(
     'title' => 'Overview stream request',
     'description' => 'This page displays a list of requested streams.',
     'page callback' => 'mediamosa_statistics_streamrequests_form',
@@ -486,26 +462,26 @@ function mediamosa_statistics_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATS_STREAM_REQUEST),
     'file' => 'mediamosa_statistics_streamrequests.inc',
   );
-  $items['admin/mediamosa/statistics/streamrequests/list'] = array(
+  $items['admin/mediamosa/reports/streamrequests/list'] = array(
     'title' => 'Overview stream request',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   /*
-  $items['admin/mediamosa/statistics/popularstreams'] = array(
+  $items['admin/mediamosa/reports/popularstreams'] = array(
     'title' => 'Overview of popular streams per period',
     'description' => 'This page displays a list of the most popular requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.',
     'page callback' => 'mediamosa_statistics_popularstreams_form',
     'access arguments' => array('access mediamosa statistics'),
     'file' => 'mediamosa_statistics_popularstreams.inc',
   );
-  $items['admin/mediamosa/statistics/popularstreams/list'] = array(
+  $items['admin/mediamosa/reports/popularstreams/list'] = array(
     'title' => 'Overview of popular streams per period',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
    */
 
-  $items['admin/mediamosa/statistics/searchwords'] = array(
+  $items['admin/mediamosa/reports/searchwords'] = array(
     'title' => 'Overview of search words per period',
     'description' => 'This page displays a list of the 150 most searched words for a period.',
     'page callback' => 'mediamosa_statistics_searchwords_form',
@@ -513,7 +489,7 @@ function mediamosa_statistics_menu() {
     'access arguments' => array(mediamosa_permission::ACCESS_STATS_SEARCH_WORDS),
     'file' => 'mediamosa_statistics_searchwords.inc',
   );
-  $items['admin/mediamosa/statistics/searchwords/list'] = array(
+  $items['admin/mediamosa/reports/searchwords/list'] = array(
     'title' => 'Overview of search words per period',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );

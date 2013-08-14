@@ -50,7 +50,7 @@ function mediamosa_maintenance_browse_revision_form() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   // Include our css.
@@ -125,7 +125,7 @@ function mediamosa_maintenance_browse_revision_form() {
 
     $rows[] = array('data' =>
       array(
-        l($revision['vid'], strtr('admin/mediamosa/browse/revision/@node/@revision', array('@node' => $revision['nid'], '@revision' => $revision['vid']))),
+        l($revision['vid'], strtr('admin/mediamosa/content/revision/@node/@revision', array('@node' => $revision['nid'], '@revision' => $revision['vid']))),
         check_plain($names[$revision['uid']]),
         $link,
         check_plain($revision['title']),
@@ -160,8 +160,8 @@ function _mediamosa_maintenance_view_revision($nid, $vid) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Revision'), 'admin/mediamosa/browse/revision');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Revision'), 'admin/mediamosa/content/revision');
   drupal_set_breadcrumb($breadcrumb);
 
   $node_current = node_load($nid);

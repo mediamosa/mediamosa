@@ -95,27 +95,31 @@ function mediamosa_maintenance_browse_theme() {
  */
 function mediamosa_maintenance_browse_help($path, $arg) {
   switch ($path) {
-    case 'admin/mediamosa/browse':
-      return '<p>' . t('The browse section allows you to browse the MediaMosa database.') . '</p>';
+    case 'admin/mediamosa/content':
+      return '<p>' . t('View the MediaMosa Assets, Mediafiles, collections and other MediaMosa content.') . '</p>';
 
-    case 'admin/mediamosa/browse/log':
-      return '<p>' . t('The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. Besides checking the MediaMosa status page, it\'s also vital to check the MediaMosa report on a regular basis.') . '</p>';
+    case 'admin/mediamosa/tools':
+      return '<p>' . t('Tools section allows you to manage the content of MediaMosa.') . '</p>';
 
-    case 'admin/mediamosa/browse/restcall':
+    case 'admin/mediamosa/tools/restcall':
       return '<p>' . t('The REST call browser allows you to view all REST calls and their properties. Use the filter form to filter your results. Status value indicates if the REST call is activated, deprecated or disabled. Disabled REST calls can not be used. Deprecated REST calls will be disabled in future releases. Interface allows where the REST call can be used. Upload REST calls will have the upload interface defined, allowing them to be used on the upload server (see !mediamosa_servers). The same for REST call defined with download interface. These can be used on download servers. App interface must be the closed REST interface and is not specified by the !mediamosa_servers listing. The OpenAPI REST calls are allowed on the OpenAPI REST interface and should be public, as these REST calls do not require client application authentication.', array('!mediamosa_servers' => l('MediaMosa Servers', 'admin/mediamosa/config/server'))) . '</p>';
 
-    case 'admin/mediamosa/browse/revision':
+    case 'admin/mediamosa/content/revision':
       return '<p>' . t('The revision log is a list of changes made on the configuration of MediaMosa. You can view changes made on transcode profiles, client applications, servers and global settings.') . '</p>';
 
-    case 'admin/mediamosa/browse/errorcode':
+    case 'admin/mediamosa/content/errorcode':
       return '<p>' . t('This list show the translation of a MediaMosa error name and code to error message. MediaMosa error name and code can not be changed.') . '</p>';
 
-    case 'admin/mediamosa/browse/testing':
+    case 'admin/mediamosa/tools/testing':
       return '<p>' . t('Run our MediaMosa tests against MediaMosa core and MediaMosa modules. These tests help assure that MediaMosa is working as designed.') . '</p>';
 
-    case 'admin/mediamosa/browse/asset/%/edit':
+    case 'admin/mediamosa/tools/asset/%/edit':
       return '<p>' . t('Add a new metadata field to the asset\'s metadata.') . '</p>';
-  }
+
+    case 'admin/mediamosa/reports/log':
+      return '<p>' . t('The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. Besides checking the MediaMosa status page, it\'s also vital to check the MediaMosa report on a regular basis.') . '</p>';
+
+   }
 }
 
 /**
@@ -124,269 +128,261 @@ function mediamosa_maintenance_browse_help($path, $arg) {
 function mediamosa_maintenance_browse_menu() {
   $items = array();
 
-  $items['admin/mediamosa/browse/asset'] = array(
+  $items['admin/mediamosa/content/asset'] = array(
     'title' => 'Asset browser',
     'description' => 'View assets currently in our database.',
     'page callback' => '_mediamosa_browse_asset_page',
     'page arguments' => array('list'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
   );
 
-  $items['admin/mediamosa/browse/asset/list'] = array(
+  $items['admin/mediamosa/content/asset/list'] = array(
     'title' => 'Asset browser',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
-  $items['admin/mediamosa/browse/asset/%'] = array(
+  $items['admin/mediamosa/content/asset/%'] = array(
     'title callback' => '_mediamosa_browse_asset_title',
     'title arguments' => array(4),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_browse_asset_page_view', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
   );
-  $items['admin/mediamosa/browse/asset/%/view'] = array(
+  $items['admin/mediamosa/content/asset/%/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
   );
-  $items['admin/mediamosa/browse/asset/%/edit'] = array(
+  $items['admin/mediamosa/content/asset/%/edit'] = array(
     'title' => 'Edit',
     'description' => 'Edit asset.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_asset_form', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
   );
-  $items['admin/mediamosa/browse/asset/%/delete'] = array(
+  $items['admin/mediamosa/content/asset/%/delete'] = array(
     'title' => 'Delete',
     'description' => 'Delete asset.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_asset_delete_confirm_form', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ASSETS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ASSETS),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
   );
 
-  $items['admin/mediamosa/browse/collection'] = array(
+  $items['admin/mediamosa/content/collection'] = array(
     'title' => 'Collection browser',
     'description' => 'View collections currently in our database.',
     'page callback' => '_mediamosa_browse_collection_page',
     'page arguments' => array('list'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
   );
-  $items['admin/mediamosa/browse/collection/list'] = array(
+  $items['admin/mediamosa/content/collection/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
-  $items['admin/mediamosa/browse/collection/%'] = array(
+  $items['admin/mediamosa/content/collection/%'] = array(
     'title' => 'Collection details',
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa_browse_collection_page_view',
     'page arguments' => array(4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
   );
-  $items['admin/mediamosa/browse/collection/%/view'] = array(
+  $items['admin/mediamosa/content/collection/%/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
   );
-  $items['admin/mediamosa/browse/collection/%/edit'] = array(
+  $items['admin/mediamosa/content/collection/%/edit'] = array(
     'title' => 'Edit',
     'description' => 'Edit collection.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_collection_form', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
   );
-  $items['admin/mediamosa/browse/collection/%/delete'] = array(
+  $items['admin/mediamosa/content/collection/%/delete'] = array(
     'title' => 'Delete',
     'description' => 'Delete collection.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_collection_delete_confirm_form', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
   );
-  $items['admin/mediamosa/browse/collection/%/remove_asset/%'] = array(
+  $items['admin/mediamosa/content/collection/%/remove_asset/%'] = array(
     'title' => 'Delete collection',
     'description' => 'Delete collection.',
     'type' => MENU_CALLBACK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_collection_remove_asset_confirm_form', 4, 6),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
   );
-  $items['admin/mediamosa/browse/collection/add'] = array(
+  $items['admin/mediamosa/content/collection/add'] = array(
     'title' => 'Add',
     'description' => 'Add a new collection.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_collection_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_COLLECTIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_COLLECTIONS),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
   );
 
-  $items['admin/mediamosa/browse/restcall'] = array(
+  $items['admin/mediamosa/tools/restcall'] = array(
     'title' => 'Rest calls browser',
     'description' => 'View and browse through the REST calls of MediaMosa.',
     'page callback' => '_mediamosa_maintenance_browse_restcall_page',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_RESTCALLS),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_RESTCALLS),
     'file' => 'mediamosa_maintenance_browse_restcalls.inc',
   );
-  $items['admin/mediamosa/browse/restcall/list'] = array(
+  $items['admin/mediamosa/tools/restcall/list'] = array(
     'title' => 'Rest calls browser',
     'access arguments' => array('access mediamosa restcalls'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['admin/mediamosa/browse/restcall/%/%'] = array(
+  $items['admin/mediamosa/tools/restcall/%/%'] = array(
     'title' => 'Detail rest calls',
     'description' => 'View the details of a REST call.',
     'page callback' => 'mediamosa_maintenance_browse_restcall_details',
     'page arguments' => array(4, 5),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_RESTCALLS),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_RESTCALLS),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_restcalls.inc',
   );
 
-  $items['admin/mediamosa/browse/log'] = array(
+  $items['admin/mediamosa/reports/log'] = array(
     'title' => 'Log entries',
     'description' => 'The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. It is vital to check the MediaMosa report on a regular basis as it is often the only way to tell what is going on.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_maintenance_browse_log_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_LOG),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_LOG),
     'file' => 'mediamosa_maintenance_browse_log.inc',
   );
-  $items['admin/mediamosa/browse/log/list'] = array(
+  $items['admin/mediamosa/reports/log/list'] = array(
     'title' => 'Log entries',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/browse/revision'] = array(
+  $items['admin/mediamosa/content/revision'] = array(
     'title' => 'Revisions',
     'description' => 'Browse through all revisions of MediaMosa servers, transcode profiles, settings and client applications.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_revision_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_REVISIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_REVISIONS),
     'file' => 'mediamosa_maintenance_browse_revision.inc',
   );
-  $items['admin/mediamosa/browse/revision/list'] = array(
+  $items['admin/mediamosa/content/revision/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/browse/revision/%/%'] = array(
+  $items['admin/mediamosa/content/revision/%/%'] = array(
     'title' => 'Revision',
     'page callback' => '_mediamosa_maintenance_view_revision',
     'page arguments' => array(4, 5),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_REVISIONS),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_REVISIONS),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_revision.inc',
   );
-  $items['admin/mediamosa/browse/revision/%/%/view'] = array(
+  $items['admin/mediamosa/content/revision/%/%/view'] = array(
     'title' => 'View',
     'type' => MENU_CALLBACK,
     'weight' => -10,
     'file' => 'mediamosa_maintenance_browse_revision.inc',
   );
 
-  $items['admin/mediamosa/browse/errorcode'] = array(
+  $items['admin/mediamosa/content/errorcode'] = array(
     'title' => 'Errorcode management',
     'description' => 'Browse through MediaMosa REST Error response codes.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_errorcode_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ERRORCODES),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ERRORCODES),
     'file' => 'mediamosa_maintenance_browse_errorcode.inc',
   );
-  $items['admin/mediamosa/browse/errorcode/list'] = array(
+  $items['admin/mediamosa/content/errorcode/list'] = array(
     'title' => 'List',
     'access arguments' => array('access mediamosa errorcodes'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/browse/errorcode/%/edit'] = array(
+  $items['admin/mediamosa/content/errorcode/%/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_errorcode_edit_form', 4),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_ERRORCODES),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_ERRORCODES),
     'weight' => 0,
     'type' => MENU_CALLBACK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'mediamosa_maintenance_browse_errorcode.inc',
   );
 
-  $items['admin/mediamosa/browse/testing'] = array(
+  $items['admin/mediamosa/tools/testing'] = array(
     'title' => 'Testing',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_test_form'),
     'description' => 'Run our MediaMosa tests against MediaMosa core and MediaMosa modules. These tests help assure that MediaMosa is working as designed.',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TESTING),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_TESTING),
     'file' => 'mediamosa_maintenance_browse_simpletest.inc',
   );
-  $items['admin/mediamosa/browse/testing/list'] = array(
+  $items['admin/mediamosa/tools/testing/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['admin/mediamosa/browse/testing/settings'] = array(
+  $items['admin/mediamosa/tools/testing/settings'] = array(
     'title' => 'Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_simpletest_settings_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TESTING_SETTINGS),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_TESTING_SETTINGS),
     'type' => MENU_LOCAL_TASK,
     'file' => 'mediamosa_maintenance_browse_simpletest.inc',
   );
 
-  $items['admin/mediamosa/browse/testing/results/%'] = array(
+  $items['admin/mediamosa/tools/testing/results/%'] = array(
     'title' => 'Test result',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_simpletest_result_form', 5),
     'description' => 'View result of tests.',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TESTING),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_TESTING),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance_browse_simpletest.inc',
   );
 
-//  $items['admin/mediamosa/browse/js/collection/searchparameters'] = array(
-//    'page callback' => '_ajax_browse_collection_search_parameters',
-//    'delivery callback' => 'ajax_deliver',
-//    'access callback' => TRUE,
-//    'type' => MENU_CALLBACK,
-//    'file' => 'mediamosa_maintenance_browse_collection.inc',
-//  );
-
-  $items['admin/mediamosa/browse/js/asset/searchparameters'] = array(
+  $items['admin/mediamosa/content/js/asset/searchparameters'] = array(
     'page callback' => '_ajax_browse_asset_search_parameters',
     'delivery callback' => 'ajax_deliver',
     'access callback' => TRUE,
@@ -394,23 +390,23 @@ function mediamosa_maintenance_browse_menu() {
     'file' => 'mediamosa_maintenance_browse_asset.inc',
   );
 
-  $items['admin/mediamosa/browse/failure'] = array(
+  $items['admin/mediamosa/content/failure'] = array(
     'title' => 'Failed jobs',
     'description' => 'View failed jobs.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_job_failures_page'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_JOB_FAILURE),
+    'access arguments' => array(mediamosa_permission::ACCESS_CONTENT_JOB_FAILURE),
     'file' => 'mediamosa_maintenance_browse_job_failures.inc',
   );
 
-  $items['admin/mediamosa/browse/transcode_length_deviation'] = array(
+  $items['admin/mediamosa/tools/transcode_length_deviation'] = array(
     'title' => 'Transcode length deviation',
     'description' => 'View transcodings that deviate in length from the original upload.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_browse_transcode_length_deviation_page'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_TRANSCODE_LENGTH_DEVIATION),
     'file' => 'mediamosa_maintenance_browse_transcode_length_deviation.inc',
   );
 
@@ -431,7 +427,7 @@ function _mediamosa_browse_asset_title($asset_id) {
   $params = array(
     'view_hidden_metadata' => 'TRUE',
   );
-  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
+  $response = mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
   if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
     return t('Asset not found');
   }

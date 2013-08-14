@@ -151,60 +151,65 @@ function mediamosa_permission() {
       'description' => t($text_view_switch, array('@type' => 'status job')),
     ),
 
-    mediamosa_permission::ACCESS_BROWSE =>  array(
-      'title' => t('Access MediaMosa browse'),
-      'description' => t($text_master_switch, array('@type' => 'browse')),
+    mediamosa_permission::ACCESS_CONTENT =>  array(
+      'title' => t('Access MediaMosa content'),
+      'description' => t($text_master_switch, array('@type' => 'content')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_ASSETS => array(
-      'title' => t('Access MediaMosa browse (assets)'),
+    mediamosa_permission::ACCESS_CONTENT_ASSETS => array(
+      'title' => t('Access MediaMosa content (assets)'),
       'description' => t($text_view_switch, array('@type' => 'assets')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_COLLECTIONS =>  array(
-      'title' => t('Access MediaMosa browse (collections)'),
+    mediamosa_permission::ACCESS_CONTENT_COLLECTIONS =>  array(
+      'title' => t('Access MediaMosa content (collections)'),
       'description' => t($text_view_switch, array('@type' => 'collections')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_RESTCALLS =>  array(
-      'title' => t('Access MediaMosa browse (REST calls)'),
-      'description' => t($text_view_switch, array('@type' => 'restcalls')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_REVISIONS =>  array(
-      'title' => t('Access MediaMosa browse (revisions)'),
+    mediamosa_permission::ACCESS_CONTENT_REVISIONS =>  array(
+      'title' => t('Access MediaMosa content (revisions)'),
       'description' => t($text_view_switch, array('@type' => 'revisions')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_LOG =>  array(
-      'title' => t('Access MediaMosa browse (log)'),
-      'description' => t($text_view_switch, array('@type' => 'log')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_ERRORCODES =>  array(
-      'title' => t('Access MediaMosa browse (errorcodes)'),
+    mediamosa_permission::ACCESS_CONTENT_ERRORCODES =>  array(
+      'title' => t('Access MediaMosa content (errorcodes)'),
       'description' => t($text_view_switch, array('@type' => 'errorcodes')),
     ),
     mediamosa_permission::ACCESS_EDIT_ERRORCODES =>  array(
-      'title' => t('Edit MediaMosa browse (errorcodes)'),
+      'title' => t('Edit MediaMosa content (errorcodes)'),
       'description' => t($text_edit_switch, array('@type' => 'errorcodes')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_TESTING =>  array(
-      'title' => t('Access MediaMosa browse (testing)'),
-      'description' => t($text_view_switch, array('@type' => 'testing')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_TESTING_SETTINGS =>  array(
-      'title' => t('Access MediaMosa browse (testing settings)'),
-      'description' => t($text_view_switch, array('@type' => 'testing settings')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_BATCH =>  array(
-      'title' => t('Access MediaMosa browse (batch jobs)'),
-      'description' => t($text_view_switch, array('@type' => 'batch jobs')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_FILE_INTEGRITY =>  array(
-      'title' => t('Access MediaMosa browse (errorcodes)'),
-      'description' => t($text_view_switch, array('@type' => 'file integrity')),
-    ),
-    mediamosa_permission::ACCESS_BROWSE_JOB_FAILURE =>  array(
-      'title' => t('Access MediaMosa browse (failured job)'),
+    mediamosa_permission::ACCESS_CONTENT_JOB_FAILURE =>  array(
+      'title' => t('Access MediaMosa tools (failured job)'),
       'description' => t($text_view_switch, array('@type' => 'failured job')),
     ),
-    mediamosa_permission::ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION =>  array(
-      'title' => t('Access MediaMosa browse (transcode length deviation)'),
+
+    mediamosa_permission::ACCESS_TOOLS =>  array(
+      'title' => t('Access MediaMosa tools'),
+      'description' => t($text_master_switch, array('@type' => 'tools')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_RESTCALLS =>  array(
+      'title' => t('Access MediaMosa tools (REST calls)'),
+      'description' => t($text_view_switch, array('@type' => 'restcalls')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_LOG =>  array(
+      'title' => t('Access MediaMosa tools (log)'),
+      'description' => t($text_view_switch, array('@type' => 'log')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_BATCH =>  array(
+      'title' => t('Access MediaMosa tools (batch jobs)'),
+      'description' => t($text_view_switch, array('@type' => 'batch jobs')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_TESTING =>  array(
+      'title' => t('Access MediaMosa tools (testing)'),
+      'description' => t($text_view_switch, array('@type' => 'testing')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_TESTING_SETTINGS =>  array(
+      'title' => t('Access MediaMosa tools (testing settings)'),
+      'description' => t($text_view_switch, array('@type' => 'testing settings')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_FILE_INTEGRITY =>  array(
+      'title' => t('Access MediaMosa tools (errorcodes)'),
+      'description' => t($text_view_switch, array('@type' => 'file integrity')),
+    ),
+    mediamosa_permission::ACCESS_TOOLS_TRANSCODE_LENGTH_DEVIATION =>  array(
+      'title' => t('Access MediaMosa tools (transcode length deviation)'),
       'description' => t($text_view_switch, array('@type' => 'transcode length deviation')),
     ),
 
@@ -232,6 +237,7 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa statistics (streaming requests)'),
       'description' => t($text_view_switch, array('@type' => 'statistics streaming per file')),
     ),
+
     mediamosa_permission::ACCESS_CONFIG =>  array(
       'title' => t('Access MediaMosa configuration'),
       'description' => t($text_master_switch, array('@type' => 'configuration')),

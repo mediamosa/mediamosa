@@ -24,10 +24,10 @@ class mediamosa_settings {
   const UUID_LENGTH = 24;
 
   // URL to asset. (lib function mediamosa_lib::l_asset($asset_id, $text);)
-  const URL_ASSET = 'admin/mediamosa/browse/asset/@asset_id';
+  const URL_ASSET = 'admin/mediamosa/content/asset/@asset_id';
 
   // URL to collection. (lib function mediamosa_lib::l_collection($coll_id, $text);)
-  const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
+  const URL_COLLECTION = 'admin/mediamosa/content/collection/@coll_id';
 
   // Path to icon.
   const PATH_ICON = '/lib/misc/mediamosa-logo-16x16.png';

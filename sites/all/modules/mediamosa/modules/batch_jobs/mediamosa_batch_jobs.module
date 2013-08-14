@@ -45,62 +45,62 @@ function mediamosa_batch_jobs_perm() {
 function mediamosa_batch_jobs_menu() {
   $items = array();
 
-  $items['admin/mediamosa/browse/ftp_batch'] = array(
+  $items['admin/mediamosa/tools/ftp_batch'] = array(
     'title' => 'Batch jobs',
     'description' => 'Batch jobs.',
     'page callback' => 'mediamosa_batch_jobs_current',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_NORMAL_ITEM
   );
-  $items['admin/mediamosa/browse/ftp_batch/current'] = array(
+  $items['admin/mediamosa/tools/ftp_batch/current'] = array(
     'title' => 'Current ftp batch job',
     'description' => 'Display the current job.',
     'page callback' => 'mediamosa_batch_jobs_current',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 1
   );
-  $items['admin/mediamosa/browse/ftp_batch/queue'] = array(
+  $items['admin/mediamosa/tools/ftp_batch/queue'] = array(
     'title' => 'Queue',
     'description' => 'Display the job queue.',
     'page callback' => 'mediamosa_batch_jobs_queue',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 2
   );
-  $items['admin/mediamosa/browse/ftp_batch/queue/delete'] = array(
+  $items['admin/mediamosa/tools/ftp_batch/queue/delete'] = array(
     'title' => 'Remove from queue',
     'description' => 'Remove an item from the queue.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_batch_jobs_delete_confirm', 1),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_CALLBACK,
     'weight' => 3
   );
-  $items['admin/mediamosa/browse/ftp_batch/history'] = array(
+  $items['admin/mediamosa/tools/ftp_batch/history'] = array(
     'title' => 'History',
     'description' => 'Display the job history.',
     'page callback' => 'mediamosa_batch_jobs_history',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 4
   );
-  $items['admin/mediamosa/browse/ftp_batch/log'] = array(
+  $items['admin/mediamosa/tools/ftp_batch/log'] = array(
     'title' => 'Log',
     'description' => 'Display the job log.',
     'page callback' => 'mediamosa_batch_jobs_log',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
+    'access arguments' => array(mediamosa_permission::ACCESS_TOOLS_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_CALLBACK,
     'weight' => 5

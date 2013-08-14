@@ -39,7 +39,7 @@ function mediamosa_maintenance_browse_errorcode_form() {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
   drupal_set_breadcrumb($breadcrumb);
 
   $header = array(
@@ -65,7 +65,7 @@ function mediamosa_maintenance_browse_errorcode_form() {
     $actions = array();
 
     if (_mediamosa_user_access(mediamosa_permission::ACCESS_EDIT_ERRORCODES)) {
-      $actions[] = l(t('Edit'), 'admin/mediamosa/browse/errorcode/' . $errorcode[mediamosa_error_db::ID] . '/edit', $l_options);
+      $actions[] = l(t('Edit'), 'admin/mediamosa/content/errorcode/' . $errorcode[mediamosa_error_db::ID] . '/edit', $l_options);
     }
 
     $rows[] = array('data' =>
@@ -99,8 +99,8 @@ function mediamosa_maintenance_browse_errorcode_edit_form($form, &$form_state, $
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Errorcode management'), 'admin/mediamosa/browse/errorcode');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Errorcode management'), 'admin/mediamosa/content/errorcode');
   drupal_set_breadcrumb($breadcrumb);
 
   $form = array();

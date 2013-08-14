@@ -29,25 +29,25 @@ class mediamosa_permission {
   const ACCESS_STATUS_SERVERS = 'mediamosa|access|status|servers';
   const ACCESS_STATUS_JOB = 'mediamosa|access|status|job';
 
-  // Browse page.
-  const ACCESS_BROWSE = 'mediamosa|access|browse';
-  const ACCESS_BROWSE_ASSETS = 'mediamosa|access|browse|assets';
-  const ACCESS_BROWSE_COLLECTIONS = 'mediamosa|access|browse|collections';
-  const ACCESS_BROWSE_RESTCALLS = 'mediamosa|access|browse|restcalls';
-  const ACCESS_BROWSE_REVISIONS = 'mediamosa|access|browse|revisions';
-  const ACCESS_BROWSE_LOG = 'mediamosa|access|browse|log';
-  const ACCESS_BROWSE_ERRORCODES = 'mediamosa|access|browse|errorcodes';
-  const ACCESS_BROWSE_TESTING = 'mediamosa|access|browse|testing';
-  const ACCESS_BROWSE_TESTING_SETTINGS = 'mediamosa|access|browse|testing|settings';
-  const ACCESS_BROWSE_BATCH = 'mediamosa|access|browse|batch';
-  const ACCESS_BROWSE_FILE_INTEGRITY = 'mediamosa|access|browse|file_integrity';
-  const ACCESS_BROWSE_JOB_FAILURE = 'mediamosa|access|browse|job_failure';
-  const ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION = 'mediamosa|access|browse|transcode_length_deviation';
-
   // Content page.
   const ACCESS_CONTENT = 'mediamosa|access|content';
-  const ACCESS_CONTENT_UPLOAD = 'mediamosa|access|content|upload';
-  const ACCESS_CONTENT_SUPPLIER = 'mediamosa|access|content|supplier';
+  const ACCESS_CONTENT_ASSETS = 'mediamosa|access|content|assets';
+  const ACCESS_CONTENT_COLLECTIONS = 'mediamosa|access|content|collections';
+  const ACCESS_CONTENT_REVISIONS = 'mediamosa|access|content|revisions';
+  const ACCESS_CONTENT_ERRORCODES = 'mediamosa|access|content|errorcodes';
+
+  // Tools page.
+  const ACCESS_TOOLS = 'mediamosa|access|tools';
+  const ACCESS_TOOLS_RESTCALLS = 'mediamosa|access|tools|restcalls';
+  const ACCESS_TOOLS_LOG = 'mediamosa|access|tools|log';
+  const ACCESS_TOOLS_TESTING = 'mediamosa|access|tools|testing';
+  const ACCESS_TOOLS_TESTING_SETTINGS = 'mediamosa|access|tools|testing|settings';
+  const ACCESS_TOOLS_BATCH = 'mediamosa|access|tools|batch';
+  const ACCESS_TOOLS_FILE_INTEGRITY = 'mediamosa|access|tools|file_integrity';
+  const ACCESS_CONTENT_JOB_FAILURE = 'mediamosa|access|tools|job_failure';
+  const ACCESS_TOOLS_TRANSCODE_LENGTH_DEVIATION = 'mediamosa|access|tools|transcode_length_deviation';
+  const ACCESS_TOOLS_UPLOAD = 'mediamosa|access|tools|upload';
+  const ACCESS_TOOLS_SUPPLIER = 'mediamosa|access|tools|supplier';
 
   // Start right.
   const ACCESS_START_FILE_INTEGRITY_START = 'mediamosa|start|file_integrity';
