@@ -535,7 +535,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     $timer = timer_stop('simpletest');
     if (strlen($result) == 0) {
-      trigger_error(t('Got zero length body. Total time (ms):@ms', array('@ms' => $timer['run'])), E_ERROR);
+      trigger_error(t('Got zero length body. Total time (ms):@ms', array('@ms' => $timer['run'])), E_USER_ERROR);
       error_log(t('Got zero length body. Total time (ms):@ms', array('@ms' => $timer['run'])));
     }
 
