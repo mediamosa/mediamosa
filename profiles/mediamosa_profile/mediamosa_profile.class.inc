@@ -273,12 +273,12 @@ class mediamosa_profile {
   public static function requirements_php_settings() {
 
     $requirements = array();
-
+ 
     $php_upload_max_filesize = ini_get('upload_max_filesize');
-    $too_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
+    $too_low = ($php_upload_max_filesize > 0) && (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
     $requirements['upload_max_filesize'] = array(
       'title' => '<b>' . st('upload_max_filesize:') . '</b>',
-      'value' => $php_upload_max_filesize,
+      'value' => $php_upload_max_filesize ? $php_upload_max_filesize : st('unlimited'),
       'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
       'description' => !$too_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
     );
