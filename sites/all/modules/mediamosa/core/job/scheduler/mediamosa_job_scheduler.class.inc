@@ -1437,7 +1437,7 @@ class mediamosa_job_scheduler {
     // Timeout upload jobs in progress and waiting which have no activity.
     $select_timeouted_jobs = db_select(mediamosa_job_upload_db::TABLE_NAME, 'ju')
       ->fields('ju', array(mediamosa_job_upload_db::JOB_ID));
-    $select_timeouted_jobs->where('TIMEDIFF(UTC_TIMESTAMP(), changed) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_UPLOAD_TIMEOUT));
+    $select_timeouted_jobs->where('TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), changed)) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_UPLOAD_TIMEOUT));
 
     mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
       ->fields(array(
@@ -1457,7 +1457,7 @@ class mediamosa_job_scheduler {
         mediamosa_job_db::ERROR_DESCRIPTION => strtr('Job has timed out (max. #JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_UPLOAD_TIMEOUT)),
       ))
       ->condition(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_INPROGRESS);
-    $query->where('TIMEDIFF(UTC_TIMESTAMP(), changed) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_JOB_TIMEOUT));
+    $query->where('TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), changed)) > :upload_timeout', array(':upload_timeout' => mediamosa_settings::JOB_JOB_TIMEOUT));
     $query->execute();
   }
 
