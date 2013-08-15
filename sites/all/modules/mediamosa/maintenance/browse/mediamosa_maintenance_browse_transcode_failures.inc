@@ -10,13 +10,6 @@ define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
  * Build the form for browsing collections.
  */
 function mediamosa_browse_transcode_failures_page($form) {
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  drupal_set_breadcrumb($breadcrumb);
-
   $build = array();
 
   //$build['collection_filter'] = drupal_get_form('mediamosa_browse_transcode_failures_filter_form');

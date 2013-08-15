@@ -9,13 +9,6 @@
  * Show a selection of the watchdog in our own log viewer.
  */
 function _mediamosa_maintenance_browse_log_form() {
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  drupal_set_breadcrumb($breadcrumb);
-
   $rows = array();
   $icons = array(
     WATCHDOG_DEBUG     => '',

@@ -12,13 +12,6 @@ module_load_include('inc', 'simpletest', 'simpletest.pages');
  */
 function mediamosa_maintenance_browse_test_form($form) {
 
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
-  drupal_set_breadcrumb($breadcrumb);
-
   $form['tests'] = array(
     '#type' => 'fieldset',
     '#title' => t('Tests'),

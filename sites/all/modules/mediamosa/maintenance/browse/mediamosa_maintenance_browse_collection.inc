@@ -10,13 +10,6 @@ define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
  * Build the form for browsing collections.
  */
 function _mediamosa_browse_collection_page($op = 'list') {
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  drupal_set_breadcrumb($breadcrumb);
-
   return drupal_get_form('mediamosa_browse_collection_filter_form');
 }
 
@@ -322,15 +315,6 @@ function _mediamosa_browse_collection_session($filter_form_state = array()) {
  * View the details of an collection.
  */
 function _mediamosa_browse_collection_page_view($coll_id) {
-  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/content/collection');
-  drupal_set_breadcrumb($breadcrumb);
-
   // Get the collection.
   $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('collection/@coll_id', array('@coll_id' => rawurlencode($coll_id))) , 'GET');
 

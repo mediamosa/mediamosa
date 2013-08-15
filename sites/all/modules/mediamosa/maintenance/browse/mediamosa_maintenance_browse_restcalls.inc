@@ -8,13 +8,6 @@
  * The main REST call browse page.
  */
 function _mediamosa_maintenance_browse_restcall_page() {
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
-  drupal_set_breadcrumb($breadcrumb);
-
   // Add our CSS.
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse_restcalls.css');
 
@@ -409,15 +402,6 @@ function _mediamosa_maintenance_browse_restcall_list() {
  * View specific details of a REST call.
  */
 function mediamosa_maintenance_browse_restcall_details($uri, $method) {
-  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Tools'), 'admin/mediamosa/tools');
-  $breadcrumb[] = l(t('Rest calls browser'), 'admin/mediamosa/tools/restcall');
-  drupal_set_breadcrumb($breadcrumb);
-
   $uri = str_replace('-', '/', $uri);
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
   $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');

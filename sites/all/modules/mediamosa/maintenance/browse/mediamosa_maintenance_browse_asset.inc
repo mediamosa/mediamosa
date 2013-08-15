@@ -10,14 +10,6 @@ define('MEDIAMOSA_BROWSE_FILTER_ASSET', 'mediafile_browse_asset');
  * Build the form for browsing assets.
  */
 function _mediamosa_browse_asset_page() {
-
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  drupal_set_breadcrumb($breadcrumb);
-
   return drupal_get_form('mediamosa_browse_asset_filter_form');
 }
 
@@ -382,15 +374,6 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
  * View the details of an asset.
  */
 function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
-  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/content/asset');
-  drupal_set_breadcrumb($breadcrumb);
-
   // Get the asset.
   $params = array(
     'view_hidden_metadata' => 'TRUE',
@@ -441,7 +424,6 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
 function _mediamosa_browse_asset_page_view_properties($asset) {
 
   $variables = array(
-//    'description' => t('Details for this asset are shown below.'),
     'properties' => array(
       t('App ID') => $asset[mediamosa_asset_db::APP_ID],
       t('Owner ID') => $asset[mediamosa_asset_db::OWNER_ID],
@@ -498,6 +480,7 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
   }
 
   $variables = array(
+    'metadata' => array(),
     //'metadata_description' => t('Metadata properties for the asset.'),
   );
 
@@ -516,7 +499,7 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
   }
 
   return array(
-    '#title' => t('Metadata'),
+    '#title' => t('Metadata (@total)', array('@total' => count($variables['metadata']))),
     '#type' => 'fieldset',
     '#group' => 'mediamosa_asset',
     '#collapsed' => TRUE,
@@ -911,14 +894,6 @@ function _mediamosa_browse_asset_page_view_supplements_list($asset) {
  * @see mediamosa_browse_asset_form_submit()
  */
 function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
-  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
-  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/content/asset');
-  drupal_set_breadcrumb($breadcrumb);
 
   // Do REST call.
   $result_asset = mediamosa_response_connector::static_do_restcall_drupal('asset/' . $asset_id, 'GET', array());
@@ -948,8 +923,8 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
     '#value' => $asset_id,
   );
 
-  // Build form for editing the metdata.
-  foreach ($metadata_groups as $group_name => $group_id) {
+  // Build form for editing the metadata.
+  foreach (array_keys($metadata_groups) as $group_name) {
     if (empty($asset[$group_name])) {
       continue;
     }
