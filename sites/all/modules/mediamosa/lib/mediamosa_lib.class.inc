@@ -277,4 +277,36 @@ class mediamosa_lib {
 
     return implode("\n", $diff);
   }
+
+  /**
+   * Return the config value in bytes.
+   *
+   * @param string $val
+   *   The string value to convert.
+   *
+   * @return int
+   *   The byte value.
+   */
+  public static function php_config_value_to_bytes($val) {
+    $val = trim($val);
+
+    if (drupal_strlen($val) > 1) {
+      $last = drupal_substr($val, -1, 1);
+      switch($last) {
+        case 'g':
+        case 'G':
+          return drupal_substr($val, 0, -1) * 1073741824;
+
+        case 'm':
+        case 'M':
+          return drupal_substr($val, 0, -1) * 1048576;
+
+        case 'k':
+        case 'K':
+          return drupal_substr($val, 0, -1) * 1024;
+      }
+    }
+
+    return (int) $val;
+  }
 }

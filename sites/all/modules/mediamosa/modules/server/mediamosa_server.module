@@ -112,10 +112,135 @@ function mediamosa_server_mediamosa_register_rest_call() {
   $rest_calls['server/status'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve information about the (process) server.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_server',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $rest_calls['server/status/upload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_5_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT,
+  );
+
+  $rest_calls['server/status/upload/$server_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_upload_details',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_5_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_server_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['server/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the status of the all servers.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve information about the (process) server.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'server/status',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['server/status/upload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the status of the upload servers.',
+    mediamosa_rest_call::DESCRIPTION => 'Front ends can use this call to retrieve the upload settings (PHP) for front ends. Do not request this REST call often, as it will do requests to the upload server(s) during the request to give you real time information. Best is to cache this information, specially about the maximum allowed upload size.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'server/upload',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'items/item/real_max_upload_bytes' => 'Use this value to calculate maximum allowed upload size in bytes. With multiple upload servers, choose the lowest value.',
+      'items/item/php' => 'This array contains the PHP settings related to upload for the specific upload server.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header>
+    <item_count>1</item_count>
+    <item_count_total>1</item_count_total>
+    <item_offset>0</item_offset>
+    <request_class>mediamosa_rest_call_server_upload</request_class>
+    <request_matched_method>GET</request_matched_method>
+    <request_matched_uri>/server/upload</request_matched_uri>
+    <request_result>success</request_result>
+    <request_result_description/>
+    <request_result_id>601</request_result_id>
+    <request_uri>[GET] server/upload/</request_uri>
+    <version>3.5.x.2030-dev</version>
+    <request_process_time>0.129</request_process_time>
+  </header>
+  <items>
+    <item>
+      <server_id>14</server_id>
+      <version>0</version>
+      <server_status>ON</server_status>
+      <server_type>UPLOAD</server_type>
+      <server_uri>http://upload1.mediamosa.local/</server_uri>
+      <server_path>{base_uri}mediafile/upload?upload_ticket={TICKET}</server_path>
+      <description>Default upload server 1</description>
+      <containers/>
+      <mime_type/>
+      <object_code/>
+      <server_name>Default upload server 1</server_name>
+      <slots>0</slots>
+      <tools/>
+      <uri_upload_progress>{base_uri}uploadprogress?id={PROGRESS_ID}</uri_upload_progress>
+      <uri_upload_progress_server>{base_uri}progress?X-Progress-ID={PROGRESS_ID}</uri_upload_progress_server>
+      <uri_upload_progress_server_type>APC</uri_upload_progress_server_type>
+      <php>
+        <file_uploads>1</file_uploads>
+        <upload_tmp_dir>/var/tmp</upload_tmp_dir>
+        <upload_max_filesize>0</upload_max_filesize>
+        <upload_max_filesize_bytes>0</upload_max_filesize_bytes>
+        <post_max_size>4090M</post_max_size>
+        <post_max_size_bytes>4288675840</post_max_size_bytes>
+        <max_file_uploads>20</max_file_uploads>
+      </php>
+      <real_max_upload_bytes>4288675840</real_max_upload_bytes>
+    </item>
+    <item>
+      <server_id>15</server_id>
+      <version>0</version>
+      <server_status>ON</server_status>
+      <server_type>UPLOAD</server_type>
+      <server_uri>http://upload2.mediamosa.local/</server_uri>
+      <server_path>{base_uri}mediafile/upload?upload_ticket={TICKET}</server_path>
+      <description>Default upload server 2</description>
+      <containers/>
+      <mime_type/>
+      <object_code/>
+      <server_name>Default upload server 2</server_name>
+      <slots>0</slots>
+      <tools/>
+      <uri_upload_progress>{base_uri}uploadprogress?id={PROGRESS_ID}</uri_upload_progress>
+      <uri_upload_progress_server>{base_uri}progress?X-Progress-ID={PROGRESS_ID}</uri_upload_progress_server>
+      <uri_upload_progress_server_type>APC</uri_upload_progress_server_type>
+      <php>
+        <file_uploads>1</file_uploads>
+        <upload_tmp_dir>/var/tmp</upload_tmp_dir>
+        <upload_max_filesize>0</upload_max_filesize>
+        <upload_max_filesize_bytes>0</upload_max_filesize_bytes>
+        <post_max_size>4090M</post_max_size>
+        <post_max_size_bytes>4288675840</post_max_size_bytes>
+        <max_file_uploads>20</max_file_uploads>
+      </php>
+      <real_max_upload_bytes>4288675840</real_max_upload_bytes>
+    </item>
+  </items>
+</response>',
+  );
+
+  $rest_calls['server/status/upload/$server_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the status the current upload server instance.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve detail information about the upload settings on this server instance. Internal call only, use server/upload/status instead as client.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'server/upload/4',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   return $rest_calls;

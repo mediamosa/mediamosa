@@ -23,6 +23,16 @@ class mediamosa_response extends mediamosa {
   const RESPONSE_TYPE_XML_OEMBED = 'xml_oembed';
   const RESPONSE_TYPE_JSON_OEMBED = 'json_oembed';
 
+  // Result headers.
+  const RESPONSE_REQUEST_RESULT = 'request_result';
+  const RESPONSE_REQUEST_RESULT_DESCRIPTION = 'request_result_description';
+  const RESPONSE_REQUEST_RESULT_ID = 'request_result_id';
+  const RESPONSE_REQUEST_URI = 'request_uri';
+  const RESPONSE_ITEM_COUNT = 'item_count';
+  const RESPONSE_ITEM_COUNT_TOTAL = 'item_count_total';
+  const RESPONSE_ITEM_OFFSET = 'item_offset';
+  const RESPONSE_VERSION = 'version';
+
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'download';
 
@@ -388,7 +398,7 @@ class mediamosa_response extends mediamosa {
           // Any error during REST call we'll handle here.
           if ($this->response['header']['request_result'] == self::ERROR) {
             header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-            $output = $this->response['header']['request_result_description'];
+            $output = $this->response['header'][self::RESPONSE_REQUEST_RESULT_DESCRIPTION];
           }
           break;
 
@@ -454,12 +464,12 @@ class mediamosa_response extends mediamosa {
      */
     $this->response = array(
       'header' => array(
-        'request_result' => self::SUCCESS,
-        'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
-        'request_result_description' => '',
-        'request_uri' => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
-        'item_count' => 0,
-        'version' => mediamosa_version::MEDIAMOSA_VERSION,
+        self::RESPONSE_REQUEST_RESULT => self::SUCCESS,
+        self::RESPONSE_REQUEST_RESULT_ID => mediamosa_error::ERRORCODE_OKAY,
+        self::RESPONSE_REQUEST_RESULT_DESCRIPTION => '',
+        self::RESPONSE_REQUEST_URI => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
+        self::RESPONSE_ITEM_COUNT => 0,
+        self::RESPONSE_VERSION => mediamosa_version::MEDIAMOSA_VERSION,
       ),
       'items' => array()
     );
@@ -477,7 +487,8 @@ class mediamosa_response extends mediamosa {
   /**
    * Add one item to the output.
    *
-   * @param array $a_item
+   * @param array $item
+   *   The item with data to add.
    */
   public function add_item($item) {
     $this->response['items'][++$this->item_count] = $item;
@@ -531,9 +542,9 @@ class mediamosa_response extends mediamosa {
    * @param string $request_result_description
    */
   public function set_result($request_result, $request_result_id, $request_result_description = FALSE) {
-    $this->response['header']['request_result'] = $request_result;
-    $this->response['header']['request_result_id'] = $request_result_id;
-    $this->response['header']['request_result_description'] = $request_result_description !== FALSE ? $request_result_description : mediamosa_error::error_code_find_description($request_result_id);
+    $this->response['header'][self::RESPONSE_REQUEST_RESULT] = $request_result;
+    $this->response['header'][self::RESPONSE_REQUEST_RESULT_ID] = $request_result_id;
+    $this->response['header'][self::RESPONSE_REQUEST_RESULT_DESCRIPTION] = $request_result_description !== FALSE ? $request_result_description : mediamosa_error::error_code_find_description($request_result_id);
   }
 
   /**

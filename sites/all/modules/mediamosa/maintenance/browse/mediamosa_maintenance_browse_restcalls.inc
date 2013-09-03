@@ -492,7 +492,7 @@ function template_preprocess_restcall_doc(&$variables) {
 
   // Build up the text explaning the access.
   if ($mediamosa_rest_call->access == mediamosa_rest_call::ACCESS_AUTHENTICATED_ONLY) {
-    $request_authorization[] = t('needs EGA authentication.');
+    $request_authorization[] = t('needs client application authentication.');
   }
   elseif ($mediamosa_rest_call->access == mediamosa_rest_call::ACCESS_EXTERNAL_ONLY) {
     $request_authorization[] = t('does not need any authentication.');
@@ -502,7 +502,7 @@ function template_preprocess_restcall_doc(&$variables) {
   }
   else {
     if ($mediamosa_rest_call->access & mediamosa_rest_call::ACCESS_AUTHENTICATED) {
-      $request_authorization[] =  t('can be accessed by EGA authentication');
+      $request_authorization[] =  t('can be accessed by client application authentication');
     }
     if ($mediamosa_rest_call->access & mediamosa_rest_call::ACCESS_EXTERNAL) {
       $request_authorization[] =  t('can be accessed without authentication');

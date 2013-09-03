@@ -74,7 +74,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $uuid = rand(1000000, 9999999);
 
     $url = mediamosa_http::expectHTTP($server_upload[mediamosa_server_db::SERVER_URI]);
-    
+
     // Set response.
     $mediamosa->add_item(
       array(

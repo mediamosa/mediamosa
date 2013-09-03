@@ -78,6 +78,13 @@ class mediamosa_server {
   }
 
   /**
+   * Get all upload servers.
+   */
+  public static function get_upload_servers($enabled_status = array(mediamosa_server_db::SERVER_STATUS_ON, mediamosa_server_db::SERVER_STATUS_CLOSE, mediamosa_server_db::SERVER_STATUS_OFF)) {
+    return self::get_enabled(array(mediamosa_server_db::SERVER_TYPE_UPLOAD), $enabled_status);
+  }
+
+  /**
    * Get upload server by its node ID.
    *
    * @param integer $nid
@@ -137,6 +144,38 @@ class mediamosa_server {
     $response = mediamosa_http::do_internal_call($uri, 'server/status?include_status=TRUE');
     if ($response->code != '200') {
       self::log('Call to server/status did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+    }
+
+    if (!empty($response->data)) {
+      $xml = new mediamosa_connector_response($response->data);
+
+      if (isset($xml->items->item)) {
+        return $xml->items->item;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Get the status report of an REST interface.
+   *
+   * Will do an internal REST call to server to retrieve the status report.
+   *
+   * @param string $uri
+   *   The URI of the REST interface.
+   * @param int $server_id
+   *   The Node ID of the server.
+   *
+   * @return SimpleXMLElement
+   *   The generated XML report or FALSE.
+   */
+  public static function getStatusUpload($uri, $server_id) {
+    // Do call.
+    $response = mediamosa_http::do_internal_call($uri, 'server/status/upload/' . (int) $server_id);
+    if ($response->code != '200') {
+      self::log('Call to server/status did not return a 200 result (header: @headers)', array('@headers' => var_export($response->headers, TRUE)));
+      return FALSE;
     }
 
     if (!empty($response->data)) {
