@@ -21,6 +21,8 @@ You should have received a copy of the GNU General Public License
 along with this program as the file LICENSE.txt; if not, please see
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
 
+Join our official Google+ communitie
+* https://plus.google.com/u/0/communities/108771938512877203754
 
 # Using our source code from GitHub
 MediaMosa 3.4 and higher now includes the MediaMosa CK module. The MediaMosa SDK
