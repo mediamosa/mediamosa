@@ -522,6 +522,68 @@ function drush_mediamosa_mm_acl_set($mediafile_id = NULL, $acls = NULL) {
 }
 
 /**
+ * Callback function for mediamosa-mm-acl-get command.
+ *
+ * @param int $mediafile_id
+ *   Mediafile id of the file to get acl rights.
+ */
+function drush_mediamosa_mm_acl_get($mediafile_id = NULL) {
+  if ($mediafile_id == NULL) {
+    return drush_set_error('', dt('Invalid mediafile_id.'));
+  }
+  if (!mediamosa_asset_mediafile::must_exists($mediafile_id)) {
+    return drush_set_error('', dt('mediafile_id does not exists.'));
+  }
+
+  // Get the mediafile info first.
+  $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+  $acl_rights = mediamosa_acl::rights_get($mediafile['app_id'], $mediafile['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, FALSE);
+
+  drush_print('Mediafile id has new acl: ' . print_r($acl_rights, TRUE));
+}
+
+/**
+ * Callback function for mediamosa-mm-acl-set command.
+ *
+ * @param int $mediafile_id
+ *   Mediafile id of the file to set acl rights.
+ */
+function drush_mediamosa_mm_acl_set($mediafile_id = NULL, $acls = NULL) {
+  if ($mediafile_id == NULL) {
+    return drush_set_error('', dt('Invalid mediafile_id.'));
+  }
+  if (!mediamosa_asset_mediafile::must_exists($mediafile_id)) {
+    return drush_set_error('', dt('mediafile_id does not exists.'));
+  }
+
+  // Get the media file.
+  $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+
+  $app_ids = array();
+  $a_acls = explode(',', $acls);
+  $a_acl_realms = array();
+  $a_acl_domains = array();
+  foreach ($a_acls as $item) {
+    if (empty($item)) {
+      continue;
+    }
+    if (strpos($item, '@') === FALSE) {
+      // Domain.
+      $a_acl_domains[$item] = $item;
+    }
+    else {
+      // REALM.
+      $a_acl_realms[$item] = $item;
+    }
+  }
+  // Set access rights.
+  $result_rights_set = mediamosa_acl::rights_set(
+    $mediafile['app_id'], $mediafile['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, $app_ids, array(), array(), $a_acl_domains, $a_acl_realms, 'replace');
+
+  drush_print('Mediafile id has new acl: ' . print_r($result_rights_set, TRUE));
+}
+
+/**
  * Callback function for mediamosa-mm-app-purge command.
  *
  * @param int $app_id
