@@ -244,9 +244,11 @@ function field_update_field($field) {
   // $prior_field may no longer be right.
   module_load_install($field['module']);
   $schema = (array) module_invoke($field['module'], 'field_schema', $field);
-  $schema += array('columns' => array(), 'indexes' => array());
+  $schema += array('columns' => array(), 'indexes' => array(), 'foreign keys' => array());
   // 'columns' are hardcoded in the field type.
   $field['columns'] = $schema['columns'];
+  // 'foreign keys' are hardcoded in the field type.
+  $field['foreign keys'] = $schema['foreign keys'];
   // 'indexes' can be both hardcoded in the field type, and specified in the
   // incoming $field definition.
   $field += array(
@@ -319,7 +321,11 @@ function field_read_field($field_name, $include_additional = array()) {
  * Reads in fields that match an array of conditions.
  *
  * @param array $params
- *   An array of conditions to match against.
+ *   An array of conditions to match against. Keys are columns from the
+ *   'field_config' table, values are conditions to match. Additionally,
+ *   conditions on the 'entity_type' and 'bundle' columns from the
+ *   'field_config_instance' table are supported (select fields having an
+ *   instance on a given bundle).
  * @param array $include_additional
  *   The default behavior of this function is to not return fields that
  *   are inactive or have been deleted. Setting
@@ -337,8 +343,21 @@ function field_read_fields($params = array(), $include_additional = array()) {
 
   // Turn the conditions into a query.
   foreach ($params as $key => $value) {
+    // Allow filtering on the 'entity_type' and 'bundle' columns of the
+    // field_config_instance table.
+    if ($key == 'entity_type' || $key == 'bundle') {
+      if (empty($fci_join)) {
+        $fci_join = $query->join('field_config_instance', 'fci', 'fc.id = fci.field_id');
+      }
+      $key = 'fci.' . $key;
+    }
+    else {
+      $key = 'fc.' . $key;
+    }
+
     $query->condition($key, $value);
   }
+
   if (!isset($include_additional['include_inactive']) || !$include_additional['include_inactive']) {
     $query
       ->condition('fc.active', 1)
@@ -505,17 +524,30 @@ function field_create_instance($instance) {
  * Updates an instance of a field.
  *
  * @param $instance
- *   An associative array representing an instance structure. The required
- *   keys and values are:
+ *   An associative array representing an instance structure. The following
+ *   required array elements specify which field instance is being updated:
  *   - entity_type: The type of the entity the field is attached to.
  *   - bundle: The bundle this field belongs to.
  *   - field_name: The name of an existing field.
- *   Read-only_id properties are assigned automatically. Any other
- *   properties specified in $instance overwrite the existing values for
- *   the instance.
+ *   The other array elements represent properties of the instance, and all
+ *   properties must be specified or their default values will be used (except
+ *   internal-use properties, which are assigned automatically). To avoid
+ *   losing the previously stored properties of the instance when making a
+ *   change, first load the instance with field_info_instance(), then override
+ *   the values you want to override, and finally save using this function.
+ *   Example:
+ *   @code
+ *   // Fetch an instance info array.
+ *   $instance_info = field_info_instance($entity_type, $field_name, $bundle_name);
+ *   // Change a single property in the instance definition.
+ *   $instance_info['definition']['required'] = TRUE;
+ *   // Write the changed definition back.
+ *   field_update_instance($instance_info['definition']);
+ *   @endcode
  *
  * @throws FieldException
  *
+ * @see field_info_instance()
  * @see field_create_instance()
  */
 function field_update_instance($instance) {

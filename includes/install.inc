@@ -741,20 +741,27 @@ function drupal_install_system() {
 }
 
 /**
- * Uninstalls a given list of modules.
+ * Uninstalls a given list of disabled modules.
  *
- * @param $module_list
- *   The modules to uninstall.
- * @param $uninstall_dependents
- *   If TRUE, the function will check that all modules which depend on the
- *   passed-in module list either are already uninstalled or contained in the
- *   list, and it will ensure that the modules are uninstalled in the correct
- *   order. This incurs a significant performance cost, so use FALSE if you
- *   know $module_list is already complete and in the correct order.
+ * @param array $module_list
+ *   The modules to uninstall. It is the caller's responsibility to ensure that
+ *   all modules in this list have already been disabled before this function
+ *   is called.
+ * @param bool $uninstall_dependents
+ *   (optional) If TRUE, the function will check that all modules which depend
+ *   on the passed-in module list either are already uninstalled or contained in
+ *   the list, and it will ensure that the modules are uninstalled in the
+ *   correct order. This incurs a significant performance cost, so use FALSE if
+ *   you know $module_list is already complete and in the correct order.
+ *   Defaults to TRUE.
  *
- * @return
- *   FALSE if one or more dependent modules are missing from the list, TRUE
- *   otherwise.
+ * @return bool
+ *   Returns TRUE if the operation succeeds or FALSE if it aborts due to an
+ *   unsafe condition, namely, $uninstall_dependents is TRUE and a module in
+ *   $module_list has dependents which are not already uninstalled and not also
+ *   included in $module_list).
+ *
+ * @see module_disable()
  */
 function drupal_uninstall_modules($module_list = array(), $uninstall_dependents = TRUE) {
   if ($uninstall_dependents) {
@@ -766,7 +773,7 @@ function drupal_uninstall_modules($module_list = array(), $uninstall_dependents 
     $profile = drupal_get_profile();
     while (list($module) = each($module_list)) {
       if (!isset($module_data[$module]) || drupal_get_installed_schema_version($module) == SCHEMA_UNINSTALLED) {
-        // This module doesn't exist or is already uninstalled, skip it.
+        // This module doesn't exist or is already uninstalled. Skip it.
         unset($module_list[$module]);
         continue;
       }
@@ -799,7 +806,7 @@ function drupal_uninstall_modules($module_list = array(), $uninstall_dependents 
   }
 
   if (!empty($module_list)) {
-    // Call hook_module_uninstall to let other modules act
+    // Let other modules react.
     module_invoke_all('modules_uninstalled', $module_list);
   }
 
@@ -1244,6 +1251,12 @@ function drupal_check_module($module) {
  * - distribution_name: The name of the Drupal distribution that is being
  *   installed, to be shown throughout the installation process. Defaults to
  *   'Drupal'.
+ * - exclusive: If the install profile is intended to be the only eligible
+ *   choice in a distribution, setting exclusive = TRUE will auto-select it
+ *   during installation, and the install profile selection screen will be
+ *   skipped. If more than one profile is found where exclusive = TRUE then
+ *   this property will have no effect and the profile selection screen will
+ *   be shown as normal with all available profiles shown.
  *
  * Note that this function does an expensive file system scan to get info file
  * information for dependencies. If you only need information from the info

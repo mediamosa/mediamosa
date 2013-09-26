@@ -147,7 +147,7 @@
  *     'authmap'   => 'shared_',
  *   ),
  * @endcode
- * You can also use a reference to a schema/database as a prefix. This maybe
+ * You can also use a reference to a schema/database as a prefix. This may be
  * useful if your Drupal installation exists in a schema that is not the default
  * or you want to access several databases from the same code base at the same
  * time.
@@ -435,7 +435,7 @@ ini_set('session.cookie_lifetime', 2000000);
 /**
  * String overrides:
  *
- * To override specific strings on your site with or without enabling locale
+ * To override specific strings on your site with or without enabling the Locale
  * module, add an entry to this list. This functionality allows you to change
  * a small number of your site's default English language interface strings.
  *
@@ -551,7 +551,6 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
  * Remove the leading hash signs to disable.
  */
 # $conf['allow_authorize_operations'] = FALSE;
-
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
  * APP REST interface. Putting it on FALSE will disable the interface
@@ -609,4 +608,3 @@ $conf['mediamosa_admin'] = TRUE;
  */
 //                                    1234567890123456 chars max
 $conf['mediamosa_installation_id'] = 'default';
-

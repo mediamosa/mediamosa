@@ -89,7 +89,7 @@ define('FILE_STATUS_PERMANENT', 1);
  * wrappers that are appropriate for particular usage. For example, this returns
  * only stream wrappers that use local file storage:
  * @code
- *   $local_stream_wrappers = file_get_stream_wrappers(STEAM_WRAPPERS_LOCAL);
+ *   $local_stream_wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL);
  * @endcode
  *
  * The $filter parameter can only filter to types containing a particular flag.
@@ -99,7 +99,7 @@ define('FILE_STATUS_PERMANENT', 1);
  * array_diff_key() function can be used to help with this. For example, this
  * returns only stream wrappers that do not use local file storage:
  * @code
- *   $remote_stream_wrappers = array_diff_key(file_get_stream_wrappers(STREAM_WRAPPERS_ALL), file_get_stream_wrappers(STEAM_WRAPPERS_LOCAL));
+ *   $remote_stream_wrappers = array_diff_key(file_get_stream_wrappers(STREAM_WRAPPERS_ALL), file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL));
  * @endcode
  *
  * @param $filter
@@ -281,10 +281,6 @@ function file_stream_wrapper_uri_normalize($uri) {
     if ($target !== FALSE) {
       $uri = $scheme . '://' . $target;
     }
-  }
-  else {
-    // The default scheme is file://
-    $url = 'file://' . $uri;
   }
   return $uri;
 }
@@ -834,9 +830,8 @@ function file_valid_uri($uri) {
  *   A string specifying the filepath or URI of the source file.
  * @param $destination
  *   A URI containing the destination that $source should be copied to. The
- *   URI may be a bare filepath (without a scheme) and in that case the default
- *   scheme (file://) will be used. If this value is omitted, Drupal's default
- *   files scheme will be used, usually "public://".
+ *   URI may be a bare filepath (without a scheme). If this value is omitted,
+ *   Drupal's default files scheme will be used, usually "public://".
  * @param $replace
  *   Replace behavior when the destination file already exists:
  *   - FILE_EXISTS_REPLACE - Replace the existing file.
@@ -892,7 +887,7 @@ function file_unmanaged_copy($source, $destination = NULL, $replace = FILE_EXIST
   $destination = file_destination($destination, $replace);
   if ($destination === FALSE) {
     drupal_set_message(t('The file %file could not be copied because a file by that name already exists in the destination directory.', array('%file' => $original_source)), 'error');
-    watchdog('file', 'File %file could not be copied because a file by that name already exists in the destination directory (%directory)', array('%file' => $original_source, '%destination' => $destination));
+    watchdog('file', 'File %file could not be copied because a file by that name already exists in the destination directory (%directory)', array('%file' => $original_source, '%directory' => $destination));
     return FALSE;
   }
 
@@ -2204,29 +2199,21 @@ function drupal_unlink($uri, $context = NULL) {
 }
 
 /**
- * Returns the absolute local filesystem path of a stream URI.
+ * Resolves the absolute filepath of a local URI or filepath.
  *
- * This function was originally written to ease the conversion of 6.x code to
- * use 7.x stream wrappers. However, it assumes that every URI may be resolved
- * to an absolute local filesystem path, and this assumption fails when stream
- * wrappers are used to support remote file storage. Remote stream wrappers
- * may implement the realpath method by always returning FALSE. The use of
- * drupal_realpath() is discouraged, and is slowly being removed from core
- * functions where possible.
+ * The use of drupal_realpath() is discouraged, because it does not work for
+ * remote URIs. Except in rare cases, URIs should not be manually resolved.
  *
  * Only use this function if you know that the stream wrapper in the URI uses
  * the local file system, and you need to pass an absolute path to a function
  * that is incompatible with stream URIs.
  *
- * @param $uri
- *   A stream wrapper URI or a filesystem path, possibly including one or more
- *   symbolic links.
+ * @param string $uri
+ *   A stream wrapper URI or a filepath, possibly including one or more symbolic
+ *   links.
  *
- * @return
- *   The absolute local filesystem path (with no symbolic links), or FALSE on
- *   failure.
- *
- * @todo This function is deprecated, and should be removed wherever possible.
+ * @return string|false
+ *   The absolute local filepath (with no symbolic links), or FALSE on failure.
  *
  * @see DrupalStreamWrapperInterface::realpath()
  * @see http://php.net/manual/function.realpath.php
@@ -2481,20 +2468,10 @@ function file_directory_temp() {
 function file_get_content_headers($file) {
   $name = mime_header_encode($file->filename);
   $type = mime_header_encode($file->filemime);
-  // Serve images, text, and flash content for display rather than download.
-  $inline_types = variable_get('file_inline_types', array('^text/', '^image/', 'flash$'));
-  $disposition = 'attachment';
-  foreach ($inline_types as $inline_type) {
-    // Exclamation marks are used as delimiters to avoid escaping slashes.
-    if (preg_match('!' . $inline_type . '!', $file->filemime)) {
-      $disposition = 'inline';
-    }
-  }
 
   return array(
     'Content-Type' => $type,
     'Content-Length' => $file->filesize,
-    'Content-Disposition' => $disposition . '; filename="' . $name . '"',
     'Cache-Control' => 'private',
   );
 }
