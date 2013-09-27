@@ -49,11 +49,6 @@ class mediamosa_permission {
   const ACCESS_TOOLS_UPLOAD = 'mediamosa|access|tools|upload';
   const ACCESS_TOOLS_SUPPLIER = 'mediamosa|access|tools|supplier';
 
-  // Content page.
-  const ACCESS_CONTENT = 'mediamosa|access|content';
-  const ACCESS_CONTENT_UPLOAD = 'mediamosa|access|content|upload';
-  const ACCESS_CONTENT_SUPPLIER = 'mediamosa|access|content|supplier';
-
   // Start right.
   const ACCESS_START_FILE_INTEGRITY_START = 'mediamosa|start|file_integrity';
 
