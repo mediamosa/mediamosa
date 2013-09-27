@@ -892,7 +892,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * file.
    */
   protected function getTestVideo() {
-    return $this->getTestVideo_wmv();
+    return $this->getTestVideo_ogg();
   }
 
   /**
