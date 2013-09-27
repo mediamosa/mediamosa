@@ -194,6 +194,31 @@ class mediamosa_asset_mediafile {
       $query->condition('mfm.val_char', $options['mime_type']);
     }
 
+    // Container query.
+    if (isset($options['container_type'])) {
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', sprintf('mfm.mediafile_id = mf.mediafile_id '));
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'mfmp', sprintf('mfmp.prop_id = mfm.prop_id AND mfmp.%s = %d', mediamosa_asset_mediafile_metadata_property_db::NAME, 'container_type'));
+      $query->condition('mfm.val_char', $options['container_type']);
+    }
+
+    // Video codec query.
+    if (isset($options['video_codec'])) {
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', sprintf('mfm.mediafile_id = mf.mediafile_id '));
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'mfmp', sprintf('mfmp.prop_id = mfm.prop_id AND mfmp.%s = %d', mediamosa_asset_mediafile_metadata_property_db::NAME, 'video_codec'));
+      $query->condition('mfm.val_char', $options['video_codec']);
+    }
+
+    // Transcode profile query.
+    if (isset($options['transcode_profile_id'])) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $options['transcode_profile_id']);
+    }
+
+    // Tag query.
+    if (isset($options['tag'])) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::TAG, $options['tag']);
+    }
+
+    // Filename (like, % is supported).
     if ($options['filename']) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::FILENAME, $options['filename'], 'LIKE');
     }
