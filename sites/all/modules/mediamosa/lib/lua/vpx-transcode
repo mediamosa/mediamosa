@@ -291,6 +291,8 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local cd_command = ""
   local audio_aac_zero = false
 
+  local ss_param = false
+
   -- MP3 ffmpeg bug workaround (see MM ticket 241).
   -- See later too.
   local mp3_error_skip_lines = false
@@ -311,6 +313,19 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     end
     if not found_size then
       params = params .. " -s " .. video_size
+    end
+  end
+
+  -- Fix -ss order for image generation.
+  if dst_ext == "jpeg" then
+    local test_params = params
+    -- Trim params
+    test_params = (string.gsub(test_params, "^%s*(.-)%s*$", "%1"))
+    for token in string.gmatch(test_params, "[^-]+") do
+      if string.sub(token, 0, 3) == 'ss ' then
+        ss_param = "-" .. token
+        params = string.gsub(params, "-" .. token, "")
+      end
     end
   end
 
@@ -396,7 +411,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   end
   local command =
     string.format(cd_command ..
-                  "ffmpeg -i %s/%s/%s %s %s %s -y %s/%s.%s 2>&1 | tr '\\r' '\\n' || " ..
+                  "ffmpeg " .. ss_param .. "-i %s/%s/%s %s %s %s -y %s/%s.%s 2>&1 | tr '\\r' '\\n' || " ..
                   "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
                   source_path, string.sub(hash, 1, 1), hash,
                   second_input, params, precommand,
