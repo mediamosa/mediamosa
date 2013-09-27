@@ -79,6 +79,11 @@ function mediamosa_drush_command() {
   $items['mm-asset-list'] = array(
     'description' => 'Returns a list of assets.',
     'aliases' => array('mmal'),
+    'options' => array(
+      'limit' => '',
+      'offset' => '',
+      'show_empty' => '',
+    ),
   );
 
   $items['mm-asset'] = array(
@@ -389,10 +394,10 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
 
   $limit = drush_get_option('limit', 25);
   $offset = drush_get_option('offset', 0);
+  $hide_empty = (drush_get_option('show_empty', 'FALSE') == 'FALSE') ? TRUE : FALSE;
+  $assets = mediamosa_asset_search::asset_search(array($app_id), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, $hide_empty, FALSE, TRUE, $limit, $offset);
 
-  $assets = mediamosa_asset_search::asset_search(array($app_id), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, $limit, $offset);
-
-  $rows[] = array('nr', 'Asset_id', 'Title', 'Created', 'Protected');
+  $rows[] = array('nr', 'Asset_id', 'Title', 'Created', 'Protected', 'Empty');
   foreach ($assets['asset_ids'] as $nr => $asset_id) {
     $asset_info = mediamosa_asset::get($asset_id, $app_id);
     $title = '';
@@ -400,7 +405,7 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
     if (isset($metadata['dublin_core']['title']['values'][0])) {
       $title = $metadata['dublin_core']['title']['values'][0];
     }
-    $rows[] = array($nr, $asset_id, $title, $asset_info['created'], $asset_info['is_protected']);
+    $rows[] = array($nr, $asset_id, $title, $asset_info['created'], $asset_info['is_protected'], $asset_info['is_empty_asset']);
   }
   drush_print_table($rows, TRUE);
   drush_print('Total: ' . $assets['total_count']);
