@@ -290,8 +290,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local audio_ext = "audio"
   local cd_command = ""
   local audio_aac_zero = false
-
-  local ss_param = false
+  local ss_param = ""
 
   -- MP3 ffmpeg bug workaround (see MM ticket 241).
   -- See later too.
