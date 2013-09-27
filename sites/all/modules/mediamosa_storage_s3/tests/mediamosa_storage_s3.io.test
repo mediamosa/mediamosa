@@ -214,7 +214,7 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
    * @param array $upload
    *   The upload for the test.
    */
-  protected function preTest($app_id, $upload) {
+  protected function preTest($app_id, array $upload) {
     $this->pass('Running S3 pre-test.');
 
     // Get mediafile ID.
