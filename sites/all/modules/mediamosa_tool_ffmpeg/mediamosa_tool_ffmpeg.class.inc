@@ -23,35 +23,6 @@ class mediamosa_tool_ffmpeg {
 
   // ---------------------------------------------------------------- Functions.
   /**
-   * Test if ffmpeg uses -padtop or -vf=pad function in this version.
-   *
-   * @param $set_value
-   *   Force the value, used during unit testing.
-   *
-   * @return
-   *   Returns TRUE when ffmpeg option -padtop can not be used by ffmpeg and you
-   *   must use the -vf (video filter) option.
-   */
-  public static function useVideoFilter($set_value = NULL) {
-    static $useVideoFilter = NULL;
-
-    // Force the value?
-    if (isset($set_value)) {
-      $useVideoFilter = $set_value;
-    }
-
-    if (!isset($useVideoFilter)) {
-      $ffmpeg_response = exec('ffmpeg -padtop 0 2>&1');
-      $useVideoFilter = strpos($ffmpeg_response, 'vf=pad') !== FALSE;
-      if (!$useVideoFilter) {
-        $useVideoFilter = (strpos(drupal_strtolower($ffmpeg_response), 'failed') !== FALSE);
-      }
-    }
-
-    return $useVideoFilter;
-  }
-
-  /**
    * Calculate the aspect ratio.
    *
    * Can return cmd line option in ffmpeg when needed.
@@ -80,17 +51,6 @@ class mediamosa_tool_ffmpeg {
       return FALSE;
     }
 
-    // Does current ffmpeg use new videofilter (-vf)?
-    if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-      return array(
-        '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
-        '-padtop' => (int) $aspect_ratio['h_padding'],
-        '-padbottom' => (int) $aspect_ratio['h_padding'],
-        '-padleft' => $aspect_ratio['v_padding'],
-        '-padright' => $aspect_ratio['v_padding'],
-      );
-    }
-
     return array(
       '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
       '-vf' => strtr(
@@ -101,7 +61,7 @@ class mediamosa_tool_ffmpeg {
           '@v_padding' => $aspect_ratio['v_padding'],
           '@h_padding' => $aspect_ratio['h_padding'],
         )
-      )
+      ),
     );
   }
 
@@ -392,16 +352,11 @@ class mediamosa_tool_ffmpeg {
               }
               fclose($fh);
 
-              // This version is creating stills for the original video
-              if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
-              }
-              else {
-                $size_explode = explode('x', $size);
-                $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
-                $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
-              }
+              // This version is creating stills for the original video.
+              $size_explode = explode('x', $size);
+              $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
+              $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
+              $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
 
               // This version is creating stills for the analysed file
               //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id_source .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION .".jpeg");
@@ -462,18 +417,12 @@ class mediamosa_tool_ffmpeg {
       ->execute();
 
     // Combine the string (only for linux, windows does not generate stills).
-    if (!mediamosa_tool_ffmpeg::useVideoFilter()) {
-      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
-      round($duration * $framerate),
-      $frametime, $duration, $framerate);
-    }
-    else {
-      $size_explode = explode('x', $size);
-      $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
-      $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
-      $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
-      round($duration * $framerate), $frametime, $duration, 1);
-    }
+    $size_explode = explode('x', $size);
+    $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
+    $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
+
+    $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
+                        round($duration * $framerate), $frametime, $duration, 1);
     $execution_string .= ' > /dev/null &';
     return $execution_string;
   }
