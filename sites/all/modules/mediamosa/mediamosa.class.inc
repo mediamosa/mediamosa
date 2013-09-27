@@ -44,7 +44,7 @@ class mediamosa {
 
     if ($multibyte != UNICODE_MULTIBYTE) {
       throw new mediamosa_exception_error(
-        mediamosa_error::ERRORCODE_PRECHECK_FAILED,
+        mediamosa_error::HTTP_INTERNAL_SERVER_ERROR,
         array('@message' => 'unicode multibyte is not enabled')
       );
     }
@@ -304,6 +304,11 @@ class mediamosa {
         E_STRICT => 'Strict warning',
         E_RECOVERABLE_ERROR => 'Recoverable fatal error'
       );
+      // E_DEPRECATED and E_USER_DEPRECATED were added in PHP 5.3.0.
+      if (defined('E_DEPRECATED')) {
+        $types[E_DEPRECATED] = 'Deprecated function';
+        $types[E_USER_DEPRECATED] = 'User deprecated function';
+      }
 
       // If the backtrace was provided, then use it.
       $caller = isset($caller) ? $caller : _drupal_get_last_caller(debug_backtrace());

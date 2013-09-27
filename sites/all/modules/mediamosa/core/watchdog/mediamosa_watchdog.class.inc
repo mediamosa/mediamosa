@@ -50,6 +50,33 @@ class mediamosa_watchdog {
   }
 
   /**
+   * Logs an exception.
+   *
+   * This is a wrapper function for watchdog() which automatically decodes an
+   * exception.
+   *
+   * @param Exception $exception
+   *   The exception that is going to be logged.
+   * @param string $message
+   *   The message to store in the log. If empty, a text that contains all useful
+   *   information about the passed-in exception is used.
+   * @param array $variables
+   *   Array of variables to replace in the message on display. Defaults to the
+   *   return value of drupal_decode_exception().
+   * @param integer $severity
+   *   The severity of the message, as per RFC 3164.
+   * @param string $type
+   *   The category to which this message belongs.
+   * @param string $link
+   *   A link to associate with the message.
+   *
+   * @see watchdog_exception()
+   */
+  public static function log_exception(Exception $exception, $message = NULL, array $variables = array(), $severity = WATCHDOG_ERROR, $type = NULL, $link = NULL) {
+    watchdog_exception('MediaMosa' . (empty($type) ? '' : ' - ' . $type), $exception, $message = NULL, $variables, $severity, $link);
+  }
+
+  /**
    * Logs for specific asset.
    *
    * @param string $asset_id

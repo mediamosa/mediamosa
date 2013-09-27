@@ -206,7 +206,9 @@ class mediamosa_media_ticket {
     }
 
     // Remove the symlinks.
-    mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+    if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
+      mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+    }
 
     // Now remove the ticket dir.
     $args['-maxdepth']--;
@@ -216,14 +218,16 @@ class mediamosa_media_ticket {
     $args['-mmin'] = '+' . ($expire + 60);
 
     // Add reg ex.
-    $args['-regex'] = "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]{" . mediamosa_settings::UUID_LENGTH . "}+?$";
+    $args['-regex'] = "^.*/[0-9]+/[a-zA-Z0-9]/[a-zA-Z0-9]{" . mediamosa_sdk::UUID_LENGTH . "}+?$";
 
     $params = array();
     foreach ($args as $cmd => $arg) {
       $params[] = $cmd . ' ' . escapeshellarg($arg);
     }
 
-    mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+    if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
+      mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+    }
   }
 
   /**
@@ -274,7 +278,7 @@ class mediamosa_media_ticket {
    *   The ticket ID to get.
    * @param string $ticket_type
    *   Matching ticket type.
-   * 
+   *
    * @return array|FALSE
    *   Either array with ticket info or FALSE when ticket is no longer valid.
    */

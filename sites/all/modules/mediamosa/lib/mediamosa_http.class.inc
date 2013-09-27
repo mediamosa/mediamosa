@@ -124,7 +124,7 @@ class mediamosa_http {
   }
 
   /**
-   * Slitup the query string.
+   * Splitup the query string.
    *
    * Opposite of http_build_query().
    *

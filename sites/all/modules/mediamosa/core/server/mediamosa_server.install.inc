@@ -15,6 +15,10 @@ require_once 'tool/mediamosa_server_tool.install.inc';
  */
 function _mediamosa_server_install() {
 
+  // Check for https.
+  $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  $scheme = $is_https ? 'https://' : 'http://';
+
   // Server node extensions.
   mediamosa::drupal_install_schema(mediamosa_server_db::TABLE_NAME);
 
@@ -22,12 +26,12 @@ function _mediamosa_server_install() {
   _mediamosa_server_streaming_install();
   _mediamosa_server_tool_install();
 
-  // Get URL of the current server, stripped from schema.
+  // Get URL of the current server, stripped from scheme.
   $server_url = url('', array('absolute' => TRUE));
-  $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/');
+  $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/') . '/';
 
   $default_servers = array(
-    array(1, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(1, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'asf', '',
       "{IF_EXTERNAL}
 <asx version='3.0'>
@@ -50,15 +54,15 @@ function _mediamosa_server_install() {
 </object>",
      'Media Player; asf videos', '', '', '', 'APC', ''),
 
-    array(2, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(2, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'flv', '',
-      "<script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
+      "<script type=\"text/javascript\" src=\"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
+          flowplayer(\"flowplayer\", \"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -68,12 +72,12 @@ function _mediamosa_server_install() {
         </script>",
       'Flowplayer; flv videos', '', '', '', 'APC', ''),
 
-    array(3, 0, 'OFF', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(3, 0, 'OFF', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'flv', '',
-      "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
+      "<script type='text/javascript' src='" . $scheme . $server_url . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
-var s1 = new SWFObject('" . url('', array('absolute' => TRUE)) . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT}','9');
+var s1 = new SWFObject('" . $scheme . $server_url . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT}','9');
 s1.addParam('allowfullscreen','true');
 s1.addParam('allowscriptaccess','always');
 s1.addParam('wmode','opaque');
@@ -82,12 +86,12 @@ s1.write('mediaspace');
 </script>",
       'JW Player; flv videos', '', '', '', 'APC', ''),
 
-    array(4, 0, 'OFF', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(4, 0, 'OFF', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'mov;mp4;m4a;3gp;3g2;mj2:h264', '',
-      "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
+      "<script type='text/javascript' src='" . $scheme . $server_url . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
-var s1 = new SWFObject('" . url('', array('absolute' => TRUE)) . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT_PLUS_20}','9');
+var s1 = new SWFObject('" . $scheme . $server_url . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT_PLUS_20}','9');
 s1.addParam('allowfullscreen','true');
 s1.addParam('allowscriptaccess','always');
 s1.addParam('wmode','opaque');
@@ -96,7 +100,7 @@ s1.write('mediaspace');
 </script>",
       'JW Player; mp4/h264 Videos', '', '', '', 'APC', ''),
 
-    array(5, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(5, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'mpeg|mov;mp4;m4a;3gp;3g2;mj2', '',
       "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
 {IF_START}
@@ -111,10 +115,10 @@ s1.write('mediaspace');
 </object>",
       'Quicktime player; MPEG videos', '', '', '', 'APC', ''),
 
-    array(6, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(6, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'ogg', '',
-      "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
-<link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
+      "<script src=\"" . $scheme . $server_url . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
+<link rel=\"stylesheet\" href=\"" . $scheme . $server_url . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
   <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
    </script>
@@ -125,14 +129,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/ogg' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
+          flowplayer(\"flowplayer\", \"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -153,10 +157,10 @@ s1.write('mediaspace');
   <!-- End VideoJS -->",
      'VideoJS player; ogg videos', 0, '', '', 'APC', ''),
 
-    array(7, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(7, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'matroska;webm', '',
-      "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
-<link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
+      "<script src=\"" . $scheme . $server_url . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
+<link rel=\"stylesheet\" href=\"" . $scheme . $server_url . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
   <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
    </script>
@@ -167,14 +171,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/webm' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
+          flowplayer(\"flowplayer\", \"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -196,10 +200,10 @@ s1.write('mediaspace');
       'VideoJS player; WebM Videos', 0, '', '', 'APC', ''),
 
     // VideoJS player
-    array(8, 0, 'ON', 'STREAMING', 'http://' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(8, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
       'mov;mp4;m4a;3gp;3g2;mj2:h264', '',
-      "<script src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
-<link rel=\"stylesheet\" href=\"" . url('', array('absolute' => TRUE)) . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
+      "<script src=\"" . $scheme . $server_url . "mmplayer/video-js/video.js\" type=\"text/javascript\" charset=\"utf-8\"></script>
+<link rel=\"stylesheet\" href=\"" . $scheme . $server_url . "mmplayer/video-js/video-js.css\" type=\"text/css\" media=\"screen\" title=\"Video JS\" charset=\"utf-8\">
   <script type=\"text/javascript\">
     VideoJS.setupAllWhenReady();
    </script>
@@ -210,14 +214,14 @@ s1.write('mediaspace');
       <source src=\"{TICKET_URI}\" type='video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"' />
       <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
     <div class=\"vjs-flash-fallback\">
-    <script type=\"text/javascript\" src=\"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.min.js\"></script>
+    <script type=\"text/javascript\" src=\"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.min.js\"></script>
         <a
             href=\"{TICKET_URI}\"
             style=\"display:block;width:{WIDTH}px;height:{HEIGHT}px;\"
             id=\"flowplayer\">
         </a>
         <script language=\"JavaScript\">
-          flowplayer(\"flowplayer\", \"" . url('', array('absolute' => TRUE)) . "mmplayer/flowplayer/flowplayer.swf\", {
+          flowplayer(\"flowplayer\", \"" . $scheme . $server_url . "mmplayer/flowplayer/flowplayer.swf\", {
             clip: {
               url: '{TICKET_URI}',
               autoPlay: false,
@@ -238,11 +242,11 @@ s1.write('mediaspace');
   <!-- End VideoJS -->",
       'VideoJS player; mp4/h264 videos', 0, '', '', 'APC', ''),
 
-    array(11, 2, 'ON', 'DOWNLOAD', 'http://download.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
-    array(12, 0, 'ON', 'STILL', 'http://download.' . $server_url .'/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
-    array(13, 0, 'ON', 'JOB_PROCESSOR', 'http://job1.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 1st job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
-    array(14, 0, 'OFF', 'JOB_PROCESSOR', 'http://job2.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 2nd job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
-    array(15, 0, 'ON', 'UPLOAD', 'http://upload.' . $server_url . '/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'mediafile/upload?upload_ticket={TICKET}', '', '', '', 'Default upload server', 0, '', mediamosa_server_db::SERVER_PATH_BASE_URI . 'uploadprogress?id={PROGRESS_ID}', 'APC', mediamosa_server_db::SERVER_PATH_BASE_URI . 'progress?X-Progress-ID={PROGRESS_ID}'),
+    array(11, 2, 'ON', 'DOWNLOAD', $scheme . 'download.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
+    array(12, 0, 'ON', 'STILL', $scheme . 'download.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}', '', '', '', 'Default server for stills', 0, '', '', 'APC', ''),
+    array(13, 0, 'ON', 'JOB_PROCESSOR', $scheme . 'job1.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 1st job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
+    array(14, 0, 'OFF', 'JOB_PROCESSOR', $scheme . 'job2.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Default 2nd job processor', 2, 'TRANSFER|ANALYSE|ffmpeg|STILL', '', 'APC', ''),
+    array(15, 0, 'ON', 'UPLOAD', $scheme . 'upload.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'mediafile/upload?upload_ticket={TICKET}', '', '', '', 'Default upload server', 0, '', mediamosa_server_db::SERVER_PATH_BASE_URI . 'uploadprogress?id={PROGRESS_ID}', 'APC', mediamosa_server_db::SERVER_PATH_BASE_URI . 'progress?X-Progress-ID={PROGRESS_ID}'),
   );
 
   // Create our node type.

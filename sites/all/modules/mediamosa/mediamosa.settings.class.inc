@@ -20,6 +20,7 @@ class mediamosa_settings {
   const MINIMUM_PHP_VERSION = '5.2.4';
 
   // Length of the unique ID generator, is always this length.
+  // @deprecated: moved to mediamosa_sdk class, use that one instead.
   const UUID_LENGTH = 24;
 
   // URL to asset. (lib function mediamosa_lib::l_asset($asset_id, $text);)

@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Contains all roles for Drupal / admin.
@@ -34,8 +9,6 @@
  * name, will grant you access splitted on the '|';
  *
  * mediamosa|subrole will match mediamosa.
- *
- *
  */
 class mediamosa_permission {
 
@@ -51,7 +24,7 @@ class mediamosa_permission {
 
   // Status page.
   const ACCESS_STATUS = 'mediamosa|access|status';
-  const ACCESS_STATUS_REFRESH = 'mediamosa|access|status|refresh'; // Able to refresh the status page.
+  const ACCESS_STATUS_REFRESH = 'mediamosa|access|status|refresh';
   const ACCESS_STATUS_COMMON = 'mediamosa|access|status|common';
   const ACCESS_STATUS_SERVERS = 'mediamosa|access|status|servers';
   const ACCESS_STATUS_JOB = 'mediamosa|access|status|job';
@@ -70,6 +43,11 @@ class mediamosa_permission {
   const ACCESS_BROWSE_FILE_INTEGRITY = 'mediamosa|access|browse|file_integrity';
   const ACCESS_BROWSE_JOB_FAILURE = 'mediamosa|access|browse|job_failure';
   const ACCESS_BROWSE_TRANSCODE_LENGTH_DEVIATION = 'mediamosa|access|browse|transcode_length_deviation';
+
+  // Content page.
+  const ACCESS_CONTENT = 'mediamosa|access|content';
+  const ACCESS_CONTENT_UPLOAD = 'mediamosa|access|content|upload';
+  const ACCESS_CONTENT_SUPPLIER = 'mediamosa|access|content|supplier';
 
   // Start right.
   const ACCESS_START_FILE_INTEGRITY_START = 'mediamosa|start|file_integrity';
@@ -102,6 +80,15 @@ class mediamosa_permission {
   const ACCESS_STATS_STREAM_REQUEST = 'mediamosa|access|stats|stream request';
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Test for ownership asset through client application.
+   *
+   * @param string $asset_id
+   *   The asset ID.
+   *
+   * @return boolean
+   *   Returns TRUE for ownership client application.
+   */
   public static function is_app_owner_asset($asset_id) {
     $assets = &drupal_static(__CLASS__ . '::' . __FUNCTION__, array());
 

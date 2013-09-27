@@ -43,8 +43,10 @@ class mediamosa_job_transcode {
    *  Triggered when transcoding is complete.
    * @param string $mediafile_id
    *  The mediafile ID.
+   * @param string $mediafile_dest
+   *   The destination mediafile ID.
    */
-  public static function create($app_id, $job_id, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $mediafile_id = NULL) {
+  public static function create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id, $mediafile_dest) {
 
     // Get the default transcode profile settings when not supplied.
     if (empty($profile_id) && $tool == '') {
@@ -59,7 +61,6 @@ class mediamosa_job_transcode {
       $command = $transcode_profile[mediamosa_transcode_profile_db::COMMAND];
     }
     elseif (!empty($profile_id)) {
-      // FIXME: should we add app_id here?
       $transcode_profile = mediamosa_transcode_profile::get($profile_id);
 
       if (!$transcode_profile) {
@@ -93,13 +94,13 @@ class mediamosa_job_transcode {
 
     // Build the completed_transcoding_url.
     if (!empty($completed_transcoding_url)) {
-      $a_query = array();
+      $query_data = array();
 
       // Lets see if there is a http query.
       $pos = mediamosa_unicode::strpos($completed_transcoding_url, '?');
       if ($pos !== FALSE) {
         if (mediamosa_unicode::strlen($completed_transcoding_url) > $pos + 1) {
-          parse_str(mediamosa_unicode::substr($completed_transcoding_url, $pos + 1), $a_query);
+          parse_str(mediamosa_unicode::substr($completed_transcoding_url, $pos + 1), $query_data);
         }
 
         // Remove the query string.
@@ -107,14 +108,17 @@ class mediamosa_job_transcode {
       }
 
       // Now add our parameters.
-      $a_query['job_id'] = $job_id;
-      $a_query['mediafile_id'] = $mediafile_id;
+      $query_data['job_id'] = $job_id;
+      $query_data['mediafile_id'] = $mediafile_id;
+
+      // Include the destination mediafile_id.
+      $query_data['mediafile_dest'] = $mediafile_dest;
 
       // The status code will be filled later
-      $a_query['status_code'] = '';
+      $query_data['status_code'] = '';
 
       // Build the query again.
-      $completed_transcoding_url .= '?' . http_build_query($a_query, '', '&');
+      $completed_transcoding_url .= '?' . http_build_query($query_data, '', '&');
     }
 
     // Now create the transcode job.

@@ -106,7 +106,7 @@ class mediamosa_asset_mediafile_metadata {
     }
 
     if (empty($mimetype)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile is not analysed.'));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile is not analyzed.'));
     }
   }
 
