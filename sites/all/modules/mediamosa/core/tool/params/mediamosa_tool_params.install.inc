@@ -68,6 +68,11 @@ function mediamosa_tool_params_schema() {
         'length' => mediamosa_tool_params_db::TOOL_LENGTH,
         'description' => 'Tool.',
       ),
+      mediamosa_tool_params_db::WEIGHT => array(
+        'type' => 'int',
+        'description' => 'The weight of the tool parameter for usage in order when generating the command line parameters.',
+        'default' => 0,
+      ),
       mediamosa_tool_params_db::NICE_PARAMETER => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::NICE_PARAMETER_LENGTH,

@@ -1,36 +1,9 @@
 <?php
-// $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * MediaMosa tool.
  */
-
- /**
-  * @file
-  * MediaMosa tool.
-  */
-
-require_once 'params/mediamosa_tool_params.inc';
-require_once 'mapping/mediamosa_tool_mapping.inc';
 
 /**
  * Implements hook_help().
@@ -92,6 +65,19 @@ function mediamosa_tool_mediamosa_register_rest_call() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function mediamosa_tool_theme() {
+  return array(
+    'mediamosa_tool_params_list_form' => array(
+      'render element' => 'form',
+      'file' => 'params/mediamosa_tool_params.inc',
+      'file path' => drupal_get_path('module', 'mediamosa_tool'),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function mediamosa_tool_menu() {
@@ -102,9 +88,12 @@ function mediamosa_tool_menu() {
   $items['admin/mediamosa/config/tool_params'] = array(
     'title' => 'Tool parameters',
     'description' => 'Tool params are used by the transcoding profiles.',
-    'page callback' => '_mediamosa_tool_params_list',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_tool_params_list_form'),
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLPARAMS),
+    'file' => 'params/mediamosa_tool_params.inc',
+    'file path' => drupal_get_path('module', 'mediamosa_tool'),
   );
 
   $items['admin/mediamosa/config/tool_params/list'] = array(
@@ -184,6 +173,8 @@ function mediamosa_tool_menu() {
     'page callback' => '_mediamosa_tool_mapping_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLMAPPING),
+    'file' => 'mapping/mediamosa_tool_mapping.inc',
+    'file path' => drupal_get_path('module', 'mediamosa_tool'),
   );
 
   $items['admin/mediamosa/config/tool_mapping/list'] = array(

@@ -4232,3 +4232,37 @@ function mediamosa_update_7166() {
   menu_rebuild();
   menu_cache_clear_all();
 }
+
+/**
+ * Add weight column to tool params table.
+ */
+function mediamosa_update_7167() {
+
+  if (!db_field_exists('mediamosa_tool_params', 'weight')) {
+    // Get the tool params as it is now, so we have the same order for weight.
+    $tool_params = mediamosa_db::db_select('mediamosa_tool_params', 'tp')
+      ->fields('tp', array('tool', 'tool_params_id'))
+      ->execute();
+
+    // Add weight.
+    db_add_field('mediamosa_tool_params', 'weight', array(
+      'type' => 'int',
+      'description' => 'The weight of the tool parameter for usage in order when generating the command line parameters.',
+      'default' => 0,
+    ));
+
+    // Now set the weight in order of the params.
+    $weights = array();
+
+    foreach ($tool_params as $tool_param) {
+      // Set weight.
+      $weights[$tool_param['tool']] = isset($weights[$tool_param['tool']]) ? $weights[$tool_param['tool']] + 1 : -50;
+
+      // Update the row.
+      db_update('mediamosa_tool_params')
+        ->fields(array('weight' => $weights[$tool_param['tool']]))
+        ->condition('tool_params_id', $tool_param['tool_params_id'])
+        ->execute();
+    }
+  }
+}

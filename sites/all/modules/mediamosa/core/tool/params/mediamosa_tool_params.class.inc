@@ -35,11 +35,15 @@ class mediamosa_tool_params {
       return $query
         ->condition(mediamosa_tool_params_db::NICE_PARAMETER, $nice_parameter)
         ->condition(mediamosa_tool_params_db::TOOL, $tool)
+        ->orderBy(mediamosa_tool_params_db::WEIGHT, 'ASC')
+        ->orderBy(mediamosa_tool_params_db::NICE_PARAMETER)
         ->execute()
         ->fetchAssoc();
     }
 
     return $query->condition(mediamosa_tool_params_db::TOOL, $tool)
+      ->orderBy(mediamosa_tool_params_db::WEIGHT, 'ASC')
+      ->orderBy(mediamosa_tool_params_db::NICE_PARAMETER)
       ->execute();
   }
 

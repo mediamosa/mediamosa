@@ -430,7 +430,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
         Sleep(5);
       }
       else {
-        $this->pass(strtr('No more running jobs found, exiting job cycle.'));
+        $this->pass('No more running jobs found, exiting job cycle.');
       }
     }
 

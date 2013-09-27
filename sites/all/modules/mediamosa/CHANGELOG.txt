@@ -201,6 +201,13 @@ MediaMosa 3.4.x-dev (build 2030, master branch)
   directories.
 - Clear messages session variable after each REST call. Community patch provided
   by WesselDankers.
+- Removed breadcrumbs functions from maintenance modules (is no longer needed,
+  as its done automatically by Drupal, left over when we worked on unstable D7).
+- Renamed and moved several menu's; Statistics -> Reports, Browse -> Tools.
+- Added new REST call /server/upload. Returns information about the upload
+  servers. Can be used to calculate the maximum allowed upload byte size. Also
+  returns real time information about the PHP upload settings of each upload
+  server.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
