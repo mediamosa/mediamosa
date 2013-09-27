@@ -2,7 +2,7 @@
 
 class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------- Consts.
-  const SIMPLETEST_PROFILE_ID_DEFAULT = 23;
+  const SIMPLETEST_PROFILE_ID_DEFAULT = 13;
 
   // -------------------------------------------------------------- Constructor.
   /**

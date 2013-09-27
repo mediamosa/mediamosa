@@ -5,29 +5,6 @@
  */
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
-/**
  * Implements hook_install().
  */
 function mediamosa_tool_ffmpeg_install() {
@@ -55,7 +32,7 @@ function mediamosa_tool_ffmpeg_install() {
     array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', $t('Aspect ratio')),
     array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force maintain the original video aspect ratio or not@default')),
     array('ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
-    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libvorbis', 'vorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libfdk_acc', 'libvorbis', 'vorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
     array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000', '64000', '128000', '192000', '256000', '512000'), '128000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
     array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050', '44100'), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
     array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
@@ -79,64 +56,50 @@ function mediamosa_tool_ffmpeg_install() {
     $node = node_save($node);
   }
 
+  // Settings from http://en.wikipedia.org/wiki/YouTube.
+  $def_params = array(
+    '360p_video' => "videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes",
+    '480p_video' => "videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes",
+    '720p_video' => "videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes",
+    '1080p_video' => "videobitrate:4000000;fps:30;size:1920x1080;maintain_aspect_ratio:yes",
+
+    '360p_audio' => "audiobitrate:128000;audiosamplingrate:44100;audiochannels:2",
+    '480p_audio' => "audiobitrate:128000;audiosamplingrate:44100;audiochannels:2",
+    '720p_audio' => "audiobitrate:192000;audiosamplingrate:44100;audiochannels:2",
+    '1080p_audio' => "audiobitrate:192000;audiosamplingrate:44100;audiochannels:2",
+  );
+
   // Install some predefined ffmpeg transcoding profiles.
   // One of the transcode profile must be set TRUE for default.
   $default_profiles = array(
 
-    // Two (less used) flash profiles.
-    array('flash small', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:250000;size:320x200;maintain_aspect_ratio:yes'),
-    array('flash 400x240', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;videocodec:flv;videobitrate:500000;size:400x240;maintain_aspect_ratio:yes'),
-    array('flash 480x270', 'FALSE', 'ffmpeg', 'flv', 'audiocodec:libmp3lame;audiobitrate:128000;audiosamplingrate:22050;videocodec:flv;videobitrate:800000;size:480x270;maintain_aspect_ratio:yes'),
+    // An example flash profile.
+    array('flash 360p', 'FALSE', 'ffmpeg', 'flv', 'videocodec:flv;' . $def_params['360p_video'] . ';audiocodec:libmp3lame;' . $def_params['360p_audio']),
 
-    // Old 3gp mobile phones format.
-    // Resource used:
-    // http://goinggnu.wordpress.com/2007/02/13/convert-avi-to-3gp-using-ffmpeg/
-    // Expected cmd
-    // ffmpeg -i inputfile.mpg -s qcif -vcodec h263 -acodec aac -ac 1 -ar 8000
-    // -r 25 -ab 32 -y outputfile.3gp
-    array('3gp mobile format', 'FALSE', 'ffmpeg', '3gp', 'audiocodec:libfaac;audiobitrate:32000;audiosamplingrate:110025;audiochannels:1;videocodec:h263;videobitrate:56000;fps:25;size:176x144'),
-
-    // libx264
-    //
-    // A baseline h264 transcode, without size.
-    array('mp4 h264 (baseline, slow 2 pass), ffmpeg < 0.7.7', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videopreset_quality:slow;videopreset_profile:baseline;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
-
-    // A baseline h264 transcode, without size.
-    array('mp4 h264 (baseline, ffmpeg > 0.7.7)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;2_pass_h264_encoding:1;videobitrate:536000;fps:25;maintain_aspect_ratio:yes'),
-
-    // Based on android h264 recommendations:
-    // http://developer.android.com/guide/appendix/media-formats.html.
-    array('mp4 h264 low quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
-    array('mp4 h264 medium quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
-    array('mp4 h264 high quality (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
-    array('mp4 h264 HD (mobile phone)', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;x264_profile:baseline;x264_preset:slow;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+    // @todo: test 2 pass encoding : 2_pass_h264_encoding:1
+    // libx264, lib264/libfaac
+    // See http://developer.android.com/guide/appendix/media-formats.html.
+    array('mp4 h264 360p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
+    array('mp4 h264 480p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
+    array('mp4 h264 720p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
 
     // Same as before but now with default profile.
-    array('mp4 h264 low quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiochannels:1;videocodec:libx264;videobitrate:56000;fps:12;size:176x144;maintain_aspect_ratio:yes'),
-    array('mp4 h264 medium quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:64000;audiochannels:2;videocodec:libx264;videobitrate:360000;fps:25;maintain_aspect_ratio:yes;size:480x320'),
-    array('mp4 h264 high quality', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:500000;fps:30;size:480x360;maintain_aspect_ratio:yes'),
-    array('mp4 h264 HD - 2kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
-    array('mp4 h264 HD - 4kbps', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libx264;videobitrate:4000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+    array('mp4 h264 360p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
+    array('mp4 h264 480p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
+    array('mp4 h264 720p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
 
-    // h264 lossless profiles.
-    //
-    // mpeg4, default profile, as this profile will work on ffmpeg 0.7 ad 0.9.
-    array('mpeg4 default', 'FALSE', 'ffmpeg', 'mpeg', 'videocodec:mpeg4'),
+    // webm, libvpx/libvorbis
+    array('WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
+    array('WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
+    array('WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['720p_video'] . ';audiocodec:libvorbis;' . $def_params['720p_audio']),
+    array('WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
 
-    // mpeg4 iphone format (untested).
-    array('mpeg4 iphone', 'FALSE', 'ffmpeg', 'mp4', 'audiocodec:libfaac;audiobitrate:128000;audiochannels:2;videocodec:mpeg4;videobitrate:800000;size:240x160'),
-
-    // webm, settings from http://en.wikipedia.org/wiki/YouTube.
-    array('WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
-    array('WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
-    array('WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
-    array('WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libvpx;videobitrate:4000000;fps:30;size:1920x1080;maintain_aspect_ratio:yes'),
-
-    // ogg.
-    array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:500000;fps:30;size:640x360;maintain_aspect_ratio:yes'),
-    // Changing default: change MediaMosaTestCaseEgaJob::SIMPLETEST_PROFILE_ID_DEFAULT too.
-    array('Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:128000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:1000000;fps:30;size:854x480;maintain_aspect_ratio:yes'),
-    array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv', 'audiocodec:libvorbis;audiobitrate:192000;audiosamplingrate:44100;audiochannels:2;videocodec:libtheora;videobitrate:2000000;fps:30;size:1280x720;maintain_aspect_ratio:yes'),
+    // ogg. libtheora/libvorbis
+    array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
+    // Changing default: also change
+    // MediaMosaTestCaseEgaJob::SIMPLETEST_PROFILE_ID_DEFAULT.
+    array('Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
+    array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv','videocodec:libtheora;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
   );
 
   foreach ($default_profiles as $default_profile) {

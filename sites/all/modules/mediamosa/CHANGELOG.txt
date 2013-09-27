@@ -357,12 +357,6 @@ MediaMosa 3.2.3 (build 1888)
   mountpoint.
 - Added update script for fixing missing directory 'Y' under mountpoint.
 
-MediaMosa 3.2.3 (build 1888)
-----------------------------
-- Fixed installation profile for missing creating of the 'Y' directory under
-  mountpoint.
-- Added update script for fixing missing directory 'Y' under mountpoint.
-
 MediaMosa 3.2.1 (build 1846)
 ----------------------------
 - Added play restriction ACL; media that does meet play restriction rules (when

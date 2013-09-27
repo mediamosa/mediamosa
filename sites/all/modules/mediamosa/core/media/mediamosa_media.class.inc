@@ -66,7 +66,9 @@ class mediamosa_media {
    *   The created mediafile_str.
    */
   public static function filename_build($basename, $extension = '', $style_id = '') {
-    return $basename . (empty($style_id) ? '' : ',' . $style_id) . '.' . $extension;
+    return $basename .
+      (empty($style_id) ? '' : ',' . $style_id) .
+      (empty($extension) ? '' : '.' . $extension);
   }
 
   /**
@@ -91,7 +93,9 @@ class mediamosa_media {
    */
   public static function filename_parse($filename) {
     $matches = array();
-    if (preg_match('@^([a-zA-Z0-9]+),?([0-9]+)?(\.[a-zA-Z0-9]+)?$@', $filename, $matches)) {
+    // Lowercase alphanumeric characters, numbers, underscores (_),
+    // and hyphens (-) for style names.
+    if (preg_match('@^([a-zA-Z0-9]+),?([a-z_\-0-9]+)?(\.[a-zA-Z0-9]+)?$@', $filename, $matches)) {
       return array(
         $matches[1],
         empty($matches[2]) ? 0 : $matches[2],
@@ -638,6 +642,70 @@ class mediamosa_media {
   }
 
   /**
+   * Preg replace callback to replace all used TICKET_URI variations.
+   */
+  protected static function replace_ticket_uris($match, $app_id, $user_id, $asset_id, $is_app_admin = FALSE) {
+
+    // Use get_by_asset_id with these defaults.
+    $options = array(
+      'exclude_stills' => FALSE,
+      'limit' => 1,
+    );
+
+    switch ($match[1]) {
+      case 'PROFILE':
+        $options += array(
+          'transcode_profile_id' => (int) $match[2],
+        );
+        break;
+
+      case 'FILE_EXTENTION':
+        $options += array(
+          'filename' => '%.' . $match[2],
+        );
+        break;
+
+      case 'CONTAINER':
+        $options += array(
+          'container_type' => $match[2],
+        );
+        break;
+
+      case 'MIME':
+        $options += array(
+          'mime_type' => $match[2],
+        );
+        break;
+
+      case 'VIDEOCODEC':
+        $options += array(
+          'video_codec' => $match[2],
+        );
+        break;
+
+      case 'TAG':
+        $options += array(
+          'tag' => $match[2],
+        );
+        break;
+
+      default:
+        return '';
+    }
+
+    $mediafile = mediamosa_asset_mediafile::get_by_asset_id($asset_id, array(), $options);
+
+    if (isset($mediafile) && is_array($mediafile)) {
+      $mf = reset($mediafile);
+      if (is_array($mf)) {
+        $media_view = mediamosa_media::process_media_view($app_id, $user_id, $mf, mediamosa_media::RESPONSE_URI, $is_app_admin);
+        return $media_view[mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD];
+      }
+    }
+    return '';
+  }
+
+  /**
    * Process response for object media view call.
    *
    * @param integer $app_id
@@ -700,8 +768,31 @@ class mediamosa_media {
     $video_codec = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'video_codec');
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'mime_type');
 
-    // Get the Object code.
     $output = mediamosa_server::get_objectcode_streaming($container_type, $video_codec, $mime_type);
+
+    $replaces = array();
+    preg_match_all('|{TICKET_URI_([a-zA-Z0-9_]+):([a-zA-Z0-9_\.\-:;\/]+)}|', $output, $matches, PREG_SET_ORDER);
+    foreach ($matches as $match) {
+
+      // Replace the ticket_uri itself.
+      $replacement = self::replace_ticket_uris($match, $app_id, $user_id, $mediafile['asset_id'], $is_app_admin);
+
+      $output = str_replace($match[0], $replacement, $output);
+
+      // Replace the {IF_...}{/IF_...} if needed.
+      $if_tag = "IF_TICKET_URI_" . $match[1] . ':' . $match[2];
+
+      if ($replacement == '') {
+        // If no replacement, remove the whole if block (if any).
+        $if_tag = strtr($if_tag, array('.' => '\.', '-' => '\-', '/' => '\/'));
+        $output = preg_replace('@\{' . $if_tag . '}.*?\{/' . $if_tag . '\}@si', '', $output);
+      }
+      else {
+        // Remove the if tags.
+        $output = str_replace('{' . $if_tag . '}', '', $output);
+        $output = str_replace('{/' . $if_tag . '}', '', $output);
+      }
+    }
 
     $variables = array(
       '{WIDTH}' => !$video_size['width'] ? '' : $video_size['width'],

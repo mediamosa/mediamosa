@@ -102,6 +102,7 @@ function mediamosa_integrity_check_schema() {
       ),
       mediamosa_integrity_check_db::SIZE => array(
         'type' => 'int',
+        'size' => 'big',
         'unsigned' => TRUE,
         'not null' => FALSE,
         'description' => t('The file size.'),
@@ -135,4 +136,19 @@ function mediamosa_integrity_check_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * Increase the size field to allow files > 2G.
+ */
+function mediamosa_integrity_check_update_7001() {
+  db_change_field(mediamosa_integrity_check_db::TABLE_NAME, mediamosa_integrity_check_db::SIZE, mediamosa_integrity_check_db::SIZE,
+    array(
+      'type' => 'int',
+      'size' => 'big',
+      'unsigned' => TRUE,
+      'not null' => FALSE,
+      'description' => t('The file size.'),
+    )
+  );
 }
