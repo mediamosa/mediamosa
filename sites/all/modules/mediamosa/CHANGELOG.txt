@@ -208,6 +208,8 @@ MediaMosa 3.4.x-dev (build 2030, master branch)
   servers. Can be used to calculate the maximum allowed upload byte size. Also
   returns real time information about the PHP upload settings of each upload
   server.
+- Added weight property to UI and tool parameters. This will allow us to change
+  the order of the params for tools.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
