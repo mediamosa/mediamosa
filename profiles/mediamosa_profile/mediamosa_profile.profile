@@ -140,7 +140,7 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => st('Setting up database'),
-    '#description' => st("<p>We advice using a MySQL 5.1 complient version or higher, such as !mariadb, !percona or !mysql.</p>
+    '#description' => st("<p>We advice using a MySQL 5.1 compliant version or higher, such as !mariadb, !percona or !mysql.</p>
    <p>Follow the instructions on !create-database if you need help creating a database.<p>", array(
      '!mysql' => l(t('MySQL'), 'http://mysql.com', array('absolute' => TRUE)),
      '!mariadb' => l(t('MariaDB'), 'http://mariadb.org', array('absolute' => TRUE)),
