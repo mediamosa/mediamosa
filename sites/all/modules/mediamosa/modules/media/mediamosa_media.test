@@ -440,7 +440,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     mediamosa_asset_mediafile::update($app_id, $mf_external_uri_id, self::SIMPLETEST_USER_ID,
       array(
-        'uri' => 'https://www.google.nl/images/srpr/logo4w.png',
+        'uri' => 'https://www.example.org/test.png',
       ));
 
     $mediafile = $this->getMediafile($mf_external_uri_id);
@@ -450,7 +450,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       $mediafile
     );
 
-    $this->assertTrue($response['output'] == 'https://www.google.nl/images/srpr/logo4w.png', 'Test playcall to external URI.');
+    $this->assertTrue($response['output'] == 'https://www.example.org/test.png', 'Test playcall to external URI.');
     $this->verbose('Response: ' . print_r($response, TRUE));
   }
 
@@ -512,7 +512,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mf_external_id = $this->createMediafile($upload['asset_id']);
     mediamosa_asset_mediafile::update($app_id, $mf_external_id, self::SIMPLETEST_USER_ID,
       array(
-        'uri' => 'https://www.google.nl/images/srpr/logo4w.png',
+        'uri' => 'https://www.example.org/test.png',
         'tag' => 'uri',
       ));
 
