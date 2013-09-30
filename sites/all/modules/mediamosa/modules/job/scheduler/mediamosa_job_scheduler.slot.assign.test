@@ -24,7 +24,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     parent::setUp();
 
     // Create upload file.
-    $this->upload = $this->uploadTestFile(array('filename' => self::getTestVideo()));
+    $this->upload = $this->uploadTestFile(array('filename' => $this->getTestVideo()));
 
     $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAll();
     $job_server = reset($job_servers);

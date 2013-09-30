@@ -282,7 +282,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->toEga_1();
 
     // Create upload file.
-    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
