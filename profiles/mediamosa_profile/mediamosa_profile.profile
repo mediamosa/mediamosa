@@ -5,10 +5,8 @@
  */
 
 // Include our helper class as autoloader is not up yet.
-require_once('mediamosa_profile.class.inc');
-
+require_once 'mediamosa_profile.class.inc';
 require_once 'sites/all/modules/mediamosa/core/storage/mediamosa_storage.class.inc';
-
 
 /**
  * Implements hook_install_tasks().
@@ -35,11 +33,6 @@ function mediamosa_profile_install_tasks() {
     'mediamosa_profile_apache_settings_form' => array(
       'display_name' => st('Apache settings'),
       'type' => 'form',
-    ),
-    'mediamosa_profile_domain_usage_form' => array(
-      'display_name' => st('Your domain usage'),
-      'type' => 'form',
-      'run' => variable_get('mediamosa_apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
     'mediamosa_profile_cron_settings_form' => array(
       'display_name' => st('Cron settings'),
@@ -87,7 +80,6 @@ function mediamosa_profile_metadata_support_form() {
   $options = array(
     'dublin_core' => st('Dublin Core'),
     'qualified_dublin_core' => st('Qualified Dublin Core'),
-    'czp' => st('Content Zoek Profiel (Content Search Profile)'),
   );
 
   $form['description'] = array(
@@ -97,7 +89,10 @@ function mediamosa_profile_metadata_support_form() {
   $form['metadata_support'] = array(
     '#type' => 'checkboxes',
     '#title' => st('Select the metadata libraries you want to use.'),
-    '#description' => st('For more information about Dublin Core !link_dc. For more information about Qualified Dublin Core !link_qdc. For more information about Content Zoek Profiel !link_czp (Dutch)', array('!link_dc' => l('click here', 'http://dublincore.org', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))), '!link_qdc' => l('click here', 'http://dublincore.org/documents/usageguide/qualifiers.shtml', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))), '!link_czp' => l('click here', 'http://www.edustandaard.nl/afspraken/001', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))))),
+    '#description' => st('For more information about Dublin Core see !link_dc. For more information about Qualified Dublin Core !link_qdc.', array(
+      '!link_dc' => l(t('dublincore.org'), 'http://dublincore.org', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))),
+      '!link_qdc' => l(t('dublincore-qualifiers'), 'http://dublincore.org/documents/usageguide/qualifiers.shtml', array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))),)),
+
     '#options' => $options,
     '#required' => TRUE,
     '#default_value' => array('dublin_core', 'qualified_dublin_core'),
@@ -145,34 +140,17 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => st('Setting up database'),
-    '#description' => st("
-   <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.</p>
-   <p>This version of MediaMosa will also work with !postgresql.</p>
-   <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'mediamosa' before proceeding.</p>
-    <pre>
-        # The password entries below needs to be changed.<br />
-        <br />
-        # Create the database.<br />
-        CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
-        <br />
-        # Create localhost access for user 'mediamosa'.<br />
-        CREATE USER 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa';<br />
-        <br />
-        # Now grant usage for user 'mediamosa' on the 'mediamosa' database.<br />
-        GRANT USAGE ON mediamosa.* TO 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
-        <br />
-        GRANT ALL ON mediamosa.* TO 'mediamosa'@'localhost';<br />
-    </pre>
-    <p>
-        You may change the 'mediamosa' database prefix and the database user name.<br />
-        <br />
-        If you want to migrate your current MediaMosa v1.7 database to the new 3.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
-   ", array(
-    '!mysql' => l('MySQL', 'http://mysql.com', array('absolute' => TRUE)),
-    '!mariadb' => l('MariaDB', 'http://mariadb.org', array('absolute' => TRUE)),
-    '!postgresql' => l('PostgreSQL', 'http://www.postgresql.org', array('absolute' => TRUE))
-   ))
+    '#description' => st("<p>We advice using a MySQL 5.1 complient version or higher, such as !mariadb, !percona or !mysql.</p>
+   <p>Follow the instructions on !create-database if you need help creating a database.<p>", array(
+     '!mysql' => l(t('MySQL'), 'http://mysql.com', array('absolute' => TRUE)),
+     '!mariadb' => l(t('MariaDB'), 'http://mariadb.org', array('absolute' => TRUE)),
+     '!percona' => l(t('Percona'), 'http://www.percona.com/', array('absolute' => TRUE)),
+     '!postgresql' => l(('PostgreSQL'), 'http://www.postgresql.org', array('absolute' => TRUE)),
+     '!create-database' => l(('www.drupal.org create-database'), 'https://drupal.org/documentation/install/create-database', array('absolute' => TRUE)),
+   )),
   );
+  unset($form['driver']['#options']['pgsql']);
+  unset($form['driver']['#options']['sqlite']);
 }
 
 /**
@@ -195,28 +173,28 @@ function mediamosa_profile_php_settings_form($form, &$form_state, &$install_stat
   // Requirements for PHP modules.
   $php_modules = mediamosa_profile::requirements_php_modules();
   $form['requirements']['php_modules']['title'] = array(
-    '#markup' => '<h1>' . st('PHP Modules') . '</h1>'
+    '#markup' => '<h1>' . st('PHP Modules') . '</h1>',
   );
   $form['requirements']['php_modules']['requirements'] = array(
-    '#markup' => theme('status_report', array('requirements' => $php_modules['requirements']))
+    '#markup' => theme('status_report', array('requirements' => $php_modules['requirements'])),
   );
 
   // Required installed 3rd party programs.
   $installed_programs = mediamosa_profile::requirements_installed_programs();
   $form['requirements']['installed_programs']['title'] = array(
-    '#markup' => '<h1>' . st('Installed programs') . '</h1>'
+    '#markup' => '<h1>' . st('Installed programs') . '</h1>',
   );
   $form['requirements']['installed_programs']['requirements'] = array(
-    '#markup' => theme('status_report', array('requirements' => $installed_programs['requirements']))
+    '#markup' => theme('status_report', array('requirements' => $installed_programs['requirements'])),
   );
 
   // Required PHP settings.
   $php_settings = mediamosa_profile::requirements_php_settings();
   $form['requirements']['php_settings']['title'] = array(
-    '#markup' => '<h1>' . st('PHP variables / Settings') . '</h1>'
+    '#markup' => '<h1>' . st('PHP variables / Settings') . '</h1>',
   );
   $form['requirements']['php_settings']['requirements'] = array(
-    '#markup' => theme('status_report', array('requirements' => $php_settings['requirements']))
+    '#markup' => theme('status_report', array('requirements' => $php_settings['requirements'])),
   );
 
   // Check for errors.
@@ -260,7 +238,7 @@ function mediamosa_profile_storage_location_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
 
   $form['description'] = array(
-    '#markup' => '<p><b>' . st('The MediaMosa mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this mount point needs to be available for all servers (i.e. through NFS)') . '</b></p>',
+    '#markup' => '<p><b>' . st('The MediaMosa mount point is a shared directory where all mediafiles are stored. On a multi-server setup, this mount point needs to be available for all servers (i.e. through NFS)') . '</b></p>',
   );
 
   $form['current_mount_point'] = array(
@@ -287,16 +265,16 @@ function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
   $mount_point = $form_state['values']['current_mount_point'];
 
   if (trim($mount_point) == '') {
-    form_set_error('current_mount_point', t("The current Linux mount point can't be empty."));
+    form_set_error('current_mount_point', t("The mount point can't be empty."));
   }
   elseif (!file_exists($mount_point)) {
-    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') can not be found.", array('@mount_point' => $mount_point)));
+    form_set_error('current_mount_point', t("The mount point ('@mount_point') could not be found.", array('@mount_point' => $mount_point)));
   }
   elseif (!is_dir($mount_point)) {
-    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') is not a directory.", array('@mount_point' => $mount_point)));
+    form_set_error('current_mount_point', t("The mount point ('@mount_point') is not a directory.", array('@mount_point' => $mount_point)));
   }
   elseif (!is_writable($mount_point)) {
-    form_set_error('current_mount_point', t("The current Linux mount point ('@mount_point') is not writeable for the webserver (@server_software).", array('@server_software' => $_SERVER['SERVER_SOFTWARE'], '@mount_point' => $mount_point)));
+    form_set_error('current_mount_point', t("The mount point ('@mount_point') is not writeable for the webserver (@server_software).", array('@server_software' => $_SERVER['SERVER_SOFTWARE'], '@mount_point' => $mount_point)));
   }
 }
 
@@ -341,7 +319,9 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => st('Cron setup'),
-    '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The setup for cron is required for MediaMosa to run properly.'),
+    '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The
+setup for cron is required for MediaMosa to run properly. On a multiple server
+setup, the cron must be installed on one server only, for example on the job schedular server.'),
   );
 
   $form['cron']['crontab_text'] = array(
@@ -381,18 +361,10 @@ function mediamosa_profile_apache_settings_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '');
 
   $apache_settings_local = st("This setup is for installation of MediaMosa on 1 server and 1 domain.
-  Can be used for simple testing setups, but also for a small server deploy. MediaMosa can be installed on a subdirectory
+  Can be used for testing setups, but also for a small server deploy. MediaMosa can be installed on a subdirectory
   (http://domain/mediamosa), or in the document root (http://domain).
   <p><li>Add the following lines to your default apache definition:</p>
     <pre>" . htmlentities("
-    # MediaMosa tickets
-    Alias !rel_directoryticket !mount_point/links
-    <Directory !mount_point/links>
-      Options FollowSymLinks
-      Order deny,allow
-      Allow from All
-    </Directory>
-
     # Media
     Alias !rel_directorymedia !mount_point/media
     <Directory !mount_point/media>
@@ -407,14 +379,15 @@ function mediamosa_profile_apache_settings_form() {
         php_admin_value upload_max_filesize 2000M
         php_admin_value memory_limit 128M
     </IfModule>") . '</pre>
-<p>The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p>
+<p>The media alias is the (streaming) link to a mediafile needed to view files, the php settings are needed to allow more than default sizes upload. For more information about upload limits, see also !uploadlimits.</p>
 <p><li>Restart your Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>
 ', array(
-      '!mount_point' => mediamosa_profile::trim_uri($mount_point, ''),
-      '!server_name_clean' => $server_name,
-      '!document_root' => DRUPAL_ROOT,
-      '!rel_directory' => url(),
-    ));
+    '!mount_point' => mediamosa_profile::trim_uri($mount_point, ''),
+    '!server_name_clean' => $server_name,
+    '!document_root' => DRUPAL_ROOT,
+    '!rel_directory' => url(),
+    '!uploadlimits' => l(t('www.mediamosa.org/server-setup'), ''),
+  ));
 
   $server_name_clean = $server_name;
 
@@ -579,22 +552,27 @@ function mediamosa_profile_apache_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Apache HTTP server setup'),
-    '#description' => t("Choose a server setup. We recommend the Multiserver setup for production websites. The simple setup should only be used for testing purposes."),
+    '#description' => st("Choose a server setup. See !mediamosa.org/server-setup for more information
+about server setups, and Apache/Nginx configurations. We recommend the Multiserver setup for
+production websites. The single setup can be used for testing purposes, and
+single machine deploys.",
+       array('!mediamosa.org/server-setup' => l(t('mediamosa.org/server-setup'), 'http://www.mediamosa.org/server-setup'))
+    ),
   );
 
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => '<b>' . t('Single server / domain setup (testing setup).') . '</b>',
-      'advanced' => '<b>' . t('Multiple server / domain setup (production setup).') . '</b>',
+      'simple' => '<b>' . t('Single server / domain setup.') . '</b>',
+      'advanced' => '<b>' . t('Multiple server / domain setup.') . '</b>',
     ),
   );
 
   $form['apache']['local'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Single server / domain setup (testing setup).'),
+    '#title' => t('Single server / domain setup.'),
     '#states' => array(
-      'visible' => array(   // action to take.
+      'visible' => array(
         ':input[name="localhost"]' => array('value' => 'simple'),
       ),
     ),
@@ -607,7 +585,7 @@ function mediamosa_profile_apache_settings_form() {
     '#type' => 'fieldset',
     '#title' => t('Multi server/domain setup (production setup).'),
     '#states' => array(
-      'visible' => array(   // action to take.
+      'visible' => array(
         ':input[name="localhost"]' => array('value' => 'advanced'),
       ),
     ),
