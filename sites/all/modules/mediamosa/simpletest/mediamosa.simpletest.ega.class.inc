@@ -620,7 +620,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   protected function uploadTestFile($options = array()) {
     // Setup default options.
     $options += array(
-      'filename' => self::getTestVideo(),
+      'filename' => $this->getTestVideo(),
       'asset_id' => '',
       'use_put' => FALSE,
       'downloadable' => FALSE,
@@ -684,7 +684,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['uploadprogress_url']), 'uploadprogress_url set');
 
     // Get link to upload file.
-    $filename = empty($filename) ? self::getTestVideo() : $filename;
+    $filename = empty($filename) ? $this->getTestVideo() : $filename;
 
     // Get the filesize of the original.
     $filesize_original = mediamosa_io::filesize($filename);
@@ -2153,7 +2153,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Create an mediafile.
-   * 
+   *
    * Based on REST call /mediafile/create (POST)
    */
   protected function createMediafile($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {

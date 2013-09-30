@@ -115,6 +115,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Make this global so we can output debug to the test.
     $GLOBALS['_mediamosa_simpletest'] = $this;
 
+    // Create the drupal_hash_salt, so we can store it and prevent the $database
+    // serialize bug.
+    global $drupal_hash_salt;
+    if (empty($drupal_hash_salt)) {
+      $drupal_hash_salt = drupal_get_hash_salt();
+    }
+
     $vars_to_copy = array('mediamosa_current_mount_point');
     $values = array();
 
@@ -122,9 +129,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     foreach ($vars_to_copy as $var_to_copy) {
       $values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
     }
-
-    // Set debug on high.
-    $values['mediamosa_debug_level'] = 10;
 
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
@@ -140,11 +144,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Now set it, so its in the sandbox.
     foreach ($values as $name => $value) {
-      // Skip NULL.
       if (!is_null($value)) {
         mediamosa::variable_set($name, $value);
       }
     }
+
+    // Store the salt, so we can reuse it in children page calls.
+    mediamosa::variable_set('mediamosa_drupal_hash_salt', $drupal_hash_salt);
 
     // Lets put debug on high.
     mediamosa::variable_set('mediamosa_debug_level', 10);

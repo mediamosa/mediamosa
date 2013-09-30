@@ -131,7 +131,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    * @param $options
    *   Options to setup the upload.
    *   - filename (optional)
-   *     Filename of the file to upload. Will default to wmf test file.
+   *     Filename of the file to upload. Will default to ogg test file.
    *   - asset_id (optional)
    *     The asset to use for the upload.
    *   - use_put (FALSE)

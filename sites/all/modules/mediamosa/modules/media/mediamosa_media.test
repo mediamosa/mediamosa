@@ -95,7 +95,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     $upload = $this->uploadTestFile(
       array(
         'downloadable' => TRUE,
-        'filename' => self::getTestVideo_wmv(),
+        'filename' => $this->getTestVideo_wmv(),
       ));
     $mediafile_id = $upload['mediafile_id'];
     $mediafile = $this->getMediafile($mediafile_id);

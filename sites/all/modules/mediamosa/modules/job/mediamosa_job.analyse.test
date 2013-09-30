@@ -26,7 +26,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
   public function testJobAnalyse() {
 
     // Create upload file.
-    $upload = $this->uploadTestFile(array('filename' => self::getTestVideo()));
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo()));
     $mediafile_id = $upload['mediafile_id'];
 
     // Get the mediafile.

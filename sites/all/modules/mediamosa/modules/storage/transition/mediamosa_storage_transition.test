@@ -16,22 +16,26 @@ class MediaMosaMediaStorageTransitionTestCaseEga extends MediaMosaTestCaseEgaJob
 
   // -------------------------------------------------------------------- Tests.
   function testStorageTransition() {
+    $options = array(
+      'filename' => $this->getTestVideo_wmv(),
+    );
+
     // Upload 15 files (14902200 bytes, 14,2mb).
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
-    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
+    $upload = $this->uploadTestFile($options);
 
     // Parse the queue.
     $this->doQueueCycleAll();
