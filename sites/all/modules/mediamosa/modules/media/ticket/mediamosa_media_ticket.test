@@ -120,7 +120,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Preparation.
 
     // Create upload file.
-    $upload = $this->uploadTestFile();
+    $upload = $this->uploadTestFile(array('filename' => self::getTestVideo_wmv()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
     $filename = $upload['filename'];
