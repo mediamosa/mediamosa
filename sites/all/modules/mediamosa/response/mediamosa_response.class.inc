@@ -118,6 +118,17 @@ class mediamosa_response extends mediamosa {
       return;
     }
 
+    // Fix hash_salt bug when running simpletest on multiple vhosts with
+    // different filesystems for bootstart.inc.
+    if (mediamosa::in_simpletest_sandbox()) {
+      global $drupal_hash_salt;
+
+      $mediamosa_drupal_hash_salt_copy = mediamosa::variable_get('mediamosa_drupal_hash_salt');
+      if (!empty($mediamosa_drupal_hash_salt_copy)) {
+        $drupal_hash_salt = $mediamosa_drupal_hash_salt_copy;
+      }
+    }
+
     // In case of exceptions, the output will be XML.
     $this->response_type = mediamosa_response::RESPONSE_TYPE_XML;
 
