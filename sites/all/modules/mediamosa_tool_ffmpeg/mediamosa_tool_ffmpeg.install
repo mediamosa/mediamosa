@@ -40,6 +40,7 @@ function mediamosa_tool_ffmpeg_install() {
   );
 
   // Insert default mappings as nodes.
+  $weight = 0;
   foreach ($default_params as $default_param) {
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
 
@@ -52,6 +53,7 @@ function mediamosa_tool_ffmpeg_install() {
     $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
     $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
     $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
+    $node->{mediamosa_tool_params_db::WEIGHT} = $weight++;
 
     $node = node_save($node);
   }
