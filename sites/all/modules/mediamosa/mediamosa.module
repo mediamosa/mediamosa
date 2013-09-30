@@ -74,6 +74,12 @@ function mediamosa_stream_wrappers() {
       'description' => t('Local storage of the mediafiles.'),
       'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
     ),
+    'mediamosa-storage-external-uri' => array(
+      'name' => t('MediaMosa URI external located based files.'),
+      'class' => 'mediamosa_io_streamwrapper_external_uri',
+      'description' => t('Uses the URI field in MediaFile that points to an external viewable file.'),
+      'type' => STREAM_WRAPPERS_LOCAL_HIDDEN,
+    ),
     'mediamosa-storage-stills' => array(
       'name' => t('MediaMosa storage local mount point location for stills'),
       'class' => 'mediamosa_io_streamwrapper_local_stills',

@@ -436,14 +436,15 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
     $asset_id = $this->createAsset();
-    $mf_external_uri_id = $this->createMediafile($asset_id);
 
-    mediamosa_asset_mediafile::update($app_id, $mf_external_uri_id, self::SIMPLETEST_USER_ID,
-      array(
-        'uri' => 'https://www.example.org/test.png',
-      ));
+    $parameters = array(
+      'uri' => 'https://www.example.org/test.png',
+    );
+
+    $mf_external_uri_id = $this->createMediafile($asset_id, $parameters);
 
     $mediafile = $this->getMediafile($mf_external_uri_id);
+    $this->var_export($mediafile);
     $response = $this->do_response(
       $app_id,
       mediamosa_media::RESPONSE_URI,
@@ -559,8 +560,10 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       'url://unittest.h264/' . "\n\n" .
       'url://unittest.h264/' . "\n\n" .
       'url://unittest.h264/' . "\n\n" .
+      'https://www.example.org/test.png' . "\n" .
       'url://unittest.h264/' . "\n";
-
+    $this->var_export($response['output']);
+    $this->var_export($expected_response);
     $this->assertTrue($response['output'] == $expected_response, 'Test TICKET_URI parsing.');
     $this->verbose('Response: ' . print_r($response, TRUE));
 
@@ -595,6 +598,5 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $this->assertTrue($response['output'] == $expected_response, 'Test IF_TICKET_URI parsing.');
     $this->verbose('Response: ' . print_r($response, TRUE));
-
   }
 }

@@ -1,15 +1,7 @@
 <?php
 /**
  * @file
- * This example streamwrapper is used by our simpletests and should give an
- * example template for external wrappers.
- *
- * For better example, look at the S3 implementation.
- *
- * Notes:
- * ------
- *
- * The uri of typical external mediamosa stream;
+ * External streamwrapper for uri based mediafiles.
  *
  * Uri:
  * {scheme}://{storage_profile_id}/[path][/-/mediafile_path].
@@ -27,54 +19,7 @@
  *   unset($md5s[$uri]);
  */
 
-/**
- * Just here for example.
- */
-class mediamosa_storage_example extends mediamosa_storage {
-  /**
-   * Get the default scheme.
-   *
-   * @param boolean $is_still
-   *   Is mount point for still? Is ignored on external uris.
-   *
-   * @return string
-   *   The uri of the moint point to store.
-   */
-  public function get_scheme($is_still = FALSE) {
-    return 'mediamosa-storage-external-example';
-  }
-
-  /**
-   * Return the storage options available for the storage type
-   *
-   * @return
-   *   Array of available storage options
-   */
-  public function get_storage_options() {
-    return array('some path' => (t('my path')));
-  }
-
-  /**
-   * Return alle required upload parameters for the storage type
-   * which allow a frontend application to build the correct upload form
-   *
-   * $param $app_id
-   *   Application ID.
-   *
-   * @param $user_id
-   *   User ID
-   * @param $group_id
-   *   Group ID
-   *
-   * @return
-   *   Array with upload parameters
-   */
-//  public function get_upload_parameters($app_id, $user_id, $group_id) {
-//    return array();
-//  }
-}
-
-class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwrapper_external {
+class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper_external {
   // --------------------------------------------------------- Abstract methods.
   /**
    * Build the storage object that belongs to this streamwrapper.
@@ -82,11 +27,11 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
    * @param array $storage_profile
    *   Storage profile.
    *
-   * @return mediamosa_storage_s3
-   *   The mediamosa storage S3 object.
+   * @return mediamosa_storage_uri
+   *   The mediamosa storage URI object.
    */
   public function create_storage_object(array $storage_profile) {
-    return new mediamosa_storage_example($storage_profile);
+    return new mediamosa_storage_uri($storage_profile);
   }
 
   /**
@@ -96,7 +41,7 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
    *   Returns the uri to the local file.
    */
   public function get_uri_local_file() {
-    return 'mediamosa-storage-data:///-/s/something/something.txt';
+    throw new mediamosa_exception_error_unexpected_error('An external URI based mediafile does not have an local file.');
   }
 
   /**
@@ -111,7 +56,7 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
    * @throws mediamosa_exception_error
    */
   public function mediafile_copy($mediamosa_io_streamwrapper_source) {
-    // See S3 implementation.
+    throw new mediamosa_exception_error_unexpected_error('Can not copy external URI based mediafile.');
   }
 
   /**
@@ -121,7 +66,7 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
    *   The MD5 of the file or FALSE otherwise.
    */
   public function md5_file() {
-    // Should return a valid MD5 value.
+    // We don't know the md5 of an external file.
     return self::MD5_DEFAULT;
   }
   // ------------------------------------------------------ Abstract IO Methods.
@@ -150,5 +95,51 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
   public function filesize() {
     // Implement into your class file_exists().
     return $this->file_exists() ? TRUE : FALSE;
+  }
+
+  /**
+   * Process media view request.
+   *
+   * @param integer $app_id
+   *   Application ID.
+   * @param string $user_id
+   *   The owner for possible ticket.
+   * @param array $mediafile
+   *   The mediafile to process.
+   * @param string $response_type
+   *   See mediamosa_media::RESPONSE_*
+   * @param boolean $is_app_admin
+   *   Is app admin.
+   *
+   * @return array
+   *   An associative array; (see mediamosa_io_streamwrapper::MEDIA_VIEW_*)
+   *   - 'ticket_id'
+   *     The ticket ID used.
+   *   - 'link'
+   *     The symbolic link complete path.
+   *   - 'filename'
+   *     The filename of the media.
+   *   - 'server_uri_build'
+   *     The finished server uri.
+   */
+   public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+    // Get the stuff we need.
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+    $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
+
+    // Get the streaming server URI.
+    $server_uri = mediamosa_media::get_server_uri($mediafile_id, $uri, $response_type);
+
+    // Get the permanent status, public mediafiles can be public.
+    $is_public = mediamosa_media::is_public($mediafile, $is_app_admin);
+
+    // Return the information needed.
+    return array(
+      mediamosa_io_streamwrapper::MEDIA_VIEW_TICKET_ID => '',
+      mediamosa_io_streamwrapper::MEDIA_VIEW_FILENAME => '',
+      mediamosa_io_streamwrapper::MEDIA_VIEW_LINK => '',
+      mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri,
+      mediamosa_io_streamwrapper::MEDIA_VIEW_IS_PUBLIC => $is_public,
+    );
   }
 }

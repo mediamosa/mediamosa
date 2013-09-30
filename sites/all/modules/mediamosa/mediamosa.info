@@ -43,6 +43,7 @@ files[] = lib/mediamosa_io.class.inc
 files[] = lib/mediamosa_io.streamwrapper.class.inc
 files[] = lib/mediamosa_io.streamwrapper.external.class.inc
 files[] = lib/mediamosa_io.streamwrapper.external.example.class.inc
+files[] = lib/mediamosa_io.streamwrapper.external.uri.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.data.class.inc
 files[] = lib/mediamosa_io.streamwrapper.local.media.class.inc
@@ -262,6 +263,7 @@ files[] = core/storage/profile/mediamosa_storage_profile.class.inc
 files[] = core/storage/profile/app/mediamosa_storage_profile_app_db.class.inc
 files[] = core/storage/profile/app/mediamosa_storage_profile_app.class.inc
 files[] = core/storage/local/mediamosa_storage_local.class.inc
+files[] = core/storage/uri/mediamosa_storage_uri.class.inc
 files[] = core/storage/mediamosa_storage.class.inc
 
 ; Server.

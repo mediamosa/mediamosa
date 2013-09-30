@@ -27,9 +27,6 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    */
   public function getExternalUrl() {
     return '';
-
-//    $path = str_replace('\\', '/', $this->getTarget());
-//    return url('system/temporary/' . $path, array('absolute' => TRUE));
   }
 
   /**

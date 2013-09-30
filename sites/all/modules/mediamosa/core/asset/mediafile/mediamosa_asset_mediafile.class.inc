@@ -862,11 +862,14 @@ class mediamosa_asset_mediafile {
   /**
    * Update the mediafile.
    *
-   * @param integer $app_id
+   * @param int $app_id
+   *   The client application ID.
    * @param string $mediafile_id
+   *   The MediaFile ID to update.
    * @param string $user_id
-   * @param string $type
+   *   The owner of the mediafile.
    * @param array $fields
+   *   The mediafile fields to save.
    */
   public static function update($app_id, $mediafile_id, $user_id, array $fields) {
     // Cant mix input of uri/filename/is_downloadable.
@@ -888,6 +891,11 @@ class mediamosa_asset_mediafile {
     // Can't change the type.
     if (!empty($mediafile[mediamosa_asset_mediafile_db::URI]) && ( isset($fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]) ) || (!empty($mediafile[mediamosa_asset_mediafile_db::FILENAME]) && isset($fields[mediamosa_asset_mediafile_db::URI])) ) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE);
+    }
+
+    // When URI is set, we need to set the mount point to external uri.
+    if (isset($fields[mediamosa_asset_mediafile_db::URI])) {
+      $fields[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = mediamosa_storage_uri::SCHEME . '://';
     }
 
     // Update the timestamps of the asset
@@ -964,14 +972,15 @@ class mediamosa_asset_mediafile {
    * Create the mediafile.
    *
    * @param string $mediafile_id
-   *  Provide the new mediafile_id.
+   *   Provide the new mediafile_id.
    * @param integer $app_id
+   *   The client application ID.
    * @param string $asset_id
-   *  Parent asset.
+   *   Parent asset.
    * @param string $user_id
-   *  The new owner.
+   *   The new owner.
    * @param array $fields
-   *  Optional fields. See mediamosa_asset_mediafile_db.
+   *   Optional fields. See mediamosa_asset_mediafile_db.
    */
   public static function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
     // Is original with mediafile_id_source combo.
@@ -993,6 +1002,11 @@ class mediamosa_asset_mediafile {
     $fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
     $fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
     $fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
+
+    // When URI is set, we need to set the mount point to external uri.
+    if (isset($fields[mediamosa_asset_mediafile_db::URI])) {
+      $fields[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = mediamosa_storage_uri::SCHEME . '://';
+    }
 
     // Enrich for created/changed.
     $fields = mediamosa_db::db_insert_enrich($fields);
