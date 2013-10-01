@@ -1,7 +1,7 @@
 name = "Amazon S3 storage module"
 description = "The MediaMosa Amazon S3 storage module."
 package = "MediaMosa - Storage"
-version = 7.x-3.4
+version = 7.x-3.5-RC1
 core = 7.x
 
 ; Dependencies (module names)

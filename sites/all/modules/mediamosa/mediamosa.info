@@ -1,7 +1,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = 7.x-3.4.x-dev
+version = 7.x-3.5-RC1
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -15,7 +15,7 @@ dependencies[] = menu
 dependencies[] = dblog
 dependencies[] = image
 dependencies[] = simpletest
-dependencies[] = mediamosa_sdk (>=3.5)
+dependencies[] = mediamosa_sdk (>=3.5-RC1)
 dependencies[] = mediamosa_connector
 
 ; Used files.

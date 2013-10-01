@@ -1,10 +1,10 @@
 name = "MediaMosa Apache Solr"
 description = "MediaMosa Apache Solr Search Integration."
 package = "MediaMosa - Search"
-version = 7.x-3.5
+version = 7.x-3.5-RC1
 core = 7.x
 
-dependencies[] = mediamosa
+dependencies[] = mediamosa (>=3.5-RC1)
 
 configure = admin/mediamosa/config/solr
 

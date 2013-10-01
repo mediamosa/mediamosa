@@ -1,7 +1,7 @@
 name = "Maintenance home page"
 description = "Main maintenance module."
 package = "MediaMosa - Maintenance"
-version = 7.x-3.4.0
+version = 7.x-3.5-RC1
 core = 7.x
 
 ; Dependencies (module names)

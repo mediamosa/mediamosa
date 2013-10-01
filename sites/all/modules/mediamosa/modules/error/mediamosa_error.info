@@ -3,7 +3,7 @@
 name = "Error handling"
 description = "The error module handles all maintenance and usage for error messaging for MediaMosa."
 package = "MediaMosa - Modules"
-version = 7.x-3.4.0
+version = 7.x-3.5-RC1
 core = 7.x
 
 ; Dependencies (module names)
