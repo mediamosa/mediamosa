@@ -36,7 +36,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is TRUE/
+    // Check is_empty_asset field is TRUE.
     $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
@@ -52,7 +52,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Get the asset.
     $asset = $this->getAsset($asset_id);
 
-    // Check is_empty_asset field is FALSE/
+    // Check is_empty_asset field is FALSE.
     $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',

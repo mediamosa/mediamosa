@@ -158,7 +158,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
         try {
-          if ($mediafile) {
+          // Can not delete uri based mediafiles.
+          if ($mediafile && empty($mediafile[mediamosa_asset_mediafile_db::URI])) {
             // Get URI.
             $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 

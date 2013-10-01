@@ -37,8 +37,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
   /**
    * Get the file on an local location and return the location.
    *
-   * @return string
-   *   Returns the uri to the local file.
+   * @throws mediamosa_exception_error_unexpected_error
    */
   public function get_uri_local_file() {
     throw new mediamosa_exception_error_unexpected_error('An external URI based mediafile does not have an local file.');
@@ -53,7 +52,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
    * @param mediamosa_io_streamwrapper $mediamosa_io_streamwrapper_source
    *   The local stream wrapper.
    *
-   * @throws mediamosa_exception_error
+   * @throws mediamosa_exception_error_unexpected_error
    */
   public function mediafile_copy($mediamosa_io_streamwrapper_source) {
     throw new mediamosa_exception_error_unexpected_error('Can not copy external URI based mediafile.');
@@ -97,6 +96,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
     return $this->file_exists() ? TRUE : FALSE;
   }
 
+  // ------------------------------------------------------------------ Methods.
   /**
    * Process media view request.
    *
@@ -141,5 +141,20 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
       mediamosa_io_streamwrapper::MEDIA_VIEW_SERVER_URI_BUILD => $server_uri,
       mediamosa_io_streamwrapper::MEDIA_VIEW_IS_PUBLIC => $is_public,
     );
+  }
+
+  /**
+   * External URI's have no unlink by default.
+   *
+   * @param string $uri
+   *   A string containing the URI to the resource to delete.
+   *
+   * @return bool
+   *   TRUE if resource was successfully deleted.
+   *
+   * @see http://php.net/manual/en/streamwrapper.unlink.php
+   */
+  public function unlink($uri) {
+    return TRUE;
   }
 }

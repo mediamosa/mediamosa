@@ -894,7 +894,7 @@ class mediamosa_asset_mediafile {
     }
 
     // When URI is set, we need to set the mount point to external uri.
-    if (isset($fields[mediamosa_asset_mediafile_db::URI])) {
+    if (!empty($fields[mediamosa_asset_mediafile_db::URI])) {
       $fields[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = mediamosa_storage_uri::SCHEME . '://';
     }
 
@@ -1004,7 +1004,7 @@ class mediamosa_asset_mediafile {
     $fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
 
     // When URI is set, we need to set the mount point to external uri.
-    if (isset($fields[mediamosa_asset_mediafile_db::URI])) {
+    if (!empty($fields[mediamosa_asset_mediafile_db::URI])) {
       $fields[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = mediamosa_storage_uri::SCHEME . '://';
     }
 

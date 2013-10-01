@@ -833,7 +833,7 @@ class mediamosa_io {
       $wrapper = self::require_stream_wrapper_instance_by_uri($uri);
     }
     catch (mediamosa_exception_error_streamwrapper_not_found $e) {
-      return TRUE; // No stream wrapper, expect local.
+      return TRUE;
     }
 
     // Need wrapper method.
