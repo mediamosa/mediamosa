@@ -1,4 +1,4 @@
-MediaMosa 3.5.x-RC1 (build 2050, master branch)
+MediaMosa 3.5.x-RC1 (build 2051, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
@@ -217,6 +217,8 @@ MediaMosa 3.5.x-RC1 (build 2050, master branch)
 - Unittest small fix: use proper uri's.
 - Added stream wrapper for external located mediafile with mediafile URI field.
 - Fixing problem when trying to delete uri based mediafiles.
+- Re-ordered overlapping update functions on v3.2.4 from 7037, 7038, 7039 to
+  7068, 7069, 7070.
 
 MediaMosa 3.3.x-dev (build 1910, master branch)
 -----------------------------------------------
