@@ -219,9 +219,6 @@ MediaMosa 3.5.x-RC1 (build 2051, master branch)
 - Fixing problem when trying to delete uri based mediafiles.
 - Re-ordered overlapping update functions on v3.2.4 from 7037, 7038, 7039 to
   7068, 7069, 7070.
-
-MediaMosa 3.3.x-dev (build 1910, master branch)
------------------------------------------------
 - Removed mediamosa_code_standard.draft.txt, as we will now follow Drupal code
   standards.
 - Removed mediamosa_migration module for migration of v1.7->v3.2.
