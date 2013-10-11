@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
   * CQL with is_private test file.
@@ -36,13 +11,12 @@ class MediaMosaAssetCQLIsPrivateTestCaseEga extends MediaMosaTestCaseEga {
   public static function getInfo() {
     return array(
       'name' => 'CQL - Asset search with is_private',
-      'description' => 'Testing asset CQL search with is_private = TRUE/FALSE.',
+      'description' => 'Testing asset CQL search with is_private = TRUE/FALSE and publish status (using is_private).',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
-  // Test Asset search with is_private (867).
   public function testCQLIsPrivate() {
 
     // Create asset.
@@ -115,5 +89,40 @@ class MediaMosaAssetCQLIsPrivateTestCaseEga extends MediaMosaTestCaseEga {
 
     // now owner can no longer see 1 when unapp.
     $this->cql_do_search_test_assets_1('aap', array($asset_id_2 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
+
+  /**
+   * Test publish mechanism that uses the is_private flag as indication of
+   * publish. When is_private = TRUE, then asset is not published.
+   */
+  public function testCQLPublished() {
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // We need mediafiles because ACL can only put rights on mediafiles atm
+
+    // Create mediafile.
+    $this->createMediafile($asset_id_1);
+    $this->createMediafile($asset_id_2);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
+    $this->createAssetMetadata($asset_id_2, array('title' => 'aap'));
+
+    // All with 'aap' in title
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Now put isprivate flag on asset 1
+    $this->set_isprivate($asset_id_1, TRUE);
+
+    // All with 'aap' in title - still all
+    $this->cql_do_search_test_assets_1('title any aap', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // All with 'aap' in title - and is_private = TRUE.
+    $this->cql_do_search_test_assets_1('title any "aap" AND is_private = TRUE', array($asset_id_1 => TRUE));
+
+    // All with 'aap' in title - and is_private = TRUE.
+    $this->cql_do_search_test_assets_1('title any "aap" AND is_private = FALSE', array($asset_id_2 => TRUE));
   }
 }

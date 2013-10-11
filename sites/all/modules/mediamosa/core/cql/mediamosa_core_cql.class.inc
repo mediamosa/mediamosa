@@ -1332,6 +1332,12 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'ASSET_COLLECTION',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_CASE_SENSITIVE => TRUE,
               ),
+              'is_private' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::ISPRIVATE,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL,
+              ),
             ),
           ),
           'mediamosa:acl' => array(
