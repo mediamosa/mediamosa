@@ -1,7 +1,7 @@
 name = "Mediamosa Tool PDF"
 description = "Mediamosa Tool module for PDF"
 package = "MediaMosa - Tool"
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 ; Dependencies (module names)

@@ -1,7 +1,7 @@
 name = "Mountpoint storage module"
 description = "The MediaMosa mountpoint storage module allows to setup mount point storage per client application."
 package = "MediaMosa - Storage"
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 ; Dependencies (module names).

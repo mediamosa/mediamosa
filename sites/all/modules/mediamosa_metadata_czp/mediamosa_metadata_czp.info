@@ -1,7 +1,7 @@
 name = Content Zoek Profiel
 description = MediaMosa support for the metadata (Dutch) format Content Zoek Profiel (Content Search Profile). <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
 package = MediaMosa - Metadata
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 dependencies[] = mediamosa

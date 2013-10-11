@@ -3,7 +3,7 @@
 name = "Collection"
 description = "The collection module creates collections of assets."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 ; Dependencies (module names)

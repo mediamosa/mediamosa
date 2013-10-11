@@ -3,7 +3,7 @@
 name = "oEmbed"
 description = "oEmbed is a format for allowing an embedded representation of a URL on third party sites."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 ; Dependencies (module names)

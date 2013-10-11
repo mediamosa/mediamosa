@@ -1,7 +1,7 @@
 name = "Debug"
 description = "The debug settings."
 package = "MediaMosa - Maintenance - Configuration"
-version = 7.x-3.5-RC1
+version = 7.x-3.5-RC2
 core = 7.x
 
 ; Dependencies (module names)

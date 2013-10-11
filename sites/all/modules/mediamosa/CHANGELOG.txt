@@ -1,3 +1,12 @@
+MediaMosa 3.5.x-RC2-dev (build 2055, master branch)
+---------------------------------------------------
+- CQL is extended with search on the is_private flag (useful for testing
+  published status).
+- Mimetype of the original mediafile is now normalized to the asset.
+- CQL is extended with search on the mimetype of the original.
+- Solr schema has been updated to allow search on normalized mimetype field.
+  Replace schema.xml and solrconfig.xml (v3.5.1) on your solr instance.
+
 MediaMosa 3.5.x-RC1 (build 2051, master branch)
 -----------------------------------------------
 - Improvements of Asset edit UI.
