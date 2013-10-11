@@ -976,6 +976,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test audio (mp3).
+   */
+  protected function getTestAudio_Mp3() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/testing.mp3';
+    $this->pass(t('Got test audio @audio.', array('@audio' => $filename)));
+    return $filename;
+  }
+  /**
    * Create a random app or specified one.
    *
    * @param array $a_attributes

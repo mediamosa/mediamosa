@@ -153,6 +153,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => 'The container type length.',
       ),
+      mediamosa_asset_db::MEDIAFILE_MIME_TYPE => array(
+        'type' => 'varchar',
+        'length' => mediamosa_asset_db::MEDIAFILE_MIME_TYPE_LENGTH,
+        'default' => NULL,
+        'description' => 'The mime type normalized from original.',
+      ),
       mediamosa_asset_db::MEDIAFILE_FILENAME => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::MEDIAFILE_FILENAME_LENGTH,

@@ -775,6 +775,13 @@ class mediamosa_asset_mediafile_metadata {
     // Result.
     $values = array();
 
+    // Translation matrix.
+    $type2field = array(
+      mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
+      mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME => mediamosa_asset_mediafile_metadata_db::VAL_DATETIME,
+      mediamosa_asset_mediafile_metadata_property_db::TYPE_INT => mediamosa_asset_mediafile_metadata_db::VAL_INT,
+    );
+
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
     $result = $query
@@ -798,7 +805,7 @@ class mediamosa_asset_mediafile_metadata {
       $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
 
       // Store.
-      $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[$prop['type']];
+      $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[$type2field[$prop['type']]];
 
       // Get mediafile.
       $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['mediafile'] = $row;

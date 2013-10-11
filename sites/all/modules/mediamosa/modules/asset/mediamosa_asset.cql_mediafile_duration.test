@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
  /**
   * @file
   * CQL sort on 'mediafile_duration' file.
@@ -35,14 +10,13 @@ class MediaMosaAssetCQLMediafileDurationTestCaseEga extends MediaMosaTestCaseEga
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'CQL - Sort on "mediafile_duration"',
-      'description' => 'Testing CQL sort on "mediafile_duration" related functions and rest calls.',
+      'name' => 'CQL - Tests for mediafile_duration, mediafile_mime_type.',
+      'description' => 'Testing CQL sort on "mediafile_duration" related functions and rest calls. Also tests for normalized mimetype.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
-  // Test sort on 'mediafile_duration' (233).
   public function testCQLSortMediafileDuration() {
 
     // Limit.
@@ -108,5 +82,46 @@ class MediaMosaAssetCQLMediafileDurationTestCaseEga extends MediaMosaTestCaseEga
       count($a_assets['items']['item']) == 3,
       t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
     );
+  }
+
+  public function testCQLMimeType() {
+    // Upload files.
+    $response_1 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $response_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
+    $response_3 = $this->uploadTestFile(array('filename' => $this->getTestAudio_Mp3()));
+    $response_4 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+
+    $asset_id_1 = $response_1['asset_id'];
+    $asset_id_2 = $response_2['asset_id'];
+    $asset_id_3 = $response_3['asset_id'];
+    $asset_id_4 = $response_4['asset_id'];
+
+    $asset_1 = $this->getAsset($asset_id_1);
+    $this->var_export($asset_1);
+    $this->assertTrue(in_array($asset_1['mediafile_mime_type'], array('application/ogg', 'video/ogg')), 'Mimetype is ' . $asset_1['mediafile_mime_type']);
+
+    $asset_2 = $this->getAsset($asset_id_2);
+    $this->var_export($asset_2);
+    $this->assertTrue(in_array($asset_2['mediafile_mime_type'], array('video/x-ms-asf')), 'Mimetype is ' . $asset_2['mediafile_mime_type']);
+
+    $asset_3 = $this->getAsset($asset_id_3);
+    $this->var_export($asset_3);
+    $this->assertTrue(in_array($asset_3['mediafile_mime_type'], array('audio/mpeg')), 'Mimetype is ' . $asset_3['mediafile_mime_type']);
+
+    $asset_4 = $this->getAsset($asset_id_4);
+    $this->var_export($asset_4);
+    $this->assertTrue(in_array($asset_4['mediafile_mime_type'], array('application/ogg', 'video/ogg')), 'Mimetype is ' . $asset_4['mediafile_mime_type']);
+
+    // Search for audio.
+    $this->cql_do_search_test_assets_1('mediafile_mime_type = "^audio/"', array($asset_id_3 => TRUE));
+
+    // Search for ogg.
+    $this->cql_do_search_test_assets_1('mediafile_mime_type = "^application/ogg^" OR mediafile_mime_type = "^video/ogg^"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+
+    // Search for wmf.
+    $this->cql_do_search_test_assets_1('mediafile_mime_type = "^video/x-ms-asf^"', array($asset_id_2 => TRUE));
+
+    // Search for wmf using the normal mime_type.
+    $this->cql_do_search_test_assets_1('mime_type = "^video/x-ms-asf^"', array($asset_id_2 => TRUE));
   }
 }

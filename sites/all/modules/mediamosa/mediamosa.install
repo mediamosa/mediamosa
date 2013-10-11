@@ -4286,3 +4286,75 @@ function mediamosa_update_7170() {
   // Update job_server_transcode.
   _mediamosa_update_helper_convert_command('mediamosa_asset_mediafile', 'mediafile_id');
 }
+
+/**
+ * Add normalized field for mime type to asset.
+ */
+function mediamosa_update_7171() {
+  db_add_field('mediamosa_asset', 'mediafile_mime_type', array(
+    'type' => 'varchar',
+    'length' => mediamosa_asset_db::MEDIAFILE_MIME_TYPE_LENGTH,
+    'default' => NULL,
+    'description' => 'The mime type normalized from original.',
+  ));
+}
+
+/**
+ * Normalize the original mediafile filename to the asset. This allows frontends
+ * to use filenames from search results when no metadata titles are available.
+ * If the update times out, just restart the update process. It will continue
+ * where it stopped.
+ */
+function mediamosa_update_7172() {
+  $max_items = 1000;
+
+  // Need prop_id of the mime_type technical metadata.
+  $prop_id = db_select('mediamosa_asset_mediafile_metadata_property', 'mammp')
+    ->fields('mammp', array('prop_id'))
+    ->condition('prop_name', 'mime_type')
+    ->execute()
+    ->fetchField();
+
+  while ($prop_id) {
+    $query = db_select('mediamosa_asset_mediafile', 'mf');
+    $query->join('mediamosa_asset', 'a', 'a.asset_id = mf.asset_id');
+    $query->join('mediamosa_asset_mediafile_metadata', 'mfmd', 'mfmd.mediafile_id = mf.mediafile_id');
+    $mediafiles = $query
+      ->fields('mf', array('asset_id', 'filename'))
+      ->fields('mfmd', array('val_char'))
+      ->condition('mf.is_original_file', 'TRUE')
+      ->condition('mfmd.prop_id', $prop_id)
+      ->isNull('a.mediafile_mime_type')
+      ->range(0, $max_items)
+      ->orderBy('mf.asset_id')
+      ->execute();
+
+    if (!$mediafiles->rowCount()) {
+      break;
+    }
+
+    // Now update each asset with the missing mediafile mimetype.
+    foreach ($mediafiles as $mediafile) {
+      db_update('mediamosa_asset')
+        ->fields(array('mediafile_mime_type' => $mediafile->val_char))
+        ->condition('asset_id', $mediafile->asset_id)
+        ->execute();
+
+      // Reindex the asset.
+      mediamosa_asset::mediamosa_asset_reindex(array($mediafile->asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
+    }
+  }
+
+  if ($prop_id) {
+    // Now replace empty mimetypes into NULLs again.
+    db_update('mediamosa_asset')
+      ->fields(array('mediafile_mime_type' => NULL))
+      ->condition('mediafile_mime_type', '')
+      ->execute();
+  }
+  else {
+    return 'Unable to execute update 7172, did not find the metadata property for mime-type. Skipping update.';
+  }
+
+  return 'Mime-types successfully normalized.';
+}
