@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : build.xml
+    Created on : August 4, 2010, 12:51 PM
+    Version    : $Id$
+    Author     : Scholars' Lab
+    Description:
+        Provides a build environment for the this library.
+
+        The ImageMagick library is a dependency for to successfully run several
+        of the programs called below.
+
+        PEAR Channels:
+
+        You will need to have the following channels to ensure all the PEAR
+        packages can be installed
+
+        sudo pear channel-discover pear.phpunit.de
+        sudo pear channel-discover components.ez.no
+        sudo pear channel-discover pear.symfony-project.com
+        sudo pear channel-discover pear.phpmd.org
+        sudo pear channel-discover pear.pdepend.org
+
+        PEAR Packages:
+
+        You will need to make sure you have updated PEAR and install the
+        following packages:
+
+        sudo pear upgrade
+        sudo pear install pdepend/PHP_Depend
+        sudo pear install phpmd/PHP_PMD
+        sudo pear install phpunit/phpcpd
+        sudo pear install phpunit/phploc
+        sudo pear install PHPDocumentor
+        sudo pear install PHP_CodeSniffer
+        sudo pear install -alldeps phpunit/PHP_CodeBrowser
+        sudo pear install -alldeps phpunit/PHPUnit
+
+-->
+
+<project name="bagitphp" default="usage" basedir=".">
+
+    <description>A simple build file for BagIt PHP library.</description>
+
+    <property name="project" value="bagitphp" />
+    <property name="build" location="build" />
+    <property name="dist" location="dist" />
+    <tstamp />
+    <property name="now" value="${DSTAMP}-${TSTAMP}" />
+    <property name="tar" value="${project}-${now}.tar" />
+    <property name="gzip" value="${tar}.gz" />
+
+    <target name="setup" description="Create the build directory structure">
+        <tstamp />
+        <!-- create the build directory structure -->
+        <mkdir dir="${build}/api" />
+        <mkdir dir="${build}/code-browser" />
+        <mkdir dir="${build}/coverage" />
+        <mkdir dir="${build}/logs" />
+        <mkdir dir="${build}/pdepend" />
+        <mkdir dir="${build}/phpmd" />
+
+    </target>
+
+    <target name="clean" description="Clean up">
+        <delete dir="${build}" />
+        <delete dir="${dist}" />
+    </target>
+
+    <target name="package" description="Create a zipped package for distribution">
+
+        <mkdir dir="${dist}" />
+
+        <tar destfile="${dist}/${project}-${now}.tar"
+            basedir="${basedir}"
+            excludes="${build}/**,${dist}/**,nbproject/**" />
+
+        <gzip zipfile="${dist}/${gzip}" src="${dist}/${tar}" />
+        <delete file="${dist}/${tar}" />
+    </target>
+
+    <target name="package-docs" depends="phpdoc" description="Create a zipped package of the documentation">
+        
+        <echo message="Compressing documentation" />
+
+        <mkdir dir="${dist}" />
+
+        <property name="docfile" value="${project}-docs-${now}.tar" />
+        <property name="zipfile" value="${docfile}.gz" />
+
+        <tar destfile="${dist}/${docfile}"
+            basedir="${build}/api" />
+
+        <gzip zipfile="${dist}/${zipfile}" src="${dist}/${docfile}" />
+        <delete file="${dist}/${docfile}" />
+    </target>
+
+    <target name="parallelTasks" description="Run pdepend, phpmd, phpcpd, phpcs, and phpdoc tasks on parallel threads">
+        <parallel>
+            <antcall target="pdepend" />
+            <antcall target="phpmd" />
+            <antcall target="phpcpd"/>
+            <antcall target="phpcs"/>
+            <antcall target="phpdoc" />
+        </parallel>
+    </target>
+
+    <target name="phpunit" description="Run unit tests on current plugin">
+      <!-- <exec executable="phpunit" failonerror="true">
+            <arg line="test/testbagit.php" />
+        </exec>
+        <exec executable="phpunit" failonerror="true">
+            <arg line="test/testmanifest.php" />
+        </exec>
+        <exec executable="phpunit" failonerror="true">
+            <arg line="test/testusecases.php" />
+        </exec> -->
+        <exec executable="phpunit" />
+    </target>
+
+    <target name="pdepend" depends="setup" description="Create PHP_Depend Static Code Analysis report">
+
+        <!--
+            This task runs PHP_Depend on your library. For more on usage, see the
+            PHP_Depend Documentation at http://pdepend.org/documentation/getting-started.html
+        -->
+
+        <exec executable="pdepend">
+            <arg line="--jdepend-xml=${build}/logs/jdepend.xml
+                       --jdepend-chart=${build}/pdepend/dependencies.svg
+                       --overview-pyramid=${build}/pdepend/overview-pyramid.svg
+                       ." />
+        </exec>
+    </target>
+
+    <target name="phpmd" depends="setup" description="Generate PHP Mess Detector report">
+
+        <!--
+            This task creates a report by running the PHP Mess Detector package
+            on the source. For more information on the configuration options
+            see http://phpmd.org/documentation/index.html
+        -->
+
+        <exec executable="phpmd">
+            <arg line="lib html codesize,design,naming,unusedcode --reportfile ${build}/phpmd/index.html" />
+        </exec>
+    </target>
+
+     <target name="phpcpd" depends="setup" description="Generate a PHP Copy/Paste Detection report">
+
+         <!--
+            phpcpd is a light-weight detector of duplicate code. For more information
+            see the documentation at http://github.com/sebastianbergmann/phpcpd
+         -->
+
+        <exec executable="phpcpd">
+            <arg line="--log-pmd ${build}/logs/pmd-cpd.xml ${basedir}" />
+        </exec>
+    </target>
+
+    <target name="phpcs" depends="setup" description="Generate a PHP_CodeSniffer report for coding standards">
+        <!--
+            PHP_CodeSniffer detects violations of coding standards. See 
+            http://pear.php.net/package/PHP_CodeSniffer/docs for usage.
+        -->
+
+        <exec executable="phpcs" output="/dev/null">
+             <arg line="--report=checkstyle
+                        --extensions=php
+                        --ignore=*/test/*
+                        --report-file=${build}/logs/checkstyle.xml
+                        --standard=PEAR
+                        ${basedir}" />
+        </exec>
+    </target>
+
+    <target name="phpdoc" depends="setup" description="Generate programming documentation with PHPDoc">
+        <!--
+            PHPDoc generates documentation for your project. See http://www.phpdoc.org for
+            configuration/usage examples.
+
+            To generate different outputs, try any (or all) of the following
+
+            -o HTML:frames:earthli,HTML:Smarty:PHP,HTML:frames:phphtmllib,HTML:frames:phpedit,PDF:default:default
+        -->
+        <exec executable="phpdoc">
+            <arg line="-o HTML:frames:earthli -d ${basedir} -t ${build}/api -i tests/,dist/,build/ --quiet" />
+        </exec>
+    </target>
+
+    <target name="phpcb" depends="setup, phpcs" description="Generate the PHPCodeBrowser report">
+        <!--
+            Visualize errors in your code from CodeSniffer and PhpUnit
+
+            see http://github.com/mayflowergmbh/PHP_CodeBrowser
+        -->
+        <exec executable="phpcb">
+            <arg line="--log   ${build}/logs
+                      --source ${basedir}
+                      --output ${build}/code-browser" />
+        </exec>
+    </target>
+
+    <target name="build" depends="clean, setup, parallelTasks, phpunit, phpcb"
+        description="Builds the PHP reports" />
+
+    <target name="usage">
+        <echo message="Type ant -p to list all the targets available in this build script." />
+    </target>
+</project>
