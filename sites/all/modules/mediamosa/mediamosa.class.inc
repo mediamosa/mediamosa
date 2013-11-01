@@ -140,7 +140,7 @@ class mediamosa {
   /**
    * Retrieve the main response object.
    *
-   * @return object
+   * @return mediamosa_response
    *  The core object.
    */
   public static function get($new_mediamosa_response = NULL) {

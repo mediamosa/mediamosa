@@ -80,7 +80,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     cache_clear_all('simpletest', 'cache');
   }
 
-
   /**
    * Because run() can create unused tables.
    */
