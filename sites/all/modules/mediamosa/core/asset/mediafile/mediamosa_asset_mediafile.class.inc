@@ -101,7 +101,8 @@ class mediamosa_asset_mediafile {
    * @param string $base_filename
    *   The filename without extension. Can be in some case the mediafile ID.
    *
-   * @return type
+   * @return string
+   *   The created filename.
    */
   public static function create_filename($destination_uri, $base_filename) {
     // Get mimetype.
@@ -114,12 +115,11 @@ class mediamosa_asset_mediafile {
     return $base_filename . '.' . $ext;
   }
 
-
-
   /**
    * Get the asset_id of the mediafile.
    *
    * @param string $mediafile_id
+   *   The mediafile ID.
    */
   public static function get_asset_id($mediafile_id) {
     $mediafile = self::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID));

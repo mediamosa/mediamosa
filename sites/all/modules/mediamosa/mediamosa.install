@@ -4315,6 +4315,14 @@ function mediamosa_update_7172() {
     ->execute()
     ->fetchField();
 
+  // Remove the mimetypes that are invalid.
+  if ($prop_id) {
+    db_delete('mediamosa_asset_mediafile_metadata')
+      ->condition('prop_id', $prop_id)
+      ->condition('val_char', '%' . db_like('cannot open ') . '%', 'LIKE')
+      ->execute();
+  }
+
   while ($prop_id) {
     $query = db_select('mediamosa_asset_mediafile', 'mf');
     $query->join('mediamosa_asset', 'a', 'a.asset_id = mf.asset_id');
@@ -4357,4 +4365,21 @@ function mediamosa_update_7172() {
   }
 
   return 'Mime-types successfully normalized.';
+}
+
+/**
+ * Extend the storage size of the mediafile extension.
+ */
+function mediamosa_update_7173() {
+    db_change_field(
+      'mediamosa_asset_mediafile',
+      'file_extension',
+      'file_extension',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => NULL,
+        'description' => 'The file extension.',
+      )
+    );
 }
