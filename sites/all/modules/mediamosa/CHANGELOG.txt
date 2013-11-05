@@ -1,4 +1,4 @@
-MediaMosa 3.5.x-RC2-dev (build 2055, master branch)
+MediaMosa 3.5.x-RC2-dev (build 2059, master branch)
 ---------------------------------------------------
 - CQL is extended with search on the is_private flag (useful for testing
   published status).
@@ -6,6 +6,10 @@ MediaMosa 3.5.x-RC2-dev (build 2055, master branch)
 - CQL is extended with search on the mimetype of the original.
 - Solr schema has been updated to allow search on normalized mimetype field.
   Replace schema.xml and solrconfig.xml (v3.5.1) on your solr instance.
+- Extended the storage size of the mediafile file extension field.
+- Fixed file extension extraction when more than one dot is present in filename.
+- Fixed problem with mimetype detection when file did not exists.
+- md5file no longer generates a error when file does not exists.
 
 MediaMosa 3.5.x-RC1 (build 2051, master branch)
 -----------------------------------------------
