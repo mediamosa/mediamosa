@@ -1166,7 +1166,7 @@ class mediamosa_io {
     $realpath = self::realpath($uri);
 
     // See of cached version.
-    if (isset($md5_files[$realpath])) {
+    if (!empty($md5_files[$realpath])) {
       return $md5_files[$realpath];
     }
 
@@ -1176,7 +1176,7 @@ class mediamosa_io {
     }
 
     // Use realpath, because this is always end product.
-    $md5_files[$realpath] = md5_file($realpath);
+    $md5_files[$realpath] = file_exists($realpath) ? md5_file($realpath) : FALSE;
 
     return $md5_files[$realpath];
   }
