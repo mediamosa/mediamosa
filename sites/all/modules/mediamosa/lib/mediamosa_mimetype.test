@@ -28,6 +28,7 @@ class MediaMosaMimeTypeTestCase extends MediaMosaTestCase {
       DRUPAL_ROOT . '/' . $this->getTestImage_Png() => 'image/png',
       DRUPAL_ROOT . '/' . $this->getTestVideo_ogg() => 'application/ogg',
       DRUPAL_ROOT . '/' . $this->getTestVideo_wmv() => 'video/x-ms-asf',
+      DRUPAL_ROOT . '/somefilethatdoesnotexits.puf' => FALSE,
     );
 
     // Now test our files.
