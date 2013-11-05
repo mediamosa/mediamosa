@@ -502,9 +502,9 @@ class mediamosa_io {
    *   The filename without extension.
    */
   public static function get_base_filename($filename) {
-    $last_dot = strripos($filename, '.');
+    $first_dot = stripos($filename, '.');
 
-    return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
+    return $first_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $first_dot);
   }
 
   /**
@@ -517,9 +517,9 @@ class mediamosa_io {
    *   The file extension without the dot or ''.
    */
   public static function get_ext($filename) {
-    $last_dot = strripos($filename, '.');
+    $first_dot = stripos($filename, '.');
 
-    return $last_dot === FALSE && ($last_dot + 1) != mediamosa_unicode::strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
+    return $first_dot === FALSE && ($first_dot + 1) != mediamosa_unicode::strlen($filename) ? '' : mediamosa_unicode::substr($filename, $first_dot + 1);
   }
 
   /**

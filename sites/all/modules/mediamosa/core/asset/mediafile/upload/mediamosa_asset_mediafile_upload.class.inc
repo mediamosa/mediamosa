@@ -206,9 +206,8 @@ class mediamosa_asset_mediafile_upload {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
       }
 
-      // Make sure the file extension match its content type.
-      $filename = mediamosa_io::get_base_filename($upload_file_info['name']);
-      $filename = mediamosa_asset_mediafile::create_filename($destination_uri, $filename);
+      // Use the original filename.
+      $filename = $upload_file_info['name'];
 
       // Update the mediafile.
       $fields = array(
