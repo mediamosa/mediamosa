@@ -3673,9 +3673,8 @@ function mediamosa_update_7147() {
       else {
         $stills_moved++;
       }
-
-      closedir($fh);
     }
+    closedir($fh);
 
     // Remove the dir.
     drupal_rmdir($source_dir);
@@ -4050,7 +4049,10 @@ function mediamosa_update_7162() {
  * Change the job table to allow the filename to be changed by its tool.
  */
 function mediamosa_update_7163() {
- if (!db_field_exists('mediamosa_job', 'filename')) {
+   if (!db_field_exists('mediamosa_job', 'filename')) {
+     // Fix problem with wrong empty dates.
+     db_query("UPDATE mediamosa_job SET created = started WHERE created = '0000-00-00 00:00:00'");
+
     db_add_field(
       'mediamosa_job',
       'filename',
