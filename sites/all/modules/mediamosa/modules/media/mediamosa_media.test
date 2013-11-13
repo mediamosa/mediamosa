@@ -483,8 +483,8 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     mediamosa_asset_mediafile_metadata::store_metadata($mf_profile5['mediafile_id'], $metadata);
     mediamosa_asset_mediafile::update($app_id, $mf_profile5['mediafile_id'], self::SIMPLETEST_USER_ID, array('transcode_profile_id' => 5));
 
-    $mf_mime_webm = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
-    mediamosa_asset_mediafile_metadata::store_metadata($mf_mime_webm['mediafile_id'], array('MIME-type' => 'video/webm') + $metadata);
+    $mf_mime_ogg = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
+    mediamosa_asset_mediafile_metadata::store_metadata($mf_mime_ogg['mediafile_id'], array('MIME-type' => 'application/ogg') + $metadata);
 
     $mf_cont_mp4 = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
     mediamosa_asset_mediafile_metadata::store_metadata($mf_cont_mp4['mediafile_id'], array('Video-codec' => 'h264') + $metadata);
@@ -519,7 +519,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Add a complex streaming server definition.
     $object_code = '{TICKET_URI_PROFILE:4}' . "\n" .
-      '{TICKET_URI_MIME:video/webm}' .  "\n" .
+      '{TICKET_URI_MIME:application/ogg}' .  "\n" .
       '{TICKET_URI_MIME:video/none}' .  "\n" .
       '{TICKET_URI_CONTAINER:mov;mp4;m4a;3gp;3g2;mj2}' . "\n" .
       '{TICKET_URI_CONTAINER:none}' . "\n" .
