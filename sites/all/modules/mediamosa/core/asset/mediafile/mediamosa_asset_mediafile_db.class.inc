@@ -42,7 +42,7 @@ class mediamosa_asset_mediafile_db {
   const TOOL_LENGTH = 10;
   const COMMAND = 'command';
   const FILE_EXTENSION = 'file_extension';
-  const FILE_EXTENSION_LENGTH = 5;
+  const FILE_EXTENSION_LENGTH = 255;
   const IS_PROTECTED = 'is_protected';
   const IS_PROTECTED_FALSE = 'FALSE';
   const IS_PROTECTED_USER_USERGROUP = 'USER_USERGROUP';

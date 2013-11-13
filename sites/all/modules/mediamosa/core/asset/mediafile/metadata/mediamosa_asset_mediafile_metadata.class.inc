@@ -241,6 +241,9 @@ class mediamosa_asset_mediafile_metadata {
     // Get the filesize.
     $filesize = mediamosa_io::filesize($mediafile_uri);
 
+    $mimetype = mediamosa_mimetype::get_mime_type($mediafile_uri);
+    self::create_mediafile_metadata($mediafile_id, $mimetype, mediamosa_asset_mediafile_metadata::MIME_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+
     // Get the md5.
     $md5 = mediamosa_io::md5_file($mediafile_uri);
 
@@ -252,10 +255,6 @@ class mediamosa_asset_mediafile_metadata {
 
     // Store analyse.
     //
-    // MIME-type.
-    $value = isset($metadata['MIME-type']) ? $metadata['MIME-type'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::MIME_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
     // Video-codec.
     $value = isset($metadata['Video-codec']) ? $metadata['Video-codec'] : '';
     self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::VIDEO_CODEC, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);

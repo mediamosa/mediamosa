@@ -62,15 +62,17 @@ class mediamosa_mimetype {
   /**
    * Determine Mime type of a file.
    *
-   * @todo: move to wrapper.
-   *
    * @param string $uri
    *   File to get the mimetype of.
    *
-   * @return string
-   *   The mime type.
+   * @return string|FALSE
+   *   The mime type or FALSE if file does not exists or isn't a file.
    */
   public static function get_mime_type($uri) {
+    if (!mediamosa_io::file_exists($uri) || !mediamosa_io::is_file($uri)) {
+      return FALSE;
+    }
+
     // Get the local file.
     $realpath = mediamosa_io::realpath($uri);
 
