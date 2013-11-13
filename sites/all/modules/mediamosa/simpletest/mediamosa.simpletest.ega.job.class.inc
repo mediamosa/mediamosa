@@ -1,9 +1,6 @@
 <?php
 
 class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
-  // ------------------------------------------------------------------- Consts.
-  const SIMPLETEST_PROFILE_ID_DEFAULT = 13;
-
   // -------------------------------------------------------------- Constructor.
   /**
    * Implement contructor.
@@ -206,10 +203,15 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
   }
 
   /**
-   * Return the most workable transcode profile based on our ffmpeg version.
+   * Return the most default transcode profile.
    */
   protected function getDefaultTranscodeProfile() {
-    return self::SIMPLETEST_PROFILE_ID_DEFAULT;
+
+    $profile = mediamosa_transcode_profile::get_default(0);
+    if (isset($profile['transcode_profile_id'])) {
+      return $profile['transcode_profile_id'];
+    }
+    return FALSE;
   }
 
   /**
