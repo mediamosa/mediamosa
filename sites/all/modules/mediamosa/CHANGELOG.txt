@@ -1,4 +1,4 @@
-MediaMosa 3.5.x-RC2-dev (build 2059, master branch)
+MediaMosa 3.5.x-RC2-dev (build 2061, master branch)
 ---------------------------------------------------
 - CQL is extended with search on the is_private flag (useful for testing
   published status).
@@ -10,6 +10,11 @@ MediaMosa 3.5.x-RC2-dev (build 2059, master branch)
 - Fixed file extension extraction when more than one dot is present in filename.
 - Fixed problem with mimetype detection when file did not exists.
 - md5file no longer generates a error when file does not exists.
+-	Upgraded video-js to version 4.2.1.
+- Unittests will use default transcode profile.
+- Upgraded video-js to version 4.3.0.
+- Fixed upgrade path when merging still (data/stills) files into mediafile
+  (data) tree.
 
 MediaMosa 3.5.x-RC1 (build 2051, master branch)
 -----------------------------------------------
