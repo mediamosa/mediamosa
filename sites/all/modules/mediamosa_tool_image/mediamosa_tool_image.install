@@ -1,8 +1,8 @@
 <?php
- /**
-  * @file
-  * Image tool installer.
-  */
+/**
+ * @file
+ * Image tool installer.
+ */
 
 /**
  * Implements hook_install().
@@ -53,12 +53,14 @@ function mediamosa_tool_image_install() {
   }
 
   // Tool mapping.
-
-  // dc = 1, qdc = 2.
   $dc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('dublin_core');
   $mapping_array = array(
-    array('copyright'        , 'rights', $dc[mediamosa_asset_metadata_property_group_db::ID]),
-    array('exif comment'     , 'description', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('copyright',
+      'rights',
+      $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('exif comment',
+      'description',
+      $dc[mediamosa_asset_metadata_property_group_db::ID]),
   );
 
   // Insert default mappings as nodes.
