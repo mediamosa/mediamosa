@@ -56,44 +56,47 @@ function mediamosa_rules_condition_info() {
   $conditions['mediamosa_condition_mediafile_filesize'] = array(
     'label' => t('Mediafile filesize > number of bytes'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_filesize(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_filesize(),
   );
   $conditions['mediamosa_condition_mediafile_mimetype'] = array(
     'label' => t('Mediafile mimetype = ...'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_mimetype(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_mimetype(),
+  );
+  $conditions['mediamosa_condition_mediafile_mimetype_part'] = array(
+    'label' => t('Mediafile mimetype starts with ...'),
+    'group' => t('MediaMosa'),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_mimetype(),
   );
   $conditions['mediamosa_condition_mediafile_transcode_profile'] = array(
     'label' => t('Mediafile transcode profile = ...'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_transcode_profile_id(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_transcode_profile_id(),
   );
   $conditions['mediamosa_condition_mediafile_video_codec'] = array(
     'label' => t('Mediafile video codec = ...'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_video_codec(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_video_codec(),
+  );
+  $conditions['mediamosa_condition_mediafile_audio_codec'] = array(
+    'label' => t('Mediafile audio codec = ...'),
+    'group' => t('MediaMosa'),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_audio_codec(),
   );
   $conditions['mediamosa_condition_mediafile_bitrate'] = array(
     'label' => t('Mediafile bitrate > ...'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_bitrate(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_bitrate(),
   );
   $conditions['mediamosa_condition_mediafile_width'] = array(
     'label' => t('Mediafile width > ...'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_width(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_width(),
+  );
+  $conditions['mediamosa_condition_mediafile_app_id'] = array(
+    'label' => t('Mediafile app_id = ...'),
+    'group' => t('MediaMosa'),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_app_id(),
   );
   return $conditions;
 }
@@ -112,9 +115,7 @@ function mediamosa_rules_action_info() {
   $actions['mediamosa_action_transcode'] = array(
     'label' => t('Start an transcode job for a mediafile'),
     'group' => t('MediaMosa'),
-    'parameter' =>
-      _mediamosa_rules_variable_mediafile_id() +
-      _mediamosa_rules_variable_transcode_profile_id(),
+    'parameter' => _mediamosa_rules_variable_mediafile_id() + _mediamosa_rules_variable_transcode_profile_id(),
   );
 
   $actions['mediamosa_action_delete_mediafile'] = array(
@@ -128,6 +129,18 @@ function mediamosa_rules_action_info() {
     'group' => t('MediaMosa'),
     'description' => t('Delete the *original* source mediafile of the id given, if any.'),
     'parameter' => _mediamosa_rules_variable_mediafile_id(),
+  );
+
+  $actions['mediamosa_action_log'] = array(
+    'label' => t('Make a log entry.'),
+    'group' => t('MediaMosa'),
+    'description' => t('Save a log entry in the logging system.'),
+    'parameter' => array(
+      'log_message' => array(
+        'type' => 'text',
+        'label' => t('Log Message'),
+      ),
+    ),
   );
   return $actions;
 }
@@ -187,6 +200,19 @@ function _mediamosa_rules_variable_video_codec() {
     'videocodec' => array(
       'type' => 'text',
       'label' => t('Video Codec'),
+      'optional' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Defines variable audio_codec.
+ */
+function _mediamosa_rules_variable_audio_codec() {
+  return array(
+    'audiocodec' => array(
+      'type' => 'text',
+      'label' => t('Audio Codec'),
     ),
   );
 }
@@ -212,6 +238,18 @@ function _mediamosa_rules_variable_width() {
     'width' => array(
       'type' => 'text',
       'label' => t('width'),
+    ),
+  );
+}
+
+/**
+ * Defines app id.
+ */
+function _mediamosa_rules_variable_app_id() {
+  return array(
+    'app_id' => array(
+      'label' => t('App id'),
+      'type' => 'integer',
     ),
   );
 }
@@ -291,21 +329,31 @@ function mediamosa_action_delete_mediafile($mediafile_id) {
 }
 
 /**
+ * The action function for delete a mediafile.
+ */
+function mediamosa_action_log($log_message) {
+  watchdog('MM Rules', $log_message);
+  return TRUE;
+}
+
+/**
  * The action function to delete an original mediafile.
  */
 function mediamosa_action_delete_original_mediafile($mediafile_id) {
 
   // First search the original of the mediafile.
-  $mediafile_orig_id = mediamosa_db::db_select('mediamosa_asset_mediafile','mf')
-    ->fields('mf',array('mediafile_id_source'))
-    ->range(0,1)
-    ->condition('mf.mediafile_id', $mediafile_id,'=')
+  $mediafile_orig_id = mediamosa_db::db_select('mediamosa_asset_mediafile', 'mf')
+    ->fields('mf', array('mediafile_id_source'))
+    ->range(0, 1)
+    ->condition('mf.mediafile_id', $mediafile_id, '=')
     ->execute()
     ->fetchField();
 
   // Delete the original mediafile.
-  if (($mediafile_orig_id != NULL) && ($mediafile_orig_id != $mediafile_id)) {
+  if ((isset($mediafile_orig_id)) && ($mediafile_orig_id != NULL) && ($mediafile_orig_id != $mediafile_id)) {
+    watchdog('MM Rules', 'delete mf original: ' . $mediafile_orig_id);
     mediamosa_asset_mediafile::delete($mediafile_orig_id);
+    mediamosa_asset_mediafile::set_new_original($mediafile_orig_id, $mediafile_id);
     return TRUE;
   }
   return FALSE;
@@ -321,7 +369,7 @@ function mediamosa_action_delete_original_mediafile($mediafile_id) {
  * @param string $filesize
  *   The value to check.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_filesize($mediafile_id, $filesize = 0) {
@@ -337,15 +385,35 @@ function mediamosa_condition_mediafile_filesize($mediafile_id, $filesize = 0) {
  *
  * @param string $mediafile_id
  *   Mediafile id to check against.
- * @param string $mime_type
+ * @param string $mimetype
+ *   mime_type.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_mimetype($mediafile_id, $mimetype = '') {
 
   $mf_mimetype = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
   return ($mf_mimetype == $mimetype) ? TRUE : FALSE;
+}
+
+/**
+ * Rules condition of part of mime-type of a mediafile.
+ *
+ * Returns TRUE if part of mimetype of $mediafile_id matches to $mimetype.
+ *
+ * @param string $mediafile_id
+ *   Mediafile id to check against.
+ * @param string $mimetype
+ *   mime_type substring to test.
+ *
+ * @return bool
+ *   returns the value of the condition.
+ */
+function mediamosa_condition_mediafile_mimetype_part($mediafile_id, $mimetype = '') {
+
+  $mf_mimetype = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+  return (stripos($mf_mimetype, $mimetype) === 0) ? TRUE : FALSE;
 }
 
 /**
@@ -356,8 +424,9 @@ function mediamosa_condition_mediafile_mimetype($mediafile_id, $mimetype = '') {
  * @param string $mediafile_id
  *   Mediafile id to check against.
  * @param string $videocodec
+ *   Videocodec as given by ffmpeg.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_video_codec($mediafile_id, $videocodec = '') {
@@ -367,15 +436,36 @@ function mediamosa_condition_mediafile_video_codec($mediafile_id, $videocodec = 
 }
 
 /**
- * Rules condition width (part of size) of a mediafile
+ * Rules condition audiocodec of a mediafile.
+ *
+ * Returns TRUE if audiocodec (as given by ffmpeg) of $mediafile_id equal to
+ *   $audiocodec.
+ *
+ * @param string $mediafile_id
+ *   Mediafile id to check against.
+ * @param string $audiocodec
+ *   Audiocodec as given by ffmpeg.
+ *
+ * @return bool
+ *   returns the value of the condition.
+ */
+function mediamosa_condition_mediafile_audio_codec($mediafile_id, $audiocodec = '') {
+
+  $mf_audiocodec = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::AUDIO_CODEC);
+  return ($mf_audiocodec == $audiocodec) ? TRUE : FALSE;
+}
+
+/**
+ * Rules condition width (part of size) of a mediafile.
  *
  * Returns TRUE if width of $mediafile_id > $width.
  *
  * @param string $mediafile_id
  *   Mediafile id to check against.
  * @param string $width
+ *   width of file.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_width($mediafile_id, $width = '') {
@@ -392,8 +482,9 @@ function mediamosa_condition_mediafile_width($mediafile_id, $width = '') {
  * @param string $mediafile_id
  *   Mediafile id to check against.
  * @param string $bitrate
+ *   bitrate as given by ffmpeg.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_bitrate($mediafile_id, $bitrate = '') {
@@ -405,23 +496,50 @@ function mediamosa_condition_mediafile_bitrate($mediafile_id, $bitrate = '') {
 /**
  * Rules condition transcode profile of a mediafile.
  *
- * Returns TRUE if transcode_profile_id of $mediafile_id equal to $transcode_profile_id.
+ * Returns TRUE if transcode_profile_id of $mediafile_id equal to
+ * $transcode_profile_id.
  *
  * @param string $mediafile_id
  *   Mediafile id to check against.
  * @param string $transcode_profile_id
+ *   Transcde profile id.
  *
- * @return boolean
+ * @return bool
  *   returns the value of the condition.
  */
 function mediamosa_condition_mediafile_transcode_profile($mediafile_id, $transcode_profile_id = '') {
 
-  $mf_profile_id = mediamosa_db::db_select('mediamosa_asset_mediafile','mf')
+  $mf_profile_id = mediamosa_db::db_select('mediamosa_asset_mediafile', 'mf')
     ->fields('mf', array(mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID))
-    ->range(0,1)
-    ->condition('mf.mediafile_id', $mediafile_id,'=')
+    ->range(0, 1)
+    ->condition('mf.mediafile_id', $mediafile_id, '=')
     ->execute()
     ->fetchField();
 
   return ($mf_profile_id == $transcode_profile_id) ? TRUE : FALSE;
+}
+
+/**
+ * Rules condition app_id of a mediafile.
+ *
+ * Returns TRUE if app_id of $mediafile_id is equal to $app_id.
+ *
+ * @param string $mediafile_id
+ *   Mediafile id to check against.
+ * @param string $app_id
+ *   App_id.
+ *
+ * @return bool
+ *   returns the value of the condition.
+ */
+function mediamosa_condition_mediafile_app_id($mediafile_id, $app_id = 0) {
+
+  $mf_app_id = mediamosa_db::db_select('mediamosa_asset_mediafile', 'mf')
+    ->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID))
+    ->range(0, 1)
+    ->condition('mf.mediafile_id', $mediafile_id, '=')
+    ->execute()
+    ->fetchField();
+
+  return ($mf_app_id == $app_id) ? TRUE : FALSE;
 }
