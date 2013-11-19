@@ -29,8 +29,11 @@ class mediamosa_tool_image {
    * Log for image tool.
    *
    * @param string $message
+   *   message to log.
    * @param array $variables
+   *   variables to be used in the log message.
    * @param string $severity
+   *   see WATCHDOG_* severity.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
     mediamosa_watchdog::log($message, $variables, $severity, 'tool image');
@@ -40,6 +43,7 @@ class mediamosa_tool_image {
    * Returns TRUE when we support this mime-type.
    *
    * @param string $mime_type
+   *   mimetype request.
    */
   public static function is_supported($mime_type) {
     return preg_match('#^image\/.+#', $mime_type);
@@ -49,7 +53,9 @@ class mediamosa_tool_image {
    * Generate still.
    *
    * @param string $jobserver_job_id
+   *   id of jobserver.
    * @param string $mediafile_id_source
+   *   mediafile_id of source.
    */
   public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
 
@@ -60,7 +66,8 @@ class mediamosa_tool_image {
     $execution_string = '';
 
     if ($job_server_still) {
-      $size = $job_server_still[mediamosa_job_server_still_db::SIZE]; // wxh
+      // WxH.
+      $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
       $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
       $v_padding = $job_server_still[mediamosa_job_server_still_db::V_PADDING];
 
@@ -71,7 +78,7 @@ class mediamosa_tool_image {
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
       // Dest.
-      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($mediafile_id_source . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_id . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
       $execute_string_options = array(
         '@mediafile_dest' => $mediafile_dest,
@@ -80,12 +87,12 @@ class mediamosa_tool_image {
         '@status_file' => mediamosa_storage::get_realpath_status_file($job_id),
       );
 
-    // Execution string:
-    return strtr(
-      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
-      'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
-      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
-      $execution_string_options);
+      // Execution string:
+      return strtr(
+        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+        'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
+        $execute_string_options);
     }
   }
 
@@ -93,6 +100,7 @@ class mediamosa_tool_image {
    * Get the exec string for transcoding the file.
    *
    * @param array $options
+   *   Options array for transcode.
    */
   public static function get_transcode_exec($options) {
 
