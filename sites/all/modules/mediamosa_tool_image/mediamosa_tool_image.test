@@ -1,0 +1,53 @@
+<?php
+/**
+ * @file
+ * Job tests for image tool related functions.
+ */
+
+class MediaMosaToolImageTestCaseEga extends MediaMosaTestCaseEgaJob {
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - Image',
+      'description' => 'Testing the image tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('mediamosa_tool_image');
+  }
+
+  /**
+   * Test an image still generation.
+   */
+  public function testImageStillGeneration() {
+
+    // Upload image file.
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/notblack-001.jpeg';
+    $upload = $this->uploadTestFile(array('filename' => $filename));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $parameters = array('still_type' => 'NONE');
+    $job_id = $this->createMediafileStill($mediafile_id, $parameters);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Dump the asset.
+    $this->dump_jobs();
+
+    $asset = $this->getAssetMediafile($asset_id);
+
+    $this->var_export($asset);
+
+    $this->assertTrue($asset['items']['item'][0]['still']['is_still'] == 'TRUE', 'Still generated.');
+  }
+}

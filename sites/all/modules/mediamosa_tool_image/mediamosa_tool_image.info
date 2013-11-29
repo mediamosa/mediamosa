@@ -15,3 +15,4 @@ dependencies[] = mediamosa_app
 
 ; Tool files.
 files[] = mediamosa_tool_image.class.inc
+files[] = mediamosa_tool_image.test
