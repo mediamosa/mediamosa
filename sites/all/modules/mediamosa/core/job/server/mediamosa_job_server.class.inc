@@ -118,7 +118,7 @@ class mediamosa_job_server {
 
     // Acquire a lock for exclusive run.
     if (!lock_acquire('mediamosa_job_server_' . $server_id, 59)) {
-      self::log('run_parse_queue() unable to acquire lock.');
+      self::log_debug('run_parse_queue() unable to acquire lock.');
       return;
     }
 
