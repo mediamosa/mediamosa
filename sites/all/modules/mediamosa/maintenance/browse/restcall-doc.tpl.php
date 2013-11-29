@@ -46,7 +46,7 @@
 <h3><?php print t('Request Authorization'); ?></h3>
 <?php print $request_authorization; ?>
 </p>
-<?
+<?php
   // Set any warning.
   if (!empty($warnings)) {
 ?>
@@ -54,7 +54,7 @@
 <h3><?php print t('Warnings and checks during page generation'); ?></h3>
 <ul><li><?php print implode('<li>', $warnings); ?></ul>
 </p>
-<?
+<?php
   }
 ?>
 <h3><?php print t('Request Parameters'); ?></h3>
