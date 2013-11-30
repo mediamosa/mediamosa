@@ -64,6 +64,46 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
       t('Download url is exists: @download', array('@download' => $download))
     );
 
+    $this->var_export($download);
+
+    // Download the file.
+    $result = mediamosa_http::drupal_http_request($download);
+
+    $this->var_export($result->headers);
+    $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    $this->assertTrue($result->headers['content-type'] == 'application/force-download', 'Got force download.');
+
+    // Set acl.
+
+    // Set access to self only.
+    $this->setMediafileAcl($mediafile_id, array('acl_user' => array(self::SIMPLETEST_USER_ID)));
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters);
+
+    // Check the download url.
+    $download = (string) $xml->items->item->output;
+    $this->assertTrue(
+      !empty($download),
+      t('Download url is exists: @download', array('@download' => $download))
+    );
+
+    $this->var_export($download);
+
+    // Download the file.
+    $result = mediamosa_http::drupal_http_request($download);
+
+    $this->var_export($result->headers);
+    $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    $this->assertTrue($result->headers['content-type'] == 'application/force-download', 'Got force response download.');
+
+    $this->deleteMediafileAcl($mediafile_id);
+
+
     //
     // Change the mediafile to is_downloadable = FALSE.
     //

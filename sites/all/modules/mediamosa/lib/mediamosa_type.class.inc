@@ -237,13 +237,6 @@ class mediamosa_type {
 
       // Check ticket id for downloads.
       case mediamosa_sdk::TYPE_TICKET_ID:
-        if (preg_match("@^([a-zA-Z0-9]+)?$@", $mixed_param_value, $matches) !== 1) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
-        $checked_param_value = (string) $mixed_param_value;
-        break;
-
       case mediamosa_sdk::TYPE_MEDIAFILE_ID:
         if (preg_match('@^([a-zA-Z0-9]+)?$@', $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));

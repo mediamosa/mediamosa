@@ -427,8 +427,8 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
  *
  * Not supported, is supported by /download REST call;
  * download (download response)
- * /media/$app_id/[1st letter ticket]/$mediafile_id-download/filename[,style].ext
- * /media/ticket/$app_id/[1st letter ticket]/$ticket_id-download/filename[,style].ext
+ * /media/download/$app_id/[1st letter ticket]/$mediafile_id-download/filename[,style].ext
+ * /media/ticket/download/$app_id/[1st letter ticket]/$ticket_id-download/filename[,style].ext
  *
  * Method: GET / POST
  */
@@ -545,7 +545,7 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
 }
 
 /**
- * 3.5 uri's;
+ * 3.5 media uri's;
  * URI:
  * View (play response):
  * /media/$app_id/[1st letter ticket]/$mediafile_id/filename[,style].ext
@@ -555,16 +555,184 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
  * /media/$app_id/[1st letter ticket]/$mediafile_id-still/filename[,style].ext
  * /media/ticket/still/$app_id/[1st letter ticket]/$ticket_id-still/filename[,style].ext
  *
- * Not supported, is supported by /download REST call;
- * download (download response)
- * /media/$app_id/[1st letter ticket]/$mediafile_id-download/filename[,style].ext
- * /media/ticket/$app_id/[1st letter ticket]/$ticket_id-download/filename[,style].ext
- *
  * Method: GET / POST
  *
  * @see mediamosa_rest_call_media
  */
 class mediamosa_rest_call_media_ticket extends mediamosa_rest_call_media {
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::APP_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
+          self::VAR_DESCRIPTION => 'The app ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::TICKET_ID_PREFIX => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID_PREFIX,
+          self::VAR_DESCRIPTION => 'One letter index of the mediafile ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::TICKET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
+          self::VAR_DESCRIPTION => 'The mediafile ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::FILENAME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FILENAME,
+          self::VAR_DESCRIPTION => 'The filename.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // All we need.
+    return $var_setup;
+  }
+}
+
+/**
+ * URI: /download
+ * Method: GET / POST
+ *
+ * Serve the mediafile for download.
+ */
+class mediamosa_rest_call_media_download extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  // Rest vars;
+  const APP_ID = 'app_id';
+  const MEDIAFILE_ID_PREFIX = 'mediafile_id_prefix';
+  const MEDIAFILE_ID = 'mediafile_id';
+  const TICKET_ID_PREFIX = 'ticket_id_prefix';
+  const TICKET_ID = 'ticket_id';
+  const FILENAME = 'filename';
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::APP_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
+          self::VAR_DESCRIPTION => 'The app ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::MEDIAFILE_ID_PREFIX => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID_PREFIX,
+          self::VAR_DESCRIPTION => 'One letter index of the mediafile ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::MEDIAFILE_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The ticket ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::FILENAME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FILENAME,
+          self::VAR_DESCRIPTION => 'The filename.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // All we need.
+    return $var_setup;
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    // Get the input values.
+    $app_id = $this->get_param_value(self::APP_ID);
+    $filename = $this->get_param_value(self::FILENAME);
+
+    $mediafile_id = NULL;
+    if ($this->isset_given_param(self::MEDIAFILE_ID)) {
+      $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    }
+
+    $ticket_id = NULL;
+    if ($this->isset_given_param(self::TICKET_ID)) {
+      $ticket_id = $this->get_param_value(self::TICKET_ID);
+    }
+
+    // Either one required.
+    if (!$mediafile_id && !$ticket_id) {
+      throw new mediamosa_exception_error_400(); // Bad request.
+    }
+
+    if (isset($ticket_id)) {
+      // Get filename.
+      $file = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD);
+    }
+    else {
+      $file = mediamosa_storage::get_realpath_mediafile($mediafile_id);
+    }
+
+    // Make sure the file exists we want to download.
+    if (!mediamosa_io::file_exists($file) || !mediamosa_io::is_file($file)) {
+      throw new mediamosa_exception_error_404(); // File not found.
+    }
+
+    // Set headers.
+    header('Pragma: public');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Cache-Control: private, false');
+    header('Content-Description: Download');
+    header('Content-Type: application/force-download');
+    header('Content-Length: ' . filesize($file));
+
+    // Force a save dialog.
+    header('Content-Disposition: attachment; filename="' . mime_header_encode($filename) . '"');
+    header('Content-Transfer-Encoding: binary');
+
+    $handle = fopen($file, 'rb');
+
+    if (!$handle) {
+      throw new mediamosa_exception(0, 'Unable to open file!');
+    }
+
+    // Make sure we send the header now.
+    ob_clean();
+    flush();
+
+    // Max download time is 1 day.
+    drupal_set_time_limit(3600);
+
+    // Until end of file, get the file and output.
+    while (!feof($handle)) {
+      $buffer = fread($handle, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
+
+      print $buffer;
+
+      ob_flush();
+      flush();
+    }
+
+    // Close the file.
+    fclose($handle);
+
+    // Set the result, reponse object will know what to do.
+    $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
+  }
+}
+
+/**
+ * 3.5 uri's;
+ * /download/$app_id/[1st letter ticket]/$mediafile_id-download/filename[,style].ext
+ * /download/ticket/$app_id/[1st letter ticket]/$ticket_id-download/filename[,style].ext
+ *
+ * Method: GET / POST
+ *
+ * @see mediamosa_rest_call_media
+ */
+class mediamosa_rest_call_media_download_ticket extends mediamosa_rest_call_media_download {
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
@@ -596,107 +764,5 @@ class mediamosa_rest_call_media_ticket extends mediamosa_rest_call_media {
 
     // All we need.
     return $var_setup;
-  }
-}
-
-/**
- * URI: /download
- * Method: GET / POST
- *
- * Download the mediafile.
- */
-class mediamosa_rest_call_media_download extends mediamosa_rest_call {
-  // ------------------------------------------------------------------- Consts.
-  // Rest vars;
-  const APP_ID = 'app_id';
-  const TICKET_ID = 'ticket_id';
-  const FILENAME = 'filename';
-
-  // ------------------------------------------------------------ Get Var Setup.
-  public function get_var_setup() {
-    $var_setup = array();
-
-    $var_setup = array(
-      self::VARS => array(
-        self::APP_ID => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
-          self::VAR_DESCRIPTION => 'The app ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-        ),
-        self::TICKET_ID => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
-          self::VAR_DESCRIPTION => 'The ticket ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-        ),
-        self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The filename.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-        )
-      )
-    );
-
-    // All we need.
-    return $var_setup;
-  }
-
-  // ------------------------------------------------------------------ Do Call.
-  public function do_call() {
-    $mediamosa = mediamosa::get();
-
-    // Get the ticket ID.
-    $app_id = $this->get_param_value(self::APP_ID);
-    $ticket_id = $this->get_param_value(self::TICKET_ID);
-    $filename = $this->get_param_value(self::FILENAME);
-
-    // Get filename.
-    $file = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, mediamosa_media_ticket::TICKET_TYPE_DOWNLOAD);
-
-    // Make sure the file exists we want to download.
-    if (!mediamosa_io::file_exists($file) || !mediamosa_io::is_file($file)) {
-      throw new mediamosa_exception(0, 'Invalid download ticket');
-    }
-
-    // Set headers.
-    header('Pragma: public');
-    header('Expires: 0');
-    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-    header('Cache-Control: private, false');
-    header('Content-Description: Download');
-    header('Content-Type: application/force-download');
-    header('Content-Length: ' . filesize($file));
-
-    // Force a save dialog.
-    header('Content-Disposition: attachment; filename="' . mime_header_encode($filename) . '"');
-    header('Content-Transfer-Encoding: binary');
-
-    $handle = fopen($file, 'rb');
-
-    if (!$handle) {
-      throw new mediamosa_exception(0, 'Unable to open file!');
-    }
-
-    // Make sure we send the header now.
-    ob_clean();
-    flush();
-
-    // No time-out here.
-    set_time_limit(0);
-
-    // Until end of file, get the file and output.
-    while (!feof($handle)) {
-      $buffer = fread($handle, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
-
-      print $buffer;
-
-      ob_flush();
-      flush();
-    }
-
-    // Close the file.
-    fclose($handle);
-
-    // Set the result, reponse object will know what to do.
-    $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
   }
 }

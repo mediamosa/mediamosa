@@ -770,7 +770,7 @@ class mediamosa_media {
 
     $output = mediamosa_server::get_objectcode_streaming($container_type, $video_codec, $mime_type);
 
-    $replaces = array();
+    $matches = array();
     preg_match_all('|{TICKET_URI_([a-zA-Z0-9_]+):([a-zA-Z0-9_\.\-:;\/]+)}|', $output, $matches, PREG_SET_ORDER);
     foreach ($matches as $match) {
 

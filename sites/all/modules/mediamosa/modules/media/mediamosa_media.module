@@ -64,8 +64,20 @@ function mediamosa_media_mediamosa_register_rest_call() {
   $rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET];
 
   // Download file.
-  $rest_calls['download/$app_id/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['download/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_download',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD),
+  );
+
+  // Download file.
+  $rest_calls['download/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_media_download_ticket',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
@@ -156,10 +168,19 @@ function mediamosa_media_mediamosa_register_rest_call_doc() {
   }
 
   // Download file.
-  $rest_calls['download/$app_id/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['download/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Download a mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/23/j89y492b84/foo.mpg',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'media/download/23/j/j89y492b84/foo.mpg',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
+  );
+
+  // Download file.
+  $rest_calls['download/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Download a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/23/j/j89y492b84/foo.mpg',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
   );

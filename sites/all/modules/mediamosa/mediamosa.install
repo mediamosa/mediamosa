@@ -4385,3 +4385,24 @@ function mediamosa_update_7173() {
       )
     );
 }
+
+/**
+ * Replace the 'media' call with the 'download' for download servers.
+ */
+function mediamosa_update_7174() {
+  // Update the MediaMosa server for still to support /media now.
+  $nids = db_select('mediamosa_server', 's')
+    ->fields('s', array('nid'))
+    ->condition('server_type', 'DOWNLOAD')
+    ->condition('server_path', '{base_uri}media/{TICKET}')
+    ->execute()
+    ->fetchCol();
+
+  // Load and save the node for revision.
+  foreach ($nids as $nid) {
+    $node = node_load($nid);
+    $node->server_path = '{base_uri}download/{TICKET}';
+    node_save($node);
+  }
+
+}
