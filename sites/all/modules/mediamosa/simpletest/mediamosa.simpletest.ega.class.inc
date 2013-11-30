@@ -656,7 +656,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $source_filename, self::SIMPLETEST_USER_ID, $upload_options);
 
     // Lets return the asset_id, mediafile_id and filename.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename, 'source_filename' => $source_filename);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename, 'filesize' => mediamosa_io::filesize($filename), 'source_filename' => $source_filename);
   }
 
   /**
@@ -727,8 +727,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // POST or PUT.
     if (!$options['use_put']) { // POST.
-      // File.
-      $postfields = array('file' => '@' . $filename);
+      if (class_exists('CURLFile')) {
+        $postfields = array('file' => new CURLFile($filename));
+      }
+      else {
+        // File.
+        $postfields = array('file' => '@' . $filename);
+      }
 
       // Upload the test file.
       $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
@@ -884,6 +889,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         'default' => $default ? 'true' : 'false',
       );
 
+      // PHP 5.5.
+      if (class_exists('CURLFile')) {
+        $postfields['file'] = new CURLFile($filename);
+      }
+
       // Upload the test file.
       $out = $this->curlExec(array(CURLOPT_URL => url($uri, array('absolute' => TRUE)), CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
 
@@ -1033,6 +1043,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $postfields['upload_ticket'] = $uploadticket['ticket_id'];
     $postfields['order'] = $order;
     $postfields['default'] = $default ? 'true' : 'false';
+
+    // PHP 5.5.
+    if (class_exists('CURLFile')) {
+      $postfields['file'] = new CURLFile($filename);
+    }
 
     // No headers.
     $headers = array();
