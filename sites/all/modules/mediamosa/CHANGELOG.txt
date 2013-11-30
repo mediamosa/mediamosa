@@ -1,4 +1,4 @@
-MediaMosa 3.5.x-RC3-dev (build 2065, master branch)
+MediaMosa 3.5.x-RC3 (build 2067, master branch)
 ---------------------------------------------------
 - Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
 - Downgraded log message for overflow cron tick to debug status.
@@ -11,9 +11,11 @@ MediaMosa 3.5.x-RC3-dev (build 2065, master branch)
   server will always use REST call for downloading file.
 - Fixed unittest using CURL file upload; will use CURLfile class when available
   (PHP5.5+).
+- Update SDK and CK submodule. Use git submodule update.
+- Upgraded Drupal to 7.24.
 
-MediaMosa 3.5.x-RC2-dev (build 2061, master branch)
----------------------------------------------------
+MediaMosa 3.5.x-RC2 (build 2061, master branch)
+-----------------------------------------------
 - CQL is extended with search on the is_private flag (useful for testing
   published status).
 - Mimetype of the original mediafile is now normalized to the asset.
