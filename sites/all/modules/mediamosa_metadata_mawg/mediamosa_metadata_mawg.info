@@ -1,7 +1,7 @@
 name = Media Ontology
 description = MediaMosa support for the Ontology for Media Resources 1.0 (<a href="http://www.w3.org/TR/mediaont-10" target="_blank">http://www.w3.org/TR/mediaont-10</a>) from the W3C Media Annotation Working Group.
 package = MediaMosa - Metadata
-version = 7.x-3.5-RC2
+version = 7.x-3.5-RC3
 core = 7.x
 
 dependencies[] = mediamosa

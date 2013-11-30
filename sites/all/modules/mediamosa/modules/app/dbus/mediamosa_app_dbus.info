@@ -3,7 +3,7 @@
 name = "Application authentication by DBUS"
 description = "The DBUS authentication module handles application authentication."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC2
+version = 7.x-3.5-RC3
 core = 7.x
 
 ; Dependencies (module names)

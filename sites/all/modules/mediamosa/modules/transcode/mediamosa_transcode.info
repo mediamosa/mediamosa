@@ -3,7 +3,7 @@
 name = "Transcode profiles"
 description = "The transcode module handles predefined transcoding profiles."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC2
+version = 7.x-3.5-RC3
 core = 7.x
 
 ; Dependencies (module names)

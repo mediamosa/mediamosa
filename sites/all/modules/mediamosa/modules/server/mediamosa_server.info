@@ -3,7 +3,7 @@
 name = "Server"
 description = "The server module manage the different server settings and types."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC2
+version = 7.x-3.5-RC3
 core = 7.x
 
 ; Dependencies (module names)

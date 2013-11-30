@@ -1,3 +1,17 @@
+MediaMosa 3.5.x-RC3-dev (build 2065, master branch)
+---------------------------------------------------
+- Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
+- Downgraded log message for overflow cron tick to debug status.
+- Fixed still generation tool_image.
+- Upgraded Mediamosa rules integration.
+- Fixed unittest with MIME-type.
+- Fixed download mediafile to force download HTTP header, instead of triggering
+  browser mime-type action.
+- Download server is no longer checked for /media htaccess file, as download
+  server will always use REST call for downloading file.
+- Fixed unittest using CURL file upload; will use CURLfile class when available
+  (PHP5.5+).
+
 MediaMosa 3.5.x-RC2-dev (build 2061, master branch)
 ---------------------------------------------------
 - CQL is extended with search on the is_private flag (useful for testing
