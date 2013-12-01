@@ -116,6 +116,9 @@ function mediamosa_media_mediamosa_register_rest_call() {
   if (mediamosa::get()->in_simpletest_sandbox()) {
     $rest_calls['media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'] = $rest_calls['media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'];
     $rest_calls['media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'] = $rest_calls['media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename'];
+
+    $rest_calls['download/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'] = $rest_calls['download/$app_id/$mediafile_id_prefix/$mediafile_id/$filename'];
+    $rest_calls['download/simpletest/media/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename'] = $rest_calls['download/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename'];
   }
 
   return $rest_calls;

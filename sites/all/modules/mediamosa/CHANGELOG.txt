@@ -7,8 +7,6 @@ MediaMosa 3.5.x-RC3 (build 2067, master branch)
 - Fixed unittest with MIME-type.
 - Fixed download mediafile to force download HTTP header, instead of triggering
   browser mime-type action.
-- Download server is no longer checked for /media htaccess file, as download
-  server will always use REST call for downloading file.
 - Fixed unittest using CURL file upload; will use CURLfile class when available
   (PHP5.5+).
 - Update SDK and CK submodule. Use git submodule update.
