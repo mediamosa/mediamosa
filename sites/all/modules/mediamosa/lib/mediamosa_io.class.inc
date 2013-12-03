@@ -1036,8 +1036,18 @@ class mediamosa_io {
 
   /**
    * Calculate the space used by a directory.
+   *
+   * @param string $directory
+   *   The path for scan.
+   * @param bool $recursive
+   *   Go deeper in subdirs.
+   * @param bool $follow_symlink
+   *   Also include symlinked directories.
    */
-  public static function disk_usage($directory, $recursive = FALSE) {
+  public static function disk_usage($directory, $recursive = FALSE, $follow_symlink = TRUE) {
+    if ((is_link($directory) && !$follow_symlink) || !self::file_exists($directory)) {
+      return 0;
+    }
     if (self::is_file($directory)) {
       return filesize($directory);
     }
@@ -1046,16 +1056,16 @@ class mediamosa_io {
     if (is_dir($directory)) {
       $dir = dir($directory);
       while (($entry = $dir->read()) !== FALSE) {
-        if ($entry == '.' || $entry == '..') {
+        $entry_path = $directory . '/' . $entry;
+        if ($entry == '.' || $entry == '..' || !self::file_exists($entry_path) || (!$follow_symlink && is_link($entry_path))) {
           continue;
         }
 
-        $entry_path = $directory . '/' . $entry;
         if (self::is_file($entry_path)) {
           $disk_usage += filesize($entry_path);
         }
         elseif ($recursive && self::is_dir($entry_path)) {
-          $disk_usage += self::disk_usage($entry_path, TRUE);
+          $disk_usage += self::disk_usage($entry_path, $recursive, $follow_symlink);
         }
       }
       $dir->close();
