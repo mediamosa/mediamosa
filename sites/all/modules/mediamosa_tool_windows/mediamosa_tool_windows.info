@@ -12,3 +12,4 @@ dependencies[] = mediamosa_server
 dependencies[] = mediamosa_app
 
 ; Used files.
+files[] = mediamosa_tool_windows.class.inc
