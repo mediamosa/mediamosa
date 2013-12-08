@@ -3,7 +3,7 @@
 name = "Contents browser"
 description = "Use this module to be able to browse through assets, collections, and REST calls definitions."
 package = "MediaMosa - Maintenance"
-version = 7.x-3.5-RC3
+version = 7.x-3.5
 core = 7.x
 
 ; Used files.

@@ -1,4 +1,4 @@
-MediaMosa 3.5.x-RC3 (build 2068, master branch)
+MediaMosa 3.5.x (build 2069)
 ---------------------------------------------------
 - Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
 - Downgraded log message for overflow cron tick to debug status.
@@ -11,9 +11,6 @@ MediaMosa 3.5.x-RC3 (build 2068, master branch)
   (PHP5.5+).
 - Update SDK and CK submodule. Use git submodule update.
 - Upgraded Drupal to 7.24.
-
-MediaMosa 3.5.x-RC2 (build 2061, master branch)
------------------------------------------------
 - CQL is extended with search on the is_private flag (useful for testing
   published status).
 - Mimetype of the original mediafile is now normalized to the asset.
@@ -29,9 +26,6 @@ MediaMosa 3.5.x-RC2 (build 2061, master branch)
 - Upgraded video-js to version 4.3.0.
 - Fixed upgrade path when merging still (data/stills) files into mediafile
   (data) tree.
-
-MediaMosa 3.5.x-RC1 (build 2051, master branch)
------------------------------------------------
 - Improvements of Asset edit UI.
   - labels and text fields on 1 line
   - no empty collection dropdown on filter.

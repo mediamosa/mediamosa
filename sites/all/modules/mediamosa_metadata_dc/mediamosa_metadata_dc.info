@@ -1,7 +1,7 @@
 name = Dublin Core
 description = MediaMosa support for the metadata format Dublin Core. See http://dublincore.org/ for more information. <b>Warning: Uninstalling this module will remove all Metadata stored using this metadata type. Disabling will only disallow usage of the Metadata type.</b>
 package = MediaMosa - Metadata
-version = 7.x-3.5-RC3
+version = 7.x-3.5
 core = 7.x
 
 dependencies[] = mediamosa

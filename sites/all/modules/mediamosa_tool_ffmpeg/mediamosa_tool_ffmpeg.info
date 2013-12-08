@@ -1,7 +1,7 @@
 name = "Mediamosa Tool FFmpeg"
 description = "Mediamosa Tool module for FFmpeg toolset"
 package = "MediaMosa - Tool"
-version = 7.x-3.5-RC3
+version = 7.x-3.5
 core = 7.x
 
 ; Dependencies (module names)
