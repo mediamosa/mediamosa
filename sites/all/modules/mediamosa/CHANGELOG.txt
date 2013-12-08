@@ -1,5 +1,5 @@
 MediaMosa 3.5.x (build 2069)
----------------------------------------------------
+----------------------------
 - Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
 - Downgraded log message for overflow cron tick to debug status.
 - Fixed still generation tool_image.
@@ -309,23 +309,6 @@ MediaMosa 3.5.x (build 2069)
   previous one for Solr3.6.
 - Updated version MediaMosa SDK to 7.x-3.1.
 - Fixed minor dependency problem with SDK module 'mediamosa_development'.
-- Extended the hook output of 'mediamosa_metadata_info'. Now returns an
-  associated array;
-  - 'title'
-    Title of the set.
-  - 'description'
-    Description of the set.
-  - 'context'
-    The context name of the set, e.g. 'dc', 'qdc'. Used in CQL.
-- Fixed context set detection for new asset.tag metadata.
-- Metadata properties can no longer be created with a name starting with a
-  number.
-- Improved metadata add/edit form on asset browser.
-- Added forms for listing, creating and deletion of client application metadata
-  tags.
-- Fixed bug in REST asset/$asset_id/metadata_tag delete.
-- Added Drush command to core for adding a client application.
-- Fixed 2 notices with static's and during install.
 
 MediaMosa 3.2.4 (build 1906)
 ----------------------------
