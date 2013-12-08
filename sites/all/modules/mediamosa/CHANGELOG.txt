@@ -1,5 +1,6 @@
-MediaMosa 3.5.x (build 2071)
+MediaMosa 3.5.x (build 2072)
 ----------------------------
+- Fixing default value for download server.
 - Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
 - Downgraded log message for overflow cron tick to debug status.
 - Fixed still generation tool_image.
