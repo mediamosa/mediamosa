@@ -1,4 +1,4 @@
-MediaMosa 3.5.x (build 2069)
+MediaMosa 3.5.x (build 2070)
 ----------------------------
 - Fixed <? tag into <?php on some templates (gives fatal error on PHP5.5).
 - Downgraded log message for overflow cron tick to debug status.
