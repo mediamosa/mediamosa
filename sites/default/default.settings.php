@@ -558,7 +558,7 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
  * for this URL / Location, disabling all REST calls; except upload
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = TRUE;
+$conf['mediamosa_app'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -589,7 +589,7 @@ $conf['mediamosa_app_download'] = TRUE;
  * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_openapi' to TRUE.
  */
-$conf['mediamosa_app_openapi'] = FALSE;
+$conf['mediamosa_app_openapi'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the

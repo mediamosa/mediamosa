@@ -1,7 +1,7 @@
 name = "Storage profiles"
 description = "The storage module handles different storage profiles."
 package = "MediaMosa - Modules"
-version = 7.x-3.5-RC3
+version = 7.x-3.5
 core = 7.x
 
 ; Dependencies (module names)

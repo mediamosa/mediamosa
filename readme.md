@@ -36,7 +36,7 @@ The following modules are now submodules;
 To complete a pull from GitHub, you must pull its submodules as well. You can do
 this by using these git commands;
 
-git submodule init
+git submodule init  
 git submodule update
 
 If you re-pulling from MediaMosa, also include the following command to ensure
