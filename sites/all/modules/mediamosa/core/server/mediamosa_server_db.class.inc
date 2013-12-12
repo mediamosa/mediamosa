@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * DB Class for mediamosa_server_upload module.
+ * DB Class for mediamosa_server module.
  */
 
 class mediamosa_server_db {

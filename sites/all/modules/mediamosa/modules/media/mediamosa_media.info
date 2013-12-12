@@ -20,6 +20,7 @@ files[] = mediamosa_media.stills.test
 files[] = mediamosa_media.stills_download.test
 files[] = mediamosa_media.test
 files[] = mediamosa_media.timerestrictions.test
+files[] = mediamosa_media.viewer.test
 
 ; Tests ticket
 files[] = ticket/mediamosa_media_ticket.cleanup.test

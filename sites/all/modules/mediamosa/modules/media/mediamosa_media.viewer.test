@@ -1,0 +1,77 @@
+<?php
+/**
+ * @file
+ * Unit test for streaming server viewer.
+ */
+
+class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * MediaTestcaseEga getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Media - Viewer object code',
+      'description' => 'Test if the correct viewer object code is select for client application.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_ALL,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test basic PlayProxy calls.
+   */
+  public function testViewer() {
+    // Expecting;
+    $mime_type = 'application/ogg';
+    $video_codec = 'theora';
+    $container_type = 'ogg';
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+
+    $object_code = 'viewer object code';
+
+    $node_viewer = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, 'MediaMosa viewer');
+    $node_viewer->{mediamosa_viewer_db::NAME} = 'test1';
+    $node_viewer->{mediamosa_viewer_db::DESCRIPTION} = 'Destination.';
+    $node_viewer->{mediamosa_viewer_db::OBJECT_CODE} = $object_code;
+    node_save($node_viewer);
+
+    $this->var_export($node_viewer);
+
+    // Create a upload test file with asset and mediafile.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $this->var_export($upload);
+
+    $mediafile = mediamosa_asset_mediafile::must_exists($upload['mediafile_id']);
+    $this->var_export($mediafile);
+
+    $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($upload['mediafile_id']);
+    $this->var_export($mediafile_metadata);
+
+    // Do basic media play call.
+    $parameters = array(
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $upload['mediafile_id'],
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_OBJECT,
+    );
+    $response = $this->do_media_view($asset_id, $parameters);
+    $this->var_export($response->items->item);
+
+    $streaming_server = mediamosa_server::get_streaming($container_type, $video_codec, $mime_type);
+    $this->assert(!empty($streaming_server), 'Found streaming server');
+    $nid_server = $streaming_server['nid'];
+    $this->var_export($streaming_server);
+    $this->viewer_link_server_app($app_id, $nid_server, $node_viewer->nid);
+
+    // Do basic media play call.
+    $parameters = array(
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $upload['mediafile_id'],
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_OBJECT,
+    );
+    $response = $this->do_media_view($asset_id, $parameters);
+    $this->var_export($response->items->item);
+$this->var_export($response->items->item->output);
+    $this->assert($response->items->item->output == $object_code, 'Found correct object code');
+  }
+}

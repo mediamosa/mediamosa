@@ -58,6 +58,8 @@ class mediamosa_permission {
   // Config.
   const ACCESS_CONFIG = 'mediamosa|access|config';
   const ACCESS_CONFIG_SERVERS = 'mediamosa|access|config|servers';
+  const ACCESS_CONFIG_VIEWERS = 'mediamosa|access|config|viewers';
+  const UPDATE_CONFIG_VIEWERS = 'mediamosa|update|config|viewers';
   const ACCESS_CONFIG_APPS = 'mediamosa|access|config|apps';
   const ACCESS_CONFIG_GLOBAL = 'mediamosa|access|config|global';
   const ACCESS_CONFIG_DEVELOPMENT = 'mediamosa|access|config|development';

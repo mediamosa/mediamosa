@@ -281,6 +281,9 @@ files[] = core/server/streaming/container/mediamosa_server_streaming_container_d
 files[] = core/server/tool/mediamosa_server_tool.class.inc
 files[] = core/server/tool/mediamosa_server_tool_db.class.inc
 
+; Server Viewer.
+files[] = core/server/viewer/mediamosa_server_viewer_db.class.inc
+
 ; Media.
 files[] = core/media/mediamosa_media.class.inc
 
@@ -314,6 +317,11 @@ files[] = core/user/group/mediamosa_user_in_group_db.class.inc
 ; User Favorite.
 files[] = core/user/favorite/mediamosa_user_favorite_db.class.inc
 files[] = core/user/favorite/mediamosa_user_favorite.class.inc
+
+; Viewer.
+files[] = core/viewer/mediamosa_viewer.class.inc
+files[] = core/viewer/mediamosa_viewer_db.class.inc
+files[] = core/viewer/mediamosa_viewer_app_db.class.inc
 
 ; Simpletest Class.
 files[] = simpletest/mediamosa.simpletest.class.inc

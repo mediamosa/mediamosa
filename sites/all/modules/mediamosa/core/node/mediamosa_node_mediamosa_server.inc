@@ -141,6 +141,15 @@ function mediamosa_server_delete($node) {
   // Delete revisions.
   mediamosa_node_revision::delete_ex($node, mediamosa_server_db::TABLE_NAME);
 
+  // Remove all links.
+  db_delete(mediamosa_viewer_app_db::TABLE_NAME)
+    ->condition(mediamosa_viewer_app_db::NID_SERVER, $node->nid)
+    ->execute();
+
+  db_delete(mediamosa_server_viewer_db::TABLE_NAME)
+    ->condition(mediamosa_server_viewer_db::NID_SERVER, $node->nid)
+    ->execute();
+
   // Remove streaming containers.
   db_delete(mediamosa_server_streaming_container_db::TABLE_NAME)
     ->condition('nid', $node->nid)

@@ -9,6 +9,7 @@ require_once 'mediamosa_server_db.class.inc';
 require_once 'job/mediamosa_server_job.install.inc';
 require_once 'streaming/mediamosa_server_streaming.install.inc';
 require_once 'tool/mediamosa_server_tool.install.inc';
+require_once 'viewer/mediamosa_server_viewer.install.inc';
 
 /**
  * Implements hook_install().
@@ -21,6 +22,9 @@ function _mediamosa_server_install() {
 
   // Server node extensions.
   mediamosa::drupal_install_schema(mediamosa_server_db::TABLE_NAME);
+
+  // Install the viewer table.
+  _mediamosa_server_viewer_install();
 
   // Children.
   _mediamosa_server_streaming_install();
@@ -295,6 +299,9 @@ s1.write('mediaspace');
 function _mediamosa_server_uninstall() {
   // Server job uninstall.
   _mediamosa_server_job_uninstall();
+
+  // Uninstall the viewer table.
+  _mediamosa_server_viewer_uninstall();
 
     // Unstall our children..
   _mediamosa_server_streaming_uninstall();

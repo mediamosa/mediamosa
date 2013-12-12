@@ -3779,6 +3779,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $response['xml'];
   }
 
+  /**
+   * Create link between viewer, server and app.
+   *
+   * @param int $app_id
+   *   The client application ID.
+   * @param type $nid_server
+   *   Node ID server.
+   * @param type $nid_viewer
+   *   Noder ID viewer.
+     *
+   */
+  protected function viewer_link_server_app($app_id, $nid_server, $nid_viewer) {
+    // Insert when not already.
+    $mediamosa_viewer_app = db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')
+      ->fields('va', array(mediamosa_viewer_app_db::APP_ID))
+      ->condition(mediamosa_viewer_app_db::APP_ID, $app_id)
+      ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
+      ->condition(mediamosa_viewer_app_db::NID_VIEWER, $nid_viewer)
+      ->execute()
+      ->fetchAssoc();
+
+    if (empty($mediamosa_viewer_app)) {
+      db_insert(mediamosa_viewer_app_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_viewer_app_db::APP_ID => $app_id,
+          mediamosa_viewer_app_db::NID_SERVER => $nid_server,
+          mediamosa_viewer_app_db::NID_VIEWER => $nid_viewer,
+        ))
+        ->execute();
+    }
+  }
+
   // --------------------------------------------------------------- Statistics.
   /*
    * Do a search word stats call.

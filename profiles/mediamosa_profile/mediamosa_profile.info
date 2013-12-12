@@ -45,6 +45,7 @@ dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_user
+dependencies[] = mediamosa_viewer
 dependencies[] = mediamosa_webservice
 dependencies[] = mediamosa_tool
 dependencies[] = mediamosa_tool_ffmpeg

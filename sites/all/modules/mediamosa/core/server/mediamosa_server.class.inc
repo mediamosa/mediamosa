@@ -522,6 +522,8 @@ class mediamosa_server {
   /**
    * Find the object code based on container and video_codec (optional).
    *
+   * @param int $app_id
+   *   The client application.
    * @param string $container_type
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
@@ -529,12 +531,20 @@ class mediamosa_server {
    * @param string $mime_type
    *  Mime type.
    */
-  public static function get_objectcode_streaming($container_type, $video_codec, $mime_type = NULL) {
+  public static function get_objectcode_streaming($app_id, $container_type, $video_codec, $mime_type = NULL) {
 
     $server = self::get_streaming($container_type, $video_codec, $mime_type);
-
     if ($server) {
-      return $server[mediamosa_server_db::OBJECT_CODE];
+      // Get possible chosen object code viewer.
+      $query = mediamosa_db::db_select(mediamosa_viewer_db::TABLE_NAME, 'v')->fields('v', array(mediamosa_viewer_db::OBJECT_CODE));
+      $query->join(mediamosa_viewer_app_db::TABLE_NAME, 'va', 'va.app_id = :app_id', array(':app_id' => $app_id));
+      $viewer = $query
+        ->condition('va.' . mediamosa_viewer_app_db::APP_ID, $app_id)
+        ->condition('va.' . mediamosa_viewer_app_db::NID_SERVER, $server['nid'])
+        ->execute()
+        ->fetchAssoc();
+
+      return $viewer ? $viewer[mediamosa_viewer_db::OBJECT_CODE] : $server[mediamosa_server_db::OBJECT_CODE];
     }
 
     return FALSE;

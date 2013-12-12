@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Server"
 description = "The server module manage the different server settings and types."
 package = "MediaMosa - Modules"
@@ -8,7 +6,9 @@ core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
+dependencies[] = mediamosa_viewer
 
 ; Used files.
 files[] = mediamosa_server.rest.class.inc
 files[] = mediamosa_server.setup.test
+files[] = mediamosa_server.admin.inc

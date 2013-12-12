@@ -1,0 +1,93 @@
+<?php
+/**
+ * @file
+ * Server module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_viewer_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/viewer'] = array(
+    'title' => 'Viewers',
+    'description' => 'The MediaMosa viewers enables to specify specific view and play options for assets en mediafiles.',
+    'page callback' => '_mediamosa_viewer_list',
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_SERVERS),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+    'file' => 'mediamosa_viewer.admin.inc',
+  );
+
+  $items['admin/mediamosa/config/viewer/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+  );
+
+  $items['admin/mediamosa/config/viewer/add'] = array(
+    'title' => 'Add viewer',
+    'page callback' => 'node_add',
+    'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
+  );
+
+  $items['admin/mediamosa/config/viewer/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/mediamosa/config/viewer/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/viewer/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+
+  $items['admin/mediamosa/config/viewer/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_node_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/viewer/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
+  return $items;
+}

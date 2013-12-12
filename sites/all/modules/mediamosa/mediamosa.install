@@ -34,6 +34,7 @@ require_once 'core/tool/mediamosa_tool.install.inc';
 require_once 'core/transcode/mediamosa_transcode.install.inc';
 require_once 'core/storage/mediamosa_storage.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
+require_once 'core/viewer/mediamosa_viewer.install.inc';
 require_once 'core/webservice/mediamosa_webservice.install.inc';
 
 /**
@@ -89,6 +90,9 @@ function mediamosa_install() {
   // Install the server db.
   _mediamosa_server_install();
 
+  // Install the viewer db.
+  _mediamosa_viewer_install();
+
   // Install the statistics db.
   _mediamosa_statistics_install();
 
@@ -117,6 +121,9 @@ function mediamosa_uninstall() {
 
   // Remove the node db.
   _mediamosa_node_uninstall();
+
+  // Uninstall the viewer db.
+  _mediamosa_viewer_uninstall();
 
   // Remove the server db.
   _mediamosa_server_uninstall();
@@ -4404,5 +4411,150 @@ function mediamosa_update_7174() {
     $node->server_path = '{base_uri}download/{TICKET}';
     node_save($node);
   }
+}
 
+/**
+ * Install the MediaMosa viewer table and enable its module.
+ */
+function mediamosa_update_7175() {
+
+  if (!db_table_exists('mediamosa_viewer')) {
+    db_create_table('mediamosa_viewer', array(
+      'description' => 'The download server table contains settings for the download servers.',
+      'fields' => array(
+        'nid' => array(
+          'description' => 'The Drupal node id.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'vid' => array(
+          'description' => 'The Drupal node revision id.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'description' => 'The unique name of the viewer.',
+          'type' => 'varchar',
+          'length' => 80,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+        'description' => array(
+          'description' => 'The description of the viewer.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+        'object_code' => array(
+          'description' => 'The object code for the viewer for generating the viewer code (in HTML or other markup language).',
+          'type' => 'text',
+          'not null' => TRUE,
+        ),
+      ),
+      'primary key' => array('nid'),
+      'indexes' => array(
+        'idx_nid_vid' => array('nid', 'vid'),
+      ),
+      'unique keys' => array(
+        'uni_name' => array('name'),
+      ),
+    ));
+  }
+
+  return $message;
+}
+
+/**
+ * Install the MediaMosa server viewer table.
+ */
+function mediamosa_update_7176() {
+
+  if (!db_table_exists('mediamosa_server_viewer')) {
+    $viewer_status = array(
+      'ENABLED',
+      'DISABLED',
+    );
+
+    db_create_table('mediamosa_server_viewer', array(
+      'description' => '.',
+      'fields' => array(
+        'nid_viewer' => array(
+          'description' => 'Viewer node ID.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'nid_server' => array(
+          'description' => 'Server node ID.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'status' => array(
+          'description' => 'The status.',
+          'type' => "enum('" . implode("','", $viewer_status) . "')",
+          'mysql_type' => "enum('" . implode("','", $viewer_status) . "')",
+          'not null' => FALSE,
+        ),
+        'weight' => array(
+          'type' => 'int',
+          'description' => 'The weight of the viewer for usage in order.',
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('nid_viewer', 'nid_server'),
+      'indexes' => array(
+      )
+    ));
+  }
+}
+
+/**
+ * Install the MediaMosa server viewer table.
+ */
+function mediamosa_update_7177() {
+
+  if (!db_table_exists('mediamosa_viewer_app')) {
+    db_create_table('mediamosa_viewer_app', array(
+      'description' => 'The viewer app links the choices of the app which viewers it will use.',
+      'fields' => array(
+        'app_id' => array(
+          'description' => 'The client application ID.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'nid_server' => array(
+          'description' => 'The view (streaming) server node ID.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'nid_viewer' => array(
+          'description' => 'The viewer ID.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+      ),
+      'primary key' => array('app_id', 'nid_server', 'nid_viewer'),
+    ));
+  }
+}
+
+/**
+ * Enable new MediaMosa viewer module.
+ */
+function mediamosa_update_7178() {
+  // Only enable viewer module when server module is on.
+  $message = 'Did not enable the MediaMosa Viewer module because MediaMosa Server module is disabled.';
+  if (module_exists('mediamosa_server') && !module_exists('mediamosa_viewer')) {
+    module_enable(array('mediamosa_viewer'));
+    $message = 'Installed view table and enabled MediaMosa viewer module.';
+  }
+
+  return $message;
 }

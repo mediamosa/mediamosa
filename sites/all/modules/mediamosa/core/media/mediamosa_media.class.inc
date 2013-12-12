@@ -768,7 +768,7 @@ class mediamosa_media {
     $video_codec = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'video_codec');
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile[mediamosa_asset_mediafile_db::ID], 'mime_type');
 
-    $output = mediamosa_server::get_objectcode_streaming($container_type, $video_codec, $mime_type);
+    $output = mediamosa_server::get_objectcode_streaming($app_id, $container_type, $video_codec, $mime_type);
 
     $matches = array();
     preg_match_all('|{TICKET_URI_([a-zA-Z0-9_]+):([a-zA-Z0-9_\.\-:;\/]+)}|', $output, $matches, PREG_SET_ORDER);

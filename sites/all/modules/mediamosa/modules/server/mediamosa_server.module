@@ -17,6 +17,7 @@ function mediamosa_server_menu() {
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_SERVERS),
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
+    'file' => 'mediamosa_server.admin.inc',
   );
 
   $items['admin/mediamosa/config/server/list'] = array(
@@ -75,6 +76,21 @@ function mediamosa_server_menu() {
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
   );
 
+  $items['admin/mediamosa/config/server/%node/viewers'] = array(
+    'title' => 'Viewers',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_server_viewer_form', 4),
+    'access callback' => '_mediamosa_user_access_server_viewer',
+    'access arguments' => array(mediamosa_permission::UPDATE_CONFIG_VIEWERS, 4),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+    'file' => 'mediamosa_server.admin.inc',
+    'file path' => drupal_get_path('module', 'mediamosa_server'),
+  );
+  $items['node/%node/viewers'] = $items['admin/mediamosa/config/server/%node/viewers'];
+  $items['node/%node/viewers']['access arguments'] = array(mediamosa_permission::UPDATE_CONFIG_VIEWERS, 1);
+  $items['node/%node/viewers']['page arguments'] = array('mediamosa_server_viewer_form', 1);
+
   $items['admin/mediamosa/config/server/%node/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
@@ -100,6 +116,37 @@ function mediamosa_server_menu() {
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
   );
   return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_server_theme() {
+  return array(
+    'mediamosa_server_viewer_form' => array(
+      'render element' => 'form',
+      'file' => 'mediamosa_server.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Access for viewers on server.
+ *
+ * @param string $perm
+ *   The permission.
+ * @param object $node
+ *   The node object.
+ *
+ * @return bool
+ *   Returns TRUE for access, FALSE otherwise.
+ */
+function _mediamosa_user_access_server_viewer($perm, $node) {
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER && $node->{mediamosa_server_db::SERVER_TYPE} != mediamosa_server_db::SERVER_TYPE_STREAMING) {
+    return FALSE;
+  }
+
+  return _mediamosa_user_access($perm);
 }
 
 /**
@@ -244,81 +291,4 @@ function mediamosa_server_mediamosa_register_rest_call_doc() {
   );
 
   return $rest_calls;
-}
-
-/**
- * Show the mediamosa servers.
- */
-function _mediamosa_server_list() {
-  // Reset the breadcrum.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administration'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  drupal_set_breadcrumb($breadcrumb);
-
-  $rows = array();
-
-  $header = array(
-    array('data' => t('Server Type'), 'field' => 'ms.' . mediamosa_server_db::SERVER_TYPE, 'sort' => 'asc'),
-    array('data' => t('Title'), 'field' => 'ms.' . mediamosa_server_db::SERVER_NAME),
-    array('data' => t('URI'), 'field' => 'ms.' . mediamosa_server_db::SERVER_URI),
-    array('data' => t('Path'), 'field' => 'ms.' . mediamosa_server_db::SERVER_PATH),
-    array('data' => t('Status'), 'field' => 'ms.' . mediamosa_server_db::SERVER_STATUS),
-    t('Operations'),
-  );
-
-  // Get the servers.
-  $servers = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('PagerDefault')->extend('TableSort')
-    ->fields('ms')
-    ->limit(mediamosa_settings::maintenance_items_per_page())
-    ->orderByHeader($header)
-    ->execute()
-    ->fetchAll();
-
-  // Collect the node IDs.
-  $nids = array();
-  foreach ($servers as $server) {
-    $nids[] = $server[mediamosa_server_db::NID];
-  }
-
-  // Get the nodes.
-  $nodes = node_load_multiple($nids);
-
-  // Get destination.
-  $l_options = array('query' => drupal_get_destination());
-
-  foreach ($servers as $server) {
-    $actions = array();
-    if (node_access('update', $nodes[$server[mediamosa_server_db::NID]])) {
-      $actions[] = l(t('Edit'), 'node/' . $server[mediamosa_server_db::NID] . '/edit', $l_options);
-    }
-    if (node_access('delete', $nodes[$server[mediamosa_server_db::NID]])) {
-      $actions[] = l(t('Delete'), 'admin/mediamosa/config/server/' . $server[mediamosa_server_db::NID] . '/delete', $l_options);
-    }
-
-    $statuses = array(
-      mediamosa_server_db::SERVER_STATUS_ON => t('On'),
-      mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'),
-      mediamosa_server_db::SERVER_STATUS_OFF => t('Off'),
-    );
-
-    $rows[] = array('data' =>
-      array(
-        // Cells
-        t($server[mediamosa_server_db::SERVER_TYPE]),
-       'title' => array('data' => l($server[mediamosa_server_db::SERVER_NAME], 'admin/mediamosa/config/server/' . $server[mediamosa_server_db::NID]), 'field' => mediamosa_server_db::SERVER_NAME),
-        t($server[mediamosa_server_db::SERVER_URI]),
-        t($server[mediamosa_server_db::SERVER_PATH]),
-        $statuses[$server[mediamosa_server_db::SERVER_STATUS]],
-        empty($actions) ? '-' : implode(' | ', $actions),
-      ),
-    );
-  }
-
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no servers specified. Click on the <em>Add</em> tab to create one.')));
-  $output .= theme('pager');
-
-  return $output;
 }

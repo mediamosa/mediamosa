@@ -101,6 +101,9 @@ function mediamosa_app_update($node) {
     // Update webservice.
     _mediamosa_app_update_webservice($node);
 
+    // Create / remove viewer links.
+    _mediamosa_app_update_viewers($node);
+
     // Update default storage uri if storage module is enabled.
     if (module_exists('mediamosa_storage')) {
       mediamosa_storage_profile_app::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_URI}, $node->{mediamosa_app_db::STORAGE_STILLS_URI});
@@ -130,6 +133,9 @@ function mediamosa_app_insert($node) {
   // Update webservice.
   _mediamosa_app_update_webservice($node);
 
+  // Create / remove viewer links.
+  _mediamosa_app_update_viewers($node);
+
   // Update default storage uri if storage module is enabled.
   if (module_exists('mediamosa_storage') && !empty($node->{mediamosa_app_db::STORAGE_URI}) && !empty($node->{mediamosa_app_db::STORAGE_STILLS_URI})) {
     mediamosa_storage_profile_app::update_default_uri($node->{mediamosa_app_db::APP_ID}, $node->{mediamosa_app_db::STORAGE_URI}, $node->{mediamosa_app_db::STORAGE_STILLS_URI});
@@ -154,6 +160,48 @@ function _mediamosa_app_update_webservice($node) {
     }
     else {
       mediamosa_webservice_app::webservice_status($node->app_id, $handle, TRUE);
+    }
+  }
+}
+
+/**
+ * Create or remove the links between the viewer, server and app.
+ *
+ * @param object $node
+ *   The node.
+ */
+function _mediamosa_app_update_viewers($node) {
+
+  $viewer_server_apps = empty($node->viewer_server_apps) ? array() : $node->viewer_server_apps;
+  foreach ($viewer_server_apps as $viewer_server_app) {
+    $nid_viewer = empty($node->{$viewer_server_app}) ? 0 : $node->{$viewer_server_app};
+    $nid_server = (int) substr($viewer_server_app, strlen('viewer_server_app-'));
+    if (empty($nid_viewer)) {
+      // Remove any link.
+      db_delete(mediamosa_viewer_app_db::TABLE_NAME)
+        ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
+        ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
+        ->execute();
+    }
+    else {
+      // Insert when not already.
+      $mediamosa_viewer_app = db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')
+        ->fields('va', array(mediamosa_viewer_app_db::APP_ID))
+        ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
+        ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
+        ->condition(mediamosa_viewer_app_db::NID_VIEWER, $nid_viewer)
+        ->execute()
+        ->fetchAssoc();
+
+      if (empty($mediamosa_viewer_app)) {
+        db_insert(mediamosa_viewer_app_db::TABLE_NAME)
+          ->fields(array(
+            mediamosa_viewer_app_db::APP_ID => $node->app_id,
+            mediamosa_viewer_app_db::NID_SERVER => $nid_server,
+            mediamosa_viewer_app_db::NID_VIEWER => $nid_viewer,
+          ))
+          ->execute();
+      }
     }
   }
 }
@@ -487,6 +535,77 @@ function mediamosa_app_form($node, &$form_state) {
     '#multiple' => TRUE,
     '#size' => 20,
   );
+
+  $form['viewer'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Viewer settings'),
+    '#description' => t('Choose the viewer chose per view (streaming) server'),
+    '#group' => 'mediamosa_app',
+  );
+
+  // Get streaming servers.
+  $servers = mediamosa_server::get_enabled(array(mediamosa_server_db::SERVER_TYPE_STREAMING))->fetchAll();
+
+  if (empty($servers)) {
+    $form['viewer']['viewer_text'] = array(
+      '#markup' => 'There are no enabled view (streaming) servers found.',
+    );
+  }
+  else {
+    $server_nids = array();
+    foreach ($servers as $server) {
+      $server_nids[] = $server['nid'];
+    }
+
+    // Get the viewers.
+    $query = mediamosa_db::db_select(mediamosa_viewer_db::TABLE_NAME, 'v');
+    $query->join(mediamosa_server_viewer_db::TABLE_NAME, 'sv', 'sv.nid_viewer = v.nid');
+    $viewers = $query
+      ->fields('v')
+      ->fields('sv')
+      ->condition('sv.status', mediamosa_server_viewer_db::STATUS_ENABLED)
+      ->condition('sv.nid_server', $server_nids, 'IN')
+      ->execute()
+      ->fetchAll();
+
+    $mediamosa_viewer_apps = db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')
+      ->fields('va', array(mediamosa_viewer_app_db::NID_SERVER, mediamosa_viewer_app_db::NID_VIEWER))
+      ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
+      ->execute()
+      ->fetchAllKeyed();
+
+    $server_viewers = array();
+    foreach ($viewers as $viewer) {
+      if (empty($server_viewers[$viewer['nid_server']])) {
+        $server_viewers[$viewer['nid_server']][0] = t('Use default viewer');
+      }
+      $server_viewers[$viewer['nid_server']][$viewer['nid_viewer']] = $viewer['name'];
+    }
+    $viewer_server_apps = array();
+    foreach ($servers as $server) {
+      if (empty($server_viewers[$server['nid']])) {
+        $options_server_viewers = array(0 => t('No viewers available, using default.'));
+      }
+      else {
+        $options_server_viewers = $server_viewers[$server['nid']];
+      }
+
+      $viewer_server_apps[] = 'viewer_server_app-' . $server['nid'];
+      $form['viewer']['viewer_server_app-' . $server['nid']] = array(
+        '#type' => 'select',
+        '#title' => $server[mediamosa_server_db::SERVER_NAME],
+        '#description' => t('Select the viewer for this view (streaming) server.'),
+        '#options' => $options_server_viewers,
+        '#default_value' => empty($mediamosa_viewer_apps[$server['nid']]) ? 0 : $mediamosa_viewer_apps[$server['nid']],
+      );
+    }
+    $form['viewer']['viewer_server_apps'] = array(
+      '#type' => 'value',
+      '#value' => $viewer_server_apps,
+    );
+  }
 
   $form['oai'] = array(
     '#type' => 'fieldset',

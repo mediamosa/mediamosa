@@ -14,19 +14,4 @@ dependencies[] = mediamosa_transcode
 files[] = params/mediamosa_tool_params.rest.class.inc
 files[] = params/mediamosa_tool_params.inc
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 files[] = mapping/mediamosa_tool_mapping.inc

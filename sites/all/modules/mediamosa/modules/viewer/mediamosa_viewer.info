@@ -1,0 +1,10 @@
+name = "Viewer"
+description = "The viewer module allows to manage multiple viewer objects for files."
+package = "MediaMosa - Modules"
+version = 7.x-3.6
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.

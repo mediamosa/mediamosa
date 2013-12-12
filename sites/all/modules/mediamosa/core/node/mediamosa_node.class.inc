@@ -11,6 +11,7 @@
  */
 require_once 'mediamosa_node_mediamosa_app.class.inc';
 require_once 'mediamosa_node_mediamosa_server.inc';
+require_once 'mediamosa_node_mediamosa_viewer.inc';
 require_once 'mediamosa_node_mediamosa_settings.class.inc';
 require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
 require_once 'mediamosa_node_mediamosa_storage_profile.inc';
@@ -25,6 +26,7 @@ class mediamosa_node {
   const MEDIAMOSA_NODE_TYPE_TOOL_PARAMS = 'mediamosa_tool_params';
   const MEDIAMOSA_NODE_TYPE_TOOL_MAPPING = 'mediamosa_tool_mapping';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
+  const MEDIAMOSA_NODE_TYPE_VIEWER = 'mediamosa_viewer';
   const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
   const MEDIAMOSA_NODE_TYPE_SETTINGS = 'mediamosa_settings';
 
@@ -202,7 +204,11 @@ class mediamosa_node {
 
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE:
         return mediamosa_storage_profile_db::get_fields();
-     }
+
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER:
+        $fields = mediamosa_viewer_db::get_fields();
+        return $fields;
+    }
 
     return array();
   }
@@ -248,6 +254,12 @@ function mediamosa_node_info() {
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_APP,
       'has_body' => FALSE,
       'description' => t('MediaMosa client applications are clients that can login onto MediaMosa and execute REST calls. All data stored is stored under its client application ID; giving each client application its own database of assets, mediafiles etc.'),
+    ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER => array(
+      'name' => t('MediaMosa viewer'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER,
+      'has_body' => FALSE,
+      'description' => t('MediaMosa viewer object allow client application to set custom or other specific players (viewers) for their content.'),
     ),
     mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS => array(
       'name' => t('MediaMosa settings'),
@@ -459,6 +471,16 @@ function mediamosa_form_mediamosa_server_node_form_alter(&$form, &$form_state) {
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/server';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mediamosa_form_mediamosa_viewer_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/viewer';
 }
 
 /**

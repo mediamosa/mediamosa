@@ -275,3 +275,7 @@ th.mediamosa-app-storage-name,
 th.mediamosa-app-storage-location {
   width: 25%;
 }
+
+#mediamosa-viewer-node-form #edit-object-code {
+  height: 300px;
+}
