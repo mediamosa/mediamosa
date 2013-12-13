@@ -3801,6 +3801,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       ->fetchAssoc();
 
     if (empty($mediamosa_viewer_app)) {
+      db_delete(mediamosa_viewer_app_db::TABLE_NAME)
+        ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
+        ->condition(mediamosa_viewer_app_db::APP_ID, $app_id)
+        ->execute();
+
       db_insert(mediamosa_viewer_app_db::TABLE_NAME)
         ->fields(array(
           mediamosa_viewer_app_db::APP_ID => $app_id,

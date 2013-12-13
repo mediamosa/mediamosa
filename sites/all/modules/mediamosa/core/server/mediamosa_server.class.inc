@@ -536,9 +536,11 @@ class mediamosa_server {
     $server = self::get_streaming($container_type, $video_codec, $mime_type);
     if ($server) {
       // Get possible chosen object code viewer.
-      $query = mediamosa_db::db_select(mediamosa_viewer_db::TABLE_NAME, 'v')->fields('v', array(mediamosa_viewer_db::OBJECT_CODE));
-      $query->join(mediamosa_viewer_app_db::TABLE_NAME, 'va', 'va.app_id = :app_id', array(':app_id' => $app_id));
+      $query = mediamosa_db::db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')->fields('v', array(mediamosa_viewer_db::OBJECT_CODE));
+      $query->join(mediamosa_viewer_db::TABLE_NAME, 'v', 'v.nid = va.nid_viewer');
       $viewer = $query
+        ->fields('v', array(mediamosa_viewer_db::OBJECT_CODE))
+        ->fields('va')
         ->condition('va.' . mediamosa_viewer_app_db::APP_ID, $app_id)
         ->condition('va.' . mediamosa_viewer_app_db::NID_SERVER, $server['nid'])
         ->execute()

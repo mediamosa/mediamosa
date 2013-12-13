@@ -4417,51 +4417,11 @@ function mediamosa_update_7174() {
  * Install the MediaMosa viewer table and enable its module.
  */
 function mediamosa_update_7175() {
-
-  if (!db_table_exists('mediamosa_viewer')) {
-    db_create_table('mediamosa_viewer', array(
-      'description' => 'The download server table contains settings for the download servers.',
-      'fields' => array(
-        'nid' => array(
-          'description' => 'The Drupal node id.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'vid' => array(
-          'description' => 'The Drupal node revision id.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'name' => array(
-          'description' => 'The unique name of the viewer.',
-          'type' => 'varchar',
-          'length' => 80,
-          'not null' => FALSE,
-          'default' => '',
-        ),
-        'description' => array(
-          'description' => 'The description of the viewer.',
-          'type' => 'varchar',
-          'length' => 255,
-          'not null' => FALSE,
-          'default' => '',
-        ),
-        'object_code' => array(
-          'description' => 'The object code for the viewer for generating the viewer code (in HTML or other markup language).',
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('nid'),
-      'indexes' => array(
-        'idx_nid_vid' => array('nid', 'vid'),
-      ),
-      'unique keys' => array(
-        'uni_name' => array('name'),
-      ),
-    ));
+  // Only enable viewer module when server module is on.
+  $message = 'Did not enable the MediaMosa Viewer module because MediaMosa Server module is disabled.';
+  if (module_exists('mediamosa_server') && !module_exists('mediamosa_viewer')) {
+    module_enable(array('mediamosa_viewer'));
+    $message = 'Installed view table and enabled MediaMosa viewer module.';
   }
 
   return $message;
@@ -4546,15 +4506,7 @@ function mediamosa_update_7177() {
 }
 
 /**
- * Enable new MediaMosa viewer module.
+ * This update has been removed and does nothing.
  */
 function mediamosa_update_7178() {
-  // Only enable viewer module when server module is on.
-  $message = 'Did not enable the MediaMosa Viewer module because MediaMosa Server module is disabled.';
-  if (module_exists('mediamosa_server') && !module_exists('mediamosa_viewer')) {
-    module_enable(array('mediamosa_viewer'));
-    $message = 'Installed view table and enabled MediaMosa viewer module.';
-  }
-
-  return $message;
 }

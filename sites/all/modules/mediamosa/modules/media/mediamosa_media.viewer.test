@@ -30,14 +30,21 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
     $object_code = 'viewer object code';
+    $object_code_2 = 'viewer object code 2';
 
     $node_viewer = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, 'MediaMosa viewer');
     $node_viewer->{mediamosa_viewer_db::NAME} = 'test1';
     $node_viewer->{mediamosa_viewer_db::DESCRIPTION} = 'Destination.';
     $node_viewer->{mediamosa_viewer_db::OBJECT_CODE} = $object_code;
     node_save($node_viewer);
-
     $this->var_export($node_viewer);
+
+    $node_viewer_2 = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, 'MediaMosa viewer 2');
+    $node_viewer_2->{mediamosa_viewer_db::NAME} = 'test2';
+    $node_viewer_2->{mediamosa_viewer_db::DESCRIPTION} = 'Destination.';
+    $node_viewer_2->{mediamosa_viewer_db::OBJECT_CODE} = $object_code_2;
+    node_save($node_viewer_2);
+    $this->var_export($node_viewer_2);
 
     // Create a upload test file with asset and mediafile.
     $upload = $this->uploadTestFile();
@@ -62,6 +69,8 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->assert(!empty($streaming_server), 'Found streaming server');
     $nid_server = $streaming_server['nid'];
     $this->var_export($streaming_server);
+
+    // Link viewer 1 to app.
     $this->viewer_link_server_app($app_id, $nid_server, $node_viewer->nid);
 
     // Do basic media play call.
@@ -71,7 +80,32 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
     $response = $this->do_media_view($asset_id, $parameters);
     $this->var_export($response->items->item);
-$this->var_export($response->items->item->output);
+    $this->var_export($response->items->item->output);
     $this->assert($response->items->item->output == $object_code, 'Found correct object code');
+
+    // Link viewer 2 to app.
+    $this->viewer_link_server_app($app_id, $nid_server, $node_viewer_2->nid);
+
+    // Do basic media play call.
+    $parameters = array(
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $upload['mediafile_id'],
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_OBJECT,
+    );
+    $response = $this->do_media_view($asset_id, $parameters);
+    $this->var_export($response->items->item);
+    $this->var_export($response->items->item->output);
+    $this->assert($response->items->item->output == $object_code_2, 'Found correct object code');
+
+    $viewers = mediamosa_db::db_select(mediamosa_viewer_db::TABLE_NAME, 'v')
+      ->fields('v')
+      ->execute()
+      ->fetchAll();
+    $this->var_export($viewers);
+
+    $viewer_apps = mediamosa_db::db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')
+      ->fields('va')
+      ->execute()
+      ->fetchAll();
+    $this->var_export($viewer_apps);
   }
 }
