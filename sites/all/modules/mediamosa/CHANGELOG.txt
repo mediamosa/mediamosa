@@ -1,8 +1,9 @@
-MediaMosa 3.5.1-dev (build 2073)
+MediaMosa 3.5.1-dev (build 2074)
 --------------------------------
- - Added MediaMosa viewer module, enabled multiple object code streaming
-   definitions. Each app can now select other streaming viewer objects (when
-   available).
+- Added MediaMosa viewer module, enabled multiple object code streaming
+  definitions. Each app can now select other streaming viewer objects (when
+  available).
+- Fixed bug when selecting correct viewer object on streaming server.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
