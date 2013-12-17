@@ -618,7 +618,7 @@ class mediamosa_db {
             '#foreign_column' => $foreign_column,
           )
         );
-watchdog('foo', $query);
+
         try {
           db_query($query);
         }
