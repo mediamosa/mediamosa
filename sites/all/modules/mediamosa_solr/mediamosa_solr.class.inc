@@ -44,6 +44,39 @@ class mediamosa_solr {
   const ACL_PLAYRESTRICTION = 'playrestriction';
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Search for assets with given parameters.
+   *
+   * @param array $parameters
+   *   An associative array.
+   *   - 'a_app_ids': Application IDs.
+   *   - 'cql': The CQL search string.
+   *   - 'cql_store_stats': Process the CQL into keywords and store it for
+   *     statistics. Should be TRUE only when CQL has been provided by user
+   *     input (not for internal searches).
+   *   - 'acl_user_id': The authentication user.
+   *   - 'acl_group_ids': The authentication group.
+   *   - 'acl_domain':  The authentication domain.
+   *   - 'acl_realm': The authentication realm.
+   *   - 'batch_id': The batch ID to search through.
+   *   - 'coll_id': The Collection to search through.
+   *   - 'fav_user_id': The user ID.
+   *   - 'granted': When true, assets are include on which we dont have access
+   *      on. The granted parameter with the asset indicates if we have access.
+   *   - 'is_public_list': Used to include or exclude unappropriate assets.
+   *   - 'is_app_admin': Used for unappropriate.
+   *   - 'hide_empty_assets': Don't include empty assets.
+   *   - 'show_deleted': Include deleted.
+   *   - 'calculate_total_count': Calculate all found rows.
+   *   - 'limit': Maximum number of results.
+   *   - 'offset': Offset within the result rows.
+   *
+   * @return array
+   *   An associative array.
+   *   - 'asset_ids': The found asset_ids.
+   *   - 'total_count': Total found asset_ids.
+   *   - 'related': The related data.
+   */
   public static function asset_search($parameters) {
 
     // Make sure its unique.
@@ -195,11 +228,26 @@ class mediamosa_solr {
       $query_params['sort'] = $order_by . ($is_metadata ? ($order_direction == 'ASC' ? '_lo' : '_hi') : '') . ' ' . $order_direction;
     }
 
+    // Check for related.
+    if ($parameters['related']) {
+      $query_params['mlt'] = 'true';
+      $query_params['mlt.fl'] = 'description_vc';
+      $query_params['mlt.mindf'] = '1';
+      $query_params['mlt.mintf'] = '1';
+      $query_params['fl'] = '*,score';
+      $query_params['mlt.count'] = $parameters['related_count'];
+      $query_params['mlt.boost'] = $parameters['related_boost'] ? 'true' : 'false';
+    }
+
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, $parameters['offset'], $parameters['limit'], $query_params);
 
     // Done.
-    return array('asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(), 'total_count' => $mediamosa_solr_apache_solr_response->getNumFound());
+    return array(
+      'asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(),
+      'total_count' => $mediamosa_solr_apache_solr_response->getNumFound(),
+      'related' => $mediamosa_solr_apache_solr_response->getRelated(),
+    );
   }
 
   /**
@@ -961,6 +1009,7 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
+            $document->{$name . '_md'} = $metadata['values'];
             $document->{$name . '_vc'} = $metadata['values'];
             $document->{$name . '_vc_exact'} = $metadata['values'];
             $document->{$name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
@@ -990,6 +1039,7 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
+            $document->{$name . '_md'} = $metadata['values'];
             $document->{$name . '_vd'} = $metadata['values'];
             $document->{$name . '_svd_lo'} = reset($metadata['values']);
             $document->{$name . '_svd_hi'} = array_pop($metadata['values']);
@@ -999,6 +1049,7 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_NUMERIC);
 
+            $document->{$name . '_md'} = $metadata['values'];
             $document->{$name . '_vi'} = $metadata['values'];
             $document->{$name . '_svi_lo'} = reset($metadata['values']);
             $document->{$name . '_svi_hi'} = array_pop($metadata['values']);
