@@ -79,4 +79,39 @@ class mediamosa_solr_apache_solr_response {
 
     return $asset_ids;
   }
+
+  /**
+   * Get related.
+   *
+   * @return array
+   *   Related information. Key contains asset_id.
+   *   - 'score': The score related.
+   */
+  public function getRelated() {
+    $related = array();
+
+    if (!empty($this->_response->moreLikeThis)) {
+      foreach ($this->_response->moreLikeThis as $asset_id => $data) {
+        $assets = array();
+        foreach ($data->docs as $doc) {
+          $assets[$doc->asset_id] = array('score' => $doc->score, 'asset_id' => $doc->asset_id);
+          foreach ($doc as $name => $value) {
+            if (mediamosa_unicode::substr($name, -3) == '_md') {
+              $assets[$doc->asset_id]['metadata'][mediamosa_unicode::substr($name, 0, -3)] = $value;
+            }
+          }
+        }
+
+        $related[$asset_id] = array(
+          'count_total' => (int) $data->numFound,
+          'count' => count($assets),
+          'offset' => (int) $data->start,
+          'score_max' => (string) $data->maxScore,
+          'assets' => $assets,
+        );
+      }
+    }
+
+    return $related;
+  }
 }

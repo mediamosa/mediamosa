@@ -5,6 +5,12 @@
  */
 
 class mediamosa_search {
+
+  // ------------------------------------------------------------------- Consts.
+  const SEARCH_SUPPORT_RELATED = 'related';
+  const SEARCH_SUPPORT_FACET = 'facet';
+
+  // ---------------------------------------------------------------- Functions.
   /**
    * Return with the selected search engine.
    */
@@ -24,9 +30,48 @@ class mediamosa_search {
       // Select the search engine.
       $mediamosa_search_engine = $mediamosa_search_engines[$selected_mediamosa_search_engine];
       $mediamosa_search_engine['name'] = $selected_mediamosa_search_engine;
+
+      // Add defaults.
+      $mediamosa_search_engine += array(
+        self::SEARCH_SUPPORT_RELATED => FALSE,
+        self::SEARCH_SUPPORT_FACET => FALSE,
+      );
     }
 
     return $mediamosa_search_engine;
+  }
+
+  /**
+   * Support any of the additional search options that MySQL does not support?
+   *
+   * @return bool
+   *   Returns TRUE when any of the additional options are supported.
+   */
+  public static function support_additional() {
+    $server = self::get_search_engine();
+    return $server[self::SEARCH_SUPPORT_RELATED] || $server[self::SEARCH_SUPPORT_FACET];
+  }
+
+  /**
+   * Does ths server support related?
+   *
+   * @return bool
+   *   Returns TRUE
+   */
+  public static function support_related() {
+    $server = self::get_search_engine();
+    return $server[self::SEARCH_SUPPORT_RELATED];
+  }
+
+  /**
+   * Does ths server support facted search?
+   *
+   * @return bool
+   *   Returns TRUE
+   */
+  public static function support_facet() {
+    $server = self::get_search_engine();
+    return $server[self::SEARCH_SUPPORT_FACET];
   }
 
   /**
@@ -69,11 +114,21 @@ class mediamosa_search {
 
       'limit' => 10,
       'offset' => 0,
+
+      'related' => false,
+      'related_count' => 10,
+      'related_boost' => false,
     );
 
     // Call function.
     try {
-      return call_user_func($name . '::asset_search', $parameters);
+      $asset_search = call_user_func($name . '::asset_search', $parameters);
+      $asset_search += array(
+        'related' => array(),
+      );
+
+      return $asset_search;
+
     }
     catch (Exception $e) {
       // Do not support fallback for database when running tests.

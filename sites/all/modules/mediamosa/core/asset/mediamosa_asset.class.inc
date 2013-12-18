@@ -682,6 +682,35 @@ class mediamosa_asset {
   }
 
   /**
+   * Collect related asset data.
+   *
+   * @param array $items
+   *   The items array to populate.
+   * @param array $related
+   *   The related result.
+   * @param array $options
+   *   Associative array with options;
+   *   - 'show_stills': (false) Include still.
+   */
+  public static function asset_collect_related(&$items, $related, $options = array()) {
+    foreach ($items as &$item) {
+      $item['related'] = array('count_total' => 0, 'count' => 0, 'score_max' => 0, 'assets' => array());
+      if (!isset($related[$item['asset_id']])) {
+        continue;
+      }
+
+      $item['related']['count_total'] = $related[$item['asset_id']]['count_total'];
+      $item['related']['count'] = $related[$item['asset_id']]['count'];
+      $item['related']['score_max'] = $related[$item['asset_id']]['score_max'];
+     // $item['related']['assets'] = $related[$item['asset_id']]['assets'];
+
+      foreach ($related[$item['asset_id']]['assets'] as $asset_id => $asset) {
+        $item['related']['assets']['asset']['#' . serialize(array('asset_id' => $asset_id))] = $asset;
+      }
+    }
+  }
+
+  /**
    * Enrich the response object with asset information.
    *
    * @param array $items
@@ -1011,8 +1040,6 @@ class mediamosa_asset {
 
   /**
    * Increase viewed.
-   *
-   * 1.x: _mediafile_management_asset_viewed
    *
    * @param $asset_id
    */

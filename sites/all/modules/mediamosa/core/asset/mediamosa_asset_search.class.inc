@@ -15,11 +15,9 @@ class mediamosa_asset_search {
   const COLLECTION = 'collection';
   const FTP_BATCH = 'ftp_batch';
 
-  // ------------------------------------------------------------------ Static Function.
-
+  // ---------------------------------------------------------------- Functions.
   /**
    * Search for assets with given parameters.
-   * 1.x _media_management_search_asset
    *
    * @param array $a_app_ids
    *  Application IDs.
@@ -43,9 +41,8 @@ class mediamosa_asset_search {
    * @param string $fav_user_id
    *  The user ID.
    * @param boolean $granted
-   *  When true, assets are include on which we dont have access
-   *  on. The granted parameter with the asset indicates if we have
-   *  access.
+   *  When true, assets are include on which we dont have access on. The granted
+   *  parameter with the asset indicates if we have access.
    * @param boolean $is_public_list
    *  Used to include or exclude unappropriate assets.
    * @param boolean $is_app_admin

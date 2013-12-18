@@ -17,6 +17,7 @@ function mediamosa_solr_mediamosa_search_engine_info() {
   return array('mediamosa_solr' => array(
     'title' => t('MediaMosa Solr search'),
     'description' => t('The Apache Solr search allows fast metadata search. This module allows MediaMosa to use Solr for its searching.'),
+    mediamosa_search::SEARCH_SUPPORT_RELATED => true,
   ));
 }
 
