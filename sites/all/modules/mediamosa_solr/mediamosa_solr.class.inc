@@ -1022,7 +1022,8 @@ class mediamosa_solr {
 
     // Asset metadata.
     // [groupname][propertyname] = array('values' => array(value, value), 'type' => type).
-    foreach ($asset_for_index['asset_metadata'] as $name => $metadata_group) {
+    foreach ($asset_for_index['asset_metadata'] as $group_name => $metadata_group) {
+      $group_name_short = mediamosa_asset_metadata::metadata_get_groupname_short($group_name);
       foreach ($metadata_group as $name => $metadata) {
 
         switch ($metadata['type']) {
@@ -1030,11 +1031,11 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
-            $document->{$name . '_md'} = $metadata['values'];
-            $document->{$name . '_vc'} = $metadata['values'];
-            $document->{$name . '_vc_exact'} = $metadata['values'];
-            $document->{$name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
-            $document->{$name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
+            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vc'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vc_exact'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
+            $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
@@ -1060,20 +1061,20 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
-            $document->{$name . '_md'} = $metadata['values'];
-            $document->{$name . '_vd'} = $metadata['values'];
-            $document->{$name . '_svd_lo'} = reset($metadata['values']);
-            $document->{$name . '_svd_hi'} = array_pop($metadata['values']);
+            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vd'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_svd_lo'} = reset($metadata['values']);
+            $document->{$group_name_short. '_' . $name . '_svd_hi'} = array_pop($metadata['values']);
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             // Sort from low to high.
             sort($metadata['values'], SORT_NUMERIC);
 
-            $document->{$name . '_md'} = $metadata['values'];
-            $document->{$name . '_vi'} = $metadata['values'];
-            $document->{$name . '_svi_lo'} = reset($metadata['values']);
-            $document->{$name . '_svi_hi'} = array_pop($metadata['values']);
+            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vi'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_svi_lo'} = reset($metadata['values']);
+            $document->{$group_name_short. '_' . $name . '_svi_hi'} = array_pop($metadata['values']);
             break;
 
           default:

@@ -65,6 +65,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
       foreach ($metadata_properties as $name => $metadata_property) {
+        $group_name_short = mediamosa_asset_metadata::metadata_get_groupname_short($metadata_property['propgroup_name']);
+
         switch ($metadata_property['propgroup_name']) {
           case 'qualified_dublin_core':
             $context_set = 'mediamosa:qdc';
@@ -90,15 +92,15 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
         switch ($metadata_property['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
-            $column = $name . '_vi';
-            $sort_column = $name . '_svi';
+            $column = $group_name_short . '_' . $name . '_vi';
+            $sort_column = $group_name_short . '_' . $name . '_svi';
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $column = $name . '_vd';
-            $sort_column = $name . '_svd';
+            $column = $group_name_short . '_' . $name . '_vd';
+            $sort_column = $group_name_short . '_' . $name . '_svd';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -107,8 +109,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             assert(0);
 
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            $column = $name . '_vc';
-            $sort_column = $name . '_svc';
+            $column = $group_name_short . '_' . $name . '_vc';
+            $sort_column = $group_name_short . '_' . $name . '_svc';
             $type = mediamosa_sdk::TYPE_STRING;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
