@@ -219,4 +219,51 @@ class mediamosa_asset_metadata_property_group {
       ->condition(mediamosa_asset_metadata_property_group_db::ID, $property_group_id)
       ->execute();
   }
+
+  /**
+   * Returns the short version of the metadata group name.
+   *
+   * @param string $context_full
+   *   The group name to convert.
+   */
+  public static function property_group_get_context($context_full) {
+
+    $metadata_property_groups = &drupal_static('mediamosa_metadata_property_groups');
+
+    if (empty($metadata_property_groups)) {
+      $metadata_property_groups = module_invoke_all('mediamosa_metadata_info');
+    }
+
+    foreach ($metadata_property_groups as $metadata_property_group) {
+      if ($metadata_property_group['context_full'] === $context_full) {
+        return $metadata_property_group['context'];
+      }
+    }
+
+    // Not found? Return default.
+    return $context_full;
+  }
+
+  /**
+   * Returns the full version of the metadata group name.
+   *
+   * @param string $context
+   *   The group name to convert.
+   */
+  public static function property_group_get_context_full($context) {
+
+    $metadata_property_groups = &drupal_static('mediamosa_metadata_property_groups');
+    if (empty($metadata_property_groups)) {
+      $metadata_property_groups = module_invoke_all('mediamosa_metadata_info');
+    }
+
+    foreach ($metadata_property_groups as $metadata_property_group) {
+      if ($metadata_property_group['context'] === $context) {
+        return $metadata_property_group['context_full'];
+      }
+    }
+
+    // Not found? Return default.
+    return $context;
+  }
 }

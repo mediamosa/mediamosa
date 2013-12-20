@@ -153,7 +153,18 @@ class mediamosa_solr_apache_solr_response {
           $assets[$doc->asset_id] = array('score' => $doc->score, 'asset_id' => $doc->asset_id);
           foreach ($doc as $name => $value) {
             if (mediamosa_unicode::substr($name, -3) == '_md') {
-              $assets[$doc->asset_id]['metadata'][mediamosa_unicode::substr($name, 0, -3)] = $value;
+              $name = mediamosa_unicode::substr($name, 0, -3);
+
+              if (substr($name, 0, 4) !== mediamosa_asset_metadata_property_group::APP_PREFIX) {
+                list($group_name_short, $name) = explode('_', $name, 2);
+              }
+              else {
+                list($group_name_short, $app_id, $name) = explode('_', $name, 3);
+                $group_name_short .= '_' . $app_id;
+              }
+
+              $context_full = mediamosa_asset_metadata_property_group::property_group_get_context_full($group_name_short);
+              $assets[$doc->asset_id]['metadata'][$context_full][$name] = $value;
             }
           }
         }

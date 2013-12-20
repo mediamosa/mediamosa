@@ -226,34 +226,4 @@ class mediamosa_asset_metadata {
 
     return $result_metadata;
   }
-
-  /**
-   * Returns the short version of the metadata group name.
-   *
-   * This is temp solution till we store this too in property group table.
-   *
-   * @param string $group_name
-   *   The group name to convert.
-   */
-  public static function metadata_get_groupname_short($group_name) {
-    // Do not convert the application sets.
-    if (substr($group_name, 0, 4) === 'app_') {
-      return $group_name;
-    }
-
-    $parts = explode('_', $group_name);
-
-    // One part, return what we have.
-    if (count($parts) == 1) {
-      return $group_name;
-    }
-
-    // Rebuild with first letter.
-    $name = '';
-    foreach ($parts as $part) {
-      $name .= substr($part, 0, 1);
-    }
-
-    return $name;
-  }
 }

@@ -76,6 +76,7 @@ class mediamosa_solr {
    *   - 'asset_ids': The found asset_ids.
    *   - 'total_count': Total found asset_ids.
    *   - 'related': The related data.
+   *   - 'solr_facet': The facet data (solr specific).
    */
   public static function asset_search($parameters) {
 
@@ -229,9 +230,14 @@ class mediamosa_solr {
     }
 
     // Check for related.
-    if ($parameters['related']) {
+    if (!empty($parameters['related'])) {
+      $related_field = array();
+      foreach ($parameters['related_field'] as $field) {
+        $related_field[] = str_replace('.', '_', $field) . '_vc';
+      }
+
       $query_params['mlt'] = 'true';
-      $query_params['mlt.fl'] = 'description_vc';
+      $query_params['mlt.fl'] = implode(',', $related_field);
       $query_params['mlt.mindf'] = '1';
       $query_params['mlt.mintf'] = '1';
       $query_params['fl'] = '*,score';
@@ -240,9 +246,14 @@ class mediamosa_solr {
     }
 
     // Check for facets.
-    if ($parameters['solr_facet']) {
+    if (!empty($parameters['solr_facet'])) {
+      $solr_facet_field = array();
+      foreach ($parameters['solr_facet_field'] as $field) {
+        $solr_facet_field[] = str_replace('.', '_', $field) . '_vc';
+      }
+
       $query_params['facet'] = 'true';
-      $query_params['facet.field'] = $parameters['solr_facet_field'];
+      $query_params['facet.field'] = implode(',', $solr_facet_field);
       $query_params['facet.prefix'] = $parameters['solr_facet_prefix'];
       $query_params['facet.sort'] = $parameters['solr_facet_sort'];
       $query_params['facet.limit'] = $parameters['solr_facet_limit'];
@@ -1023,7 +1034,7 @@ class mediamosa_solr {
     // Asset metadata.
     // [groupname][propertyname] = array('values' => array(value, value), 'type' => type).
     foreach ($asset_for_index['asset_metadata'] as $group_name => $metadata_group) {
-      $group_name_short = mediamosa_asset_metadata::metadata_get_groupname_short($group_name);
+      $group_name_short = mediamosa_asset_metadata_property_group::property_group_get_context($group_name);
       foreach ($metadata_group as $name => $metadata) {
 
         switch ($metadata['type']) {

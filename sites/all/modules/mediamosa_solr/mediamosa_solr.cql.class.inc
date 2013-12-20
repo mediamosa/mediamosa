@@ -65,7 +65,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
       foreach ($metadata_properties as $name => $metadata_property) {
-        $group_name_short = mediamosa_asset_metadata::metadata_get_groupname_short($metadata_property['propgroup_name']);
+        $group_name_short = mediamosa_asset_metadata_property_group::property_group_get_context($metadata_property['propgroup_name']);
 
         switch ($metadata_property['propgroup_name']) {
           case 'qualified_dublin_core':

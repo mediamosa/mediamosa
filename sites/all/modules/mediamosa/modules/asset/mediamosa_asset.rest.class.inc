@@ -232,6 +232,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
   // Search engine specific.
   const RELATED = 'related';
+  const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
   const SOLR_FACET = 'solr_facet';
@@ -386,7 +387,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         self::SOLR_FACET_FIELD => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated as a facet. It will iterate over each Term in the field and generate a facet count using that Term as the constraint.",
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated as a facet. F.e. dc.title or dc.subject. May contain multple fields as array. It will iterate over each Term in the field and generate a facet count using that Term as the constraint.",
+          self::VAR_DEFAULT_VALUE => array('dc.title'),
         ),
         self::SOLR_FACET_PREFIX => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
@@ -451,6 +453,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include related search results.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_FIELD => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description.",
+          self::VAR_DEFAULT_VALUE => array('dc.description'),
         ),
         self::RELATED_COUNT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
@@ -630,6 +638,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       'offset' => $this->get_param_value_offset(),
 
       'related' => $this->get_param_value(self::RELATED),
+      'related_field' => $this->get_param_value(self::RELATED_FIELD),
       'related_count' => $this->get_param_value(self::RELATED_COUNT),
       'related_boost' => $this->get_param_value(self::RELATED_BOOST),
 
@@ -845,6 +854,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
   // Search engine specific.
   const RELATED = 'related';
+  const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
 
@@ -925,6 +935,12 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include related search results.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_FIELD => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description.",
+          self::VAR_DEFAULT_VALUE => array('dc.description'),
         ),
         self::RELATED_COUNT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
@@ -1018,6 +1034,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
         // Additional search options.
         'related' => $this->get_param_value(self::RELATED),
+        'related_field' => $this->get_param_value(self::RELATED_FIELD),
         'related_count' => $this->get_param_value(self::RELATED_COUNT),
         'related_boost' => $this->get_param_value(self::RELATED_BOOST),
       ));
@@ -1098,6 +1115,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
 
   // Search engine specific.
   const RELATED = 'related';
+  const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
 
@@ -1179,6 +1197,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include related search results.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_FIELD => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description.",
+          self::VAR_DEFAULT_VALUE => array('dc.description'),
         ),
         self::RELATED_COUNT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
@@ -1268,6 +1292,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       'offset' => 0,
 
       'related' => $this->get_param_value(self::RELATED),
+      'related_field' => $this->get_param_value(self::RELATED_FIELD),
       'related_count' => $this->get_param_value(self::RELATED_COUNT),
       'related_boost' => $this->get_param_value(self::RELATED_BOOST),
     ));
