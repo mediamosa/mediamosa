@@ -1,9 +1,19 @@
-MediaMosa 3.5.1-dev (build 2074)
+MediaMosa 3.5.1-dev (build 2076)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
   available).
 - Fixed bug when selecting correct viewer object on streaming server.
+- Added support for metadata field names in format of [context].[metadatafield]
+  (dc.title) for Solr facet and related field parameters.
+- Solr now correctly indexes with context set prefix.
+- Add facet search for Solr (3.6).
+- Extended search engine with related assets search for Solr.
+- Change Solr schema to support related search, and now storing metadata in
+  solr.
+- Removed watchdog leftover code.
+- Updated MediaMosa CK module to latest, please use git submodule update to
+  retrieve changes.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
