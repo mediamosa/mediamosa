@@ -702,13 +702,37 @@ class mediamosa_asset {
       $item['related']['count_total'] = $related[$item['asset_id']]['count_total'];
       $item['related']['count'] = $related[$item['asset_id']]['count'];
       $item['related']['score_max'] = $related[$item['asset_id']]['score_max'];
-     // $item['related']['assets'] = $related[$item['asset_id']]['assets'];
 
       foreach ($related[$item['asset_id']]['assets'] as $asset_id => $asset) {
         $item['related']['assets']['asset']['#' . serialize(array('asset_id' => $asset_id))] = $asset;
       }
     }
   }
+
+  /**
+   * Convert the facet data into output ready data.
+   */
+  public static function asset_collect_solr_facet($solr_facet) {
+
+    foreach ($solr_facet['solr_facet_fields'] as &$data) {
+      $converted = array();
+      foreach ($data as $name => $value) {
+        $converted['field'][] =  array('name' => $name, 'value' => $value);
+      }
+      $data = array('fields' => $converted);
+    }
+
+    foreach ($solr_facet['solr_facet_dates'] as &$data) {
+      $converted = array();
+      foreach ($data as $name => $value) {
+        $converted['field'][] =  array('name' => $name, 'value' => $value);
+      }
+      $data = array('fields' => $converted);
+    }
+
+    return $solr_facet;
+  }
+
 
   /**
    * Enrich the response object with asset information.

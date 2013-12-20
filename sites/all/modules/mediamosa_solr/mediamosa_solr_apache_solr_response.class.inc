@@ -81,6 +81,62 @@ class mediamosa_solr_apache_solr_response {
   }
 
   /**
+   * Convert the metadata field name from solr to MM field.
+   *
+   * @param string $solrfield
+   *   The Solr field to convert.
+   *
+   * @return string
+   *   The solr field.
+   */
+  protected function solrfield2metadatafield($solrfield) {
+    return $solrfield;
+  }
+
+  /**
+   * Get facets.
+   *
+   * In output from Solr we ignore;
+   * - 'facet_query': Requires solr query, needs work (CQL -> solr).
+   * - 'facet_range': Requires complex field specified input.
+   *
+   * @return array
+   *   Related information. Key contains asset_id.
+   *   - 'score': The score related.
+   */
+  public function getFacets() {
+    $facets = array('solr_facet_fields' => array(), 'solr_facet_dates' => array());
+
+    // facet_fields;
+    // granted=true&calculate_total_count=true&solr_facet=true&solr_facet_field=title_vc
+
+    // facet_dates;
+    // granted=true&calculate_total_count=true&solr_facet=true&solr_facet_date=videotimestampmodified&solr_facet_date_start=NOW/DAY-5DAYS&solr_facet_date_end=NOW/DAY%2B1DAY&solr_facet_date_gap=%2B1DAY
+
+    if (!empty($this->_response->facet_counts)) {
+      if (!empty($this->_response->facet_counts->facet_fields)) {
+        foreach ($this->_response->facet_counts->facet_fields as $field => $data) {
+          $field = $this->solrfield2metadatafield($field);
+          $facets['solr_facet_fields'][$field] = array();
+          foreach ($data as $name => $value) {
+            $facets['solr_facet_fields'][$field][$name] = (string) $value;
+          }
+        }
+
+        foreach ($this->_response->facet_counts->facet_dates as $field => $dates) {
+          $field = $this->solrfield2metadatafield($field);
+          $facets['solr_facet_dates'][$field] = array();
+          foreach ($dates as $name => $value) {
+            $facets['solr_facet_dates'][$field][$name] = (string) $value;
+          }
+        }
+      }
+    }
+
+    return $facets;
+  }
+
+  /**
    * Get related.
    *
    * @return array

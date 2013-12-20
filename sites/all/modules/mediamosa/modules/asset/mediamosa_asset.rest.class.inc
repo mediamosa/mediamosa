@@ -234,6 +234,22 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const RELATED = 'related';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
+  const SOLR_FACET = 'solr_facet';
+  const SOLR_FACET_FIELD = 'solr_facet_field';
+  const SOLR_FACET_PREFIX = 'solr_facet_prefix';
+  const SOLR_FACET_SORT = 'solr_facet_sort';
+  const SOLR_FACET_LIMIT = 'solr_facet_limit';
+  const SOLR_FACET_OFFSET = 'solr_facet_offset';
+  const SOLR_FACET_MINCOUNT = 'solr_facet_mincount';
+  const SOLR_FACET_MISSING = 'solr_facet_missing';
+  const SOLR_FACET_METHOD = 'solr_facet_method';
+  const SOLR_FACET_DATE = 'solr_facet_date';
+  const SOLR_FACET_DATE_START = 'solr_facet_date_start';
+  const SOLR_FACET_DATE_END = 'solr_facet_date_end';
+  const SOLR_FACET_DATE_GAP = 'solr_facet_date_gap';
+  const SOLR_FACET_DATE_HARDEND = 'solr_facet_date_hardend';
+  const SOLR_FACET_DATE_OTHER = 'solr_facet_date_other';
+  const SOLR_FACET_DATE_INCLUDE = 'solr_facet_date_include';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -360,6 +376,76 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "View hidden metadata.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+
+        self::SOLR_FACET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Return facets.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::SOLR_FACET_FIELD => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated as a facet. It will iterate over each Term in the field and generate a facet count using that Term as the constraint.",
+        ),
+        self::SOLR_FACET_PREFIX => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "Limits the terms on which to facet to those starting with the given string prefix. Note that this does not change the search results -- it merely reduces the facet values returned to those beginning with the specified prefix.",
+        ),
+        self::SOLR_FACET_SORT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "This param determines the ordering of the facet field constraints.",
+        ),
+        self::SOLR_FACET_LIMIT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => "This param indicates the maximum number of constraint counts that should be returned for the facet fields. A negative value means unlimited.",
+        ),
+        self::SOLR_FACET_OFFSET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => "This param indicates an offset into the list of constraints to allow paging.",
+        ),
+        self::SOLR_FACET_MINCOUNT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => "This param indicates the minimum counts for facet fields should be included in the response.",
+        ),
+        self::SOLR_FACET_MISSING => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Set to true this param indicates that in addition to the Term based constraints of a facet field, a count of all matching results which have no value for the field should be computed",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::SOLR_FACET_METHOD => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "This parameter indicates what type of algorithm/method to use when faceting a field.",
+        ),
+        self::SOLR_FACET_DATE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => "This param allows you to specify names of fields (of type DateField) which should be treated as date facets.",
+        ),
+        self::SOLR_FACET_DATE_START => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "The lower bound for the first date range for all Date Faceting on this field. This should be a single date expression which may use the DateMathParser syntax.",
+        ),
+        self::SOLR_FACET_DATE_END => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "The minimum upper bound for the last date range for all Date Faceting on this field (see facet.date.hardend for an explanation of what the actual end value may be greater). This should be a single date expression which may use the DateMathParser syntax.",
+        ),
+        self::SOLR_FACET_DATE_GAP => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "The size of each date range expressed as an interval to be added to the lower bound using the DateMathParser syntax.",
+        ),
+        self::SOLR_FACET_DATE_HARDEND => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "A Boolean parameter instructing Solr what to do in the event that facet.date.gap does not divide evenly between facet.date.start and facet.date.end. If this is true, the last date range constraint will have an upper bound of facet.date.end; if false, the last date range will have the smallest possible upper bound greater then facet.date.end such that the range is exactly facet.date.gap wide.",
+        ),
+        self::SOLR_FACET_DATE_OTHER => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "This param indicates that in addition to the counts for each date range constraint between facet.date.start and facet.date.end, counts should also be computed for...",
+        ),
+        self::SOLR_FACET_DATE_INCLUDE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => "By default, the ranges used to compute date faceting between facet.date.start and facet.date.end are all inclusive of both endpoints, while the the before and after ranges are not inclusive. This behavior can be modified by the facet.date.include param, which can be any combination of the following options...",
         ),
         self::RELATED => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
@@ -546,6 +632,23 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       'related' => $this->get_param_value(self::RELATED),
       'related_count' => $this->get_param_value(self::RELATED_COUNT),
       'related_boost' => $this->get_param_value(self::RELATED_BOOST),
+
+      'solr_facet' => $this->get_param_value(self::SOLR_FACET),
+      'solr_facet_field' => $this->get_param_value(self::SOLR_FACET_FIELD),
+      'solr_facet_prefix' => $this->get_param_value(self::SOLR_FACET_PREFIX),
+      'solr_facet_sort' => $this->get_param_value(self::SOLR_FACET_SORT),
+      'solr_facet_limit' => $this->get_param_value(self::SOLR_FACET_LIMIT),
+      'solr_facet_offset' => $this->get_param_value(self::SOLR_FACET_OFFSET),
+      'solr_facet_mincount' => $this->get_param_value(self::SOLR_FACET_MINCOUNT),
+      'solr_facet_missing' => $this->get_param_value(self::SOLR_FACET_MISSING),
+      'solr_facet_method' => $this->get_param_value(self::SOLR_FACET_METHOD),
+      'solr_facet_date' => $this->get_param_value(self::SOLR_FACET_DATE),
+      'solr_facet_date_start' => $this->get_param_value(self::SOLR_FACET_DATE_START),
+      'solr_facet_date_end' => $this->get_param_value(self::SOLR_FACET_DATE_END),
+      'solr_facet_date_gap' => $this->get_param_value(self::SOLR_FACET_DATE_GAP),
+      'solr_facet_date_hardend' => $this->get_param_value(self::SOLR_FACET_DATE_HARDEND),
+      'solr_facet_date_other' => $this->get_param_value(self::SOLR_FACET_DATE_OTHER),
+      'solr_facet_date_include' => $this->get_param_value(self::SOLR_FACET_DATE_INCLUDE),
     ));
 
     // Set the total amount found.
@@ -577,6 +680,11 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
       if (!empty($asset_search['related'])) {
         mediamosa_asset::asset_collect_related($items, $asset_search['related']);
+      }
+
+      if (!empty($asset_search['solr_facet'])) {
+        $solr_facet = mediamosa_asset::asset_collect_solr_facet($asset_search['solr_facet']);
+        $mediamosa->set_result_header_extra($solr_facet, 'solr_facet');
       }
 
       foreach ($items as $item) {
@@ -1222,8 +1330,6 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
  * Method: POST
  *
  * Delete assets.
- *
- * 1.x: media_management_multi_delete_asset
  */
 class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.

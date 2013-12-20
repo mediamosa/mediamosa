@@ -239,6 +239,26 @@ class mediamosa_solr {
       $query_params['mlt.boost'] = $parameters['related_boost'] ? 'true' : 'false';
     }
 
+    // Check for facets.
+    if ($parameters['solr_facet']) {
+      $query_params['facet'] = 'true';
+      $query_params['facet.field'] = $parameters['solr_facet_field'];
+      $query_params['facet.prefix'] = $parameters['solr_facet_prefix'];
+      $query_params['facet.sort'] = $parameters['solr_facet_sort'];
+      $query_params['facet.limit'] = $parameters['solr_facet_limit'];
+      $query_params['facet.offset'] = $parameters['solr_facet_offset'];
+      $query_params['facet.mincount'] = $parameters['solr_facet_mincount'];
+      $query_params['facet.missing'] = $parameters['solr_facet_missing'] ? 'true' : 'false' ;
+      $query_params['facet.method'] = $parameters['solr_facet_method'];
+      $query_params['facet.date'] = $parameters['solr_facet_date'];
+      $query_params['facet.date.start'] = $parameters['solr_facet_date_start'];
+      $query_params['facet.date.end'] = $parameters['solr_facet_date_end'];
+      $query_params['facet.date.gap'] = $parameters['solr_facet_date_gap'];
+      $query_params['facet.date.hardend'] = $parameters['solr_facet_date_hardend'] ? 'true' : 'false';
+      $query_params['facet.date.other'] = $parameters['solr_facet_date_other'];
+      $query_params['facet.date.include'] = $parameters['solr_facet_date_include'];
+    }
+
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, $parameters['offset'], $parameters['limit'], $query_params);
 
@@ -247,6 +267,7 @@ class mediamosa_solr {
       'asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(),
       'total_count' => $mediamosa_solr_apache_solr_response->getNumFound(),
       'related' => $mediamosa_solr_apache_solr_response->getRelated(),
+      'solr_facet' => $mediamosa_solr_apache_solr_response->getFacets(),
     );
   }
 
