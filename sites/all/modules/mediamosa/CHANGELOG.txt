@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2077)
+MediaMosa 3.5.1-dev (build 2079)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -14,6 +14,12 @@ MediaMosa 3.5.1-dev (build 2077)
 - Removed watchdog leftover code.
 - Updated MediaMosa CK module to latest, please use git submodule update to
   retrieve changes.
+- Allowing to use order_by and order_direction in combination with CQL (without
+  using sortby in CQL). You can not specify order_by and CQL sortby, this will
+  still return a error.
+- Fixed problem with schema and facet search, please update your Solr schema.xml
+  to included schema.xml in mediamosa_solr dir. Also restart Solr and reindex
+  the solr index on /admin/mediamosa/config/solr/indexer.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
