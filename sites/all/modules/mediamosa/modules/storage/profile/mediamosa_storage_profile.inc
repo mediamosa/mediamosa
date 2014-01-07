@@ -104,7 +104,7 @@ function _mediamosa_storage_profile_add_page($storage_type = NULL) {
   if (count($storage_types) || $storage_types['standard']) {
     if (count($apps)) {
       if (class_exists('mediamosa_storage_local')) {
-        // Never allow to add extra local storage
+        // Never allow to add extra local storage.
         unset($storage_types[mediamosa_storage_local::NAME]);
       }
       foreach ($storage_types as $key => $type) {
@@ -121,7 +121,7 @@ function _mediamosa_storage_profile_add_page($storage_type = NULL) {
     }
 
     if (empty($storage_types)) {
-      return t('You are not allowed to add storage profiles for your client applications.');
+      return t('You are not allowed to add storage profiles for your client applications or you haven\'t enabled any other storage module(s) than local.');
     }
   }
   else {
