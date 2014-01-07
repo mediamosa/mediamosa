@@ -12,7 +12,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-3.5.1-asset" version="1.5">
+<schema name="mediamosa-3.5.3-asset" version="1.5">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
@@ -346,6 +346,7 @@
       -->
 
     <!-- Searchable fields -->
+    <dynamicField name="*_md" type="string" indexed="true" stored="true" multiValued="true"/>
     <dynamicField name="*_vc" type="val_char" indexed="true" stored="false" multiValued="true"/>
     <dynamicField name="*_vi" type="val_int" indexed="true" stored="false" multiValued="true"/>
     <dynamicField name="*_vd" type="val_date" indexed="true" stored="false" multiValued="true"/>

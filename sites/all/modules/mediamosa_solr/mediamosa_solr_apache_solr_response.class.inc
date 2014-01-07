@@ -116,18 +116,24 @@ class mediamosa_solr_apache_solr_response {
     if (!empty($this->_response->facet_counts)) {
       if (!empty($this->_response->facet_counts->facet_fields)) {
         foreach ($this->_response->facet_counts->facet_fields as $field => $data) {
-          $field = $this->solrfield2metadatafield($field);
-          $facets['solr_facet_fields'][$field] = array();
-          foreach ($data as $name => $value) {
-            $facets['solr_facet_fields'][$field][$name] = (string) $value;
+          if (mediamosa_unicode::substr($field, -3) == '_md') {
+            $field = mediamosa_unicode::substr($field, 0, -3);
+
+            $facets['solr_facet_fields'][$field] = array();
+            foreach ($data as $name => $value) {
+              $facets['solr_facet_fields'][$field][$name] = (string) $value;
+            }
           }
         }
 
         foreach ($this->_response->facet_counts->facet_dates as $field => $dates) {
-          $field = $this->solrfield2metadatafield($field);
-          $facets['solr_facet_dates'][$field] = array();
-          foreach ($dates as $name => $value) {
-            $facets['solr_facet_dates'][$field][$name] = (string) $value;
+          if (mediamosa_unicode::substr($field, -3) == '_md') {
+            $field = mediamosa_unicode::substr($field, 0, -3);
+            $facets['solr_facet_dates'][$field] = array();
+            foreach ($dates as $name => $value) {
+              $name = mediamosa_unicode::substr($name, 0, -3);
+              $facets['solr_facet_dates'][$field][$name] = (string) $value;
+            }
           }
         }
       }

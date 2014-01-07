@@ -249,7 +249,7 @@ class mediamosa_solr {
     if (!empty($parameters['solr_facet'])) {
       $solr_facet_field = array();
       foreach ($parameters['solr_facet_field'] as $field) {
-        $solr_facet_field[] = str_replace('.', '_', $field) . '_vc';
+        $solr_facet_field[] = str_replace('.', '_', $field) . '_md';
       }
 
       $query_params['facet'] = 'true';
