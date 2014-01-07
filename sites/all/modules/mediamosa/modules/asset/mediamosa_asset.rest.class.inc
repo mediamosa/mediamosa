@@ -557,7 +557,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
     $cql = '';
     if (!empty($a_cql)) {
-
       // CQL must not be set.
       if (!self::empty_param(self::CQL)) {
         throw new mediamosa_exception_error_cql_exclusive();
@@ -568,29 +567,35 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
     }
-
-    // Non CQL parameters.
-    $order_by = $this->get_param_value(self::ORDER_BY);
-    $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
-
-    // Add possible order by to the CQL.
-    if ($order_by != '') {
-      if (!self::empty_param(self::CQL)) {
-        throw new mediamosa_exception_error_cql_exclusive();
-      }
-
-      $cql .= (!empty($cql) ? ' ' : '') . 'sortby ' . $order_by;
-      $cql .= (empty($order_direction) ? '' : '/' . (mediamosa_unicode::strtolower($order_direction) == mediamosa_type::ORDER_DIRECTION_ASC ? 'ascending' : 'descending'));
-    }
-    elseif (empty($a_cql)) {
-      // Now normal search params, then take CQL (if any).
+    else {
       $cql = $this->get_param_value(self::CQL);
     }
-    $app_ids = $this->get_param_value_app();
-    $error_text = '';
 
-    if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+    // Add order by to CQL (unless sortby is already specified).
+    $order_by = $this->get_param_value(self::ORDER_BY);
+
+    $error_text = '';
+    if ($order_by != '') {
+      $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
+
+      // Make sure CQL is valid before we attach order by.
+      if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+      }
+
+      // Recheck if we detected 'sortby' in current CQL. But 'sortby' can also
+      // be used in search text, so attach it and verify cql.
+      $has_sortby = mediamosa_unicode::stripos($cql, 'sortby ');
+      $cql .= (!empty($cql) ? ' ' : '') . 'sortby ' . $order_by;
+      $cql .= (empty($order_direction) ? '' : '/' . (mediamosa_unicode::strtolower($order_direction) == mediamosa_type::ORDER_DIRECTION_ASC ? 'ascending' : 'descending'));
+      if ($has_sortby && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+        throw new mediamosa_exception_error_cql_exclusive();
+      }
+    }
+    else {
+      if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+      }
     }
 
     // Save the possible changed CQL.

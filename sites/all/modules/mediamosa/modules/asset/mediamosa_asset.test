@@ -18,7 +18,44 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test if order by does not trigger problem with generating CQL and sort by.
+   */
+  public function testOrderByCQL() {
+    // Create assets.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+
+    // add properties
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'asset 3',
+        'publisher' => 'foo',
+      )
+    );
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'asset 2',
+        'publisher' => 'bar',
+      )
+    );
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'asset 1',
+        'publisher' => array('foo', 'bar'),
+      )
+    );
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'asset 4',
+      )
+    );
+    $this->cql_do_search_test_assets_1('title = "asset"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE), array(mediamosa_rest_call_asset_search::ORDER_BY => 'videotimestamp', mediamosa_rest_call_asset_search::ORDER_DIRECTION => 'ASC'));
+  }
+
   /**
    * Testing is_empty_asset issues, see: ticket 165.
    */
