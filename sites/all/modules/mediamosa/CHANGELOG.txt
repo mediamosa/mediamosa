@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2079)
+MediaMosa 3.5.1-dev (build 2080)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -20,6 +20,9 @@ MediaMosa 3.5.1-dev (build 2079)
 - Fixed problem with schema and facet search, please update your Solr schema.xml
   to included schema.xml in mediamosa_solr dir. Also restart Solr and reindex
   the solr index on /admin/mediamosa/config/solr/indexer.
+- Fixed multiple fields when using solr facet search.
+- Added default still to related assets in call /asset, /assets and /asset/[id].
+- Missing still physical file will no longer be fatal.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
