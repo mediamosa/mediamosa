@@ -684,6 +684,10 @@ class mediamosa_asset {
   /**
    * Collect related asset data.
    *
+   * @param int $app_id
+   *   The client application ID.
+   * @param bool $is_app_admin
+   *   Is app admin, for super user access.
    * @param array $items
    *   The items array to populate.
    * @param array $related
@@ -692,7 +696,7 @@ class mediamosa_asset {
    *   Associative array with options;
    *   - 'show_stills': (false) Include still.
    */
-  public static function asset_collect_related(&$items, $related, $options = array()) {
+  public static function asset_collect_related($app_id, $is_app_admin, &$items, $related, $options = array()) {
     foreach ($items as &$item) {
       $item['related'] = array('count_total' => 0, 'count' => 0, 'score_max' => 0, 'assets' => array());
       if (!isset($related[$item['asset_id']])) {
@@ -704,6 +708,7 @@ class mediamosa_asset {
       $item['related']['score_max'] = $related[$item['asset_id']]['score_max'];
 
       foreach ($related[$item['asset_id']]['assets'] as $asset_id => $asset) {
+        $asset['still_url'] = empty($options['show_stills']) ? '' : mediamosa_media::do_response_still_default($app_id, $asset_id, $is_app_admin);
         $item['related']['assets']['asset']['#' . serialize(array('asset_id' => $asset_id))] = $asset;
       }
     }

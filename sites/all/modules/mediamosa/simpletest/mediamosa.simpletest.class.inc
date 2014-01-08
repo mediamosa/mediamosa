@@ -314,7 +314,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param mixed $data
    */
   public function var_export($data, $group = 'Other', array $caller = NULL) {
-    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group, $caller);
+    $data = drupal_truncate_bytes(highlight_string('<?php ' . var_export($data, TRUE), TRUE), 64 * 1024 - 32);
+    $this->pass($data, $group, $caller);
   }
 
   /**

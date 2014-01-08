@@ -208,7 +208,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
  * Method: GET
  */
 class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const RETURN_ASSET_IDS = 'return_asset_ids';
   const FAV_USER_ID = 'fav_user_id';
@@ -235,6 +235,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
+  const RELATED_SHOW_STILLS = 'related_show_stills';
   const SOLR_FACET = 'solr_facet';
   const SOLR_FACET_FIELD = 'solr_facet_field';
   const SOLR_FACET_PREFIX = 'solr_facet_prefix';
@@ -258,7 +259,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const ALIAS_AUT_DOMAIN = 'aut_domain';
   const ALIAS_AUT_REALM = 'aut_realm';
 
-  // ------------------------------------------------------------------ Public Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function get_search_params() {
     return array(
       'asset_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
@@ -451,24 +452,29 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::RELATED => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Include related search results.',
+          self::VAR_DESCRIPTION => 'Include related search results. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::RELATED_FIELD => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description.",
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.",
           self::VAR_DEFAULT_VALUE => array('dc.description'),
         ),
         self::RELATED_COUNT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
-          self::VAR_DESCRIPTION => 'The number of similar assets to return for each result.',
+          self::VAR_DESCRIPTION => 'The number of similar assets to return for each result. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 10,
         ),
         self::RELATED_BOOST => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance.',
+          self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
         // Old fasion search params.
@@ -607,6 +613,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $acl_user_id = $this->get_param_value(self::ACL_USER_ID);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Calculate the total.
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
@@ -622,7 +631,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       'app_ids' => $app_ids,
       'cql' => $cql,
       'cql_store_stats' => TRUE,
-      'acl_user_id' => $this->get_param_value(self::ACL_USER_ID),
+      'acl_user_id' => $acl_user_id,
       'acl_group_ids' => $this->get_param_value(self::ACL_GROUP_ID),
       'acl_domain' => $this->get_param_value(self::ACL_DOMAIN),
       'acl_realm' => $this->get_param_value(self::ACL_REALM),
@@ -634,7 +643,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
       'granted' => $this->get_param_value(self::GRANTED),
       'is_public_list' => $this->get_param_value(self::IS_PUBLIC_LIST),
-      'is_app_admin' => $this->get_param_value(self::IS_APP_ADMIN),
+      'is_app_admin' => $is_app_admin,
       'hide_empty_assets' => $this->get_param_value(self::HIDE_EMPTY_ASSETS),
       'show_deleted' => $this->get_param_value(self::SHOW_DELETED),
       'calculate_total_count' => $calculate_total_count,
@@ -680,12 +689,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $items = mediamosa_asset::asset_collect(
         $asset_search['asset_ids'],
         $app_ids,
-        $this->get_param_value(self::ACL_USER_ID),
+        $acl_user_id,
         $this->get_param_value(self::GRANTED),
         $this->get_param_value(self::ACL_GROUP_ID),
         $this->get_param_value(self::ACL_DOMAIN),
         $this->get_param_value(self::ACL_REALM),
-        $this->get_param_value(self::IS_APP_ADMIN),
+        $is_app_admin,
         $this->get_param_value(self::SHOW_STILLS),
         $this->get_param_value(self::SHOW_COLLECTIONS),
         $add_has_streamable_mediafiles,
@@ -693,7 +702,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       );
 
       if (!empty($asset_search['related'])) {
-        mediamosa_asset::asset_collect_related($items, $asset_search['related']);
+        mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
       }
 
       if (!empty($asset_search['solr_facet'])) {
@@ -862,6 +871,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
+  const RELATED_SHOW_STILLS = 'related_show_stills';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -957,6 +967,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::RELATED_SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
       ),
     );
 
@@ -1011,7 +1026,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // call.
     $related = $this->get_param_value(self::RELATED);
 
-    if ($related && mediamosa_search::support_additional()) {
+    if ($related && mediamosa_search::support_related()) {
       // Now search.
       $asset_search = mediamosa_search::asset(array(
         'app_ids' => $app_ids,
@@ -1066,7 +1081,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     );
 
     if (isset($asset_search['related'])) {
-      mediamosa_asset::asset_collect_related($items, $asset_search['related']);
+      mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
     }
 
     // Add mediafiles.
@@ -1123,6 +1138,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const RELATED_FIELD = 'related_field';
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
+  const RELATED_SHOW_STILLS = 'related_show_stills';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -1219,6 +1235,11 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::RELATED_SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
       ),
     );
 
@@ -1231,6 +1252,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_ids = $this->get_param_value(self::ASSET_ID);
@@ -1327,7 +1349,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       );
 
       if (!empty($asset_search['related'])) {
-        mediamosa_asset::asset_collect_related($items, $asset_search['related']);
+        mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
       }
 
       // Add to response.
