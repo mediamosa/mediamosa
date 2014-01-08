@@ -23,6 +23,7 @@ MediaMosa 3.5.1-dev (build 2080)
 - Fixed multiple fields when using solr facet search.
 - Added default still to related assets in call /asset, /assets and /asset/[id].
 - Missing still physical file will no longer be fatal.
+- Fixed: Deleting asset did not remove the asset from Solr.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------

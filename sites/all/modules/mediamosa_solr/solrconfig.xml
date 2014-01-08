@@ -781,6 +781,10 @@
       -->
   </requestHandler>
 
+  <requestHandler name="/mlt" class="solr.MoreLikeThisHandler">
+    <lst name="defaults"/>
+  </requestHandler>
+
   <!-- A Robust Example
 
        This example SearchHandler declaration shows off usage of the
