@@ -4,7 +4,7 @@ package = "MediaMosa - Search"
 version = 7.x-3.5
 core = 7.x
 
-dependencies[] = mediamosa (>=3.5-RC1)
+dependencies[] = mediamosa (>=3.5)
 
 configure = admin/mediamosa/config/solr
 
@@ -33,6 +33,7 @@ files[] = tests/mediamosa_solr.acl.mediafiles.test
 files[] = tests/mediamosa_solr.acl.play_restriction.test
 files[] = tests/mediamosa_solr.acl.slave.rights.test
 files[] = tests/mediamosa_solr.acl.test
+files[] = tests/mediamosa_solr.asset_mediafiles.test
 
 ; Add 3rdparty so classes are autoload by Drupal.
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Service.php

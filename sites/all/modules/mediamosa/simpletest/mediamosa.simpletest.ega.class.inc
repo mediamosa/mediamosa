@@ -3335,7 +3335,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   protected function deleteAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters.
     $parameters += array(
-      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_delete::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // The uri.

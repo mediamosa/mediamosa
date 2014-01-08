@@ -234,13 +234,14 @@ function mediamosa_solr_mediamosa_status_collect_realtime() {
 /**
  * Implementation of hook_mediamosa_asset_index_delete().
  *
- * @param string $asset_id
- *   The asset ID to delete.
+ * @param array $delete_info
+ *  - asset_ids: (array)
+ *    The assets to delete.
  */
-function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
+function mediamosa_solr_mediamosa_asset_index_delete($delete_info) {
   // Delete the asset.
   if (mediamosa_solr::isEnabled()) {
-    mediamosa_solr::deleteAssets(array($asset_id));
+    mediamosa_solr::deleteAssets($delete_info['asset_ids']);
   }
 }
 
