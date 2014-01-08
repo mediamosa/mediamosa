@@ -517,17 +517,30 @@ abstract class mediamosa_storage {
    *
    * @param array|string $mediafile
    *   The mediafile to check. Either ID or mediafile array.
-   * @param boolean $include_external
+   * @param bool $include_external
    *   If file located on external source, then skip the check. Provide TRUE to
    *   check file, even when on external source.
+   * @param bool $fatal
+   *   File not exists will result in exception. Default TRUE.
+   *
+   * @param bool
+   *   Returns TRUE when file exists. When $fatal = TRUE, exception will be
+   *   thrown when file does not exist else FALSE is returned.
+   *
+   * @throws mediamosa_exception_error_file_not_found
    */
-  public static function file_must_exist($mediafile, $include_external = FALSE) {
+  public static function file_must_exist($mediafile, $include_external = FALSE, $fatal = TRUE) {
     // Check if still file exists.
     $uri = self::get_uri_mediafile($mediafile);
 
     if ( ($include_external || mediamosa_io::is_local($uri)) && !mediamosa_io::file_exists($uri)) {
-      throw new mediamosa_exception_error_file_not_found(array('@filename' => mediamosa_io::realpath_safe($uri)));
+      if ($fatal) {
+        throw new mediamosa_exception_error_file_not_found(array('@filename' => mediamosa_io::realpath_safe($uri)));
+      }
+      return FALSE;
     }
+
+    return TRUE;
   }
 
   // -------------------------------------------- /transition related functions.

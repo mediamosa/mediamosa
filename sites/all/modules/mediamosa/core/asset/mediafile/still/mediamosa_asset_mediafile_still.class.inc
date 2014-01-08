@@ -614,13 +614,10 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Check if the still id is in the database
-    if (!$still) {
+    if (!$still || !mediamosa_storage::file_must_exist($still, FALSE, FALSE)) {
       // There isn't any still
       return FALSE;
     }
-
-    // Check if the still is ok.
-    mediamosa_storage::file_must_exist($still[mediamosa_asset_mediafile_db::ID]);
 
     // Return our mediafile still array.
     return $still;
