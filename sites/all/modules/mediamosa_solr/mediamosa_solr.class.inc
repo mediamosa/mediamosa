@@ -253,7 +253,7 @@ class mediamosa_solr {
       }
 
       $query_params['facet'] = 'true';
-      $query_params['facet.field'] = implode(',', $solr_facet_field);
+      $query_params['facet.field'] = $solr_facet_field;
       $query_params['facet.prefix'] = $parameters['solr_facet_prefix'];
       $query_params['facet.sort'] = $parameters['solr_facet_sort'];
       $query_params['facet.limit'] = $parameters['solr_facet_limit'];
