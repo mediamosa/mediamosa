@@ -124,6 +124,28 @@ class mediamosa_http {
   }
 
   /**
+   * Splits a URL-encoded query string into an array.
+   *
+   * Fixed version of drupal_get_query_array().
+   *
+   * @param $query
+   *   The query string to split.
+   *
+   * @return
+   *   An array of URL decoded couples $param_name => $value.
+   */
+  public static function drupal_get_query_array($query) {
+    $result = array();
+    if (!empty($query)) {
+      foreach (explode('&', $query) as $param) {
+        $param = explode('=', $param);
+        $result[rawurldecode($param[0])] = isset($param[1]) ? rawurldecode($param[1]) : '';
+      }
+    }
+    return $result;
+  }
+
+  /**
    * Splitup the query string.
    *
    * Opposite of http_build_query().

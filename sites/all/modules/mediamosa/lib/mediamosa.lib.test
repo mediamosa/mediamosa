@@ -219,10 +219,29 @@ class MediaMosaTypeValidation extends MediaMosaTestCase {
     $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
 
     // This command fails on 3.2.1, which it should not.
-    $commands = array('-acodec' => 'libfaac', '-aspect' => '16:9');
+    $commands = array('-acodec' => 'libfaac', '-aspect' => '16:9', '-b:v' => '100000');
 
     // Validate.
     $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
+
+    // Check if arrayToCommand and back works as expected.
+    $commands_to_command = mediamosa_transcode_profile::arrayToCommand($commands);
+
+    // Now revert.
+    $command_to_commands = mediamosa_transcode_profile::commandToArray($commands_to_command);
+
+    $commands_cpy = $commands;
+    foreach ($command_to_commands as $key => $value) {
+      $this->assert(isset($commands[$key]), $key . ' exists in original command');
+      if (isset($commands[$key])) {
+        $this->assert($commands[$key] === $value, $value . ' value is the same as in original command');
+      }
+      if (isset($commands_cpy[$key])) {
+        unset($commands_cpy[$key]);
+      }
+    }
+
+    $this->assert(empty($commands_cpy), 'All commands tested');
 
     // This command fails on 3.2.1, which it should not.
     $commands = array(
@@ -242,5 +261,7 @@ class MediaMosaTypeValidation extends MediaMosaTestCase {
 
     // Validate.
     $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
+
+
   }
 }

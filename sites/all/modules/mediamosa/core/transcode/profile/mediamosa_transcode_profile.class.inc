@@ -352,7 +352,7 @@ class mediamosa_transcode_profile {
    *   An array of url decoded couples $param_name => $value.
    */
   public static function commandToArray($command) {
-    return drupal_get_query_array($command);
+    return mediamosa_http::drupal_get_query_array($command);
   }
 
   /**
