@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2082)
+MediaMosa 3.5.1-dev (build 2083)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -25,6 +25,8 @@ MediaMosa 3.5.1-dev (build 2082)
 - Missing still physical file will no longer be fatal.
 - Fixed: Deleting asset did not remove the asset from Solr.
 - Fixed encode/decode parameter error when sending job server command.
+- Added asset viewed count to related result assets. Use
+  related_show_viewed_asset flag to include these values.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
