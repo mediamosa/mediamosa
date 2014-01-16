@@ -695,8 +695,27 @@ class mediamosa_asset {
    * @param array $options
    *   Associative array with options;
    *   - 'show_stills': (false) Include still.
+   *   - 'show_viewed_asset': (false) Include the view counts of the related
+   *     assets.
    */
   public static function asset_collect_related($app_id, $is_app_admin, &$items, $related, $options = array()) {
+    if (!empty($options['show_viewed_asset'])) {
+      $asset_ids = array();
+      foreach ($items as $item) {
+        if (!isset($related[$item['asset_id']])) {
+          continue;
+        }
+
+        $asset_ids = array_merge($asset_ids, array_keys($related[$item['asset_id']]['assets']));
+      }
+      $asset_ids = array_unique($asset_ids);
+      $viewed = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
+        ->fields('a', array(mediamosa_asset_db::ID, mediamosa_asset_db::VIEWED))
+        ->condition(mediamosa_asset_db::ID, $asset_ids)
+        ->execute()
+        ->fetchAllKeyed(0, 1);
+    }
+
     foreach ($items as &$item) {
       $item['related'] = array('count_total' => 0, 'count' => 0, 'score_max' => 0, 'assets' => array());
       if (!isset($related[$item['asset_id']])) {
@@ -709,6 +728,10 @@ class mediamosa_asset {
 
       foreach ($related[$item['asset_id']]['assets'] as $asset_id => $asset) {
         $asset['still_url'] = empty($options['show_stills']) ? '' : mediamosa_media::do_response_still_default($app_id, $asset_id, $is_app_admin);
+
+        if (!empty($options['show_viewed_asset'])) {
+          $asset['viewed'] = isset($viewed[$asset_id]) ? $viewed[$asset_id] : 0;
+        }
         $item['related']['assets']['asset']['#' . serialize(array('asset_id' => $asset_id))] = $asset;
       }
     }

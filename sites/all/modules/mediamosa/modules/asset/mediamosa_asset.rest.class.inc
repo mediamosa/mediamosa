@@ -236,6 +236,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
   const RELATED_SHOW_STILLS = 'related_show_stills';
+  const RELATED_SHOW_VIEWED_ASSET = 'related_show_viewed_asset';
   const SOLR_FACET = 'solr_facet';
   const SOLR_FACET_FIELD = 'solr_facet_field';
   const SOLR_FACET_PREFIX = 'solr_facet_prefix';
@@ -474,7 +475,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         self::RELATED_SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
-          self::VAR_DEFAULT_VALUE => 'TRUE',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_SHOW_VIEWED_ASSET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, include the view count of the asset in the related asset data.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
 
         // Old fasion search params.
@@ -702,7 +708,16 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       );
 
       if (!empty($asset_search['related'])) {
-        mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
+        mediamosa_asset::asset_collect_related(
+          $app_id,
+          $is_app_admin,
+          $items,
+          $asset_search['related'],
+          array(
+            'show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS),
+            'show_viewed_asset' => $this->get_param_value(self::RELATED_SHOW_VIEWED_ASSET),
+          )
+        );
       }
 
       if (!empty($asset_search['solr_facet'])) {
@@ -872,6 +887,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
   const RELATED_SHOW_STILLS = 'related_show_stills';
+  const RELATED_SHOW_VIEWED_ASSET = 'related_show_viewed_asset';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -970,7 +986,12 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
         self::RELATED_SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
-          self::VAR_DEFAULT_VALUE => 'TRUE',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_SHOW_VIEWED_ASSET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, include the view count of the asset in the related asset data.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       ),
     );
@@ -1081,7 +1102,16 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     );
 
     if (isset($asset_search['related'])) {
-      mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
+      mediamosa_asset::asset_collect_related(
+        $app_id,
+        $is_app_admin,
+        $items,
+        $asset_search['related'],
+        array(
+          'show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS),
+          'show_viewed_asset' => $this->get_param_value(self::RELATED_SHOW_VIEWED_ASSET),
+        )
+      );
     }
 
     // Add mediafiles.
@@ -1139,6 +1169,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const RELATED_COUNT = 'related_count';
   const RELATED_BOOST = 'related_boost';
   const RELATED_SHOW_STILLS = 'related_show_stills';
+  const RELATED_SHOW_VIEWED_ASSET = 'related_show_viewed_asset';
 
   // Aliases, do NOT use in code(!).
   const ALIAS_AUT_USER_ID = 'aut_user_id';
@@ -1238,7 +1269,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         self::RELATED_SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, generate a default still for related asset.',
-          self::VAR_DEFAULT_VALUE => 'TRUE',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::RELATED_SHOW_VIEWED_ASSET => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, include the view count of the asset in the related asset data.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       ),
     );
@@ -1349,7 +1385,16 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       );
 
       if (!empty($asset_search['related'])) {
-        mediamosa_asset::asset_collect_related($app_id, $is_app_admin, $items, $asset_search['related'], array('show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS)));
+        mediamosa_asset::asset_collect_related(
+          $app_id,
+          $is_app_admin,
+          $items,
+          $asset_search['related'],
+          array(
+            'show_stills' => $this->get_param_value(self::RELATED_SHOW_STILLS),
+            'show_viewed_asset' => $this->get_param_value(self::RELATED_SHOW_VIEWED_ASSET),
+          )
+        );
       }
 
       // Add to response.
