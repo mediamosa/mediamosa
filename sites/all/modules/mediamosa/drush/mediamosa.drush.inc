@@ -315,6 +315,21 @@ function mediamosa_drush_command() {
     'aliases' => array('mmtst'),
   );
 
+  $items['mm-meta-explode'] = array(
+    'description' => 'Explode metadata data into seperate fields for the same property. Useful if you have comma separated items in your data and these need to be inserted as single trimmed item. Will add all items and remove the original metadata value. Before any attempt, make sure you backup your database first.',
+    'arguments' => array(
+      'app_id' => 'Application id',
+      'name' => 'Name of metadata field, e.g. dc.subject',
+      'delimeter' => 'Delimiter to explode, like , or |',
+    ),
+    'options' => array(
+    ),
+    'examples' => array(
+      'drush mm-metadata-explode 1 dc.subject ,' => 'Metadata explode client id 1, take content of field dc.subject, do explode on , and re-insert all items. F.e. dc.subject "a,b,c" becomes 3 new entries for dc.subject; a and b and c. The "a,b,c" will be removed',
+    ),
+    'aliases' => array('mmmetaex'),
+  );
+
   return $items;
 }
 
@@ -1346,4 +1361,108 @@ function drush_mediamosa_mm_test() {
 
   drush_print("test done.");
 
+}
+
+/**
+ * Drush function mm-meta-explode.
+ */
+function drush_mediamosa_mm_meta_explode($app_id, $field, $delimeter) {
+
+  if (drupal_strlen($delimeter) != 1) {
+    drush_print('Delimeter must be one char.');
+    return;
+  }
+
+  list($context, $field) = explode('.', $field, 2);
+  if (is_null($context) || is_null($field)) {
+    drush_print('Field must be in format as [contextset].[metadatafield], e.g. dc.subject.');
+    return;
+  }
+
+  $sets  = module_invoke_all('mediamosa_metadata_info');
+  $prop_name = '';
+  foreach ($sets as $name => $set) {
+    if (drupal_strtolower($set['context']) === drupal_strtolower($context)) {
+      $prop_name = $name;
+      break;
+    }
+  }
+
+  if (empty($prop_name)) {
+    drush_print('Unknown metadata field ' . $context . '.' . $field);
+    return;
+  }
+
+  // Get prop id.
+  $prop = mediamosa_asset_metadata_property_group::property_group_row_get_with_name($prop_name);
+  if (empty($prop)) {
+    drush_print('Unknown metadata field ' . $context . '.' . $field);
+    return;
+  }
+  $propgroup_id = $prop['propgroup_id'];
+
+  $property = mediamosa_asset_metadata_property::property_get_row_with_name($field, $propgroup_id);
+  if (empty($property)) {
+    drush_print('Unknown metadata field ' . $context . '.' . $field);
+    return;
+  }
+
+  if ($property['type'] !== mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+    drush_print('Metadata field must be type CHAR.');
+    return;
+  }
+
+  $prop_id = $property['prop_id'];
+
+  $offset = 0;
+  $amount = 100;
+  $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
+
+  $done = 0;
+  $transaction = mediamosa_db::db_transaction();
+  try {
+    print 'Running';
+    while (TRUE) {
+      $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+      $query->join(mediamosa_asset_metadata_db::TABLE_NAME, 'am', 'am.asset_id = a.asset_id');
+      $query
+        ->fields('am')
+        ->condition('a.app_id=', $app_id)
+        ->condition('am.prop_id', $prop_id)
+        ->condition('am.val_char', '%' . db_like($delimeter) . '%', 'LIKE')
+        ->range($offset, $amount);
+
+      $rows = $query->execute();
+      print '.';
+      if (!$rows->rowCount()) {
+        drush_print('');
+        break;
+      }
+
+      foreach ($rows as $row) {
+        $done++;
+        $items = explode($delimeter, $row['val_char']);
+        $params = array();
+        foreach ($items as $item) {
+          $item = trim($item);
+          if ($item !== '') {
+            $params[$field][] = $item;
+          }
+        }
+        if (count($params[$field])) {
+          mediamosa_asset_metadata::metadata_create($row['asset_id'], $metadata_definitions_full, $params, 'append');
+        }
+
+        mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME)
+          ->condition('metadata_id', $row['metadata_id'])
+          ->execute();
+      }
+    }
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
+  }
+
+  drush_print('Exploded ' . $done . ' items.');
 }
