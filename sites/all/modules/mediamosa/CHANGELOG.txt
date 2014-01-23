@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2084)
+MediaMosa 3.5.1-dev (build 2085)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -28,6 +28,11 @@ MediaMosa 3.5.1-dev (build 2084)
 - Added asset viewed count to related result assets. Use
   related_show_viewed_asset flag to include these values.
 - Added drush commando 'mm-meta-explode'.
+- Removed test for public:// on status pages, as public:// is not used on rest
+  interfaces and Drupal status page will report problems on the MediaMosa status
+  page.
+- Extended asset/collection search unit test for case-(in)sensitive search for
+  assets. Test now fails on Solr, will be fixed in later build of module.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
