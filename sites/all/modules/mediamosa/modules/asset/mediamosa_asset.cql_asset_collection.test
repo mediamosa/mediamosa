@@ -104,7 +104,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     // Title.
     $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
     $this->createAssetMetadata($asset_id_2, array('title' => 'aap noot'));
-    $this->createAssetMetadata($asset_id_3, array('title' => 'noot'));
+    $this->createAssetMetadata($asset_id_3, array('title' => 'NOOT'));
     $this->createAssetMetadata($asset_id_4, array('title' => 'dit is een test mies'));
     $this->createAssetMetadata($asset_id_5, array('title' => 'lord of maar wist the noot rings'));
     $this->createAssetMetadata($asset_id_6, array('title' => 'blaat en foo'));
@@ -224,6 +224,22 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
 
     // Gives all, where 'we are still' is exactly in description sorted by title ascending.
     $this->cql_do_search_test_assets_3('vpx:dc.description == "^we are still obama\'s test^" sortBy title/sort.ascending', array($asset_id_6 => TRUE));
+
+    // Case sensitive tests.
+    // Insensitive search on noot.
+    $this->cql_do_search_test_assets_3('title =/ignorecase "noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
+
+    // Insensitive search on noot.
+    $this->cql_do_search_test_assets_3('title =/ignorecase "nOOt"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
+
+    // Sensitive search on noot.
+    $this->cql_do_search_test_assets_3('title =/respectcase "noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE));
+
+    // Sensitive search on noot.
+    $this->cql_do_search_test_assets_3('title =/respectcase "NOOT"', array($asset_id_3 => TRUE));
+
+    // Sensitive search on noot.
+    $this->cql_do_search_test_assets_3('title =/respectcase "Noot"', array());
 
     // Date.
 
