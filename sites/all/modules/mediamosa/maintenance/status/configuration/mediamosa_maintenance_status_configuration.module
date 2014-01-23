@@ -627,22 +627,6 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_collect_rea
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
 
-  // If writable, drupal will create it when needed.
-  $public_writable = file_exists('public://') && is_writable('public://');
-
-  $text_not_writable = t(
-    '@dir not writable on @server_name',
-    array(
-      '@dir' => DRUPAL_ROOT . '/' . variable_get('file_public_path', conf_path() . '/files'),
-      '@server_name' => $_SERVER['SERVER_NAME'],
-    )
-  );
-  $results_mediamosa_configuration['public_write'] = array(
-    'title' => variable_get('file_public_path', conf_path() . '/files'),
-    'value' => $public_writable ? t('Found & Writable') : $text_not_writable,
-    'severity' => _mediamosa_maintenance_status_okerror($public_writable),
-  );
-
   $results_mediamosa_configuration['install_id'] = array(
     'title' => t('Interface installation ID'),
     'value' => mediamosa::get_server_id(),
