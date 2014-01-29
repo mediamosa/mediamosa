@@ -699,6 +699,7 @@ class mediamosa_asset {
    *     assets.
    */
   public static function asset_collect_related($app_id, $is_app_admin, &$items, $related, $options = array()) {
+    $viewed = array();
     if (!empty($options['show_viewed_asset'])) {
       $asset_ids = array();
       foreach ($items as $item) {
@@ -709,11 +710,13 @@ class mediamosa_asset {
         $asset_ids = array_merge($asset_ids, array_keys($related[$item['asset_id']]['assets']));
       }
       $asset_ids = array_unique($asset_ids);
-      $viewed = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
-        ->fields('a', array(mediamosa_asset_db::ID, mediamosa_asset_db::VIEWED))
-        ->condition(mediamosa_asset_db::ID, $asset_ids)
-        ->execute()
-        ->fetchAllKeyed(0, 1);
+      if (!empty($asset_ids)) {
+        $viewed = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
+          ->fields('a', array(mediamosa_asset_db::ID, mediamosa_asset_db::VIEWED))
+          ->condition(mediamosa_asset_db::ID, $asset_ids)
+          ->execute()
+          ->fetchAllKeyed(0, 1);
+      }
     }
 
     foreach ($items as &$item) {
