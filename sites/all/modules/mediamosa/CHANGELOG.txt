@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2085)
+MediaMosa 3.5.1-dev (build 2086)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -33,6 +33,7 @@ MediaMosa 3.5.1-dev (build 2085)
   page.
 - Extended asset/collection search unit test for case-(in)sensitive search for
   assets. Test now fails on Solr, will be fixed in later build of module.
+- Fixed; No related assets generated SQL error when counting viewed value.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
