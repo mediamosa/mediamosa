@@ -439,6 +439,14 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  // Return all IDs of deleted assets.
+  $rest_calls['asset/deleted'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_get_deleted',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_5_1,
+  );
+
   // Create link between asset and collection.
   $rest_calls['collection/$coll_id/asset_relation'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_create',
@@ -1792,6 +1800,56 @@ user_id = "username"',
     <result>success</result>
     <result_id>601</result_id>
     <result_description></result_description>
+  </item>
+</items>',
+  );
+
+  $rest_calls['asset/deleted'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Return a listing of asset IDs of the deleted assets.',
+    mediamosa_rest_call::DESCRIPTION => 'Assets that are deleted are logged with their asset ID, the possible collection they where in and the date when deleted (videotimestampmodified). Note that used collection IDs might be collections that no longer exists.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/deleted"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'items/item/asset_id' => 'The ID of the asset that has been deleted.',
+      'items/item/videotimestampmodified' => 'The datetime when the asset was deleted.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="ZfLVnYgHMO2NPb5eVyz9Qqpq">
+    <asset_id>ZfLVnYgHMO2NPb5eVyz9Qqpq</asset_id>
+    <videotimestampmodified>2009-09-19 08:20:01</videotimestampmodified>
+    <coll_ids>
+      <coll_id>14PFhLm5F6cqPUCYL0P1tkWg</coll_id>
+      <coll_id>8BA9l2IO2JynfNkSHF6bHCLg</coll_id>
+    </coll_ids>
+  </item>
+  <item id="1IIwxmK8JYkKfEmNSfUT8FzD">
+    <asset_id>1IIwxmK8JYkKfEmNSfUT8FzD</asset_id>
+    <videotimestampmodified>2009-09-29 11:20:02</videotimestampmodified>
+    <coll_ids/>
+  </item>
+    <item id="46BDsdGInn3QrDWvXcnHw9sW">
+    <asset_id>46BDsdGInn3QrDWvXcnHw9sW</asset_id>
+    <videotimestampmodified>2009-09-29 11:20:02</videotimestampmodified>
+    <coll_ids/>
+  </item>
+    <item id="IrrgXrm08B1CMy5o9dHUamdg">
+    <asset_id>IrrgXrm08B1CMy5o9dHUamdg</asset_id>
+    <videotimestampmodified>2009-09-29 11:20:03</videotimestampmodified>
+    <coll_ids/>
+  </item>
+    <item id="FjnS9Jr47sO7e4rH81b6UTka">
+    <asset_id>FjnS9Jr47sO7e4rH81b6UTka</asset_id>
+    <videotimestampmodified>2009-10-09 11:30:01</videotimestampmodified>
+    <coll_ids/>
+  </item>
+    <item id="GI7SQ1e6VWEtL3hOuk4JV4mr">
+    <asset_id>GI7SQ1e6VWEtL3hOuk4JV4mr</asset_id>
+    <videotimestampmodified>2009-10-09 11:30:01</videotimestampmodified>
+    <coll_ids/>
+  </item>
+    <item id="5WHYEkK8fLD1xTxw5GJeE4BO">
+    <asset_id>5WHYEkK8fLD1xTxw5GJeE4BO</asset_id>
+    <videotimestampmodified>2009-10-12 14:38:32</videotimestampmodified>
+    <coll_ids/>
   </item>
 </items>',
   );

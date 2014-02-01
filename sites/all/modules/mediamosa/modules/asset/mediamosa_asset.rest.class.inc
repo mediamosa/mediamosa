@@ -743,7 +743,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
   const ASSET_ID = 'asset_id';
   const FAV_TYPE= 'fav_type';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -895,7 +895,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const ALIAS_AUT_DOMAIN = 'aut_domain';
   const ALIAS_AUT_REALM = 'aut_realm';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1177,7 +1177,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const ALIAS_AUT_DOMAIN = 'aut_domain';
   const ALIAS_AUT_REALM = 'aut_realm';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1435,7 +1435,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const DELETE = 'delete';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1531,7 +1531,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
  * 1.x: media_management_create_asset
  */
 class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
@@ -1539,7 +1539,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   const PROVIDER_ID = 'provider_id';
   const PARENT_ID = 'parent_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1623,7 +1623,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const GROUP_ID = 'group_id';
   const REFERENCE_ID = 'reference_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -1715,5 +1715,57 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
 
     // Default OK.
     $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/deleted
+ * Method: POST
+ *
+ * Update asset.
+ */
+class mediamosa_rest_call_asset_get_deleted extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    // Include limit, offset vars.
+    $var_setup = self::get_var_setup_range($var_setup);
+
+    // Include order by.
+    $var_setup = self::get_var_setup_order_by($var_setup, mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED, array(mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED, mediamosa_asset_delete_db::ID));
+
+    // Include default.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $asset_deleted = mediamosa_asset::get_deleted(
+      $app_id,
+      array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED),
+      $this->get_param_value_offset(),
+      $this->get_param_value_limit(),
+      $this->get_param_value_order_by(),
+      $this->get_param_value_order_direction()
+    );
+
+    foreach ($asset_deleted['asset_deleted'] as $asset_delete) {
+      $coll_ids = $asset_delete['coll_ids'];
+      $asset_delete['coll_ids'] = array();
+      foreach ($coll_ids as $coll_id) {
+        $asset_delete['coll_ids']['coll_id'][] = $coll_id;
+      }
+
+      $mediamosa->add_item($asset_delete, array('id' => $asset_delete[mediamosa_asset_delete_db::ID]));
+    }
+
+    $mediamosa->item_count_total = $asset_deleted['item_count_total'];
   }
 }

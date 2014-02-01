@@ -1462,4 +1462,52 @@ class mediamosa_asset {
   public static function mediamosa_asset_delete(array $asset_ids) {
     mediamosa_search::asset_delete($asset_ids);
   }
+
+  /**
+   * Get listing of the deleted assets.
+   *
+   * @param int $app_id
+   *   The client application.
+   * @param int $offset
+   *   The record offset.
+   * @param int $limit
+   *   THe maximum offset.
+   * @param string $direction
+   *   Either ASC or DESC.
+   *
+   * @return array
+   *   The result.
+   */
+  public static function get_deleted($app_id, $fields = array(), $offset = 0, $limit = 10, $order_by = mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED, $direction = mediamosa_db::ORDER_DIRECTION_DESC) {
+    $assets = mediamosa_db::db_select(mediamosa_asset_delete_db::TABLE_NAME, 'ad')
+      ->fields('ad', $fields)
+      ->condition('app_id', $app_id)
+      ->orderBy($order_by, $direction)
+      ->range($offset, $limit)
+      ->groupBy(mediamosa_asset_delete_db::ID)
+      ->execute();
+
+    $asset_deleted = array();
+    foreach ($assets as $asset) {
+      unset($asset['coll_id']);
+      $asset['coll_ids'] = array();
+      $asset_deleted[$asset[mediamosa_asset_delete_db::ID]] = $asset;
+    }
+
+    if (!empty($asset_deleted)) {
+      $collections = mediamosa_db::db_select(mediamosa_asset_delete_db::TABLE_NAME, 'ad')
+        ->fields('ad', array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::COLL_ID))
+        ->condition(mediamosa_asset_delete_db::ID, array_keys($asset_deleted))
+        ->condition(db_and()->isNotNull(mediamosa_asset_delete_db::COLL_ID)->condition(mediamosa_asset_delete_db::COLL_ID, '', '!='))
+        ->orderBy(mediamosa_asset_delete_db::COLL_ID, 'ASC')
+        ->execute();
+
+      foreach ($collections as $collection) {
+        $asset_deleted[$collection[mediamosa_asset_delete_db::ID]]['coll_ids'][$collection[mediamosa_asset_delete_db::COLL_ID]] = array($collection[mediamosa_asset_delete_db::COLL_ID]);
+      }
+    }
+
+    $item_count_total = mediamosa_db::db_count_rows(mediamosa_asset_delete_db::TABLE_NAME, array('app_id' => $app_id));
+    return array('asset_deleted' => $asset_deleted, 'item_count_total' => $item_count_total);
+  }
 }
