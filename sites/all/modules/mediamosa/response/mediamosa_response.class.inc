@@ -500,9 +500,18 @@ class mediamosa_response extends mediamosa {
    *
    * @param array $item
    *   The item with data to add.
+   * @param string $id
+   *   The ID of the item.
+   * @param string $id_name
+   *   The name of the ID to use as attribute.
    */
-  public function add_item($item) {
-    $this->response['items'][++$this->item_count] = $item;
+  public function add_item($item, array $attributes = array()) {
+    if (empty($attributes)) {
+      $this->response['items'][++$this->item_count] = $item;
+    }
+    else {
+      $this->response['items'][++$this->item_count]['#' . serialize($attributes)] = $item;
+    }
   }
 
   /**
@@ -526,6 +535,7 @@ class mediamosa_response extends mediamosa {
   public function get_reponse_attributes() {
     return $this->response_attributes;
   }
+
   /**
    * Add an error to the header.
    *
