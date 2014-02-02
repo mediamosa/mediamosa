@@ -15,7 +15,8 @@ function mediamosa_metadata_dc_install() {
   // Check if the property group already exists. If so, we have a pre-3.0
   // install where MediaMosa created this group by core code.
   if (mediamosa_metadata_dc::property_group_installed(mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME)) {
-    return; // Already installed, pre 3.0 install.
+    // Already installed, pre 3.0 install.
+    return;
   }
 
   // Create the property group.
@@ -32,7 +33,7 @@ function mediamosa_metadata_dc_install() {
     array('subject', 'CHAR'),
     array('description', 'CHAR'),
     array('contributor', 'CHAR'),
-    array('date', 'DATETIME'),
+    array('date', 'CHAR'),
     array('identifier', 'CHAR'),
     array('source', 'CHAR'),
     array('relation', 'CHAR'),
@@ -53,4 +54,61 @@ function mediamosa_metadata_dc_install() {
 function mediamosa_metadata_dc_uninstall() {
   // Remove it and delete all properties.
   mediamosa_metadata_dc::property_group_delete(mediamosa_metadata_dc::METADATA_PROPERTY_GROUP_NAME);
+}
+
+
+/**
+ * Update dublin core field 'date' to type char.
+ *
+ * This used to be an datetime, however Dublin Core specifies a more
+ * general field for date. So this field is converted to char type.
+ * see: http://dublincore.org/documents/dcmi-terms/#terms-date for
+ * more information.
+ */
+function mediamosa_metadata_dc_update_7001() {
+
+  // Get prop_id of the dc 'date' field.
+  $query = db_select('mediamosa_asset_metadata_property', 'mp');
+  $query->join('mediamosa_asset_metadata_property_group', 'mpg', 'mpg.propgroup_id = mp.propgroup_id');
+  $prop_id = $query->fields('mp', array('prop_id'))
+    ->condition('mp.prop_name', 'date')
+    ->condition('mpg.propgroup_name', 'dublin_core')
+    ->execute()
+    ->fetchField();
+
+  if (!($prop_id) > 0) {
+    return t('Although Dublin Core is enabled, no Field Dublin Core date found.');
+  }
+
+  // Change type of date from datetime to date.
+  db_update('mediamosa_asset_metadata_property')
+    ->fields(array('type' => 'CHAR'))
+    ->condition('prop_id', $prop_id)
+    ->execute();
+
+  // Find metadata of type date.
+  $metadata_query = db_select('mediamosa_asset_metadata', 'm')
+    ->fields('m', array('val_datetime', 'metadata_id'))
+    ->condition('prop_id', $prop_id)
+    ->condition('val_datetime', NULL, 'IS NOT')
+    ->condition('val_char', NULL)
+    ->execute();
+
+  // Loop metadata and update.
+  foreach ($metadata_query as $metadata) {
+
+    $val_datetime_str = strtr($metadata->val_datetime, array(' 00:00:00' => ''));
+    $val_char_left = mediamosa_unicode::substr($val_datetime_str, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
+    $val_char_right = mediamosa_unicode::strrev(mediamosa_unicode::substr($val_datetime_str, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
+
+    db_update('mediamosa_asset_metadata')
+      ->fields(array(
+          'val_char' => $val_datetime_str,
+          mediamosa_asset_metadata_db::VAL_CHAR_LFT => $val_char_left,
+          mediamosa_asset_metadata_db::VAL_CHAR_RGHT => $val_char_right))
+      ->condition('prop_id', $prop_id)
+      ->condition('metadata_id', $metadata->metadata_id)
+      ->execute();
+  }
+  return t('Dublin Core date field is converted from datetime to a less restricting string type. See http://dublincore.org/documents/dcmi-terms/#terms-date for more information.');
 }
