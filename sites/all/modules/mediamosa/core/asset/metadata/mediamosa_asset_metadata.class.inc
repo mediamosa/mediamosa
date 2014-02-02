@@ -226,4 +226,46 @@ class mediamosa_asset_metadata {
 
     return $result_metadata;
   }
+
+  /**
+   * Collect the metadata of the asset of a single property.
+   *
+   * @param string $asset_id
+   *   asset id.
+   * @param int $prop_id
+   *   property id.
+   */
+  public static function metadata_prop_get($asset_id, $prop_id) {
+    $result = mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_asset_metadata} AS am
+       JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id
+       WHERE am.#asset_id = :asset_id AND am.prop_id = :prop_id',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
+        '#prop_id' => mediamosa_asset_metadata_property_db::ID,
+        ':asset_id' => $asset_id,
+        ':prop_id' => $prop_id,
+      )
+    );
+
+    $value = array();
+    foreach ($result as $metadata) {
+      switch ($metadata[mediamosa_asset_metadata_property_db::TYPE]) {
+        case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_CHAR];
+          break;
+
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
+          break;
+
+        case mediamosa_asset_metadata_property_db::TYPE_INT:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_INT];
+          break;
+      }
+    }
+    return $value;
+  }
+
 }
