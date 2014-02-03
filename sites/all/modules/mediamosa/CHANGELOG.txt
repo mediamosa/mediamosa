@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2087)
+MediaMosa 3.5.1-dev (build 2088)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -36,6 +36,9 @@ MediaMosa 3.5.1-dev (build 2087)
 - Fixed; No related assets generated SQL error when counting viewed value.
 - Extended REST output to include attributes on <item> tags.
 - Added asset/deleted REST call, listing IDs of deleted assets.
+- Added drush mm-meta-copy and mm-meta-update. Added 2 new drush functions to
+  manipulate metadata of lots of assets in 1 run.
+- Fixed dc.date field, type is char, not date.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
