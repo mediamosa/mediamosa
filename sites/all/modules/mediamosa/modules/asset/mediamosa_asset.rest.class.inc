@@ -1559,10 +1559,12 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
         self::REFERENCE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The reference ID.',
+          self::VAR_RANGE_END => mediamosa_asset_db::REFERENCE_ID_LENGTH,
         ),
         self::PROVIDER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
           self::VAR_DESCRIPTION => 'The provider ID.',
+          self::VAR_RANGE_END => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         ),
         self::PARENT_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
@@ -1622,6 +1624,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const OWNER_ID = 'owner_id';
   const GROUP_ID = 'group_id';
   const REFERENCE_ID = 'reference_id';
+  const PROVIDER_ID = 'provider_id';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -1672,6 +1675,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         self::REFERENCE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The reference ID.',
+          self::VAR_RANGE_END => mediamosa_asset_db::REFERENCE_ID_LENGTH,
+        ),
+        self::PROVIDER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_DESCRIPTION => 'The provider ID.',
+          self::VAR_RANGE_END => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         ),
       )
     );
@@ -1699,6 +1708,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $isprivate = $this->get_param_value(self::ISPRIVATE);
 
     $reference_id = $this->get_param_value(self::REFERENCE_ID);
+    $provider_id = $this->get_param_value(self::PROVIDER_ID);
 
     // If is_inappropriate is set, we'll use that one.
     if ($this->isset_given_param(self::IS_INAPPROPRIATE)) {

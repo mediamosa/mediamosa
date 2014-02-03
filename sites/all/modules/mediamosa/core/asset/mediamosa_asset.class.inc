@@ -1250,7 +1250,7 @@ class mediamosa_asset {
    * @param bool $is_unappropriate
    *  Is unappropriate flag.
    */
-  public static function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL, $reference_id = NULL) {
+  public static function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL, $reference_id = NULL, $provider_id = NULL) {
 
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
@@ -1287,6 +1287,9 @@ class mediamosa_asset {
 
     if (isset($reference_id)) {
       $fields[mediamosa_asset_db::REFERENCE_ID] = $reference_id;
+    }
+    if (isset($provider_id)) {
+      $fields[mediamosa_asset_db::PROVIDER_ID] = $provider_id;
     }
 
     if ($is_app_admin) {
