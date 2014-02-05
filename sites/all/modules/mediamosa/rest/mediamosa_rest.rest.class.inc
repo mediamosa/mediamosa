@@ -33,6 +33,15 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
 
     foreach ($calls as $call_method) { // Method
       foreach ($call_method as $call_uri) { // Uri
+        // Fix the response fields keys values, these can contain invalid chars.
+        $response_fields = array();
+        if (isset($call_uri['response_fields']) && is_array($call_uri['response_fields'])) {
+          foreach ($call_uri['response_fields'] as $key => $value) {
+            $response_fields['response_field'][] = array('xpath' => $key, 'description' => $value);
+          }
+        }
+
+        $call_uri['response_fields'] = $response_fields;
         $mediamosa->add_item($call_uri);
       }
     }
@@ -89,7 +98,17 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     // Now include the variables of this REST call.
     $rest_calls[$uri_id][mediamosa_rest_call::VARS] = $var_setup[mediamosa_rest_call::VARS];
 
-    // Add it to the XML output.
-    $mediamosa->add_item($rest_calls[$uri_id]);
+    // Fix the response fields keys values, these can contain invalid chars.
+    $response_fields = array();
+    $call_uri = $rest_calls[$uri_id];
+    if (isset($call_uri['response_fields']) && is_array($call_uri['response_fields'])) {
+      foreach ($call_uri['response_fields'] as $key => $value) {
+        $response_fields['response_field'][] = array('xpath' => $key, 'description' => $value);
+      }
+    }
+
+    $call_uri['response_fields'] = $response_fields;
+
+    $mediamosa->add_item($call_uri);
   }
 }
