@@ -36,7 +36,7 @@ class MediaMosaToolImageTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     $parameters = array('still_type' => 'NONE');
-    $job_id = $this->createMediafileStill($mediafile_id, $parameters);
+    $this->createMediafileStill($mediafile_id, $parameters);
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -49,5 +49,26 @@ class MediaMosaToolImageTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->var_export($asset);
 
     $this->assertTrue($asset['items']['item'][0]['still']['is_still'] == 'TRUE', 'Still generated.');
+
+    // Do get asset/$asset_id/still call with still.
+    $response = $this->getAssetStill($asset_id);
+    $this->var_export($response);
+    $this->assertTrue(!empty($response[0]['output']), 'Got still');
+
+    // Do play call with still (supply with mediafile ID).
+    $response = $this->do_media_view_still($asset_id, array(mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id));
+    $this->var_export($response);
+    $item = $response->xpath('items/item');
+    $item = reset($item);
+    $this->var_export($item);
+    $this->assertTrue(!empty($item->output), 'Got still');
+
+    // Do play call with still (without mediafile ID).
+    $response = $this->do_media_view_still($asset_id);
+    $this->var_export($response);
+    $item = $response->xpath('items/item');
+    $item = reset($item);
+    $this->var_export($item);
+    $this->assertTrue(!empty($item->output), 'Got still');
   }
 }

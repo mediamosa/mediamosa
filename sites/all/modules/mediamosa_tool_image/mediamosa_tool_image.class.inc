@@ -63,13 +63,9 @@ class mediamosa_tool_image {
     $job_server = mediamosa_job_server::get($jobserver_job_id);
     $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
 
-    $execution_string = '';
-
     if ($job_server_still) {
       // WxH.
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
-      $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
-      $v_padding = $job_server_still[mediamosa_job_server_still_db::V_PADDING];
 
       // Resize.
       $parameter_string[] = '-resize ' . $size;

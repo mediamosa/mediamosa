@@ -6,7 +6,7 @@
  */
 
 class mediamosa_asset_mediafile_still {
-  // ------------------------------------------------------------------ Constants.
+  // ------------------------------------------------------------------- Consts.
   // Watermark.
   const WATERMARK_ID = 'watermark_id';
   const WATERMARK_DST_X = 'watermark_dst_x';
@@ -31,7 +31,7 @@ class mediamosa_asset_mediafile_still {
 
   const SAVE_QUALITY = 100;
 
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
 
   /**
    * Log message.
@@ -177,7 +177,8 @@ class mediamosa_asset_mediafile_still {
 
     // Any value?
     if (empty($range)) {
-      return $order;
+      // Return NULL here so order is ignored later.
+      return NULL;
     }
 
     // Single number?
@@ -200,7 +201,7 @@ class mediamosa_asset_mediafile_still {
       }
     }
 
-    return $order;
+    return empty($order) ? NULL : $order;
   }
 
   /**
