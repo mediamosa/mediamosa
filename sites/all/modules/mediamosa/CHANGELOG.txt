@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2088)
+MediaMosa 3.5.1-dev (build 2089)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -39,6 +39,14 @@ MediaMosa 3.5.1-dev (build 2088)
 - Added drush mm-meta-copy and mm-meta-update. Added 2 new drush functions to
   manipulate metadata of lots of assets in 1 run.
 - Fixed dc.date field, type is char, not date.
+- Fixing /rest output, did not properly output some fields in the REST call
+  documentation, causing developer tool not to work.
+- Fixed still REST calls; Generated stills where not returned on images because
+  their size did not match default. Will now return stills that are inside
+  default size and have one side the same size. This happens when image ratio
+  does not match default still size and generates a still that fits the default,
+  but is not in ratio with default still size.
+- Fixed timezone unit test to ignore /asset/deleted REST calls in its tests.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
