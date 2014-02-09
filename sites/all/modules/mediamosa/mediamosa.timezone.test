@@ -234,6 +234,7 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'asset/$asset_id/collections/count',
       'asset/$asset_id/count_collections',
       'asset/$asset_id/still',
+      'asset/deleted',
       'tagcount',
       'download/$ticket_id/$filename',
       'still/$still_id',
