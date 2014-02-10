@@ -199,7 +199,8 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
 /**
  * Helper to find best title to show.
  *
- * @param array $row
+ * @param array $asset
+ *   The asset to show.
  */
 function _mediamosa_browse_asset_get_title($asset, $default = NULL) {
   $title = $default;
@@ -211,6 +212,9 @@ function _mediamosa_browse_asset_get_title($asset, $default = NULL) {
   if (!empty($asset['mediafile_filename'])) {
     $title = $asset['mediafile_filename'];
   }
+
+  // Allow other modules to alter the title.
+  drupal_alter('mediamosa_browse_asset_title', $title, $asset);
 
   return $title;
 }
