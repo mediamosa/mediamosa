@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2090)
+MediaMosa 3.5.1-dev (build 2091)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -48,6 +48,8 @@ MediaMosa 3.5.1-dev (build 2090)
   but is not in ratio with default still size.
 - Fixed timezone unit test to ignore /asset/deleted REST calls in its tests.
 - Added drupal_alter to the asset title function for backend asset browser.
+- Fixed transcode completed_transcoding_url trigger; appened slash on url while
+  this was not allowed. Bug reported by Rok.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
