@@ -63,6 +63,9 @@ function mediamosa_app_listing_form() {
   // Get all statuses of webservices per app.
   $webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
 
+  // Get all diskspace used.
+  $diskspace_used = mediamosa_webservice_app::diskspace_used_get_all_status();
+
   // Get destination.
   $options = array('query' => drupal_get_destination());
 
@@ -88,11 +91,12 @@ function mediamosa_app_listing_form() {
         }
       }
     }
-
+    $perc = round($diskspace_used[$app[mediamosa_app_db::APP_NAME]] / ($app[mediamosa_app_db::QUOTA] * 1024 * 1024 * 1024) * 100);
+    $percentagebar = '<div class="progressbar" style="width:100px;height:10px" rel="' . $perc . '"></div>';
     $rows[] = array(
       $app[mediamosa_app_db::APP_ID],
       'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
-      $app[mediamosa_app_db::QUOTA],
+      $percentagebar . ' (' . format_size($diskspace_used[$app[mediamosa_app_db::APP_NAME]]) . ' / ' . $app[mediamosa_app_db::QUOTA] . ' GB)',
       implode(', ', $offline_webservices),
       $app[mediamosa_app_db::OWNER],
       $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
@@ -109,6 +113,19 @@ function mediamosa_app_listing_form() {
     '#empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')
   );
   $form['pager_bottom'] = array('#theme' => 'pager');
+
+  drupal_add_library('system', 'ui.progressbar');
+  drupal_add_js("
+  (function($) {
+    $(function() {
+      $('.progressbar').each(function() {
+        var val = $(this).attr('rel');
+        $(this).progressbar({ value: parseInt(val) });
+      });
+    });
+  })(jQuery);",
+    'inline'
+  );
 
   return $form;
 }
