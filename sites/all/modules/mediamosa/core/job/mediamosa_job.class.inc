@@ -1001,7 +1001,9 @@ class mediamosa_job {
     $completed_transcoding_url = $job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
     if (!empty($completed_transcoding_url)) {
       // Add trailing slash if not given.
-      $completed_transcoding_url .= substr($completed_transcoding_url, -1) == '/' ? '' : '/';
+      if (strpos($completed_transcoding_url, '?') === FALSE) {
+        $completed_transcoding_url .= substr($completed_transcoding_url, -1) == '/' ? '' : '/';
+      }
       self::log('Call to completed transcoding URL: ' . $completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
 
       // Do the call (through proxy).
