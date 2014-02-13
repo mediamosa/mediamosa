@@ -640,6 +640,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     }
     else {
       $actions[] = t('Original file');
+      $actions[] = l(t('Replace'), strtr('admin/mediamosa/content/asset/@asset_id/mediafile/@mediafile_id/replace', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id'])));
     }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);

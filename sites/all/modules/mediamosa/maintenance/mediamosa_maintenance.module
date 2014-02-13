@@ -108,6 +108,14 @@ function mediamosa_maintenance_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
+  $items['admin/mediamosa/content/asset/%/mediafile/%/replace'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_maintenance_mediafile_replace', 4, 6),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(4),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
   $items['admin/mediamosa/asset/%/job/%/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_maintenance_job_delete', 3, 5),
