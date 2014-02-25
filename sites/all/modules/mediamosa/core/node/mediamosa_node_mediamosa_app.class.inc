@@ -173,35 +173,22 @@ function _mediamosa_app_update_webservice($node) {
 function _mediamosa_app_update_viewers($node) {
 
   $viewer_server_apps = empty($node->viewer_server_apps) ? array() : $node->viewer_server_apps;
+
+  db_delete(mediamosa_viewer_app_db::TABLE_NAME)
+    ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
+    ->execute();
+
   foreach ($viewer_server_apps as $viewer_server_app) {
     $nid_viewer = empty($node->{$viewer_server_app}) ? 0 : $node->{$viewer_server_app};
     $nid_server = (int) substr($viewer_server_app, strlen('viewer_server_app-'));
-    if (empty($nid_viewer)) {
-      // Remove any link.
-      db_delete(mediamosa_viewer_app_db::TABLE_NAME)
-        ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
-        ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
-        ->execute();
-    }
-    else {
-      // Insert when not already.
-      $mediamosa_viewer_app = db_select(mediamosa_viewer_app_db::TABLE_NAME, 'va')
-        ->fields('va', array(mediamosa_viewer_app_db::APP_ID))
-        ->condition(mediamosa_viewer_app_db::APP_ID, $node->app_id)
-        ->condition(mediamosa_viewer_app_db::NID_SERVER, $nid_server)
-        ->condition(mediamosa_viewer_app_db::NID_VIEWER, $nid_viewer)
-        ->execute()
-        ->fetchAssoc();
-
-      if (empty($mediamosa_viewer_app)) {
-        db_insert(mediamosa_viewer_app_db::TABLE_NAME)
-          ->fields(array(
+    if ($nid_viewer) {
+      db_insert(mediamosa_viewer_app_db::TABLE_NAME)
+        ->fields(array(
             mediamosa_viewer_app_db::APP_ID => $node->app_id,
             mediamosa_viewer_app_db::NID_SERVER => $nid_server,
             mediamosa_viewer_app_db::NID_VIEWER => $nid_viewer,
           ))
-          ->execute();
-      }
+        ->execute();
     }
   }
 }
