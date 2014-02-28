@@ -793,11 +793,21 @@ class mediamosa_media {
         $output = str_replace('{/' . $if_tag . '}', '', $output);
       }
     }
-
+    // Calculate aspect ratio.
+    if (($mediafile_width == 0) or ($mediafile_height == 0) or (empty($mediafile_width)) or (empty($mediafile_height))) {
+      // Defaults to 16:9.
+      $aspect_ratio = 16 / 9;
+    }
+    else {
+      $aspect_ratio = ($mediafile_width / $mediafile_height);
+    }
+    $aspect_ratio_perc = (1 / $aspect_ratio) * 100;
     $variables = array(
       '{WIDTH}' => !$video_size['width'] ? '' : $video_size['width'],
       '{HEIGHT}' => !$video_size['height'] ? '' : $video_size['height'],
       '{HEIGHT_PLUS_20}' => $video_size['height'] > 0 ? $video_size['height'] + 20 : '',
+      '{ASPECT_RATIO}' => round($aspect_ratio, 2),
+      '{ASPECT_RATIO_PERC}' => (round($aspect_ratio_perc, 2)),
       '{MEDIAFILE_ID}' => $mediafile[mediamosa_asset_mediafile_db::ID],
       '{TICKET_URI}' => $server_uri_build,
       '{STILL_URI}' => self::do_response_still_default($app_id, $mediafile[mediamosa_asset_mediafile_db::ASSET_ID]),
