@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2091)
+MediaMosa 3.5.1-dev (build 2092)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -50,6 +50,12 @@ MediaMosa 3.5.1-dev (build 2091)
 - Added drupal_alter to the asset title function for backend asset browser.
 - Fixed transcode completed_transcoding_url trigger; appended slash on url while
   this was not allowed. Bug reported by Rok.
+- Added {ASPECT_RATIO} and {ASPECT_RATIO_PERC} as template parameters for the
+  server object code.
+- Prevent empty transcodes after upload.
+- Added replace mediafile option in backend.
+- Added quota used bar to client app overview.
+- Added 'all collections' option on asset search page.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
