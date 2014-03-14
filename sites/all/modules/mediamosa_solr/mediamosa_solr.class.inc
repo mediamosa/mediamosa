@@ -434,6 +434,9 @@ class mediamosa_solr {
    *   Returns the array with asset_id(s) on which we have access on.
    */
   public static function access_check_assets(array $parameters) {
+    if (empty($parameters['asset_ids'])) {
+      return array();
+    }
 
     $asset_ids = array();
 
@@ -451,7 +454,7 @@ class mediamosa_solr {
     $query = self::where($solr_query);
 
     // Do query.
-    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query);
+    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, 0, count($parameters['asset_ids']));
 
     // Get the asset_ids.
     $result = $mediamosa_solr_apache_solr_response->getAssetIds();
