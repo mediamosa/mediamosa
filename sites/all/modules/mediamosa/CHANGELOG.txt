@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2092)
+MediaMosa 3.5.1-dev (build 2093)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -56,6 +56,9 @@ MediaMosa 3.5.1-dev (build 2092)
 - Added replace mediafile option in backend.
 - Added quota used bar to client app overview.
 - Added 'all collections' option on asset search page.
+- Fixed viewed and played count not being updated to Solr.
+- Fixed granted value wrong on Solr when search result contains more than 10
+  assets.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
