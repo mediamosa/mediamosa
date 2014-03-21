@@ -1108,6 +1108,9 @@ class mediamosa_asset {
         ':asset_id' => $asset_id
       )
     );
+
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
   }
 
   /**
@@ -1126,6 +1129,9 @@ class mediamosa_asset {
         ':asset_id' => $asset_id
       )
     );
+
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
   }
 
   /**

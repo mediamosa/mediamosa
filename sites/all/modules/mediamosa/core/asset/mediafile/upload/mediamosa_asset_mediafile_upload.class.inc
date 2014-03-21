@@ -238,6 +238,9 @@ class mediamosa_asset_mediafile_upload {
       // Start transcodes.
       foreach ($transcode_profiles as $profile_id) {
         try {
+          // Only start existing profiles.
+          mediamosa_transcode_profile::must_exists($app_id, $profile_id);
+
           mediamosa_job::create_job_transcode(
             $app_id,
             $ticket[mediamosa_media_ticket_db::OWNER_ID],

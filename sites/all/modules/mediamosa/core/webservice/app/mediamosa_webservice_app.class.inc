@@ -155,6 +155,32 @@ class mediamosa_webservice_app {
     return $a_webservice_apps;
   }
 
+  /**
+   * Return percentage used diskspace of each app.
+   */
+  public static function diskspace_used_get_all_status($app_ids = array()) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm');
+    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'm', 'm.mediafile_id = mm.mediafile_id');
+    $query->fields('mm', array('val_int'));
+    $query->fields('m', array('app_id'));
+    $query->groupBy('app_id');
+    $query->addExpression('sum(val_int)', 'total');
+
+    // If we provide app_ids, then only retrieve those.
+    if (!empty($app_ids)) {
+      $query->condition(mediamosa_asset_mediafile_db::APP_ID, $app_ids, 'IN');
+    }
+
+    $result = $query->execute();
+
+    $a_quotas = array();
+    foreach ($result as $diskspace) {
+      $a_quotas[$diskspace[mediamosa_asset_mediafile_db::APP_ID]] = $diskspace['total'];
+    }
+    return $a_quotas;
+  }
+
 
   /**
    * Remove all handles from this app_id. Provide 0 for all globals.

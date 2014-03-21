@@ -24,6 +24,7 @@ function mediamosa_browse_asset_filter_form() {
 
   // Get all collections.
   $collections = mediamosa_collection::getAll(array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))->fetchAllKeyed();
+  $collections[] = t('All collections');
   foreach ($collections as $coll_id => $name) {
     if (!$coll_id || trim($name) != '') {
       continue;
@@ -639,6 +640,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     }
     else {
       $actions[] = t('Original file');
+      $actions[] = l(t('Replace'), strtr('admin/mediamosa/content/asset/@asset_id/mediafile/@mediafile_id/replace', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id'])));
     }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);

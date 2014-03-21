@@ -319,7 +319,85 @@ function mediamosa_maintenance_mediafile_retranscode($asset_id, $mediafile_id) {
 }
 
 /**
- * start download proxy call.
+ * Present an upload form to replace existing file.
+ */
+function _mediamosa_maintenance_mediafile_replace($form, &$form_state, $asset_id, $mediafile_id) {
+
+  // Set breadcrumb.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Content'), 'admin/mediamosa/content');
+  $breadcrumb[] = l(t('Asset Browser'), 'admin/mediamosa/content/asset');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Set title.
+  $mf = mediamosa_asset_mediafile::get($mediafile_id, NULL, array('filename'));
+  drupal_set_title(strtr('Replace Mediafile: !mf (!fn)', array('!mf' => $mediafile_id, '!fn' => $mf['filename'])));
+
+  $form = array();
+
+  // Set the title.
+  $form['title'] = array(
+    '#title' => t('Upload a new mediafile, will replace the original file.'),
+  );
+
+  // Get asset info and owner_id.
+  $asset = mediamosa_asset::get($asset_id);
+
+  // Create the upload ticket.
+  $response = mediamosa_ck::request_post_fatal('mediafile/' . $mediafile_id . '/uploadticket/create', array('user_id' => $asset['owner_id']));
+  if (!$response) {
+    $form['upload'] = array(
+      '#markup' => t('Unable to upload to MediaMosa; @reason', array('@reason' => mediamosa_ck::get_connector_last_error_text())),
+    );
+    return $form;
+  }
+
+  // Get the Action URL from the result.
+  $action = (string) $response->items->item->action;
+
+  // Get the Progress id from the result.
+  $progress_id = (int) $response->items->item->progress_id;
+  $uploadprogress_url = $response->items->item->uploadprogress_url;
+
+  // Get upload URL.
+  $upload_url = $response->items->item->action;
+
+  // Because we override.
+  $form_state['has_file_element'] = TRUE;
+
+  // FIXME: Hack to make it work with single array file upload to mediamosa.
+  // To make it work with MediaMosa single array upload result. MediaMosa
+  // can not work with files[file].
+  $form['file'] = array(
+    '#type' => 'item',
+    '#markup' => '<input type="file" id="edit-file-upload" name="file" size="40" class="form-file" />',
+    '#title' => t('Upload your file'),
+    '#required' => TRUE,
+    '#description' => 'Upload your file',
+  );
+
+  // Redirect value, we need to redirect back after upload so we can add it to
+  // Drupal.
+  $form['redirect_uri'] = array(
+    '#type' => 'hidden',
+    '#value' => url('admin/mediamosa/content/asset/' . rawurlencode($asset_id), array('absolute' => TRUE)),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#description' => t('Upload your file'),
+    '#value' => t('Upload'),
+  );
+
+  $form['#action'] = $upload_url;
+  return $form;
+}
+
+/**
+ * Start download proxy call.
  */
 function _mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
 
