@@ -362,7 +362,7 @@ class mediamosa_solr {
         }
       }
 
-      // possible slaves
+      // Possible slaves.
       foreach (array_keys($slaves) as $app_id_slave) {
         assert($app_id_slave);// should not happen
 
@@ -1351,7 +1351,11 @@ class mediamosa_solr {
       }
     }
 
-    if ($glue == $previous_glue || count($result) < 2) {
+    if (count($result) < 2) {
+     return '(' . static::trim_groups(implode($glue, $result)) . ')';
+    }
+
+    if ($glue === $previous_glue) {
       $l = $r = '';
     }
     else {
@@ -1360,6 +1364,23 @@ class mediamosa_solr {
     }
 
     return $l . implode($glue, $result) . $r;
+  }
+
+  /**
+   * Evenly remove paired ( ).
+   *
+   * @param string $string
+   *   The string tot trim.
+   *
+   * @return string
+   *   The result.
+   */
+  protected static function trim_groups($string) {
+    while (mediamosa_unicode::substr($string, 0, 1) == '(' && mediamosa_unicode::substr($string, -1) == ')') {
+      $string = mediamosa_unicode::substr($string, 1, -1);
+    }
+
+    return $string;
   }
 
   /**
