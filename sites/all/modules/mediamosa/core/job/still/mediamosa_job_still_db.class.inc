@@ -31,7 +31,7 @@
 class mediamosa_job_still_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_job_still'; // 1.x name still_job.
+  const TABLE_NAME = 'mediamosa_job_still';
 
   // Database fields;
   const ID = 'still_job_id';

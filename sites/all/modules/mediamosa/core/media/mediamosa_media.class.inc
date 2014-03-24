@@ -1427,14 +1427,6 @@ class mediamosa_media {
       }
     }
 
-    if (empty($stills)) {
-      foreach ($found_stills as $still) {
-        if (self::collect_stills_helper($still, $width, $height, $format, $order, TRUE)) {
-          $stills[] = $still;
-        }
-      }
-    }
-
     return $stills;
   }
 
@@ -1454,23 +1446,24 @@ class mediamosa_media {
    *   (optional) The format.
    * @param integer $order
    *   (optional) The order in stills.
-   * @param bool $allow_ratio
-   *   (default FALSE) Supply TRUE to allow matching ratio fiting with width and
-   *   height.
    *
    * @return boolean
    *   Returns TRUE when still matches the provided values (width, height,
    *   format, order).
    */
-  static protected function collect_stills_helper(array &$still, $width = NULL, $height = NULL, $format = NULL, $order = NULL, $allow_ratio = FALSE) {
+  static protected function collect_stills_helper(array &$still, $width = NULL, $height = NULL, $format = NULL, $order = NULL) {
+
+    static $values = array();
 
     // Need this to compare.
     if (!isset($width) && !isset($height) && !isset($format) && !isset($order)) {
       return TRUE;
     }
 
-    // Get the technical metadata of the still.
-    $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($still['still_id']);
+    if (!isset($values[$still['still_id']])) {
+      // Get the technical metadata of the still.
+      $values[$still['still_id']] = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($still['still_id']);
+    }
 
     $fields = array(
       mediamosa_asset_mediafile_metadata::WIDTH,
@@ -1486,7 +1479,7 @@ class mediamosa_media {
 
     // Collect the values we need.
     foreach ($fields as $field) {
-      $still[$field] = (empty($values[$field]) ? NULL : $values[$field]);
+      $still[$field] = (empty($values[$still['still_id']][$field]) ? NULL : $values[$still['still_id']][$field]);
     }
 
     if (isset($format) && $format != $still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
@@ -1497,9 +1490,9 @@ class mediamosa_media {
     }
 
     // Other tests passed, now size.
-    if ( (isset($width) && $width != $still[mediamosa_asset_mediafile_metadata::WIDTH]) || (isset($height) && $height != $still[mediamosa_asset_mediafile_metadata::HEIGHT])) {
+    if ( (isset($width) && $width > 0 && $width != $still[mediamosa_asset_mediafile_metadata::WIDTH]) || (isset($height) && $height > 0 && $height != $still[mediamosa_asset_mediafile_metadata::HEIGHT])) {
       // If both are set, treat them as max size ratio check.
-      if ($allow_ratio && isset($width) && isset($height)) {
+      if (isset($width) && isset($height)) {
         // If one side is the correct size and other smaller, then it was fitted
         // within the box for ratio.
         if ($width == $still[mediamosa_asset_mediafile_metadata::WIDTH] && $height > $still[mediamosa_asset_mediafile_metadata::HEIGHT]) {

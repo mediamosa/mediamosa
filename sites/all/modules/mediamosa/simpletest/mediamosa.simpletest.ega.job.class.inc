@@ -56,7 +56,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
     // Dump the log.
     $result = db_query('SELECT * FROM {mediamosa_job}');
 
-    $texts = array('Dumping contents of job table');
+    $texts = array('Dumping contents of job and server-job table');
 
     foreach ($result as $log_item) {
       $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
@@ -71,7 +71,72 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
     }
 
     // In verbose mode only.
-    $this->verbose(implode('<br />', $texts), 'job dump');
+    $this->verbose(implode('<br />', $texts), 'job main dump');
+
+    $texts = array('Dumping contents of job tables');
+
+    $result = db_query('SELECT * FROM {mediamosa_job_still}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job still server table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    $result = db_query('SELECT * FROM {mediamosa_job_transcode}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job transcode table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    $result = db_query('SELECT * FROM {mediamosa_job_upload}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job upload table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+    // In verbose mode only.
+    $this->verbose(implode('<br />', $texts), 'job tables dump');
+
+    $texts = array('Dumping contents of job server tables');
+
+    $result = db_query('SELECT * FROM {mediamosa_job_server}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job server table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    $result = db_query('SELECT * FROM {mediamosa_job_server_analyse}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job server analyse table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    $result = db_query('SELECT * FROM {mediamosa_job_server_still}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job server still table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    $result = db_query('SELECT * FROM {mediamosa_job_server_transcode}');
+    if ($result->rowCount()) {
+      $texts[] = 'Dumping contents of job server table';
+      foreach ($result as $log_item) {
+        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
+      }
+    }
+
+    // In verbose mode only.
+    $this->verbose(implode('<br />', $texts), 'job server dump (these should be empty)');
   }
 
   /**

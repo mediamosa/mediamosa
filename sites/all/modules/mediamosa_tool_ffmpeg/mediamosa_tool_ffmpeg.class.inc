@@ -297,7 +297,7 @@ class mediamosa_tool_ffmpeg {
                 }
               }
             }
-            //mediamosa_job_server::log_mediafile($mediafile_id_source, 'tbr: '. print_r($tbr, TRUE) .', map: '. print_r($map, TRUE) .', kbs: '. print_r($kbs, TRUE));
+
             if (!$tbr) {
               // This is the base value
               $tbr = 25;

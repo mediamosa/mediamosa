@@ -1135,7 +1135,7 @@ class mediamosa_job_scheduler {
             $target_size = $result['still_parameters']['size'];
 
             // Check the size.
-            if (preg_match('/(\d+)x(\d+)/', $target_size)) {
+            if (!preg_match('/(\d+)x(\d+)/', $target_size)) {
               // If there is a still default size for the client app available,
               // then use that instead.
               $target_size = mediamosa_app::get_still_default_size($app_id);
