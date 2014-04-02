@@ -32,7 +32,7 @@ function mediamosa_app_listing_form() {
     t('Offline webservices'),
     array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
     array('data' => t('Status'), 'field' => 'a.' . mediamosa_app_db::ACTIVE),
-    t('Operations')
+    t('Operations'),
   );
 
   // Get the app nodes.
@@ -91,12 +91,18 @@ function mediamosa_app_listing_form() {
         }
       }
     }
-    $perc = round($diskspace_used[$app[mediamosa_app_db::APP_NAME]] / ($app[mediamosa_app_db::QUOTA] * 1024 * 1024 * 1024) * 100);
+    if (!isset($diskspace_used[$app[mediamosa_app_db::APP_ID]])) {
+      $diskspace_used[$app[mediamosa_app_db::APP_ID]] = 0;
+    }
+    $perc = round($diskspace_used[$app[mediamosa_app_db::APP_ID]] / ($app[mediamosa_app_db::QUOTA] * 1024 * 1024 * 1024) * 100);
     $percentagebar = '<div class="progressbar" style="width:100px;height:10px" rel="' . $perc . '"></div>';
     $rows[] = array(
       $app[mediamosa_app_db::APP_ID],
-      'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
-      $percentagebar . ' (' . format_size($diskspace_used[$app[mediamosa_app_db::APP_NAME]]) . ' / ' . $app[mediamosa_app_db::QUOTA] . ' GB)',
+      array(
+        'data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]),
+        'field' => $app[mediamosa_app_db::APP_NAME],
+      ),
+      $percentagebar . ' (' . format_size($diskspace_used[$app[mediamosa_app_db::APP_ID]]) . ' / ' . $app[mediamosa_app_db::QUOTA] . ' GB)',
       implode(', ', $offline_webservices),
       $app[mediamosa_app_db::OWNER],
       $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
@@ -110,7 +116,7 @@ function mediamosa_app_listing_form() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')
+    '#empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.'),
   );
   $form['pager_bottom'] = array('#theme' => 'pager');
 
