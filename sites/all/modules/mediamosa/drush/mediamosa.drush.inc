@@ -83,6 +83,13 @@ function mediamosa_drush_command() {
       'limit' => '',
       'offset' => '',
       'show_empty' => '',
+      'cql' => 'sortby asset_created/sort.descending',
+      'facet_field' => '',
+    ),
+    'examples' => array(
+      "drush mm-asset-list 1 --cql='title=foo sortby asset_created/sort.descending'" => '',
+      "drush mmal 1 --cql='filetype=\"audio\" sortby asset_created/sort.descending'" => '',
+      "drush mmal 1 --cql='sortby asset_created/sort.descending' --facet_field=asset.filetype" => '',
     ),
   );
 
@@ -474,22 +481,59 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
     return drush_set_error('', dt('Invalid app_id.'));
   }
 
+  $cql = drush_get_option('cql', 'sortby asset_created/sort.descending');
   $limit = drush_get_option('limit', 25);
   $offset = drush_get_option('offset', 0);
   $hide_empty = (drush_get_option('show_empty', 'FALSE') == 'FALSE') ? TRUE : FALSE;
-  $assets = mediamosa_asset_search::asset_search(array($app_id), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, $hide_empty, FALSE, TRUE, $limit, $offset);
+
+  $search_options = array(
+    'app_ids' => array($app_id),
+    'cql' => $cql,
+    'cql_store_stats' => TRUE,
+    'granted' => TRUE,
+    'is_public_list' => FALSE,
+    'is_app_admin' => TRUE,
+    'hide_empty_assets' => $hide_empty,
+    'calculate_total_count' => TRUE,
+    'limit' => $limit,
+    'offset' => $offset,
+  );
+
+  // Facetted search?
+  $facet_field = drush_get_option('facet_field', '');
+  if (isset($facet_field)) {
+    $search_options['solr_facet'] = 'TRUE';
+    $search_options['solr_facet_field'] = array($facet_field);
+  }
+
+  $assets = mediamosa_search::asset($search_options);
+  $items = mediamosa_asset::asset_collect($assets['asset_ids'], array(1), NULL, TRUE, '', '', '', TRUE, FALSE, FALSE, FALSE, TRUE);
 
   $rows[] = array('nr', 'Asset_id', 'Title', 'Created', 'Protected', 'Empty');
-  foreach ($assets['asset_ids'] as $nr => $asset_id) {
-    $asset_info = mediamosa_asset::get($asset_id, $app_id);
+  foreach ($items as $nr => $asset) {
     $title = '';
-    $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
-    if (isset($metadata['dublin_core']['title']['values'][0])) {
-      $title = $metadata['dublin_core']['title']['values'][0];
+    if (isset($asset['dublin_core']['title'])) {
+      $title = implode(', ', $asset['dublin_core']['title']);
     }
-    $rows[] = array($nr, $asset_id, $title, $asset_info['created'], $asset_info['is_protected'], $asset_info['is_empty_asset']);
+    $rows[] = array(
+      $nr, $asset['asset_id'], $title, $asset['videotimestamp'], $asset['is_protected'], $asset['is_empty_asset'],
+    );
   }
   drush_print_table($rows, TRUE);
+
+  // Show facet info.
+  $rows = array();
+  if (isset($assets['solr_facet']['solr_facet_fields']) && !empty($assets['solr_facet']['solr_facet_fields'])) {
+    foreach ($assets['solr_facet']['solr_facet_fields'] as $field => $values) {
+      $rows[] = array($field);
+      foreach ($values as $prop => $value) {
+        $rows[] = array($prop, $value);
+      }
+    }
+    if ($rows != array(array(''))) {
+      drush_print_table($rows, TRUE);
+    }
+  }
   drush_print('Total: ' . $assets['total_count']);
 }
 
@@ -554,7 +598,6 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   drush_print_table($rows, TRUE);
 
   // @todo: collections.
-
   // Show table of mediafiles.
   $rows = array();
   $rows[] = array('Mediafiles');
@@ -1355,7 +1398,9 @@ function drush_mediamosa_mm_servers() {
   $rows = array();
   $rows[] = array('id', 'Name', 'Type', 'Status');
   foreach ($servers as $server) {
-    $rows[] = array($server['nid'], $server['server_name'], $server['server_type'], $server['server_status']);
+    $rows[] = array(
+      $server['nid'], $server['server_name'], $server['server_type'], $server['server_status'],
+    );
   }
   drush_print_table($rows, TRUE);
 }
@@ -1369,7 +1414,8 @@ function drush_mediamosa_mm_server($server_id = NULL) {
   }
 
   // Get servers.
-  $servers = mediamosa_server::search(); // there should be an search criteria here.
+  // there could be an search criteria here.
+  $servers = mediamosa_server::search();
   $rows = array();
   foreach ($servers as $server) {
     if ($server['nid'] == $server_id) {
@@ -1665,8 +1711,6 @@ function drush_mediamosa_mm_meta_copy($app_id, $metadata_field_from, $metadata_f
 
   drush_print('Number of assets updated: ' . $done . ' items.');
 }
-
-
 
 /**
  * Drush function mm-reset-counts.
