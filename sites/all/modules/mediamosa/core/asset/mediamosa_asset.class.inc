@@ -322,6 +322,7 @@ class mediamosa_asset {
       $fields[mediamosa_asset_db::MEDIAFILE_DURATION] = $file_duration;
       $fields[mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE] = $container_type;
       $fields[mediamosa_asset_db::MEDIAFILE_MIME_TYPE] = $mime_type;
+      $fields[mediamosa_asset_db::FILE_TYPE] = mediamosa_mimetype::get_type_part($mime_type);
 
       // Normalize the original filename.
       $fields[mediamosa_asset_db::MEDIAFILE_FILENAME] = mediamosa_asset_mediafile::get_filename($mediafile_info);

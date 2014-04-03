@@ -36,6 +36,8 @@ class mediamosa_asset_db {
   const MEDIAFILE_MIME_TYPE_LENGTH = 80;
   const MEDIAFILE_FILENAME = 'mediafile_filename';
   const MEDIAFILE_FILENAME_LENGTH = 255;
+  const FILE_TYPE = 'file_type';
+  const FILE_TYPE_LENGTH = 50;
   const CREATED = 'created';
   const CHANGED = 'changed';
   const IS_INAPPROPRIATE = 'is_unappropriate';
