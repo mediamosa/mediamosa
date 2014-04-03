@@ -1,13 +1,9 @@
 <?php
 /**
  * @file
- * MediaMosa still watermark unittests.
+ * MediaMosa still upload unittests.
  */
 
-/**
-  * @file
-  * Unittest for watermark still.
-  */
 class MediaMosaAssetMediafileStillUploadPNGTestCase extends MediaMosaTestCaseEga {
 
   public static function getInfo() {

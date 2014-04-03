@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2093)
+MediaMosa 3.5.1-dev (build 2094)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -59,6 +59,12 @@ MediaMosa 3.5.1-dev (build 2093)
 - Fixed viewed and played count not being updated to Solr.
 - Fixed granted value wrong on Solr when search result contains more than 10
   assets.
+- Fixed bug when updating viewers.
+- Updated videojs to 4.4.3.
+- Fixed; Still generation using custom size parameter did not work. Unit test
+  added.
+- Fixed empty asset content list in backend when Solr search was selected.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------

@@ -257,7 +257,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @see simpletest_verbose()
    */
   protected function verbose($message, $type = 'Verbose message') {
-    if ($id = simpletest_verbose($message)) {
+    $id = simpletest_verbose($message);
+    if ($id) {
       $url = file_create_url($this->originalFileDirectory . '/simpletest/verbose/' . get_class($this) . '-' . $id . '.html');
       $this->error(l(t($type), $url, array('attributes' => array('target' => '_blank'))), 'User notice');
     }

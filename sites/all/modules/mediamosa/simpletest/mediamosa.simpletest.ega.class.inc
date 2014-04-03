@@ -844,7 +844,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Basic upload of still.
    */
   protected function uploadTestStill($order = 0, $default = FALSE, $filename = NULL, $use_put = FALSE) {
-    // Create an asset.
+
     $asset_id = $this->createAsset();
 
     // Create mediafile.
@@ -1585,8 +1585,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Get the still(s) from a mediafile..
-   * Based on the rest call /mediafile/$mediafile_id/still (GET)
+   * Get the still(s) from a asset.
+   *
+   * Based on the rest call /asset/$asset_id/still (GET)
    */
   protected function getAssetStill($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters still.
@@ -1649,13 +1650,15 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Get response.
     $response = mediamosa_lib::responsexml2array($response['xml']);
-    $stills = $response['items']['item'];
+    $stills = isset($response['items']['item']) ? $response['items']['item'] : array();
 
-    // Did we get something?
-    $this->assertTrue(
-      count($stills),
-      'Got the mediafile stills'
-    );
+    if (!in_array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, $expected_result_ids)) {
+      // Did we get something?
+      $this->assertTrue(
+        count($stills),
+        'Got the mediafile stills'
+      );
+    }
 
     // Return data.
     return $stills;
@@ -2084,6 +2087,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return the asset_id.
     return $asset_id;
+  }
+
+  /**
+   * Create an asset.
+   *
+   * Based on REST call /asset/$asset_id/still/create (POST)
+   */
+  protected function createAssetStill($asset_id, $mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_job_create_still::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+    $parameters[mediamosa_rest_call_job_create_still_for_mediafile::MEDIAFILE_ID] = $mediafile_id;
+
+    // Set uri.
+    $uri = 'asset/' . rawurlencode($asset_id) . '/still/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Created metadata for asset ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response['xml'];
   }
 
   /**
@@ -3428,6 +3467,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Delete still.
+   *
    * Based on the REST call /asset/$asset_id/still/delete (POST)
    */
   protected function deleteStill($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {

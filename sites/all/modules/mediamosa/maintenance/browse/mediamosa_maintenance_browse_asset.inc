@@ -24,7 +24,7 @@ function mediamosa_browse_asset_filter_form() {
 
   // Get all collections.
   $collections = mediamosa_collection::getAll(array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))->fetchAllKeyed();
-  $collections[] = t('All collections');
+  $collections = array_merge(array(0 => t('All collections')), $collections);
   foreach ($collections as $coll_id => $name) {
     if (!$coll_id || trim($name) != '') {
       continue;

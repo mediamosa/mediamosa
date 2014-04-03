@@ -40,11 +40,12 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
 
 ; Mediafile Still.
-files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.class.inc
 files[] = mediafile/still/mediamosa_asset_mediafile_still.audio_file.test
-files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
-files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.create.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.class.inc
 files[] = mediafile/still/mediamosa_asset_mediafile_still.upload.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.watermark.test
 

@@ -1,0 +1,106 @@
+<?php
+/**
+ * @file
+ * MediaMosa still watermark unittests.
+ */
+
+class MediaMosaAssetMediafileStillCreateTestCase extends MediaMosaTestCaseEgaJob {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Still - Creation tests',
+      'description' => 'Create and generate tests.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * The still upload test.
+   */
+  function testStillCreate() {
+    $upload = $this->uploadTestFile(array('downloadable' => TRUE));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get all stills, expecting none.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 1a');
+
+    // Get all stills, expecting none.
+    $stills = $this->getMediafileStill($mediafile_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 1b');
+
+    // Create a still.
+    $this->createAssetStill($asset_id, $mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get all stills, expecting none.
+    $stills = $this->getAssetStill($asset_id);
+    $this->var_export($stills, 'stills 2a');
+
+    // Expecting 1 still.
+    $this->assertTrue(count($stills) === 1, 'Found 1 still');
+
+    // Must be default size.
+    list($width, $height) = explode('x', mediamosa_settings::STILL_DEFAULT_SIZE);
+    $this->assertTrue($stills[0]['stills']['width'] == $width, 'Width correct size');
+    $this->assertTrue($stills[0]['stills']['height'] == $height, 'Height correct size');
+
+    // Get all stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->var_export($stills, 'stills 2b');
+
+    // Expecting 1 still.
+    $this->assertTrue(count($stills) === 1, 'Found 1 still');
+
+    // Must be default size.
+    list($width, $height) = explode('x', mediamosa_settings::STILL_DEFAULT_SIZE);
+    $this->assertTrue($stills[0]['stills']['width'] == $width, 'Width correct size');
+    $this->assertTrue($stills[0]['stills']['height'] == $height, 'Height correct size');
+
+    // Remove the still.
+    $this->deleteStill($asset_id);
+
+    // Get all stills, expecting none.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 3a');
+
+    // Get all stills, expecting none.
+    $stills = $this->getMediafileStill($mediafile_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 3b');
+
+    $width /= 2;
+    $height /= 2;
+
+    // Now generate still with smaller size.
+    $this->createAssetStill($asset_id, $mediafile_id, array(mediamosa_rest_call_job_create_still::SIZE => $width . 'x' . $height));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get all stills.
+    $stills = $this->getAssetStill($asset_id, array('size' => $width . 'x' . $height));
+    $this->var_export($stills, 'stills 4a');
+
+    // Check against new width.
+    $this->assertTrue($stills[0]['stills']['width'] == $width, 'Width correct size');
+    $this->assertTrue($stills[0]['stills']['height'] == $height, 'Height correct size');
+
+    // Get all stills.
+    $stills = $this->getMediafileStill($mediafile_id, array('size' => $width . 'x' . $height));
+    $this->var_export($stills, 'stills 4b');
+
+    // Check against new width.
+    $this->assertTrue($stills[0]['stills']['width'] == $width, 'Width correct size');
+    $this->assertTrue($stills[0]['stills']['height'] == $height, 'Height correct size');
+  }
+}

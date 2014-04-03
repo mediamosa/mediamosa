@@ -411,7 +411,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'Size of the still.',
+          self::VAR_DESCRIPTION => 'Size of the still in WxH format (e.g. 640x320).',
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
