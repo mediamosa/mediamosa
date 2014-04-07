@@ -65,6 +65,12 @@ MediaMosa 3.5.1-dev (build 2094)
   added.
 - Fixed empty asset content list in backend when Solr search was selected.
 - Fixed unit test dependency on mediamosa_viewer_app module.
+- Fixed respectcase and ignorecase issues with MediaMosa Solr module.
+- Updated Solr schema files; if you are using MediaMosa Solr, please update the
+  schema.xml file under your Solr installation, restart the solr server and
+  completely rebuild the index using page 'admin/mediamosa/config/solr/indexer'.
+  Make sure you are using the 'mediamosa-3.5.4-asset' solr schema file or
+  higher. Version can be viewed using the Solr admin or in schema.xml.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
