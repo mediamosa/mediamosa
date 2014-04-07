@@ -12,7 +12,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-3.5.3-asset" version="1.5">
+<schema name="mediamosa-3.5.4-asset" version="1.5">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
@@ -104,9 +104,6 @@
       <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
-        <!-- in this example, we will only use synonyms at query time
-        <filter class="solr.SynonymFilterFactory" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
-        -->
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.ReversedWildcardFilterFactory"/>
       </analyzer>
@@ -125,6 +122,15 @@
           -->
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+    <fieldType name="val_char_exact_cs" class="solr.TextField" omitNorms="true">
+      <analyzer>
+        <!-- KeywordTokenizer does no actual tokenizing, so the entire
+             input string is preserved as a single token
+          -->
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
       </analyzer>
     </fieldType>
 
@@ -319,6 +325,7 @@
 
     <!-- Searchable exact fields -->
     <dynamicField name="*_vc_exact" type="val_char_exact" indexed="true" stored="false" multiValued="true" termVectors="true"/>
+    <dynamicField name="*_vc_exact_cs" type="val_char_exact_cs" indexed="true" stored="false" multiValued="true" termVectors="true"/>
 
     <!-- Sortable fields lo (asc searching) -->
     <dynamicField name="*_svc_lo" type="sval_char" indexed="true" stored="false" multiValued="false" termVectors="true"/>

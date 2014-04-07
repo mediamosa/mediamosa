@@ -103,6 +103,9 @@ define('MEDIAMOSA_CQL_KEY_SETTING_VERIFY', 'cql_key_setting_verify');
  */
 abstract class mediamosa_cql {
 
+  const RESPECTCASE = 'respectcase';
+  const IGNORECASE = 'ignorecase';
+
   private $m_str_cql = FALSE;
   private $m_o_cql_part_group = FALSE;
   private $m_o_cql_sortby = FALSE;

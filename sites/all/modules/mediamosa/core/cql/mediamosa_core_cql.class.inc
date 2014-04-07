@@ -712,7 +712,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       case mediamosa_sdk::TYPE_DOMAIN:
       case mediamosa_sdk::TYPE_REALM:
       case mediamosa_sdk::TYPE_STRING:
-        if (in_array('respectcase', $a_relation_modifiers)) {
+        if (in_array(mediamosa_cql::RESPECTCASE, $a_relation_modifiers)) {
           $str_binary = 'BINARY ';
         }
         $str_quotes = '\'';

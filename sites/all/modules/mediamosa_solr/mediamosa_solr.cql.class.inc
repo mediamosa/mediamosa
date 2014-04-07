@@ -151,7 +151,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $str_index = mediamosa_unicode::substr($str_index, $pos + 1);
     }
 
-    $a_relation_modifiers = $cql_part_relation->mediamosa_cql_modifier_get_array();
+    $relation_modifiers = $cql_part_relation->mediamosa_cql_modifier_get_array();
 
     $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
     if ($index2column === FALSE) {
@@ -186,6 +186,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     $str_table_column = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
     $str_table_column_exact = $is_metadata ? $str_table_column . '_exact' : $str_table_column;
+    $str_table_column_exact_cs = $is_metadata ? $str_table_column . '_exact_cs' : $str_table_column;
 
     if (isset($index2column['select_expr'])) {
       $result['a_select_expr'][$str_index] = $index2column['select_expr'];
@@ -264,6 +265,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $str_relation = '=';
     }
 
+    // Case sensitive fix (metadata).
+    $str_table_column_exact = in_array(mediamosa_cql::RESPECTCASE, $relation_modifiers) && $is_metadata ? $str_table_column_exact_cs : $str_table_column_exact;
+
     switch ($str_relation) {
       case 'bool':
         $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
@@ -274,7 +278,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       case '=':
       case 'any':
-        if (!$is_case_sensitive) {
+        if (!$is_case_sensitive && !$is_metadata) {
           $str_search_term = mediamosa_unicode::strtolower($str_search_term);
         }
 
@@ -359,7 +363,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
 
           default:
-            if (!$is_case_sensitive) {
+            if (!$is_case_sensitive && !$is_metadata) {
               $str_search_term = mediamosa_unicode::strtolower($str_search_term);
             }
 

@@ -1055,6 +1055,7 @@ class mediamosa_solr {
             $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_vc'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_vc_exact'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vc_exact_cs'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             break;
@@ -1347,22 +1348,15 @@ class mediamosa_solr {
 
     $result = array();
     foreach ($where as $type => $statements) {
-      if ($type == self::WHERE_AND) {
-        $result[] = self::where($statements, ' AND ', $glue);
-      }
-      elseif ($type == self::WHERE_OR) {
-        $result[] = self::where($statements, ' OR ', $glue);
+      if (in_array($type, array(self::WHERE_AND, self::WHERE_OR))) {
+        $result[] = self::where($statements, ' ' . $type . ' ', $glue);
       }
       else {
         $result[] = self::where($statements, $glue, $previous_glue);
       }
     }
 
-    if (count($result) < 2) {
-     return '(' . static::trim_groups(implode($glue, $result)) . ')';
-    }
-
-    if ($glue === $previous_glue) {
+    if ($glue === $previous_glue || count($result) < 2) {
       $l = $r = '';
     }
     else {

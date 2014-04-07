@@ -225,7 +225,7 @@ class mediamosa_cql_part_relation extends mediamosa_cql_modifiers {
   }
 
   protected function mediamosa_cql_modifier_allowed_modifier($str) {
-    return in_array($str, array('ignorecase', 'respectcase')) ? TRUE : FALSE;
+    return in_array($str, array(mediamosa_cql::IGNORECASE, mediamosa_cql::RESPECTCASE)) ? TRUE : FALSE;
   }
 
   /**

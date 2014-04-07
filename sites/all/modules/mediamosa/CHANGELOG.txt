@@ -64,7 +64,7 @@ MediaMosa 3.5.1-dev (build 2094)
 - Fixed; Still generation using custom size parameter did not work. Unit test
   added.
 - Fixed empty asset content list in backend when Solr search was selected.
-
+- Fixed unit test dependency on mediamosa_viewer_app module.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
