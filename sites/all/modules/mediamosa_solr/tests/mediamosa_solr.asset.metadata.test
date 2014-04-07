@@ -1,10 +1,12 @@
 <?php
 /**
  * @file
- * Default test.
+ * Solr version of MediaMosaAclTestCaseEga
  */
 
-class MediaMosaSolrTestAssetMFCaseEga extends MediaMosaTestAssetMFCaseEga {
+class MediaMosaSolrAssetMetadataPropertyTestCaseEga extends MediaMosaAssetMetadataPropertyTestCaseEga {
+  // ----------------------------------------------- ------------------ Members.
+
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
 
@@ -12,7 +14,6 @@ class MediaMosaSolrTestAssetMFCaseEga extends MediaMosaTestAssetMFCaseEga {
     $info['name'] = 'SOLR - ' . $info['name'];
     $info['group'] = 'MediaMosa Solr';
     $info['automatic_run_disabled'] = module_exists('mediamosa_solr') ? FALSE : TRUE;
-
     return $info;
   }
 
@@ -23,16 +24,14 @@ class MediaMosaSolrTestAssetMFCaseEga extends MediaMosaTestAssetMFCaseEga {
     return module_exists('mediamosa_solr') ? TRUE : FALSE;
   }
 
-  // ------------------------------------------------------------------ Methods.
   /**
    * Implements setUp().
+   *
+   * Any changes; see other classes(!)
    */
   protected function setUp() {
     // Get Solr url from parent install.
     $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
-
-    // Change app timezones to UTC default.
-    $this->default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL;
 
     // Run parent first so we are inside sandbox.
     // Call parent::setUp and preserve arguments.
@@ -59,6 +58,8 @@ class MediaMosaSolrTestAssetMFCaseEga extends MediaMosaTestAssetMFCaseEga {
 
   /**
    * Implements tearDown().
+   *
+   * Any changes; see other classes(!)
    */
   protected function tearDown() {
 
@@ -80,17 +81,5 @@ class MediaMosaSolrTestAssetMFCaseEga extends MediaMosaTestAssetMFCaseEga {
     if (!empty($app_ids)) {
       mediamosa_solr::delete_simpletest_documents($app_ids);
     }
-  }
-
-  // ------------------------------------------------------------------ Tests.
-  public function testBasic() {
-
-    $this->var_export(mediamosa_search::get_search_engine());
-
-    // Make sure the instanty settings are all on by default.
-    $this->assertTrue(mediamosa_solr::settingInstantlyMetadata(), 'Metadata setting instant');
-    $this->assertTrue(mediamosa_solr::settingInstantlyAssetUpdate(), 'Asset update setting instant');
-
-    parent::testBasic();
   }
 }

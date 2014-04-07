@@ -5,9 +5,7 @@
  */
 
 class MediaMosaSolrAssetSearchEmptyTestCaseEga extends MediaMosaAssetSearchEmptyTestCaseEga {
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
 
     $info = parent::getInfo();
@@ -25,6 +23,7 @@ class MediaMosaSolrAssetSearchEmptyTestCaseEga extends MediaMosaAssetSearchEmpty
     return module_exists('mediamosa_solr') ? TRUE : FALSE;
   }
 
+  // ------------------------------------------------------------------ Methods.
   /**
    * Implements setUp().
    *

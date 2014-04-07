@@ -1,0 +1,69 @@
+<?php
+/**
+ * @file
+ * Default test.
+ */
+
+class MediaMosaTestAssetMFCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - Specific asset / mediafile tests',
+      'description' => 'Basic tests for assets and mediafiles.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testBasic() {
+
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+    $upload_4 = $this->uploadTestFile();
+
+    // Create transcode for all.
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Must be sure we got the asset.
+    $this->getAsset($upload_1['asset_id']);
+
+    // We need to find it.
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_1['asset_id'] . '^"', array($upload_1['asset_id'] => TRUE));
+
+    // We need to find it.
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_1['asset_id'] . '^" AND owner_id == "^' . self::SIMPLETEST_USER_ID . '^"', array($upload_1['asset_id'] => TRUE));
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_1['asset_id'] . '^" AND owner_id == "^' . strtolower(self::SIMPLETEST_USER_ID) . '^"', array($upload_1['asset_id'] => TRUE));
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_1['asset_id'] . '^" AND owner_id == "^' . strtoupper(self::SIMPLETEST_USER_ID) . '^"', array($upload_1['asset_id'] => TRUE));
+
+    $lower = mediamosa_unicode::strtolower($upload_1['asset_id']);
+    if ($upload_1['asset_id'] != $lower) {
+      $this->cql_do_search_test_assets_1('asset_id == "^' . $lower . '^"', array());
+    }
+
+    $upper = mediamosa_unicode::strtoupper($upload_1['asset_id']);
+    if ($upload_1['asset_id'] != $upper) {
+      $this->cql_do_search_test_assets_1('asset_id == "^' . $upper . '^"', array());
+    }
+
+    // We need to find it.
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_2['asset_id'] . '^"', array($upload_2['asset_id'] => TRUE));
+
+    // We need to find it.
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_3['asset_id'] . '^"', array($upload_3['asset_id'] => TRUE));
+
+    $this->deleteAsset($upload_1['asset_id'], array(mediamosa_rest_call_asset_delete::DELETE => 'cascade'));
+
+    $this->cql_do_search_test_assets_1('asset_id == "^' . $upload_1['asset_id'] . '^"', array());
+  }
+}
