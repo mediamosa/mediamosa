@@ -943,6 +943,13 @@ class mediamosa_solr {
       mediamosa_asset_db::MEDIAFILE_MIME_TYPE,
     );
 
+    if (isset($asset_for_index['asset'][mediamosa_asset_db::MEDIAFILE_MIME_TYPE])) {
+      $document->asset_mimetype_md = $asset_for_index['asset'][mediamosa_asset_db::MEDIAFILE_MIME_TYPE];
+    }
+    if (isset($asset_for_index['asset'][mediamosa_asset_db::FILE_TYPE])) {
+      $document->asset_filetype_md = $asset_for_index['asset'][mediamosa_asset_db::FILE_TYPE];
+    }
+
     foreach ($asset_optionals as $optional) {
       if (!empty($asset_for_index['asset'][$optional])) {
         $document->{$optional} = $asset_for_index['asset'][$optional];
