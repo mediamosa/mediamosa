@@ -158,41 +158,6 @@ function read_line_from_command(command)
   return line
 end
 
-function mime_type(filename)
-  -- parse
-  -- 'filename: type/subtype'
-  -- 'filename: type/subtype; charset=xyz'
-  -- 'filename: very short file (no magic)'
-  local line = read_line_from_command(string.format("file --mime --dereference \"%s\"", filename))
-
-  local filename, short_file = string.match(line, "(.*): (very short file)")
-  if not short_file then
-    local filename, mimetype, extra = string.match(line, "(.*): ([^;]*)(.*)")
-    if mimetype then
-      local type, subtype = string.match(mimetype, "(.*)/(.*)")
-      if type and subtype then
-        if type == "application" and subtype == "octet-stream" then
-          -- special case for MS video formats and Flash, which sometimes return application/octet-stream.
-          -- The 'file' tool consistently returns 'Microsoft ASF' for those files when not invoked
-          -- with the '--mime' parameter, however - let's use that.
-          local line = read_line_from_command(string.format("file --dereference \"%s\"", filename))
-          local filename, filetype = string.match(line, "(.*): (.*)")
-          if filetype == "Microsoft ASF" then
-            type, subtype = "video", "x-msvideo"
-          elseif filetype == "Macromedia Flash Video" then
-            type, subtype = "video", "x-flv"
-          elseif filetype == "video/mp4" then
-            type, subtype = "video", "mp4"
-          end
-        end
-        return type, subtype
-      end
-    end
-  end
-
-  return "application", "octet-stream"
-end
-
 function log_out(format, ...)
   -- print(string.format("LOG: " .. format, ...))
 end
@@ -318,15 +283,6 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
 
   -- detect the best video audio stream
   local video_stream, audio_stream, video_size = find_best_streams(source_path, hash)
-
-  -- detect MIME type
-  local mime_type, mime_subtype = mime_type(filename)
-  add_property("MIME-type", mime_type .. "/" .. mime_subtype)
-
-  -- leave when an empty file was found
-  if mime_type == "application" and mime_subtype == "x-empty" then
-    return
-  end
 
   -- asx detection
   local fd = io.open(filename)
