@@ -131,6 +131,18 @@ function mediamosa_rules_action_info() {
     'parameter' => _mediamosa_rules_variable_mediafile_id(),
   );
 
+  $actions['mediamosa_action_mediafile_downloadable'] = array(
+    'label' => t('Set downloadable flag of a mediafile'),
+    'group' => t('MediaMosa'),
+    'parameter' => _mediamosa_rules_variable_mediafile_id(),
+  );
+
+  $actions['mediamosa_action_mediafile_downloadable'] = array(
+    'label' => t('Set downloadable flag of a mediafile'),
+    'group' => t('MediaMosa'),
+    'parameter' => _mediamosa_rules_variable_mediafile_id(),
+  );
+
   $actions['mediamosa_action_log'] = array(
     'label' => t('Make a log entry.'),
     'group' => t('MediaMosa'),
@@ -354,6 +366,42 @@ function mediamosa_action_delete_original_mediafile($mediafile_id) {
     watchdog('MM Rules', 'delete mf original: ' . $mediafile_orig_id);
     mediamosa_asset_mediafile::delete($mediafile_orig_id);
     mediamosa_asset_mediafile::set_new_original($mediafile_orig_id, $mediafile_id);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+/**
+ * The action function to set downloadable flag of a mediafile.
+ */
+function mediamosa_action_mediafile_downloadable($mediafile_id) {
+
+  if ($mediafile_id != NULL) {
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
+    if (!$mediafile) {
+      return FALSE;
+    }
+    $fields = array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => 'TRUE');
+    mediamosa_asset_mediafile::update($mediafile['app_id'], $mediafile_id, $mediafile['owner_id'], $fields);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+/**
+ * The action function to set downloadable flag of a mediafile.
+ */
+function mediamosa_action_mediafile_downloadable($mediafile_id) {
+
+  if ($mediafile_id != NULL) {
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
+    if (!$mediafile) {
+      return FALSE;
+    }
+    $fields = array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => 'TRUE');
+    mediamosa_asset_mediafile::update($mediafile['app_id'], $mediafile_id, $mediafile['owner_id'], $fields);
     return TRUE;
   }
   return FALSE;
