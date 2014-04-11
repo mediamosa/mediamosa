@@ -16,7 +16,7 @@ class mediamosa_job_scheduler {
    * @param array $variables
    *   Array of variables to replace in the message on display or NULL if
    *   message is already translated or not possible to translate.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   RFC 3164.
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -45,7 +45,7 @@ class mediamosa_job_scheduler {
    * @param array $variables
    *   Array of variables to replace in the message on display or NULL if
    *   message is already translated or not possible to translate.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   RFC 3164:
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -155,7 +155,7 @@ class mediamosa_job_scheduler {
           self::parse_queue();
         }
         catch (mediamosa_exception $e) {
-          // ignore, its logged
+          // Ignore, its logged.
         }
 
         // Release lock.
@@ -334,7 +334,7 @@ class mediamosa_job_scheduler {
    *
    * @param string $uri
    *   The job server URI.
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    */
   public static function remove_job_on_server($uri, $job_id) {
@@ -348,7 +348,7 @@ class mediamosa_job_scheduler {
   /**
    * Get the information of transcode job and related info.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    */
   public static function get_transcodejob_info($job_id) {
@@ -413,7 +413,7 @@ class mediamosa_job_scheduler {
   /**
    * Called when transcode was successfully finished.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $mediafile_id_src
    *   The mediafile ID of the source.
@@ -452,7 +452,7 @@ class mediamosa_job_scheduler {
       ->fields($fields)
       ->execute();
 
-    //  Relocate mediafile if final storage location is not local.
+    // Relocate mediafile if final storage location is not local.
     mediamosa_storage::relocate_mediafile($job_info['app_id'], $mediafile_id_dest, TRUE);
 
     // Perform a post transcode, if supported.
@@ -477,7 +477,7 @@ class mediamosa_job_scheduler {
   /**
    * Process the data from a still job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param array $filenames
    *   The filenames of the stills.
@@ -551,7 +551,7 @@ class mediamosa_job_scheduler {
   /**
    * Called when transcode failed or was canceled.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    */
   public static function parse_failed_transcode($job_id) {
@@ -637,7 +637,7 @@ class mediamosa_job_scheduler {
    * interface of the server, the job is send. At the end the job is attached to
    * the mediamosa_server_job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $job_type
    *   The job type, see mediamosa_job_db::JOB_TYPE_*.
@@ -741,7 +741,7 @@ class mediamosa_job_scheduler {
   /**
    * Start transcode job by REST call.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $uri
    *   The job server uri.
@@ -804,7 +804,7 @@ class mediamosa_job_scheduler {
   /**
    * Start analyse job by REST call.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $uri
    *   The job server URI.
@@ -861,14 +861,14 @@ class mediamosa_job_scheduler {
   /**
    * Function for starting a still job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $uri
    *   The uri of the job server.
    * @param string $mediafile_id
    *   The ID for the mediafile.
    *
-   * @return integer
+   * @return int
    *   The HTTP code returned by the job server call.
    */
   public static function start_server_still_job($job_id, $uri, $mediafile_id) {
@@ -923,7 +923,7 @@ class mediamosa_job_scheduler {
       'watermark_dst_y' => $job_parameters['still_parameters']['watermark_dst_y'],
       'watermark_pct' => $job_parameters['still_parameters']['watermark_pct'],
       'watermark_v_align' => $job_parameters['still_parameters']['watermark_v_align'],
-      'watermark_h_align' => $job_parameters['still_parameters']['watermark_h_align']
+      'watermark_h_align' => $job_parameters['still_parameters']['watermark_h_align'],
     );
     $rest_url = 'server/jobstart?' . http_build_query($query_data);
 
@@ -960,7 +960,7 @@ class mediamosa_job_scheduler {
   /**
    * Start media job by REST call.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $job_type
    *   The job type.
@@ -1007,71 +1007,105 @@ class mediamosa_job_scheduler {
    * @index `status`,`asset_id`,`job_id`, `job_type`
    */
   public static function fetch_single_available_job($server_id) {
-    return mediamosa_db::db_query(
-      'SELECT job_id, job_type, asset_id, mediafile_id FROM {#mediamosa_job} AS mj WHERE
-            mj.#job_status = :status
-          AND
-            mj.asset_id NOT IN
-              (SELECT asset_id FROM {#mediamosa_job} AS mj2
-               JOIN {#mediamosa_server_job} AS msj USING(job_id)
-               WHERE mj2.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING, :JOBSTATUS_WAITING))
-          AND
-            mj.asset_id NOT IN
-              (SELECT asset_id FROM {#mediamosa_job} AS mj3
-               WHERE mj3.job_type = :JOBTYPE_UPLOAD AND mj3.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING))
-          AND
-            mj.job_id NOT IN
-              (SELECT job_id FROM {#mediamosa_server_job})
-          AND
-            mj.job_type != :JOBTYPE_UPLOAD
-          AND
-            (
+
+    // Search a job from the mediamosa_job table with status 'WAITING'.
+    $sql = 'SELECT job_id, job_type, asset_id, mediafile_id FROM {#mediamosa_job} AS mj
+       WHERE mj.#job_status = :status AND ';
+
+    $sql_ands = array();
+
+    // Don't start new jobs from the same asset if the asset has a cancelling
+    // job in progress.
+    $sql_ands[] = 'mj.asset_id NOT IN
+      (SELECT asset_id
+       FROM {#mediamosa_job} AS mj1
+       JOIN {#mediamosa_server_job} AS msj USING(job_id)
+       WHERE mj1.#job_status = :JOBSTATUS_CANCELLING)';
+
+    // Don't start jobs if the asset has some kind of media job running. Note
+    // that 'running' is defined as present in the mediamosa_server_job, it may
+    // have status of waiting, but this won't last for long.
+    $sql_ands[] = 'mj.asset_id NOT IN
+      (SELECT asset_id
+       FROM {#mediamosa_job} AS mj2
+       JOIN {#mediamosa_server_job} AS msj USING(job_id)
+       WHERE mj2.job_type IN (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE))';
+
+    // Don't start a media job if some other kind of job is running.
+    $sql_ands[] = '
+      (job_type not in (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE)
+       AND mj.asset_id NOT IN
+         (SELECT asset_id FROM {#mediamosa_job} AS mj2
+          JOIN {#mediamosa_server_job} AS msj USING(job_id)))';
+
+    // Don't start jobs if an upload in the same asset is in progress.
+    $sql_ands[] = 'mj.asset_id NOT IN
+                (SELECT asset_id FROM {#mediamosa_job} AS mj3
+                 WHERE mj3.job_type = :JOBTYPE_UPLOAD AND mj3.#job_status IN (:JOBSTATUS_INPROGRESS, :JOBSTATUS_CANCELLING))';
+
+    // The job may not yet be the server_job table.
+    $sql_ands[] = 'mj.job_id NOT IN (SELECT job_id FROM {#mediamosa_server_job})';
+
+    // Don't do upload jobs.
+    $sql_ands[] = 'mj.job_type != :JOBTYPE_UPLOAD';
+
+    // Don't start jobs that need asset exclusivity. Some jobs may only be
+    // started if there is no other job waiting or running in the asset, for
+    // example generating a pdf from all preview images (which are the result of
+    // conversion-jobs).
+    // @todo.
+
+    // Here are jobservers matched with job_types.
+    $sql_ands[] = '(
               (mj.job_type = :JOBTYPE_TRANSCODE AND
                 (SELECT COUNT(*) FROM {#mediamosa_job_transcode} AS mjt
                   JOIN {#mediamosa_server_tool} USING(tool)
-                  WHERE #nid = :nid AND mjt.job_id = mj.job_id LIMIT 1) = 1)
+                  WHERE nid = :nid AND mjt.job_id = mj.job_id LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_ANALYSE AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt1
-                  WHERE mstt1.tool = :TOOL_ANALYSE AND mstt1.#nid = :nid LIMIT 1) = 1)
+                  WHERE mstt1.tool = :TOOL_ANALYSE AND mstt1.nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_STILL AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt2
-                  WHERE mstt2.tool = :TOOL_STILL AND mstt2.#nid = :nid LIMIT 1) = 1)
+                  WHERE mstt2.tool = :TOOL_STILL AND mstt2.nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type IN (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE) AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt3
-                  WHERE mstt3.tool = :TOOL_TRANSFER AND mstt3.#nid = :nid LIMIT 1) = 1)
+                  WHERE mstt3.tool = :TOOL_TRANSFER AND mstt3.nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type IN (:JOBTYPE_DELETE_MEDIAFILE))
-            )
-          ORDER BY priority ASC, job_id ASC
-          LIMIT 0,1',
+            )';
+
+    $sql .= implode($sql_ands, "\n AND ") . "\n" . ' ORDER BY priority ASC, job_id ASC LIMIT 0,1';
+
+    // First strtr tablenames as these are not allowed as named parameters.
+    $sql = strtr($sql, array(
+             '#job_status' => mediamosa_job_db::JOB_STATUS,
+             '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
+             '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
+             '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
+             '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
+           ));
+    //watchdog('_debug_', print_r($sql, TRUE));
+
+    return mediamosa_db::db_query($sql,
       array(
-        '#job_status' => mediamosa_job_db::JOB_STATUS,
-        ':status' => mediamosa_job_db::JOB_STATUS_WAITING,
-        ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
         ':JOBSTATUS_CANCELLING' => mediamosa_job_db::JOB_STATUS_CANCELLING,
-        ':JOBSTATUS_WAITING' => mediamosa_job_db::JOB_STATUS_WAITING,
-        ':JOBTYPE_UPLOAD' => mediamosa_job_db::JOB_TYPE_UPLOAD,
         ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-        ':JOBSTATUS_CANCELLING' => mediamosa_job_db::JOB_STATUS_CANCELLING,
-        ':JOBTYPE_TRANSCODE' => mediamosa_job_db::JOB_TYPE_TRANSCODE,
-        ':nid' => $server_id,
-        '#nid' => mediamosa_server_tool_db::NID,
-        ':JOBTYPE_ANALYSE' => mediamosa_job_db::JOB_TYPE_ANALYSE,
-        ':JOBTYPE_STILL' => mediamosa_job_db::JOB_TYPE_STILL,
-        ':JOBTYPE_DELETE_MEDIAFILE' => mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
         ':JOBTYPE_MEDIA_DOWNLOAD' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
-        ':JOBTYPE_MEDIA_UPLOAD' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
         ':JOBTYPE_MEDIA_MOVE' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+        ':JOBTYPE_MEDIA_UPLOAD' => mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        ':JOBTYPE_UPLOAD' => mediamosa_job_db::JOB_TYPE_UPLOAD,
+        ':JOBTYPE_DELETE_MEDIAFILE' => mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
         ':TOOL_ANALYSE' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_ANALYSE,
         ':TOOL_STILL' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_STILL,
         ':TOOL_TRANSFER' => mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER,
-        '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-        '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
-        '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
-        '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
+        ':nid' => $server_id,
+        ':JOBTYPE_ANALYSE' => mediamosa_job_db::JOB_TYPE_ANALYSE,
+        ':JOBTYPE_STILL' => mediamosa_job_db::JOB_TYPE_STILL,
+        ':JOBTYPE_TRANSCODE' => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+        ':status' => mediamosa_job_db::JOB_STATUS_WAITING,
       )
     )->fetchAssoc();
   }
@@ -1079,7 +1113,7 @@ class mediamosa_job_scheduler {
   /**
    * Based on job type, get more information.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $job_type
    *   The job type, see mediamosa_job_db::JOB_TYPE_*.
@@ -1288,9 +1322,9 @@ class mediamosa_job_scheduler {
    *   The easily readable parameter name.
    * @param string $tool_parameter
    *   The tool parameter name.
-   * @param integer $min_value
+   * @param int $min_value
    *   The minimum value.
-   * @param integer $max_value
+   * @param int $max_value
    *   The maximum value.
    * @param string $allowed_value
    *   The allowed value serialized string.
@@ -1361,7 +1395,7 @@ class mediamosa_job_scheduler {
   /**
    * Function for starting a delete job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $mediafile_id
    *   The mediafile ID.
@@ -1472,8 +1506,8 @@ class mediamosa_job_scheduler {
         #server_status = :server_status_close AND #nid NOT IN (SELECT DISTINCT #nid FROM {#mediamosa_server_job})',
       array(
         '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
-        '#server_status' =>  mediamosa_server_db::SERVER_STATUS,
-        ':server_status_off' =>  mediamosa_server_db::SERVER_STATUS_OFF,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
+        ':server_status_off' => mediamosa_server_db::SERVER_STATUS_OFF,
         ':server_status_close' => mediamosa_server_db::SERVER_STATUS_CLOSE,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         '#nid' => mediamosa_server_db::NID,
