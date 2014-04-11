@@ -94,31 +94,16 @@ class mediamosa_job_transcode {
 
     // Build the completed_transcoding_url.
     if (!empty($completed_transcoding_url)) {
-      $query_data = array();
-
-      // Lets see if there is a http query.
-      $pos = mediamosa_unicode::strpos($completed_transcoding_url, '?');
-      if ($pos !== FALSE) {
-        if (mediamosa_unicode::strlen($completed_transcoding_url) > $pos + 1) {
-          parse_str(mediamosa_unicode::substr($completed_transcoding_url, $pos + 1), $query_data);
-        }
-
-        // Remove the query string.
-        $completed_transcoding_url = mediamosa_unicode::substr($completed_transcoding_url, 0, $pos);
-      }
-
-      // Now add our parameters.
-      $query_data['job_id'] = $job_id;
-      $query_data['mediafile_id'] = $mediafile_id;
-
-      // Include the destination mediafile_id.
-      $query_data['mediafile_dest'] = $mediafile_dest;
-
-      // The status code will be filled later
-      $query_data['status_code'] = '';
+      $params = array(
+        'job_id' => $job_id,
+        'mediafile_id' => $mediafile_id,
+        'mediafile_dest' => $mediafile_dest,
+        // The status code will be filled later, keep at last.
+        'status_code' => '',
+      );
 
       // Build the query again.
-      $completed_transcoding_url .= '?' . http_build_query($query_data, '', '&');
+      $completed_transcoding_url = mediamosa_http::glue_params($completed_transcoding_url, $params);
     }
 
     // Now create the transcode job.

@@ -288,12 +288,12 @@ class mediamosa_asset_mediafile_upload {
    *   The URL to trigger when upload has been completed.
    * @param integer $order
    *   Order between stills.
-   * @param integer $frametime
-   *   Still frametime (in seconds).
    * @param boolean $default
    *   Is default still.
    * @param array $still_parameters
    *   The still parameters to use.
+   * @param integer $frametime
+   *   Still frametime (in seconds).
    *
    * @return string
    *   The created still ID.

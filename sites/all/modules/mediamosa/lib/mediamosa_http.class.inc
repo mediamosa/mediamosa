@@ -800,4 +800,36 @@ class mediamosa_http {
 
     return $result;
   }
+
+  /**
+   * Glue additional params to the url.
+   *
+   * @param string $url
+   *   The complete url, may include query_string.
+   * @param array $params
+   *   The array containing the GET params. Name => value pairs.
+   *
+   * @return string
+   *   The result url.
+   */
+  public static function glue_params($url, array $params) {
+    $query_data = array();
+
+    // Lets see if there is a http query.
+    $pos = mediamosa_unicode::strpos($url, '?');
+    if ($pos !== FALSE) {
+      if (mediamosa_unicode::strlen($url) > $pos + 1) {
+        parse_str(mediamosa_unicode::substr($url, $pos + 1), $query_data);
+      }
+
+      // Remove the query string.
+      $url = mediamosa_unicode::substr($url, 0, $pos);
+    }
+
+    $query_data = array_merge($query_data, $params);
+
+    // Build the query again.
+    $url .= '?' . http_build_query($query_data, '', '&');
+    return $url;
+  }
 }

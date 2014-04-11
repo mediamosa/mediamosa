@@ -55,7 +55,7 @@ class mediamosa_exception extends Exception {
       );
     }
 
-    parent::__construct($message, (int) $errorcode);
+    parent::__construct($message, (int) $errorcode, null);
   }
 
   public function mediamosa_exception_rest_response() {
@@ -65,7 +65,9 @@ class mediamosa_exception extends Exception {
 
 /**
  * Throw for override of output. Will log error and redirect to URI/URL and
- * will exit() at end. Will not generate output.
+ * will exit() at end. Will not generate output. The redirect uri will be
+ * extended with the GET values 'status_code' and 'status_message', both filled
+ * from the exception code and message.
  */
 class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
   /**
@@ -96,9 +98,16 @@ class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
 
   /**
    * Return redirect url.
+   *
+   * Will add the status_code and status_message.
    */
   public function get_redirect_uri() {
-    return $this->redirectUri;
+    $params = array(
+      'status_code' => $this->getCode(),
+      'status_message' => $this->getCode() == mediamosa_sdk::ERRORCODE_OKAY ? '' : $this->getMessage(),
+    );
+
+    return mediamosa_http::glue_params($this->redirectUri, $params);
   }
 }
 

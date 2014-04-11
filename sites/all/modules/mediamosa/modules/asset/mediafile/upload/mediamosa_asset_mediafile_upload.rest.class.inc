@@ -182,7 +182,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::REDIRECT_URI => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_URL_URI,
-          self::VAR_DESCRIPTION => 'The URL to redirect when upload has been successful.',
+          self::VAR_DESCRIPTION => "The URL to redirect when upload is completed or failed. The url will contain the MediaMosa result code using 'status_code', and the MediaMosa message in 'status_message'. If all went ok, the status will be 601 (OK).",
         ),
         self::TRANSCODE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -343,66 +343,66 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    // Ticket id.
-    $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
-    $watermark_id = $this->get_param_value(self::WATERMARK_ID);
-
-    // Get the ticket.
-    $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
-    if (empty($ticket)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
-    }
-    // Get the mediafile using the ticket mediafile_id.
-    $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
-    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
-
-    // Check watermark id, if exists.
-    if ($watermark_id) {
-      mediamosa_asset_mediafile::must_exists_cached($watermark_id, $app_id);
-    }
-
-    // Get params.
-    $create_still = $this->get_param_value(self::CREATE_STILL);
-    $still_parameters = array(
-      'still_type' => $this->get_param_value(self::STILL_TYPE),
-      'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
-      'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
-      'start_frame' => $this->get_param_value(self::START_FRAME),
-      'end_frame' => $this->get_param_value(self::END_FRAME),
-      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id)),
-      'h_padding' => ($this->get_param_value_org(self::H_PADDING) == '' ? NULL : $this->get_param_value(self::H_PADDING)),
-      'v_padding' => ($this->get_param_value_org(self::V_PADDING) == '' ? NULL : $this->get_param_value(self::V_PADDING)),
-      'tag' => $this->get_param_value(self::TAG),
-      'frametime' => $this->get_param_value(self::FRAMETIME),
-      'width' => $this->get_param_value(self::WIDTH),
-      'height' => $this->get_param_value(self::HEIGHT),
-      // Watermark.
-      self::WATERMARK_ID => $watermark_id,
-      self::WATERMARK_DST_X => $this->get_param_value(self::WATERMARK_DST_X),
-      self::WATERMARK_DST_Y => $this->get_param_value(self::WATERMARK_DST_Y),
-      self::WATERMARK_PCT => $this->get_param_value(self::WATERMARK_PCT),
-      self::WATERMARK_V_ALIGN => $this->get_param_value(self::WATERMARK_V_ALIGN),
-      self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
-    );
-    $completed_url = $this->get_param_value(self::COMPLETED_URL);
-    $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);
-    $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
-    $tag = $this->get_param_value(self::TAG);
-    $transcode_profiles = $this->get_param_value(self::TRANSCODE);
-    $retranscode = $this->get_param_value(self::RETRANSCODE);
-
-    // Is still upload?
-    $still_upload = $this->get_param_value(self::STILL_UPLOAD);
-    $order = $this->get_param_value(self::ORDER);
-    $default = $this->get_param_value(self::DEFAULT_);
-
-    // With PUT only.
-    $filename_put = $this->is_method_put() ? $this->get_param_value(self::FILENAME) : NULL;
-
-    // Frametime (point of still in media).
-    $frametime = $this->get_param_value(self::FRAMETIME);
-
     try {
+      // Ticket id.
+      $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+      $watermark_id = $this->get_param_value(self::WATERMARK_ID);
+
+      // Get the ticket.
+      $ticket = mediamosa_media_ticket::get_valid_upload($ticket_id);
+      if (empty($ticket)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
+      }
+      // Get the mediafile using the ticket mediafile_id.
+      $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
+      $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
+      // Check watermark id, if exists.
+      if ($watermark_id) {
+        mediamosa_asset_mediafile::must_exists_cached($watermark_id, $app_id);
+      }
+
+      // Get params.
+      $create_still = $this->get_param_value(self::CREATE_STILL);
+      $still_parameters = array(
+        'still_type' => $this->get_param_value(self::STILL_TYPE),
+        'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
+        'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
+        'start_frame' => $this->get_param_value(self::START_FRAME),
+        'end_frame' => $this->get_param_value(self::END_FRAME),
+        'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_size($app_id)),
+        'h_padding' => ($this->get_param_value_org(self::H_PADDING) == '' ? NULL : $this->get_param_value(self::H_PADDING)),
+        'v_padding' => ($this->get_param_value_org(self::V_PADDING) == '' ? NULL : $this->get_param_value(self::V_PADDING)),
+        'tag' => $this->get_param_value(self::TAG),
+        'frametime' => $this->get_param_value(self::FRAMETIME),
+        'width' => $this->get_param_value(self::WIDTH),
+        'height' => $this->get_param_value(self::HEIGHT),
+        // Watermark.
+        self::WATERMARK_ID => $watermark_id,
+        self::WATERMARK_DST_X => $this->get_param_value(self::WATERMARK_DST_X),
+        self::WATERMARK_DST_Y => $this->get_param_value(self::WATERMARK_DST_Y),
+        self::WATERMARK_PCT => $this->get_param_value(self::WATERMARK_PCT),
+        self::WATERMARK_V_ALIGN => $this->get_param_value(self::WATERMARK_V_ALIGN),
+        self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
+      );
+      $completed_url = $this->get_param_value(self::COMPLETED_URL);
+      $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);
+      $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
+      $tag = $this->get_param_value(self::TAG);
+      $transcode_profiles = $this->get_param_value(self::TRANSCODE);
+      $retranscode = $this->get_param_value(self::RETRANSCODE);
+
+      // Is still upload?
+      $still_upload = $this->get_param_value(self::STILL_UPLOAD);
+      $order = $this->get_param_value(self::ORDER);
+      $default = $this->get_param_value(self::DEFAULT_);
+
+      // With PUT only.
+      $filename_put = $this->is_method_put() ? $this->get_param_value(self::FILENAME) : NULL;
+
+      // Frametime (point of still in media).
+      $frametime = $this->get_param_value(self::FRAMETIME);
+
       if ($still_upload) {
         $still_id = mediamosa_asset_mediafile_upload::handle_upload_still('file', $ticket_id, $filename_put, $tag, $completed_url, $order, $default, $still_parameters, $frametime);
 
@@ -427,7 +427,6 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       }
     }
     catch (Exception $e) {
-
       if ($this->isset_param(self::REDIRECT_URI)) {
         // Any errors need to be redirected.
         throw new mediamosa_exception_redirect_and_exit($this->get_param_value(self::REDIRECT_URI), $e->getCode(), $e->getMessage());
