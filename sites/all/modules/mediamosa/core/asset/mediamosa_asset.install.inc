@@ -165,6 +165,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => 'The normalized filename of the original mediafile.',
       ),
+      mediamosa_asset_db::FILE_TYPE => array(
+        'type' => 'varchar',
+        'length' => mediamosa_asset_db::FILE_TYPE_LENGTH,
+        'default' => NULL,
+        'description' => 'Type of asset based on mime type from original mediafile.',
+      ),
       mediamosa_asset_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
