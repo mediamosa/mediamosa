@@ -371,25 +371,6 @@ function mediamosa_action_delete_original_mediafile($mediafile_id) {
   return FALSE;
 }
 
-
-/**
- * The action function to set downloadable flag of a mediafile.
- */
-function mediamosa_action_mediafile_downloadable($mediafile_id) {
-
-  if ($mediafile_id != NULL) {
-    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
-    if (!$mediafile) {
-      return FALSE;
-    }
-    $fields = array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => 'TRUE');
-    mediamosa_asset_mediafile::update($mediafile['app_id'], $mediafile_id, $mediafile['owner_id'], $fields);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-
 /**
  * The action function to set downloadable flag of a mediafile.
  */
