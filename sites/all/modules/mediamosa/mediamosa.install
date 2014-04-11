@@ -4532,7 +4532,7 @@ function mediamosa_update_7180() {
     $query = db_select('mediamosa_asset', 'ma');
     $assets = $query
       ->fields('ma', array('asset_id', 'mediafile_mime_type', 'asset_type'))
-      ->isNull('ma.file_type')
+      ->isNull('ma.asset_type')
       ->range(0, $max_items)
       ->execute();
 
@@ -4544,7 +4544,7 @@ function mediamosa_update_7180() {
     foreach ($assets as $asset) {
       $file_part = mediamosa_mimetype::get_type_part($asset->mediafile_mime_type);
       db_update('mediamosa_asset')
-        ->fields(array('file_type' => (is_null($file_part) ? '' : $file_part)))
+        ->fields(array('asset_type' => (is_null($file_part) ? '' : $file_part)))
         ->condition('asset_id', $asset->asset_id)
         ->execute();
     }
@@ -4552,8 +4552,8 @@ function mediamosa_update_7180() {
 
   // Now replace empty filename into NULLs again.
   db_update('mediamosa_asset')
-    ->fields(array('file_type' => NULL))
-    ->condition('file_type', '')
+    ->fields(array('asset_type' => NULL))
+    ->condition('asset_type', '')
     ->execute();
 
   // Now start a reindex in solr (if enabled).
