@@ -941,6 +941,7 @@ class mediamosa_solr {
       mediamosa_asset_db::MEDIAFILE_DURATION,
       mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
       mediamosa_asset_db::MEDIAFILE_MIME_TYPE,
+      mediamosa_asset_db::FILE_TYPE,
     );
 
     foreach ($asset_optionals as $optional) {

@@ -28,6 +28,8 @@ class mediamosa_asset_db {
   const ISPRIVATE = 'isprivate';
   const ISPRIVATE_TRUE = 'TRUE';
   const ISPRIVATE_FALSE = 'FALSE';
+  const ASSET_TYPE = 'asset_type';
+  const ASSET_TYPE_LENGTH = 50;
   const MEDIAFILE_DURATION = 'mediafile_duration';
   const MEDIAFILE_DURATION_LENGTH = 11;
   const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';
