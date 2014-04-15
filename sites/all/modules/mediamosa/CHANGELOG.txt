@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2094)
+MediaMosa 3.5.1-dev (build 2096)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -71,6 +71,19 @@ MediaMosa 3.5.1-dev (build 2094)
   completely rebuild the index using page 'admin/mediamosa/config/solr/indexer'.
   Make sure you are using the 'mediamosa-3.5.4-asset' solr schema file or
   higher. Version can be viewed using the Solr admin or in schema.xml.
+- Fixed: Unittest mimetype for ogg is now by default detected as video/ogg.
+- Added extra debug information when call fails in unittest.
+- Updated test ogg file with better version.
+- Added asset_type to asset.
+- Allowed more simultaneous jobs per asset.
+- Fixed: Upload failures no longer end up in an XML output when redirect_uri is
+  given during the upload POST. The redirected URL will contain status_code and
+  status_message.
+- Drush: added solr search to asset-list
+- Removed mime_type logic from lua.
+- Fixed bug in app quota overview.
+- Added a set-downloadable action to rules.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
