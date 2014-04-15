@@ -728,6 +728,11 @@ class mediamosa_io {
       return FALSE;
     }
 
+    if (self::file_exists($link)) {
+      self::log('Symlink already exists: @link, target: @target', array('@link' => $link, '@target' => $target));
+      return TRUE;
+    }
+
     if ($make_relative) {
       // Make symlinks targets relative.
       $target = self::symlink_absolute2relative($target, $link);
