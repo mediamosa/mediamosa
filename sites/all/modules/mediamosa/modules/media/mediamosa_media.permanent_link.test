@@ -290,6 +290,11 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
+    if ($result->code != 200) {
+      $this->var_export($result->headers);
+      $this->var_export($result->body);
+    }
+
     //
     // Now same test but on asset/$asset_id/play.
     //
