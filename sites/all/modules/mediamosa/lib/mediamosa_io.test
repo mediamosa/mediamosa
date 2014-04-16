@@ -81,7 +81,7 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->is_dir(mediamosa_io::dirname($mediafile_uri));
 
     $filesize = mediamosa_io::filesize($mediafile_uri);
-    $this->assert($filesize == 384414, t("Got filesize '@filesize'", array('@filesize' => $filesize)));
+    $this->assert($filesize == 247631, t("Got filesize '@filesize'", array('@filesize' => $filesize)));
 
     // Make sure its an different filename, but same location.
     $mediafile_uri_copy = substr($mediafile_uri, 0, -1);
