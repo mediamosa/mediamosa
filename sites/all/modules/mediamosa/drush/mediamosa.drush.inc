@@ -294,37 +294,6 @@ function mediamosa_drush_command() {
     ),
   );
 
-  $items['mm-export-bagit'] = array(
-    'description' => 'Exports the content of an asset to a bagIt file.',
-    'arguments' => array(
-      'asset_id' => 'Asset id to be exported',
-    ),
-    'options' => array(
-      'path' => 'Path where the bagIt file is saved, default: current directory.',
-      'quiet' => 'Suppress messages.',
-    ),
-    'aliases' => array('mmexpbagit'),
-    'examples' => array(
-      'drush mm-export-bagit h2LMORcSojgPhPH3ch5cVXX6 --path /tmp' => 'Exports asset id h2LMORcSojgPhPH3ch5cVXX6 to /tmp/h2LMORcSojgPhPH3ch5cVXX6.zip.',
-    ),
-  );
-
-  $items['mm-import-bagit'] = array(
-    'description' => 'Imports the content of a directory in a new asset. If the directory contains a bag-info.txt, this file is used to add metadata to the asset.',
-    'arguments' => array(
-      'path' => 'Path to a directory that needs to be imported.',
-    ),
-    'options' => array(
-      'symlink' => 'Use a symlink instead of a filecopy.',
-      'quiet' => 'Suppress messages.',
-    ),
-    'aliases' => array('mmimp'),
-    'examples' => array(
-      'drush mmimp /mnt/media/item1' => 'Import the contents of directory /mnt/media/item1 into a new asset.',
-      'drush mmimp --symlink /mnt/media/item1' => 'The same but now with symbolic links.',
-    ),
-  );
-
   $items['mm-servers'] = array(
     'description' => 'Get the list of MediaMosa servers.',
     'aliases' => array('mmsrvrs'),
@@ -373,23 +342,33 @@ function mediamosa_drush_command() {
     'description' => 'Update metadata of all assets of an app_id. Warning: will remove all old data of this property!',
     'arguments' => array(
       'app_id' => 'Application id',
-      'name' => 'Name of metadata field, e.g. dc.subject',
+      'prop' => 'Name of metadata field, e.g. dc.subject',
       'value' => 'New value of the property.',
     ),
-    'options' => array(),
+    'options' => array(
+      'cql' => 'sortby asset_created/sort.descending',
+      'verbose' => 'give verbose info during update.',
+      'dryrun' => 'do a dryrun, do not actually change data',
+    ),
     'examples' => array(),
   );
 
   $items['mm-meta-copy'] = array(
-    'description' => 'Copies metadata properties of all assets of an app_id. Warning: will remove all old data of this property!',
+    'description' => 'Copies metadata properties of all assets of an app_id. Warning: will remove old data of this property!',
     'arguments' => array(
       'app_id' => 'Application id',
-      'prop' => 'Name of metadata field, e.g. dc.subject',
-      'new_prop' => 'New name of metadata field.',
+      'prop' => 'Name of metadata field to copy, e.g. dc.subject',
+      'new_prop' => 'Metadata field name to copy the data into. e.g. dc.title.',
     ),
-    'options' => array(),
+    'options' => array(
+      'cql' => 'sortby asset_created/sort.descending',
+      'verbose' => 'give verbose info during update.',
+      'dryrun' => 'do a dryrun, do not actually change data',
+    ),
     'examples' => array(
       'drush mm-meta-copy 1 dc.subject dc.type' => 'Copies all dc.subjects to dc.type of all assets in app_id 1. This will overwrite existing values of dc.type',
+      'drush mm-meta-copy 1 dc.subject dc.type --cql="videotimestampcreate<2014-01-01"' => 'Same as above, but now for all asset before 2014.',
+      'drush mm-meta-copy 1 dc.subject dc.type --cql="videotimestampcreate<2014-01-01" --dryrun' => 'Same as above, but now only a dryrun',
     ),
   );
 
@@ -495,6 +474,7 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
     'is_app_admin' => TRUE,
     'hide_empty_assets' => $hide_empty,
     'calculate_total_count' => TRUE,
+    'show_deleted' => FALSE,
     'limit' => $limit,
     'offset' => $offset,
   );
@@ -565,7 +545,7 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     }
   }
 
-  // only first letters given, try to find a match.
+  // Only first letters given, try to find a match.
   if (strlen($asset_id < 10)) {
     // We miss a mediamosa_asset func here.
   }
@@ -1297,9 +1277,9 @@ function _mediamosa_bagit_metadata_convert($tag_name, $to_bagit = TRUE) {
 }
 
 /**
- * Drush function mm-import-directory.
+ * Drush function mm-import.
  */
-function drush_mediamosa_mm_import_directory($path, $app_id = 1, $owner = 'N.N.') {
+function drush_mediamosa_mm_import($path, $app_id = 1, $owner = 'N.N.') {
 
   // Sanitize path.
   $path .= (drupal_substr($path, -1) == '/' ? '' : '/');
@@ -1595,85 +1575,76 @@ function drush_mediamosa_mm_meta_explode($app_id, $field, $delimeter) {
  * Drush function mm-meta-update.
  */
 function drush_mediamosa_mm_meta_update($app_id, $metadata_field, $value) {
-
-  if (!(is_numeric($app_id))) {
-    return drush_set_error('', dt('Invalid app_id.'));
-  }
-
-  if ($metadata_field == NULL) {
-    return drush_set_error('', dt('Invalid metadata field.'));
-  }
-  if ($value == NULL) {
-    return drush_set_error('', dt('Invalid value.'));
-  }
-
-  // Test if app_id already exists.
-  if (!mediamosa_app::get_by_appid($app_id)) {
-    return drush_set_error('', dt('This app does not exist.'));
-  }
-  list($prop_id, $prop_name) = _drush_mediamosa_mm_get_prop_id($metadata_field);
-
-  if (!($prop_id > 0)) {
-    return drush_set_error('', dt('Invalid metadata_field.'));
-  }
-
-  $offset = 0;
-  $amount = 100;
-  $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
-
-  $done = 0;
-  $transaction = mediamosa_db::db_transaction();
-  try {
-    print 'Running';
-    while (TRUE) {
-      $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
-        ->fields('a')
-        ->condition('a.app_id=', $app_id)
-        ->range($offset, $amount);
-      $rows = $query->execute();
-      print '.';
-      if (!$rows->rowCount()) {
-        drush_print('');
-        break;
-      }
-
-      foreach ($rows as $row) {
-        mediamosa_asset_metadata::metadata_create($row['asset_id'], $metadata_definitions_full, array($prop_name => array($value)), 'update');
-        $done++;
-      }
-      $offset += 100;
-    }
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-    throw $e;
-  }
-
-  drush_print('Number of assets updated: ' . $done . ' items.');
+  _drush_mediamosa_mm_meta_update($app_id, $metadata_field, NULL, $value);
 }
 
 /**
  * Drush function mm-meta-copy.
  */
 function drush_mediamosa_mm_meta_copy($app_id, $metadata_field_from, $metadata_field_to) {
+  // Note the change of parameter to/from. As we "copy from-to", and we
+  // "update to-from".
+  _drush_mediamosa_mm_meta_update($app_id, $metadata_field_to, $metadata_field_from, NULL);
+}
+
+/**
+ * Helper function for mm_meta_update and mm_meta_copy.
+ */
+function _drush_mediamosa_mm_meta_update($app_id, $property = NULL, $property_from = NULL, $value = NULL) {
+
+  // Test app_id parameter.
   if (!(is_numeric($app_id))) {
     return drush_set_error('', dt('Invalid app_id.'));
   }
-
-  if (($metadata_field_from == NULL) || ($metadata_field_to == NULL)) {
-    return drush_set_error('', dt('Invalid metadata field.'));
-  }
-
-  // Test if app_id already exists.
   if (!mediamosa_app::get_by_appid($app_id)) {
     return drush_set_error('', dt('This app does not exist.'));
   }
 
-  list($prop_id_from, $prop_name_from) = _drush_mediamosa_mm_get_prop_id($metadata_field_from);
-  list($prop_id_to, $prop_name_to) = _drush_mediamosa_mm_get_prop_id($metadata_field_to);
+  // Check property field parameter.
+  if ($property == NULL) {
+    return drush_set_error('', dt('Invalid metadata field.'));
+  }
+  list($prop_id, $prop_name) = _drush_mediamosa_mm_get_prop_id($property);
+  if ((!($prop_id > 0)) || (!($prop_id > 0))) {
+    return;
+  }
 
-  if ((!($prop_id_to > 0)) || (!($prop_id_from > 0))) {
-    return drush_set_error('', dt('Invalid metadata_field.'));
+  // Now check either property_from or value parameter.
+  if ($property_from != NULL) {
+    list($prop_id_from, $prop_name_from) = _drush_mediamosa_mm_get_prop_id($property_from);
+    if ((!($prop_id_from > 0)) || (!($prop_id_from > 0))) {
+      return drush_set_error('', dt('Invalid metadata_field.'));
+    }
+  }
+  else {
+    if ($value == NULL) {
+      return;
+    }
+  }
+
+  $verbose = drush_get_option('verbose', FALSE);
+  $dryrun = drush_get_option('dryrun', FALSE);
+  $cql = drush_get_option('cql', 'sortby asset_created/sort.descending');
+  $search_options = array(
+    'app_ids' => array($app_id),
+    'cql' => $cql,
+    'cql_store_stats' => TRUE,
+    'granted' => TRUE,
+    'is_public_list' => FALSE,
+    'is_app_admin' => TRUE,
+    'hide_empty_assets' => TRUE,
+    'calculate_total_count' => TRUE,
+    'show_deleted' => FALSE,
+    'limit' => 1,
+  );
+  $assets = mediamosa_search::asset($search_options);
+
+  drush_print('A total of ' . $assets['total_count'] . ' assets are affected.');
+  if ($dryrun) {
+    drush_print('This is a dry-run. No assets will be updated.');
+  }
+  if (!drush_confirm(dt('Are you sure?'))) {
+    return drush_user_abort();
   }
 
   $offset = 0;
@@ -1685,20 +1656,31 @@ function drush_mediamosa_mm_meta_copy($app_id, $metadata_field_from, $metadata_f
   try {
     print 'Running';
     while (TRUE) {
-      $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
-        ->fields('a')
-        ->condition('a.app_id=', $app_id)
-        ->range($offset, $amount);
-      $rows = $query->execute();
+
+      $search_options['limit'] = $amount;
+      $search_options['offset'] = $offset;
+      $assets = mediamosa_search::asset($search_options);
+
       print '.';
-      if (!$rows->rowCount()) {
+      if (count($assets['asset_ids']) == 0) {
         drush_print('');
         break;
       }
+      foreach ($assets['asset_ids'] as $asset_id) {
+        $old_props = mediamosa_asset_metadata::metadata_prop_get($asset_id, $prop_id);
+        if ($value == NULL) {
+          $props = mediamosa_asset_metadata::metadata_prop_get($asset_id, $prop_id_from);
+        }
+        else {
+          $props = array($value);
+        }
 
-      foreach ($rows as $row) {
-        $props = mediamosa_asset_metadata::metadata_prop_get($row['asset_id'], $prop_id_from);
-        mediamosa_asset_metadata::metadata_create($row['asset_id'], $metadata_definitions_full, array($prop_name_to => $props), 'update');
+        if ($verbose) {
+          echo 'asset: ' . $asset_id . ' ' . implode($props) . ' --> ' . implode($old_props) . "\n";
+        }
+        if (!$dryrun) {
+          mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, array($prop_name => $props), 'update');
+        }
         $done++;
       }
       $offset += 100;
