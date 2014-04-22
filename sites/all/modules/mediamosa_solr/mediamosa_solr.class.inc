@@ -249,7 +249,13 @@ class mediamosa_solr {
     if (!empty($parameters['solr_facet'])) {
       $solr_facet_field = array();
       foreach ($parameters['solr_facet_field'] as $field) {
-        $solr_facet_field[] = str_replace('.', '_', $field) . '_md';
+
+        if ($field == 'asset_type') {
+          $solr_facet_field[] = str_replace('.', '_', $field);
+        }
+        else {
+          $solr_facet_field[] = str_replace('.', '_', $field) . '_md';
+        }
       }
 
       $query_params['facet'] = 'true';

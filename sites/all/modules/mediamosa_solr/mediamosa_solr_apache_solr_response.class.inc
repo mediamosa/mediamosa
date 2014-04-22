@@ -124,6 +124,12 @@ class mediamosa_solr_apache_solr_response {
               $facets['solr_facet_fields'][$field][$name] = (string) $value;
             }
           }
+          elseif ($field == 'asset_type') {
+            $facets['solr_facet_fields'][$field] = array();
+            foreach ($data as $name => $value) {
+              $facets['solr_facet_fields'][$field][$name] = (string) $value;
+            }
+          }
         }
 
         foreach ($this->_response->facet_counts->facet_dates as $field => $dates) {
