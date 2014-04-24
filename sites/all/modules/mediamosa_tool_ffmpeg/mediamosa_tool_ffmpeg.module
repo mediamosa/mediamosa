@@ -9,7 +9,7 @@
  */
 function mediamosa_tool_ffmpeg_permission() {
   return array(
-    'access mediamosa tool ffmpeg' =>  array(
+    'access mediamosa tool ffmpeg' => array(
       'title' => t('Access MediaMosa Tool module for FFmpeg toolset'),
       'description' => t('Enables the user to use the FFmpeg toolset.'),
     ),
@@ -18,21 +18,159 @@ function mediamosa_tool_ffmpeg_permission() {
 
 /**
  * Implements hook_mediamosa_tool_info().
- *
- * @return array
- *  An array filled with information about the tool.
  */
 function mediamosa_tool_ffmpeg_mediamosa_tool_info() {
-  return array(mediamosa_tool_ffmpeg::NAME => array(
-    'name' => t('ffmpeg'),
-    'description' => t('The ffmpeg tool for transcoding video files.'),
-  ));
+  return array(
+    mediamosa_tool_ffmpeg::NAME => array(
+      'name' => t('ffmpeg'),
+      'description' => t('The ffmpeg tool for transcoding video files.'),
+    ));
+}
+
+/**
+ * Implements hook_mediamosa_tool_can_analyse().
+ */
+function mediamosa_tool_ffmpeg_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_ffmpeg::is_supported($mime_type);
+}
+
+/**
+ * Implements hook_mediamosa_tool_analyse().
+ */
+function mediamosa_tool_ffmpeg_mediamosa_tool_analyse($mediafile_id) {
+
+  $execution_string = sprintf(
+    '%s %s %s',
+    mediamosa_settings::lua_analyse_script(),
+    mediamosa_storage::get_local_mediafile_path($mediafile_id),
+    $mediafile_id
+  );
+
+  mediamosa_watchdog::log_mediafile($mediafile_id, 'Start analyse: @command', array('@command' => $execution_string), NULL, WATCHDOG_NOTICE, 'tool ffmpeg');
+
+  // Return the result from the exec.
+  $analyse_result = mediamosa_io::exec($execution_string . ' 2>&1');
+
+  // Store parsed result.
+  $parsed_analyse_result = array();
+
+  // Walk through results and make an informative array.
+  // These are used in mediamosa_asset_mediafile_metadata::store_analyse().
+  foreach ($analyse_result as $line) {
+    if (strpos($line, ':') !== FALSE) {
+      list($name, $value) = explode(':', $line, 2);
+      if (trim($value) == '') {
+        // Dont store empty values.
+        continue;
+      }
+      switch ($name) {
+        case 'Video-codec':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Video-colorspace':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::COLORSPACE] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Video-size':
+          list($width, $height) = isset($value) ? explode('x', trim($value)) : array(0, 0);
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::WIDTH] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            'value' => $width,
+          );
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::HEIGHT] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            'value' => $height,
+          );
+          break;
+
+        case 'Video-framespersecond':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::FPS] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Audio-codec':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::AUDIO_CODEC] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Audio-frequency':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::SAMPLE_RATE] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Audio-channels':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::CHANNELS] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'File-duration':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::FILE_DURATION] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'File-type':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'File-bitrate':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::BITRATE] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            'value' => trim($value),
+          );
+          break;
+
+        case 'Is-hinted':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::IS_HINTED] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE',
+          );
+          break;
+
+        case 'Is-inserted-md':
+          $parsed_analyse_result[mediamosa_asset_mediafile_metadata::IS_INSERTED_MD] = array(
+            'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+            'value' => strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE',
+          );
+          break;
+      }
+    }
+  }
+
+  // BPP is a calculated field.
+  if (isset($width) && isset($height) && isset($fps) && isset($bitrate)) {
+    $bpp = (string) mediamosa_tool_ffmpeg::calculate_bpp($width, $height, $fps, $bitrate);
+    if (isset($bpp) and ($bpp != '')) {
+      $parsed_analyse_result[mediamosa_asset_mediafile_metadata::BPP] = array(
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+        'value' => $bpp,
+      );
+    }
+  }
+  return $parsed_analyse_result;
 }
 
 /**
  * Implements hook_mediamosa_tool_mapping().
- *
- * @return The mapping array.
  */
 function mediamosa_tool_ffmpeg_mediamosa_tool_mapping() {
   return mediamosa_tool_params::get_by_tool(mediamosa_tool_ffmpeg::NAME);
@@ -40,9 +178,6 @@ function mediamosa_tool_ffmpeg_mediamosa_tool_mapping() {
 
 /**
  * Implements hook_mediamosa_tool_param_checking().
- *
- * @return array
- *  The mapping array.
  */
 function mediamosa_tool_ffmpeg_mediamosa_tool_param_checking($nice_parameter, $value) {
   mediamosa_tool_params::check_mapping(mediamosa_tool_ffmpeg::NAME, $nice_parameter, $value);

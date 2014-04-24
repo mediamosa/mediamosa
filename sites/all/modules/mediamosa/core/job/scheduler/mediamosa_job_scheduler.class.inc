@@ -468,7 +468,7 @@ class mediamosa_job_scheduler {
     }
 
     // Analyse the mediafile.
-    $analyse_result = mediamosa_asset_mediafile::analyse($job_info['app_id'], (string) $mediafile_id_dest);
+    $analyse_result = mediamosa_job_server::analyse((string) $mediafile_id_dest, $job_id);
 
     // Store it.
     mediamosa_asset_mediafile_metadata::store_analyse_without_job($job_id, $analyse_result, (string) $mediafile_id_dest);

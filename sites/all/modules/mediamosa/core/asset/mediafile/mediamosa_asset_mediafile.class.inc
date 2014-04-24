@@ -784,60 +784,6 @@ class mediamosa_asset_mediafile {
   }
 
   /**
-   * Analyse the mediafile and store it into the database metadata of mediafile.
-   *
-   * @param integer $app_id
-   *   The client application ID.
-   * @param string $mediafile_id
-   *   The ID of the mediafile to analyse.
-   * @param string $execution_string
-   *   The execution string for the analyse.
-   *
-   * @return array
-   *   The output of the executed batch.
-   */
-  public static function analyse($app_id, $mediafile_id, $execution_string = '') {
-
-    $options = array();
-    if ($app_id) {
-      // Get the app.
-      $mediamosa_app = mediamosa_app::get_by_appid($app_id);
-
-      if ($mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
-        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
-      }
-
-      if ($mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
-        $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
-      }
-    }
-
-    $execution_string = sprintf('%s %s %s',
-      mediamosa_settings::lua_analyse_script(),
-      mediamosa_storage::get_local_mediafile_path($mediafile_id),
-      $mediafile_id
-    );
-
-    $execution_string .= (count($options) ? ' ' . implode(' ', $options) : '');
-
-    // Return the result from the exec.
-    $analyse_result =  mediamosa_io::exec($execution_string . ' 2>&1');
-
-    // Store parsed result.
-    $parsed_analyse_result = array();
-
-    // Walk through results and make proper array.
-    foreach ($analyse_result as $line) {
-      if (strpos($line, ':') !== FALSE) {
-        list($name, $value) = explode(':', $line, 2);
-        $parsed_analyse_result[trim($name)] = trim($value);
-      }
-    }
-
-    return $parsed_analyse_result;
-  }
-
-  /**
    * Returns TRUE/FALSE if the mediafile is an original.
    *
    * @param array $mediafile
