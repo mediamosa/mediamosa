@@ -1411,6 +1411,7 @@ class mediamosa_asset {
    * Retrieve all data for asset needed to index for external database.
    *
    * @param $asset_id
+   *   The asset ID of the asset.
    *
    * @return
    *  Returns FALSE if asset does not exists.
@@ -1454,10 +1455,10 @@ class mediamosa_asset {
    *
    * Triggers hook(s) for reindexing external databases.
    *
-   * @param array $asset_id
-   *  Asset ID.
+   * @param array $asset_ids
+   *   Asset ID.
    * @param string $search_index_type
-   *  @see mediamosa_settings::search_index_type_*
+   *   @see mediamosa_settings::search_index_type_*
    */
   public static function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
     mediamosa_search::asset_reindex($asset_ids, $search_index_type);
@@ -1467,7 +1468,7 @@ class mediamosa_asset {
    * Remove asset from external databases.
    *
    * @param array $asset_ids
-   *  The assets to remove.
+   *   The assets to remove.
    */
   public static function mediamosa_asset_delete(array $asset_ids) {
     mediamosa_search::asset_delete($asset_ids);

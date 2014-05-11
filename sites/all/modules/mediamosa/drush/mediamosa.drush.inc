@@ -1572,13 +1572,17 @@ function drush_mediamosa_mm_meta_explode($app_id, $field, $delimeter) {
             $params[$field][] = $item;
           }
         }
-        if (count($params[$field])) {
-          mediamosa_asset_metadata::metadata_create($row['asset_id'], $metadata_definitions_full, array($prop_name => $params[$field]), 'append');
-        }
-
         mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME)
           ->condition('metadata_id', $row['metadata_id'])
           ->execute();
+
+        if (count($params[$field])) {
+          mediamosa_asset_metadata::metadata_create($row['asset_id'], $metadata_definitions_full, array($prop_name => $params[$field]), 'append');
+        }
+        else {
+          // Reindex the asset.
+          mediamosa_asset::mediamosa_asset_reindex(array($row['asset_id']), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
+        }
       }
     }
   }
