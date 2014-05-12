@@ -39,9 +39,39 @@ function mediamosa_tool_pdf_mediamosa_tool_can_analyse($mime_type) {
 /**
  * Implements hook_mediamosa_tool_analyse().
  *
- * @param array $job_ext
+ * Currently only implements number of pages.
  */
-function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
+function mediamosa_tool_pdf_mediamosa_tool_analyse($mediafile_id) {
+
+  $mediafile_path = mediamosa_storage::get_realpath_mediafile($mediafile_id);
+  $execution_command = strtr('pdfinfo @mediafile', array('@mediafile' => $mediafile_path));
+  mediamosa_watchdog::log_mediafile($mediafile_id, 'Start analyse: @command', array('@command' => $execution_command), NULL, WATCHDOG_NOTICE, 'tool pdf');
+  $output_array = mediamosa_io::exec($execution_command);
+
+  // Output of pdfinfo is in the form of "property : value"
+  // for example "Pages:          3"
+  foreach ($output_array as $value) {
+    if (strpos($value, 'Pages:') !== FALSE) {
+      list($property, $pages) = explode(':', $value);
+    }
+    if (strpos($value, 'PDF version:') !== FALSE) {
+      list($property, $version) = explode(':', $value);
+    }
+  }
+  $analyse = array();
+  $analyse['pages'] = array('type' => 'INT', 'value' => trim($pages));
+  $analyse['PDF version'] = array('type' => 'CHAR', 'value' => trim($version));
+
+  return $analyse;
+}
+
+/**
+ * Implements hook_mediamosa_tool_analyse_metadata().
+ *
+ * Used to be tool_analyse(). This will analyse the file for possible extra
+ * Asset metadata.
+ */
+function mediamosa_tool_pdf_mediamosa_tool_analyse_metadata($job_ext) {
   $command_type = 'mediamosa_tool_pdf';
   $tool_id = mediamosa_tool_pdf::NAME;
   $execution_command = 'pdfinfo @mediafile_location';
