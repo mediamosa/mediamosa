@@ -76,6 +76,29 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       );
     }
 
+    // Update asset (provider_id, reference_id, asset_type).
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PROVIDER_ID => 'foo.',
+      mediamosa_rest_call_asset_update::REFERENCE_ID => 'bar.',
+      mediamosa_rest_call_asset_update::ASSET_TYPE => 'baz.',
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::PROVIDER_ID => 'foo.',
+      mediamosa_asset_db::REFERENCE_ID => 'bar.',
+      mediamosa_asset_db::ASSET_TYPE => 'baz.',
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get",
+          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
     // Update the asset, if we are not an ega admin, /asset/$asset_id [POST].
     $a_parameters = array(
       mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
