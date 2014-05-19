@@ -1,38 +1,14 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for asset functions.
  */
 
-/**
-  * @file
-  * Unittests for asset functions.
-  */
 class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Asset - function tests',
@@ -41,34 +17,20 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  /**
+   * Tests basic asset functions.
+   */
+  public function testAssetFunction() {
 
-  // Testing asset mediafile delete, see: ticket 204.
-  function testAssetFunction() {
-
-    //
-    // Make an empty asset.
-    // [post] asset/create.
-    //
-
-    // Create an asset.
+    // Test asset creation /asset [POST].
     $asset_id = $this->createAsset();
-
-    // Check the result.
     $this->assertTrue(
       isset($asset_id) && $asset_id,
       t("Create a new asset: @asset_id", array('@asset_id' => $asset_id))
     );
 
-    //
-    // Get the asset.
-    // [get] asset/$asset_id.
-    //
-
-    // Get the asset.
+    // Get the asset /asset/id [GET].
     $a_asset = $this->getAsset($asset_id);
-
-    // Check the result.
     $test = array(
       mediamosa_asset_db::ID => $asset_id,
       mediamosa_asset_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
@@ -78,20 +40,14 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
-    //
-    // Search the assets.
-    // [get] asset.
-    //
-
-    // Search asset.
+    // Search asset - /asset [GET].
     $limit = 1;
     $a_assets = $this->searchAsset($limit);
-
-    // Check the result.
     $this->assertTrue(
       count($a_assets['items']['item']),
       t("Get a list of assets. Count = 1.")
@@ -101,72 +57,52 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       t("Get a list of assets. Asset id has the good value.")
     );
 
-    //
-    // Update the asset (isprivate).
-    // [post] asset/$asset_id.
-    //
-
-    // Update the asset.
+    // Update asset (isprivate), asset/$asset_id [POST]
     $a_parameters = array(
       mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
     );
-    $response = $this->updateAsset($asset_id, $a_parameters);
-
-    // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
+    $this->updateAsset($asset_id, $a_parameters);
 
     // Check the result.
+    $a_asset = $this->getAsset($asset_id);
     $test = array(
       mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
     );
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get",
+          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
-    //
-    // Update the asset, if we are not an ega admin.
-    // [post] asset/$asset_id.
-    //
-
-    // Update the asset.
+    // Update the asset, if we are not an ega admin, /asset/$asset_id [POST].
     $a_parameters = array(
       mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
     );
-    $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
-    //
-    // Update the asset, if we are an ega admin.
-    // [post] asset/$asset_id.
-    //
-
-    // Update the asset.
+    // Update the asset, with ega admin permissions, /asset/$asset_id [POST].
     $a_parameters = array(
       mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
       mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
     );
-    $response = $this->updateAsset($asset_id, $a_parameters);
-
-    // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
+    $this->updateAsset($asset_id, $a_parameters);
 
     // Check the result.
+    $a_asset = $this->getAsset($asset_id);
     $test = array(
       mediamosa_asset_db::IS_INAPPROPRIATE => mediamosa_asset_db::IS_INAPPROPRIATE_TRUE,
     );
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
-    //
     // Get the asset, as different users, while is_unappropriate is true.
-    //
-
     // Get the asset as app_admin.
     $a_parameters = array(
       mediamosa_rest_call_asset_get::USER_ID => 'johndoe',
@@ -187,23 +123,17 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
     $a_asset = $this->getAsset($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
-    //
-    // Update the asset (play_restriction_start, play_restriction_end, isprivate).
-    // [post] asset/$asset_id.
-    //
-
-    // Update the asset.
+    // Update the asset (play_restriction_start, play_restriction_end,
+    // isprivate), asset/$asset_id [POST].
     $a_parameters = array(
       mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
       mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
       mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
     );
-    $response = $this->updateAsset($asset_id, $a_parameters);
-
-    // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
+    $this->updateAsset($asset_id, $a_parameters);
 
     // Check the result.
+    $a_asset = $this->getAsset($asset_id);
     $test = array(
       mediamosa_asset_db::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
       mediamosa_asset_db::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
@@ -212,24 +142,21 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
     // Test for unsetting the play_restriction_* dates.
-
-    // Update the asset.
     $parameters = array(
       mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
       mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
       mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
     );
-    $response = $this->updateAsset($asset_id, $parameters);
-
-    // Get the asset.
-    $asset = $this->getAsset($asset_id);
+    $this->updateAsset($asset_id, $parameters);
 
     // Check the result.
+    $asset = $this->getAsset($asset_id);
     $test = array(
       mediamosa_asset_db::PLAY_RESTRICTION_START => '',
       mediamosa_asset_db::PLAY_RESTRICTION_END => '',
@@ -238,29 +165,23 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $asset[$key]))
       );
     }
 
-    //
     // Change the ownership as not an ega admin.
-    //
-
     $owner_id = 'johndoe';
     $group_id = 'johndoe group';
-
-    // Update the asset.
     $a_parameters = array(
       mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
       mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
       mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
     );
-    $response = $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NO_CHANGES));
-
-    // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
+    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NO_CHANGES));
 
     // Check the result.
+    $a_asset = $this->getAsset($asset_id);
     $test = array(
       mediamosa_asset_db::OWNER_ID => $owner_id,
       mediamosa_asset_db::GROUP_ID => $group_id,
@@ -268,24 +189,20 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] != $value,
-        t('Get the original value from property: @key, sent: @sent, get: @get', array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t('Got the original value from property: @key, sent: @sent, get: @get', array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
-    //
     // Change the ownership as an ega admin.
-    //
-
     $owner_id = 'johndoe';
     $group_id = 'johndoe group';
-
-    // Update the asset.
     $a_parameters = array(
       mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
       mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
       mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
     );
-    $response = $this->updateAsset($asset_id, $a_parameters);
+    $this->updateAsset($asset_id, $a_parameters);
 
     // Get the asset.
     $a_parameters = array(
@@ -301,7 +218,8 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] == $value,
-        t("Get the good value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
@@ -315,7 +233,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $a_upload['mediafile_id'];
 
     // Create still job.
-    $job_id = $this->createMediafileStill($mediafile_id);
+    $this->createMediafileStill($mediafile_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -324,16 +242,11 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     $a_stills = $this->getMediafileStill($mediafile_id);
     $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
 
-    // Get first array.
-    $a_stills = $a_stills[0];
-    $still_mediafile_id = $a_stills['stills']['still_id'];
-
-    // Part 1. asset/{asset_id} GET
+    // Part 1. asset/{asset_id} GET.
 
     // Get still.
     // show_stills = NULL.
     $a_asset = $this->getAsset($asset_id);
-    //$this->var_export($a_asset);
 
     // Check the response.
     $this->assertTrue(
@@ -365,7 +278,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       t("Is still not exists?")
     );
 
-    // Part 2. asset GET
+    // Part 2. asset GET.
 
     // Limit.
     $limit = 10;
@@ -373,7 +286,6 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Get still.
     // show_stills = NULL.
     $a_assets = $this->searchAsset($limit);
-    //$this->var_export($a_assets);
 
     // Check the response.
     $this->assertFalse(
