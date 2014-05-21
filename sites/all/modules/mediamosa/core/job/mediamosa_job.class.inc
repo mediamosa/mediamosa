@@ -970,7 +970,7 @@ class mediamosa_job {
     $mediafile_id = $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID];
 
     // Analyse the mediafile.
-    $analyse_result = mediamosa_asset_mediafile::analyse($job_ext_upload[mediamosa_job_db::APP_ID], $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
+    $analyse_result = mediamosa_job_server::analyse($job_ext_upload[mediamosa_job_db::MEDIAFILE_ID], $job_ext_upload[mediamosa_job_db::ID]);
 
     // Store it.
     mediamosa_asset_mediafile_metadata::store_analyse($job_ext_upload[mediamosa_job_db::ID], $analyse_result);
@@ -1100,7 +1100,7 @@ class mediamosa_job {
         // Check if the tool is enabled for this app.
         if (isset($tool_analyse[key($tool_info)])) {
           // Start the analyse process.
-          module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
+          module_invoke($module, 'mediamosa_tool_analyse_metadata', $job_ext);
           break;
         }
       }

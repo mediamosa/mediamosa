@@ -134,23 +134,6 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
-   * Calculate the bits per plane.
-   *
-   * @param $width
-   * @param $height
-   * @param $fps
-   * @param $bitrate
-   */
-  static function calculate_bpp($width, $height, $fps, $bitrate) {
-    $result = '';
-    if ($width != '' && $height != '' && $fps != '' && $bitrate != '') {
-      $result = round((($bitrate * 1000) / ($fps * $width * $height)), 2);
-    }
-
-    return $result;
-  }
-
-  /**
    * Fill the mediafile metadata.
    *
    * @param string $still_id
@@ -223,7 +206,7 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Parse and store the returned data from the analyse.
    *
-   * @param string mediafile_id
+   * @param string $mediafile_id
    *   The mediafile ID.
    * @param array $metadata
    *   The name-value pair array.
@@ -241,9 +224,6 @@ class mediamosa_asset_mediafile_metadata {
     // Get the filesize.
     $filesize = mediamosa_io::filesize($mediafile_uri);
 
-    $mimetype = mediamosa_mimetype::get_mime_type($mediafile_uri);
-    self::create_mediafile_metadata($mediafile_id, $mimetype, mediamosa_asset_mediafile_metadata::MIME_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
     // Get the md5.
     $md5 = mediamosa_io::md5_file($mediafile_uri);
 
@@ -253,65 +233,10 @@ class mediamosa_asset_mediafile_metadata {
     // Create md5 metadata.
     self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
 
-    // Store analyse.
-    //
-    // Video-codec.
-    $value = isset($metadata['Video-codec']) ? $metadata['Video-codec'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::VIDEO_CODEC, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // Video-colorspace.
-    $value = isset($metadata['Video-colorspace']) ? $metadata['Video-colorspace'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::COLORSPACE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // Video-size.
-    list($width, $height) = isset($metadata['Video-size']) ? explode('x', $metadata['Video-size']) : array(0, 0);
-    self::create_mediafile_metadata($mediafile_id, $width, mediamosa_asset_mediafile_metadata::WIDTH, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
-    self::create_mediafile_metadata($mediafile_id, $height, mediamosa_asset_mediafile_metadata::HEIGHT, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
-
-    // Video-framespersecond.
-    $fps = isset($metadata['Video-framespersecond']) ? $metadata['Video-framespersecond'] : '';
-    self::create_mediafile_metadata($mediafile_id, $fps, mediamosa_asset_mediafile_metadata::FPS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // Audio-codec.
-    $value = isset($metadata['Audio-codec']) ? $metadata['Audio-codec'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::AUDIO_CODEC, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // Audio-frequency.
-    $value = isset($metadata['Audio-frequency']) ? $metadata['Audio-frequency'] : '0';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::SAMPLE_RATE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
-
-    // Audio-channels.
-    $value = isset($metadata['Audio-channels']) ? $metadata['Audio-channels'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CHANNELS, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // file-duration.
-    $value = isset($metadata['File-duration']) ? $metadata['File-duration'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // container.
-    $value = isset($metadata['File-type']) ? $metadata['File-type'] : '';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // file-bitrate.
-    $bitrate = isset($metadata['File-bitrate']) ? intval($metadata['File-bitrate']) : '0';
-    if ($bitrate) {
-      // Don't store invalid data.
-      self::create_mediafile_metadata($mediafile_id, $bitrate, mediamosa_asset_mediafile_metadata::BITRATE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    // Store metadata from analyse.
+    foreach ($metadata as $property => $value) {
+      self::create_mediafile_metadata($mediafile_id, $value['value'], $property, $value['type']);
     }
-
-    // bpp.
-    $value = (string) self::calculate_bpp($width, $height, $fps, $bitrate);
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::BPP, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // is hinted.
-    $value = isset($metadata['Is-hinted']) ? $metadata['Is-hinted'] : 'no';
-    $value = strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_HINTED, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
-
-    // has inserted extra metadata.
-    $value = isset($metadata['Is-inserted-md']) ? $metadata['Is-inserted-md'] : 'no';
-    $value = strcasecmp($value, 'yes') == 0 ? 'TRUE' : 'FALSE';
-    self::create_mediafile_metadata($mediafile_id, $value, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
 
     // The output of ffmpeg.
     $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $metadata['ffmpeg-output'])) : '';

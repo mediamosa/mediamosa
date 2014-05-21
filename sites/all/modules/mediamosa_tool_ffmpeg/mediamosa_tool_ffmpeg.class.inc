@@ -21,6 +21,16 @@ class mediamosa_tool_ffmpeg {
    */
   const BLACK_STILL_INTERVAL = 30;
 
+  /**
+   * Returns TRUE when we support this mime-type.
+   *
+   * @param string $mime_type
+   *   mimetype request.
+   */
+  public static function is_supported($mime_type) {
+    return preg_match('#^(video|audio)\/.+#', $mime_type);
+  }
+
   // ---------------------------------------------------------------- Functions.
   /**
    * Calculate the aspect ratio.
@@ -426,4 +436,26 @@ class mediamosa_tool_ffmpeg {
     $execution_string .= ' > /dev/null &';
     return $execution_string;
   }
+
+  /**
+   * Calculate the bits per plane.
+   *
+   * @param int $width
+   *   width
+   * @param int $height
+   *   height
+   * @param int $fps
+   *   frames per second
+   * @param int $bitrate
+   *   bitrate
+   */
+  public static function calculate_bpp($width, $height, $fps, $bitrate) {
+    $result = '';
+    if ($width != '' && $height != '' && $fps != '' && $bitrate != '') {
+      $result = round((($bitrate * 1000) / ($fps * $width * $height)), 2);
+    }
+
+    return $result;
+  }
+
 }

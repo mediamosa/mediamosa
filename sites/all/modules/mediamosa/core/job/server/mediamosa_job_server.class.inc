@@ -381,14 +381,16 @@ class mediamosa_job_server {
         mediamosa_io::unlink(mediamosa_storage::get_realpath_status_file($job_id));
 
         $execution_string = self::get_transcode_exec($jobserver_job_id, $mediafile_id_src);
+        self::log_mediafile($mediafile_id_src, 'About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
         break;
 
       case mediamosa_job_server_db::JOB_TYPE_STILL:
         $execution_string = self::get_generate_still_exec($jobserver_job_id, $mediafile_id_src);
+        self::log_mediafile($mediafile_id_src, 'About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
         break;
 
       case mediamosa_job_server_db::JOB_TYPE_ANALYSE:
-        $execution_string = self::get_analyse_string($mediafile_id_src, $job_id);
+        // See below.
         break;
 
       default:
@@ -397,25 +399,14 @@ class mediamosa_job_server {
         return FALSE;
     }
 
-    // Log our action.
-    self::log_mediafile($mediafile_id_src, 'About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
-
     // Set job in progress.
     self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
 
-    // Now execute analyse directly, as its really fast.
+    // Now execute analyse directly, as it should be fast.
     if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
-      $analyse_result = mediamosa_asset_mediafile::analyse(0, $mediafile_id_src, $execution_string);
 
-      $link_asset = self::get_asset_link($job_id);
-      self::log_mediafile($mediafile_id_src, 'Job @job_type (Job ID: @job_id) returned output: @output<br /><br />@link',
-        array(
-          '@job_type' => $job_type,
-          '@job_id' => $job_id,
-          '@output' => print_r($analyse_result, TRUE),
-          '@link' => $link_asset,
-        )
-      );
+      // Call all modules that can analyse.
+      $analyse_result = self::analyse($mediafile_id_src, $job_id);
 
       if (!empty($analyse_result)) {
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FINISHED, '1.000');
@@ -423,9 +414,6 @@ class mediamosa_job_server {
       else {
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'Empty result, analyse failed.');
       }
-
-      // Log it.
-      self::log_mediafile($mediafile_id_src, 'Starting new followup analyse job for job ID: @job_id.', array('@job_id' => $job_id));
 
       // Update job_server_analyse row.
       $fields = array(
@@ -458,6 +446,44 @@ class mediamosa_job_server {
         )
       );
     }
+  }
+
+  /**
+   * Analyse mediafile.
+   */
+  public static function analyse($mediafile_id, $job_id = NULL) {
+    $analyse_result = array();
+
+    $mediafile_path = mediamosa_storage::get_realpath_mediafile($mediafile_id);
+    $mime_type = mediamosa_mimetype::get_mime_type($mediafile_path);
+    $analyse_result[mediamosa_asset_mediafile_metadata::MIME_TYPE] = array(
+      'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      'value' => $mime_type,
+    );
+
+    // Based on the mime_type there might be a tool that can analyse.
+    // Call the mediamosa_tool_can_analyse hook.
+    foreach (module_implements('mediamosa_tool_can_analyse') as $module) {
+      if (module_invoke($module, 'mediamosa_tool_can_analyse', $mime_type)) {
+        $analyse_result += module_invoke($module, 'mediamosa_tool_analyse', $mediafile_id);
+      }
+    }
+
+    // Make an informative log entry.
+    $analyse_output = array();
+    foreach ($analyse_result as $key => $value) {
+      $analyse_output[] = $key . ' [' . $value['type'] . '] ' . $value['value'];
+    }
+    $link_asset = self::get_asset_link($job_id);
+    self::log_mediafile($mediafile_id, 'Job analyse (Job ID: @job_id) returned output: @output<br /><br />@link',
+      array(
+        '@job_id' => $job_id,
+        '@output' => implode("\n", $analyse_output) . "\n",
+        '@link' => $link_asset,
+      )
+    );
+
+    return $analyse_result;
   }
 
   /**
