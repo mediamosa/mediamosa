@@ -1,7 +1,8 @@
 <?php
 /**
  * @file
- * Install, update, and uninstall functions for the mediamosa mountpoint storage module.
+ * Install, update, and uninstall functions for the mediamosa mountpoint storage
+ * module.
  */
 
 require_once 'mediamosa_storage_mountpoint_db.class.inc';
@@ -18,7 +19,7 @@ function mediamosa_storage_mountpoint_install() {
  * Implements hook_uninstall().
  */
 function mediamosa_storage_mountpoint_uninstall() {
-  // Delete all nodes for this storage type
+  // Delete all nodes for this storage type.
   $result = db_select(mediamosa_storage_mountpoint_db::TABLE_NAME, 'p')
     ->fields('p', array(mediamosa_storage_mountpoint_db::NID))
     ->execute();
@@ -72,13 +73,13 @@ function mediamosa_storage_mountpoint_schema() {
         'type' => 'varchar',
         'length' => mediamosa_storage_mountpoint_db::MOUNTPOINT_LENGTH,
         'not null' => TRUE,
-  			'description' => 'Storage mountpoint.',
+        'description' => 'Storage mountpoint.',
       ),
       mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS => array(
         'type' => 'varchar',
         'length' => mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS_LENGTH,
         'not null' => FALSE,
-  			'description' => 'Storage mountpoint on Windows.',
+        'description' => 'Storage mountpoint on Windows.',
       ),
     ),
     'primary key' => array(mediamosa_storage_mountpoint_db::NID),

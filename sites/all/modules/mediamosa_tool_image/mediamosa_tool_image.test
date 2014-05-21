@@ -20,7 +20,7 @@ class MediaMosaToolImageTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Implements setUp().
    */
-  function setUp() {
+  protected function setUp() {
     parent::setUp('mediamosa_tool_image');
   }
 

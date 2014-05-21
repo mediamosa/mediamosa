@@ -15,7 +15,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *
    * @var array
    */
-  public $file_list = null;
+  public $file_list = NULL;
 
   /**
    * Stored position in file_list.
@@ -29,7 +29,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *
    * @var boolean
    */
-	public $eof = FALSE;
+  public $eof = FALSE;
 
   /**
    * Open file handle.
@@ -43,7 +43,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *
    * @var integer
    */
-	public $seek_position = 0;
+  public $seek_position = 0;
 
   /**
    * Temporary buffer.
@@ -52,14 +52,14 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *
    * @var string
    */
-	public $buffer = NULL;
+  public $buffer = NULL;
 
   /**
    * File size.
    *
    * @var integer.
    */
-	public $object_size = 0;
+  public $object_size = 0;
 
   // --------------------------------------------------------- Abstract methods.
   /**
@@ -197,10 +197,14 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 
     // Make sure source exists.
     if (!mediamosa_io::file_exists($source_uri)) {
-      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("source file '@uri' (@path) was not found.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri)))));
+      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array(
+          '@error' => t("source file '@uri' (@path) was not found.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri))))
+      );
     }
     elseif (!mediamosa_io::is_file($source_uri)) {
-      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("source file '@uri' (@path) is not a file.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri)))));
+      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array(
+          '@error' => t("source file '@uri' (@path) is not a file.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri))))
+      );
     }
 
     // Need s3 object.
@@ -228,7 +232,9 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $s3->_upload($bucket, $source_uri, $this->get_mediafile_path(), $source_md5, $mediafile_id, $acl, $content_type);
 
     if (!$this->file_exists()) {
-      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array('@error' => t("destination file '@uri' (@path) was not found; move failed.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri)))));
+      throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_STORAGE_IO_ERROR, array(
+          '@error' => t("destination file '@uri' (@path) was not found; move failed.", array('@uri' => $source_uri, '@path' => mediamosa_io::realpath($source_uri))))
+      );
     }
 
     // Set the MD5.
@@ -238,7 +244,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
   /**
    * Process media view request.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner for possible ticket.
@@ -246,7 +252,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array
@@ -262,7 +268,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *   - 'is_public'
    *     Public urls have no ACL rules.
    */
-   public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+  public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
 
     // Get the stuff we need.
     $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
@@ -330,20 +336,20 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
   }
 
   // ------------------------------------------------------ Abstract IO Methods.
-	/**
-	 * Open directory handle.
+  /**
+   * Open directory handle.
    *
    * This method is called in response to php:opendir().
-	 *
-	 * @param string $uri
+   *
+   * @param string $uri
    *   Specifies the URL that was passed to opendir().
-	 * @param integer $options
+   * @param int $options
    *   (ignored) Whether or not to enforce safe_mode (0x04).
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function dir_opendir($uri, $options) {
+   */
+  public function dir_opendir($uri, $options) {
     // Store uri.
     $this->uri = $uri;
 
@@ -364,71 +370,71 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       )
     );
 
-		return !empty($this->file_list) ? TRUE : FALSE;
-	}
+    return !empty($this->file_list) ? TRUE : FALSE;
+  }
 
-	/**
-	 * Close directory handle.
+  /**
+   * Close directory handle.
    *
    * This method is called in response to php:closedir().
-	 *
-	 * @return boolean
-	 *   Since Amazon S3 doesn't have real directories, always return TRUE.
-	 */
-	public function dir_closedir() {
-		$this->position = 0;
-		$this->uri = NULL;
-		$this->file_list = NULL;
-		$this->open_file = NULL;
-		$this->seek_position = 0;
-		$this->eof = FALSE;
-		$this->buffer = NULL;
-		$this->object_size = 0;
-		return TRUE;
-	}
+   *
+   * @return bool
+   *   Since Amazon S3 doesn't have real directories, always return TRUE.
+   */
+  public function dir_closedir() {
+    $this->position = 0;
+    $this->uri = NULL;
+    $this->file_list = NULL;
+    $this->open_file = NULL;
+    $this->seek_position = 0;
+    $this->eof = FALSE;
+    $this->buffer = NULL;
+    $this->object_size = 0;
+    return TRUE;
+  }
 
-	/**
+  /**
    * Read entry from directory handle.
    *
-	 * This method is called in response to php:readdir().
-	 *
-	 * @return string
+   * This method is called in response to php:readdir().
+   *
+   * @return string
    *   Should return a string representing the next filename, or FALSE if there
    *   is no next file.
-	 */
-	public function dir_readdir() {
-		if (isset($this->file_list[$this->position]))	{
-			return $this->file_list[$this->position++];
+   */
+  public function dir_readdir() {
+    if (isset($this->file_list[$this->position])) {
+      return $this->file_list[$this->position++];
     }
 
-		return FALSE;
-	}
+    return FALSE;
+  }
 
-	/**
+  /**
    * Rewind directory handle.
    *
-	 * This method is called in response to php:rewinddir().
-	 *
-	 * Should reset the output generated by php:streamWrapper::dir_readdir().
+   * This method is called in response to php:rewinddir().
+   *
+   * Should reset the output generated by php:streamWrapper::dir_readdir().
    * i.e.: The next call to php:streamWrapper::dir_readdir() should return the
    * first entry in the location returned by php:streamWrapper::dir_opendir().
-	 *
-	 * @return boolean
+   *
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function dir_rewinddir() {
-		$this->position = 0;
-		return TRUE;
-	}
+   */
+  public function dir_rewinddir() {
+    $this->position = 0;
+    return TRUE;
+  }
 
-	/**
-	 * This method is called in response to php:flock(), when
+  /**
+   * This method is called in response to php:flock(), when
    * php:file_put_contents() (when flags contains LOCK_EX),
    * php:stream_set_blocking() and when closing the stream (LOCK_UN).
-	 *
-	 * Not implemented in S3, so it's not implemented here.
-	 *
-	 * @param mode $operation
+   *
+   * Not implemented in S3, so it's not implemented here.
+   *
+   * @param mode $operation
    *   Is one of the following:
    *   - LOCK_SH
    *     To acquire a shared lock (reader).
@@ -440,77 +446,77 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *     If you don't want flock() to block while locking. (not supported on
    *     Windows).
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function stream_lock($operation) {
+   */
+  public function stream_lock($operation) {
     return TRUE;
   }
 
-	/**
-	 * Opens file or URL.
+  /**
+   * Opens file or URL.
    *
    * This method is called immediately after the wrapper is initialized (e.g.,
    * by php:fopen() and php:file_get_contents()).
-	 *
-	 * @param string $uri
+   *
+   * @param string $uri
    *   Specifies the URL that was passed to the original function.
-	 * @param string $mode
+   * @param string $mode
    *   (ignored) The mode used to open the file, as detailed for fopen().
-	 * @param integer $options
+   * @param int $options
    *   (ignored) Remember to check if the mode is valid for the path requested.
-	 * @param string &$opened_path
+   * @param string &$opened_path
    *   If the path is opened successfully, and STREAM_USE_PATH is set in
    *   options, opened_path should be set to the full path of the file/resource
    *   that was actually opened.
-   * .
-	 * @return boolean
+   *
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function stream_open($uri, $mode, $options, &$opened_path) {
-		$opened_path = $uri;
-		$this->open_file = $uri;
-		$this->uri = $uri;
-		$this->seek_position = 0;
-		$this->object_size = 0;
+   */
+  public function stream_open($uri, $mode, $options, &$opened_path) {
+    $opened_path = $uri;
+    $this->open_file = $uri;
+    $this->uri = $uri;
+    $this->seek_position = 0;
+    $this->object_size = 0;
 
-		return TRUE;
-	}
+    return TRUE;
+  }
 
-	/**
-	 * Close an resource.
+  /**
+   * Close an resource.
    *
    * This method is called in response to php:fclose().
-	 *
-	 * All resources that were locked, or allocated, by the wrapper should be
+   *
+   * All resources that were locked, or allocated, by the wrapper should be
    * released.
-	 */
-	public function stream_close() {
-		$this->position = 0;
-		$this->path = NULL;
-		$this->file_list = NULL;
-		$this->open_file = NULL;
-		$this->seek_position = 0;
-		$this->eof = FALSE;
-		$this->buffer = NULL;
-		$this->object_size = 0;
-	}
+   */
+  public function stream_close() {
+    $this->position = 0;
+    $this->path = NULL;
+    $this->file_list = NULL;
+    $this->open_file = NULL;
+    $this->seek_position = 0;
+    $this->eof = FALSE;
+    $this->buffer = NULL;
+    $this->object_size = 0;
+  }
 
-	/**
-	 * Read from stream.
+  /**
+   * Read from stream.
    *
    * This method is called in response to php:fread() and php:fgets().
-	 *
-	 * @param integer $count
+   *
+   * @param int $count
    *   How many bytes of data from the current position should be returned.
    *
-	 * @return string
+   * @return string
    *   The contents of the Amazon S3 object.
-	 */
-	public function stream_read($count)	{
-		if ($this->eof)	{
-			return FALSE;
-		}
+   */
+  public function stream_read($count) {
+    if ($this->eof) {
+      return FALSE;
+    }
 
     // Need s3 object.
     $s3 = $this->get_s3();
@@ -521,118 +527,118 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get path.
     $object_name = $this->get_mediafile_path();
 
-		if ($this->seek_position > 0 && $this->object_size)	{
-			if ($count + $this->seek_position > $this->object_size) {
-				$count = $this->object_size - $this->seek_position;
-			}
+    if ($this->seek_position > 0 && $this->object_size) {
+      if ($count + $this->seek_position > $this->object_size) {
+        $count = $this->object_size - $this->seek_position;
+      }
 
-			$start = $this->seek_position;
-			$end = $this->seek_position + $count;
+      $start = $this->seek_position;
+      $end = $this->seek_position + $count;
 
-			$response = $s3->get_object($bucket, $object_name, array(
-				'range' => $start . '-' . $end
-			));
-		}
-		else {
-			$response = $s3->get_object($bucket, $object_name);
-			$this->object_size = isset($response->header['content-length']) ? $response->header['content-length'] : 0;
-		}
+      $response = $s3->get_object($bucket, $object_name, array(
+                    'range' => $start . '-' . $end,
+                  ));
+    }
+    else {
+      $response = $s3->get_object($bucket, $object_name);
+      $this->object_size = isset($response->header['content-length']) ? $response->header['content-length'] : 0;
+    }
 
-		if (!$response->isOK())	{
-			return FALSE;
-		}
+    if (!$response->isOK()) {
+      return FALSE;
+    }
 
-		$data = substr($response->body, 0, min($count, $this->object_size));
-		$this->seek_position += strlen($data);
+    $data = substr($response->body, 0, min($count, $this->object_size));
+    $this->seek_position += strlen($data);
 
-		if ($this->seek_position >= $this->object_size) {
+    if ($this->seek_position >= $this->object_size) {
       $this->eof = TRUE;
-			$this->seek_position = 0;
-			$this->object_size = 0;
-		}
+      $this->seek_position = 0;
+      $this->object_size = 0;
+    }
 
-		return $data;
-	}
-
-	/**
-	 * Seeks to specific location in a stream.
-   *
-   * This method is called in response to php:fseek(). The read/write
-	 * position of the stream should be updated according to the $offset and
-   * $whence parameters.
-   *
-	 * @param integer $offset
-   *   The number of bytes to offset from the start of the file.
-	 * @param integer $whence
-   *   (optional, ignored) Always uses SEEK_SET.
-   *
-	 * @return boolean
-   *   Return TRUE if the position was updated, FALSE otherwise.
-	 */
-	public function stream_seek($offset, $whence) {
-		$this->seek_position = $offset;
-		return TRUE;
-	}
+    return $data;
+  }
 
   /**
-	 * Retrieve information about a file resource.
-	 *
-	 * @return array
-   *   Returns the same data as a call to php:stat().
-	 */
-	public function stream_stat() {
-		return $this->url_stat($this->uri, NULL);
-	}
+   * Seeks to specific location in a stream.
+   *
+   * This method is called in response to php:fseek(). The read/write
+   * position of the stream should be updated according to the $offset and
+   * $whence parameters.
+   *
+   * @param int $offset
+   *   The number of bytes to offset from the start of the file.
+   * @param int $whence
+   *   (optional, ignored) Always uses SEEK_SET.
+   *
+   * @return bool
+   *   Return TRUE if the position was updated, FALSE otherwise.
+   */
+  public function stream_seek($offset, $whence) {
+    $this->seek_position = $offset;
+    return TRUE;
+  }
 
-	/**
-	 * Retrieve the current position of a stream.
+  /**
+   * Retrieve information about a file resource.
+   *
+   * @return array
+   *   Returns the same data as a call to php:stat().
+   */
+  public function stream_stat() {
+    return $this->url_stat($this->uri, NULL);
+  }
+
+  /**
+   * Retrieve the current position of a stream.
    *
    * This method is called in response to php:ftell().
-	 *
-	 * @return integer
+   *
+   * @return int
    *   Returns the current position of the stream.
-	 */
-	public function stream_tell()	{
-		return $this->seek_position;
-	}
+   */
+  public function stream_tell() {
+    return $this->seek_position;
+  }
 
-	/**
-	 * Write to stream.
+  /**
+   * Write to stream.
    *
    * This method is called in response to php:fwrite().
-	 *
-	 * It is important to avoid reading files that are larger than the amount of memory allocated to PHP,
-	 * otherwise "out of memory" errors will occur.
-	 *
-	 * @param string $data
+   *
+   * It is important to avoid reading files that are larger than the amount of
+   * memory allocated to PHP, otherwise "out of memory" errors will occur.
+   *
+   * @param string $data
    *   The data to write to the stream.
    *
-	 * @return integer
+   * @return int
    *   The number of bytes that were written to the stream.
-	 */
-	public function stream_write($data) {
-		$this->seek_position = strlen($data);
-		$this->buffer .= $data;
+   */
+  public function stream_write($data) {
+    $this->seek_position = strlen($data);
+    $this->buffer .= $data;
 
-		return $this->seek_position;
-	}
+    return $this->seek_position;
+  }
 
-	/**
-	 * Flushes the output.
+  /**
+   * Flushes the output.
    *
    * This method is called in response to php:fflush(). If you have cached data
    * in your stream but not yet stored it into the underlying storage, you
    * should do so now.
-	 *
-	 * Since this implementation doesn't buffer streams, simply return TRUE.
-	 *
-	 * @return boolean
+   *
+   * Since this implementation doesn't buffer streams, simply return TRUE.
+   *
+   * @return bool
    *   If not implemented, FALSE is assumed as the return value.
-	 */
-	public function stream_flush() {
-		if ($this->buffer === NULL) {
-			return FALSE;
-		}
+   */
+  public function stream_flush() {
+    if ($this->buffer === NULL) {
+      return FALSE;
+    }
 
     // Need s3 object.
     $s3 = $this->get_s3();
@@ -643,40 +649,41 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get path.
     $object_name = $this->get_mediafile_path();
 
-		$response = $s3->create_object($bucket, $object_name, array(
-			'body' => $this->buffer,
-		));
+    $response = $s3->create_object($bucket, $object_name, array(
+                  'body' => $this->buffer,
+                ));
 
-		$this->seek_position = 0;
-		$this->buffer = NULL;
-		$this->eof = TRUE;
+    $this->seek_position = 0;
+    $this->buffer = NULL;
+    $this->eof = TRUE;
 
-		return $response->isOK();
-	}
+    return $response->isOK();
+  }
 
-	/**
-	 * Tests for end-of-file on a file pointer.
+  /**
+   * Tests for end-of-file on a file pointer.
    *
    * This method is called in response to php:feof().
-	 *
-	 * @return boolean
-	 */
-	public function stream_eof() {
-		return $this->eof;
-	}
+   *
+   * @return bool
+   *   eof.
+   */
+  public function stream_eof() {
+    return $this->eof;
+  }
 
-	/**
-	 * Delete a file.
+  /**
+   * Delete a file.
    *
    * This method is called in response to php:unlink().
-	 *
-	 * @param string $uri
+   *
+   * @param string $uri
    *   The file URI which should be deleted.
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function unlink($uri)	{
+   */
+  public function unlink($uri) {
     // Make sure md5file is recalculated now this file is removed.
     $md5s = &drupal_static(self::STATIC_MD5S, array());
     unset($md5s[$uri]);
@@ -694,24 +701,24 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $object_name = $this->get_mediafile_path();
 
     // Do delete.
-		return $s3->delete_object($bucket, $object_name)->isOK();
-	}
+    return $s3->delete_object($bucket, $object_name)->isOK();
+  }
 
-	/**
-	 * Renames a file or directory.
+  /**
+   * Renames a file or directory.
    *
    * This method is called in response to php:rename(). Both uris must be on
    * the same location.
-	 *
-	 * @param string $path_from
+   *
+   * @param string $path_from
    *   The URL to the current file.
-	 * @param string $path_to
+   * @param string $path_to
    *   The URL which the $path_from should be renamed to.
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function rename($path_from, $path_to) {
+   */
+  public function rename($path_from, $path_to) {
     // Need s3 object.
     $s3 = $this->get_s3();
 
@@ -720,38 +727,38 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $from_object_name = $this->get_parts($path_from, 'mediafile_path');
     $to_object_name = $this->get_parts($path_to, 'mediafile_path');
 
-		$response = $s3->copy_object(
-			array('bucket' => $from_bucket_name, 'filename' => $from_object_name),
-			array('bucket' => $to_bucket_name, 'filename' => $to_object_name)
-		);
+    $response = $s3->copy_object(
+      array('bucket' => $from_bucket_name, 'filename' => $from_object_name),
+      array('bucket' => $to_bucket_name, 'filename' => $to_object_name)
+    );
 
     if ($response->isOK()) {
-			return $s3->delete_object($from_bucket_name, $from_object_name)->isOK();
-		}
+      return $s3->delete_object($from_bucket_name, $from_object_name)->isOK();
+    }
 
-		return FALSE;
-	}
+    return FALSE;
+  }
 
-	/**
-	 * Create a new bucket.
+  /**
+   * Create a new bucket.
    *
    * This method is called in response to php:mkdir().
-	 *
-	 * @param string $path
+   *
+   * @param string $path
    *   The bucket name to create.
-	 * @param integer $mode
+   * @param int $mode
    *   (optional) Permissions.
    *   700-range permissions map to ACL_PUBLIC.
    *   600-range permissions map to ACL_AUTH_READ.
    *   All other permissions map to ACL_PRIVATE.
-	 * @param integer $options
+   * @param int $options
    *   (optional, ignored) A bitwise mask of values, such as
    *   STREAM_MKDIR_RECURSIVE.
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function mkdir($path, $mode, $options)	{
+   */
+  public function mkdir($path, $mode, $options) {
     // Store uri.
     $this->uri = $path;
 
@@ -762,33 +769,33 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     $bucket = $this->get_bucket();
 
     // Figure out acl.
-  	$acl = AmazonS3::ACL_PRIVATE;
-		if (in_array($mode, range(700, 799))) {
-			$acl = AmazonS3::ACL_PUBLIC;
-		}
-		elseif (in_array($mode, range(600, 699))) {
-			$acl = AmazonS3::ACL_AUTH_READ;
-		}
+    $acl = AmazonS3::ACL_PRIVATE;
+    if (in_array($mode, range(700, 799))) {
+      $acl = AmazonS3::ACL_PUBLIC;
+    }
+    elseif (in_array($mode, range(600, 699))) {
+      $acl = AmazonS3::ACL_AUTH_READ;
+    }
 
     // TODO: region select.
-		return $s3->create_bucket($bucket, AmazonS3::REGION_IRELAND, $acl)->isOK();
-	}
+    return $s3->create_bucket($bucket, AmazonS3::REGION_IRELAND, $acl)->isOK();
+  }
 
-	/**
+  /**
    * Removes a directory.
    *
-	 * This method is called in response to php:rmdir().
-	 *
-	 * @param string $path
+   * This method is called in response to php:rmdir().
+   *
+   * @param string $path
    *   The bucket name to create.
-	 * @param boolean $context
+   * @param bool $context
    *   (optional, ignored) A bitwise mask of values, such as
    *   STREAM_MKDIR_RECURSIVE.
    *
-	 * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
-	 */
-	public function rmdir($path, $context) {
+   */
+  public function rmdir($path, $context) {
     // Store uri.
     $this->uri = $path;
 
@@ -798,18 +805,18 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get bucket.
     $bucket = $this->get_bucket();
 
-		return $s3->delete_bucket($bucket)->isOK();
-	}
+    return $s3->delete_bucket($bucket)->isOK();
+  }
 
-	/**
-   *  Retrieve information about a file.
+  /**
+   * Retrieve information about a file.
    *
-	 * This method is called in response to all php:stat() related functions.
-	 *
-	 * @param string $path
+   * This method is called in response to all php:stat() related functions.
+   *
+   * @param string $path
    *   The file path or URL to stat. Note that in the case of a URL, it must be
    *   a :// delimited URL. Other URL forms are not supported.
-	 * @param integer $flags
+   * @param int $flags
    *   (ignored) Holds additional flags set by the streams API. It can hold one
    *   or more of the following values OR'd together.
    *   - STREAM_URL_STAT_LINK
@@ -823,32 +830,32 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
    *     flag is not set, you are responsible for reporting errors using the
    *     trigger_error() function during stating of the path.
    *
-	 * @return array
+   * @return array
    *   Should return as many elements as stat() does. Unknown or unavailable
    *   values should be set to a rational value (usually 0).
-	 */
-	public function url_stat($path, $flags) {
-  	// Defaults
-		$out = array();
-		$out[0] = $out['dev'] = 0;
-		$out[1] = $out['ino'] = 0;
-		$out[2] = $out['mode'] = 0;
-		$out[3] = $out['nlink'] = 0;
-		$out[4] = $out['uid'] = 0;
-		$out[5] = $out['gid'] = 0;
-		$out[6] = $out['rdev'] = 0;
-		$out[7] = $out['size'] = 0;
-		$out[8] = $out['atime'] = 0;
-		$out[9] = $out['mtime'] = 0;
-		$out[10] = $out['ctime'] = 0;
-		$out[11] = $out['blksize'] = 0;
-		$out[12] = $out['blocks'] = 0;
+   */
+  public function url_stat($path, $flags) {
+    // Defaults.
+    $out = array();
+    $out[0] = $out['dev'] = 0;
+    $out[1] = $out['ino'] = 0;
+    $out[2] = $out['mode'] = 0;
+    $out[3] = $out['nlink'] = 0;
+    $out[4] = $out['uid'] = 0;
+    $out[5] = $out['gid'] = 0;
+    $out[6] = $out['rdev'] = 0;
+    $out[7] = $out['size'] = 0;
+    $out[8] = $out['atime'] = 0;
+    $out[9] = $out['mtime'] = 0;
+    $out[10] = $out['ctime'] = 0;
+    $out[11] = $out['blksize'] = 0;
+    $out[12] = $out['blocks'] = 0;
 
-		$file = NULL;
-		$mode = 0;
+    $file = NULL;
+    $mode = 0;
 
     // Store uri.
-		$this->uri = $path;
+    $this->uri = $path;
 
     // Need s3 object.
     $s3 = $this->get_s3();
@@ -864,12 +871,12 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
       $object_name = str_replace('//', '/', $object_name);
 
       $response = $s3->list_objects($bucket, array(
-				'prefix' => $object_name,
-			));
+                    'prefix' => $object_name,
+                  ));
 
-			if (!$response->isOK())	{
-				return $out;
-			}
+      if (!$response->isOK()) {
+        return $out;
+      }
 
       // Go through the found file(s) and see if it matches the uri we seek.
       foreach ($response->body->Contents as $file) {
@@ -893,56 +900,57 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
 
       // Again, test. Must match or else its not what we want.
       if (!$file || $object_name != (string) $file->Key) {
-        return FALSE; // File / dir not found.
+        // File / dir not found.
+        return FALSE;
       }
-		}
-		else {
-			if (!$s3->list_objects($bucket)->isOK()) {
-				return $out;
-			}
-		}
+    }
+    else {
+      if (!$s3->list_objects($bucket)->isOK()) {
+        return $out;
+      }
+    }
 
-    //  Type & Permission bitwise values (only those that pertain to S3).
-    //  Simulate the concept of a "directory". Nothing has an executable bit
-    //  because there's no executing on S3.
-    //  Reference: http://docstore.mik.ua/orelly/webprog/pcook/ch19_13.htm
+    // Type & Permission bitwise values (only those that pertain to S3).
     //
-    //  0100000 => type:   regular file
-    //  0040000 => type:   directory
-    //  0000400 => owner:  read permission
-    //  0000200 => owner:  write permission
-    //  0000040 => group:  read permission
-    //  0000020 => group:  write permission
-    //  0000004 => others: read permission
-    //  0000002 => others: write permission
-
-		// File or directory?
+    // Simulate the concept of a "directory". Nothing has an executable bit
+    // because there's no executing on S3.
+    // Reference: http://docstore.mik.ua/orelly/webprog/pcook/ch19_13.htm
     //
-		// Root of the bucket?
+    // 0100000 => type:   regular file
+    // 0040000 => type:   directory
+    // 0000400 => owner:  read permission
+    // 0000200 => owner:  write permission
+    // 0000040 => group:  read permission
+    // 0000020 => group:  write permission
+    // 0000004 => others: read permission
+    // 0000002 => others: write permission
+    // File or directory?
+    //
+    // Root of the bucket?
     if ($object_name === '') {
-			$mode = octdec('004066');
-		}
-		elseif ($file) {
+      $mode = octdec('004066');
+    }
+    elseif ($file) {
       // If object name is the same and we have file size.
       $is_file = $object_name == (string) $file->Key && (int) $file->Size > 0;
 
       // Regular File, Owner R/W : Directory, Owner R/W.
-			$mode = $is_file ? octdec('0100666') : octdec('0040666');
-		}
-		else {
-			$mode = octdec('0100666');
-		}
+      $mode = $is_file ? octdec('0100666') : octdec('0040666');
+    }
+    else {
+      $mode = octdec('0100666');
+    }
 
-		// Update stat output.
-		$out[2] = $out['mode'] = $mode;
-		$out[4] = $out['uid'] = (isset($file) ? (string) $file->Owner->ID : 0);
-		$out[7] = $out['size'] = (isset($file) ? (string) $file->Size : 0);
-		$out[8] = $out['atime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
-		$out[9] = $out['mtime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
-		$out[10] = $out['ctime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
+    // Update stat output.
+    $out[2] = $out['mode'] = $mode;
+    $out[4] = $out['uid'] = (isset($file) ? (string) $file->Owner->ID : 0);
+    $out[7] = $out['size'] = (isset($file) ? (string) $file->Size : 0);
+    $out[8] = $out['atime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
+    $out[9] = $out['mtime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
+    $out[10] = $out['ctime'] = (isset($file) ? date('U', strtotime((string) $file->LastModified)) : 0);
 
     return $out;
-	}
+  }
 
   // ------------------------------------------------------------------ Methods.
   /**
@@ -972,29 +980,29 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
     // Get the path.
     $path = parent::get_path($uri);
 
-    list($bucket, ) = explode('/', $path, 2);
+    list($bucket,) = explode('/', $path, 2);
 
     // First part should be the bucket.
     return $bucket;
   }
 
-	/**
-	 * Make token PCRE-compatible.
-	 *
-	 * @param string $str
+  /**
+   * Make token PCRE-compatible.
+   *
+   * @param string $str
    *   The token.
    *
-	 * @return string
+   * @return string
    *   The PCRE-compatible version of the token.
-	 */
-	public function quotemeta($str) {
-		return str_replace('\\\\', '\\', quotemeta(str_replace('/', '\/', $str)));
-	}
+   */
+  public function quotemeta($str) {
+    return str_replace('\\\\', '\\', quotemeta(str_replace('/', '\/', $str)));
+  }
 
   /**
    * Test if the file exists.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file exists.
    */
   public function file_exists() {
@@ -1030,7 +1038,7 @@ class mediamosa_storage_s3_streamwrapper extends mediamosa_io_streamwrapper_exte
   /**
    * Set ACL on S3.
    *
-   * @param boolean $is_public
+   * @param bool $is_public
    *   Is either public or private.
    *
    * @return CFResponse

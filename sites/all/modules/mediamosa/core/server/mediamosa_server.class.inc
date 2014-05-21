@@ -87,7 +87,7 @@ class mediamosa_server {
   /**
    * Get upload server by its node ID.
    *
-   * @param integer $nid
+   * @param int $nid
    *  The node ID.
    */
   public static function get_upload_by_nid($nid) {

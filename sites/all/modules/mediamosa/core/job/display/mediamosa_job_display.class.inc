@@ -8,7 +8,7 @@ class mediamosa_job_display {
 
   /**
    * Get the job display data.
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    */
   public static function get($job_id, $fields = array()) {

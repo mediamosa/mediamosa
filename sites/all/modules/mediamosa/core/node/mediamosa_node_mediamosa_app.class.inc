@@ -1204,7 +1204,7 @@ function mediamosa_app_metadata_tag_form_submit($form, &$form_state) {
  *   An associative array containing the current state of the form.
  * @param object $node
  *   The application node.
- * @param integer $prop_id
+ * @param int $prop_id
  *   The ID of the property to delete.
  *
  * @return

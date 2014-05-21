@@ -41,7 +41,7 @@ class mediamosa_asset_collection {
    * @param string $coll_id
    *  When given, remove all links from any asset in this collection.
    *  In combination with asset_id, only one link might be deleted.
-   * @return boolean
+   * @return bool
    */
   public static function delete($asset_id = FALSE, $coll_id = FALSE) {
 

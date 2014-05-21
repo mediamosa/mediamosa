@@ -13,7 +13,7 @@ class mediamosa_storage_profile_app {
   /**
    * Get storage profile app.
    *
-   * @param integer $profile_app_id
+   * @param int $profile_app_id
    *   Storage profile app ID. This is the ID of the profile; its origin is
    *   table mediamosa_storage_profile->storage_profile_id.
    *
@@ -31,7 +31,7 @@ class mediamosa_storage_profile_app {
   /**
    * Get storage profile app by building it.
    *
-   * @param integer $profile_app_id
+   * @param int $profile_app_id
    *   Storage profile app ID.
    *
    * @return array
@@ -55,7 +55,7 @@ class mediamosa_storage_profile_app {
   /**
    * Get the storage profile ID used by this application.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    *
    * @return integer
@@ -90,7 +90,7 @@ class mediamosa_storage_profile_app {
   /**
    * Get the storage profile app for specific app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    *
    * @return array
@@ -107,9 +107,9 @@ class mediamosa_storage_profile_app {
   /**
    * Get the human readable default storage profile app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
-   * @param boolean $for_stills
+   * @param bool $for_stills
    *   Specify TRUE to get setting for stills.
    *
    * @return string
@@ -183,13 +183,13 @@ class mediamosa_storage_profile_app {
   /**
    * Update default storage profile app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Storage profile ID
    * @param string $path
    *   Storage path.
-   * @param integer $profile_id_stills
+   * @param int $profile_id_stills
    *   Storage profile ID stills.
    * @param string $path_stills
    *   Storage path stills.
@@ -212,13 +212,13 @@ class mediamosa_storage_profile_app {
   /**
    * Insert storage profile app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Storage profile ID
    * @param string $path
    *   Storage path.
-   * @param integer $profile_id_stills
+   * @param int $profile_id_stills
    *   Storage profile ID stills.
    * @param string $path_stills
    *   Storage path stills.
@@ -244,9 +244,9 @@ class mediamosa_storage_profile_app {
   /**
    * Update storage profile app.
    *
-   * @param integer $profile_app_id
+   * @param int $profile_app_id
    *   Storage profile app ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Storage profile ID.
    * @param string $path
    *   Storage path.
@@ -281,7 +281,7 @@ class mediamosa_storage_profile_app {
   /**
    * Delete all storage profile apps for given application.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID
    */
   public static function delete_for_app($app_id) {

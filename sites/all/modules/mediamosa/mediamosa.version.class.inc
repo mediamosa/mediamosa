@@ -82,7 +82,7 @@ class mediamosa_version {
   /**
    * Return the current version of MediaMosa as string.
    *
-   * @param boolean $return_full
+   * @param bool $return_full
    *  Include the build and changeset.
    * @return string
    */

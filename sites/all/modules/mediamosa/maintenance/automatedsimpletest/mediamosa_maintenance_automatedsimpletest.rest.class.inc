@@ -147,7 +147,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
   /**
    * Get test results for $test_id.
    *
-   * @param integer $test_id
+   * @param int $test_id
    *   The test_id to retrieve results of.
    *
    * @return array

@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Tool params"
 description = "The tool module handles tool params."

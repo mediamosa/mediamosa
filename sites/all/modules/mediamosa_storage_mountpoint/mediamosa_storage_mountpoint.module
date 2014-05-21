@@ -26,10 +26,12 @@ function mediamosa_storage_mountpoint_stream_wrappers() {
  * Implements hook_mediamosa_storage_info().
  */
 function mediamosa_storage_mountpoint_mediamosa_storage_info() {
-  return array(mediamosa_storage_mountpoint::NAME => array(
+  return array(
+    mediamosa_storage_mountpoint::NAME => array(
       'name' => t('Custom mountpoint storage'),
       'description' => t('The MediaMosa custom mountpoint storage.'),
-  ));
+    ),
+  );
 }
 
 /**
@@ -64,7 +66,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_insert($node) {
     ->fields($fields)
     ->execute();
 
-  //TODO: maybe do some other stuff before or after inserting?
+  // @TODO: maybe do some other stuff before or after inserting?
 }
 
 /**
@@ -84,7 +86,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_update($node) {
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
 
-  //TODO: maybe do some other stuff before or after updating?
+  // @TODO: maybe do some other stuff before or after updating?
 }
 
 /**
@@ -95,7 +97,7 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_delete($node) {
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
 
-  //TODO: maybe do some other stuff before or after deleting?
+  // @TODO: maybe do some other stuff before or after deleting?
 }
 
 /**
@@ -148,5 +150,5 @@ function mediamosa_storage_mountpoint_mediamosa_storage_profile_validate($node, 
   elseif (!is_writable($mountpoint)) {
     form_set_error(mediamosa_storage_mountpoint_db::MOUNTPOINT, t('Mountpoint not writable'));
   }
-  //TODO: validate windows mountpoint
+  // @TODO: validate windows mountpoint
 }

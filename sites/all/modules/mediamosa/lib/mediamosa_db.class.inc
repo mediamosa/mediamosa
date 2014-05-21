@@ -67,7 +67,7 @@ class mediamosa_db {
   /**
    * Increase/retrieve query_count.
    *
-   * @param integer $add
+   * @param int $add
    *  Number to increase, use 0 to retrieve.
    */
   public static function query_count($add = 0) {
@@ -707,7 +707,7 @@ class mediamosa_db {
    *  Optional error code to throw when error.
    * @param array $errorcode_args
    *  Optional arguments for the generated error.
-   * @param boolean $log_error
+   * @param bool $log_error
    *  Optional TRUE/FALSE to log the error, default is TRUE.
    */
   public static function db_must_exists($table_name, array $columns_and = array(), $errorcode = NULL, array $errorcode_args = array(), $log_error = TRUE) {
@@ -768,7 +768,7 @@ class mediamosa_db {
    * @param array $columns_and
    *  column => value.
    *
-   * @return boolean
+   * @return bool
    *  Returns TRUE if one or more rows where found.
    */
   public static function db_exists($table_name, array $columns_and = array()) {
@@ -791,7 +791,7 @@ class mediamosa_db {
    * Count rows depending on the app, owner and group.
    *
    * @param string $table
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $owner_id
    * @param string $group_id
    * @return integer

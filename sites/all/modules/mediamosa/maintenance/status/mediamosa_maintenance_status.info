@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Status view page"
 description = "The status module allows you to view the status of your MediaMosa installation."

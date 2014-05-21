@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Application authentication by oAuth"
 description = "The oAuth authentication module handles application authentication."

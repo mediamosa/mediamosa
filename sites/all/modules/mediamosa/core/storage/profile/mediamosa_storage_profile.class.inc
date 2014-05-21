@@ -44,7 +44,7 @@ class mediamosa_storage_profile {
   /**
    * Get listing storage profiles for app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) Application ID.
    * @param array $fields
    *   (optional) Custom column selection.
@@ -90,9 +90,9 @@ class mediamosa_storage_profile {
   /**
    * Will test if storage profile exits, will throw exception when fail.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The storage profile ID.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) Must exists in combination with application ID.
    */
   public static function must_exists($storage_profile_id, $app_id = NULL) {
@@ -106,7 +106,7 @@ class mediamosa_storage_profile {
   /**
    * Create storage instance based on a storage profile ID.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The storage profile ID.
    *
    * @return mediamosa_storage

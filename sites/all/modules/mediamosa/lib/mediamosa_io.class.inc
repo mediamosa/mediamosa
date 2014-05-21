@@ -195,7 +195,7 @@ class mediamosa_io {
    * @param string $uri
    *   The uri to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when uri.
    */
   public static function is_uri($uri) {
@@ -319,12 +319,12 @@ class mediamosa_io {
    *
    * @param string $uri
    *   The uri of the directory to create.
-   * @param boolean $recursive
+   * @param bool $recursive
    *   Enable recursive to create the sub maps required to create directory.
-   * @param integer $mode
+   * @param int $mode
    *   Default mode value for created directory, defaults to mode 0775.
    *
-   * @return boolean
+   * @return bool
    *   Return TRUE or throws exception.
    *
    * @throws mediamosa_exception_error()
@@ -459,7 +459,7 @@ class mediamosa_io {
    * @param string $uri
    *   A URI or pathname.
    *
-   * @return boolean
+   * @return bool
    *   Return TRUE on success or FALSE with failure.
    */
   public static function unlink($uri) {
@@ -566,7 +566,7 @@ class mediamosa_io {
    * @param string $to_uri
    *   Rename to name.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when successful.
    */
   public static function rename($from_uri, $to_uri) {
@@ -753,7 +753,7 @@ class mediamosa_io {
    * @param string $uri
    *   The uri to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE if the file or directory specified by filename exists and is
    *   readable, FALSE otherwise.
    */
@@ -767,7 +767,7 @@ class mediamosa_io {
    * @param string $uri
    *   The uri to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE if the filename exists and is writable.
    */
   public static function is_writable($uri) {
@@ -780,7 +780,7 @@ class mediamosa_io {
    * @param string $uri
    *   The file to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file, FALSE otherwise.
    */
   public static function is_file($uri) {
@@ -802,7 +802,7 @@ class mediamosa_io {
    * @param string $uri
    *   The path to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when dir, FALSE otherwise.
    */
   public static function is_dir($uri) {
@@ -824,7 +824,7 @@ class mediamosa_io {
    * @param string $uri
    *   The uri to file or dir.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for local.
    */
   public static function is_local($uri) {
@@ -852,7 +852,7 @@ class mediamosa_io {
    * @param string $uri
    *   The file/path to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file exists.
    */
   public static function file_exists($uri) {
@@ -934,7 +934,7 @@ class mediamosa_io {
    * @param string $dest_uri
    *   Destination name uri.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for succes, FALSE otherwise.
    */
   public static function move($source_uri, $dest_uri) {
@@ -966,7 +966,7 @@ class mediamosa_io {
    *     extension. Defaults to 'uri'.
    *   - 'min_depth': Minimum depth of directories to return files from.
    *     Defaults to 0.
-   * @param integer $depth
+   * @param int $depth
    *   Current depth of recursion. This parameter is only used internally and
    *   should not be passed in.
    *
@@ -1201,16 +1201,16 @@ class mediamosa_io {
    *
    * @param string $uri
    *   Uri of the file to read.
-   * @param boolean $use_include_path
+   * @param bool $use_include_path
    *   As of PHP 5 the FILE_USE_INCLUDE_PATH can be used to trigger include path
    *   search.
    * @param resource $context
    *   A valid context resource created with stream_context_create(). If you
    *   the filters.
    *   don't need to use a custom context, you can skip this parameter by NULL.
-   * @param integer $offset
+   * @param int $offset
    *   The offset where the reading starts on the original stream.
-   * @param integer $maxlen
+   * @param int $maxlen
    *   Maximum length of data read. The default is to read until end of file is
    *   reached. Note that this parameter is applied to the stream processed by
    *

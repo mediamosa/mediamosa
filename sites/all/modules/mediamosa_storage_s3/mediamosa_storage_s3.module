@@ -31,10 +31,12 @@ function mediamosa_storage_s3_stream_wrappers() {
  * Implements hook_mediamosa_storage_info().
  */
 function mediamosa_storage_s3_mediamosa_storage_info() {
-  return array(mediamosa_storage_s3::NAME => array(
+  return array(
+    mediamosa_storage_s3::NAME => array(
       'name' => t('AWS S3 storage'),
       'description' => t('The MediaMosa AWS S3 storage.'),
-  ));
+    ),
+  );
 }
 
 /**
@@ -88,7 +90,6 @@ function mediamosa_storage_s3_mediamosa_acl(array $object, $op, $acl_type, $app_
         }
         break;
 
-
       case mediamosa_acl::ACL_TYPE_COLLECTION:
         // Don't care.
         break;
@@ -132,7 +133,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_insert($node) {
     ->fields($fields)
     ->execute();
 
-  //TODO: maybe do some other stuff before or after inserting?
+  // @TODO: maybe do some other stuff before or after inserting?
 }
 
 /**
@@ -152,7 +153,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_update($node) {
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
 
-  //TODO: maybe do some other stuff before or after updating?
+  // @TODO: maybe do some other stuff before or after updating?
 }
 
 /**
@@ -163,7 +164,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_delete($node) {
     ->condition(mediamosa_storage_profile_db::ID, $node->{mediamosa_storage_profile_db::ID})
     ->execute();
 
-  //TODO: maybe do some other stuff before or after deleting?
+  // @TODO: maybe do some other stuff before or after deleting?
 }
 
 /**
@@ -198,7 +199,6 @@ function mediamosa_storage_s3_mediamosa_storage_profile_form($node, $form_state)
     '#type' => 'password',
     '#required' => TRUE,
     '#description' => t('The AWS Secret Access Key.'),
-    //'#default_value' => mediamosa_node::default_value(mediamosa_storage_s3_db::SECRET, $node),
     '#maxlength' => mediamosa_storage_s3_db::SECRET_LENGTH,
   );
 
@@ -222,6 +222,7 @@ function mediamosa_storage_s3_mediamosa_storage_profile_validate($node, $form, $
  * Implements hook_mediamosa_configuration_collect().
  */
 function mediamosa_storage_s3_mediamosa_configuration_collect() {
+  $form = array();
   $form['settings_s3'] = array(
     '#type' => 'fieldset',
     '#title' => t('Amazone S3 Simpletest'),
@@ -263,13 +264,6 @@ function mediamosa_storage_s3_mediamosa_configuration_collect() {
     '#default_value' => variable_get('mediamosa_storage_s3_simpletest_region', AmazonS3::REGION_IRELAND),
     '#description' => t('Select the region where to use Amazon S3 simpletest'),
   );
-
-//  $form['settings_s3']['s3_debug']['mediamosa_storage_s3_simpletest_aws_certificate_authority'] = array(
-//    '#type' => 'checkbox',
-//    '#title' => t('Determines which Cerificate Authority file to use'),
-//    '#default_value' => variable_get('aws_certificate_authority', FALSE),
-//    '#description' => t('A value of boolean `false` will use the Certificate Authority file available on the system. A value of boolean `true` will use the Certificate Authority provided by the SDK. Passing a file system path to a Certificate Authority file (chmodded to `0755`) will use that. Leave this set to `false` if you\'re not sure.'),
-//  );
   return $form;
 }
 

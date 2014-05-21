@@ -32,9 +32,9 @@ class mediamosa_transcode_profile {
   /**
    * Get transcode profile for app.
    *
-   * @param integer $transcode_profile_id
+   * @param int $transcode_profile_id
    *   Profile to get.
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    */
   public static function get($transcode_profile_id, $app_id = NULL) {
@@ -53,7 +53,7 @@ class mediamosa_transcode_profile {
   /**
    * Get the default transcode profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    */
   public static function get_default($app_id) {
@@ -92,7 +92,7 @@ class mediamosa_transcode_profile {
   /**
    * Get listing transcode profiles for app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    */
   public static function search($app_id) {
@@ -106,7 +106,7 @@ class mediamosa_transcode_profile {
   /**
    * Get transcode profile for app by name.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    */
   public static function get_by_name($app_id, $profile_name) {
@@ -122,7 +122,7 @@ class mediamosa_transcode_profile {
   /**
    * Retrieve the transcode profiles based on tool.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $tool
    *   The name of the tool.
@@ -152,9 +152,9 @@ class mediamosa_transcode_profile {
   /**
    * Will test if transcode profile exits, will throw when fail.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   The profile ID to check.
    */
   public static function must_exists($app_id, $profile_id) {
@@ -164,11 +164,11 @@ class mediamosa_transcode_profile {
   /**
    * Create a transcode profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $name
    *   The name of the profile.
-   * @param integer $version
+   * @param int $version
    *   Version number.
    * @param bool $default
    *   Is default.
@@ -223,13 +223,13 @@ class mediamosa_transcode_profile {
   /**
    * Update a transcode profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   The ID of profile to update.
    * @param string $name
    *   The name of the profile.
-   * @param integer $version
+   * @param int $version
    *   Version number.
    * @param bool $default
    *   Is default.
@@ -295,9 +295,9 @@ class mediamosa_transcode_profile {
   /**
    * Delete a transcode profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   The ID of the profile to delete.
    */
   public static function delete($app_id, $profile_id) {

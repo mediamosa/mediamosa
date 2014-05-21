@@ -164,7 +164,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    *
    * Uses REST /job/$job_id [GET].
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The Job ID.
    *
    * @return mediamosa_connector_response

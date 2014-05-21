@@ -23,7 +23,7 @@ class mediamosa_asset_search {
    *  Application IDs.
    * @param string $cql
    *  The CQL search string.
-   * @param boolean $cql_store_stats
+   * @param bool $cql_store_stats
    *  Process the CQL into keywords and store it for statistics. Should be TRUE
    *  only when CQL has been provided by user input (not for internal searches).
    * @param string $acl_user_id
@@ -40,22 +40,22 @@ class mediamosa_asset_search {
    *  The Collection to search through.
    * @param string $fav_user_id
    *  The user ID.
-   * @param boolean $granted
+   * @param bool $granted
    *  When true, assets are include on which we dont have access on. The granted
    *  parameter with the asset indicates if we have access.
-   * @param boolean $is_public_list
+   * @param bool $is_public_list
    *  Used to include or exclude unappropriate assets.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *  Used for unappropriate.
-   * @param boolean $hide_empty_assets
+   * @param bool $hide_empty_assets
    *  Don't include empty assets.
-   * @param boolean $show_deleted
+   * @param bool $show_deleted
    *  Include deleted.
    * @param bool $calculate_total_count
    *  Calculate all found rows.
-   * @param integer $limit
+   * @param int $limit
    *  Maximum number of results.
-   * @param integer $offset
+   * @param int $offset
    *  Offset within the result rows.
    */
   public static function asset_search(

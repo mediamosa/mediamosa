@@ -55,7 +55,7 @@ function _mediamosa_maintenance_status_server_generate() {
 /**
  * Implementation of hook_mediamosa_status_collect().
  *
- * @param boolean $reset
+ * @param bool $reset
  *
  * @return array
  *   All the statuses in an array

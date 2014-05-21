@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "FTP user"
 description = "The FTP user allows applications to manage FTP users."

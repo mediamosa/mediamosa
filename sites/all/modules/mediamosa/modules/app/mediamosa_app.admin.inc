@@ -346,7 +346,7 @@ function mediamosa_app_storage_form_submit($form, $form_state) {
  *   An associative array containing the current state of the form.
  * @param object $node
  *   The application node.
- * @param boolean is_still
+ * @param bool is_still
  *   TRUE if mediafile is still.
  *
  * @return array

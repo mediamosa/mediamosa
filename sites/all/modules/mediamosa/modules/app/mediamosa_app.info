@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Application"
 description = "The application module enables different applications to access MediaMosa within their own database and section in MediaMosa."

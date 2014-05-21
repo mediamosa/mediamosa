@@ -1,27 +1,7 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The acl_app_master_slave functions.
  */
 
 /**
@@ -41,10 +21,6 @@
  * been granted access to the asset/mediafile.
  */
 
- /**
-  * @file
-  * The acl_app_master_slave functions.
-  */
 class mediamosa_acl_app_master_slave {
   /**
    * Returns the join for joining with acl_app_master slave table.
@@ -53,6 +29,7 @@ class mediamosa_acl_app_master_slave {
    *   See mediamosa_acl::ACL_TYPE_*.
    *
    * @return string
+   *   The SQL join statement.
    */
   public static function join_acl_app_master_slave_get($acl_type) {
     switch ($acl_type) {
@@ -60,14 +37,17 @@ class mediamosa_acl_app_master_slave {
         $on = 'mf.mediafile_id';
         $alias = 'acl_ms';
         break;
+
       case mediamosa_acl::ACL_TYPE_COLLECTION:
         $on = 'c.coll_id';
         $alias = 'acl_msc';
         break;
+
       case mediamosa_acl::ACL_TYPE_ASSET:
         $on = 'a.asset_id';
         $alias = 'acl_msa';
         break;
+
       default:
         assert(0);
         return '';
@@ -87,15 +67,20 @@ class mediamosa_acl_app_master_slave {
    * Create a master - slave record.
    *
    * @param string $acl_object_id
+   *   The ACL object ID.
    * @param string $acl_object_type
-   * @param integer $app_id
-   * @param integer $app_id_slave
-   * @param array $a_rights (reserved)
+   *   The ACL object type.
+   * @param int $app_id_master
+   *   The master app ID.
+   * @param int $app_id_slave
+   *   The slave app ID.
+   * @param array $rights
+   *   Unused for now.
    */
-  public static function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_acl::RIGHT_ACCESS)) {
+  public static function create($acl_object_id, $acl_object_type, $app_id_master, $app_id_slave, array $rights = array(mediamosa_acl::RIGHT_ACCESS)) {
 
     // Here to sadisify Zend about unused var.
-    assert(is_array($a_rights));
+    assert(is_array($rights));
 
     // Make sure we dont allow that app ids of master and slave are the same.
     if ($app_id_master == $app_id_slave) {
@@ -146,14 +131,15 @@ class mediamosa_acl_app_master_slave {
   }
 
   /**
-   * Return the app_id(s) of EGAs that have slaves of my supplied EGA (master)
+   * Return the app_id(s) of EGAs that have slaves of my supplied EGA (master).
    *
    * @param array/integer $mixed_app_id
    *   The app ID array or integer.
-   * @param string $acl_type
+   * @param string $acl_object_type
    *   The type of acl (mediamosa_acl::ACL_TYPE_*).
-   * @param string $object_id (optional)
-   *   The ID of object you want to know slaves on.
+   * @param string $object_id
+   *   (optional) The ID of object you want to know slaves on.
+   *
    * @return array
    *   returns array with info about the slaves.
    */
@@ -198,16 +184,17 @@ class mediamosa_acl_app_master_slave {
   }
 
   /**
-   * Return the app_id of applications (master) of my supplied application (slave)
+   * Return the master app_id  of my supplied slave app.
    *
-   * @param integer $slave_app_id
-   *  The slave app ID.
+   * @param int $app_id_slave
+   *   The slave app ID.
    * @param string $acl_object_type
-   *  The type of acl (mediamosa_acl::ACL_TYPE_*)
-   * @param string $acl_object_id (optional)
-   *  The ID of object you want to know slaves on.
-   * @return integer
-   *  returns master app_id.
+   *   The type of acl (mediamosa_acl::ACL_TYPE_*).
+   * @param string $acl_object_id
+   *   (optional) The ID of object you want to know slaves on.
+   *
+   * @return int
+   *   returns master app_id.
    */
   public static function master_get($app_id_slave, $acl_object_type, $acl_object_id) {
 

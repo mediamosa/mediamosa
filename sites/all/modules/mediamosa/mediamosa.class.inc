@@ -276,10 +276,10 @@ class mediamosa {
    * @param string $error_level
    * @param string $message
    * @param string $filename
-   * @param integer $line
+   * @param int $line
    * @param string $context
    * @param array $caller
-   * @return boolean
+   * @return bool
    */
   public static function mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller = NULL) {
     assert(isset($context));
@@ -600,7 +600,7 @@ class mediamosa {
    *   Module name.
    * @param string $table_prefix
    *   (optional) Prefix of the tables.
-   * @param boolean $make_foreignkey
+   * @param bool $make_foreignkey
    *   Make foreign keys (TRUE), or not (FALSE). Default TRUE.
    */
   public static function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
@@ -708,7 +708,7 @@ class mediamosa {
   /**
    * Deny any access for anonymous.
    *
-   * @return boolean
+   * @return bool
    *   TRUE when access for anonymous is denied.
    */
   public static function deny_anonymous() {

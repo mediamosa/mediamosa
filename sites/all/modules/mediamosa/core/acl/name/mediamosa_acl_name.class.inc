@@ -34,10 +34,10 @@ class mediamosa_acl_name {
   /**
    * Get the acl name entry
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $acl_type
    * @param string $acl_name
-   * @param integer $acl_group_id
+   * @param int $acl_group_id
    * @return array
    */
   public static function get($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
@@ -59,10 +59,10 @@ class mediamosa_acl_name {
   /**
    * Remove acl name row(s).
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $acl_type
    * @param string $acl_name
-   * @param integer $acl_group_id
+   * @param int $acl_group_id
    */
   public static function delete($app_id, $acl_type, $acl_name, $acl_group_id/* can be NULL, do not use 0*/) {
     $a_acl_name = self::get($app_id, $acl_type, $acl_name, $acl_group_id);
@@ -90,7 +90,7 @@ class mediamosa_acl_name {
   /**
    * Creates a entry in the acl_name table.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $s_name
    * @param string $acl_type
    * @param string $acl_group_id

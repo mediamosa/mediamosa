@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * PDF tool module.
@@ -52,10 +27,10 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($mediafile_id) {
   // for example "Pages:          3"
   foreach ($output_array as $value) {
     if (strpos($value, 'Pages:') !== FALSE) {
-      list($property, $pages) = explode(':', $value);
+      list(, $pages) = explode(':', $value);
     }
     if (strpos($value, 'PDF version:') !== FALSE) {
-      list($property, $version) = explode(':', $value);
+      list(, $version) = explode(':', $value);
     }
   }
   $analyse = array();
@@ -83,10 +58,12 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse_metadata($job_ext) {
  * Implements hook_mediamosa_tool_info().
  */
 function mediamosa_tool_pdf_mediamosa_tool_info() {
-  return array(mediamosa_tool_pdf::NAME => array(
-    'name' => t('PDF tool'),
-    'description' => t('Tool for PDF files.'),
-  ));
+  return array(
+    mediamosa_tool_pdf::NAME => array(
+      'name' => t('PDF tool'),
+      'description' => t('Tool for PDF files.'),
+    ),
+  );
 }
 
 /**
@@ -95,8 +72,8 @@ function mediamosa_tool_pdf_mediamosa_tool_info() {
 function _mediamosa_tool_pdf_status_generate() {
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'pdf2swf' => l('here', 'http://mediamosa.org/trac/wiki/pdf2swf'),
-    'pdfinfo' => l('here', 'http://mediamosa.org/trac/wiki/pdfinfo'),
+    'pdf2swf' => l(t('here'), 'http://mediamosa.org/trac/wiki/pdf2swf'),
+    'pdfinfo' => l(t('here'), 'http://mediamosa.org/trac/wiki/pdfinfo'),
   );
 
   $results = array();
@@ -144,11 +121,6 @@ function _mediamosa_tool_pdf_status_generate() {
 
 /**
  * Implements hook_mediamosa_status_collect().
- *
- * @param reset boolean
- *
- * @return array
- *   All the statuses in an array
  */
 function mediamosa_tool_pdf_mediamosa_status_collect($reset = FALSE) {
   $mediamosa_status_collect = array();

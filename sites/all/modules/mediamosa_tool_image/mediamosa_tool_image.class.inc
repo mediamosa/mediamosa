@@ -68,7 +68,9 @@ class mediamosa_tool_image {
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
 
       // Resize.
-      $parameter_string[] = '-resize ' . $size;
+      $parameter_string = array(
+        '-resize ' => $size,
+      );
 
       // Source.
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);

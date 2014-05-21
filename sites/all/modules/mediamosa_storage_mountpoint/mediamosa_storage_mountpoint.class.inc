@@ -17,9 +17,6 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
    *
    * @param object|integer $storage_profile
    *   Storage profile node or nid
-   *
-   * @param $uri
-   *   Optional uri to the storage object
    */
   public function __construct($storage_profile) {
     // Get the specific data for mountpoint.
@@ -43,11 +40,11 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
    * Unless local mount point, the uri must include $storage_profile::ID and
    * $storage_profile_app::PATH or $storage_profile_app::PATH_STILLS.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The storage profile ID.
    * @param string $path
    *   The storage path.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Ignored, the still path is handled in the path and not by stream scheme.
    *
    * @return string
@@ -58,7 +55,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
   }
 
   /**
-   * Return the mountpoint's subdirs
+   * Return the mountpoint's subdirs.
    */
   public function get_storage_options() {
     $options = array();
@@ -66,7 +63,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
     $mountpoint = preg_replace('/\/$/', '', $this->storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT]) . '/';
     $options[$this->storage_profile[mediamosa_storage_profile_db::ID] . '/'] = $mountpoint;
 
-    foreach (glob($this->storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT]. '/*', GLOB_ONLYDIR) as $path) {
+    foreach (glob($this->storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT] . '/*', GLOB_ONLYDIR) as $path) {
       if (is_writable($path)) {
         $uri = $this->storage_profile[mediamosa_storage_profile_db::ID] . preg_replace('/^' . str_replace('/', '\/', $mountpoint) . '/', '/', $path);
         $options[$uri] = $path;
@@ -76,6 +73,9 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
     return $options;
   }
 
+  /**
+   * Get upload params.
+   */
   public function get_upload_parameters($app_id, $user_id, $group_id) {
     return array();
   }
@@ -84,7 +84,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
   /**
    * Get the default scheme.
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string
@@ -97,7 +97,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
   /**
    * Get storage profile.
    *
-   * @param $storage_profile_id
+   * @param string $storage_profile_id
    *   Profile to get.
    *
    * @return array

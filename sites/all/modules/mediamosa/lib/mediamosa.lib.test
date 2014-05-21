@@ -178,7 +178,7 @@ class MediaMosaTypeValidation extends MediaMosaTestCase {
    *   Type of the param, see TYPE_* list.
    * @param mixed $mixed_param_value
    *   Either string or array (with strings)
-   * @param boolean $is_required
+   * @param bool $is_required
    *   Supplied value must be provided
    *
    * @return mixed

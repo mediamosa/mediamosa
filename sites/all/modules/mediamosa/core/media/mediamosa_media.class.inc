@@ -174,7 +174,7 @@ class mediamosa_media {
   /**
    * Process the media request call for /media REST call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   The mediafile ID.
@@ -238,7 +238,7 @@ class mediamosa_media {
    * We only process the ticket when style is provided AND the ticket does
    * exists. The style is only used on stills.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_id
    *   The ticket ID.
@@ -337,7 +337,7 @@ class mediamosa_media {
   /**
    * Process ticket for media view usage. Will setup the symlink to the file.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner for possible ticket.
@@ -345,7 +345,7 @@ class mediamosa_media {
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array
@@ -418,13 +418,13 @@ class mediamosa_media {
   /**
    * Process response for download media view call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
    * @param array $mediafile
    *   The mediafile to download.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is user application admin.
    *
    * @return array
@@ -458,19 +458,19 @@ class mediamosa_media {
   /**
    * Process response for metafile media view call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
    * @param array $mediafile
    *   The mediafile to use.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is user application admin.
-   * @param boolean $autostart
+   * @param bool $autostart
    *   The autostart parameter.
-   * @param integer $start
+   * @param int $start
    *   The start parameter.
-   * @param integer $duration
+   * @param int $duration
    *   The duration parameter.
    *
    * @return array
@@ -708,23 +708,23 @@ class mediamosa_media {
   /**
    * Process response for object media view call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
    * @param array $mediafile
    *   The mediafile to use.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
-   * @param integer $width
+   * @param int $width
    *   The width of the video.
-   * @param integer $height
+   * @param int $height
    *   The height of the video.
-   * @param boolean $autostart
+   * @param bool $autostart
    *   The autostart parameter.
-   * @param integer $start
+   * @param int $start
    *   The start parameter.
-   * @param integer $duration
+   * @param int $duration
    *   The duration parameter.
    *
    * @return array
@@ -988,13 +988,13 @@ class mediamosa_media {
   /**
    * Process response for still media view call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The user ID for ticket owner.
    * @param array $still
    *   The still mediafile.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    * @param array $filtered_stills
    *   The filtered stills result or empty.
@@ -1050,11 +1050,11 @@ class mediamosa_media {
   /**
    * Generate default still link for asset.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The client application ID.
    * @param string $asset_id
    *   The asset ID to use default still.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return string
@@ -1076,13 +1076,13 @@ class mediamosa_media {
   /**
    * Process response for still uri (plain) view call.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The user ID for ticket owner.
    * @param array $mediafile
    *   The mediafile.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array
@@ -1121,7 +1121,7 @@ class mediamosa_media {
    *
    * @param array $mediafile
    *   The mediafile to test.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @throws mediamosa_exception_error_is_inappropriate
@@ -1190,7 +1190,7 @@ class mediamosa_media {
   /**
    * This function converts miliseconds to the format specified.
    *
-   * @param integer $input
+   * @param int $input
    *   The number of seconds.
    * @param string $container_type
    *   See CONTAINER_TYPE_*.
@@ -1251,13 +1251,13 @@ class mediamosa_media {
   /**
    * Calculate the size of the video based on given size and type.
    *
-   * @param integer $video_width
+   * @param int $video_width
    *   The mediafile width.
-   * @param integer $video_height
+   * @param int $video_height
    *   The mediafile height.
-   * @param integer $width
+   * @param int $width
    *   The media play call parameter width.
-   * @param integer $height
+   * @param int $height
    *   The media play call parameter height.
    * @param string $container_type
    *   See mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_*.
@@ -1309,10 +1309,10 @@ class mediamosa_media {
   /**
    * Check if the time has been restricted.
    *
-   * @param integer $time_restriction_start
+   * @param int $time_restriction_start
    *   Start time in UTC of the time restriction period in datetime format
    *   (optional).
-   * @param integer $time_restriction_end
+   * @param int $time_restriction_end
    *   End time in UTC of the time restriction period date.
    *
    * @throws mediamosa_exception_error()
@@ -1337,7 +1337,7 @@ class mediamosa_media {
    *
    * If filter properties are empty then all stills of this asset are returned.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $asset_id
    *   The asset ID.
@@ -1347,9 +1347,9 @@ class mediamosa_media {
    *   (optional) The still ID to check against filter parameters.
    * @param string $size
    *   (optional) In WxH format.
-   * @param integer $width
+   * @param int $width
    *   (optional) The width.
-   * @param integer $height
+   * @param int $height
    *   (optional) The height.
    * @param string $range
    *   (optional) The range of stills ('1' or '1,3-5').
@@ -1438,16 +1438,16 @@ class mediamosa_media {
    *
    * @param array &$still
    *   The mediafile still array where its metadata will be added.
-   * @param integer $width
+   * @param int $width
    *   (optional) The width.
-   * @param integer $height
+   * @param int $height
    *   (optional) The height.
    * @param string $format
    *   (optional) The format.
-   * @param integer $order
+   * @param int $order
    *   (optional) The order in stills.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when still matches the provided values (width, height,
    *   format, order).
    */

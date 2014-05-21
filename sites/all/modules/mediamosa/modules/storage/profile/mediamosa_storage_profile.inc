@@ -173,7 +173,7 @@ function _mediamosa_storage_profile_delete_confirm_submit($form, &$form_state) {
 /**
  * Return storage options for given client app
  *
- * @param integer $app_id
+ * @param int $app_id
  *   Client application ID
  *
  * @return array

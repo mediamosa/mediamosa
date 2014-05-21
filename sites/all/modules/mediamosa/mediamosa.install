@@ -172,7 +172,7 @@ function mediamosa_uninstall() {
 }
 
 /**
- * Implement hook_requirements().
+ * Implements hook_requirements().
  */
 function mediamosa_requirements($phase) {
 
@@ -182,7 +182,7 @@ function mediamosa_requirements($phase) {
     return $requirements;
   }
 
-  // The t() function is save during runtime phase.
+  $t = get_t();
 
   // Runtime phase, all others are ignored at this point.
 
@@ -190,42 +190,49 @@ function mediamosa_requirements($phase) {
   // in the future we might need even higher version of PHP than Drupal.
   if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
     $requirements['mediamosa_php'] = array(
-      'title' => t('PHP'),
+      'title' => $t('PHP'),
       'value' => phpversion(),
-      'description' => t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
-      'severity' => REQUIREMENT_ERROR
-    );
-  }
-
-  // Make sure the mediamosa_server_id is set and not to long.
-  // @TODO should be made as REST call to other servers.
-  $mediamosa_installation_id = mediamosa::get_server_id();
-
-  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
-    $requirements['mediamosa_installation_id'] = array(
-      'title' => t('MediaMosa installation ID'),
-      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : t('Not defined'),
-      'description' => t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+      'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
       'severity' => REQUIREMENT_ERROR,
     );
   }
 
-  // In case there are no warnings and errors - remind about detailed mediamosa report.
-  if (empty($requirements)) {
-    $requirements['mediamosa_encourage_check_status'] = array(
-      'title' => t('MediaMosa'),
-      'value' => t('Installed'),
-      'description' => t('Detailed description of the MediaMosa component status can be found !here.', array('!here' => l(t('here'), 'admin/mediamosa'))),
-    'severity' => REQUIREMENT_OK,
+  // Make sure the mediamosa_server_id is set and not to long.
+  $mediamosa_installation_id = mediamosa::get_server_id();
+
+  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+    $requirements['mediamosa_installation_id'] = array(
+      'title' => $t('MediaMosa installation ID'),
+      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : $t('Not defined'),
+      'description' => $t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+      'severity' => REQUIREMENT_ERROR,
     );
   }
 
-  // Check for Client Application presence. Warnings do not count for correct install message (above).
+  // In case there are no warnings and errors - remind about detailed mediamosa
+  // report.
+  if (empty($requirements)) {
+    $requirements['mediamosa_encourage_check_status'] = array(
+      'title' => $t('MediaMosa'),
+      'value' => $t('Installed'),
+      'description' => $t(
+        'Detailed description of the MediaMosa component status can be found !here.',
+        array('!here' => l($t('here'), 'admin/mediamosa'))
+      ),
+      'severity' => REQUIREMENT_OK,
+    );
+  }
+
+  // Check for Client Application presence. Warnings do not count for correct
+  // install message (above).
   if (!mediamosa_app::get_number_of_apps()) {
     $requirements['mediamosa_no_apps_defined'] = array(
-      'title' => t('MediaMosa client application'),
-      'value' => t('None found'),
-      'description' => t('A MediaMosa client is required for any front end application (website or other entity) to connect to MediaMosa. You can add one !here.', array('!here' => l(t('here'), 'admin/mediamosa/config/app/add'))),
+      'title' => $t('MediaMosa client application'),
+      'value' => $t('None found'),
+      'description' => $t(
+        'A MediaMosa client is required for any front end application (website or other entity) to connect to MediaMosa. You can add one !here.',
+        array('!here' => l($t('here'), 'admin/mediamosa/config/app/add'))
+      ),
       'severity' => REQUIREMENT_WARNING,
     );
   }
@@ -252,15 +259,28 @@ function _mediamosa_update_helper_get_mountpoint() {
  * Change mediafile metadata STILL_TYPE ENUM value 'SECONDS' to 'SECOND'.
  */
 function mediamosa_update_7000() {
-  // Add 'SECOND' first
+  // Add 'SECOND' first.
   db_change_field(
     mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
     mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
     mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
     array(
       'description' => t('The type of the still.'),
-      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'type' => "enum('" . implode("','", array(
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND,
+        'SECONDS',
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
+      )) . "')",
+      'mysql_type' => "enum('" . implode("','", array(
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS',
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
+      )) . "')",
       'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
     )
   );
@@ -275,8 +295,20 @@ function mediamosa_update_7000() {
     mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
     array(
       'description' => t('The type of the still.'),
-      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'type' => "enum('" . implode("','", array(
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
+      )) . "')",
+      'mysql_type' => "enum('" . implode("','", array(
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
+        mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
+      )) . "')",
       'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
     )
   );
@@ -387,6 +419,8 @@ function mediamosa_update_7006() {
 }
 
 /**
+ * Alter the mediamosa_asset_mediafile table.
+ *
  * Make varchar(10) for transcode ID into INT in mediamosa_asset_mediafile
  * table. (Conversion can take some time).
  */
@@ -412,6 +446,7 @@ function mediamosa_update_7009() {
 
 /**
  * Rename old mediamosa_asset_mediafile_metadata table.
+ *
  * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foreign key.
  * Create new mediamosa_asset_mediafile_metadata table.
  * Create new mediamosa_asset_mediafile_metadata_property table.
@@ -432,6 +467,7 @@ function mediamosa_update_7010() {
 
 /**
  * Migrate mediamosa_asset_mediafile_metadata table.
+ *
  * Drop old mediamosa_asset_mediafile_metadata table.
  */
 function mediamosa_update_7011() {
@@ -551,14 +587,14 @@ function mediamosa_update_7012() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // drop some not used indexes:
+  // Drop some not used indexes.
   db_drop_index('mediamosa_asset', 'idx_app_parent_priv_unapp_emptyasset_owner');
 
   // parent_id is deprecated.
   db_query('ALTER TABLE mediamosa_asset drop foreign key fk_mediamosa_asset_parent_id');
   db_drop_index('mediamosa_asset', 'idx_parent_id');
 
-  // only add the main search query.
+  // Only add the main search query.
   db_add_index(
     'mediamosa_asset',
     'idx_app_priv_unapp_emptyasset',
@@ -575,7 +611,7 @@ function mediamosa_update_7012() {
 }
 
 /**
- * 2 pass h264 encoding.
+ * Add 2 pass h264 encoding.
  */
 function mediamosa_update_7013() {
   db_query("
@@ -598,6 +634,7 @@ function mediamosa_update_7013() {
 
 /**
  * Remove asset_id_root field from the mediamosa_asset_mediafile table.
+ *
  * See MediaMosa ticket #317.
  */
 function mediamosa_update_7014() {
@@ -665,7 +702,7 @@ function mediamosa_update_7015() {
 function mediamosa_update_7016() {
 
   db_add_field('mediamosa_app', mediamosa_app_db::TIMEZONE, array(
-    'description' => t('The application timezone.'),
+    'description' => $t('The application timezone.'),
     'type' => 'varchar',
     'length' => mediamosa_app_db::TIMEZONE_LENGTH,
     'not null' => FALSE,
@@ -1146,7 +1183,7 @@ function mediamosa_update_7052() {
     mediamosa_asset_collection_db::TABLE_NAME,
     mediamosa_asset_collection_db::IS_EMPTY_ASSET,
     array(
-      'description' => t('True if the asset in this collection has media.'),
+      'description' => $t('True if the asset in this collection has media.'),
       'type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
       'not null' => TRUE,
       'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
@@ -1222,6 +1259,7 @@ function mediamosa_update_7058() {
 }
 /**
  * Default still size is adjustable now.
+ *
  * Padding and maintain aspect ratio is adjustable now too.
  */
 function mediamosa_update_7059() {
@@ -1230,7 +1268,7 @@ function mediamosa_update_7059() {
     if (!db_field_exists('mediamosa_app', 'still_default_size')) {
       // Create still default size field.
       db_add_field('mediamosa_app', 'still_default_size', array(
-        'description' => t('The default size of the still image.'),
+        'description' => $t('The default size of the still image.'),
         'type' => 'varchar',
         'length' => 25,
         'not null' => FALSE,
@@ -1240,7 +1278,7 @@ function mediamosa_update_7059() {
     if (!db_field_exists('mediamosa_app', 'still_padding')) {
       // Create still padding field.
       db_add_field('mediamosa_app', 'still_padding', array(
-        'description' => t('Force padding, if aspect ratio is maintaned.'),
+        'description' => $t('Force padding, if aspect ratio is maintaned.'),
         'type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
@@ -1250,7 +1288,7 @@ function mediamosa_update_7059() {
     if (!db_field_exists('mediamosa_app', 'still_maintain_aspect_ratio')) {
       // Create still maintain aspect ratio field.
       db_add_field('mediamosa_app', 'still_maintain_aspect_ratio', array(
-        'description' => t('Force maintain the original video aspect ratio or not.'),
+        'description' => $t('Force maintain the original video aspect ratio or not.'),
         'type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array('NO', 'YES')) . "')",
@@ -1287,8 +1325,7 @@ function mediamosa_update_7062() {
 }
 
 /**
- * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the
- * old version installed.
+ * Rename mediamosa_dblog table to mediamosa_watchdog.
  */
 function mediamosa_update_7063() {
   try {
@@ -1341,6 +1378,7 @@ function mediamosa_update_7068() {
 
 /**
  * Install mediamosa_tool_params table.
+ *
  * Create the tool params node type.
  * Turn on tool modules.
  * Uninstall nodes from tool params.
@@ -1424,7 +1462,7 @@ function mediamosa_update_7070() {
 }
 
 /**
- * Removing error: ERRORCODE_INVALID_STILL_PERMANENT
+ * Removing error: ERRORCODE_INVALID_STILL_PERMANENT.
  */
 function mediamosa_update_7071() {
   db_query('DELETE FROM {mediamosa_error} WHERE name = :name', array(
@@ -1433,6 +1471,8 @@ function mediamosa_update_7071() {
 }
 
 /**
+ * Drop and install of tables.
+ *
  * Uninstall tables:
  *  - mediamosa_statistics_stream_request
  *  - mediamosa_statistics_stream_request_collection
@@ -1583,7 +1623,7 @@ function mediamosa_update_7076() {
   $fixes = array(
     'filter_format' => array(
       'real_schema_name' => 'filter',
-      'status',
+      0 => 'status',
     ),
     'filter' => array(
       'status',
@@ -1641,8 +1681,7 @@ function mediamosa_update_7077() {
  */
 function mediamosa_update_7078() {
 
-  // Rename table
-
+  // Rename table.
   module_load_include('install', 'mediamosa_integrity_check');
 
   // Our fixes.
@@ -1657,7 +1696,7 @@ function mediamosa_update_7078() {
       continue;
     }
 
-      // Get the schema so we can reuse the schema creation.
+    // Get the schema so we can reuse the schema creation.
     $schema = drupal_get_schema_unprocessed($table_name);
     _drupal_schema_initialize($schema, $table_name, FALSE);
 
@@ -1681,7 +1720,11 @@ function mediamosa_update_7078() {
 
   if (!db_index_exists('url_alias', 'alias_language_pid')) {
     // Other.
-    db_add_index('url_alias', 'alias_language_pid', array('alias','language','pid'));
+    db_add_index(
+      'url_alias',
+      'alias_language_pid',
+      array('alias','language','pid')
+    );
   }
 }
 
@@ -1702,9 +1745,9 @@ function mediamosa_update_7080() {
     mediamosa_job_db::NO_HINT,
     mediamosa_job_db::HINT,
     array(
-        'description' => 'Hinting.',
-        'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+      'description' => 'Hinting.',
+      'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
     )
   );
 }
@@ -1798,9 +1841,21 @@ function mediamosa_update_7084() {
       mediamosa_statistics_job_db::JOB_TYPE,
       array(
         'description' => 'The type of the job.',
-        'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'type' => "enum('" . implode("','", array(
+          mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+          mediamosa_statistics_job_db::JOB_TYPE_STILL,
+          mediamosa_statistics_job_db::JOB_TYPE_UPLOAD,
+          mediamosa_statistics_job_db::JOB_TYPE_ANALYSE,
+          mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+        )) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(
+          mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+          mediamosa_statistics_job_db::JOB_TYPE_STILL,
+          mediamosa_statistics_job_db::JOB_TYPE_UPLOAD,
+          mediamosa_statistics_job_db::JOB_TYPE_ANALYSE,
+          mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+        )) . "')",
         'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
       )
     );
@@ -1824,9 +1879,17 @@ function mediamosa_update_7086() {
     mediamosa_job_db::JOB_TYPE,
     array(
       'description' => 'The type of the job.',
-      'type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'type' => "enum('" . implode("','", array(
+        mediamosa_job_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+      )) . "')",
       'not null' => TRUE,
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(
+        mediamosa_job_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+      )) . "')",
       'default' => mediamosa_job_db::JOB_TYPE_UPLOAD,
     )
   );
@@ -1834,6 +1897,7 @@ function mediamosa_update_7086() {
 
 /**
  * Create new errorcode in database.
+ *
  * Clearing cache and rebuild registry.
  */
 function mediamosa_update_7087() {
@@ -1852,6 +1916,7 @@ function mediamosa_update_7087() {
 
 /**
  * Create new 'missing extension' errorcode in database.
+ *
  * Change mediamosa_streaming_ticket table.
  * Add new field: time.
  * Add new indexes: ticket_id, time.
@@ -1905,9 +1970,11 @@ function mediamosa_update_7089() {
 }
 
 /**
+ * This update is empty and does nothing.
  */
 function mediamosa_update_7090() {
 }
+
 /**
  * Add new fields to mediamosa_server table to support new upload progress.
  */
@@ -1944,6 +2011,7 @@ function mediamosa_update_7091() {
 
 /**
  * Create new 'missing extension' errorcode in database.
+ *
  * Change mediamosa_streaming_ticket table.
  * Add new field: time.
  * Add new indexes: ticket_id, time.
@@ -1991,6 +2059,9 @@ function mediamosa_update_7092() {
   }
 }
 
+/**
+ * This one got no document header and update does nothing.
+ */
 function mediamosa_update_7093() {
 }
 
@@ -2073,11 +2144,11 @@ function mediamosa_update_7097() {
       'uid',
       'uid',
       array(
-          'type' => 'int',
-          'size' => 'small',
-          'not null' => TRUE,
-          'description' => 'The linux user ID of the FTP user.',
-          'default' => '200',
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'description' => 'The linux user ID of the FTP user.',
+        'default' => '200',
       )
     );
   }
@@ -2102,6 +2173,7 @@ function mediamosa_update_7098() {
 
 /**
  * Change mediamosa_server table.
+ *
  * Add new field: mime_type.
  * Add possible missing columns in mediamosa_app table.
  */
@@ -2126,6 +2198,7 @@ function mediamosa_update_7099() {
 
 /**
  * Change mediamosa_asset_metadata_property table.
+ *
  * Add new field: is_hidden.
  * Add new index: is_hidden.
  * Fix missing comments on database.
@@ -2199,6 +2272,8 @@ function mediamosa_update_7104() {
 }
 
 /**
+ * New fields for mediamosa_app.
+ *
  * Add new fields to mediamosa_app table to determine which tools will put
  * analyse data to asset metadata.
  */
@@ -2220,7 +2295,7 @@ function mediamosa_update_7105() {
   }
 
   if (!db_index_exists('mediamosa_app', 'idx_oauth_consumer_key')) {
-    // only add the main search query.
+    // Only add the main search query.
     db_add_index(
       'mediamosa_app',
       'idx_oauth_consumer_key',
@@ -2233,6 +2308,7 @@ function mediamosa_update_7105() {
 
 /**
  * Install mediamosa_tool_mapping table.
+ *
  * Create the tool mapping node type.
  */
 function mediamosa_update_7106() {
@@ -2256,8 +2332,8 @@ function mediamosa_update_7106() {
     node_type_save($tool_mapping_node_type);
   }
   // Rebuild the registry.
-  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 }
 
@@ -2274,15 +2350,14 @@ function mediamosa_update_7107() {
       ->fields(array(
         mediamosa_error_db::NAME => 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG',
         mediamosa_error_db::MESSAGE => "No mediafile found for the given asset and tag",
-        mediamosa_error_db::CODE => 620, // mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG.
+        mediamosa_error_db::CODE => 620,
       ))
     ->execute();
   }
 }
 
 /**
- * Create new 'The mediafile (@mediafile_id) is not original' errorcode in database.
- * Create new 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)' errorcode in database.
+ * Create new error codes.
  */
 function mediamosa_update_7108() {
   $result = db_select('mediamosa_error', 'e')
@@ -2294,7 +2369,7 @@ function mediamosa_update_7108() {
       ->fields(array(
         'name' => 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL',
         'message' => "The mediafile (@mediafile_id) is not original",
-        'code' => 723, //mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL,
+        'code' => 723,
       ))
     ->execute();
   }
@@ -2308,7 +2383,7 @@ function mediamosa_update_7108() {
       ->fields(array(
         'name' => 'ERRORCODE_INVALID_MEDIAFILE_RELATION',
         'message' => "The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)",
-        'code' => 724, //mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION,
+        'code' => 724,
       ))
     ->execute();
   }
@@ -2328,8 +2403,8 @@ function mediamosa_update_7109() {
  */
 function mediamosa_update_7110() {
   // Rebuild the registry.
-  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 
   $query = db_select('mediamosa_server', 's');
@@ -2390,7 +2465,10 @@ function mediamosa_update_7110() {
       ->execute();
   }
 
-  return t('Your server configurations were changed. Please, check them: !here', array('!here' => l('admin/mediamosa/config/server', 'admin/mediamosa/config/server')));
+  return t(
+    'Your server configurations were changed. Please, check them: !here',
+    array('!here' => l(t('admin/mediamosa/config/server'), 'admin/mediamosa/config/server'))
+  );
 }
 
 /**
@@ -2480,7 +2558,7 @@ function mediamosa_update_7113() {
 
   // Our new user_in_group table.
   $schema = array(
-  'description' => 'The user/group relation table.',
+    'description' => 'The user/group relation table.',
     'fields' => array(
       'relation_id' => array(
         'type' => 'serial',
@@ -2633,8 +2711,7 @@ function mediamosa_update_7116() {
 }
 
 /**
- * Create new "Unable creating derivative from image with style: @style, path:
- * @path" errorcode in database.
+ * Create new errorcode in database.
  */
 function mediamosa_update_7117() {
   $query = db_select('mediamosa_error', 'e');
@@ -2649,7 +2726,7 @@ function mediamosa_update_7117() {
       ->fields(array(
         'name' => 'ERRORCODE_CREATING_DERIVATIVE',
         'message' => "Unable creating derivative from image with style: @style, path: @path",
-        'code' => 1157, // mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+        'code' => 1157,
       ))
     ->execute();
   }
@@ -3118,8 +3195,8 @@ function mediamosa_update_7120() {
  */
 function mediamosa_update_7121() {
   // Rebuild the registry.
-  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 }
 
@@ -3131,8 +3208,7 @@ function mediamosa_update_7122() {
 }
 
 /**
- * Create new "Still can not be created for mediafile with '@mediafile_id'"
- * errorcode in database.
+ * Create new errorcode in database.
  */
 function mediamosa_update_7123() {
   $query = db_select('mediamosa_error', 'e');
@@ -3147,7 +3223,7 @@ function mediamosa_update_7123() {
       ->fields(array(
         'name' => 'ERRORCODE_STILL_IS_NOT_CREATABLE',
         'message' => "Still can not be created for mediafile with '@mediafile_id'",
-        'code' => 1156, // mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
+        'code' => 1156,
       ))
     ->execute();
   }
@@ -3166,7 +3242,7 @@ function mediamosa_update_7124() {
     $user_home_dir = _mediamosa_update_helper_get_mountpoint() . '/ftp/' . $username;
 
     try {
-      $chmod_result = drupal_chmod($user_home_dir, NULL); // changes ftp directories to 0775.
+      $chmod_result = drupal_chmod($user_home_dir, NULL);
       if ($chmod_result == FALSE) {
         $return[] = t('chmod: no such ftp home directory: !userdir', array('!userdir' => $user_home_dir));
       }
@@ -3180,7 +3256,6 @@ function mediamosa_update_7124() {
 }
 
 /**
- * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
  * New table mediamosa_job_display was added.
  */
 function mediamosa_update_7125() {
@@ -3192,6 +3267,7 @@ function mediamosa_update_7125() {
 
 /**
  * MediaMosa ticket #371 (object code enhancement).
+ *
  * New table mediamosa_asset_mediafile_still_style was added.
  */
 function mediamosa_update_7126() {
@@ -3202,6 +3278,8 @@ function mediamosa_update_7126() {
 }
 
 /**
+ * Migration to /media directory.
+ *
  * Create the new /media directory under the MediaMosa mount point. Also create
  * the .htaccess file.
  */
@@ -3276,7 +3354,7 @@ function mediamosa_update_7129() {
  * Move the simpletest directory to the new location under media.
  */
 function mediamosa_update_7130() {
-    // Create the new directory.
+  // Create the new directory.
   $path = mediamosa_storage_local::SCHEME;
   mediamosa_io::move($path . '://data/simpletest', $path . '://media/simpletest');
 }
@@ -3295,7 +3373,7 @@ function mediamosa_update_7131() {
  */
 function mediamosa_update_7132() {
 
-  // install dc and qdc metadata formats if not already enabled.
+  // Install dc and qdc metadata formats if not already enabled.
   $module_list = array(
     'mediamosa_metadata_dc',
     'mediamosa_metadata_qdc',
@@ -3313,8 +3391,9 @@ function mediamosa_update_7133() {
 }
 
 /**
- * Repair the MediaMosa server settings; some installations where no longer able
- * to edit the MediaMosa servers.
+ * Repair the MediaMosa server settings.
+ *
+ * Some installations where no longer able to edit the MediaMosa servers.
  */
 function mediamosa_update_7134() {
 
@@ -3374,8 +3453,9 @@ function mediamosa_update_7135() {
 }
 
 /**
- * Repair possible missing Y directory on storage mount point. Some 2.x or 3.x
- * installations may be missing the Y directory.
+ * Repair possible missing Y directory on storage mount point.
+ *
+ * Some 2.x or 3.x installations may be missing the Y directory.
  */
 function mediamosa_update_7136() {
   // Get uri to storage.
@@ -3406,10 +3486,11 @@ function mediamosa_update_7139() {
 }
 
 /**
- * Re-evaluate all assets 'is empty' values. This might take some time depending
- * on the size of your database. If this update times out or stops because of
- * OOM errors, just run update again. The update will continue where it was
- * interrupted.
+ * Re-evaluate all assets 'is empty' values.
+ *
+ * This might take some time depending on the size of your database. If this
+ * update times out or stops because of OOM errors, just run update again. The
+ * update will continue where it was interrupted.
  */
 function mediamosa_update_7140() {
 
@@ -3455,9 +3536,10 @@ function mediamosa_update_7140() {
 }
 
 /**
- * Replace the .htaccess file under the mountpoint media. This includes a fix
- * for FireFox that requires mimetype in HTTP header for playback of webm, mp4
- * and ogg files.
+ * Replace the .htaccess file under the mountpoint media.
+ *
+ * This includes a fix for FireFox that requires mimetype in HTTP header for
+ * playback of webm, mp4 and ogg files.
  */
 function mediamosa_update_7141() {
   // Get the path to the media directory.
@@ -3467,7 +3549,13 @@ function mediamosa_update_7141() {
   // When found, remove it first.
   if ($found) {
     if (!drupal_chmod($path . '.htaccess', 0664) || !is_writable($path)) {
-      return strtr("Unable to replace / write .htaccess on location '@path'. Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.", array('@path' => drupal_realpath($path)  . '.htaccess', '@url' => url('/', array('absolute' => TRUE))));
+      return strtr(
+        "Unable to replace / write .htaccess on location '@path'. Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.",
+        array(
+          '@path' => drupal_realpath($path)  . '.htaccess',
+          '@url' => url('/', array('absolute' => TRUE)),
+        )
+      );
     }
   }
 
@@ -3478,7 +3566,13 @@ function mediamosa_update_7141() {
   $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
 
   // Return the status of this update.
-  return strtr(($found ? "Successfully replaced the .htaccess file under '@mount_pointmedia/.htaccess'." : 'Warning: Was unable to create /media under mount point (@mount_point). Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.'), array('@url' => url('/', array('absolute' => TRUE)), '@mount_point' => _mediamosa_update_helper_get_mountpoint()));
+  return strtr(
+    ($found ? "Successfully replaced the .htaccess file under '@mount_pointmedia/.htaccess'." : 'Warning: Was unable to create /media under mount point (@mount_point). Visit and refresh the MediaMosa status page (@url) and follow the instructions display how to repair.'),
+    array(
+      '@url' => url('/', array('absolute' => TRUE)),
+      '@mount_point' => _mediamosa_update_helper_get_mountpoint()
+    )
+  );
 }
 
 /**
@@ -3492,16 +3586,14 @@ function mediamosa_update_7142() {
 }
 
 /**
- * Clear the cache and rebuild registry in prepration of the usage of the new
- * storage classes.
+ * Clear the cache and rebuild registry.
  */
 function mediamosa_update_7143() {
   // Rebuild the registry.
-  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 
-  // Rebuild again so we are sure whe
   registry_rebuild();
   cache_clear_all();
 }
@@ -3602,8 +3694,10 @@ function mediamosa_update_7146() {
 }
 
 /**
- * Move the stills to the normal mediafile data tree. If this script times out,
- * you can restart update again and the script will continue where it ended.
+ * Move the stills to the normal mediafile data tree.
+ *
+ * If this script times out, you can restart update again and the script will
+ * continue where it ended.
  * Will only move stills which are found as still in the database. All other
  * files under mountpount/data/stills will not be moved.
  */
@@ -3706,7 +3800,13 @@ function mediamosa_update_7147() {
   }
 
   // Got messages.
-  return strtr("Moved @count stills to main mediafile data dir.<br />@messages", array('@count' => $stills_moved, '@messages' => implode('<br />', $messages)));
+  return strtr(
+    "Moved @count stills to main mediafile data dir.<br />@messages",
+    array(
+      '@count' => $stills_moved,
+      '@messages' => implode('<br />', $messages)
+    )
+  );
 }
 
 /**
@@ -3718,7 +3818,7 @@ function mediamosa_update_7148() {
     // Disable module.
     module_disable(array('mediamosa_configuration_storage'));
 
-    // Uninstall module
+    // Uninstall module.
     drupal_uninstall_modules(array('mediamosa_configuration_storage'));
 
     return 'The module MediaMosa Configuration Storage has been integrated into core. This module is now turned off and uninstalled. Please keep this module off as in future version this module will be completly removed.';
@@ -3726,8 +3826,7 @@ function mediamosa_update_7148() {
 }
 
 /**
- * Clean up current play and download tickets, as these moved and are no longer
- * valid or used.
+ * Clean up current play and download tickets.
  */
 function mediamosa_update_7149() {
 
@@ -3793,6 +3892,8 @@ function mediamosa_update_7149() {
 }
 
 /**
+ * Module movements.
+ *
  * The playproxy code and ticket module has been moved into the MediaMosa Media
  * module. The ticket module will be uninstalled and replaced by the new
  * Mediamosa-media module.
@@ -3821,8 +3922,7 @@ function mediamosa_update_7151() {
 }
 
 /**
- * Setup the setting for temporary file location for transcodes and still
- * generation.
+ * Setup the setting for temporary file location.
  */
 function mediamosa_update_7152() {
   // Expecting mountpoint to be set as variable.
@@ -3852,9 +3952,27 @@ function mediamosa_update_7153() {
     mediamosa_job_db::JOB_TYPE,
     array(
       'description' => 'The type of the job.',
-      'type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'type' => "enum('" . implode("','", array(
+        mediamosa_job_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_db::JOB_TYPE_STILL,
+        mediamosa_job_db::JOB_TYPE_UPLOAD,
+        mediamosa_job_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+      )) . "')",
       'not null' => TRUE,
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(
+        mediamosa_job_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_db::JOB_TYPE_STILL,
+        mediamosa_job_db::JOB_TYPE_UPLOAD,
+        mediamosa_job_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+      )) . "')",
       'default' => mediamosa_job_db::JOB_TYPE_UPLOAD,
     )
   );
@@ -3865,9 +3983,27 @@ function mediamosa_update_7153() {
     mediamosa_job_server_db::JOB_TYPE,
     array(
       'description' => 'The type of the job.',
-      'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'type' => "enum('" . implode("','", array(
+        mediamosa_job_server_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_server_db::JOB_TYPE_STILL,
+        mediamosa_job_server_db::JOB_TYPE_UPLOAD,
+        mediamosa_job_server_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+      )) . "')",
       'not null' => TRUE,
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD, mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(
+        mediamosa_job_server_db::JOB_TYPE_TRANSCODE,
+        mediamosa_job_server_db::JOB_TYPE_STILL,
+        mediamosa_job_server_db::JOB_TYPE_UPLOAD,
+        mediamosa_job_server_db::JOB_TYPE_ANALYSE,
+        mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_UPLOAD,
+        mediamosa_job_server_db::JOB_TYPE_TRANSFER_MEDIA_MOVE,
+      )) . "')",
       'default' => mediamosa_job_server_db::JOB_TYPE_UPLOAD,
     )
   );
@@ -3954,7 +4090,7 @@ function mediamosa_update_7158() {
   }
 
   // Done.
-  return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
+  return strtr("The paths for your download, still and streaming servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l(t('server settings page'), 'admin/mediamosa/config/server')));
 }
 
 /**
@@ -3972,7 +4108,7 @@ function mediamosa_update_7159() {
     // Add file transfer.
     $job_tools[] = mediamosa_job_server::MEDIAMOSA_JOB_SERVER_TOOL_TRANSFER;
 
-    // Unique tools
+    // Unique tools.
     $job_tools = array_unique($job_tools);
 
     // Load the job server.
@@ -3989,8 +4125,7 @@ function mediamosa_update_7159() {
 }
 
 /**
- * Remove the 'is_default_profile' flag from storage profiles, its no longer
- * used.
+ * Remove the 'is_default_profile' flag from storage profiles.
  */
 function mediamosa_update_7160() {
   if (db_index_exists('mediamosa_storage_profile', 'idx_app_isdefault')) {
@@ -4029,6 +4164,8 @@ function mediamosa_update_7161() {
 }
 
 /**
+ * Fix installations.
+ *
  * New installations could have been created with /download uri instead of
  * /media. This update will fix this.
  */
@@ -4049,16 +4186,16 @@ function mediamosa_update_7162() {
   }
 
   // Done.
-  return strtr("The paths for your download servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l('server settings page', 'admin/mediamosa/config/server')));
+  return strtr("The paths for your download servers might have changed if they where using incorrect URI paths. Check your server settings on your @link. Download, still should be '{base_uri}media/{TICKET}'. Streaming servers must also be '{base_uri}media/{TICKET}' unless your are using a external streaming server like wowza.", array('@link' => l(t('server settings page'), 'admin/mediamosa/config/server')));
 }
 
 /**
  * Change the job table to allow the filename to be changed by its tool.
  */
 function mediamosa_update_7163() {
-   if (!db_field_exists('mediamosa_job', 'filename')) {
-     // Fix problem with wrong empty dates.
-     db_query("UPDATE mediamosa_job SET created = started WHERE created = '0000-00-00 00:00:00'");
+  if (!db_field_exists('mediamosa_job', 'filename')) {
+    // Fix problem with wrong empty dates.
+    db_query("UPDATE mediamosa_job SET created = started WHERE created = '0000-00-00 00:00:00'");
 
     db_add_field(
       'mediamosa_job',
@@ -4076,6 +4213,8 @@ function mediamosa_update_7163() {
 }
 
 /**
+ * Change the asset table.
+ *
  * Add filename to the asset table for normalizing the filename from the
  * original mediafiles.
  */
@@ -4092,6 +4231,8 @@ function mediamosa_update_7164() {
 }
 
 /**
+ * Process the mediafiles for asset normalization.
+ *
  * Normalize the original mediafile filename to the asset. This allows frontends
  * to use filenames from search results when no metadata titles are available.
  * If the update times out, just restart the update process. It will continue
@@ -4237,6 +4378,8 @@ function _mediamosa_update_helper_convert_command($table_name, $id_name) {
 }
 
 /**
+ * Convert command-line strings.
+ *
  * Convert all profile command-line strings for mediamosa_job_server_transcode
  * table to new format.
  *
@@ -4271,6 +4414,8 @@ function mediamosa_update_7168() {
 }
 
 /**
+ * Convert command-line strings.
+ *
  * Convert all profile command-line strings for mediamosa_job_transcode table
  * to new format.
  *
@@ -4284,6 +4429,8 @@ function mediamosa_update_7169() {
 }
 
 /**
+ * Convert command-line strings.
+ *
  * Convert all profile command-line strings for mediamosa_asset_mediafile table
  * to new format.
  *
@@ -4309,6 +4456,8 @@ function mediamosa_update_7171() {
 }
 
 /**
+ * Process mediafiles for asset normalize.
+ *
  * Normalize the original mediafile filename to the asset. This allows frontends
  * to use filenames from search results when no metadata titles are available.
  * If the update times out, just restart the update process. It will continue
@@ -4380,17 +4529,17 @@ function mediamosa_update_7172() {
  * Extend the storage size of the mediafile extension.
  */
 function mediamosa_update_7173() {
-    db_change_field(
-      'mediamosa_asset_mediafile',
-      'file_extension',
-      'file_extension',
-      array(
-        'type' => 'varchar',
-        'length' => 255,
-        'default' => NULL,
-        'description' => 'The file extension.',
-      )
-    );
+  db_change_field(
+    'mediamosa_asset_mediafile',
+    'file_extension',
+    'file_extension',
+    array(
+      'type' => 'varchar',
+      'length' => 255,
+      'default' => NULL,
+      'description' => 'The file extension.',
+    )
+  );
 }
 
 /**
@@ -4466,8 +4615,7 @@ function mediamosa_update_7176() {
         ),
       ),
       'primary key' => array('nid_viewer', 'nid_server'),
-      'indexes' => array(
-      )
+      'indexes' => array(),
     ));
   }
 }

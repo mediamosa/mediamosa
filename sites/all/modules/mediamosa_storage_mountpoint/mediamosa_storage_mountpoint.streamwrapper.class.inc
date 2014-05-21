@@ -20,8 +20,9 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
   }
 
   /**
-   * Returns the working path. Any info used by storage profile object is
-   * stripped from the path.
+   * Returns the working path.
+   *
+   * Any info used by storage profile object is stripped from the path.
    *
    * Expects the path to be [storage_profile_id]/[path][/-/mediafile_path].
    *
@@ -42,7 +43,8 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
       return '';
     }
 
-    // Expecting path is be [storage_profile_id]/[path]/mediafile_id[0]/[mediafile_id].
+    // Expecting path is be
+    // [storage_profile_id]/[path]/mediafile_id[0]/[mediafile_id].
     list(, $target) = explode('/', $target, 2);
 
     return $target;
@@ -121,11 +123,6 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
 
     $mediafile_path = empty($matches['mediafile_path']) ? '' : trim($matches['mediafile_path'], '\/');
 
-//    // Validate the mediafile_path part.
-//    if (!empty($mediafile_path) && !$this->validate_uri_mediafile_path($mediafile_path)) {
-//      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STORAGE_IO_ERROR, array('@error' => "invalid storage uri: '" . $uri . "', ' . $mediafile_path . '"));
-//    }
-
     // Return parts.
     return array(
       'scheme' => $matches['scheme'],
@@ -144,7 +141,7 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
    * @param string $mediafile_path
    *   The mediafile path to validate.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {

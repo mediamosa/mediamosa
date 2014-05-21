@@ -115,7 +115,7 @@ abstract class mediamosa_cql {
    * Will throw exceptions when errors are found in syntax
    *
    * @param string $str_cql
-   * @param boolean $b_verify
+   * @param bool $b_verify
    */
   protected function mediamosa_cql_parse($str_cql, $a_settings = array()) {
     assert(is_string($str_cql));
@@ -195,7 +195,7 @@ abstract class mediamosa_cql {
    * Will throw exceptions when parsing failed
    *
    * @param string $str_cql
-   * @return boolean
+   * @return bool
    */
   protected function mediamosa_cql_verify($str_cql) {
     mediamosa_cql::mediamosa_cql_parse($str_cql, array(MEDIAMOSA_CQL_KEY_SETTING_VERIFY => TRUE));
@@ -206,8 +206,8 @@ abstract class mediamosa_cql {
    * throws cql_exception_eos when it reached the end
    *
    * @param string $str_cql
-   * @param integer $i_pos
-   * @return boolean true; char is escaped
+   * @param int $i_pos
+   * @return bool true; char is escaped
    */
   private function mediamosa_cql_next_pos($str_cql, &$i_pos, $is_quoted) {
 
@@ -242,7 +242,7 @@ abstract class mediamosa_cql {
    * Skip Whitespaces
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    * @return integer
    */
   private function mediamosa_cql_skip_ws($str_cql, &$i_pos) {
@@ -265,7 +265,7 @@ abstract class mediamosa_cql {
    * expect it.
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    */
   private function mediamosa_cql_has_next($str_cql, $i_pos) {
     return $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
@@ -275,7 +275,7 @@ abstract class mediamosa_cql {
    * Get next cql (sub)part
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    * @return string
    */
   private function mediamosa_cql_next($str_cql, &$i_pos, $is_quoted = FALSE, $is_escaped = FALSE, $array_end_chars = array(' ', '/', '(', ')', '"'), $array_end_words = array('<>', '<=', '>=', '==', '=', '>', '<')) {
@@ -387,7 +387,7 @@ abstract class mediamosa_cql {
    * Same as mediamosa_cql_next, except we are inside quoted string
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    * @return string
    */
   private function mediamosa_cql_next_quoted($str_cql, &$pos) {
@@ -426,7 +426,7 @@ abstract class mediamosa_cql {
    * Get the next complete part
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    */
   private function mediamosa_cql_next_part($str_cql, &$i_pos, &$o_cql_part_group) {
 
@@ -637,8 +637,8 @@ abstract class mediamosa_cql {
    * Check if next char matches with given char
    *
    * @param string $str_cql
-   * @param integer $i_pos
-   * @return boolean
+   * @param int $i_pos
+   * @return bool
    */
   final private function mediamosa_cql_next_is($str_cql, $i_pos, $char) {
 
@@ -658,7 +658,7 @@ abstract class mediamosa_cql {
    * Check for modifiers and collect them when present
    *
    * @param string $str_cql
-   * @param integer $i_pos
+   * @param int $i_pos
    * @param object/array $mixed_item
    */
   final private function mediamosa_cql_modifiers_do($str_cql, &$i_pos, $mixed_item) {
@@ -850,7 +850,7 @@ abstract class mediamosa_cql_modifiers {
   /**
    * Test if there are any modifiers
    *
-   * @return boolean
+   * @return bool
    */
   public function mediamosa_cql_modifier_has() {
     return (count($this->m_a_str_modifiers) ? TRUE : FALSE);

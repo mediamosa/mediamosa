@@ -9,10 +9,15 @@
  */
 function mediamosa_tool_image_install() {
 
+  $t = get_t();
   // Tool parameters.
   $default_params = array(
-    array('image', 'quality', '-quality', NULL, NULL, NULL, '', 'FALSE', t('Quality is 0 (lowest image quality and highest compression) to 100 (best quality but least effective compression). The default quality is 75. See man convert for more information.')),
-    array('image', 'resize', '-resize', NULL, NULL, NULL, '', 'FALSE', t('Resize an image ({width}x{height}). Default the size of the original. See man convert for more information.')),
+    array(
+      'image', 'quality', '-quality', NULL, NULL, NULL, '', 'FALSE', $t('Quality is 0 (lowest image quality and highest compression) to 100 (best quality but least effective compression). The default quality is 75. See man convert for more information.'),
+    ),
+    array(
+      'image', 'resize', '-resize', NULL, NULL, NULL, '', 'FALSE', $t('Resize an image ({width}x{height}). Default the size of the original. See man convert for more information.'),
+    ),
   );
 
   // Insert default mappings as nodes.
@@ -35,7 +40,9 @@ function mediamosa_tool_image_install() {
   // Transcode profile.
   $default_profiles = array(
     array('convert image', 'FALSE', 'image', 'jpg', ''),
-    array('high quality image', 'FALSE', 'image', 'jpg', 'quality:80;resize:2000x2000\>;'),
+    array(
+      'high quality image', 'FALSE', 'image', 'jpg', 'quality:80;resize:2000x2000\>;',
+    ),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -100,6 +107,7 @@ function mediamosa_tool_image_uninstall() {
   $nodes = node_load_multiple(array_keys($entities['node']));
 
   // Can't add tool=image to FieldQuery, so do it here.
+  $nodes_to_delete = array();
   foreach ($nodes as $node) {
     if ($node->tool == 'image') {
       $nodes_to_delete[] = $node->nid;

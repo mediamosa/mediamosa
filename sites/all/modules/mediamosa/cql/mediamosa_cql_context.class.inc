@@ -68,7 +68,7 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
    * Verify the given CQL string
    *
    * @param string $str_cql
-   * @return boolean
+   * @return bool
    */
   final public function mediamosa_cql_verify($str_cql) {
     try {
@@ -96,7 +96,7 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
    * Check if given string is a known relation syntax
    *
    * @param string $str
-   * @return boolean
+   * @return bool
    */
   final public function mediamosa_cql_context_is_relation($str) {
     return ($this->mediamosa_cql_context_is_comparitor_symbol($str) || $this->mediamosa_cql_context_is_named_comparitor($str));

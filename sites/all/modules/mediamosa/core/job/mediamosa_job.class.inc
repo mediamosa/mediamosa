@@ -18,7 +18,7 @@ class mediamosa_job {
    *   Array of variables to replace in the message on display or
    *   NULL if message is already translated or not possible to
    *   translate.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -50,7 +50,7 @@ class mediamosa_job {
    *   translate.
    * @param string $asset_id
    *   (optional) The ID of the asset. Provide when available.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -69,7 +69,7 @@ class mediamosa_job {
   /**
    * Make sure the job exists.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The Job ID.
    *
    * @return array
@@ -84,7 +84,7 @@ class mediamosa_job {
   /**
    * Get the job from the main job table.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    *
    * @return array
@@ -137,7 +137,7 @@ class mediamosa_job {
   /**
    * Get job details by a given asset_id.
    *
-   * @param integer $asset_id
+   * @param int $asset_id
    *  The asset ID.
    *
    * @return DatabaseStatementInterface
@@ -238,7 +238,7 @@ class mediamosa_job {
   /**
    * Returns the number jobs of certain type.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param array $job_types
    *   (optional) The job types to count.
    * @param array $job_status
@@ -271,7 +271,7 @@ class mediamosa_job {
   /**
    * Store the error description.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    * @param string $error_description
    *  Text to store.
@@ -292,7 +292,7 @@ class mediamosa_job {
   /**
    * Get all information of this job in the database.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    *
    * @return array
@@ -333,7 +333,7 @@ class mediamosa_job {
   /**
    * Update the progress in the job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    * @param string $progress
    *  In format x.xxx (0.000 to 1.000)
@@ -370,7 +370,7 @@ class mediamosa_job {
    *   The mediafile ID.
    * @param string $user_id
    *   The owner.
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    *
    * @return integer
@@ -399,17 +399,17 @@ class mediamosa_job {
   /**
    * Create a transcode job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner of the job.
    * @param string $group_id
    *   The group of the user.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is application admin.
    * @param string $mediafile_id
    *   The source mediafile ID.
-   * @param boolean $create_still
+   * @param bool $create_still
    *   Create still after transcode.
    * @param array $still_parameters
    *   The still parameters for creation of the still.
@@ -419,7 +419,7 @@ class mediamosa_job {
    *  Set of commands.
    * @param string $tool
    *  Name of tool to use.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Possible transcode profile to use.
    * @param string $completed_transcoding_url
    *   The URL to trigger when job status changes.
@@ -446,17 +446,17 @@ class mediamosa_job {
   /**
    * Create a retranscode job
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner of the job.
    * @param string $group_id
    *   The group of the user.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is application admin.
    * @param string $mediafile_id
    *   The source mediafile ID.
-   * @param boolean $create_still
+   * @param bool $create_still
    *   Create still after transcode.
    * @param array $still_parameters
    *   The still parameters for creation of the still.
@@ -466,7 +466,7 @@ class mediamosa_job {
    *  Set of commands.
    * @param string $tool
    *  Name of tool to use.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Possible transcode profile to use.
    * @param string $completed_transcoding_url
    *   The URL to trigger when job status changes.
@@ -522,7 +522,7 @@ class mediamosa_job {
    *
    * @param string $mediafile_id
    *
-   * @return boolean
+   * @return bool
    *   TRUE in case of still is creatable.
    */
   public static function is_still_creatable($mediafile_id) {
@@ -539,12 +539,12 @@ class mediamosa_job {
   /**
    * Create still job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param bool $is_app_admin
    * @param string $mediafile_id
    * @param array $still_parameters
-   * @param integer $priority
+   * @param int $priority
    */
   public static function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array(), $priority = NULL) {
     if (self::is_still_creatable($mediafile_id)) {
@@ -567,16 +567,16 @@ class mediamosa_job {
   /**
    * Create upload job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $group_id
    * @param bool $is_app_admin
    * @param string $mediafile_id
-   * @param integer $file_size
+   * @param int $file_size
    * @param bool $retranscode
    * @param bool $create_still
    * @param array $still_parameters
-   * @param integer $priority
+   * @param int $priority
    */
   public static function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode = FALSE, $create_still = FALSE, $still_parameters = array(), $priority = NULL) {
 
@@ -599,15 +599,15 @@ class mediamosa_job {
    * This job will download the storage location and place it in the transition
    * dir.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The user ID.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is user superuser?
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $priority
+   * @param int $priority
    *   The priority for job.
    *
    * @return integer
@@ -651,15 +651,15 @@ class mediamosa_job {
    *
    * This job will upload the mediafile from source to its storage location.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The user ID.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is user superuser?
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $priority
+   * @param int $priority
    *   The priority for job.
    *
    * @return integer
@@ -688,17 +688,17 @@ class mediamosa_job {
    *
    * The mediamove will use an temporary (local) location during the copy.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The user ID.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is user superuser?
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The storage profile ID.
-   * @param integer $priority
+   * @param int $priority
    *   The priority for job.
    *
    * @return integer
@@ -721,17 +721,17 @@ class mediamosa_job {
   /**
    * Create analyse job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The owner of the job.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    * @param string $mediafile_id
    *   The ID of the mediafile to analyse.
-   * @param integer $priority
+   * @param int $priority
    *   The job priority.
-   * @param boolean $hint
+   * @param bool $hint
    *   Hinting of the mediafile.
    *
    * @return integer
@@ -749,7 +749,7 @@ class mediamosa_job {
    * Create a job.
    *
    * @param string $job_type
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param bool $is_app_admin
    * @param string $mediafile_id
@@ -842,7 +842,7 @@ class mediamosa_job {
   /**
    * Called after the job has been created.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $mediafile_id
    * @param string $job_type
@@ -893,7 +893,7 @@ class mediamosa_job {
   /**
    * Create a finished job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $mediafile_id
    * @param string $job_type
@@ -907,7 +907,7 @@ class mediamosa_job {
   /**
    * Create a failed job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $mediafile_id
    * @param string $job_type
@@ -986,7 +986,7 @@ class mediamosa_job {
    *   Old status.
    * @param string $new_status
    *   New status.
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $mediafile_dest
    *
@@ -1014,7 +1014,7 @@ class mediamosa_job {
   /**
    * Change the job status.
    *
-   * @param integer job_id
+   * @param int job_id
    * @param string $job_status
    * @param string $error_description
    */
@@ -1281,10 +1281,10 @@ class mediamosa_job {
   /**
    * Deletes the job. Moved into function for re-use.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when job was deleted, FALSE otherwise.
    */
   public static function delete_job($job_id) {
@@ -1471,9 +1471,9 @@ class mediamosa_job {
   /**
    * Update the progress status of the upload job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
-   * @param integer $uploaded_file_size
+   * @param int $uploaded_file_size
    *   The size of the current position done upload in bytes.
    */
   public static function update_progress_upload($job_id, $uploaded_file_size) {

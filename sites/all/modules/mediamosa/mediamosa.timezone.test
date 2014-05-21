@@ -9,6 +9,12 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
+  /**
+   * Get info about the test.
+   *
+   * @return array
+   *   The info about the test.
+   */
   public static function getInfo() {
     return array(
       'name' => 'MediaMosa - Timezone UTC dates',
@@ -51,23 +57,49 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
   /**
    * Helper for checking dates.
    *
-   * @param array $mixed_item
+   * @param mixed $mixed_item
+   *   Single date.
    * @param array $found_dates
+   *   For usage data later.
+   * @param string $cet_timestamp
+   *   The CET timestamp
+   * @param string $name
+   *   Name withing array.
+   *
+   * @return bool
+   *   Valid date when true.
    */
   private function helper_check_for_dates($mixed_item, &$found_dates, $cet_timestamp, $name = 'item') {
     return $this->helper_check_for_dates_2($mixed_item, $found_dates, mediamosa_datetime::date2unix($cet_timestamp), $name = 'item', $cet_timestamp);
   }
 
+  /**
+   * Helper for checking dates.
+   *
+   * @param mixed $mixed_item
+   *   Single date.
+   * @param array $found_dates
+   *   For usage data later.
+   * @param string $cet_unixtime
+   *   The Unix timestamp
+   * @param string $name
+   *   Name withing array.
+   * @param string $cet_timestamp
+   *   The CET timestamp
+   *
+   * @return bool
+   *   Valid date when true.
+   */
   private function helper_check_for_dates_2($mixed_item, &$found_dates, $cet_unixtime, $name = 'item', $cet_timestamp = '') {
     if (is_string($mixed_item)) {
       try {
         mediamosa_datetime::date8601_to_timestamp($mixed_item, $name, mediamosa_sdk::TYPE_DATETIME);
       }
       catch (Exception $e) {
-        return FALSE; // Not date.
+        return FALSE;
       }
 
-      return TRUE; // Date.
+      return TRUE;
     }
 
     // Do not expect anything less.
@@ -78,11 +110,10 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
         return FALSE;
       }
 
-
       if ($this->helper_check_for_dates_2($item, $found_dates, $cet_unixtime, $key, $cet_timestamp)) {
         $found_dates['found']++;
 
-        // into seconds.
+        // Into seconds.
         $item_unixtime = mediamosa_datetime::date2unix($item);
 
         // If diffs more than 600 seconds, then im sure its not in this timezone.
@@ -102,6 +133,8 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
   /**
+   * Verify output on most REST calls.
+   *
    * Call all known REST calls, and see if it has the correct timezone settings
    * in their output.
    */
@@ -115,7 +148,7 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
     $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
 
-    // enable change master/slave.
+    // Enable change master/slave.
     $this->toEga_1();
     $this->enableMasterSlave($app_id_2);
     $this->enableMasterSlave($app_id_3);
@@ -187,7 +220,7 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
 
     // Put asset(s) in collection.
     $this->createCollectionAssetRelation($coll_id_1, array($asset_id_1));
-    // Some rigths
+
     $this->setMediafileAcl($mediafile_id_1, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
@@ -248,39 +281,39 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'collection/count',
       'collection/$coll_id/favorites/count',
       'collection/$coll_id/count_favorites',
-      'ftp_batch', // checked manually.
-      'ftp_batch/$batch_id', // checked manually.
-      'ftp_batch/$batch_id/assets', // checked manually.
+      'ftp_batch',
+      'ftp_batch/$batch_id',
+      'ftp_batch/$batch_id/assets',
       'ftp/$user',
       'ftp/list',
       'ftp',
-      'autorisation_group/$groupname/hostname', // has no dates.
+      'autorisation_group/$groupname/hostname',
       'video/transcode/$job_id/status',
       'mediafile/transcode/$job_id/status',
-      'statistics/popularmediafiles',// checked manually.
-      'statistics/popularcollections',// checked manually.
-      'statistics/dataupload',// checked manually.
-      'statistics/playedstreams',// checked manually.
-      'statistics/streams',// checked manually.
-      'statistics/mostsearchedwords',// checked manually.
-      'statistics/searchedwords',// checked manually.
-      'statistics/searchrequest',// checked manually.
-      'statistics/datausagevideo', // checked manually.
-      'user/$fav_user_id/favorites', // checked manually.
-      'user', // Gives troubles on a simple server setup, so skip here.
-      'version', // no dates.
-      'openapi/oauth/request_token',// No need to check.
-      'openapi/oauth/access_token',// No need to check.
-      'job/$job_id/execute', // New 3.4
-      'download/$app_id/$ticket_id/$filename', // 3.4
-      'download/$app_id/$mediafile_id_prefix/$mediafile_id/$filename', // 3.5
-      'download/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename', // 3.5
-      'download/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename', // 3.5
-      'download/simpletest/media/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename', // 3.5
-      'media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename', // 3.4
-      'media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename', // 3.4
-      'media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename', // 3.4
-      'media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename', // 3.4
+      'statistics/popularmediafiles',
+      'statistics/popularcollections',
+      'statistics/dataupload',
+      'statistics/playedstreams',
+      'statistics/streams',
+      'statistics/mostsearchedwords',
+      'statistics/searchedwords',
+      'statistics/searchrequest',
+      'statistics/datausagevideo',
+      'user/$fav_user_id/favorites',
+      'user',
+      'version',
+      'openapi/oauth/request_token',
+      'openapi/oauth/access_token',
+      'job/$job_id/execute',
+      'download/$app_id/$ticket_id/$filename',
+      'download/$app_id/$mediafile_id_prefix/$mediafile_id/$filename',
+      'download/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename',
+      'download/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename',
+      'download/simpletest/media/ticket/download/$app_id/$ticket_id_prefix/$ticket_id/$filename',
+      'media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename',
+      'media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename',
+      'media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename',
+      'media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename',
     );
 
     $uri_fixed_params = array(
@@ -365,7 +398,9 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       $output = $this->restCall($uri_call, mediamosa_rest_call::METHOD_GET, empty($uri_fixed_params[$uri]) ? array() : $uri_fixed_params[$uri]);
       $output = mediamosa_lib::responsexml2array($output['xml']);
 
-      $message = array(t("Found test with uri '@uri', called with '@uri_call'", array('@uri' => $uri, '@uri_call' => $uri_call)));
+      $message = array(
+        t("Found test with uri '@uri', called with '@uri_call'", array('@uri' => $uri, '@uri_call' => $uri_call))
+      );
 
       // Test if we have output as in items.
       if (empty($output['items']['item'])) {
@@ -393,23 +428,39 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
 
       // No dates found?
       if ($found_dates['found'] == 0) {
-        // ok lets know.
         $message[] = t("@items item(s) total, but has no dates.", array('@uri' => $uri, '@items' => count($output['items']['item'])));
         $this->pass(implode(', ', $message));
       }
-      elseif ($found_dates['ok'] == $found_dates['found']) { // All good?
-        // ok lets know.
-        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all OK.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found']));
+      elseif ($found_dates['ok'] == $found_dates['found']) {
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all OK.",
+          array(
+            '@uri' => $uri,
+            '@items' => count($output['items']['item']),
+            '@dates' => $found_dates['found'],
+          )
+        );
         $this->pass(implode(', ', $message));
       }
-      elseif (!$found_dates['ok']) { // All bad?
-        // ok lets know.
-        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all failed.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found']));
+      elseif (!$found_dates['ok']) {
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), all failed.",
+          array(
+            '@uri' => $uri,
+            '@items' => count($output['items']['item']),
+            '@dates' => $found_dates['found'],
+          )
+        );
         $this->fail(implode(', ', $message));
       }
-      else { // Some bad, some good.
-        // ok lets know.
-        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), @bad_dates bad dates, @good_dates good dates.", array('@uri' => $uri, '@items' => count($output['items']['item']), '@dates' => $found_dates['found'], '@bad_dates' => $found_dates['found'] - $found_dates['ok'], '@good_dates' => $found_dates['ok']));
+      else {
+        $message[] = t("Found test with uri '@uri', @items item(s) total, found @dates date(s), @bad_dates bad dates, @good_dates good dates.",
+          array(
+            '@uri' => $uri,
+            '@items' => count($output['items']['item']),
+            '@dates' => $found_dates['found'],
+            '@bad_dates' => $found_dates['found'] - $found_dates['ok'],
+            '@good_dates' => $found_dates['ok'],
+          )
+        );
         $this->fail(implode(', ', $message));
       }
     }

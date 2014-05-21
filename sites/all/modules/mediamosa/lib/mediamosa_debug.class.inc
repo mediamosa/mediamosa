@@ -32,7 +32,7 @@ class mediamosa_debug {
    *
    * @param mixed $data
    *   The data to export to the log.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -196,7 +196,7 @@ class mediamosa_debug {
    *   The message to log.
    * @param string $file
    *   The file where the error happened.
-   * @param integer $line
+   * @param int $line
    *   The line number where the error happened.
    */
   public static function error_log($message, $file = '', $line = '') {
@@ -222,7 +222,7 @@ class mediamosa_debug {
   /**
    * Returns TRUE / FALSE to indicate debug mode ON / OFF.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when debug is on.
    */
   public static function is_debug() {
@@ -232,7 +232,7 @@ class mediamosa_debug {
   /**
    * Returns TRUE / FALSE to indicate normal debug.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when normal level debug is on.
    */
   public static function is_debug_normal() {
@@ -242,7 +242,7 @@ class mediamosa_debug {
   /**
    * Returns TRUE / FALSE to indicate debug mode for logging.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when high level debug is on.
    */
   public static function is_debug_high() {
