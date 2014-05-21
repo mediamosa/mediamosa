@@ -734,8 +734,12 @@ abstract class mediamosa_storage {
    * @return string
    *   The path.
    */
-  public static function get_path_media_permanent_file($app_id, $mediafile_id = '', $filename = '') {
+  public static function get_path_media_permanent_file($app_id, $mediafile_id = '', $filename = '', $urlencode = false) {
+    if($urlencode) {
+      return $app_id . '/' . (!empty($mediafile_id) ? $mediafile_id[0] . '/' . $mediafile_id . '/' . rawurlencode($filename) : '');
+    } else {
     return $app_id . '/' . (!empty($mediafile_id) ? $mediafile_id[0] . '/' . $mediafile_id . '/' . $filename : '');
+    }
   }
 
   /**
