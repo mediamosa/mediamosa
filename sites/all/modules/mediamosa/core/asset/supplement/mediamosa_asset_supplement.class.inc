@@ -63,7 +63,7 @@ class mediamosa_asset_supplement {
   /**
    * Create the supplement.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $asset_id
    *  The asset ID on which to create the supplement on.
@@ -112,7 +112,7 @@ class mediamosa_asset_supplement {
   /**
    * Update a asset supplement.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $user_id
    *  The user ID, must be owner of parent asset.
@@ -169,7 +169,7 @@ class mediamosa_asset_supplement {
   /**
    * Delete the supplement.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $user_id
    *  Must be owner of the asset to delete supplement.

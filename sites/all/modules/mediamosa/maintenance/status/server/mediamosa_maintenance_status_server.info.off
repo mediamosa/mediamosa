@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Server status view page"
 description = "If you enable this module then the MediaMosa status page will be extended with server status."

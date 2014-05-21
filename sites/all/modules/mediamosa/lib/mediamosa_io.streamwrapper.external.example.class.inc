@@ -34,7 +34,7 @@ class mediamosa_storage_example extends mediamosa_storage {
   /**
    * Get the default scheme.
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still? Is ignored on external uris.
    *
    * @return string
@@ -133,7 +133,7 @@ class mediamosa_io_streamwrapper_external_example extends mediamosa_io_streamwra
   /**
    * Check if the the file exists.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file exists.
    */
   public function file_exists() {

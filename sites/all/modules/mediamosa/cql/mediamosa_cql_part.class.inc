@@ -167,7 +167,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
    * checks if any exception was thrown
    *
    * @param cql_context $o_cql_context
-   * @param integer $i_pos
+   * @param int $i_pos
    */
   final public function mediamosa_cql_part_verify_index(mediamosa_cql_context $o_cql_context, $i_pos) {
     if ($o_cql_context->mediamosa_cql_context_index2column($this) === FALSE) {
@@ -180,7 +180,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
   /**
    * Set if NOT is present in front of
    *
-   * @param boolean $b_set
+   * @param bool $b_set
    */
   final public function mediamosa_cql_part_has_boolean_not_set($b_set) {
     $this->m_b_not_boolean = $b_set ? TRUE : FALSE;
@@ -275,7 +275,7 @@ final class mediamosa_cql_part_search_term {
    * @param string $str
    *   The string to test for wildcards.
    *
-   * @return boolean
+   * @return bool
    *   Will return TRUE when string contains wildcards.
    */
   final public function mediamosa_cql_contains_wildcards($str = FALSE) {

@@ -38,7 +38,7 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Get a property group.
    *
-   * @param integer $property_group_id (unique)
+   * @param int $property_group_id (unique)
    * @return array
    */
   public static function property_group_row_get($property_group_id) {
@@ -72,7 +72,7 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Get a property group by app_id.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @return array
    */
   public static function property_group_row_get_with_appid($app_id) {
@@ -111,7 +111,7 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Create a property group for application.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The name of the property group.
    *
    * @return integer
@@ -126,7 +126,7 @@ class mediamosa_asset_metadata_property_group {
    *
    * @param string $property_group_name
    *
-   * @return boolean
+   * @return bool
    *  TRUE / FALSE
    */
   public static function property_group_installed($property_group_name) {
@@ -139,7 +139,7 @@ class mediamosa_asset_metadata_property_group {
   /**
    * Create global property.
    *
-   * @param integer $property_group_id
+   * @param int $property_group_id
    * @param string $property_name
    * @param string $type
    * @param array $options

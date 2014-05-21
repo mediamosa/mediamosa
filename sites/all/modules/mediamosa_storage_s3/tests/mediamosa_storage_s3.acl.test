@@ -12,6 +12,9 @@ if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
 
 class MediaMosaS3MediaACLTestCaseEga extends MediaMosaS3BaseTestCaseEga {
   // ------------------------------------------------------------------ Methods.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     // Only available when these are set.
     if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
@@ -25,6 +28,9 @@ class MediaMosaS3MediaACLTestCaseEga extends MediaMosaS3BaseTestCaseEga {
   }
 
   // -------------------------------------------------------------------- Tests.
+  /**
+   * Test ACL.
+   */
   public function testACL() {
     // If s3 object is missing, stop the test.
     if (!$this->s3) {

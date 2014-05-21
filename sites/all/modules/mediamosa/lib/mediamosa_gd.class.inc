@@ -9,17 +9,17 @@ class mediamosa_gd {
   /**
    * Calculate the difference in lumosity.
    *
-   * @param integer $r1
+   * @param int $r1
    *   Red 1.
-   * @param integer $g1
+   * @param int $g1
    *   Green 1.
-   * @param integer $b1
+   * @param int $b1
    *   Blue 1.
-   * @param integer $r2
+   * @param int $r2
    *   Red 2.
-   * @param integer $g2
+   * @param int $g2
    *   Green 2.
-   * @param integer $b2
+   * @param int $b2
    *   Blue 2.
    *
    * @return integer
@@ -35,17 +35,17 @@ class mediamosa_gd {
   /**
    * Calc color difference between each color (rgb).
    *
-   * @param integer $r1
+   * @param int $r1
    *   Red 1.
-   * @param integer $g1
+   * @param int $g1
    *   Green 1.
-   * @param integer $b1
+   * @param int $b1
    *   Blue 1.
-   * @param integer $r2
+   * @param int $r2
    *   Red 2.
-   * @param integer $g2
+   * @param int $g2
    *   Green 2.
-   * @param integer $b2
+   * @param int $b2
    *   Blue 2.
    */
   public static function coldiff($r1, $g1, $b1, $r2, $g2, $b2) {
@@ -55,17 +55,17 @@ class mediamosa_gd {
   /**
    * Calculate the difference in color distance.
    *
-   * @param integer $r1
+   * @param int $r1
    *   Red 1.
-   * @param integer $g1
+   * @param int $g1
    *   Green 1.
-   * @param integer $b1
+   * @param int $b1
    *   Blue 1.
-   * @param integer $r2
+   * @param int $r2
    *   Red 2.
-   * @param integer $g2
+   * @param int $g2
    *   Green 2.
-   * @param integer $b2
+   * @param int $b2
    *   Blue 2.
    *
    * @return integer
@@ -82,17 +82,17 @@ class mediamosa_gd {
   /**
    * Calculate the difference in brightness.
    *
-   * @param integer $r1
+   * @param int $r1
    *   Red 1.
-   * @param integer $g1
+   * @param int $g1
    *   Green 1.
-   * @param integer $b1
+   * @param int $b1
    *   Blue 1.
-   * @param integer $r2
+   * @param int $r2
    *   Red 2.
-   * @param integer $g2
+   * @param int $g2
    *   Green 2.
-   * @param integer $b2
+   * @param int $b2
    *   Blue 2.
    *
    * @return integer
@@ -161,7 +161,7 @@ class mediamosa_gd {
    *   identically to imagecopy() for pallete images, while it implements alpha
    *   transparency for true colour images.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
    *
    * @link http://www.php.net/imagecopymerge
@@ -354,9 +354,9 @@ class mediamosa_gd {
    *
    * @param resource $image
    *   The resource identifier.
-   * @param integer $x
+   * @param int $x
    *   The x-coordinate of the point on surface.
-   * @param integer $y
+   * @param int $y
    *   The y-coordinate of the point on surface.
    *
    * @return int
@@ -380,7 +380,7 @@ class mediamosa_gd {
    * @param resource $image
    *   The resource identifier.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
    *
    * @link http://www.php.net/imagedestroy
@@ -403,12 +403,12 @@ class mediamosa_gd {
    * @param string $uri
    *   A stream wrapper URI or a filesystem path to save the file to. If NULL,
    *   the raw image stream will be outputted directly.
-   * @param integer $quality
+   * @param int $quality
    *   Quality is optional, and ranges from 0 (worst quality, smaller file) to
    *   100 (best quality, biggest file). The default is the default IJG quality
    *   value (about 75).
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
    *
    * @link http://php.net/imagejpeg
@@ -432,15 +432,15 @@ class mediamosa_gd {
    *   A stream wrapper URI or a filesystem path to save the file to. If NULL
    *   the raw image stream will be outputted directly. NULL is invalid if the
    *   quality and filters arguments are not used.
-   * @param integer $quality
+   * @param int $quality
    *   Compression level: from 0 (no compression) to 9.
-   * @param integer $filters
+   * @param int $filters
    *   Allows reducing the PNG file size. It is a bitmask field which may be set
    *   to any combination of the PNG_FILTER_XXX constants. PNG_NO_FILTER or
    *   PNG_ALL_FILTERS may also be used to respectively disable or activate all
    *   filters.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
    *
    * @link http://php.net/imagepng
@@ -456,17 +456,17 @@ class mediamosa_gd {
    *
    * @param resource $image
    *   The resource object.
-   * @param integer $image_type
+   * @param int $image_type
    *   Is one of the IMAGETYPE_XXX constants indicating the type of the image.
    * @param string $uri
    *   A stream wrapper URI or a filesystem path to save the file to. If NULL,
    *   the raw image stream will be outputted directly.
-   * @param integer $quality
+   * @param int $quality
    *   Quality is optional, and ranges from 0 (worst quality, smaller file) to
    *   100 (best quality, biggest file). The default is the default IJG quality
    *   value (about 75).
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success or FALSE on failure.
    *
    * @see imagejpeg()
@@ -492,17 +492,17 @@ class mediamosa_gd {
    *
    * Calculates the image size based on target and source sizes.
    *
-   * @param integer $source_width
+   * @param int $source_width
    *   Width of source.
-   * @param integer $source_height
+   * @param int $source_height
    *   Height of source.
    * @param string $target_size
    *   The size of the target in WIDTHxHEIGHT format.
-   * @param integer $h_padding
+   * @param int $h_padding
    *   Horizontal padding.
-   * @param integer $v_padding
+   * @param int $v_padding
    *   Vertical padding.
-   * @param boolean $use_padding
+   * @param bool $use_padding
    *   Use padding parameters.
    *
    * @return array|boolean

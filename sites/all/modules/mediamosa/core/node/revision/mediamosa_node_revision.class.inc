@@ -90,8 +90,8 @@ class mediamosa_node_revision {
   /**
    * Insert new revision of object.
    *
-   * @param integer $nid
-   * @param integer $vid
+   * @param int $nid
+   * @param int $vid
    * @param array $revision_data
    */
   public static function insert($nid, $vid, array $revision_data) {

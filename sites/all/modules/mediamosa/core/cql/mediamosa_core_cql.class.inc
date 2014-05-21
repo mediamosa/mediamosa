@@ -106,7 +106,7 @@ class mediamosa_core_cql {
    * Start parsing the CQL for asset search.
    *
    * @param string $str_cql
-   * @param boolean $cql_store_stats
+   * @param bool $cql_store_stats
    * @param array $app_ids
    */
   public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
@@ -121,7 +121,7 @@ class mediamosa_core_cql {
    * Will throw exception when verify has failed.
    *
    * @param string $str_cql
-   * @return boolean
+   * @return bool
    */
   public static function verify_asset($str_cql, array $app_ids, &$error_text) {
 
@@ -152,7 +152,7 @@ class mediamosa_core_cql {
    * Will throw exception when verify has failed.
    *
    * @param string $str_cql
-   * @return boolean
+   * @return bool
    */
   public static function verify_collection($str_cql, $app_ids, &$error_text) {
 
@@ -184,7 +184,7 @@ class mediamosa_core_cql {
    * Will throw exception when verify has failed.
    *
    * @param string $str_cql
-   * @return boolean
+   * @return bool
    */
   public static function verify_job($str_cql, $app_ids, &$error_text) {
 
@@ -429,7 +429,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @param string $like
    *   The operator, e.g. '=' or 'LIKE'.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when operator is 'LIKE' (or 'NOT LIKE').
    */
   protected function mediamosa_cql_is_like($like) {

@@ -299,7 +299,7 @@ class mediamosa_datetime {
    * Convert date from UTC to timezone of APP.
    *
    * @param string $utc_date
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function utc_date2app_date($utc_date, $app_timezone) {
 

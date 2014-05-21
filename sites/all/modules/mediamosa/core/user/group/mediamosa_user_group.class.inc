@@ -36,7 +36,7 @@ class mediamosa_user_group {
    *
    * @param string $group_id
    *  Group to retrieve.
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    */
   public static function get($group_id, $app_id, array $a_fields = NULL) {
@@ -51,7 +51,7 @@ class mediamosa_user_group {
   /**
    * Collect and calculate group quota.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $group_id
    *  Group ID.
@@ -120,11 +120,11 @@ class mediamosa_user_group {
   /**
    * Create a group.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $group_id
    *  The group ID.
-   * @param integer $quotum
+   * @param int $quotum
    *  The quotum.
    */
   public static function create($app_id, $group_id, $quotum) {
@@ -146,7 +146,7 @@ class mediamosa_user_group {
   /**
    * Delete a group.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The Application ID.
    * @param string $group_id
    *  The Group ID.
@@ -172,11 +172,11 @@ class mediamosa_user_group {
   /**
    * Update the group.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $group_id
    *  The group ID.
-   * @param integer $quotum
+   * @param int $quotum
    *  Quotum to change.
    */
   public static function update($app_id, $group_id, $quotum) {

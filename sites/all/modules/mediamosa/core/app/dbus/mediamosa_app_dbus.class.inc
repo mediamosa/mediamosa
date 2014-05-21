@@ -208,7 +208,7 @@ class mediamosa_app_dbus {
   /**
    * Store the application ID to keep us logged in.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The client application.
    */
   protected static function set_session_app_id($app_id) {

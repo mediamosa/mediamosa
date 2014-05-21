@@ -268,7 +268,7 @@ function mediamosa_app_menu() {
  * @param object $node
  *   The node object.
  *
- * @return boolean
+ * @return bool
  *   TRUE when access, FALSE otherwise.
  */
 function _mediamosa_app_storage_node_access($node) {

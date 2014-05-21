@@ -9,7 +9,7 @@ class mediamosa_app {
   /**
    * Get the app using the app_id.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The client application ID.
    *
    * @return array
@@ -64,7 +64,7 @@ class mediamosa_app {
   /**
    * Get the app using the node ID.
    *
-   * @param integer $nid
+   * @param int $nid
    *   The node ID.
    * @param array $fields
    *   For specific columns.
@@ -202,7 +202,7 @@ class mediamosa_app {
   /**
    * return an array of all apps that are allowed to master/slave this app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function get_allowed_master_slave_apps($app_id) {
     $allowed_apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
@@ -222,7 +222,7 @@ class mediamosa_app {
   /**
    * Return the default value of the still, depending of the application id.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    *
    * @return string|boolean
@@ -246,7 +246,7 @@ class mediamosa_app {
   /**
    * Return the still padding value, depending of the application id.
    *
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function get_still_padding_value($app_id) {
     if (!$app_id) {
@@ -261,7 +261,7 @@ class mediamosa_app {
    * Return the still maintain aspect ratio value, depending of the application
    * id.
    *
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function get_still_maintain_aspect_ratio_value($app_id) {
     if (!$app_id) {
@@ -314,7 +314,7 @@ class mediamosa_app {
    * @param string $name
    *   The name of the application.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when app is active OR FALSE when not.
    */
   public static function is_app_active($name) {
@@ -338,7 +338,7 @@ class mediamosa_app {
   /**
    * Set the authenticated client application ID in session.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The client application ID.
    */
   public static function set_session_app_id($app_id) {

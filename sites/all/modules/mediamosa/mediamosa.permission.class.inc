@@ -88,7 +88,7 @@ class mediamosa_permission {
    * @param string $asset_id
    *   The asset ID.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for ownership client application.
    */
   public static function is_app_owner_asset($asset_id) {

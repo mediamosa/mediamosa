@@ -1,8 +1,8 @@
 <?php
- /**
-  * @file
-  * Global settings file.
-  */
+/**
+ * @file
+ * Global settings file.
+ */
 
 class mediamosa_settings {
 
@@ -50,14 +50,14 @@ class mediamosa_settings {
   const RSS_GENERATOR = 'MediaMosa RSS API';
 
   // Max Limits.
-  const LIMIT_DEFAULT = 10; // We return 10 items by default.
-  const LIMIT_DEFAULT_STATISTICS = 50; // statistics bit more.
-  const LIMIT_DEFAULT_STATISTICS_NO_PAGER = 150; // When we dont have a pager.
-  const LIMIT_DEFAULT_JOBLIST = 200; // For joblist.
+  const LIMIT_DEFAULT = 10;
+  const LIMIT_DEFAULT_STATISTICS = 50;
+  const LIMIT_DEFAULT_STATISTICS_NO_PAGER = 150;
+  const LIMIT_DEFAULT_JOBLIST = 200;
 
   const LIMIT_MAX = 200;
-  const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.
-  const LIMIT_MAX_JOBLIST = 200; // For joblist.
+  const LIMIT_MAX_IDS_ONLY = 5000;
+  const LIMIT_MAX_JOBLIST = 200;
 
   // Max. supplements per asset.
   const MAX_SUPPLEMENT_PER_ASSET = 16;
@@ -66,14 +66,14 @@ class mediamosa_settings {
 
   // Maximum number of still per video file
   // See jobserver_job table mediafile_dest field size
-  // Notice: One still length is around 32 + 5 byte (because of serialization)
+  // Notice: One still length is around 32 + 5 byte (because of serialization).
   const STILL_MAXIMUM = 100;
   // Still names extension on the case of multiple images
   // See: lua/vpx_transcode file too, it has the same constant!
-  // If you want to change, you have to do it on both places
+  // If you want to change, you have to do it on both places.
   const STILL_EXTENSION = '-%03d';
 
-  // Maximum still file size in byte
+  // Maximum still file size in byte.
   const STILL_FILE_MAXIMUM = 1000000;
 
   // Scene still: The still is THIS number of frames after the detected still
@@ -117,10 +117,10 @@ class mediamosa_settings {
   const ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION = '--always_insert_metadata';
 
   // Job timeout settings.
-  const JOB_UPLOAD_TIMEOUT = 10800; // 3 hours, POST upload timeout is 2 hours.
+  const JOB_UPLOAD_TIMEOUT = 10800;
   const JOB_JOB_TIMEOUT = 10800;
   const JOB_TRANSCODE_TIMEOUT = 10800;
-  // default amount of transcoding slots per app
+  // Default amount of transcoding slots per app.
   const JOB_MAX_SLOTS = 5;
 
   // Header item used in internal calls.
@@ -136,12 +136,12 @@ class mediamosa_settings {
   const UPLOAD_PUT_CHUNK_SIZE = 4096;
   const UPLOAD_PROGRESS_INTERVAL = 5;
 
-  // Asset garbage collector
-  const ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL = 86400; // 24 hours
-  const ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT = 1209600; // 2 weeks
+  // Asset garbage collector.
+  const ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL = 86400;
+  const ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT = 1209600;
 
   // Cron timeout for ticket cleanup.
-  const TICKET_CRON_INTERVAL = 600; // 10 minutes.
+  const TICKET_CRON_INTERVAL = 600;
 
   // The number of items per page in admin listings, like client apps listing.
   const MAINTENANCE_ITEMS_PER_PAGE = 25;
@@ -163,7 +163,8 @@ class mediamosa_settings {
   const FTP_QUEUE_EXTENTION = 'vuf';
 
   // UI settings.
-  const UI_TAB_WEIGHT_LIST = -10; // Weights of tab items. -10 left, +10 right.
+  // Weights of tab items. -10 left, +10 right.
+  const UI_TAB_WEIGHT_LIST = -10;
   const UI_TAB_WEIGHT_VIEW = -10;
   const UI_TAB_WEIGHT_EDIT = 0;
   const UI_TAB_WEIGHT_ADD = -20;
@@ -172,13 +173,13 @@ class mediamosa_settings {
 
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';
-  const MEDIAMOSA_RUN_ENABLED = 'mediamosa_run_enabled'; // Function that returns BOOLEAN if test should be run or listed.
+  const MEDIAMOSA_RUN_ENABLED = 'mediamosa_run_enabled';
   const MEDIAMOSA_RUN_15_MINUTES  = 'mediamosa_run_15_minutes';
   const MEDIAMOSA_RUN_3_HOURS = 'mediamosa_run_3_hours';
   const MEDIAMOSA_RUN_DAILY = 'mediamosa_run_daily';
   const MEDIAMOSA_RUN_ALL = 'mediamosa_run_all';
   // Run interval in minutes.
-  const MEDIAMOSA_RUN_INTERVAL_FAST = 30; // calling it fast, normal, slow interval groups.
+  const MEDIAMOSA_RUN_INTERVAL_FAST = 30;
   const MEDIAMOSA_RUN_INTERVAL_NORMAL = 180;
   const MEDIAMOSA_RUN_INTERVAL_SLOW = 1440;
 
@@ -187,10 +188,10 @@ class mediamosa_settings {
   const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
 
   // Status page check timeout.
-  const MAINTENANCE_STATUS_CRON_TIME = 600; // 10 minutes.
+  const MAINTENANCE_STATUS_CRON_TIME = 600;
 
   // Statistics log maximum process time.
-  const STATISTICS_LOG_MAX_TIME = 3600; // 1 hour.
+  const STATISTICS_LOG_MAX_TIME = 3600;
 
   // Chunk size.
   const DOWNLOAD_CHUNK_SIZE = 1048576;
@@ -243,8 +244,7 @@ class mediamosa_settings {
   }
 
   /**
-   * Returns the number of items per page in admin listings, like client apps
-   * listing.
+   * Returns the number of items per page in admin listings.
    */
   public static function maintenance_items_per_page() {
     return variable_get('mediamosa_maintenance_items_per_page', self::MAINTENANCE_ITEMS_PER_PAGE);
@@ -254,6 +254,7 @@ class mediamosa_settings {
    * Return url to asset.
    *
    * @param string $asset_id
+   *   The ID of the asset.
    */
   public static function get_url_asset($asset_id) {
     return strtr(self::URL_ASSET, array('@asset_id' => $asset_id));
@@ -263,6 +264,7 @@ class mediamosa_settings {
    * Return url to collection.
    *
    * @param string $coll_id
+   *   The ID of the collection.
    */
   public static function get_url_collection($coll_id) {
     return strtr(self::URL_COLLECTION, array('@coll_id' => $coll_id));

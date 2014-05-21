@@ -21,14 +21,14 @@ class mediamosa_exception extends Exception {
   /**
    * Constructor.
    *
-   * @param integer $errorcode
+   * @param int $errorcode
    *   The error code.
    * @param string $message
    *   (optional) The error message.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; The higher the serverity, the critical the
    *   type in log.
-   * @param boolean $log_error
+   * @param bool $log_error
    *   Master switch if exception should be logged. TRUE is log exception.
    */
   public function __construct($errorcode, $message = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
@@ -82,11 +82,11 @@ class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
    *
    * @param string $redirect_uri
    *   Redirect URI used when exception is caught.
-   * @param integer $errorcode
+   * @param int $errorcode
    *   The exception error code, should match the mediamosa_error code list.
    * @param string $message
    *   The exception message.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; The higher the serverity, the critical the
    *   type in log.
    */
@@ -132,15 +132,15 @@ class mediamosa_exception_error extends mediamosa_exception {
   /**
    * Constructor.
    *
-   * @param integer $mediamosa_errorcode
+   * @param int $mediamosa_errorcode
    *   The mediamosa error code.
    * @param $args
    *   An associative array of replacements to make. Occurrences in $string of
    *   any key in $args are replaced with the corresponding value
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; The higher the serverity, the critical the
    *   type in log.
-   * @param boolean $log_error
+   * @param bool $log_error
    *   Master switch if exception should be logged. TRUE is log exception.
    */
   public function __construct($mediamosa_errorcode, $args = array(), $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {

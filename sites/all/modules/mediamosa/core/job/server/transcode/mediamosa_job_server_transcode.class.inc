@@ -9,7 +9,7 @@ class mediamosa_job_server_transcode {
   /**
    * Get the extra jobserver data for transcode jobs.
    *
-   * @param integer $jobserver_id
+   * @param int $jobserver_id
    *   The job server ID.
    * @param array $fields
    *   Possible selection of fields.

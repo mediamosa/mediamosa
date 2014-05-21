@@ -122,7 +122,7 @@ class mediamosa_statistics {
    * Log search query keywords.
    *
    * @param array $keywords
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function log_event_search_query(array $keywords, $app_id) {
     // Is we detect an array, then we are not gonna log it. In this case we

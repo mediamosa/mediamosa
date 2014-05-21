@@ -14,11 +14,11 @@ class mediamosa_storage_transition {
   /**
    * Return with uri of the profile mount point.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   (ignored) The storage profile ID.
    * @param string $path
    *   (ignored) The storage path.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string
@@ -42,7 +42,7 @@ class mediamosa_storage_transition {
   /**
    * Get the default scheme.
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   (ignored) Is mount point for still?
    *
    * @return string
@@ -63,7 +63,7 @@ class mediamosa_storage_transition {
    *
    * @param string $transition_uri
    *   The URI of the transition file.
-   * @param boolean $trust_md5
+   * @param bool $trust_md5
    *   Trust the file as valid. In some cases we have to assume the file is ok.
    *
    * @return string
@@ -292,7 +292,7 @@ class mediamosa_storage_transition {
    *
    * @param string $transition_uri
    *   The file to check.
-   * @param boolean $allow_md5_default
+   * @param bool $allow_md5_default
    *   In some cases (when downloading), the MD5 is unknown. In that case we
    *   will ignore the MD5 if its default MD5 value.
    *
@@ -409,7 +409,7 @@ class mediamosa_storage_transition {
    *
    * @param string $mediafile_id
    *   The ID of mediafile to move.
-   * @param boolean $move
+   * @param bool $move
    *   Move to transition, else copy.
    *
    * @return string
@@ -481,7 +481,7 @@ class mediamosa_storage_transition {
   /**
    * Clean up our transition files.
    *
-   * @param integer $max_remove
+   * @param int $max_remove
    *   The maximum of file to remove during this call.
    *
    * @return

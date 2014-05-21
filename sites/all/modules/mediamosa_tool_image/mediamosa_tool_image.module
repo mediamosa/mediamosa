@@ -40,7 +40,7 @@ function mediamosa_tool_image_mediamosa_tool_analyse($mediafile_id) {
   // for example "Image size      : 3414 x 5090"
   foreach ($output_array as $value) {
     if (strpos($value, 'Image size') !== FALSE) {
-      list($property, $size) = explode(':', $value);
+      list(, $size) = explode(':', $value);
       list($width, $height) = explode('x', $size);
     }
   }
@@ -109,8 +109,8 @@ function mediamosa_tool_image_mediamosa_tool_get_generate_still_exec($jobserver_
 function _mediamosa_tool_image_status_generate() {
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'imagemagic' => l('here', 'http://www.imagemagick.org/'),
-    'exiv2' => l('here', 'http://www.exiv2.org/'),
+    'imagemagic' => l(t('here'), 'http://www.imagemagick.org/'),
+    'exiv2' => l(t('here'), 'http://www.exiv2.org/'),
   );
 
   $results = array();
@@ -130,7 +130,6 @@ function _mediamosa_tool_image_status_generate() {
     'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_image::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING),
     'description' => $found ? '' : t('Install ImageMagic. You can find more information how to install ImageMagic !here', array('!here' => $helper_links['imagemagic'])),
   );
-
 
   $exec_output = array();
   $found = mediamosa_io::command_installed('exiv2 -h', $exec_output);
@@ -154,11 +153,6 @@ function _mediamosa_tool_image_status_generate() {
 
 /**
  * Implements hook_mediamosa_status_collect().
- *
- * @param reset boolean
- *
- * @return array
- *   All the statuses in an array
  */
 function mediamosa_tool_image_mediamosa_status_collect($reset = FALSE) {
   $mediamosa_status_collect = array();

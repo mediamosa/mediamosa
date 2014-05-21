@@ -357,7 +357,7 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    *   The asset ID to update empty state.
-   * @param boolean $do_reindex
+   * @param bool $do_reindex
    *   Trigger re-index on external databases.
    */
   public static function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
@@ -471,7 +471,7 @@ class mediamosa_asset {
    *   Application app ids.
    * @param string $user_id
    *   The acl_user ID.
-   * @param boolean $granted
+   * @param bool $granted
    *   Show or hide accessable assets.
    * @param array $acl_group_id
    *   Group ID authentication.
@@ -479,7 +479,7 @@ class mediamosa_asset {
    *   Domain authentication.
    * @param string $acl_realm
    *   Realm authentication.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Used for including unappropriate assets.
    * @param $show_stills
    *   Include stills.
@@ -773,8 +773,8 @@ class mediamosa_asset {
    * @param array $asset_ids
    * @param array $app_ids
    * @param string $acl_user_id
-   * @param boolean $show_stills
-   * @param boolean $show_collections
+   * @param bool $show_stills
+   * @param bool $show_collections
    *  Include collections (was hack on _GET)
    * @param $add_has_streamable_mediafiles,
    * @param $view_hidden_metadata
@@ -1032,7 +1032,7 @@ class mediamosa_asset {
    * @param array $mediafiles
    *   The mediafiles in output.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when input contains streamable mediafiles, FALSE otherwise.
    */
   public static function enrich_response_has_streamable_mediafiles($mediafiles) {
@@ -1144,7 +1144,7 @@ class mediamosa_asset {
    *   The asset ID.
    * @param string $user_id
    *   The current user ID in case of ownership of asset.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin for overruling the inappropriate status.
    */
   public static function is_inappropriate(array $app_ids, $asset_id, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
@@ -1178,7 +1178,7 @@ class mediamosa_asset {
   /**
    * Create asset.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The Application ID.
    * @param string $owner_id
    *   The owner ID.
@@ -1377,10 +1377,10 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    *   The asset to check.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) Application ID.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when asset is exists or FALSE.
    */
   public static function must_exists($asset_id, $app_id = NULL) {

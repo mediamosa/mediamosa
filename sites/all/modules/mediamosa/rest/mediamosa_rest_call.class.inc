@@ -447,7 +447,7 @@ abstract class mediamosa_rest_call {
    *
    * @see mediamosa_version()
    *
-   * @param integer $app_id
+   * @param int $app_id
    */
   protected function app_active_version($app_id) {
     $app_versions = &drupal_static(__FUNCTION__, array());
@@ -513,7 +513,7 @@ abstract class mediamosa_rest_call {
    * This flag will enable to throw exception when any _GET or _POST var that is
    * not specified in the var setup of the REST call object.
    *
-   * @param boolean $check_for_unspecified
+   * @param bool $check_for_unspecified
    *   Supply TRUE when check for unspecified is unabled.
    */
   public function set_check_for_unspecified($check_for_unspecified) {
@@ -612,7 +612,7 @@ abstract class mediamosa_rest_call {
    * @param string $param
    *   The name of the parameter.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when value is set.
    */
   public function isset_param($param) {
@@ -628,7 +628,7 @@ abstract class mediamosa_rest_call {
    * @param string $param
    *   The name of the parameter.
    *
-   * @return boolean
+   * @return bool
    *   Will return TRUE if the param was set by POST/GET/URI.
    */
   public function isset_given_param($param) {
@@ -641,7 +641,7 @@ abstract class mediamosa_rest_call {
    * @param string $param
    *   The name of the parameter.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE is value was set by default value.
    */
   public function isset_default_param($param) {
@@ -654,7 +654,7 @@ abstract class mediamosa_rest_call {
    * @param string $param
    *   The name of the parameter.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when value is 'empty'.
    */
   public function empty_param($param) {
@@ -766,7 +766,7 @@ abstract class mediamosa_rest_call {
   /**
    * Returns TRUE / FALSE if method used is POST.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when POST.
    */
   public function is_method_post() {
@@ -776,7 +776,7 @@ abstract class mediamosa_rest_call {
   /**
    * Returns TRUE / FALSE if method used is GET.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when GET.
    */
   public function is_method_get() {
@@ -786,7 +786,7 @@ abstract class mediamosa_rest_call {
   /**
    * Returns TRUE / FALSE if method used is DELETE.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when DELETE.
    */
   public function is_method_delete() {
@@ -796,7 +796,7 @@ abstract class mediamosa_rest_call {
   /**
    * Returns TRUE / FALSE if method used is PUT.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when PUT.
    */
   public function is_method_put() {
@@ -806,7 +806,7 @@ abstract class mediamosa_rest_call {
   /**
    * Returns TRUE / FALSE if method used is OPTIONS.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when OPTIONS.
    */
   public function is_method_options() {

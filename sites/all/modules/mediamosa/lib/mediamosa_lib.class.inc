@@ -30,7 +30,7 @@ class mediamosa_lib {
    * to a normal boolean value TRUE/FALSE
    *
    * @param string $str
-   * @return boolean
+   * @return bool
    */
   public static function boolstr2bool($str) {
     if (is_bool($str)) {
@@ -45,7 +45,7 @@ class mediamosa_lib {
   /**
    * Converts a boolean to a string variant  ('TRUE', 'FALSE')
    *
-   * @param boolean $boolean
+   * @param bool $boolean
    * @return string
    */
   public static function bool2boolstr($boolean) {
@@ -232,7 +232,7 @@ class mediamosa_lib {
 
   /**
    * Adds English ordinal suffix to numbers.
-   * @param integer $value
+   * @param int $value
    */
   public static function ordinal($value) {
 

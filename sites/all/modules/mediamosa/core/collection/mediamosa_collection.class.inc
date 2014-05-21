@@ -35,7 +35,7 @@ class mediamosa_collection {
    * Remove collection.
    *
    * @param string $coll_id
-   * @return boolean
+   * @return bool
    */
   public static function delete($coll_id) {
     $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);

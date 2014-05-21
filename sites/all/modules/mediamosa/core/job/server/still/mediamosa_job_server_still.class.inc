@@ -18,7 +18,7 @@ class mediamosa_job_server_still {
   /**
    * Black still check.
    *
-   * @param integer $job_id
+   * @param int $job_id
    * @param string $base_filename
    */
   public static function still_validate($job_id, $base_filename) {

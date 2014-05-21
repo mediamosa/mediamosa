@@ -106,7 +106,7 @@ class mediamosa_io_streamwrapper_local_transition extends mediamosa_io_streamwra
    * @param string $mediafile_path
    *   The mediafile path to validate.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {

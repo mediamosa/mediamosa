@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Transcode profiles"
 description = "The transcode module handles predefined transcoding profiles."

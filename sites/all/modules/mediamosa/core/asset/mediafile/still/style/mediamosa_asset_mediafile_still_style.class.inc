@@ -9,9 +9,9 @@ class mediamosa_asset_mediafile_still_style {
   /**
    * Get the still style data.
    *
-   * @param integer $style_id
+   * @param int $style_id
    *   The ID of the style.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) Application ID.
    * @param array $fields
    *   (optional) Selection of database fields.

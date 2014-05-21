@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Configuration"
 description = "The configuration module contains several sub modules for maintenaning and managing MediaMosa database and settings."
 package = "MediaMosa - Maintenance - Configuration"

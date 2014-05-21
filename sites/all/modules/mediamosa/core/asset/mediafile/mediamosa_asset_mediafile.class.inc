@@ -19,11 +19,11 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The client application ID.
    * @param array $fields
    *   (optional) The columns to get from database.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   (optional) Load only when still or when not still type.
    *
    * @return array|boolean
@@ -67,7 +67,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $still_id
    *   The still ID.
-   * @param boolean $parent
+   * @param bool $parent
    *   (default: FALSE) You must ignore this setting, as its used internally.
    *
    * @return string
@@ -245,7 +245,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $asset_id
    *   The asset ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   The transcode profile ID.
    * @param string $original_mediafile_id
    *   The ID of the original mediafile.
@@ -345,7 +345,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The application ID.
    *
    * @return array
@@ -366,10 +366,10 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The application ID.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when mediafile exists.
    */
   public static function must_exists_cached($mediafile_id, $app_id = 0) {
@@ -491,11 +491,11 @@ class mediamosa_asset_mediafile {
    *   The mediafiles to include in output.S
    * @param array $app_ids
    *   Either array or integer application ID.
-   * @param boolean $is_oai
+   * @param bool $is_oai
    *   Include extended EGA Play Urls.
-   * @param boolean $show_stills
+   * @param bool $show_stills
    *   Include the stills.
-   * @param boolean $old_output
+   * @param bool $old_output
    *   Output as pre-2.0.
    */
   public static function enrich_response_mediafile(array $mediafile_ids, array $app_ids, $is_oai, $show_stills = TRUE, $old_output = FALSE) {
@@ -727,7 +727,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $asset_id
    * @param string $tag
-   * @param boolean $is_still
+   * @param bool $is_still
    * @param array $app_ids
    */
   public static function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
@@ -789,7 +789,7 @@ class mediamosa_asset_mediafile {
    * @param array $mediafile
    *   The mediafile to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when original, FALSE otherwise.
    */
   public static function is_original(array $mediafile) {
@@ -919,7 +919,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    *   Provide the new mediafile_id.
-   * @param integer $app_id
+   * @param int $app_id
    *   The client application ID.
    * @param string $asset_id
    *   Parent asset.
@@ -1005,7 +1005,7 @@ class mediamosa_asset_mediafile {
    *
    * @param $mediafile_id
    *   The ID of mediafile to check.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   The app admin flag.
    *
    * @throws mediamosa_exception_error_mediafile_not_found()
@@ -1032,7 +1032,7 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    *   The mediafile to check.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   The app admin flag.
    *
    * @throws mediamosa_exception_error_mediafile_not_found()

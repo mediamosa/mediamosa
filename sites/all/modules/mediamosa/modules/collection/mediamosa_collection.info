@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Collection"
 description = "The collection module creates collections of assets."

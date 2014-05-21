@@ -230,8 +230,8 @@ class mediamosa_db_query {
    * Create a UNION query from supplied queries.
    *
    * @param array $a_queries
-   * @param integer $limit
-   * @param integer $offset
+   * @param int $limit
+   * @param int $offset
    * @param array $a_options
    * @return string
    */

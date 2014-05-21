@@ -9,13 +9,13 @@ class mediamosa_ftp_batch_asset {
   /**
    * Get the asset relations.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param integer $batch_id
+   * @param int $batch_id
    *  The batch ID.
-   * @param integer $offset
+   * @param int $offset
    *  The offset in the result set.
-   * @param integer $limit
+   * @param int $limit
    *  The limit of items in the result set.
    */
   public static function get_asset_relations($app_id, $batch_id, $offset, $limit) {
@@ -45,11 +45,11 @@ class mediamosa_ftp_batch_asset {
   /**
    * Put assets in a batch.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param array $asset_ids
    *  The asset IDs.
-   * @param integer $batch_id
+   * @param int $batch_id
    *  The batch ID.
    */
   public static function add_asset_relation($app_id, array $asset_ids, $batch_id) {
@@ -83,7 +83,7 @@ class mediamosa_ftp_batch_asset {
   /**
    * Remove all relations of one ftp batch.
    *
-   * @param integer $batch_id
+   * @param int $batch_id
    *  ID of batch to delete.
    */
   public static function remove_asset_relation($batch_id) {

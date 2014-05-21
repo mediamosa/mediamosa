@@ -215,10 +215,10 @@ function mediamosa_statistics_filter_form_submit($form, &$form_state) {
 /**
  * Create pager.
  *
- * @param integer $item_offset
- * @param integer $item_count_total
- * @param integer $item_limit
- * @param integer $element
+ * @param int $item_offset
+ * @param int $item_count_total
+ * @param int $item_limit
+ * @param int $element
  */
 function _mediamosa_pager($item_offset, $item_count_total, $item_limit = mediamosa_settings::LIMIT_DEFAULT_STATISTICS, $element = 0) {
 

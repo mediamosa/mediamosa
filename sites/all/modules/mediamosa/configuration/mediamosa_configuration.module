@@ -54,7 +54,7 @@ function mediamosa_configuration_menu() {
 /**
  * Block code copied from drupal system.inc.
  *
- * @return
+ * @return string
  *   The output HTML.
  */
 function mediamosa_configuration_menu_block_page() {
@@ -75,6 +75,7 @@ function mediamosa_configuration_menu_block_page() {
  * Our Maintenance settings form.
  *
  * @return array
+ *   The output form.
  */
 function _mediamosa_configuration_form() {
 
@@ -172,7 +173,7 @@ function _mediamosa_configuration_form_submit($form, $form_state) {
   $node->sticky = 0;
   $node->comment = 0;
   $node->promote = 0;
-  $node->status = 1; // published.
+  $node->status = 1;
 
   // Save the node.
   node_save($node);

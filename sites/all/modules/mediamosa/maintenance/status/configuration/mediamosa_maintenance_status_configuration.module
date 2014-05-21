@@ -587,7 +587,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
 /**
  * Implements hook_mediamosa_status_collect().
  *
- * @param boolean $reset
+ * @param bool $reset
  *   Set to TRUE to regenerate.
  *
  * @return array

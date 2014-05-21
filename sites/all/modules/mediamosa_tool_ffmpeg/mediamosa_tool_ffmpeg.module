@@ -95,6 +95,7 @@ function mediamosa_tool_ffmpeg_mediamosa_tool_analyse($mediafile_id) {
             'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
             'value' => trim($value),
           );
+          $fps = trim($value);
           break;
 
         case 'Audio-codec':
@@ -137,6 +138,7 @@ function mediamosa_tool_ffmpeg_mediamosa_tool_analyse($mediafile_id) {
             'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
             'value' => trim($value),
           );
+          $bitrate = trim($value);
           break;
 
         case 'Is-hinted':

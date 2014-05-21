@@ -31,7 +31,7 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
   /**
    * Create the default S3 storage profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The app owner of the profile.
    *
    * @return array
@@ -41,7 +41,7 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
     // Create wrapper.
     $wrapper = new mediamosa_storage_simpletest_stream_wrapper();
 
-    // Create the one and only default local storage
+    // Create the one and only default local storage.
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE, 'MediaMosa mountpoint storage');
     $node->{mediamosa_storage_profile_db::TYPE} = mediamosa_storage_mountpoint::NAME;
     $node->{mediamosa_storage_profile_db::APP_ID} = $app_id;

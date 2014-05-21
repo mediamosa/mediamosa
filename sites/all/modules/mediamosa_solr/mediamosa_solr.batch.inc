@@ -13,8 +13,7 @@ function _mediamosa_solr_batch_reindex_start($purge_solr) {
 
   // Create the batch.
   $batch = array(
-    'operations' => array(
-     ),
+    'operations' => array(),
     'finished' => '_mediamosa_solr_batch_finished',
     'title' => t('Re-indexing the Solr search database'),
     'init_message' => t('Initializing to start to fill re-index queue.'),
@@ -117,6 +116,9 @@ function _mediamosa_solr_batch_purge_solr(&$context) {
   $context['sandbox']['progress'] = 1;
 }
 
+/**
+ * SOLR batch queue.
+ */
 function _mediamosa_solr_batch_queue(&$context) {
 
   if (!isset($context['sandbox']['progress'])) {
@@ -130,11 +132,12 @@ function _mediamosa_solr_batch_queue(&$context) {
   $asset_ids = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
     ->fields('a', array(mediamosa_asset_db::ID))
     ->range($context['sandbox']['progress'], $limit)
-    ->orderBy(mediamosa_asset_db::CREATED, 'ASC') // make sure its order of creation so we dont forget any.
+    // Make sure its order of creation so we dont forget any.
+    ->orderBy(mediamosa_asset_db::CREATED, 'ASC')
     ->execute()
     ->fetchCol(mediamosa_asset_db::ID);
 
-  // Queue the IDs
+  // Queue the IDs.
   mediamosa_solr::queueAssets($asset_ids);
 
   // Update progress.
@@ -165,7 +168,9 @@ function _mediamosa_solr_batch_finished($success, $results, $operations) {
     // An error occurred.
     // $operations contains the operations that remained unprocessed.
     $error_operation = reset($operations);
-    $message = t('An error occurred while processing %error_operation with arguments: @arguments', array('%error_operation' => $error_operation[0], '@arguments' => print_r($error_operation[1], TRUE)));
+    $message = t('An error occurred while processing %error_operation with arguments: @arguments', array(
+                 '%error_operation' => $error_operation[0], '@arguments' => print_r($error_operation[1], TRUE))
+    );
   }
 
   drupal_set_message($message);

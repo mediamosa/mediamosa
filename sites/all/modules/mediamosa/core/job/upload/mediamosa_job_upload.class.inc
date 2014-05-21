@@ -33,7 +33,7 @@ class mediamosa_job_upload {
   /**
    * Get job upload.
    *
-   * @param integer $job_id
+   * @param int $job_id
    */
   public static function get($job_id) {
     return mediamosa_db::db_select(mediamosa_job_upload_db::TABLE_NAME, 'ju')
@@ -62,9 +62,9 @@ class mediamosa_job_upload {
   /**
    * Create a upload job.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    * @param string $user_id
    *  Owner/user.
@@ -72,7 +72,7 @@ class mediamosa_job_upload {
    *  Group ID.
    * @param string $mediafile_id
    *  Mediafile ID.
-   * @param integer $file_size
+   * @param int $file_size
    *  Filesize.
    * @param bool $retranscode
    * @param bool $create_still

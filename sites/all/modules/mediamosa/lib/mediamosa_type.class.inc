@@ -31,9 +31,9 @@ class mediamosa_type {
    *   Type of the param, see TYPE_* list.
    * @param mixed $mixed_param_value
    *   Either string or array (with strings)
-   * @param boolean $is_required
+   * @param bool $is_required
    *   Supplied value must be provided
-   * @param boolean $toplevel
+   * @param bool $toplevel
    *   Internal boolean for array loops, leave as is.
    *
    * @return mixed
@@ -491,9 +491,9 @@ class mediamosa_type {
    *
    * @param string $param
    *  The Param name.
-   * @param integer $int_val
+   * @param int $int_val
    *  The value.
-   * @param integer $min_value
+   * @param int $min_value
    *  The minimum value allowed.
    * @param unknown_type $max_value
    *  The maximum value allowed.
@@ -531,9 +531,9 @@ class mediamosa_type {
    *  The Param name.
    * @param string $string_val
    *  The string value.
-   * @param integer $min_length
+   * @param int $min_length
    *  The minimum length.
-   * @param integer $max_length
+   * @param int $max_length
    *  The maximum length.
    * @return
    *  Returns the same value, use it for future changes.

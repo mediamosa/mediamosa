@@ -1,5 +1,3 @@
-; $Id$
-
 name = "Proxy"
 description = "The proxy settings."
 package = "MediaMosa - Maintenance - Configuration"

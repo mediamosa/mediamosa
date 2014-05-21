@@ -11,7 +11,7 @@ class mediamosa_server_job {
    *
    * Remove server<->job link.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The Job ID.
    */
   public static function delete_by_jobid($job_id) {

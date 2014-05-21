@@ -84,7 +84,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   /**
    * Test if the current path/file is local or external (like Amazon S3).
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when local or FALSE otherwise.
    */
   abstract public function is_local();
@@ -147,7 +147,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * @param string $mediafile_path
    *   The mediafile path to validate.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for match, FALSE otherwise.
    */
   abstract public function validate_uri_mediafile_path($mediafile_path);
@@ -163,7 +163,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   /**
    * Process media view request.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner for possible ticket.
@@ -171,7 +171,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array
@@ -195,7 +195,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * will support it through mediamosa_io::is_file(). It will only work when
    * called by mediamosa_io::is_file().
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE if the filename exists and is a regular file, FALSE
    *   otherwise.
    */
@@ -218,7 +218,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    * will support it through mediamosa_io::is_dir(). It will only work when
    * called by mediamosa_io::is_dir().
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE if the filename exists and is a directory, FALSE otherwise.
    */
   public function is_dir() {
@@ -255,7 +255,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
   /**
    * Test if the file exists.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file exists.
    */
   public function file_exists() {

@@ -11,9 +11,9 @@ class mediamosa_user {
    *
    * @param string $user_id
    *  The user to retrieve.
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param boolean $with_groups
+   * @param bool $with_groups
    *  Shall we populate ['group_id'] with groups array?
    *
    * @return
@@ -37,7 +37,7 @@ class mediamosa_user {
   /**
    * Get the user's group(s).
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $user_id
    *  The user name.
@@ -79,9 +79,9 @@ class mediamosa_user {
   /**
    * Add user's group membership identifying user by key.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
-   * @param integer $user_key
+   * @param int $user_key
    *  User key.
    * @param string $group_id
    *  A particular Group ID to include user to.
@@ -115,11 +115,11 @@ class mediamosa_user {
   /**
    * Update the user.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
-   * @param integer $quotum
+   * @param int $quotum
    *  The allowed disk usage.
    * @param array $group_ids
    *  Group ID.
@@ -158,7 +158,7 @@ class mediamosa_user {
   /**
    * Delete the user.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
@@ -189,11 +189,11 @@ class mediamosa_user {
   /**
    * Create a user.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
-   * @param integer $quotum
+   * @param int $quotum
    *  The allowed disk usage.
    * @param array $group_ids
    *  Group IDs.
@@ -229,7 +229,7 @@ class mediamosa_user {
    *
    * 1.x: _user_management_get_quota
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $group_id
    */
@@ -261,7 +261,7 @@ class mediamosa_user {
    *
    * @param string $subject
    * @param string $id
-   * @param integer $app_id
+   * @param int $app_id
    *
    * @return array
    */
@@ -296,7 +296,7 @@ class mediamosa_user {
    *
    * 1.x: _user_management_check_user_quota
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  The user ID / Owner ID.
@@ -341,7 +341,7 @@ class mediamosa_user {
   /**
    * Check if the user has enough quota and throw exception when failed.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  The user ID / Owner ID.
@@ -357,7 +357,7 @@ class mediamosa_user {
   /**
    * Collect and calculate users quota.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User / Owner ID.

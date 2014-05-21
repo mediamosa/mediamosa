@@ -138,11 +138,11 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $still_id
    *   The still ID.
-   * @param integer $width
+   * @param int $width
    *   The width of the still.
    * @param $height
    *   The height of the still.
-   * @param integer $filesize
+   * @param int $filesize
    *   The size of the file in bytes.
    * @param string $mime
    *   The content-type (mime-type).
@@ -251,7 +251,7 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Store the analyse result in the mediafile metadata.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param array $analyse_result
    *   The result of the analyse.

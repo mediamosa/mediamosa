@@ -70,7 +70,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
   /**
    * Test if the current path/file is local or external (like Amazon S3).
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when local or FALSE otherwise.
    */
   public function is_local() {
@@ -259,7 +259,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    * @param string $mediafile_path
    *   The mediafile path to validate.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE for match, FALSE otherwise.
    */
   public function validate_uri_mediafile_path($mediafile_path) {
@@ -291,7 +291,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
   /**
    * Process media view request.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner for possible ticket.
@@ -299,7 +299,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array
@@ -406,13 +406,13 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    *
    * @param string $uri
    *   A string containing the URI to the directory to create.
-   * @param integer $mode
+   * @param int $mode
    *   Permission flags - see mkdir().
-   * @param integer $options
+   * @param int $options
    *   A bit mask of STREAM_REPORT_ERRORS (unsupported) and
    *   STREAM_MKDIR_RECURSIVE.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if directory was successfully created.
    *
    * @see http://php.net/manual/en/streamwrapper.mkdir.php

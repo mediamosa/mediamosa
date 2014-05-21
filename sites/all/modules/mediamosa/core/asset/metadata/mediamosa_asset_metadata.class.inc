@@ -22,13 +22,13 @@ class mediamosa_asset_metadata {
   /**
    * Return a list of property values and their count per given property.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param integer $prop_id
+   * @param int $prop_id
    *  The property ID.
-   * @param integer $offset
+   * @param int $offset
    *  The offset in the result set.
-   * @param integer $limit
+   * @param int $limit
    *  Maximum number of rows in result.
    */
   public static function tagcount($app_id, $prop_id, $offset, $limit) {
