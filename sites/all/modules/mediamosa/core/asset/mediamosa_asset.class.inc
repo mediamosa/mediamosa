@@ -357,8 +357,9 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    *   The asset ID to update empty state.
-   * @param boolean $do_reindex
-   *   Trigger re-index on external databases.
+   * @param bool $do_reindex
+   *   Trigger re-index on external databases. This will only be triggered if
+   *   the empty_asset flag is changed.
    */
   public static function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
@@ -367,8 +368,8 @@ class mediamosa_asset {
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
        WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id = :asset_id AND
              (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR (mm.#prop_id = :prop_id AND mm.#val_int > 0))",
-      0, // From.
-      1, // Count.
+      0,
+      1,
       array(
         '#uri' => mediamosa_asset_mediafile_db::URI,
         '#filename' => mediamosa_asset_mediafile_db::FILENAME,
@@ -387,13 +388,21 @@ class mediamosa_asset {
       )
     )->fetchAssoc();
 
+    // Does the asset have metadata?
+    $has_metadata = mediamosa_db::db_query(
+      'select count(*) total from mediamosa_asset_metadata md where md.asset_id = :asset_id', array(":asset_id" => $asset_id)
+    )->fetchField();
+
+    // An asset is empty if it has no files with content and no metadata.
+    $is_empty_asset = (($has_metadata == 0) && !$mediafile) ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE;
+
     // Set is_empty_asset.
     mediamosa_db::db_query(
       "UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
-        ':is_empty_asset' => $mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+        ':is_empty_asset' => $is_empty_asset,
         '#asset_id' => mediamosa_asset_db::ID,
         ':asset_id' => $asset_id,
       )
@@ -405,7 +414,7 @@ class mediamosa_asset {
       array(
         '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
         '#is_empty_asset' => mediamosa_asset_collection_db::IS_EMPTY_ASSET,
-        ':is_empty_asset' => $mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+        ':is_empty_asset' => $is_empty_asset,
         '#asset_id' => mediamosa_asset_db::ID,
         ':asset_id' => $asset_id,
       )
@@ -1384,26 +1393,39 @@ class mediamosa_asset {
   }
 
   /**
-   * Clean up assets which have no mediafiles and no children assets.
+   * Clean up empty assets that have no mediafiles.
+   *
+   * Assets that are allowed for cleanup:
+   * - have no metadata,
+   * - is_empty_asset = true,
+   * - is older than ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT (currently 2 weeks).
+   *
+   * This cleanup limits to 100 assets, to minimize the impact for cron.
    */
   public static function do_garbage_cleanup() {
     $result = mediamosa_db::db_query(
       'SELECT #asset_id FROM {#mediamosa_asset} AS a WHERE
-        (SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am WHERE am.#asset_id = a.#asset_id) = 0 AND
-        (SELECT COUNT(*) FROM {#mediamosa_asset} AS a2 WHERE a2.#parent_id = a.#asset_id) = 0 AND
-        UTC_TIMESTAMP() > DATE_ADD(a.#created, interval #timeout second)',
+        (SELECT COUNT(*) FROM {#mediamosa_asset_metadata} AS md WHERE md.#asset_id = a.#asset_id) = 0 AND
+        a.#is_empty_asset = \'#is_empty_asset_true\' AND
+        UTC_TIMESTAMP() > DATE_ADD(a.#created, interval #timeout second)
+        order by created',
       array(
         '#timeout' => mediamosa_settings::ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT,
         '#asset_id' => mediamosa_asset_db::ID,
-        '#parent_id' => mediamosa_asset_db::PARENT_ID,
+        '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
+        '#is_empty_asset_true' => mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#created' => mediamosa_asset_db::CREATED,
       )
     );
-
+    $asset_log = array();
     foreach ($result as $row) {
+      $asset_log[] = $row['asset_id'];
       mediamosa_asset::delete($row["asset_id"]);
+    }
+    if (count($asset_log) > 0) {
+      mediamosa_watchdog::log('Garbage cleanup: @assets deleted.', array('@assets' => implode(' ', $asset_log)), WATCHDOG_NOTICE, 'mediamosa_asset');
     }
   }
 

@@ -19,8 +19,9 @@ function mediamosa_asset_cron() {
 
     $run_last = variable_get('mediamosa_asset_cron_last', NULL);
 
-    // may run?
-    if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
+    // Cleanup of assets may only run once a day during nightly hours.
+    if ((round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) and
+      (date("Hi") > '0200' and date("Hi") < '0600')) {
       // For the next time...
       variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
 

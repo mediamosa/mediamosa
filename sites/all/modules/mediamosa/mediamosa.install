@@ -4561,3 +4561,56 @@ function mediamosa_update_7180() {
     _mediamosa_solr_batch_reindex_start(FALSE);
   }
 }
+
+/**
+ * Updates the is_empty_asset flag for assets with metadata.
+ */
+function mediamosa_update_7181() {
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  while (TRUE) {
+    // Select asset_id from mediamosa_asset a where is_empty_asset = 'TRUE' and
+    // exists (select * from mediamosa_asset_metadata md where md.asset_id =
+    // a.asset_id).
+    $query_exists = db_select('mediamosa_asset_metadata', 'md')
+      ->fields('md', array('asset_id'))
+      ->where("md.asset_id = a.asset_id");
+
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->condition('is_empty_asset', 'TRUE')
+      ->Exists($query_exists)
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+    // Now re-evalute the asset is_empty_flag.
+    foreach ($asset_ids as $asset_id) {
+      mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+
+    // Next position.
+    $start += count($asset_ids);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}
