@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "File integrity check"
 description = "This module checks the integrity of the mediafiles."

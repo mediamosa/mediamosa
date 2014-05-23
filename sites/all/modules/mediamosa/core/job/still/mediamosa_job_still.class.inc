@@ -8,7 +8,7 @@ class mediamosa_job_still {
 
   /**
    * Get the job still data.
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    */
   public static function get($job_id, $fields = array()) {
@@ -22,7 +22,7 @@ class mediamosa_job_still {
   /**
    * Create new still job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    * @param array $a_still_parameters
    */
   public static function create($job_id, array $a_still_parameters) {

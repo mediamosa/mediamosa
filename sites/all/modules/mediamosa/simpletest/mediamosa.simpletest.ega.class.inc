@@ -412,7 +412,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * @param array $mediafile_ext
    * @param array $asset_metadata (not used)
    * @param string $ticket
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $mediafile_group_id
    * @param array $stills
    */
@@ -4268,7 +4268,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Get the storage profile.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The profile ID.
    *
    * @return array
@@ -4285,13 +4285,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Attach the storage profile with application.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
-   * @param integer $profile_id
+   * @param int $profile_id
    *   Storage profile ID
    * @param string $path
    *   Storage path.
-   * @param integer $profile_id_stills
+   * @param int $profile_id_stills
    *   Storage profile ID stills.
    * @param string $path_stills
    *   Storage path stills.

@@ -1,10 +1,9 @@
 <?php
-// $Id$
-
 /**
  * @file
  * The S3 storage profile DB class.
  */
+
 class mediamosa_storage_s3_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;

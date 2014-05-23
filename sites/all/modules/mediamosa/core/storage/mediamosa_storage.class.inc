@@ -34,7 +34,7 @@ abstract class mediamosa_storage {
   /**
    * Get the default scheme (without the '://').
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string
@@ -88,11 +88,11 @@ abstract class mediamosa_storage {
    * Unless local mount point, the uri must include $storage_profile::ID and
    * $storage_profile_app::PATH or $storage_profile_app::PATH_STILLS.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The storage profile ID.
    * @param string $path
    *   The storage path.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string
@@ -105,7 +105,7 @@ abstract class mediamosa_storage {
   /**
    * Is storage object local or external?
    *
-   * @return boolean
+   * @return bool
    *   Return TRUE when all data is stored on local storage.
    */
   public function is_local() {
@@ -147,7 +147,7 @@ abstract class mediamosa_storage {
   /**
    * Is the storage file system path specified?
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when storage file system path has been specified.
    */
   public static function is_storage_setup() {
@@ -194,7 +194,7 @@ abstract class mediamosa_storage {
    *   The storage profile ID.
    * @param string $path
    *   The (prefix) path on the uri.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -215,7 +215,7 @@ abstract class mediamosa_storage {
    *
    * @param array $storage_profile_app
    *   The storage profile app (link between app and storage profile).
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -235,7 +235,7 @@ abstract class mediamosa_storage {
    *   The storage profile.
    * @param string $path
    *   The (prefix) path on the uri.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -257,11 +257,11 @@ abstract class mediamosa_storage {
    * be used to get the current URI location of the mediafile (use
    * mediamosa_storage::get_mediafile_uri() instead).
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -295,9 +295,9 @@ abstract class mediamosa_storage {
    *
    * @todo: need to return local moint point (always).
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -328,11 +328,11 @@ abstract class mediamosa_storage {
    *
    * The path and filename returned are intended for creation of the new file.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   The mediafile ID.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   TRUE when mediafile is still.
    *
    * @return string
@@ -406,11 +406,11 @@ abstract class mediamosa_storage {
    * Will move the file to its final storage location. Expect the mediafile ID
    * to exist as mediafile entry in database.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   The mediafile ID of the new file.
-   * @param boolean $is_new
+   * @param bool $is_new
    *   Will alter the sannas location to transition if TRUE.
    */
   public static function relocate_mediafile($app_id, $mediafile_id, $is_new) {
@@ -724,7 +724,7 @@ abstract class mediamosa_storage {
   /**
    * Return the path, usable for URLs. Not for URI usage.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   (optional) The mediafile ID.
@@ -746,7 +746,7 @@ abstract class mediamosa_storage {
    * after an amount of time. The permanent link can only exist when the
    * mediafile is not protected by ACL.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $mediafile_id
    *   (optional) The mediafile ID.
@@ -764,7 +764,7 @@ abstract class mediamosa_storage {
   /**
    * Return the path usable for URLs. Not for URIs.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_id
    *   The mediafile ID.
@@ -791,7 +791,7 @@ abstract class mediamosa_storage {
    * is granted to the user. The ticket ID is random string that only the
    * authenticated party knows.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_id
    *   The mediafile ID.
@@ -818,7 +818,7 @@ abstract class mediamosa_storage {
    * is granted to the user. The ticket ID is random string that only the
    * authenticated party knows.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_id
    *   The mediafile ID.
@@ -843,7 +843,7 @@ abstract class mediamosa_storage {
    * This location is used for storage and downloading of extra object files,
    * f.e. asx text/html files.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The application ID.
    * @param string $filename
    *   The filename (optional but required when app_id is provided). This can be
@@ -862,7 +862,7 @@ abstract class mediamosa_storage {
    * This location is used for storage and downloading of extra object files,
    * f.e. asx text/html files.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The application ID.
    * @param string $filename
    *   The filename (optional but required when app_id is provided). This can be
@@ -878,7 +878,7 @@ abstract class mediamosa_storage {
   /**
    * Return the path to object file (e.g. asx) usable for URLs, not for URIs.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_id
    *   The mediafile ID.
@@ -944,7 +944,7 @@ abstract class mediamosa_storage {
    * @param string $contents
    *   The contents to write.
    *
-   * @return boolean
+   * @return bool
    *   Returns either TRUE (success) or FALSE (failure).
    */
   public static function file_create_htaccess($directory, $contents) {
@@ -1053,7 +1053,7 @@ abstract class mediamosa_storage {
    *
    * @param array $mediafile
    *   The mediafile to move.
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   The destination location.
    * @param string $path
    *   The destination path.
@@ -1100,9 +1100,9 @@ abstract class mediamosa_storage {
   /**
    * Collect information about current mediafile locations.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Select either stills or mediafiles.
    *
    * @return array

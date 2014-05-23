@@ -131,7 +131,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
    * @param string $group_id
    * @param $acl_domain
    * @param $acl_realm
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    * @param $play_call
    *
    * @return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket_id)

@@ -1,39 +1,28 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The ACL group.
  */
 
- /**
-  * @file
-  *
-  */
-
 class mediamosa_acl_group {
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Create an acl group.
+   *
+   * @param int $app_id
+   *   The client app ID.
+   * @param string $group_name
+   *   The name of the ACL group.
+   * @param string $acl_type
+   *   The ACL type.
+   *
+   * @return string
+   *   The created ACL group ID.
+   *
+   * @throws mediamosa_exception_error_invalid_data_parameter
+   */
   public static function create($app_id, $group_name, $acl_type) {
 
-    // Trim it
     $group_name = trim($group_name);
 
     switch ($acl_type) {
@@ -41,14 +30,12 @@ class mediamosa_acl_group {
         if (!mediamosa_acl::is_group_domain($group_name)) {
           throw new mediamosa_exception_error_invalid_data_parameter(array("@parameter" => $group_name, "@data" => "domain group"));
         }
-
         break;
 
       case mediamosa_acl::ACL_NAME_TYPE_REALM:
         if (!mediamosa_acl::is_group_realm($group_name)) {
           throw new mediamosa_exception_error_invalid_data_parameter(array("@parameter" => $group_name, "@data" => "domain group"));
         }
-
         break;
 
       default:
@@ -82,13 +69,17 @@ class mediamosa_acl_group {
   /**
    * Retrieve group listing.
    *
-   * @param array $a_app_ids
-   * @param integer $offset
-   * @param integer $limit
-   * @return db result
+   * @param array $app_ids
+   *   The app IDs.
+   * @param int $offset
+   *   The offset within the result record set.
+   * @param int $limit
+   *   The maximum items to return.
    *
+   * @return DatabaseStatementInterface
+   *   A prepared statement object, already executed.
    */
-  static function get_list(array $app_ids, $offset, $limit) {
+  public static function get_list(array $app_ids, $offset, $limit) {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_acl_group_db::ACL_GROUP_NAME;
@@ -96,7 +87,7 @@ class mediamosa_acl_group {
     $a_query[mediamosa_db_query::A_FROM][] = '{' . mediamosa_acl_group_db::TABLE_NAME . '}';
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $app_ids));
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE . ' IS NOT NULL';// trick to keep the index in order
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE . ' IS NOT NULL';
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE . ' IS NULL';
     $a_query[mediamosa_db_query::A_ORDER_BY][] = mediamosa_acl_group_db::ACL_GROUP_NAME . ' ASC';
 
@@ -118,9 +109,11 @@ class mediamosa_acl_group {
    * Get group by given name.
    *
    * @param array $app_ids
+   *   The application IDs.
    * @param string $group_name
+   *   The name of the group to get.
    */
-  static function get_by_group_name(array $app_ids, $group_name) {
+  public static function get_by_group_name(array $app_ids, $group_name) {
 
     return mediamosa_db::db_select(mediamosa_acl_group_db::TABLE_NAME, 'ag')
       ->fields('ag', array(
@@ -132,18 +125,24 @@ class mediamosa_acl_group {
       ->condition(db_or()->isNull(mediamosa_acl_group_db::ACL_GROUP_TYPE)->isNotNull(mediamosa_acl_group_db::ACL_GROUP_TYPE))
       ->condition(mediamosa_acl_group_db::ACL_GROUP_NAME, $group_name)
       ->execute()->fetchAssoc();
-    }
+  }
 
   /**
    * Retrieve hostnames from group.
    *
    * @param array $app_ids
+   *   The application IDs.
    * @param string $group_name
-   * @param integer $offset
-   * @param integer $limit
-   * @return db result
+   *   The name of the group.
+   * @param int $offset
+   *   The offset in the record set.
+   * @param int $limit
+   *   The maximum items.
+   *
+   * @return DatabaseStatementInterface
+   *   A prepared statement object, already executed.
    */
-  static function get_hostnames_by_group_name(array $app_ids, $group_name, $offset, $limit) {
+  public static function get_hostnames_by_group_name(array $app_ids, $group_name, $offset, $limit) {
     $a_query = array();
 
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{mediamosa_acl_name}.acl_name";
@@ -152,7 +151,7 @@ class mediamosa_acl_group {
     $a_query[mediamosa_db_query::A_JOIN]["acl_group"] = "LEFT JOIN {mediamosa_acl_group} USING (acl_group_id)";
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('{mediamosa_acl_name}.%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $app_ids));
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "acl_group_type IS NOT NULL";// trick to keep the index in order
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "acl_group_type IS NOT NULL";
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "acl_group_type IS NULL";
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_acl_group}.acl_group_name = '%s'", mediamosa_db::escape_string($group_name));
 
@@ -175,15 +174,17 @@ class mediamosa_acl_group {
   /**
    * Create hostname(s) for acl group.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $group_name
    *   The group name for hostnames.
    * @param array $host_names
    *   The hostnames to create.
+   *
    * @return array
+   *   Information about the created hostnames.
    */
-  static function create_hostnames_for_group($app_id, $group_name, array $host_names) {
+  public static function create_hostnames_for_group($app_id, $group_name, array $host_names) {
     $group = mediamosa_acl_group::get_by_group_name(array($app_id), $group_name);
     if (!$group) {
       throw new mediamosa_exception_error_acl_group_not_found(array('@group' => $group_name));
@@ -271,11 +272,14 @@ class mediamosa_acl_group {
   /**
    * Delete hostname for group.
    *
-   * @param integer $app_id
+   * @param int $app_id
+   *   The client application.
    * @param string $group_name
+   *   The group name.
    * @param array $host_names
+   *   The ACL hostnames.
    */
-  static function delete_hostname_for_group($app_id, $group_name, array $host_names) {
+  public static function delete_hostname_for_group($app_id, $group_name, array $host_names) {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 

@@ -12,6 +12,9 @@ if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
 
 class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
   // ------------------------------------------------------------------ Methods.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     // Only available when these are set.
     if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
@@ -95,7 +98,6 @@ class MediaMosaS3JobsProfileTestCaseEga extends MediaMosaS3BaseTestCaseEga {
 
     // At this point our mediafile is local, we haven't attached the S3 profile
     // on our App. Will do that now.
-
 
     // Create the destination uri.
     $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app) . mediamosa_io_streamwrapper::create_mediafile_path($mediafile_id) . '/' . $filename;

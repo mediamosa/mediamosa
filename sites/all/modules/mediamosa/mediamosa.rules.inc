@@ -280,12 +280,13 @@ function mediamosa_action_analyse($mediafile_id) {
     );
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
 
-    $job = mediamosa_job::create_analyse_job(
-      $mediafile['owner_id'],
-      $mediafile['asset_id'],
-      $mediafile['mediafile_id'],
-      $mediafile['app_id'],
-      $priority);
+    // @todo: Create_analyse_job no longer exists.
+    // $job = mediamosa_job::create_analyse_job(
+    // $mediafile['owner_id'],
+    // $mediafile['asset_id'],
+    // $mediafile['mediafile_id'],
+    // $mediafile['app_id'],
+    // $priority);
     return TRUE;
   }
   return FALSE;

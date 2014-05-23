@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Our extended classes for Solr connections.
@@ -68,6 +43,9 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   protected $_scheme;
 
   // -------------------------------------------------------------- Constructor.
+  /**
+   * Constructor.
+   */
   public function __construct($url = NULL) {
 
     if (!isset($url)) {
@@ -85,6 +63,8 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
 
   // ---------------------------------------------------------------- Functions.
   /**
+   * Filter out special delimeters ^~.
+   *
    * We use ^ and ~ for delimeters, we need to filter them out for content
    * (sometimes).
    */
@@ -196,7 +176,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *   The scheme.
    */
   public static function mediamosaGetScheme($url = NULL) {
-    $url =  isset($url) ? $url : self::mediamosaGetUrl();
+    $url = isset($url) ? $url : self::mediamosaGetUrl();
 
     // Parse.
     return parse_url($url, PHP_URL_SCHEME);
@@ -212,7 +192,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *   The host.
    */
   public static function mediamosaGetHost($url = NULL) {
-    $url =  isset($url) ? $url : self::mediamosaGetUrl();
+    $url = isset($url) ? $url : self::mediamosaGetUrl();
 
     // Parse.
     return parse_url($url, PHP_URL_HOST);
@@ -224,7 +204,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    * @param string $url
    *   (optional) The url of which to extract port.
    *
-   * @return integer
+   * @return int
    *   The port.
    */
   public static function mediamosaGetPort($url = NULL) {
@@ -263,9 +243,9 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *
    * @param string $url
    *   (optional) The Solr server URL.
-   * @param boolean $ping
+   * @param bool $ping
    *   Ping the server after creating the object.
-   * @param boolean $reset
+   * @param bool $reset
    *   Reset the static storage of object.
    *
    * @return mediamosa_solr_apache_solr_service
@@ -307,10 +287,10 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    *
    * @param string $url
    *   The server URL.
-   * @param boolean $fatal
+   * @param bool $fatal
    *   Set to TRUE when exeception needs to be thrown when failure.
    *
-   * @return boolean
+   * @return bool
    *   Will return TRUE for success, FALSE for failure. Will only return when
    *   $fatal is set to FALSE.
    *

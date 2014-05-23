@@ -8,7 +8,7 @@ class mediamosa_job_transcode {
 
   /**
    * Get the job transcode data.
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    */
   public static function get($job_id) {
@@ -27,9 +27,9 @@ class mediamosa_job_transcode {
    * When the tool is windows, a extra job is created for transcoding to
    * raw format.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param integer $job_id
+   * @param int $job_id
    *  The job ID.
    * @param string $file_extension
    *  File extension of the file to transcode.
@@ -37,7 +37,7 @@ class mediamosa_job_transcode {
    *  Set of commands.
    * @param string $tool
    *  Name of tool to use.
-   * @param integer $profile_id
+   * @param int $profile_id
    *  Profile to use.
    * @param string $completed_transcoding_url
    *  Triggered when transcoding is complete.

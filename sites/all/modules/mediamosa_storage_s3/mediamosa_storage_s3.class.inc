@@ -14,7 +14,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
 
   // -------------------------------------------------------------- Constructor.
   /**
-   * Main constructor
+   * Main constructor.
    *
    * @param array $storage_profile
    *   Storage profile.
@@ -36,7 +36,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
 
   // ------------------------------------------------------------------ Methods.
   /**
-   * Return the available S3 buckets
+   * Return the available S3 buckets.
    */
   public function get_storage_options() {
     // Store the results.
@@ -66,6 +66,9 @@ class mediamosa_storage_s3 extends mediamosa_storage {
     return self::boot($this->storage_profile[mediamosa_storage_s3_db::KEY], $this->storage_profile[mediamosa_storage_s3_db::SECRET]);
   }
 
+  /**
+   * Get upload parameters.
+   */
   public function get_upload_parameters($app_id, $user_id, $group_id) {
     return array();
   }
@@ -73,7 +76,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
   /**
    * Get the default scheme.
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still? Does not apply for external locations.
    *
    * @return string
@@ -139,7 +142,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
       throw new mediamosa_storage_s3_exception('Cannot load AmazonS3 class. Please check if awssdk is installed correctly');
     }
 
-    // Test the AWS connection
+    // Test the AWS connection.
     try {
       $s3 = new MediaMosaAmazonS3(array('key' => $key, 'secret' => $secret));
       if (!$s3) {
@@ -168,7 +171,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
    * @param string $secret
    *   Your AWS secret key, or a session secret key.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when succesful, FALSE otherwise.
    */
   public static function login_test($key, $secret) {
@@ -189,7 +192,7 @@ class mediamosa_storage_s3 extends mediamosa_storage {
    * @param string $mount_point
    *   The mount point to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when hosted on S3.
    */
   public static function mediafile_is_s3($mount_point) {
@@ -202,9 +205,8 @@ class mediamosa_storage_s3 extends mediamosa_storage {
    * @param array $mediafile
    *   The mediafile to test.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when public.
-   *
    */
   public static function mediafile_is_public($mediafile) {
     try {

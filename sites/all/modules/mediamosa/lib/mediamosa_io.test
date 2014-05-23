@@ -24,7 +24,7 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Run first before test.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The client app.
    * @param array $upload
    *   The upload for the test.
@@ -37,7 +37,7 @@ class MediaMosaIoTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Run right after the test.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    */
   protected function postTest($app_id) {

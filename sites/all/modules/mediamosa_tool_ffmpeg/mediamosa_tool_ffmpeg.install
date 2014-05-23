@@ -14,29 +14,71 @@ function mediamosa_tool_ffmpeg_install() {
   $t = get_t();
 
   $default_params = array(
-    array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
-    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv', 'wmv', 'mp4', 'avi', 'ogg', 'webm'), NULL, 'FALSE', NULL),
-    array('ffmpeg', 'strict', '-strict', NULL, NULL, array('', 'experimental'), NULL, 'FALSE', $t('allow non standardized experimental things.')),
-    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('libx264', 'libtheora', 'libvpx', 'rawvideo', 'flv', 'wmv', 'h263', 'mpeg4'), NULL, 'FALSE', $t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
-    array('ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array('', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast'), NULL, 'FALSE', 'The -vpre option is an preset option of ffmpeg used till version 0.8 for libx264 and later used only for libvpx, it is recommended that you use -profile and -preset for libx264.'),
-    array('ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array('', 'main', 'baseline', 'ipod320', 'ipod640'), NULL, 'FALSE', NULL),
-    array('ffmpeg', 'x264_profile', '-profile', NULL, NULL, array('', 'baseline', 'main', 'high'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
-    array('ffmpeg', 'x264_preset', '-preset', NULL, NULL, array('', 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
-    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('', '1', '2'), NULL, 'FALSE', $t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
-    array('ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', $t('Set the video bitrate in bit/s@default')),
-    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', $t('Set frame rate (Hz value, fraction or abbereviation@default')),
-    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', $t('Maximum video quantizer scale (VBR)@default')),
-    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', $t('Duration of the video.')),
-    array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
-    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96', '176x144', '352x288', '704x576', '160x120', '320x240', '640x480', '800x600', '1024x768', '1600x1200', '2048x1536', '1280x1024', '2560x2048', '5120x4096', '852x480', '1366x768', '1600x1024', '1920x1200', '2560x1600', '3200x2048', '3840x2400', '6400x4096', '7680x4800', '320x200', '640x350', '852x480', '1280x720', '1920x1080', '480x320', '480x270', '480x360', '640x390', '640x360', '854x480'), '640x390', 'FALSE', $t('Set frame size using format WIDTHxHEIGHT@default')),
-    array('ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', $t('Aspect ratio')),
-    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force maintain the original video aspect ratio or not@default')),
-    array('ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
-    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libfdk_acc', 'libvorbis', 'vorbis'), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
-    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('12200', '40000', '64000', '128000', '192000', '256000', '512000'), '128000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
-    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('8000', '22050', '44100'), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
-    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
-
+    array(
+      'ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
+    array(
+      'ffmpeg', 'internal_file_extension', '', NULL, NULL, array(
+        'flv', 'wmv', 'mp4', 'avi', 'ogg', 'webm'),
+      NULL, 'FALSE', NULL,
+    ),
+    array(
+      'ffmpeg', 'strict', '-strict', NULL, NULL, array('', 'experimental'), NULL, 'FALSE', $t('allow non standardized experimental things.')),
+    array(
+      'ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array(
+        'libx264', 'libtheora', 'libvpx', 'rawvideo', 'flv', 'wmv', 'h263', 'mpeg4',
+      ), NULL, 'FALSE', $t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
+    array(
+      'ffmpeg', 'videopreset_quality', '-vpre', NULL, NULL, array(
+        '', 'veryslow', 'slower', 'slow', 'fast', 'faster', 'veryfast',
+      ), NULL, 'FALSE', 'The -vpre option is an preset option of ffmpeg used till version 0.8 for libx264 and later used only for libvpx, it is recommended that you use -profile and -preset for libx264.'),
+    array(
+      'ffmpeg', 'videopreset_profile', '-vpre', NULL, NULL, array(
+        '', 'main', 'baseline', 'ipod320', 'ipod640',
+      ), NULL, 'FALSE', NULL),
+    array(
+      'ffmpeg', 'x264_profile', '-profile', NULL, NULL, array(
+        '', 'baseline', 'main', 'high',
+      ), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
+    array(
+      'ffmpeg', 'x264_preset', '-preset', NULL, NULL, array(
+        '', 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo',
+      ), NULL, 'FALSE', 'see http://mewiki.project357.com/wiki/X264_Settings for more information.'),
+    array(
+      'ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('', '1', '2'), NULL, 'FALSE', $t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
+    array(
+      'ffmpeg', 'videobitrate', '-b', 56000, 80000000, NULL, '200000', 'FALSE', $t('Set the video bitrate in bit/s@default')),
+    array(
+      'ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', $t('Set frame rate (Hz value, fraction or abbereviation@default')),
+    array(
+      'ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', $t('Maximum video quantizer scale (VBR)@default')),
+    array(
+      'ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', $t('Duration of the video.')),
+    array(
+      'ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
+    array(
+      'ffmpeg', 'size', '-s', NULL, NULL, array(
+        '', '128x96', '176x144', '352x288', '704x576', '160x120', '320x240', '640x480', '800x600', '1024x768', '1600x1200', '2048x1536', '1280x1024', '2560x2048', '5120x4096', '852x480', '1366x768', '1600x1024', '1920x1200', '2560x1600', '3200x2048', '3840x2400', '6400x4096', '7680x4800', '320x200', '640x350', '852x480', '1280x720', '1920x1080', '480x320', '480x270', '480x360', '640x390', '640x360', '854x480',
+      ), '640x390', 'FALSE', $t('Set frame size using format WIDTHxHEIGHT@default')),
+    array(
+      'ffmpeg', 'aspect', '-aspect', NULL, NULL, array('', '4:3', '3:2', '16:9'), '', 'FALSE', $t('Aspect ratio')),
+    array(
+      'ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force maintain the original video aspect ratio or not@default')),
+    array(
+      'ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
+    array(
+      'ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array(
+        'libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libfdk_acc', 'libvorbis', 'vorbis',
+      ), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array(
+      'ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array(
+        '12200', '40000', '64000', '128000', '192000', '256000', '512000',
+      ), '128000', 'FALSE', $t('Set the audio bitrate in bit/s@default')),
+    array(
+      'ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array(
+        '8000', '22050', '44100',
+      ), '44100', 'FALSE', $t('Set the audio sampling frequency@default')),
+    array(
+      'ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', $t('The allowed value is between 0 and 2@default')),
   );
 
   // Insert default mappings as nodes.
@@ -76,32 +118,46 @@ function mediamosa_tool_ffmpeg_install() {
   $default_profiles = array(
 
     // An example flash profile.
-    array('flash 360p', 'FALSE', 'ffmpeg', 'flv', 'videocodec:flv;' . $def_params['360p_video'] . ';audiocodec:libmp3lame;' . $def_params['360p_audio']),
+    array(
+      'flash 360p', 'FALSE', 'ffmpeg', 'flv', 'videocodec:flv;' . $def_params['360p_video'] . ';audiocodec:libmp3lame;' . $def_params['360p_audio']),
 
     // @todo: test 2 pass encoding : 2_pass_h264_encoding:1
     // libx264, lib264/libfaac
     // See http://developer.android.com/guide/appendix/media-formats.html.
-    array('mp4 h264 360p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
-    array('mp4 h264 480p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
-    array('mp4 h264 720p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
+    array(
+      'mp4 h264 360p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
+    array(
+      'mp4 h264 480p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
+    array(
+      'mp4 h264 720p (mobile)', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;x264_profile:baseline;x264_preset:slow;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
 
     // Same as before but now with default profile.
-    array('mp4 h264 360p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
-    array('mp4 h264 480p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
-    array('mp4 h264 720p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
+    array(
+      'mp4 h264 360p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['360p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['360p_audio']),
+    array(
+      'mp4 h264 480p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['480p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['480p_audio']),
+    array(
+      'mp4 h264 720p', 'FALSE', 'ffmpeg', 'mp4', 'videocodec:libx264;' . $def_params['720p_video'] . ';audiocodec:aac;strict:experimental' . $def_params['720p_audio']),
 
     // webm, libvpx/libvorbis
-    array('WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
-    array('WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
-    array('WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['720p_video'] . ';audiocodec:libvorbis;' . $def_params['720p_audio']),
-    array('WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
+    array(
+      'WebM 360p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
+    array(
+      'WebM 480p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
+    array(
+      'WebM 720p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['720p_video'] . ';audiocodec:libvorbis;' . $def_params['720p_audio']),
+    array(
+      'WebM 1080p', 'FALSE', 'ffmpeg', 'webm', 'videocodec:libvpx;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
 
     // ogg. libtheora/libvorbis
-    array('Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
+    array(
+      'Theora/Ogv 360p', 'FALSE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['360p_video'] . ';audiocodec:libvorbis;' . $def_params['360p_audio']),
     // Changing default: also change
     // MediaMosaTestCaseEgaJob::SIMPLETEST_PROFILE_ID_DEFAULT.
-    array('Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
-    array('Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv','videocodec:libtheora;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
+    array(
+      'Theora/Ogv 480p', 'TRUE', 'ffmpeg', 'ogv',  'videocodec:libtheora;' . $def_params['480p_video'] . ';audiocodec:libvorbis;' . $def_params['480p_audio']),
+    array(
+      'Theora/Ogv 720p', 'FALSE', 'ffmpeg', 'ogv','videocodec:libtheora;' . $def_params['1080p_video'] . ';audiocodec:libvorbis;' . $def_params['1080p_audio']),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -116,13 +172,6 @@ function mediamosa_tool_ffmpeg_install() {
 
     node_save($node);
   }
-}
-
-/**
- * Implements hook_unstall().
- */
-function mediamosa_tool_ffmpeg_uninstall() {
-  // Do nothing. We don't delete the existing data.
 }
 
 /**

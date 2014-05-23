@@ -17,10 +17,10 @@ class mediamosa_webservice_app {
    *
    * @param string $handle
    *   Webservice handle.
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    *
-   * @return boolean
+   * @return bool
    *   TRUE when webservice is allowed, FALSE otherwise.
    */
   public static function webservice_is_active($handle, array $app_ids = array()) {
@@ -76,7 +76,7 @@ class mediamosa_webservice_app {
    *
    * @param string $handle
    *  Webservice handle.
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    */
   public static function webservice_must_be_active($handle, array $app_ids = array()) {
@@ -88,7 +88,7 @@ class mediamosa_webservice_app {
   /**
    * Enable webservice for app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $handle
    */
   public static function webservice_status($app_id, $handle, $status) {
@@ -184,7 +184,7 @@ class mediamosa_webservice_app {
 
   /**
    * Remove all handles from this app_id. Provide 0 for all globals.
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function remove_all($app_id) {
     mediamosa_db::db_delete(mediamosa_webservice_db::TABLE_NAME)

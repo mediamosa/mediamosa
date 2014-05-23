@@ -1,7 +1,7 @@
 <?php
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 2098);
+define('MEDIAMOSA_BUILD', 2099);
 define('MEDIAMOSA_VERSION', '3.5.1');
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-dev');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-development');
@@ -82,7 +82,7 @@ class mediamosa_version {
   /**
    * Return the current version of MediaMosa as string.
    *
-   * @param boolean $return_full
+   * @param bool $return_full
    *  Include the build and changeset.
    * @return string
    */

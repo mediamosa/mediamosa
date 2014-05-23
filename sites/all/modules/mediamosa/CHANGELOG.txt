@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2098)
+MediaMosa 3.5.1-dev (build 2099)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -85,6 +85,8 @@ MediaMosa 3.5.1-dev (build 2098)
 - Added a set-downloadable action to rules.
 - Fixed: symlink creation ending in error when symlink already exists.
 - Fixed unit test file size check because we replace our ogg test file.
+- Cleanup fase 1 codestyle.
+- Fixed problem when using symlink not adding new symlink to its stat cache.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------

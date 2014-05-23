@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Batch jobs"
 description = "Display the batch jobs."

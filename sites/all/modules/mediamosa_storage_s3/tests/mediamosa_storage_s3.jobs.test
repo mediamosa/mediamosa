@@ -12,6 +12,9 @@ if (!class_exists('MediaMosaS3BaseTestCaseEga')) {
 
 class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
   // ------------------------------------------------------------------ Methods.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     // Only available when these are set.
     if (variable_get('mediamosa_storage_s3_simpletest_enable') && variable_get('mediamosa_storage_s3_simpletest_aws_key') && variable_get('mediamosa_storage_s3_simpletest_aws_key')) {
@@ -39,7 +42,6 @@ class MediaMosaS3JobsTestCaseEga extends MediaMosaS3BaseTestCaseEga {
 
     // Do upload.
     $upload = $this->uploadTestFile();
-//    $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
     // Now transcode local file.

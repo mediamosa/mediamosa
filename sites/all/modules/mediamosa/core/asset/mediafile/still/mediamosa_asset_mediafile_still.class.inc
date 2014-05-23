@@ -112,7 +112,7 @@ class mediamosa_asset_mediafile_still {
    * Provide application ID when possible, client applications can override
    * default.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   (optional) The client application ID.
    *
    * @return string
@@ -130,9 +130,9 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $size
    *   (optional) In WxH format.
-   * @param integer $width
+   * @param int $width
    *   (optional) The width.
-   * @param integer $height
+   * @param int $height
    *   (optional) The height.
    * @param string $default_size
    *   In WxH format.
@@ -213,7 +213,7 @@ class mediamosa_asset_mediafile_still {
    *   The application ID.
    * @param array $still_parameters
    *   The still parameters.
-   * @param boolean $create_new_still
+   * @param bool $create_new_still
    *   The create new still file, instead of overwriting on current.
    *
    * @return string
@@ -335,13 +335,13 @@ class mediamosa_asset_mediafile_still {
    *
    * @param string $asset_id
    * @param string $still_id
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $owner_id
    * @param string $group_id
-   * @param integer $order
-   * @param boolean $still_default
+   * @param int $order
+   * @param bool $still_default
    * @param array $still_parameters
-   * @param integer $sec
+   * @param int $sec
    * @param string $mediafile_id_source
    * @param string $tag
    */
@@ -502,7 +502,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $asset_id
    * @param string $mediafile_id
    * @param string $still_id
-   * @param integer $order
+   * @param int $order
    */
   public static function set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order) {
     mediamosa_watchdog::log_mediafile(
@@ -789,6 +789,8 @@ class mediamosa_asset_mediafile_still {
             )
           )
         );
+
+        mediamosa_io::clearstatcache();
       }
 
       // Remove public (permenant) link.
@@ -912,7 +914,7 @@ class mediamosa_asset_mediafile_still {
    *
    * FIXME: the mediafile id unused.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    * The user ID for owner check.

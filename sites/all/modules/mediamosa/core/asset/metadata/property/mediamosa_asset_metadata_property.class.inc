@@ -12,7 +12,7 @@ class mediamosa_asset_metadata_property {
    *
    * @param array $app_ids
    *   The application IDs from which to get the metadata tags.
-   * @param boolean $include_default_definitions
+   * @param bool $include_default_definitions
    *   Include all metadata properties that are global.
    * @param string $name
    *   Retrieve for specific name.
@@ -73,15 +73,15 @@ class mediamosa_asset_metadata_property {
   /**
    * Create metadata property for client app.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $name
    *   Name of the property.
    * @param string $type
    *   Type: char, datetime, int.
-   * @param integer $min_occurences
+   * @param int $min_occurences
    *   (reserved).
-   * @param integer $max_occurences
+   * @param int $max_occurences
    *   (reserved).
    * @param bool $is_hidden
    *   Is hidden in REST output.
@@ -139,7 +139,7 @@ class mediamosa_asset_metadata_property {
   /**
    * Check if property already exists.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $name
    *   Name of the property.
@@ -173,7 +173,7 @@ class mediamosa_asset_metadata_property {
   /**
    * Delete a metadata property.
    *
-   * @param integer $app_ids
+   * @param int $app_ids
    *   The app id.
    * @param string $name
    *   The name of the property to delete.
@@ -227,7 +227,7 @@ class mediamosa_asset_metadata_property {
   /**
    * Get the asset metadata property from the database.
    *
-   * @param integer $prop_id
+   * @param int $prop_id
    * @return array
    */
   public static function property_get_row($prop_id) {
@@ -242,7 +242,7 @@ class mediamosa_asset_metadata_property {
    *
    * @param string $name
    *  Name of the property.
-   * @param integer $propgroup_id
+   * @param int $propgroup_id
    *  The ID of the propertygroup.
    * @return array
    */

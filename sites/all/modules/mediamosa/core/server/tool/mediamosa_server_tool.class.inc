@@ -9,7 +9,7 @@ class mediamosa_server_tool {
   /**
    * Return the job processor server tools.
    *
-   * @param boolean $get_full_tools_only
+   * @param bool $get_full_tools_only
    *   Supply TRUE to get tools that have other hooks. Is temporary solution
    *   till tool & job re-write of 3.6.
    *

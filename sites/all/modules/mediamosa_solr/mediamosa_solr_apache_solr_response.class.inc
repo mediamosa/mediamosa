@@ -4,29 +4,6 @@
  * Wrapper around Apache_Solr_Response.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_solr_apache_solr_response {
   /**
    * The decoded json response.
@@ -36,6 +13,9 @@ class mediamosa_solr_apache_solr_response {
   private $_response = NULL;
 
   // -------------------------------------------------------------- Constructor.
+  /**
+   * Constructor.
+   */
   public function __construct(Apache_Solr_Response $response) {
     $this->_response = json_decode($response->getRawResponse());
   }
@@ -52,10 +32,12 @@ class mediamosa_solr_apache_solr_response {
   }
 
   /**
-   * Get total found rows, is not the number of found rows, but total matched
-   * to the query.
+   * Get total found rows.
    *
-   * @return integer
+   * This is not the number of found rows, but total matched to
+   * the query.
+   *
+   * @return int
    *   The number of found rows.
    */
   public function getNumFound() {
@@ -108,10 +90,14 @@ class mediamosa_solr_apache_solr_response {
     $facets = array('solr_facet_fields' => array(), 'solr_facet_dates' => array());
 
     // facet_fields;
-    // granted=true&calculate_total_count=true&solr_facet=true&solr_facet_field=title_vc
+    // granted=true & calculate_total_count=true & solr_facet=true
+    // & solr_facet_field=title_vc
 
     // facet_dates;
-    // granted=true&calculate_total_count=true&solr_facet=true&solr_facet_date=videotimestampmodified&solr_facet_date_start=NOW/DAY-5DAYS&solr_facet_date_end=NOW/DAY%2B1DAY&solr_facet_date_gap=%2B1DAY
+    // granted=true & calculate_total_count=true & solr_facet=true &
+    // solr_facet_date=videotimestampmodified &
+    // solr_facet_date_start=NOW/DAY-5DAYS & solr_facet_date_end=NOW/DAY%2B1DAY
+    // & solr_facet_date_gap=%2B1DAY
 
     if (!empty($this->_response->facet_counts)) {
       if (!empty($this->_response->facet_counts->facet_fields)) {

@@ -51,13 +51,13 @@ class mediamosa_user_favorite {
   /**
    * Get a fav. relation.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
    * @param string $fav_type
    *  Favorite type.
-   * @param integer $fav_id
+   * @param int $fav_id
    *  ID asset / collection.
    */
   public static function get($app_id, $user_id, $fav_type, $fav_id) {
@@ -74,13 +74,13 @@ class mediamosa_user_favorite {
   /**
    * Delete a fav. relation.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
    * @param string $fav_type
    *  Favorite type.
-   * @param integer $fav_id
+   * @param int $fav_id
    *  ID asset / collection.
    */
   public static function delete($app_id, $user_id, $fav_type, $fav_id) {
@@ -100,13 +100,13 @@ class mediamosa_user_favorite {
   /**
    * Create a fav. relation.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  Application ID.
    * @param string $user_id
    *  User ID.
    * @param string $fav_type
    *  Favorite type.
-   * @param integer $fav_id
+   * @param int $fav_id
    *  ID asset / collection.
    */
   public static function create($app_id, $user_id, $fav_type, $fav_id) {

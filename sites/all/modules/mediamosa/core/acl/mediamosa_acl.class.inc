@@ -50,7 +50,7 @@ class mediamosa_acl {
    * @param string $group_domain
    *   The group domain to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when valid group domain.
    */
   public static function is_group_domain($group_domain) {
@@ -63,7 +63,7 @@ class mediamosa_acl {
    * @param string $group_realm
    *   The realm group to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when valid group realm.
    */
   public static function is_group_realm($group_realm) {
@@ -78,7 +78,7 @@ class mediamosa_acl {
   /**
    * Returns the acl_ids of the given domain and realms.
    *
-   * @param integer/array $mixed_app_id
+   * @param int/array $mixed_app_id
    * @param string $acl_user_id
    * @param array $a_acl_group_id
    *  These are user_id groups, like mf.group_id
@@ -418,15 +418,15 @@ class mediamosa_acl {
    *  The mediamosa_acl::ACL_TYPE_*
    * @param string $object_id
    *  The ID of the object to check.
-   * @param integer $app_id
+   * @param int $app_id
    *  App ID of user.
    * @param string $user_id
    *  User to check.
-   * @param integer $object_app_id
+   * @param int $object_app_id
    *  App ID of the object.
    * @param string $user_id_owner
    *  User of the object.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *  TRUE or FALSE.
    */
   public static function owner_check_ext($acl_type, $object_id, $app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
@@ -454,7 +454,7 @@ class mediamosa_acl {
    *
    * You must be either owner of asset OR collection to create link.   *
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $user_id
    *  The user ID.
@@ -487,8 +487,8 @@ class mediamosa_acl {
   /**
    * Test if you are app_admin
    *
-   * @param integer $app_id
-   * @param boolean $is_app_admin
+   * @param int $app_id
+   * @param bool $is_app_admin
    */
   public static function app_admin_check($app_id, $object_app_id, $is_app_admin) {
     assert(is_bool($is_app_admin));
@@ -507,7 +507,7 @@ class mediamosa_acl {
   /**
    * Get is protected field.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $acl_type
    * @param array $a_object
@@ -594,7 +594,7 @@ class mediamosa_acl {
   /**
    * Sets rights on the object
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $acl_type
    * @param array $object
@@ -913,7 +913,7 @@ class mediamosa_acl {
   /**
    * Remove all ACL rules from object.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $user_id
    *   The owner of the object.
@@ -922,9 +922,9 @@ class mediamosa_acl {
    *   mediamosa_acl::ACL_TYPE_*.
    * @param array $object
    *   An assocative array with owner, app and mediafile IDs data.
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Overrulling of owner check.
-   * @param boolean $process_clear
+   * @param bool $process_clear
    *   Process the ACL clear, this is called with FALSE when ACL set call is
    *   used to clear the ACL rules first. Because the ACL set function also
    *   calls the hook (with 'replace'), there no need to do this twice.
@@ -1036,11 +1036,11 @@ class mediamosa_acl {
    * Will check ownership of object.
    * On media it will allow slaves to get rights of object when not owner.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $user_id
    * @param string $acl_type
    * @param array $object
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    * @return array
    */
   public static function rights_get($app_id, $user_id, $acl_type, $object, $is_app_admin = FALSE) {
@@ -1268,9 +1268,9 @@ class mediamosa_acl {
    * @param string $acl_domain
    * @param string $acl_realm
    * @param array $slaves
-   * @param boolean $is_app_admin
-   * @param boolean $do_master_slave_only
-   * @param boolean $do_master_slave_null
+   * @param bool $is_app_admin
+   * @param bool $do_master_slave_only
+   * @param bool $do_master_slave_null
    * @param string $app_id_table_prefix
    */
   public static function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain = NULL, $acl_realm = NULL, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
@@ -1628,7 +1628,7 @@ class mediamosa_acl {
    * Check access on assets using given array asset_ids
    *
    * @param array $a_asset_ids
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $acl_user_id
    * @param array $acl_group_ids
    * @param string $s_acl_domain
@@ -1666,7 +1666,7 @@ class mediamosa_acl {
    * @param string $acl_type
    * @param string $asset_id
    * @param string $object_id
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $acl_user_id
    * @param array $acl_group_ids
    * @param string $s_acl_domain

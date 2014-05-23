@@ -44,7 +44,7 @@ class mediamosa_webservice {
   /**
    * Return with the webservice row.
    *
-   * @param integer $webservice_id
+   * @param int $webservice_id
    */
   public static function get($webservice_id) {
     return mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w')
@@ -57,7 +57,7 @@ class mediamosa_webservice {
   /**
    * Get all webservice.
    *
-   * @param integer $app_id
+   * @param int $app_id
    */
   public static function get_all($app_id = 0) {
 

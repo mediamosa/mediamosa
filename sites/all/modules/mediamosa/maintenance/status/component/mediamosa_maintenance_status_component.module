@@ -180,7 +180,7 @@ function _mediamosa_maintenance_status_component_directory($directory, &$checks)
 /**
  * Implements hook_mediamosa_status_collect().
  *
- * @param boolean $reset
+ * @param bool $reset
  *  Reset the data, regenerate.
  *
  * @return array

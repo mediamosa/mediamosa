@@ -18,10 +18,12 @@ require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
  * Implements hook_mediamosa_storage_info().
  */
 function mediamosa_mediamosa_storage_info() {
-  return array(mediamosa_storage_local::NAME => array(
-    'name' => t('MediaMosa local storage'),
-    'description' => t('The normal local MediaMosa storage.'),
-  ));
+  return array(
+    mediamosa_storage_local::NAME => array(
+      'name' => t('MediaMosa local storage'),
+      'description' => t('The normal local MediaMosa storage.'),
+    )
+  );
 }
 
 /**
@@ -133,7 +135,7 @@ function mediamosa_permission() {
 
   $perms = array(
     // Administer MediaMosa.
-    mediamosa_permission::ADMIN_MEDIAMOSA =>  array(
+    mediamosa_permission::ADMIN_MEDIAMOSA => array(
       'title' => t('Administer MediaMosa'),
       'description' => t('Administer MediaMosa is the super user that allows the user to do everything on MediaMosa backend.'),
       'restrict access' => TRUE,
@@ -157,7 +159,7 @@ function mediamosa_permission() {
       'description' => t($text_view_switch, array('@type' => 'status job')),
     ),
 
-    mediamosa_permission::ACCESS_CONTENT =>  array(
+    mediamosa_permission::ACCESS_CONTENT => array(
       'title' => t('Access MediaMosa content'),
       'description' => t($text_master_switch, array('@type' => 'content')),
     ),
@@ -165,61 +167,61 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa content (assets)'),
       'description' => t($text_view_switch, array('@type' => 'assets')),
     ),
-    mediamosa_permission::ACCESS_CONTENT_COLLECTIONS =>  array(
+    mediamosa_permission::ACCESS_CONTENT_COLLECTIONS => array(
       'title' => t('Access MediaMosa content (collections)'),
       'description' => t($text_view_switch, array('@type' => 'collections')),
     ),
-    mediamosa_permission::ACCESS_CONTENT_REVISIONS =>  array(
+    mediamosa_permission::ACCESS_CONTENT_REVISIONS => array(
       'title' => t('Access MediaMosa content (revisions)'),
       'description' => t($text_view_switch, array('@type' => 'revisions')),
     ),
-    mediamosa_permission::ACCESS_CONTENT_ERRORCODES =>  array(
+    mediamosa_permission::ACCESS_CONTENT_ERRORCODES => array(
       'title' => t('Access MediaMosa content (errorcodes)'),
       'description' => t($text_view_switch, array('@type' => 'errorcodes')),
     ),
-    mediamosa_permission::ACCESS_EDIT_ERRORCODES =>  array(
+    mediamosa_permission::ACCESS_EDIT_ERRORCODES => array(
       'title' => t('Edit MediaMosa content (errorcodes)'),
       'description' => t($text_edit_switch, array('@type' => 'errorcodes')),
     ),
-    mediamosa_permission::ACCESS_CONTENT_JOB_FAILURE =>  array(
+    mediamosa_permission::ACCESS_CONTENT_JOB_FAILURE => array(
       'title' => t('Access MediaMosa tools (failured job)'),
       'description' => t($text_view_switch, array('@type' => 'failured job')),
     ),
 
-    mediamosa_permission::ACCESS_TOOLS =>  array(
+    mediamosa_permission::ACCESS_TOOLS => array(
       'title' => t('Access MediaMosa tools'),
       'description' => t($text_master_switch, array('@type' => 'tools')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_RESTCALLS =>  array(
+    mediamosa_permission::ACCESS_TOOLS_RESTCALLS => array(
       'title' => t('Access MediaMosa tools (REST calls)'),
       'description' => t($text_view_switch, array('@type' => 'restcalls')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_LOG =>  array(
+    mediamosa_permission::ACCESS_TOOLS_LOG => array(
       'title' => t('Access MediaMosa tools (log)'),
       'description' => t($text_view_switch, array('@type' => 'log')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_BATCH =>  array(
+    mediamosa_permission::ACCESS_TOOLS_BATCH => array(
       'title' => t('Access MediaMosa tools (batch jobs)'),
       'description' => t($text_view_switch, array('@type' => 'batch jobs')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_TESTING =>  array(
+    mediamosa_permission::ACCESS_TOOLS_TESTING => array(
       'title' => t('Access MediaMosa tools (testing)'),
       'description' => t($text_view_switch, array('@type' => 'testing')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_TESTING_SETTINGS =>  array(
+    mediamosa_permission::ACCESS_TOOLS_TESTING_SETTINGS => array(
       'title' => t('Access MediaMosa tools (testing settings)'),
       'description' => t($text_view_switch, array('@type' => 'testing settings')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_FILE_INTEGRITY =>  array(
+    mediamosa_permission::ACCESS_TOOLS_FILE_INTEGRITY => array(
       'title' => t('Access MediaMosa tools (errorcodes)'),
       'description' => t($text_view_switch, array('@type' => 'file integrity')),
     ),
-    mediamosa_permission::ACCESS_TOOLS_TRANSCODE_LENGTH_DEVIATION =>  array(
+    mediamosa_permission::ACCESS_TOOLS_TRANSCODE_LENGTH_DEVIATION => array(
       'title' => t('Access MediaMosa tools (transcode length deviation)'),
       'description' => t($text_view_switch, array('@type' => 'transcode length deviation')),
     ),
 
-    mediamosa_permission::ACCESS_STATS =>  array(
+    mediamosa_permission::ACCESS_STATS => array(
       'title' => t('Access MediaMosa statistics'),
       'description' => t($text_master_switch, array('@type' => 'statistics')),
     ),
@@ -244,7 +246,7 @@ function mediamosa_permission() {
       'description' => t($text_view_switch, array('@type' => 'statistics streaming per file')),
     ),
 
-    mediamosa_permission::ACCESS_CONFIG =>  array(
+    mediamosa_permission::ACCESS_CONFIG => array(
       'title' => t('Access MediaMosa configuration'),
       'description' => t($text_master_switch, array('@type' => 'configuration')),
     ),
@@ -288,7 +290,7 @@ function mediamosa_permission() {
   // Get the apps.
   foreach ($apps as $app) {
     $perms[mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
-      'title' => t('Content owner of client application ' . $app[mediamosa_app_db::APP_NAME]),
+      'title' => t('Content owner of client application {app_name}', array('{app_name}' => $app[mediamosa_app_db::APP_NAME])),
       'description' => t('Making the user content owner of this client application will give limited access to the assets, mediafiles and other content of its client application.'),
     );
   }
@@ -301,11 +303,11 @@ function mediamosa_permission() {
  * Check access menu item.
  *
  * @param sting/array $perms
- *  array containing permissions, right on one of them is access.
- * @param boolean $one_part_test
- *  Set to TRUE if you want to see if any permission is set for MediaMosa.
+ *   Array containing permissions, right on one of them is access.
+ * @param bool $one_part_test
+ *   Set to TRUE if you want to see if any permission is set for MediaMosa.
  *
- *  @see _mediamosa_user_access_mediamosa()
+ * @see _mediamosa_user_access_mediamosa()
  */
 function _mediamosa_user_access($perms, $one_part_test = FALSE) {
   global $user;
@@ -351,7 +353,7 @@ function _mediamosa_user_access($perms, $one_part_test = FALSE) {
 
   $perms .= '|';
 
-  // If part of role is there
+  // If part of role is there.
   foreach (array_keys($user->roles) as $rid) {
     foreach ($role_permissions[$rid] as $role_permission => $switch) {
       if (empty($switch)) {
@@ -439,8 +441,7 @@ function mediamosa_block_info() {
 function mediamosa_theme() {
   return array(
     'mediamosa_version' => array(
-      'variables' => array(
-      ),
+      'variables' => array(),
     ),
   );
 }
@@ -593,7 +594,8 @@ function mediamosa_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the current registered MediaMosa REST calls.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'rest?limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+    mediamosa_rest_call::EXAMPLE_RESPONSE => <<<'EOT'
+<items>
   <item id="1">
     <access>5</access>
     <behave_as_external></behave_as_external>
@@ -609,15 +611,17 @@ function mediamosa_mediamosa_register_rest_call_doc() {
     <uri_id>1</uri_id>
     <version>1.1.0</version>
   </item>
-</items>',
-);
+</items>
+EOT
+  );
 
-$rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
-  mediamosa_rest_call::TITLE => 'Get details REST call.',
-  mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about a registered MediaMosa REST call.',
-  mediamosa_rest_call::EXAMPLE_REQUEST => 'rest/33',
-  mediamosa_rest_call::RESPONSE_FIELDS => array(),
-  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get details REST call.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about a registered MediaMosa REST call.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'rest/33',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => <<<'EOT'
+<items>
   <item id="1">
     <access>5</access>
     <behave_as_external></behave_as_external>
@@ -650,7 +654,8 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
       </is_app_admin>
     </vars>
   </item>
-</items>',
+</items>
+EOT
   );
 
   $rest_calls['version'][mediamosa_rest_call::METHOD_GET] = array(
@@ -658,13 +663,15 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the current version of MediaMosa.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/version [GET]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+    mediamosa_rest_call::EXAMPLE_RESPONSE => <<<'EOT'
+<items>
   <item id="1">
     <version>2.3.4</version>
     <build>1246</build>
     <info></info>
   </item>
-</items>',
+</items>
+EOT
   );
 
   $rest_calls['job/$job_id/execute'][mediamosa_rest_call::METHOD_GET] = array(
@@ -672,10 +679,12 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::DESCRIPTION => 'The page call will execute the job. Is only available for specific job types (for now). Use HEAD method to trigger the call. With the HEAD method, the webserver will not wait for the call to complete.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/job/2234/execute [GET]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+    mediamosa_rest_call::EXAMPLE_RESPONSE => <<<'EOT'
+<items>
   <item id="1">
   </item>
-</items>',
+</items>
+EOT
   );
 
   return $rest_calls;
@@ -922,9 +931,7 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
 function mediamosa_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'dblog_filter_form') {
 
-    /**
-     * Extend the watchdog filter.
-     */
+    // Extend the watchdog filter.
     if (!empty($_SESSION['mediamosa_watchdog_overview_filter'])) {
       $form['filters']['#collapsed'] = FALSE;
     }
@@ -982,15 +989,14 @@ function _mediamosa_watchdog_filter_form_submit($form, &$form_state) {
 
 /**
  * Implements hook_query_alter().
+ *
+ * Alter the search query on watchdog so we can search within the watchdog.
+ *
+ * @var QueryAlterableInterface $query
+ *  The watchdog query object.
  */
 function mediamosa_query_alter(QueryAlterableInterface $query) {
 
-  /**
-   * Alter the search query on watchdog so we can search within the watchdog.
-   *
-   * @var QueryAlterableInterface $query
-   *  The watchdog query object.
-   */
   $tables = $query->getTables();
   foreach ($tables as $table) {
     if ($table['table'] == 'watchdog') {
@@ -1053,10 +1059,12 @@ function mediamosa_cron() {
 function mediamosa_mediamosa_search_engine_info() {
 
   // Return the information about the default search engine.
-  return array('mediamosa_search' => array(
-    'title' => t('MediaMosa default search'),
-    'description' => t('The default search engine for searching in MediaMosa. This search engine is always available.'),
-  ));
+  return array(
+    'mediamosa_search' => array(
+      'title' => t('MediaMosa default search'),
+      'description' => t('The default search engine for searching in MediaMosa. This search engine is always available.'),
+    ),
+  );
 }
 
 /**
@@ -1078,7 +1086,8 @@ function mediamosa_file_mimetype_mapping_alter(&$mapping) {
 
 /**
  * Implements hook_mediamosa_storage_profile_view().
- * Needs to appear being mediamosa_storage_local
+ *
+ * Needs to appear being mediamosa_storage_local.
  */
 function mediamosa_storage_local_mediamosa_storage_profile_view($node, $view_mode = 'full') {
   $wrapper = new mediamosa_io_streamwrapper_local();

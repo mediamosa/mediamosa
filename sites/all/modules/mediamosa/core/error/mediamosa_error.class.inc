@@ -41,12 +41,12 @@ class mediamosa_error extends mediamosa_sdk {
   /**
    * Find the error code and its textual message.
    *
-   * @param integer $errorcode
+   * @param int $errorcode
    *   The mediamosa error code.
    * @param $args
    *   An associative array of replacements to make. Occurrences in $string of
    *   any key in $args are replaced with the corresponding value.
-   * @param boolean $return_default
+   * @param bool $return_default
    *   If code can not be found, it either return a default error or boolean
    *   FALSE.
    *
@@ -88,7 +88,7 @@ class mediamosa_error extends mediamosa_sdk {
   /**
    * Find the error code and the description.
    *
-   * @param integer $errorcode
+   * @param int $errorcode
    *   The mediamosa error code.
    * @param $args
    *   An associative array of replacements to make. Occurrences in $string of
@@ -106,7 +106,7 @@ class mediamosa_error extends mediamosa_sdk {
   /**
    * Get errorcode by row id.
    *
-   * @param integer $id
+   * @param int $id
    *   The row ID.
    *
    * @return array

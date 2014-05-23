@@ -17,7 +17,7 @@ class mediamosa_watchdog {
    *   Array of variables to replace in the message on display or
    *   NULL if message is already translated or not possible to
    *   translate.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -63,7 +63,7 @@ class mediamosa_watchdog {
    * @param array $variables
    *   Array of variables to replace in the message on display. Defaults to the
    *   return value of drupal_decode_exception().
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message, as per RFC 3164.
    * @param string $type
    *   The category to which this message belongs.
@@ -90,7 +90,7 @@ class mediamosa_watchdog {
    *   Array of variables to replace in the message on display or
    *   NULL if message is already translated or not possible to
    *   translate.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -156,7 +156,7 @@ class mediamosa_watchdog {
    *   translate.
    * @param string $asset_id
    *   (optional) The ID of the asset. Provide when available.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
@@ -194,7 +194,7 @@ class mediamosa_watchdog {
    *
    * @param mixed $data
    *   Any data to export to log.
-   * @param integer $severity
+   * @param int $severity
    *   The severity of the message; one of the following values as defined in
    *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
    *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.

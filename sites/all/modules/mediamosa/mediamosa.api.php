@@ -101,11 +101,11 @@ function hook_mediamosa_search_engine_info() {
  *     All rights where cleared and replaced.
  * @param string $acl_type
  *   The type of ACL, see mediamosa_acl::ACL_TYPE_*.
- * @param integer $app_id
+ * @param int $app_id
  *   The application ID that called the ACL change.
  * @param string $user_id
  *   The owner of the object.
- * @param boolean $is_app_admin
+ * @param bool $is_app_admin
  *   Is application admin.
  * @param array $acl_data
  *   An associative array containing the data for the 'set' operation. Is empty
@@ -130,7 +130,7 @@ function hook_mediamosa_acl(array $object, $op, $acl_type, $app_id, $user_id, $i
 /**
  * Authorize the client application.
  *
- * @return boolean
+ * @return bool
  *   Return TRUE when authorized, or FALSE otherwise.
  */
 function hook_mediamosa_app_authorized() {

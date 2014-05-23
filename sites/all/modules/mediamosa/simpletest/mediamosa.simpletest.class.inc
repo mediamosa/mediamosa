@@ -218,7 +218,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Returns if we are in verbose mode.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when verbose is on.
    */
   public function isVerbose() {
@@ -438,7 +438,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *     call may take. The default is 30 seconds. If a timeout occurs, the error
    *     code is set to the HTTP_REQUEST_TIMEOUT constant.
    *   - context: A context resource created with stream_context_create().
-   * @param boolean $is_response_xml
+   * @param bool $is_response_xml
    *   If TRUE, then the data will be parsed as XML.
    *
    * @return object
@@ -684,9 +684,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param string $uri
    *   The uri of the directory to create.
-   * @param boolean $recursive
+   * @param bool $recursive
    *   Enable recursive to create the sub maps required to create directory.
-   * @param integer $mode
+   * @param int $mode
    *   Default mode value for created directory, defaults to mode 0775.   *
    * @see mediamosa_io::mkdir()
    */
@@ -704,7 +704,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $text
    *   The text for assert.
    *
-   * @return boolean
+   * @return bool
    *   TRUE when success, FALSE otherwise.
    */
   protected function touch($uri, $text = 'Create empty file @uri (@realpath).') {
@@ -764,7 +764,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The dir exists.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when dir exists, FALSE otherwise.
    */
   protected function dir_exists($uri, $text = 'Check if dir @uri (@realpath) exists.') {
@@ -788,7 +788,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The file or path to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file does not exists, FALSE otherwise.
    */
   protected function file_not_exists($uri, $text = 'Check if file @uri (@realpath) does not exists.') {
@@ -812,7 +812,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The file or path to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when dir does not exists, FALSE otherwise.
    */
   protected function dir_not_exists($uri, $text = 'Check if dir @uri (@realpath) does not exists.') {
@@ -834,7 +834,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The uri to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file, FALSE otherwise.
    */
   protected function is_file($uri, $text = 'Is file type @uri (@realpath)') {
@@ -849,7 +849,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The uri to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when not file, FALSE otherwise.
    */
   protected function is_not_file($uri, $text = 'Is not file type @uri (@realpath)') {
@@ -864,7 +864,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The uri to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when dir/path, FALSE otherwise.
    */
   protected function is_dir($uri, $text = 'Is dir type @uri (@realpath)') {
@@ -878,7 +878,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param string $uri
    *   The uri to check.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when not dir/path, FALSE otherwise.
    */
   protected function is_not_dir($uri, $text = 'Is not dir type @uri (@realpath)') {
@@ -1150,7 +1150,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Check if the creation of mediafile metadata property was correct.
    *
-   * @param integer $prop_id
+   * @param int $prop_id
    *  Property ID to check.
    * @param string $name
    *  Name of the property.

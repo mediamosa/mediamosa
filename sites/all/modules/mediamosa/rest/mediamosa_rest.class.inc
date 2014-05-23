@@ -206,9 +206,9 @@ class mediamosa_rest {
   /**
    * Get a list of REST calls registered with our drupal hook.
    *
-   * @param integer $limit
+   * @param int $limit
    *  Maximum of items in result.
-   * @param integer $offset
+   * @param int $offset
    *  Offset in items list.
    * @param array $options
    *  - key ('method')

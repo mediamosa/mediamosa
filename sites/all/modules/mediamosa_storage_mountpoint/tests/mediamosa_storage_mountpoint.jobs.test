@@ -12,6 +12,9 @@ if (!class_exists('MediaMosaStorageMountPointBaseTestCaseEga')) {
 
 class MediaMosaStorageMountPointIOTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {
   // ------------------------------------------------------------------ Methods.
+  /**
+   * Implements setUp().
+   */
   public static function getInfo() {
     // Only available when these are set.
     return array(
@@ -22,13 +25,15 @@ class MediaMosaStorageMountPointIOTestCaseEga extends MediaMosaStorageMountPoint
   }
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Test Mount point jobs.
+   */
   public function testMountpointJobs() {
     // My app ID.
     $app_id = $this->a_app['app_id'];
 
     // Do upload.
     $upload = $this->uploadTestFile();
-//    $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
     // Now transcode local file.

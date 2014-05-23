@@ -83,7 +83,7 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Test PUT method.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when PUT upload.
    */
   public static function is_put_method() {
@@ -105,13 +105,13 @@ class mediamosa_asset_mediafile_upload {
    *   The URL to trigger when upload has been completed.
    * @param array $transcode_profiles
    *   Array of transcode_profiles to process after upload.
-   * @param boolean $transcode_inherits_acl
+   * @param bool $transcode_inherits_acl
    *   Transcodes inherits the ACL from parent.
-   * @param boolean $retranscode
+   * @param bool $retranscode
    *   Retranscode the mediafile. Default FALSE.
    * @param string $completed_transcoding_url
    *   URL to trigger when transcoding is done.
-   * @param boolean $create_still
+   * @param bool $create_still
    *   Create still of the uploaded file.
    * @param array $still_parameters
    *   The still parameters to use.
@@ -286,13 +286,13 @@ class mediamosa_asset_mediafile_upload {
    *   Tag for mediafile. Provide NULL when skipping.
    * @param string $completed_url
    *   The URL to trigger when upload has been completed.
-   * @param integer $order
+   * @param int $order
    *   Order between stills.
-   * @param boolean $default
+   * @param bool $default
    *   Is default still.
    * @param array $still_parameters
    *   The still parameters to use.
-   * @param integer $frametime
+   * @param int $frametime
    *   Still frametime (in seconds).
    *
    * @return string
@@ -451,10 +451,10 @@ class mediamosa_asset_mediafile_upload {
    *
    * @param string $destination_uri
    *   Destination filename.
-   * @param integer $job_id
+   * @param int $job_id
    *   Job ID.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE on success, FALSE otherwise.
    */
   protected static function handle_upload_put($destination_uri, $job_id = 0) {

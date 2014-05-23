@@ -34,9 +34,9 @@ class mediamosa_ftp_batch {
   /**
    * Get the list of batches.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
-   * @param integer $offset
+   * @param int $offset
    *  Offset in the result list.
    * @param unknown_type $limit
    *  Limit of items in the result list.
@@ -73,7 +73,7 @@ class mediamosa_ftp_batch {
   /**
    * Get a batch.
    *
-   * @param integer $batch_id
+   * @param int $batch_id
    *  The batch ID.
    *
    * @return array
@@ -95,7 +95,7 @@ class mediamosa_ftp_batch {
   /**
    * Create the ftp_batch.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *  The application ID.
    * @param string $owner_id
    *  The owner ID.
@@ -165,7 +165,7 @@ class mediamosa_ftp_batch {
   /**
    * Delete a ftp batch.
    *
-   * @param integer $batch_id
+   * @param int $batch_id
    *  ID of batch to delete.
    */
   public static function delete($batch_id) {

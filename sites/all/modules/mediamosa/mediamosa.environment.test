@@ -9,6 +9,12 @@ class MediaMosaEnvironmentTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
+  /**
+   * Get info about the test.
+   *
+   * @return array
+   *   The info about the test.
+   */
   public static function getInfo() {
     return array(
       'name' => 'MediaMosa - Environment tests',
@@ -17,6 +23,9 @@ class MediaMosaEnvironmentTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
+  /**
+   * Run test for session related.
+   */
   public function testSession() {
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
@@ -29,8 +38,7 @@ class MediaMosaEnvironmentTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do login on other egas.
     $this->doEgaLogin_2();
-    $this->doEgaLogin_3(); // no assets.
-
+    $this->doEgaLogin_3();
 
     // Do call asset with normal app.
 

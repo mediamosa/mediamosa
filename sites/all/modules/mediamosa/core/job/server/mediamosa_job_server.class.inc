@@ -205,7 +205,7 @@ class mediamosa_job_server {
   /**
    * Create analyse server job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $mediafile_id_src
    *   The ID of the mediafile to analyse.
@@ -293,7 +293,7 @@ class mediamosa_job_server {
   /**
    * Create a job server job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    */
   public static function create_job($job_id, $job_type, $mediafile_id_src) {
@@ -636,7 +636,7 @@ class mediamosa_job_server {
    * Get the job.
    * (only from this installation(!))
    *
-   * @param integer $job_id
+   * @param int $job_id
    */
   public static function get($jobserver_job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
@@ -650,7 +650,7 @@ class mediamosa_job_server {
    * Get the job.
    * (only from this installation(!))
    *
-   * @param integer $job_id
+   * @param int $job_id
    */
   public static function get_with_jobid($job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
@@ -1081,7 +1081,7 @@ class mediamosa_job_server {
   /**
    * Save a new mediafile.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    */
   public static function store_new_mediafile($job_id) {
@@ -1149,7 +1149,7 @@ class mediamosa_job_server {
   /**
    * Delete a server job.
    *
-   * @param integer $job_id
+   * @param int $job_id
    * @param bool $killjob
    */
   public static function delete_job($job_id, $killjob = FALSE) {
@@ -1222,7 +1222,7 @@ class mediamosa_job_server {
    * more complex, as job scheduler will make sure only one instance of this
    * job runs.
    *
-   * @param integer $job_id
+   * @param int $job_id
    *   The job ID.
    * @param string $jop_type
    *   The job type, see mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_*.

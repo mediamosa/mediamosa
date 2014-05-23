@@ -21,7 +21,10 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
   protected $random;
 
   // -------------------------------------------------------------- Constructor.
-  function __construct($test_id = NULL) {
+  /**
+   * Implements __construct().
+   */
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
     $this->skipClasses[__CLASS__] = TRUE;
   }
@@ -166,7 +169,7 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Create the default S3 storage profile.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The app owner of the profile.
    *
    * @return array
@@ -176,7 +179,7 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediamosa_storage_s3_simpletest_aws_key = variable_get('mediamosa_storage_s3_simpletest_aws_key');
     $mediamosa_storage_s3_simpletest_aws_secret = variable_get('mediamosa_storage_s3_simpletest_aws_secret');
 
-    // Create the one and only default local storage
+    // Create the one and only default local storage.
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_STORAGE_PROFILE, 'MediaMosa S3 storage');
     $node->{mediamosa_storage_profile_db::TYPE} = mediamosa_storage_s3::NAME;
     $node->{mediamosa_storage_profile_db::APP_ID} = $app_id;
@@ -189,7 +192,7 @@ class MediaMosaS3BaseTestCaseEga extends MediaMosaTestCaseEgaJob {
     $node_profile = node_load($node->nid);
     $this->var_export($node_profile);
 
-    $storage_profile =  $this->getStorageProfile($node_profile->{mediamosa_storage_profile_db::ID});
+    $storage_profile = $this->getStorageProfile($node_profile->{mediamosa_storage_profile_db::ID});
 
     // Attach storage profile to my app.
     $this->attachStorageProfile($app_id ? $app_id : $this->a_app['app_id'], $storage_profile[mediamosa_storage_profile_db::ID], $this->getBucketName(), $storage_profile[mediamosa_storage_profile_db::ID], $this->getBucketName());

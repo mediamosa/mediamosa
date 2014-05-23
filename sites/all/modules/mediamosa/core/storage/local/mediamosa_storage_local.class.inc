@@ -27,11 +27,11 @@ class mediamosa_storage_local extends mediamosa_storage {
    * Other storage types must include the $storage_profile_app::ID and the
    * $storage_profile_app::PATH / $storage_profile_app::PATH_STILLS in the URI.
    *
-   * @param integer $storage_profile_id
+   * @param int $storage_profile_id
    *   (ignored) The storage profile ID.
    * @param string $path
    *   (ignored) The storage path.
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string
@@ -95,7 +95,7 @@ class mediamosa_storage_local extends mediamosa_storage {
   /**
    * Get the default scheme.
    *
-   * @param boolean $is_still
+   * @param bool $is_still
    *   Is mount point for still?
    *
    * @return string

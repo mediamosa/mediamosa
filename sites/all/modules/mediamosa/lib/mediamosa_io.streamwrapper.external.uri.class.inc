@@ -77,7 +77,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
   /**
    * Check if the the file exists.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE when file exists.
    */
   public function file_exists() {
@@ -100,7 +100,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
   /**
    * Process media view request.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   Application ID.
    * @param string $user_id
    *   The owner for possible ticket.
@@ -108,7 +108,7 @@ class mediamosa_io_streamwrapper_external_uri extends mediamosa_io_streamwrapper
    *   The mediafile to process.
    * @param string $response_type
    *   See mediamosa_media::RESPONSE_*
-   * @param boolean $is_app_admin
+   * @param bool $is_app_admin
    *   Is app admin.
    *
    * @return array

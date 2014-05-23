@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Application authentication by DBUS"
 description = "The DBUS authentication module handles application authentication."

@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Error handling"
 description = "The error module handles all maintenance and usage for error messaging for MediaMosa."

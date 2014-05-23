@@ -1,4 +1,4 @@
-; $Id$
+
 
 name = "Webservice managment"
 description = "The webservice module enables parts of the mediamosa core on global or application level."

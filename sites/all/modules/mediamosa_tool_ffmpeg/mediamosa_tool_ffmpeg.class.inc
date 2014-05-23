@@ -37,17 +37,17 @@ class mediamosa_tool_ffmpeg {
    *
    * Can return cmd line option in ffmpeg when needed.
    *
-   * @param integer $source_width
+   * @param int $source_width
    *   Width of source.
-   * @param integer $source_height
+   * @param int $source_height
    *   Height of source.
    * @param string $target_size
    *   The size of the target in WIDTHxHEIGHT format.
-   * @param integer $h_padding
+   * @param int $h_padding
    *   Horizontal padding.
-   * @param integer $v_padding
+   * @param int $v_padding
    *   Vertical padding.
-   * @param boolean $use_padding
+   * @param bool $use_padding
    *   Use padding parameters.
    *
    * @return array|FALSE
@@ -83,7 +83,9 @@ class mediamosa_tool_ffmpeg {
    *              strings return. Rewrite of jobs is planned for v3.5.
    *
    * @param string $jobserver_job_id
+   *   id of jobserver job.
    * @param string $mediafile_id_source
+   *   id of mediafile.
    */
   public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
 
@@ -105,9 +107,11 @@ class mediamosa_tool_ffmpeg {
 
       // Video duration check, if still_type = scene.
       if (!$video_duration && $still_parameters['still_type'] == mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE) {
-        // Some videos don't have video durations according to FFMpeg.
-        // If we want to create multiple stills, we usually need this information calculating other data.
-        // But in case of scene detection we have a work around, we can put the video duration on a maximum value.
+
+        // Some videos don't have video durations according to FFMpeg. If we
+        // want to create multiple stills, we usually need this information
+        // calculating other data.  But in case of scene detection we have a
+        // work around, we can put the video duration on a maximum value.
         mediamosa_job_server::log_debug_high_mediafile($mediafile_id_source, t('No video duration, when still_type = scene. Try to get the complete video. video_duration = @video_duration.', array(
           '@video_duration' => print_r($video_duration, TRUE),
         )));
@@ -140,7 +144,7 @@ class mediamosa_tool_ffmpeg {
       // Make sure still_type is uppercase.
       $still_parameters['still_type'] = mediamosa_unicode::strtoupper($still_parameters['still_type']);
 
-      // Data check
+      // Data check.
       switch ($still_parameters['still_type']) {
         case 'NORMAL':
           if (!is_numeric($still_parameters['still_per_mediafile']) || $still_parameters['still_per_mediafile'] < 1) {
@@ -211,13 +215,13 @@ class mediamosa_tool_ffmpeg {
           // $framesecond = duration / (4 + 1)
           // .......|-- video length -----------|
           // frametime += $framesecond
-          // duration -= $framesecond
+          // duration -= $framesecond.
           $framesecond = $duration / ($still_per_mediafile + 1);
           $frametime += $framesecond;
           $duration -= $framesecond;
-          // Frames per second
+          // Frames per second.
           $framerate = 1 / max($framesecond, 1);
-          // Safety check
+          // Safety check.
           if ($duration / max($framesecond, 1) > mediamosa_settings::STILL_MAXIMUM) {
             $duration = mediamosa_settings::STILL_MAXIMUM * $framesecond;
           }
@@ -228,7 +232,7 @@ class mediamosa_tool_ffmpeg {
           $frametime = $start_frame;
           $duration = ($end_frame - $start_frame);
           $framerate = 1 / $still_every_second;
-          // Safety check
+          // Safety check.
           if ($duration / $still_every_second > mediamosa_settings::STILL_MAXIMUM) {
             $duration = mediamosa_settings::STILL_MAXIMUM * $still_every_second;
           }
@@ -243,48 +247,34 @@ class mediamosa_tool_ffmpeg {
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_list.el');
 
-
-  /*
-  // Old code
-          $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $input, $destination_path . $mediafile_id_source .'_scene.avi');
-          //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
-          exec($order);
-  */
-
-  // Hot fix
+          // Hot fix. for what?
           $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id_source . '_scene.wmv');
-          //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
           mediamosa_io::exec($order);
 
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id_source . '_scene.wmv', $destination_path . $mediafile_id_source . '_scene.avi');
-          //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
           mediamosa_io::exec($order);
 
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.wmv');
-  // Hot fix - end
+          // Hot fix - end.
 
           $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id_source . '_list.el', $destination_path . $mediafile_id_source . '_scene.avi');
           mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
           mediamosa_io::exec($order);
 
           $order = sprintf('cat %s', $destination_path . $mediafile_id_source . '_list.el');
-          //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
           $output = mediamosa_io::exec($order);
-          //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('output = %s', print_r($output, TRUE)));
 
           // Clean up II.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_list.el');
 
-          // Analyze
+          // Analyze.
           if (!empty($output)) {
-            //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Output is array with data'));
 
-            // tbr & map from the best stream
+            // Tbr & map from the best stream.
             $map = NULL;
             $tbr = NULL;
             $kbs = NULL;
             $order = sprintf('ffmpeg -i %s 2>&1', $input);
-            //mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
             $details = mediamosa_io::exec($order);
 
             $regs = $reg_kbs = $reg_map = array();
@@ -309,38 +299,31 @@ class mediamosa_tool_ffmpeg {
             }
 
             if (!$tbr) {
-              // This is the base value
+              // This is the base value.
               $tbr = 25;
             }
-            // Go further, if we have tbr
+            // Go further, if we have tbr.
             if ($tbr) {
 
               $scene_frame = NULL;
               $i = 1;
               $scenes = array();
               foreach ($output as $line) {
-                //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Line: %s', print_r($line, TRUE)));
                 $line_args = explode(' ', $line);
-                //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Line args: %s', print_r($line_args, TRUE)));
                 if ($line_args && is_array($line_args) && $line_args != array()) {
-                  //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Line args is array with data'));
                   if (isset($line_args[0]) && isset($line_args[1]) && isset($line_args[2]) && !isset($line_args[3]) && is_numeric($line_args[0]) && is_numeric($line_args[1]) && is_numeric($line_args[2])) {
-                    //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('Line args has 3 numbers'));
-                    // $line_args[1] + num = a little bit after the change
+                    // $line_args[1] + num = a little bit after the change.
                     $change_frame = $line_args[1] + mediamosa_settings::STILL_SCENE_AFTER;
-                    //mediamosa_job_server::log_mediafile($mediafile_id_source, 'change_frame: '. print_r($change_frame, TRUE) .', start_frame: '. print_r($start_frame, TRUE) .', fps = '. $fps .', end_frame: '. print_r($end_frame, TRUE));
-                    if ($change_frame >= ($start_frame*$fps) && $change_frame <= ($end_frame*$fps)) {
-                      // $scene_frame + num = minimal distance with two changes
-                      //mediamosa_job_server::log_mediafile($mediafile_id_source, 'scene_frame: '. print_r($scene_frame, TRUE));
+                    if ($change_frame >= ($start_frame * $fps) && $change_frame <= ($end_frame * $fps)) {
+                      // $scene_frame + num = minimal distance with two changes.
                       if (!$scene_frame || $scene_frame + mediamosa_settings::STILL_SCENE_DISTANCE < $change_frame) {
                         $scene_frame = $change_frame;
-                        //mediamosa_job_server::log_mediafile($mediafile_id_source, sprintf('New scene frame: %s', $scene_frame));
-                        // The avi has 25 frame/sec
-                        $scene_sec = (int)($scene_frame/25);
+                        // The avi has 25 frame/sec.
+                        $scene_sec = (int) ($scene_frame / 25);
                         $scenes[] = $scene_sec;
                         $i++;
                         if ($i > mediamosa_settings::STILL_MAXIMUM) {
-                          // Emergency break
+                          // Emergency break.
                           break;
                         }
                       }
@@ -368,11 +351,9 @@ class mediamosa_tool_ffmpeg {
               $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
               $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0:' . $map : ''), $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION . '.jpeg');
 
-              // This version is creating stills for the analysed file
-              //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id_source .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id_source . mediamosa_settings::STILL_EXTENSION .".jpeg");
+              // This version is creating stills for the analysed file.
               mediamosa_job_server::log_mediafile($mediafile_id_source, $order);
               $details = mediamosa_io::exec($order);
-              //mediamosa_job_server::log_mediafile($mediafile_id_source, 'Details: '. print_r($details, TRUE));
 
               mediamosa_io::unlink($my_file);
             }
@@ -380,7 +361,7 @@ class mediamosa_tool_ffmpeg {
             // Clean up III.
             mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
 
-            // It has to be the last, because it triggers the further processes
+            // It has to be the last, because it triggers the further processes.
             $my_file = $destination_path . $job_id . '_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
@@ -390,15 +371,16 @@ class mediamosa_tool_ffmpeg {
               fclose($fh);
             }
 
-            // Do nothing after this
+            // Do nothing after this.
             return 'echo "Scene stills are rock"';
           }
 
           // Clean up IV.
           mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
 
-          // We reached this point, so something went wrong in the creation of scene stills.
-          // So we are creating still type NONE (original behaviour).
+          // We reached this point, so something went wrong in the creation of
+          // scene stills.  So we are creating still type NONE (original
+          // behaviour).
           break;
 
         default:

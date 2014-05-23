@@ -320,7 +320,7 @@ class mediamosa_response extends mediamosa {
    * Render array as XML.
    *
    * @param array $array
-   * @param integer $tab
+   * @param int $tab
    * @param array $options
    */
   public function render_array2xml(array $array, $tab = 0, array $options = array()) {
@@ -559,7 +559,7 @@ class mediamosa_response extends mediamosa {
    * Set the header result.
    *
    * @param string $request_result
-   * @param integer $request_result_id
+   * @param int $request_result_id
    * @param string $request_result_description
    */
   public function set_result($request_result, $request_result_id, $request_result_description = FALSE) {
@@ -1153,7 +1153,7 @@ class mediamosa_response extends mediamosa {
    * @param array $item
    * @param string $key
    * @param array/string $mixed_value
-   * @param integer $max_depth
+   * @param int $max_depth
    * @return NULL or added item.
    */
   protected function generate_xml_add_child($dom_document, $dom_node, $key, $mixed_value, $max_depth = 99) {
@@ -1208,7 +1208,7 @@ class mediamosa_response extends mediamosa {
    * @param array $item
    * @param string $key
    * @param array/string $mixed_value
-   * @param integer $max_depth
+   * @param int $max_depth
    * @return NULL or added item.
    */
   protected function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
@@ -1281,9 +1281,9 @@ class mediamosa_response extends mediamosa {
    * @param string $error_level
    * @param string $message
    * @param string $filename
-   * @param integer $line
+   * @param int $line
    * @param string $context
-   * @return boolean
+   * @return bool
    */
   public function mediamosa_error_handler_response($error_level, $message, $filename, $line, $context) {
 

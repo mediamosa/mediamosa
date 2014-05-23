@@ -1,7 +1,8 @@
 <?php
 /**
  * @file
- * Install, update, and uninstall functions for the mediamosa mountpoint storage module.
+ * Install, update, and uninstall functions for the mediamosa mountpoint storage
+ * module.
  */
 
 require_once 'mediamosa_storage_s3_db.class.inc';
@@ -18,7 +19,7 @@ function mediamosa_storage_s3_install() {
  * Implements hook_uninstall().
  */
 function mediamosa_storage_s3_uninstall() {
-  // Delete all nodes for this storage type
+  // Delete all nodes for this storage type.
   $result = db_select(mediamosa_storage_s3_db::TABLE_NAME, 'p')
     ->fields('p', array(mediamosa_storage_profile_db::NID))
     ->execute();
@@ -72,13 +73,13 @@ function mediamosa_storage_s3_schema() {
         'type' => 'varchar',
         'length' => mediamosa_storage_s3_db::KEY_LENGTH,
         'not null' => TRUE,
-  			'description' => 'AWS access key id.',
+        'description' => 'AWS access key id.',
       ),
       mediamosa_storage_s3_db::SECRET => array(
         'type' => 'varchar',
         'length' => mediamosa_storage_s3_db::SECRET_LENGTH,
         'not null' => TRUE,
-  			'description' => 'AWS secret access key.',
+        'description' => 'AWS secret access key.',
       ),
     ),
     'primary key' => array(mediamosa_storage_profile_db::NID),

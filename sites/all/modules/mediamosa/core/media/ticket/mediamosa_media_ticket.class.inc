@@ -81,7 +81,7 @@ class mediamosa_media_ticket {
   /**
    * Create ticket for upload.
    *
-   * @param integer $app_id
+   * @param int $app_id
    * @param string $mediafile_id
    * @param string $user_id
    * @param string $group_id
@@ -103,7 +103,7 @@ class mediamosa_media_ticket {
   /**
    * Create ticket.
    *
-   * @param integer $app_id
+   * @param int $app_id
    *   The application ID.
    * @param string $ticket_type
    *   The ticket type. See mediamosa_media_ticket_db::TICKET_TYPE_*
@@ -158,9 +158,9 @@ class mediamosa_media_ticket {
    *
    * @param string $type
    *   Ticket type, see mediamosa_media_ticket::TICKET_TYPE_*.
-   * @param integer $mindepth
+   * @param int $mindepth
    *   Minimum depth.
-   * @param integer $maxdepth
+   * @param int $maxdepth
    *   Maximum depth.
    * @param array $args
    *   Possible extra arguments.
@@ -206,8 +206,10 @@ class mediamosa_media_ticket {
     }
 
     // Remove the symlinks.
+    $clearcache = false;
     if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
       mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+      $clearcache = true;
     }
 
     // Now remove the ticket dir.
@@ -227,6 +229,11 @@ class mediamosa_media_ticket {
 
     if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
       mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+      $clearcache = true;
+    }
+
+    if ($clearcache) {
+      mediamosa_io::clearstatcache();
     }
   }
 
