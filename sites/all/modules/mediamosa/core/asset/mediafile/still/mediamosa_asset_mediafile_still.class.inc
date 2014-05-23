@@ -789,6 +789,8 @@ class mediamosa_asset_mediafile_still {
             )
           )
         );
+
+        mediamosa_io::clearstatcache();
       }
 
       // Remove public (permenant) link.

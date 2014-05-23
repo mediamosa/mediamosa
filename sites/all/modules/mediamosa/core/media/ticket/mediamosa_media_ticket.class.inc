@@ -206,8 +206,10 @@ class mediamosa_media_ticket {
     }
 
     // Remove the symlinks.
+    $clearcache = false;
     if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
       mediamosa_io::exec(strtr('find @path @params -type l -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+      $clearcache = true;
     }
 
     // Now remove the ticket dir.
@@ -227,6 +229,11 @@ class mediamosa_media_ticket {
 
     if (mediamosa_io::file_exists($path . '/' . mediamosa_unicode::strtolower($type))) {
       mediamosa_io::exec(strtr('find @path @params -type d -delete', array('@path' => escapeshellarg($path . '/' . mediamosa_unicode::strtolower($type) . '/'), '@params' => implode(' ', $params))));
+      $clearcache = true;
+    }
+
+    if ($clearcache) {
+      mediamosa_io::clearstatcache();
     }
   }
 

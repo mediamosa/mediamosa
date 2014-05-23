@@ -1161,6 +1161,8 @@ class mediamosa_media {
           )
         )
       );
+
+      mediamosa_io::clearstatcache();
     }
   }
 
