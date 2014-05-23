@@ -3856,6 +3856,8 @@ function mediamosa_update_7149() {
       )
     );
 
+    mediamosa_io::clearstatcache();
+
     // Try to remove directory.
     @drupal_rmdir($ticket_play_location);
   }
@@ -3885,6 +3887,8 @@ function mediamosa_update_7149() {
         )
       )
     );
+
+    mediamosa_io::clearstatcache();
 
     // Try to remove directory.
     @drupal_rmdir($ticket_download_location);
