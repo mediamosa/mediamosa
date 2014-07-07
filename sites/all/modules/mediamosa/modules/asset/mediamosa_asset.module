@@ -45,7 +45,9 @@ function mediamosa_asset_menu_alter(&$items) {
 
 function _mediamosa_asset_admin_config_media_image_styles_access_callback() {
   // Only the Mediamosa admin can acces that page.
-  return (user_access('administer image styles') && user_access(mediamosa_permission::ADMIN_MEDIAMOSA));
+  return (
+    (user_access('administer image styles') && user_access(mediamosa_permission::ADMIN_MEDIAMOSA))
+  );
 }
 
 /**
@@ -70,8 +72,11 @@ function mediamosa_asset_form_alter(&$form, &$form_state, $form_id) {
     }
 
     $app = mediamosa_app::get_by_appid($app_id);
+    if (!$app) {
+      return;
+    }
 
-    if (!$app || (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin)) {
+    if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin) {
       drupal_access_denied();
       drupal_goto('');
       return;
@@ -106,7 +111,10 @@ function mediamosa_asset_form_alter(&$form, &$form_state, $form_id) {
     $still_style = mediamosa_asset_mediafile_still_style::get($style);
     $app_id = ($still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] ? $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] : '');
 
-    if (!$still_style || (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin)) {
+    if (!$still_style) {
+      return;
+    }
+    if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin) {
       drupal_access_denied();
       drupal_goto('');
       return;
