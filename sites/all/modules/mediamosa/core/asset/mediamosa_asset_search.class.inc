@@ -483,6 +483,10 @@ class mediamosa_asset_search {
         unset($a_query[mediamosa_db_query::OFFSET]);
         // Clean the joins, because of performance issue.
         unset($a_query[mediamosa_db_query::A_JOIN]);
+
+        // unset sort.videotimestampmodified.
+        unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['order_by']);
+
         $query = mediamosa_db_query::query_select($a_query);
         // Join check
         // Put back the joins, if they are (one of them) necessary
@@ -500,7 +504,6 @@ class mediamosa_asset_search {
         }
 
         try {
-          // Create temporary table and fill it with result of query.
           $table_name = mediamosa_db::db_query_temporary($query);
 
           // Deleted asset query
@@ -508,7 +511,6 @@ class mediamosa_asset_search {
             '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
           ));
 
-          // Harvesting the data
           if (mediamosa_unicode::substr($d_ordby, 0, 5) == 'sort.') {
             $d_ordby = 'a.' . mediamosa_unicode::substr($d_ordby, 5);
           }
