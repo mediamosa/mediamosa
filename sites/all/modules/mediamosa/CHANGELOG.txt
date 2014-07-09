@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2099)
+MediaMosa 3.5.1-dev (build 2100)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -87,6 +87,18 @@ MediaMosa 3.5.1-dev (build 2099)
 - Fixed unit test file size check because we replace our ogg test file.
 - Cleanup fase 1 codestyle.
 - Fixed problem when using symlink not adding new symlink to its stat cache.
+- Asset asset_type and provider_id now updateable.
+- Improved aspect ratio handling (SAR/PAR).
+- Enabled image style for other images then still.
+- Fixed analyse action for rules module.
+- Added allow header for video-js fonts for mmplayer flash.
+- Added CQL option to Drush meta-copy/update.
+- Fixed empty asset detection on asset without mediafiles, but with metadata.
+  Assets were flagged empty when it had no valid mediafiles. This included all
+  assets that had metadata but no mediafiles. This is changed to not have
+  disappearing assets in search queries with hide_empty_assets flag.
+- Fixed bug in OAI listrecords.
+- Added more asset info on the asset info page.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
