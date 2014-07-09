@@ -35,7 +35,7 @@ local dimension = lpeg.C(digits * "x" * digits) * space
 --local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) * space
 local ratio = digits * COLON * digits * space
 local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
-  (COMMA * lpeg.C("PAR" * space * ratio * "DAR" * space * ratio)) * space
+  (COMMA * lpeg.C(lpeg.S("PDSF") * "AR" * space * ratio * lpeg.S("PDSF") * "AR" * space * ratio)) * space
 local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
@@ -116,7 +116,7 @@ local ln_video = space * "Stream #" * steam_number * language * COLON *
   (aspectratio + lpeg.Cc("unknown")) *
   (
     (COMMA * number * "kb/s")^-1 *
-    (COMMA * "PAR" * space * any_number * ":" * any_number * "DAR" * space * any_number * ":" * any_number)^-1 *
+    (COMMA * (lpeg.S("PDSF") * "AR" * space * any_number * ":" * any_number)^1)^-1 *
     ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
