@@ -655,11 +655,6 @@ class mediamosa_asset_mediafile_still {
       throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
     }
 
-    // Make sure the mediafile is a still.
-    if ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] != mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
-      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
-    }
-
     // Get the style.
     $still_style = mediamosa_asset_mediafile_still_style::get($style_id, $mediafile[mediamosa_asset_mediafile_db::APP_ID]);
     if (!$still_style) {
