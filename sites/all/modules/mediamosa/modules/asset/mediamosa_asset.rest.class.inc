@@ -1625,6 +1625,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const GROUP_ID = 'group_id';
   const REFERENCE_ID = 'reference_id';
   const PROVIDER_ID = 'provider_id';
+  const ASSET_TYPE = 'asset_type';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -1678,11 +1679,16 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
           self::VAR_RANGE_END => mediamosa_asset_db::REFERENCE_ID_LENGTH,
         ),
         self::PROVIDER_ID => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The provider ID.',
           self::VAR_RANGE_END => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         ),
-      )
+        self::ASSET_TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Asset type.',
+          self::VAR_RANGE_END => mediamosa_asset_db::ASSET_TYPE_LENGTH,
+        ),
+      ),
     );
 
     // Include default.
@@ -1709,6 +1715,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
 
     $reference_id = $this->get_param_value(self::REFERENCE_ID);
     $provider_id = $this->get_param_value(self::PROVIDER_ID);
+    $asset_type = $this->get_param_value(self::ASSET_TYPE);
 
     // If is_inappropriate is set, we'll use that one.
     if ($this->isset_given_param(self::IS_INAPPROPRIATE)) {
@@ -1721,7 +1728,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Update the asset.
-    mediamosa_asset::update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id, $group_id, $play_restriction_start, $play_restriction_end, $isprivate, $is_unappropriate, $reference_id);
+    mediamosa_asset::update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id, $group_id, $play_restriction_start, $play_restriction_end, $isprivate, $is_unappropriate, $reference_id, $provider_id, $asset_type);
 
     // Default OK.
     $mediamosa->set_result_okay();
