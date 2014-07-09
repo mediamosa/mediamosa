@@ -279,14 +279,12 @@ function mediamosa_action_analyse($mediafile_id) {
       mediamosa_asset_mediafile_db::OWNER_ID,
     );
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
-
-    // @todo: Create_analyse_job no longer exists.
-    // $job = mediamosa_job::create_analyse_job(
-    // $mediafile['owner_id'],
-    // $mediafile['asset_id'],
-    // $mediafile['mediafile_id'],
-    // $mediafile['app_id'],
-    // $priority);
+    mediamosa_job::create_job_analyse(
+      $mediafile['app_id'],
+      $mediafile['owner_id'],
+      TRUE,
+      $mediafile['mediafile_id'],
+      0);
     return TRUE;
   }
   return FALSE;
@@ -378,6 +376,12 @@ function mediamosa_action_delete_original_mediafile($mediafile_id) {
 function mediamosa_action_mediafile_downloadable($mediafile_id) {
 
   if ($mediafile_id != NULL) {
+    $fields = array(
+      mediamosa_asset_mediafile_db::ID,
+      mediamosa_asset_mediafile_db::ASSET_ID,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::OWNER_ID,
+    );
     $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
     if (!$mediafile) {
       return FALSE;
