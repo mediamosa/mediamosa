@@ -47,6 +47,12 @@ function mediamosa_browse_asset_filter_form() {
     '#suffix' => '</div>',
   );
 
+  $form['actions']['filters']['hide_empty_assets'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide empty assets'),
+    '#default_value' => isset($session['hide_empty_assets']) ? $session['hide_empty_assets'] : 0,
+  );
+
   $form['actions']['filters']['operator'] = array(
     '#type' => 'select',
     '#title' => t('Search criteria operator'),
@@ -106,12 +112,11 @@ function mediamosa_browse_asset_filter_form() {
 
   $form['actions']['cqlfilter']['cql'] = array(
     '#type' => 'textfield',
-    //'#title' => t('CQL:'),
     '#description' => t('Enter a CQL search command here. Usage can be found in the Webservice document. Examples: "acl_app==5" or "is_protected == FALSE"'),
     '#default_value' => isset($session['cql']) ? $session['cql'] : '',
   );
 
-  $form['actions']['cqlfilter']['apply_sql'] = array(
+  $form['actions']['cqlfilter']['apply_cql'] = array(
     '#type' => 'submit',
     '#value' => t('Apply CQL filter'),
   );
@@ -151,7 +156,9 @@ function _ajax_browse_asset_search_parameters_callback($form, $form_state) {
  * Enrich the form with the filter items.
  *
  * @param array $form
+ *   Filter form.
  * @param array $form_state
+ *   Drupal form_state.
  */
 function _mediamosa_browse_asset_searchparameters(&$form, $form_state = array()) {
 
@@ -173,6 +180,7 @@ function _mediamosa_browse_asset_searchparameters(&$form, $form_state = array())
     case t('Reset'):
       $session['operator'] = 'and';
       $session['coll_id'] = 0;
+      $session['hide_empty_assets'] = 1;
       $session['filters'] = array();
       $form_state['input']['filters'] = array();
       // No break.
@@ -217,13 +225,23 @@ function _mediamosa_browse_asset_list() {
   $item_count_total = 0;
 
   $header = array(
-    array('field' => 'title', 'data' => t('Title'), 'sort' => 'asc'),
-    array('field' => 'app_id', 'data' => t('App ID'), 'class' => array('mmappid')),
-    array('field' => 'changed', 'data' => t('Last modified'), 'class' => array('mmdate')),
+    array('field' => 'title', 'data' => t('Title')),
+    array(
+      'field' => 'app_id',
+      'data' => t('App ID'),
+      'class' => array('mmappid'),
+    ),
+    array(
+      'field' => 'changed',
+      'data' => t('Last modified'),
+      'class' => array('mmdate') ,
+      'sort' => 'desc',
+    ),
     array('data' => t('Operations'), 'class' => array('mmoperation')),
   );
 
   $result = _mediamosa_browse_asset_execute();
+
   $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
 
   $rows = array();
@@ -240,12 +258,16 @@ function _mediamosa_browse_asset_list() {
     $rows[] = array(
       theme('l_mediamosa_asset', array('title' => _mediamosa_browse_asset_get_title($row), 'id' => $row[mediamosa_asset_db::ID])),
       array('data' => check_plain($row['app_id']), 'class' => array('mmappid')),
-      array('data' => theme('mediamosa_maintenance_date', array('datetime' => $row[mediamosa_asset_db::VIDEOTIMESTAMP])), 'class' => array('mmdate')),
+      array(
+        'data' => theme('mediamosa_maintenance_date', array('datetime' => $row[mediamosa_asset_db::VIDEOTIMESTAMP])),
+        'class' => array('mmdate'),
+      ),
       array('data' => implode(' | ', $actions), 'class' => array('mmoperation')),
     );
   }
 
   // Our listing.
+  $form = array();
   $form['list'] = array(
     '#theme' => 'mediamosa_maintenance_table',
     '#header' => $header,
@@ -255,11 +277,11 @@ function _mediamosa_browse_asset_list() {
     '#page' => $page,
     '#item_count_total' => $item_count_total,
     '#item_limit' => $limit,
-    // Top
+    // Top.
     '#title' => t('Assets (@total)', array('@total' => $item_count_total)),
     '#description' => t('Assets matching the search criteria above are listed below. Click on a asset title below to view details.'),
     // Total note.
-    '#caption_bottom' => t('Assets found: @total', array('@total' => $item_count_total))
+    '#caption_bottom' => t('Assets found: @total', array('@total' => $item_count_total)),
   );
 
   return $form;
@@ -278,19 +300,20 @@ function _mediamosa_browse_asset_execute() {
   $limit = $session['limit'];
   $page = $session['page'];
   $op = $session['op'];
+  $hide_empty_assets = $session['hide_empty_assets'];
 
   switch ($order) {
     case t('App ID'):
       $order = 'app_id';
       break;
 
-    case t('Last modified'):
-      $order = mediamosa_asset_db::VIDEOTIMESTAMP;
+    case t('Title'):
+      $order = 'title';
       break;
 
-    case t('Title'):
+    case t('Last modified'):
     default:
-      $order = 'title';
+      $order = mediamosa_asset_db::VIDEOTIMESTAMP;
       break;
   }
 
@@ -330,6 +353,9 @@ function _mediamosa_browse_asset_execute() {
   $params['cql'] = implode(' ', $cqls);
   $params['limit'] = $limit;
   $params['offset'] = $page * $limit;
+  if ($hide_empty_assets) {
+    $params['hide_empty_assets'] = 'TRUE';
+  }
 
   // Do the rest call.
   return mediamosa_response_connector::static_do_restcall_drupal('asset', 'GET', $params);
@@ -350,18 +376,27 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
     }
   }
 
-  foreach (array('operator', 'coll_id', 'filters', 'cql', 'op') as $param) {
-    if (isset($filter_form_state['input'][$param])) {
-      $session[$param] = $filter_form_state['input'][$param];
+  if (isset($filter_form_state['input'])) {
+    foreach (array('operator', 'coll_id', 'filters', 'cql', 'op') as $param) {
+      if (isset($filter_form_state['input'][$param])) {
+        $session[$param] = $filter_form_state['input'][$param];
+      }
+    }
+    if (isset($filter_form_state['input']['hide_empty_assets'])) {
+      $session['hide_empty_assets'] = 1;
+    }
+    else {
+      $session['hide_empty_assets'] = 0;
     }
   }
 
   // Set defaults.
   $session += array(
-    'order' => t('Title'),
-    'sort' => 'asc',
+    'order' => t('Last modified'),
+    'sort' => 'desc',
     'page' => 0,
     'limit' => mediamosa_settings::maintenance_items_per_page(),
+    'hide_empty_assets' => 1,
     'op' => t('Apply filter'),
   );
 
@@ -379,7 +414,7 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
   $params = array(
     'view_hidden_metadata' => 'TRUE',
   );
-  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
+  $response = mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))), 'GET', $params);
 
   if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
     return array('message' => array('#markup' => '<h1>Asset not found</h1>'));
@@ -402,7 +437,7 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
   // Mediafiles.
   $form['mediafiles'] = _mediamosa_browse_asset_page_view_mediafile_list($asset);
 
-  // job list.
+  // Job list.
   $form['joblist'] = _mediamosa_browse_asset_page_view_job_list($asset);
 
   // Collections.
@@ -421,6 +456,7 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
  * Build the properties.
  *
  * @param array $asset
+ *   asset info.
  */
 function _mediamosa_browse_asset_page_view_properties($asset) {
 
@@ -429,7 +465,16 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
       t('App ID') => $asset[mediamosa_asset_db::APP_ID],
       t('Owner ID') => $asset[mediamosa_asset_db::OWNER_ID],
       t('Group ID') => $asset[mediamosa_asset_db::GROUP_ID],
-      t('Created / Changed') => $asset['videotimestamp'] . ' / ' . $asset['videotimestampmodified']
+      t('Created / Changed') => $asset['videotimestamp'] . ' / ' . $asset['videotimestampmodified'],
+      t('Reference ID') => $asset['reference_id'],
+      t('is private') => $asset['isprivate'],
+      t('is empty asset') => $asset['is_empty_asset'],
+      t('is protected') => $asset['is_protected'],
+      t('is inappropriate') => $asset['is_inappropriate'],
+      t('Asset type') => $asset['asset_type'],
+      t('is private') => $asset['isprivate'],
+      t('viewed') => $asset['viewed'],
+      t('played') => $asset['played'],
     ),
   );
 
@@ -447,10 +492,16 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
 
     $rows_aut2 = array();
     foreach ($rows_aut as $name => $values) {
-      $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
+      $rows_aut2[] = array(
+        _mediamosa_browse_fix_metadata_name($name),
+        implode(', ', $values),
+      );
     }
 
-    $variables['properties'][t('Autorisation rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
+    $variables['properties'][t('Autorisation rules')] = array(
+      'html' => TRUE,
+      'data' => theme('table', array('rows' => $rows_aut2)),
+    );
   }
 
   return array(
@@ -460,7 +511,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
     '#collapsed' => TRUE,
     'properties' => array(
       '#markup' => theme('mediamosa_maintenance_browse_properties', $variables),
-     ),
+    ),
   );
 }
 
@@ -468,6 +519,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
  * Show metadata.
  *
  * @param array $asset
+ *   asset info.
  */
 function _mediamosa_browse_asset_page_view_metadata($asset) {
 
@@ -482,7 +534,6 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
 
   $variables = array(
     'metadata' => array(),
-    //'metadata_description' => t('Metadata properties for the asset.'),
   );
 
   foreach ($metadata_groups as $metadata_group) {
@@ -495,7 +546,7 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
         continue;
       }
 
-      $variables['metadata'][t($name) . ($metadatas[$name]['propdef_is_hidden'] == mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE ? ' [' . t('hidden metadata') . ']' : '')] = $value;
+      $variables['metadata'][$name . ($metadatas[$name]['propdef_is_hidden'] == mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE ? ' [' . t('hidden metadata') . ']' : '')] = $value;
     }
   }
 
@@ -506,7 +557,7 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
     '#collapsed' => TRUE,
     'properties' => array(
       '#markup' => theme('mediamosa_maintenance_browse_properties', $variables),
-     ),
+    ),
   );
 }
 
@@ -514,6 +565,7 @@ function _mediamosa_browse_asset_page_view_metadata($asset) {
  * Build the job list.
  *
  * @param array $asset
+ *   asset info.
  */
 function _mediamosa_browse_asset_page_view_job_list($asset) {
 
@@ -530,7 +582,11 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
   // Do REST call.
   $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', $params);
 
-  $states = array(mediamosa_job_db::JOB_STATUS_WAITING, mediamosa_job_db::JOB_STATUS_FAILED, mediamosa_job_db::JOB_STATUS_FINISHED);
+  $states = array(
+    mediamosa_job_db::JOB_STATUS_WAITING,
+    mediamosa_job_db::JOB_STATUS_FAILED,
+    mediamosa_job_db::JOB_STATUS_FINISHED,
+  );
 
   // Get Items count.
   $item_count = $result['header']['item_count'];
@@ -541,7 +597,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
 
   $rows = array();
   foreach ($result['items'] as $item) {
-    $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
+    $delete = (in_array((string) $item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
     // We will sort jobs by ID.
     $rows[$item['id']] = array(
       $item['id'],
@@ -573,7 +629,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
     '#collapsed' => TRUE,
     'properties' => array(
       '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
-    )
+    ),
   );
 }
 
@@ -581,6 +637,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
  * Build the mediafile listing.
  *
  * @param array $asset
+ *   asset info.
  */
 function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
 
@@ -663,16 +720,19 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('FLV metadated'), $item['metadata']['is_inserted_md']);
     $rows[] = array(t('Original'), $item['is_original_file']);
     $rows[] = array(t('Downloadable'), $item['is_downloadable']);
-    $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')': '');
+    $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')' : '');
     $rows[] = array(t('Protected'), $item['is_protected']);
 
     if (!empty($item['transcode_profile_id'])) {
       $transcode_profile_data = _mediamosa_get_transcode_profile_data($item['transcode_profile_id']);
       if ($transcode_profile_data) {
-        $rows[] = array(t('Transcode profile'), l($transcode_profile_data[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile_data[mediamosa_transcode_profile_db::NID]));
+        $rows[] = array(
+          t('Transcode profile'),
+          l($transcode_profile_data[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile_data[mediamosa_transcode_profile_db::NID]),
+        );
       }
       else {
-         $rows[] = array(t('Transcode profile'), t('Transcode profile no longer exists.'));
+        $rows[] = array(t('Transcode profile'), t('Transcode profile no longer exists.'));
       }
     }
 
@@ -690,10 +750,15 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
 
       $rows_aut2 = array();
       foreach ($rows_aut as $name => $values) {
-        $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
+        $rows_aut2[] = array(
+          _mediamosa_browse_fix_metadata_name($name), implode(', ', $values),
+        );
       }
 
-      $rows[] = array(t('Autorisarion rules'), theme('table', array('rows' => $rows_aut2)));
+      $rows[] = array(
+        t('Autorisarion rules'),
+        theme('table', array('rows' => $rows_aut2)),
+      );
     }
 
     // Uri REST call.
@@ -724,14 +789,26 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
           }
 
           $rows[] = array(
-            t('Still') . '<br />' . ($still_ticket ? theme('image', array('path' => $still_ticket, 'width' => 200, 'height' => NULL), FALSE) : ''),
+            t('Still') . '<br />' . ($still_ticket ?
+              theme('image',
+                array(
+                  'path' => $still_ticket,
+                  'width' => 200,
+                  'height' => NULL,
+                ),
+                FALSE) : ''),
             theme('table', array('header' => $still_header, 'rows' => $still_rows)),
           );
         }
       }
     }
 
-    $build[] = theme('table', array('caption' => $caption, 'rows' => $rows, 'header' => $header));
+    $build[] = theme('table', array(
+                 'caption' => $caption,
+                 'rows' => $rows,
+                 'header' => $header,
+               )
+    );
   }
 
   // Add text when no mediafiles where found...
@@ -754,6 +831,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
  * Build the collections listing.
  *
  * @param array $asset
+ *   asset info.
  */
 function _mediamosa_browse_asset_page_view_collections_list($asset) {
 
@@ -820,8 +898,10 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
  * Build the supplements listing.
  *
  * @param array $asset
+ *   asset info.
  *
- * @return FALSE if there are no supplement or themed supplement info.
+ * @return bool
+ *   FALSE if there are no supplement or themed supplement info.
  *
  * @see _mediamosa_browse_asset_page_view_collections_list
  */
@@ -854,16 +934,12 @@ function _mediamosa_browse_asset_page_view_supplements_list($asset) {
     array('data' => t('Approximate size')),
   );
 
-  // Get destination.
-  $l_options = array('query' => drupal_get_destination());
-
   foreach ($result['items'] as $item) {
     $length_encoded = drupal_strlen($item['supplement_base64']);
 
-    // If encoded data is big (more than 16K) we show just approx supplement size.
-
-    // Normally encoded data have 1/3 redundancy.
-    $approx_size = $length_encoded > 16 * 1024 ? round( $length_encoded * 3 / 4 ) : drupal_strlen(base64_decode($item['supplement_base64']));
+    // If encoded data is big (more than 16K) we show just approx supplement
+    // size. Normally encoded data have 1/3 redundancy.
+    $approx_size = $length_encoded > 16 * 1024 ? round($length_encoded * 3 / 4) : drupal_strlen(base64_decode($item['supplement_base64']));
 
     $approx_size = format_size($approx_size);
     $rows[$item['created']] = array(
@@ -912,7 +988,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
 
   // Collect the metadata groups.
   $metadata_groups = array();
-  foreach ($metadatas as $name => $metadata) {
+  foreach ($metadatas as $metadata) {
     $metadata_groups[$metadata['propgroup_name']] = $metadata['propgroup_id'];
   }
 
@@ -944,9 +1020,9 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
       if (!isset($form[$group_name])) {
         $form[$group_name] = array(
           '#type' => 'fieldset',
-          '#title' => t($name_fixed),
+          '#title' => $name_fixed,
           '#collapsible' => TRUE,
-          '#description' => t('Clear an item to delete it from the asset\'s @name_fixed metadata.', array('@name_fixed' => $name_fixed))
+          '#description' => t("Clear an item to delete it from the asset's @name_fixed metadata.", array('@name_fixed' => $name_fixed)),
         );
       }
       $x = 0;
@@ -957,7 +1033,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
         $form[$group_name]['metadata_' . $metadata_name . '[' . $x++ . ']'] = array(
           '#type' => drupal_strlen($metadata_value) > 80 ? 'textarea' : 'textfield',
           '#default_value' => $metadata_value,
-          '#title' => t(_mediamosa_browse_fix_metadata_name($metadata_name)),
+          '#title' => _mediamosa_browse_fix_metadata_name($metadata_name),
         );
       }
     }
@@ -977,7 +1053,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   ksort($metadata_groups);
   ksort($metadatas);
   foreach ($metadata_groups as $metadata_group_name => $metadata_group_id) {
-    foreach ($metadatas as $name => $metadata) {
+    foreach ($metadatas as $metadata) {
       if ($metadata['propgroup_id'] != $metadata_group_id) {
         continue;
       }
@@ -1024,7 +1100,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
  */
 function mediamosa_browse_asset_form_validate($form, &$form_state) {
   // Save metadata edit.
-  if ($form_state['values']['op'] ==  t('Save changes')) {
+  if ($form_state['values']['op'] == t('Save changes')) {
     // Get the metadata list.
     $metadatas = mediamosa_asset_metadata_property::get_metadata_properties_full();
 
@@ -1084,7 +1160,7 @@ function mediamosa_browse_asset_form_submit($form, &$form_state) {
   // Start empty.
   $params = array();
 
-  if ($form_state['values']['op'] ==  t('Save changes')) {
+  if ($form_state['values']['op'] == t('Save changes')) {
     foreach ($values as $name => $value) {
       // Must start with current_.
       if (drupal_substr($name, 0, 9) != 'metadata_') {
@@ -1095,10 +1171,11 @@ function mediamosa_browse_asset_form_submit($form, &$form_state) {
       $params[drupal_substr($name, 9)] = $value;
     }
   }
-  elseif ($form_state['values']['op'] ==  t('Add metadata')) {
+  elseif ($form_state['values']['op'] == t('Add metadata')) {
     if (!empty($values['new_metadata_property'])) {
       $params[$values['new_metadata_property']] = $values['new_metadata_value'];
-      $params['action'] = 'append'; // Use 'append' instead of 'replace'.
+      // Use 'append' instead of 'replace'.
+      $params['action'] = 'append';
     }
   }
 
@@ -1141,10 +1218,12 @@ function mediamosa_browse_asset_delete_confirm_form($form, &$form_state, $asset_
   );
 
   return confirm_form($form,
-                      t('Are you sure you want to delete this asset?'), // question
-                      mediamosa_settings::get_url_asset($asset_id), // cancel path
-                      t('This action cannot be undone.'),
-                      t('Delete'), t('Cancel')
+    t('Are you sure you want to delete this asset?'),
+    // Cancel path:
+    mediamosa_settings::get_url_asset($asset_id),
+    t('This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel')
   );
 }
 
