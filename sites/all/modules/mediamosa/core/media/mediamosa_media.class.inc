@@ -1405,7 +1405,6 @@ class mediamosa_media {
 
     $query->condition('still.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
     $query->condition('still.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
-    $query->condition('still.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
 
     if (!empty($still_id)) {
       $query->condition('still.' . mediamosa_asset_mediafile_db::ID, $still_id);
