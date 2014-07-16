@@ -261,7 +261,5 @@ class MediaMosaTypeValidation extends MediaMosaTestCase {
 
     // Validate.
     $this->check('command', mediamosa_sdk::TYPE_COMMAND, mediamosa_transcode_profile::arrayToCommand($commands));
-
-
   }
 }
