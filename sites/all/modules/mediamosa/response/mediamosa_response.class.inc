@@ -63,7 +63,11 @@ class mediamosa_response extends mediamosa {
   // Content_type to use for output.
   protected $response_type = mediamosa_response::RESPONSE_TYPE_XML;
 
-  // The matched REST call object.
+  /**
+   * The matched REST call object.
+   *
+   * @var mediamosa_rest_call
+   */
   protected $rest_call = NULL;
 
   // Public counters.
@@ -152,24 +156,24 @@ class mediamosa_response extends mediamosa {
         return;
       }
 
+      // When admin interface is enabled on the REST interface, then some URLs
+      // will conflict with Drupal URLs, specially with URLs used in user
+      // module. We allow some of the combinations with /user/ to work under the
+      // REST interface.
       if (mediamosa::is_admin_enabled() && !mediamosa::in_simpletest_sandbox()) {
-        // Proceed with REST call but make exception for /user/login
-        // and /user/password and /user.
-        if (user_is_logged_in()) {
-          // Then allow all restcalls without /user, /user/{number} and /user/logout
-          if ((mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') || (mediamosa_unicode::substr(mediamosa::request_uri(), -11) == 'user/logout')) {
-            // Proceed with Drupal: first put back previous (drupal) handler.
-            if (!empty($previous_handler)) {
-              set_error_handler($previous_handler, E_ALL);
+        $request_path = request_path() . '/';
+
+        $urls = user_is_logged_in() ?
+          array('^user/[0-9]+/$' => true, '^user/$' => false, '^user/autocomplete/$' => true, '^user/logout/$' => true)
+          :
+          array('^user/login/$' => true, '^user/password/$' => true, '^user/$' => false);
+
+        foreach ($urls as $regex => $filter) {
+          if (preg_match('@' . $regex . '@', $request_path)) {
+            if (!$filter) {
+              break;
             }
-            return;
-          }
-        }
-        else {
-          // Then allow all restcalls without /user/login and /user/password.
-          // Known issue: /user gives rest call here instead of Drupal login page.
-          if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password' || mediamosa_unicode::substr(mediamosa::request_uri(), -4) == 'user') {
-            // Proceed with Drupal: first put back previous (drupal) handler.
+
             if (!empty($previous_handler)) {
               set_error_handler($previous_handler, E_ALL);
             }
