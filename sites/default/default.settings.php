@@ -271,7 +271,7 @@ $drupal_hash_salt = '';
  *
  * To see what PHP settings are possible, including whether they can be set at
  * runtime (by using ini_set()), read the PHP documentation:
- * http://www.php.net/manual/en/ini.list.php
+ * http://www.php.net/manual/ini.list.php
  * See drupal_environment_initialize() in includes/bootstrap.inc for required
  * runtime settings and the .htaccess file for non-runtime settings. Settings
  * defined there should not be duplicated here so as to avoid conflict issues.
@@ -307,7 +307,7 @@ ini_set('session.cookie_lifetime', 2000000);
  * output filter may not have sufficient memory to process it.  If you
  * experience this issue, you may wish to uncomment the following two lines
  * and increase the limits of these variables.  For more information, see
- * http://php.net/manual/en/pcre.configuration.php.
+ * http://php.net/manual/pcre.configuration.php.
  */
 # ini_set('pcre.backtrack_limit', 200000);
 # ini_set('pcre.recursion_limit', 200000);
@@ -551,61 +551,3 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
  * Remove the leading hash signs to disable.
  */
 # $conf['allow_authorize_operations'] = FALSE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST interface. Putting it on FALSE will disable the interface
- * for this URL / Location, disabling all REST calls; except upload
- * REST calls, which is controlled by mediamosa_app_upload.
- */
-$conf['mediamosa_app'] = FALSE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST upload interface. The upload setting allows REST call
- * relating to uploading files, it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface
- * as an upload interface, put 'mediamosa_app' to FALSE and set
- * 'mediamosa_app_upload' to TRUE.
- */
-$conf['mediamosa_app_upload'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST download interface. The download setting allows you
- * to download mediafile using tickets. For now its used to download
- * files and still images.
- * Warning: If your download servers point to the admin, then make sure
- * sure you allow this setting on the admin, else your MediaMosa status page
- * will show failures.
- */
-$conf['mediamosa_app_download'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * APP REST OpenAPI interface. The OpenAPI setting allows REST call
- * relating to OpenAPI (eg. OpenSocial), it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface
- * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
- * 'mediamosa_app_openapi' to TRUE.
- */
-$conf['mediamosa_app_openapi'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * CMS admin interface. You can turn on the admin with app interface
- * but remember that some url like /user conflicts with the drupal
- * /user and the /user mediamosa.
- */
-$conf['mediamosa_admin'] = TRUE;
-
-/**
- * The 'mediamosa_installation_id' defines the default install ID for multiple
- * installations of mediamosa. For now only job servers need to have unique IDs.
- * Best practise is to give each MediaMosa installation its own ID. F.e. if you
- * have 'job1.mediamosa.example' for your 1st job server, then specify 'job1' as
- * installation ID here. 'admin.mediamosa.example' would be 'admin' as
- * installation ID, etc, etc. Max length for this ID is 16 chars.
- */
-//                                    1234567890123456 chars max
-$conf['mediamosa_installation_id'] = 'default';
