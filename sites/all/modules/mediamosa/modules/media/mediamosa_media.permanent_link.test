@@ -108,8 +108,9 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
 
     $still_id = $stills['stills']['still_id'];
 
-
+    // Test case 1:
     // Permanent still url without protection.
+    //
 
     // Test the output, do output call.
     $permanent_still_url = str_replace('/media/', '/media/simpletest/media/', $stills['output']);
@@ -164,7 +165,6 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     );
     $this->setMediafileAcl($still_id, $parameters);
 
-
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
 
@@ -206,22 +206,23 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
       t("Download the test image second time from '@url' (code = @code), ticket url must still be there.", array('@url' => $still_url, '@code' => $result->code))
     );
 
-
     // If one of the mediafiles has protection, then the still can still be accessed.
     $mediafile = mediamosa_asset_mediafile::get($still_id);
     $mediafile_id_original = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
     $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
-
     // Permanent still url without protection.
 
     // Remove ACL rule.
-    $parameters = array(
-    );
+    $parameters = array();
     $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    if ($result->code != 200) {
+      $this->var_export($result);
+    }
 
     // Check response.
     $this->assertTrue(
@@ -245,8 +246,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     );
 
     // Remove ACL rule.
-    $parameters = array(
-    );
+    $parameters = array();
     $this->setMediafileAcl($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
@@ -291,8 +291,7 @@ class MediaMosaMediaPermanentTemporaryTestCaseEgaJob extends MediaMosaTestCaseEg
     );
 
     if ($result->code != 200) {
-      $this->var_export($result->headers);
-      $this->var_export($result->body);
+      $this->var_export($result);
     }
 
     //
