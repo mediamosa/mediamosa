@@ -106,7 +106,7 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->toEga_2();
 
     // Expecting no stills.
-    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Switch Ega.
     $this->toEga_1();
