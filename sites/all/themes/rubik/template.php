@@ -530,6 +530,9 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
+  if (!empty($elements['#mediamosa_no_clone'])) {
+    return;
+  }
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
@@ -615,4 +618,3 @@ function _rubik_local_tasks(&$vars) {
     }
   }
 }
-
