@@ -23,6 +23,7 @@ hr { display:none; }
 div.messages {
   color:#036;
   background-color:#f8f8f8;
+  padding:9px 9px 9px 40px;
   border:1px solid #ccc;
   margin:0px 0px 10px;
   }
@@ -44,6 +45,13 @@ table tr.info th,
 div.status {
   color:#687;
   background-color:#ecf8f4;
+  }
+
+table tr.merge-down td {border-bottom: 0;}
+table tr.merge-up td {border-top: 0;}
+table td.status-description {
+  padding: 3px 40px;
+  font-size: .9em;
   }
 
   div.error   { border-color:#ffd4d0; }
@@ -119,6 +127,13 @@ div.status {
   .node-type-list li:last-child,
   .admin-list li:last-child { border:0px; }
 
+/* Fix default spacing between the links displayed in "Operations" column. */
+td ul.links.inline.operations li:not(:last-child) {
+  padding: 0 10px 0 0;
+  margin: 0 8px 0 0;
+  border-right: 1px solid #DDD;
+  }
+
 /**
  * Tables =============================================================
  */
@@ -190,8 +205,38 @@ table tr.draggable span.tabledrag-changed { display:none; }
 table.field-multiple-table td { padding: 10px; }
 
 /* Stripe administrative tables */
-.page-admin table tr.even, .page-admin table tr.even td {
-  background: #f9f9f9;
+.page-admin table tr.even,
+.page-admin table tr.even td {
+  background-color: #f9f9f9;
+}
+.page-admin table tr.odd,
+.page-admin table tr.odd td {
+  background-color: #fff;
+}
+
+/* Use Drupal's default colors for Available Updates page statuses */
+.page-admin table tr.warning,
+.page-admin table tr.warning td {
+  background-color: #ffd;
+  color: #020;
+}
+.page-admin table tr.ok,
+.page-admin table tr.ok td {
+  background-color: #dfd;
+  color: #020;
+}
+.page-admin table tr.error,
+.page-admin table tr.error td {
+  background-color: #fcc;
+  color: #020;
+}
+
+/* Overrides the striping with core classes for errors and warnings */
+.page-admin table tr.error, .page-admin table tr.error td {
+  background: #FCC;
+}
+.page-admin table tr.warning, .page-admin table tr.warning td {
+  background: #FFD;
 }
 
 /**
@@ -218,14 +263,7 @@ table.field-multiple-table td { padding: 10px; }
     padding:9px;
     }
 .form-wrapper {
-  border: 1px solid #ddd;
   margin-bottom: 10px;
-  }
-
-.form-wrapper .form-item,
-.form-wrapper .form-wrapper {
-  border:0;
-  margin-bottom:0;
   }
 
 .media-widget.form-wrapper{
@@ -283,13 +321,26 @@ table .item-list,
   color:#666;
   font-weight:bold;
   font-size:10px;
-  text-transform:uppercase;
   }
 
   .form-item label.option {
     text-transform:none;
     font-size:11px;
     }
+
+	input.button-add {
+	  background-position:-801px 50%;
+	  padding-left:25px;
+	  }
+
+	input.button-add:active { background-position:-1201px 50%; }
+
+	input.button-remove {
+	  background-position:-1601px 50%;
+	  padding-left:25px;
+	  }
+
+	input.button-remove:active { background-position:-2001px 50%; }
 
   .form-item label.option input { vertical-align:middle; }
 
@@ -330,17 +381,34 @@ table .item-list,
   display:none;
   }
 
+  .page-content .form-item.form-type-checkbox .description {
+    bottom: 150%;
+    }
+
   .page-content .form-item:hover {
-    z-index:1;
+    z-index:10;
     height:auto; /* Fix for flicker in IE7 */
     }
 
   .page-content .form-item:hover > .description { display:block; }
 
-input.form-submit, a.button { display: inline-block;}
+  .rubik-inline-field-descriptions .page-content .form-item .description {
+    display:block;
+    position:relative;
+    background:none;
+    margin:0;
+    padding:0.25em 0 0.75em;
+    border:none;
+    right:0;
+    width:100%;
+    z-index:0;
+    }
+
+input.form-submit, a.button, .form-actions #edit-cancel { display: inline-block;}
 
 input.teaser-button,
-input.form-submit, a.button {
+input.form-submit, a.button,
+.form-actions #edit-cancel {
   cursor:pointer;
   padding:2px 10px;
   color:#333;
@@ -353,12 +421,16 @@ input.form-submit, a.button {
   background:#fff url(images/buttons.png) -1px 50% no-repeat;
   }
 
-  input.form-submit:hover, a.button:hover {
+  input.form-submit:hover,
+  a.button:hover,
+  .form-actions #edit-cancel:hover {
     border-color:#ace;
     -webkit-box-shadow:#ace 0px 0px 5px;
     }
 
-  input.form-submit:active, a.button:active {
+  input.form-submit:active,
+  a.button:active,
+  .form-actions #edit-cancel:active {
     border-color:#666 #666 #555;
     background:#666 url(images/buttons.png) -401px 50% no-repeat;
     color:#222;
@@ -415,12 +487,13 @@ input.form-submit, a.button {
 
 input.form-autocomplete,
 input.form-text,
+input.form-file,
 textarea.form-textarea,
 select.form-select {
   padding:3px;
   border-width:1px;
   border-style:solid;
-  border-color:#ccc;
+  border-color:#ddd;
   background:#fff;
   color:#666;
   max-width:100%;
@@ -428,10 +501,12 @@ select.form-select {
 
   input.form-autocomplete:hover,
   input.form-text:hover,
+  input.form-file:hover,
   textarea.form-textarea:hover,
   select.form-select:hover,
   input.form-autocomplete:focus,
   input.form-text:focus,
+  input.form-file:focus,
   textarea.form-textarea:focus,
   select.form-select:focus {
     color:#333;
@@ -442,8 +517,14 @@ select.form-select {
   input.fluid {
     -moz-box-sizing:border-box;
     -webkit-box-sizing:border-box;
+    box-sizing: border-box;
     width:100%;
     }
+
+  input.form-file {
+    padding: 1px;
+    margin-right: 3px;
+  }
 
   html.js input.form-autocomplete { background-position:100% 7px; }
   html.js input.throbbing { background-position:100% -2px; }
@@ -503,23 +584,23 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
   .collapsible .fieldset-legend a { padding-bottom:4px; }
 
   /* Explicit height for IE */
-  .collapsible .fieldset-legend a { height:20px; }
+  .collapsible .fieldset-legend a {
+    height:20px;
+    padding-left:28px;
+  }
 
   .collapsible .fieldset-legend span.icon {
     position:absolute;
-    left:-20px;
-    top:4px;
-    background:url(images/bleeds.png) -20px -120px no-repeat;
-    width:20px;
-    height:20px;
+    left:6px;
+    top:6px;
+    background:url(images/bleeds.png) -80px -120px no-repeat;
+    width: 15px;
+    height: 15px;
     display:block;
     cursor:pointer;
     }
 
-    html.js .collapsed .fieldset-legend span.icon { background-position:0px -120px; }
-
-    .fieldset .collapsible .fieldset-legend span.icon,
-    html.js .fieldset .collapsible .fieldset-legend span.icon { display:none; }
+    html.js .collapsed .fieldset-legend span.icon { background-position:-60px -120px; }
 
   .collapsed .fieldset-legend a {
     background:#eee;
@@ -551,7 +632,7 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 .filter-wrapper {
   font-size:11px;
   margin-top:-10px;
-  border-top:none; 
+  border-top:none;
   }
 .text-format-wrapper .filter-wrapper{
   border-top:1px solid #CCC;
@@ -582,6 +663,18 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
   font-size:11px;
   padding:0px;
   }
+
+.form-type-date-popup label {
+  padding: 10px 10px 0 10px;
+}
+
+.form-type-date-popup .date-padding label {
+  padding: 0;
+}
+
+.form-type-date-popup .date-padding {
+  padding-top: 0;
+}
 
 /**
  * Form layout: Default ===============================================
@@ -632,7 +725,6 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 .box-title {
   font-weight:normal;
   font-size:10px;
-  text-transform:uppercase;
 
   background:#eee;
   border:1px solid #ddd;
@@ -665,19 +757,20 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 /* admin/appearance */
 .theme-selector {
   position:relative;
-  padding:9px 9px 9px 139px;
+  padding:9px 9px 9px 314px;
   border:1px solid #ddd;
   margin:10px 0px;
-  min-height:80px;
+  min-height:224px;
   text-shadow:#fff 0px 1px 0px;
   }
 
 .theme-selector img {
-  left:10px;
-  top:10px;
-  position:absolute;
-  clip:rect(0px 120px 80px 0px); /* IE6, IE7 */
-  clip:rect(0px,120px,80px,0px);
+  clip: rect(0px, 294px, 219px, 0px);
+  height: auto;
+  left: 10px;
+  position: absolute;
+  top: 10px;
+  width: 294px;
   }
 
 .theme-selector .operations a { margin-right:20px; }
@@ -685,7 +778,13 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 .system-themes-list-disabled .theme-selector {
   background:#eee;
   color:#676767;
+  padding:9px 9px 9px 162px;
+  min-height:110px;
   }
+
+.system-themes-list-disabled .theme-selector img {
+  width: 142px;
+}
 
 /* admin/content/node & admin/user/user */
 .exposed-filters .form-item label {
@@ -877,6 +976,31 @@ body.tao #admin-toolbar a.menu-hover span.menu-description span.icon {
     text-shadow:#999 0px 1px 0px;
     }
 
+/* color module fix */
+#palette .form-item {
+  width: 20em !important;
+  height: 2em;
+  line-height: 2em;
+  margin: 0.5em 0;
+  padding: 0.2em;
+}
+
+#palette .lock {
+  z-index: 2;
+}
+.page-content .color-form .form-item:hover {
+  height: 2em;
+}
+/* panels stylizer color fix */
+div.ctools-modal-content #palette .form-item label {
+  clear: none;
+  float: left;
+  width: 14em;
+}
+div.ctools-modal-content .color-form .form-item input {
+  margin-top: 0;
+}
+
 /**
  * ORPHANED MARKUP ====================================================
  * The following selectors target markup generated by Drupal that have
@@ -897,3 +1021,147 @@ body.tao #admin-toolbar a.menu-hover span.menu-description span.icon {
   color:#666;
   background:#fff;
   }
+
+/**
+ * Display Suite ====================================================
+ */
+
+.field-formatter-settings-edit-form.ds-ft-processed {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 0.5em 1em 0;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group {
+  overflow: auto;
+  margin-bottom: 1em !important;
+  border-bottom: 1px solid #CCC;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.fi {
+  border-bottom: 0;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group > .form-item {
+  margin: 0.25em 1em 0.5em 0 !important;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group > .form-item .description {
+  max-width: 120px !important;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group > .form-item.form-type-checkbox {
+  clear: both;
+  margin-right: 0 !important;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.ow .form-type-textfield,
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.fis .form-type-textfield,
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.fi .form-type-textfield {
+  clear: left;
+}
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.ow .form-type-textfield ~ .form-type-textfield,
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.fis .form-type-textfield ~ .form-type-textfield,
+.field-formatter-settings-edit-form.ds-ft-processed .ft-group.fi .form-type-textfield ~ .form-type-textfield {
+  clear: none;
+}
+
+/**
+ * Search API ====================================================
+ */
+
+#facetapi-facet-display-form .fieldset-content > .form-item {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  float: left;
+  width: 50% !important;
+}
+
+#facetapi-facet-display-form .fieldset-content .facetapi-sort-table {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  margin-top: 0 !important;
+  position: static !important;
+  width: 50% !important;
+  z-index: 1 !important;
+}
+
+/**
+ * Sidebar Scroll ====================================================
+ */
+
+#content .column-side .column-wrapper {
+  padding-bottom: 5px;
+}
+#content .column-side .column-wrapper.fixed {
+  background-color: #FFF;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -m-box-sizing: border-box;
+  box-sizing: border-box;
+  display: inline-block;
+  position: fixed;
+  top: 5px;
+  z-index: 12;
+}
+
+.admin-menu #content .column-side .column-wrapper.fixed {
+  top: 40px;
+}
+
+/**
+ * Watchdog/dblog =================================================
+ */
+
+#admin-dblog td {border-color: #ccc;}
+#admin-dblog .dblog-notice td, #admin-dblog .dblog-notice .active {background-color:#ECF8FC;}
+#admin-dblog .dblog-info td, #admin-dblog .dblog-info .active {background-color: #DFF2BF;}
+#admin-dblog .dblog-warning td, #admin-dblog .dblog-warning .active {background-color: #FEEFB3;}
+#admin-dblog .dblog-error td, #admin-dblog .dblog-error .active {background-color: #FFBABA;}
+
+/**
+ * Adminimal Administration Menu ===============================================
+ */
+body.adminimal-menu { margin-top: 29px!important; }
+
+/**
+ * Media ====================================================
+ */
+
+.page-media-browser {overflow:hidden;}
+
+.page-media-browser #block-system-main {border: none;}
+
+.media-widget .preview {
+  background-color: #CCC;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.media-widget .preview .media-item {margin: 0;}
+.media-widget .preview.launcher > .form-item {padding: 0; border: 0;}
+.media-widget.form-wrapper {margin-bottom: 0;}
+.media-widget > .form-item:last-child {display: none;}
+.field-widget-media-generic > div > .form-item {
+  border: 0;
+  padding: 0;
+}
+
+.field-widget-media-generic .field-multiple-table thead .field-label {padding-left: 5px;}
+
+.media-item .label-wrapper label {display: block;}
+
+#media-browser-page {overflow: hidden;}
+#media-browser-page .form-actions {margin-bottom: 0;}
+
+#media-browser-tabset {border: none;}
+#media-browser-tabset #branding {padding: 8px 10px 2px 10px; height: 20px;}
+#media-browser-tabset #branding h1 {margin-top: -3px;}
+
+#media-tabs-wrapper .tabs.primary {margin-right: 10px;}
+
+.media-browser-tab.ui-tabs-panel {border: none; padding-bottom: 0;}
+
+.view-media-default #edit-filename-wrapper {max-width: 200px;}
+
+
