@@ -58,8 +58,11 @@ function mediamosa_stream_wrappers() {
 
   // Do not use our stream wrappers during update and at the point our stream
   // wrappers are not known.
-  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update' && drupal_get_installed_schema_version('mediamosa', TRUE) < 7142) {
-    return $wrappers;
+  if (defined('MAINTENANCE_MODE') && (MAINTENANCE_MODE == 'update')) {
+    if ((function_exists('drupal_get_installed_schema_version'))
+      && drupal_get_installed_schema_version('mediamosa', TRUE) < 7142) {
+      return $wrappers;
+    }
   }
 
   // Our MediaMosa Stream Wrappers.
