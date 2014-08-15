@@ -1369,8 +1369,10 @@ class mediamosa_media {
     // Stills to create.
     $stills = array();
 
-    // Get width and height.
-    list($width, $height) = mediamosa_asset_mediafile_still::process_image_size($size, $width, $height, mediamosa_asset_mediafile_still::get_default_image_size($app_id));
+    if (isset($size) || $width > 0 || $height > 0) {
+      // Get width and height.
+      list($width, $height) = mediamosa_asset_mediafile_still::process_image_size($size, $width, $height, mediamosa_asset_mediafile_still::get_default_image_size($app_id));
+    }
 
     // Get the order, if any.
     $order = mediamosa_asset_mediafile_still::process_still_range($range);
