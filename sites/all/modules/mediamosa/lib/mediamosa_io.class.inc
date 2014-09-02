@@ -488,9 +488,14 @@ class mediamosa_io {
   /**
    * Clears file status cache.
    */
-  public static function clearstatcache() {
+  public static function clearstatcache($filename = NULL) {
     self::log('Cleared stat cache');
-    clearstatcache(TRUE);
+    if ($filename) {
+      clearstatcache(TRUE, $filename);
+    }
+    else {
+      clearstatcache(TRUE);
+    }
   }
 
   /**
@@ -729,6 +734,8 @@ class mediamosa_io {
       return FALSE;
     }
 
+    self::clearstatcache($link);
+
     if (self::file_exists($link)) {
       self::log('Symlink already exists: @link, target: @target', array('@link' => $link, '@target' => $target));
       return TRUE;
@@ -746,7 +753,7 @@ class mediamosa_io {
     }
 
     // Seems that symlink does not reset the realpath cache.
-    self::clearstatcache();
+    self::clearstatcache($link);
 
     return $result;
   }
