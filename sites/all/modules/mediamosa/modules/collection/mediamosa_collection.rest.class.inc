@@ -682,11 +682,11 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'An user who is the current owner can reassign a new owner; after changing the owner, the old owner has no rights to modify the collection.',
+          self::VAR_DESCRIPTION => 'An user who is the current owner can reassign a new owner; after changing the owner, the old owner has no rights to modify the collection. Only with is_app_admin=true can this parameter be changed.',
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'The group ID.',
+          self::VAR_DESCRIPTION => 'The group ID. Only with is_app_admin=true can this parameter be changed.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::PRIVATE_ => array(
@@ -711,7 +711,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
+          self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only with is_app_admin=true can this parameter be changed. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
         ),
       ),
     );
