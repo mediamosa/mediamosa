@@ -6,6 +6,9 @@
 
 class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Media - Still Play calls',
@@ -15,6 +18,9 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
   }
 
   // -------------------------------------------------------------------- Tests.
+  /**
+   * Tests some Still calls in combination with ega's.
+   */
   public function testMediaPlayStills() {
 
     //
@@ -85,7 +91,7 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     // Expecting one still.
     $stills = (array) $this->getAssetStill($asset_id);
 
-    // Check the output
+    // Check output.
     $this->assertTrue(count($stills) == 1, strtr('Expecting one still, found @count.', array('@count' => count($stills))));
 
     // Get the still.
@@ -100,7 +106,7 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->toEga_2();
 
     // Expecting no stills.
-    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Switch Ega.
     $this->toEga_1();
@@ -110,27 +116,22 @@ class MediaMosaMediaStillsTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
     $this->var_export($response, 'response');
 
-    // Now master slave the still.
+    // Now share the source mediafile to app id 2.
     $this->setMediafileAcl($mediafile_id_still, array('acl_app' => array($app_id_2)));
 
-    // Expecting one still.
+    // Expecting still one still from app id 1.
     $stills = (array) $this->getAssetStill($asset_id);
 
-    // Check the output
+    // Check output.
     $this->assertTrue(count($stills) == 1, strtr('Expecting one still with own app, found @count.', array('@count' => count($stills))));
 
     // Switch Ega.
-    $this->toEga_2();
-
-    // The following lines will work when master-slaving the mediafile still is
-    // fixed.
-
-    // Expecting one still.
- //   $stills = (array) $this->getAssetStill($asset_id);
-
-    // Check the output
- //   $this->assertTrue(count($stills) == 1, strtr('Expecting one still using other app, found @count.', array('@count' => count($stills))));
-
-
+    // $this->toEga_2();
+    // Todo: fix this.
+    // Expecting one still from app id 2.
+    // $stills = (array) $this->getAssetStill($asset_id);
+    // Check output.
+    // $this->assertTrue(count($stills) == 1, strtr('Expecting one still using other app, found @count.', array('@count' => count($stills))));
+    // Todo: instead of setMediafileAcl, setAssetAcl should also work.
   }
 }

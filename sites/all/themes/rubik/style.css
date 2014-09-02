@@ -55,7 +55,8 @@ a {
 .compact-link a,
 input.teaser-button,
 input.form-submit,
-a.button {
+a.button,
+.form-actions #edit-cancel {
   -moz-border-radius:3px;
   -webkit-border-radius:3px;
   }
@@ -65,7 +66,8 @@ a.button {
  */
 input.teaser-button,
 input.form-submit,
-a.button {
+a.button,
+.form-actions #edit-cancel {
   box-shadow:#ddd 0px 1px 1px;
   -moz-box-shadow:#ddd 0px 1px 1px;
   -webkit-box-shadow:#ddd 0px 1px 1px;
@@ -103,7 +105,6 @@ table th {
 #branding .breadcrumb {
   padding:0px;
   float:left;
-  text-transform:uppercase;
   font-weight:normal;
   }
 
@@ -122,8 +123,8 @@ table th {
   #branding .breadcrumb-depth-7 { z-index:3; }
   #branding .breadcrumb-depth-8 { z-index:2; }
 
-  #branding .breadcrumb a,
-  #branding .breadcrumb strong {
+  #branding .breadcrumb-link > a,
+  #branding .breadcrumb-link > strong {
     color:#fff;
     font-weight:normal;
     float:left;
@@ -257,7 +258,7 @@ div.pager {
 
 /* Secondary tabs, nested */
 .secondary-tabs {
-  min-width:100px;
+  min-width:150px;
   float:left;
   position:relative;
   margin:5px 5px 5px 0px;
@@ -321,6 +322,10 @@ div.node {
   background:#fff url(images/vrule.png) 65% 0% repeat-y;
   margin:0px 0px 10px;
   }
+
+/* Make large images display within the parent container. This will prevent
+messing up the layout if a wide image needs to be displayed in content. */
+#page img { max-width: 100%; }
 
 #help-text .column-main .column-wrapper,
 .help-page .column-main .column-wrapper,
@@ -391,3 +396,12 @@ div.node .column-side .column-wrapper {
   font-weight:normal;
   font-size:16px;
   }
+
+/**
+ * Fixes for other modules ===============================================
+ */
+/* Fix rules action links. */
+.rules-elements-table ul.rules-operations a {
+  text-shadow: none;
+  color: #666;
+}

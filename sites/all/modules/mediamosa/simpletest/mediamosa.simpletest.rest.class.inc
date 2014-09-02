@@ -66,7 +66,7 @@ class mediamosa_rest_call_simpletest_cleanup extends mediamosa_rest_call {
     $count = 0;
 
     $path = drupal_realpath('public://simpletest');
-    if (mediamosa_io::file_exists(mediamosa_io::$path)) {
+    if (mediamosa_io::file_exists($path)) {
       // Clear out the previous verbose files.
       file_unmanaged_delete_recursive('public://simpletest/verbose');
 
