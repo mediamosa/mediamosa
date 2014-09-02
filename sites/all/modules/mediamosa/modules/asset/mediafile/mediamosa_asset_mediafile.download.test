@@ -71,7 +71,7 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->var_export($result->headers);
     $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
-    $this->assertTrue($result->headers['content-type'] == 'application/force-download', 'Got force download.');
+    $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got download.');
 
     // Set acl.
 
@@ -99,10 +99,9 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->var_export($result->headers);
     $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
-    $this->assertTrue($result->headers['content-type'] == 'application/force-download', 'Got force response download.');
+    $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got response download.');
 
     $this->deleteMediafileAcl($mediafile_id);
-
 
     //
     // Change the mediafile to is_downloadable = FALSE.
