@@ -1025,6 +1025,8 @@ class mediamosa_asset {
           }
         }
       }
+      // Allow other modules to alter output.
+      drupal_alter('mediamosa_asset_enrich_response', $items_pre_sort[$asset[mediamosa_asset_db::ID]]);
     }
 
     $items = array();
