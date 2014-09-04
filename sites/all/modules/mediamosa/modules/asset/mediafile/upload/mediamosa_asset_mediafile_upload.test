@@ -29,6 +29,13 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
     // POST upload test.
     $this->uploadTestFile();
 
+    // POST upload test with filename = asset-title.
+    $result = $this->uploadTestFile(array('use_filename_as_dctitle' => 'TRUE'));
+
+    // Test if asset title equals filename.
+    $md = mediamosa_asset_metadata::metadata_get($result['asset_id']);
+    $this->assertTrue(mediamosa_io::basename($result['source_filename']) == $md['dublin_core']['title']['values'][0], 'Store filename as dc:title.');
+
     // PUT upload test.
     $this->uploadTestFile(array('use_put' => TRUE));
   }

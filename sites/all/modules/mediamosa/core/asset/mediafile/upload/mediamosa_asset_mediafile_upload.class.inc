@@ -132,7 +132,8 @@ class mediamosa_asset_mediafile_upload {
     $retranscode = FALSE,
     $completed_transcoding_url = '',
     $create_still = FALSE,
-    array $still_parameters = array()
+    array $still_parameters = array(),
+    $use_filename_as_dctitle = FALSE
   ) {
     // Set to false.
     $is_app_admin = FALSE;
@@ -225,6 +226,15 @@ class mediamosa_asset_mediafile_upload {
 
       // Update mediafile.
       mediamosa_asset_mediafile::update($app_id, $ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], $ticket[mediamosa_media_ticket_db::OWNER_ID], $fields);
+
+      // Update asset:dc-title if requested.
+      if ($use_filename_as_dctitle) {
+        // Determine asset_id.
+        $mf = mediamosa_asset_mediafile::get($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID], $app_id, array(mediamosa_asset_mediafile_db::ASSET_ID));
+        // Update metadata field.
+        $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
+        mediamosa_asset_metadata::metadata_create($mf[mediamosa_asset_mediafile_db::ASSET_ID], $metadata_definitions_full, array('title' => array($filename)), 'append');
+      }
 
       // Update the job.
       mediamosa_job::update_progress_upload($job_id, $upload_file_info['size']);
