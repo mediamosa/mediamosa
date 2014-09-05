@@ -64,10 +64,12 @@ class mediamosa_tool_ffmpeg {
     return array(
       '-s' => $aspect_ratio['width'] . 'x' . $aspect_ratio['height'],
       '-vf' => strtr(
-        'pad=@width:@height:@v_padding:@h_padding:black',
+        'scale=@width:@height,pad=@width_plus:@height_plus:@v_padding:@h_padding:black',
         array(
-          '@width' => $aspect_ratio['width'] + ($aspect_ratio['v_padding'] * 2),
-          '@height' => $aspect_ratio['height'] + ($aspect_ratio['h_padding'] * 2),
+          '@width' => $aspect_ratio['width'],
+          '@width_plus' => $aspect_ratio['width'] + ($aspect_ratio['v_padding'] * 2),
+          '@height' => $aspect_ratio['height'],
+          '@height_plus' => $aspect_ratio['height'] + ($aspect_ratio['h_padding'] * 2),
           '@v_padding' => $aspect_ratio['v_padding'],
           '@h_padding' => $aspect_ratio['h_padding'],
         )
@@ -408,13 +410,33 @@ class mediamosa_tool_ffmpeg {
       ->condition(mediamosa_job_db::ID, $job_id)
       ->execute();
 
-    // Combine the string (only for linux, windows does not generate stills).
+    // Prepare with and heigt variations.
     $size_explode = explode('x', $size);
+    // -vf scale takes "width:height" as parameter:
+    $size_semicolon = $size_explode[0] . ':' . $size_explode[1];
     $size_width = ($v_padding > 0) ? $size_explode[0] + (2 * $v_padding) : 0;
     $size_height = ($h_padding > 0) ? $size_explode[1] + (2 * $h_padding) : 0;
 
-    $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::lua_transcode_script(), mediamosa_storage::get_local_mediafile_path($mediafile_id_source), mediamosa_storage::get_realpath_temporary(), $mediafile_id_source, $job_id, $size, $size_width, $size_height, $v_padding, $h_padding,
-                        round($duration * $framerate), $frametime, $duration, 1);
+    // Create execution string.
+    // STILL_STRING_VFPAD = "' -s %s -vf
+    // 'yadif,scale=%s,pad=%d:%d:%d:%d:black' -vframes %d -an -y -ss %s -t %s
+    // -r %s -vcodec mjpeg -f image2'";
+    $execution_string = sprintf('%s %s %s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD,
+                        mediamosa_settings::lua_transcode_script(),
+                        mediamosa_storage::get_local_mediafile_path($mediafile_id_source),
+                        mediamosa_storage::get_realpath_temporary(),
+                        $mediafile_id_source,
+                        $job_id,
+                        $size,
+                        $size_semicolon,
+                        $size_width,
+                        $size_height,
+                        $v_padding,
+                        $h_padding,
+                        round($duration * $framerate),
+                        $frametime,
+                        $duration,
+                        1);
     $execution_string .= ' > /dev/null &';
     return $execution_string;
   }
