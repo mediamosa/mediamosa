@@ -1458,11 +1458,6 @@ class mediamosa_media {
 
     static $values = array();
 
-    // Need this to compare.
-    if (!isset($width) && !isset($height) && !isset($format) && !isset($order)) {
-      return TRUE;
-    }
-
     if (!isset($values[$still['still_id']])) {
       // Get the technical metadata of the still.
       $values[$still['still_id']] = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($still['still_id']);
