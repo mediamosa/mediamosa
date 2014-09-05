@@ -162,6 +162,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
   const RETRANSCODE = 'retranscode';
   const FILENAME = 'filename';
+  const USE_FILENAME_AS_DCTITLE ='use_filename_as_dctitle';
   const COMPLETED_URL = 'completed_url';
   const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
   const STILL_UPLOAD = 'still_upload';
@@ -324,6 +325,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The filename of the media file (PUT method only, ignored otherwise).',
           self::VAR_IS_REQUIRED => $this->is_method_put() ? self::VAR_IS_REQUIRED_YES : self::VAR_IS_REQUIRED_NO,
         ),
+        self::USE_FILENAME_AS_DCTITLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'After successful upload, set the dc.title of the asset as the filename of the upload.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
         self::COMPLETED_URL => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a MediaMosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
@@ -391,6 +397,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       $tag = $this->get_param_value(self::TAG);
       $transcode_profiles = $this->get_param_value(self::TRANSCODE);
       $retranscode = $this->get_param_value(self::RETRANSCODE);
+      $use_filename_as_dctitle = $this->get_param_value(self::USE_FILENAME_AS_DCTITLE);
 
       // Is still upload?
       $still_upload = $this->get_param_value(self::STILL_UPLOAD);
@@ -422,7 +429,8 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           $retranscode,
           $completed_transcoding_url,
           $create_still,
-          $still_parameters
+          $still_parameters,
+          $use_filename_as_dctitle
         );
       }
     }

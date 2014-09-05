@@ -628,6 +628,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'create_still' => FALSE,
       'transcode_inherits_acl' => FALSE,
       'transcode' => array(),
+      'use_filename_as_dctitle' => 'FALSE',
     );
 
     $source_filename = $options['filename'];
@@ -650,6 +651,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'create_still' => $options['create_still'],
       'transcode_inherits_acl' => $options['transcode_inherits_acl'],
       'transcode' => $options['transcode'],
+      'use_filename_as_dctitle' => $options['use_filename_as_dctitle'],
     );
 
     // Upload the file.
@@ -714,6 +716,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     if (!empty($options['transcode'])) {
       // Set any transcode profiles.
       $parse_url['query']['transcode'] = $options['transcode'];
+    }
+
+    if ($options['use_filename_as_dctitle'] == 'TRUE') {
+      $parse_url['query']['use_filename_as_dctitle'] = $options['use_filename_as_dctitle'];
     }
 
     // Rebuild.
