@@ -483,6 +483,11 @@ class mediamosa_job_server {
       )
     );
 
+    // Generate event analyse finished.
+    if (module_exists('rules')) {
+      rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id);
+    }
+
     return $analyse_result;
   }
 
