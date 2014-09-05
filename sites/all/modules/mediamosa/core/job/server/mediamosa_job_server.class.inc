@@ -358,18 +358,6 @@ class mediamosa_job_server {
     // Need mediafile.
     $mediafile_src = mediamosa_asset_mediafile::must_exists($mediafile_id_src);
 
-    // Get the filename of the source.
-    $mediamosa_uri = mediamosa_storage::get_uri_mediafile($mediafile_src);
-
-    // Check of the source file exists.
-    if (!mediamosa_io::file_exists($mediamosa_uri)) {
-      $link_asset = self::get_asset_link($job_id);
-      self::log_mediafile($mediafile_id_src, "Job ID: @job_id File '@file' not found,<br /><br/>@link", array('@job_id' => $job_id, '@file' => mediamosa_io::realpath_safe($mediamosa_uri), '@link' => $link_asset), NULL, WATCHDOG_CRITICAL);
-      self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => mediamosa_io::realpath_safe($mediamosa_uri)));
-      self::log_mediafile($mediafile_id_src, "Job ID: @job_id, memory_get_peak_usage = @memory_get_peak_usage, memory_usage: @memory_get_usage", array('@job_id' => $job_id, '@memory_get_peak_usage' => memory_get_peak_usage(), '@memory_get_usage' => memory_get_usage()));
-      return;
-    }
-
     // Based on jobtype we execute the job.
     $execution_string = '';
     switch ($job_type) {
