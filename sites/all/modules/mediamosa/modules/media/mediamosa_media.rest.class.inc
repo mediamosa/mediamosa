@@ -685,7 +685,7 @@ class mediamosa_rest_call_media_download extends mediamosa_rest_call {
     header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
     header('Cache-Control: private, false');
     header('Content-Description: Download');
-    header('Content-Type: application/force-download');
+    header('Content-Type: application/octet-stream');
     header('Content-Length: ' . filesize($file));
 
     // Force a save dialog.
