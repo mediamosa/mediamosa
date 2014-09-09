@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2100)
+MediaMosa 3.5.1-dev (build 2102)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -99,6 +99,10 @@ MediaMosa 3.5.1-dev (build 2100)
   disappearing assets in search queries with hide_empty_assets flag.
 - Fixed bug in OAI listrecords.
 - Added more asset info on the asset info page.
+- Added stemming to Solr, support directly for Dutch in supplied Solr schema.
+  Change language in solr schema when using stemming in your language. In CQL
+  Specify /stem modifier to use stemming. For example dc.title =/stem "foo".
+  Reindex and replacement of the Solr schema's is required.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
