@@ -106,6 +106,12 @@ abstract class mediamosa_cql {
   const RESPECTCASE = 'respectcase';
   const IGNORECASE = 'ignorecase';
 
+  // Reserved CQL.
+  const STEM = 'stem';
+  const RELEVANT = 'relevant';
+  const FUZZY = 'fuzzy';
+  const PARTIAL = 'partial';
+
   private $m_str_cql = FALSE;
   private $m_o_cql_part_group = FALSE;
   private $m_o_cql_sortby = FALSE;

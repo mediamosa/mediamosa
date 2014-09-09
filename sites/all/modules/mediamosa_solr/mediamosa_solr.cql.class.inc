@@ -4,29 +4,6 @@
  * Extended on the existing mediamosa_core_cql class.
  */
 
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
   /**
    * returns the array containing mapping voor cql2sql
@@ -184,9 +161,19 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     // Is asset metadata?
     $is_metadata = empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID]) ? FALSE : TRUE;
 
+    $wildcard = '*';
+
     $str_table_column = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
-    $str_table_column_exact = $is_metadata ? $str_table_column . '_exact' : $str_table_column;
-    $str_table_column_exact_cs = $is_metadata ? $str_table_column . '_exact_cs' : $str_table_column;
+    if (!in_array(mediamosa_cql::STEM, $relation_modifiers)) {
+      $str_table_column_exact = $is_metadata ? $str_table_column . '_exact' : $str_table_column;
+      $str_table_column_exact_cs = $is_metadata ? $str_table_column . '_exact_cs' : $str_table_column;
+    }
+    else {
+      $str_table_column_exact = $str_table_column;
+      $str_table_column_exact_cs = $str_table_column;
+      // Stemming does not use wildcard chars.
+      $wildcard = '';
+    }
 
     if (isset($index2column['select_expr'])) {
       $result['a_select_expr'][$str_index] = $index2column['select_expr'];
@@ -316,30 +303,33 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               elseif (mediamosa_unicode::substr($word, 0, 1) == '^') {
                 // Left ancor.
                 $sub_parts[] = strtr(
-                  '@column:@value*',
+                  '@column:@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               elseif (mediamosa_unicode::substr($word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) != '\^') {
                 // Right ancor.
                 $sub_parts[] = strtr(
-                  '@column:*@value',
+                  '@column:{wildcard}@value',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 0, -1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               else {
                 // No ancor search.
                 $sub_parts[] = strtr(
-                  '@column:*@value*',
+                  '@column:{wildcard}@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($word),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
@@ -382,30 +372,33 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
                 // Left ancor.
                 $sub_parts[] = strtr(
-                  '@column:@value*',
+                  '@column:@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
                 // Right ancor.
                 $sub_parts[] = strtr(
-                  '@column:*@value',
+                  '@column:{wildcard}@value',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 0, -1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               else {
                 // No ancor search.
                 $sub_parts[] = strtr(
-                  '@column:*@value*',
+                  '@column:{wildcard}@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
@@ -428,30 +421,33 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
                 // Left ancor.
                 $sub_parts[] = strtr(
-                  '@column:@value*',
+                  '@column:@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
                 // Right ancor.
                 $sub_parts[] = strtr(
-                  '@column:*@value',
+                  '@column:{wildcard}@value',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 0, -1)),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }
               else {
                 // No ancor search.
                 $sub_parts[] = strtr(
-                  '@column:*@value*',
+                  '@column:{wildcard}@value{wildcard}',
                   array(
                     '@column' => $str_table_column_exact,
                     '@value' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
+                    '{wildcard}' => $wildcard,
                   )
                 );
               }

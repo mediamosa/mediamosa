@@ -7,8 +7,10 @@
 /**
  * Called when pressed on test button.
  *
- * @param array $form_state
  * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state.
  */
 function _mediamosa_solr_ping_submit($form, &$form_state) {
   $mediamosa_solr_url = $form_state['values']['mediamosa_solr_url'];
