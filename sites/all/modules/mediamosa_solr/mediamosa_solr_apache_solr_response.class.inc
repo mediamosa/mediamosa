@@ -144,37 +144,35 @@ class mediamosa_solr_apache_solr_response {
   public function getRelated() {
     $related = array();
 
-    if (!empty($this->_response->moreLikeThis)) {
-      foreach ($this->_response->moreLikeThis as $asset_id => $data) {
-        $assets = array();
-        foreach ($data->docs as $doc) {
-          $assets[$doc->asset_id] = array('score' => $doc->score, 'asset_id' => $doc->asset_id);
-          foreach ($doc as $name => $value) {
-            if (mediamosa_unicode::substr($name, -3) == '_md') {
-              $name = mediamosa_unicode::substr($name, 0, -3);
+    if (!empty($this->_response->response)) {
+      $assets = array();
+      foreach ($this->_response->response->docs as $doc) {
+        $assets[$doc->asset_id] = array('score' => $doc->score, 'asset_id' => $doc->asset_id);
+        foreach ($doc as $name => $value) {
+          if (mediamosa_unicode::substr($name, -3) == '_md') {
+            $name = mediamosa_unicode::substr($name, 0, -3);
 
-              if (substr($name, 0, 4) !== mediamosa_asset_metadata_property_group::APP_PREFIX) {
-                list($group_name_short, $name) = explode('_', $name, 2);
-              }
-              else {
-                list($group_name_short, $app_id, $name) = explode('_', $name, 3);
-                $group_name_short .= '_' . $app_id;
-              }
-
-              $context_full = mediamosa_asset_metadata_property_group::property_group_get_context_full($group_name_short);
-              $assets[$doc->asset_id]['metadata'][$context_full][$name] = $value;
+            if (substr($name, 0, 4) !== mediamosa_asset_metadata_property_group::APP_PREFIX) {
+              list($group_name_short, $name) = explode('_', $name, 2);
             }
+            else {
+              list($group_name_short, $app_id, $name) = explode('_', $name, 3);
+              $group_name_short .= '_' . $app_id;
+            }
+
+            $context_full = mediamosa_asset_metadata_property_group::property_group_get_context_full($group_name_short);
+            $assets[$doc->asset_id]['metadata'][$context_full][$name] = $value;
           }
         }
-
-        $related[$asset_id] = array(
-          'count_total' => (int) $data->numFound,
-          'count' => count($assets),
-          'offset' => (int) $data->start,
-          'score_max' => (string) $data->maxScore,
-          'assets' => $assets,
-        );
       }
+
+      $related = array(
+        'count_total' => (int) $this->_response->response->numFound,
+        'count' => count($assets),
+        'offset' => (int) $this->_response->response->start,
+        'score_max' => (string) $this->_response->response->maxScore,
+        'assets' => $assets,
+      );
     }
 
     return $related;

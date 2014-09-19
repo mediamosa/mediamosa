@@ -197,7 +197,7 @@
     <!--
       The app_id is always stored. (searchable, sortable)
       -->
-    <field name="app_id" type="app_id" indexed="true" stored="false" required="true" multiValued="false" />
+    <field name="app_id" type="app_id" indexed="true" stored="true" required="true" multiValued="false" />
 
     <!--
       The asset_id is always stored. (searchable, sortable)

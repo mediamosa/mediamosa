@@ -103,6 +103,7 @@ MediaMosa 3.5.1-dev (build 2102)
   Change language in solr schema when using stemming in your language. In CQL
   Specify /stem modifier to use stemming. For example dc.title =/stem "foo".
   Reindex and replacement of the Solr schema's is required.
+- Fixed solr facetted search for asset_type.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------

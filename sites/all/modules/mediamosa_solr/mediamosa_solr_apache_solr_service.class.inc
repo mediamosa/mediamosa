@@ -34,6 +34,8 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   const MEDIAMOSA_SOLR_DEFAULT_PATH = '/solr/';
   const MEDIAMOSA_SOLR_DEFAULT_SCHEME = 'http';
 
+  const MLT_SERVLET = 'mlt';
+
   // --------------------------------------------------------------------- Vars.
   /**
    * The scheme ('http', 'https').
@@ -342,5 +344,40 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     }
 
     return $this->_scheme . '://' . $this->_host . ':' . $this->_port . $this->_path . $servlet . $queryString;
+  }
+
+  /**
+   * Simple Search interface
+   *
+   * @param string $query
+   *   The raw query string.
+   * @param int $offset
+   *   The starting offset for result documents.
+   * @param int $limit
+   *   The maximum number of result documents to return.
+   * @param array $params
+   *   The key / value pairs for other query parameters (see Solr
+   *   documentation), use arrays for parameter keys used more than once (e.g.
+   *   facet.field).
+   * @param string $method
+   *   The HTTP method (Apache_Solr_Service::METHOD_GET or
+   *   Apache_Solr_Service::METHOD::POST).
+   *
+   * @return Apache_Solr_Response
+   *
+   * @throws Apache_Solr_HttpTransportException
+   *   If an error occurs during the service call.
+   * @throws Apache_Solr_InvalidArgumentException
+   *   If an invalid HTTP method is used.
+   */
+  public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET) {
+    $searchUrl = $this->_searchUrl;
+    if (isset($params['mlt']) && mediamosa_unicode::strtolower($params['mlt']) === 'true') {
+      $this->_searchUrl = $this->_constructUrl(self::MLT_SERVLET);
+    }
+
+    $result = parent::search($query, $offset, $limit, $params, $method);
+    $this->_searchUrl = $searchUrl;
+    return $result;
   }
 }

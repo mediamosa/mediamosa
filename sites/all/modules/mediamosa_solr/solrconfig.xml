@@ -782,7 +782,11 @@
   </requestHandler>
 
   <requestHandler name="/mlt" class="solr.MoreLikeThisHandler">
-    <lst name="defaults"/>
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <int name="rows">10</int>
+      <str name="df">asset_id</str>
+    </lst>
   </requestHandler>
 
   <!-- A Robust Example

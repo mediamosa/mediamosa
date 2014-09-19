@@ -171,6 +171,9 @@ class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
       t('Sent and get property has the same value (@sent = @get).', array('@sent' => $value, '@get' => (string) $response->items->item[0]->{$definition}))
     );
 
+    // See if we can search on it using CQL.
+    $this->cql_do_search_test_assets_1($definition . ' == "^' . mediamosa_sdk::escape_cql($value) . '^"', array($asset_id => TRUE));
+
     // -------------------------------------------- Get the asset with metadata.
     // Get the asset.
     $asset = $this->getAsset($asset_id);

@@ -7,7 +7,7 @@
 class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
 
     $info = parent::getInfo();

@@ -453,23 +453,23 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::RELATED => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Include related search results. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
+          self::VAR_DESCRIPTION => 'Include related search results. Related search is only available for Solr or other external MediaMosa search engines. Not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::RELATED_FIELD => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.",
+          self::VAR_DESCRIPTION => "This param allows you to specify a field which should be treated for relation calculation. F.e. dc.title or dc.description. Related search is only available for Solr or other external MediaMosa search engines. Not supported by MySQL.",
           self::VAR_DEFAULT_VALUE => array('dc.description'),
         ),
         self::RELATED_COUNT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
-          self::VAR_DESCRIPTION => 'The number of similar assets to return for each result. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
+          self::VAR_DESCRIPTION => 'The number of similar assets to return for each result. Related search is only available for Solr or other external MediaMosa search engines. Not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 10,
         ),
         self::RELATED_BOOST => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance. Related search is only available for Solr or other external MediaMosa search engines. It not supported by MySQL.',
+          self::VAR_DESCRIPTION => 'Set if the query will be boosted by the interesting term relevance. Related search is only available for Solr or other external MediaMosa search engines. Not supported by MySQL.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::RELATED_SHOW_STILLS => array(

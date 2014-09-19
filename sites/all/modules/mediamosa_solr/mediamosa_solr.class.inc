@@ -79,7 +79,6 @@ class mediamosa_solr {
    *   - 'solr_facet': The facet data (solr specific).
    */
   public static function asset_search($parameters) {
-
     // Make sure its unique.
     $parameters['app_ids'] = array_unique($parameters['app_ids']);
 
@@ -238,22 +237,6 @@ class mediamosa_solr {
       $query_params['sort'] = $order_by . ($is_metadata ? ($order_direction == 'ASC' ? '_lo' : '_hi') : '') . ' ' . $order_direction;
     }
 
-    // Check for related.
-    if (!empty($parameters['related'])) {
-      $related_field = array();
-      foreach ($parameters['related_field'] as $field) {
-        $related_field[] = str_replace('.', '_', $field) . '_vc';
-      }
-
-      $query_params['mlt'] = 'true';
-      $query_params['mlt.fl'] = implode(',', $related_field);
-      $query_params['mlt.mindf'] = '1';
-      $query_params['mlt.mintf'] = '1';
-      $query_params['fl'] = '*,score';
-      $query_params['mlt.count'] = $parameters['related_count'];
-      $query_params['mlt.boost'] = $parameters['related_boost'] ? 'true' : 'false';
-    }
-
     // Check for facets.
     if (!empty($parameters['solr_facet'])) {
       $solr_facet_field = array();
@@ -288,11 +271,43 @@ class mediamosa_solr {
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, $parameters['offset'], $parameters['limit'], $query_params);
 
+    // Check for related.
+    $related = array();
+    $asset_ids = $mediamosa_solr_apache_solr_response->getAssetIds();
+    if (!empty($parameters['related'])) {
+      $related_field = array();
+      foreach ($parameters['related_field'] as $field) {
+        $related_field[] = str_replace('.', '_', $field) . '_vc';
+      }
+      $query_params = array();
+      $query_params['mlt'] = 'true';
+      $query_params['mlt.fl'] = implode(',', $related_field);
+      $query_params['mlt.mindf'] = '1';
+      $query_params['mlt.mintf'] = '1';
+      $query_params['fl'] = '*,score';
+      $query_params['mlt.boost'] = $parameters['related_boost'] ? 'true' : 'false';
+      if (isset($solr_query[self::WHERE_AND])) {
+        unset($solr_query[self::WHERE_AND][self::CQL]);
+      }
+      $query_params['fq'] = self::where($solr_query);
+      foreach ($asset_ids as $asset_id) {
+        $mediamosa_solr_apache_solr_response = mediamosa_solr::search('asset_id:' . mediamosa_solr_apache_solr_service::escape($asset_id), 0, $parameters['related_count'], $query_params);
+        $related[$asset_id] = $mediamosa_solr_apache_solr_response->getRelated();
+      }
+      $query_params['mlt'] = array(
+        'fl' =>  implode(',', $related_field),
+        'mindf' => '1',
+        'mintf' => '1',
+        'count' => $parameters['related_count'],
+        'boost' => $parameters['related_boost'] ? 'true' : 'false',
+      );
+    }
+
     // Done.
     return array(
-      'asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(),
+      'asset_ids' => $asset_ids,
       'total_count' => $mediamosa_solr_apache_solr_response->getNumFound(),
-      'related' => $mediamosa_solr_apache_solr_response->getRelated(),
+      'related' => $related,
       'solr_facet' => $mediamosa_solr_apache_solr_response->getFacets(),
     );
   }
