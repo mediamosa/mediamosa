@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2102)
+MediaMosa 3.5.1-dev (build 2103)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -104,6 +104,7 @@ MediaMosa 3.5.1-dev (build 2102)
   Specify /stem modifier to use stemming. For example dc.title =/stem "foo".
   Reindex and replacement of the Solr schema's is required.
 - Fixed solr facetted search for asset_type.
+- Fixed related search; now respects ACL rules and master-slave.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
