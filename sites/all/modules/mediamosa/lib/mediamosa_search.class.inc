@@ -9,6 +9,7 @@ class mediamosa_search {
   // ------------------------------------------------------------------- Consts.
   const SEARCH_SUPPORT_RELATED = 'related';
   const SEARCH_SUPPORT_FACET = 'facet';
+  const SEARCH_SUPPORT_BOOST = 'boost';
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -35,6 +36,7 @@ class mediamosa_search {
       $mediamosa_search_engine += array(
         self::SEARCH_SUPPORT_RELATED => FALSE,
         self::SEARCH_SUPPORT_FACET => FALSE,
+        self::SEARCH_SUPPORT_BOOST => FALSE,
       );
     }
 

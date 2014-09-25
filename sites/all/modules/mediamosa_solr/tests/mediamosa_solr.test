@@ -427,4 +427,70 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $this->var_export($response);
   }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testSolrBoost() {
+
+    $this->pass('Boost testing');
+
+    $this->var_export(mediamosa_search::get_search_engine());
+
+    // Make sure the instanty settings are all on by default.
+    $this->assertTrue(mediamosa_solr::settingInstantlyMetadata(), 'Metadata setting instant');
+    $this->assertTrue(mediamosa_solr::settingInstantlyAssetUpdate(), 'Asset update setting instant');
+
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+    $upload_4 = $this->uploadTestFile();
+
+    // Create transcode for all.
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Create asset metadata.
+    $this->createAssetMetadata($upload_1['asset_id'],
+      array(
+        'title' => 'We got some random text here and no description',
+        'description' => 'This is some text without extra words or something.',
+      )
+    );
+    $this->createAssetMetadata($upload_2['asset_id'],
+      array(
+        'title' => 'We got the title and is not an description',
+        'description' => 'Even an better description than the previous one.',
+      )
+    );
+    $this->createAssetMetadata($upload_3['asset_id'],
+      array(
+        'title' => 'The title here is random',
+        'description' => 'I just came up with an description for this asset.',
+      )
+    );
+
+    $search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
+
+    $this->var_export(array($upload_1['asset_id'], $upload_2['asset_id'], $upload_3['asset_id']));
+
+    $this->cql_do_search_test_assets_1('dc.description="description"', array($upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    $asset_ids = $this->cql_do_search_test_assets_1('dc.title="description" OR dc.description="description"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id']));
+    $this->var_export($asset_ids);
+
+    $asset_ids = $this->cql_do_search_test_assets_1('dc.title=/boost=200"description" OR dc.description="description"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id']));
+    $this->var_export($asset_ids);
+
+    $asset_ids = $this->cql_do_search_test_assets_1('dc.title="description" OR dc.description=/boost=200"description"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_3['asset_id'], $upload_1['asset_id']));
+    $this->var_export($asset_ids);
+  }
 }

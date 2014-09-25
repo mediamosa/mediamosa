@@ -112,6 +112,9 @@ abstract class mediamosa_cql {
   const FUZZY = 'fuzzy';
   const PARTIAL = 'partial';
 
+  // Mediamosa specific.
+  const BOOST = 'boost';
+
   private $m_str_cql = FALSE;
   private $m_o_cql_part_group = FALSE;
   private $m_o_cql_sortby = FALSE;
@@ -282,9 +285,16 @@ abstract class mediamosa_cql {
    *
    * @param string $str_cql
    * @param int $i_pos
+   * @param bool $is_quoted
+   * @param bol $is_escaped
+   * @param array $array_end_chars
+   * @param array $array_end_words
+   *
    * @return string
+   *
+   * @throws mediamosa_cql_exception_eos
    */
-  private function mediamosa_cql_next($str_cql, &$i_pos, $is_quoted = FALSE, $is_escaped = FALSE, $array_end_chars = array(' ', '/', '(', ')', '"'), $array_end_words = array('<>', '<=', '>=', '==', '=', '>', '<')) {
+  private function mediamosa_cql_next($str_cql, &$i_pos, $is_quoted = FALSE, $is_escaped = FALSE, array $array_end_chars = array(' ', '/', '(', ')', '"'), array $array_end_words = array('<>', '<=', '>=', '==', '=', '>', '<')) {
     $str_result = '';
 
     $a_symbol_end_keys = array('<', '>', '=');
@@ -444,7 +454,7 @@ abstract class mediamosa_cql {
 
     try {
       // Prefix assignment?
-      while (mediamosa_unicode::substr($str_1, 0, 1) == '>') {
+      while (mediamosa_unicode::substr($str_1, 0, 1) === '>') {
 
         // Get the next part.
         $str_2 = $this->mediamosa_cql_next($str_cql, $i_pos);
@@ -505,7 +515,6 @@ abstract class mediamosa_cql {
         $o_cql_part_index = $this->mediamosa_cql_new_part_index_obj($str_1);
         assert($o_cql_part_index);
 
-        // do modifiers
         $this->mediamosa_cql_modifiers_do($str_cql, $i_pos, $o_cql_part_index);
 
         // Get the next part
@@ -523,25 +532,25 @@ abstract class mediamosa_cql {
 
           // If this an relation, then check if we created the index part
 
-          // Add it to the main part
+          // Add it to the main part.
           $o_cql_part->mediamosa_cql_part_index_set($o_cql_part_index);
 
-          // Check the index
+          // Check the index.
           $o_cql_part->mediamosa_cql_part_verify_index($this, $i_pos - mediamosa_unicode::strlen($str_2));
 
-          // Create relation part object
+          // Create relation part object.
           $o_cql_part_relation = $this->mediamosa_cql_new_part_relation_obj($str_2);
 
-          // do modifiers (if any)
+          // Do modifiers (if any).
           $this->mediamosa_cql_modifiers_do($str_cql, $i_pos, $o_cql_part_relation);
 
-          // Add it to our object
+          // Add it to our object.
           $o_cql_part->mediamosa_cql_part_relation_set($o_cql_part_relation);
 
-          // Next is search term
+          // Next is search term.
           $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-          // Check if this char_string_1 or _2
+          // Check if this char_string_1 or _2.
           $this->mediamosa_cql_must_be_charstring($str_1, $i_pos);
         }
         else {
@@ -665,9 +674,11 @@ abstract class mediamosa_cql {
    *
    * @param string $str_cql
    * @param int $i_pos
-   * @param object/array $mixed_item
+   * @param object $cql_modifier
    */
-  final private function mediamosa_cql_modifiers_do($str_cql, &$i_pos, $mixed_item) {
+  final private function mediamosa_cql_modifiers_do($str_cql, &$i_pos, $cql_modifier) {
+
+    assert(is_object($cql_modifier));
 
     try {
       while ($this->mediamosa_cql_next_is($str_cql, $i_pos, '/')) {
@@ -676,20 +687,24 @@ abstract class mediamosa_cql {
         // Check for valid string
         $this->mediamosa_cql_must_be_charstring($str_1, $i_pos);
 
-        if (is_object($mixed_item)) {
-          $mixed_item->mediamosa_cql_modifier_add($str_1, $i_pos);
+        // Check if we specified '='.
+        $value = '';
+        $operator = '';
+        if ($this->mediamosa_cql_next_is($str_cql, $i_pos, '=')) {
+          $operator = '=';
+          // Get the next part.
+          $str_3 = $this->mediamosa_cql_next($str_cql, $i_pos);
+          if ($str_3 !== '=') {
+            throw new mediamosa_cql_exception_expecting_char('=', $i_pos);
+          }
+
+          $value = $this->mediamosa_cql_next($str_cql, $i_pos);
         }
-        elseif (is_array($mixed_item)) {
-          $mixed_item[] = $str_1;
-        }
-        else {
-          assert(0);
-          throw new mediamosa_cql_exception('program error in cql_modifiers_do', $i_pos);
-        }
+
+        $cql_modifier->mediamosa_cql_modifier_add($str_1, $i_pos, $value, $operator);
       }
     }
     catch (mediamosa_cql_exception_eos $e) {
-      // ignore
       assert($e);
     }
   }
@@ -723,7 +738,7 @@ abstract class mediamosa_cql {
     $a_invalidchars = array('(', ')', '=', '<', '>', '"', '/', ' ');
     for ($x = 0; $x < count($str); $x++) {
       if (mediamosa_unicode::substr($str, $x, 1) == '\\') {
-        $x++ ;;// 2x
+        $x++;
         continue;
       }
 
@@ -839,31 +854,39 @@ abstract class mediamosa_cql_modifiers {
   protected $m_a_str_modifiers = array();
 
   /**
-   * Add Modifier to the array
+   * Add the found modifier and its data.
    *
    * @param string $str_modifier
+   *   The name of the modifier in lowercase.
+   * @param int $i_pos
+   *   The position where the modifier was found in the CQL, used for exception.
+   * @param string $value
+   *   (optional) The value of the modifier.
+   * @param string $operator
+   *   (optional) The operator (e.g. '=').
    */
-  public function mediamosa_cql_modifier_add($str_modifier, $i_pos) {
-    assert(mediamosa_unicode::substr($str_modifier, 0, 1) != '/'); // provide without '/'
-
+  public function mediamosa_cql_modifier_add($str_modifier, $i_pos, $value, $operator) {
+    assert(mediamosa_unicode::substr($str_modifier, 0, 1) != '/');
     if (!$this->mediamosa_cql_modifier_allowed_modifier(mediamosa_unicode::strtolower($str_modifier))) {
       throw new mediamosa_cql_exception_syntax_error(sprintf('%s is not an allowed modifier', $str_modifier), $i_pos - mediamosa_unicode::strlen($str_modifier));
     }
 
-    $this->m_a_str_modifiers[] = mediamosa_unicode::strtolower($str_modifier);
+    $str_modifier = mediamosa_unicode::strtolower($str_modifier);
+    $this->m_a_str_modifiers[$str_modifier] = array('modifier' => $str_modifier, 'operator' => $operator, 'value' => $value);
   }
 
   /**
-   * Test if there are any modifiers
+   * Test if there are any modifiers.
    *
    * @return bool
+   *   Return TRUE for 1 or more modifiers, FALSE otherwise.
    */
   public function mediamosa_cql_modifier_has() {
-    return (count($this->m_a_str_modifiers) ? TRUE : FALSE);
+    return !empty($this->m_a_str_modifiers);
   }
 
   /**
-   * retrieve modifier array
+   * Retrieve modifier array.
    *
    * @return array
    */

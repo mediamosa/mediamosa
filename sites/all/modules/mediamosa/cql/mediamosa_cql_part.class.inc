@@ -1,29 +1,4 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * Contains cql_part class
@@ -36,17 +11,15 @@
  */
 class mediamosa_cql_part extends mediamosa_cql_part_group {
 
-  private $m_a_cql_part_group = array();
-
   private $m_cql_part_parent = FALSE;
 
-  // Parts
-  private $m_a_prefix_assignments = array();  // optional
-  private $m_o_cql_part_index = FALSE;        // optional
-  private $m_o_cql_part_relation = FALSE;     // optional
-  private $m_o_cql_part_search_term = FALSE;  // required
-  private $m_o_cql_part_boolean = FALSE;      // optional
-  private $m_b_not_boolean = FALSE;           // optional (has NOT parameter in front)
+  // Parts.
+  private $m_a_prefix_assignments = array();
+  private $m_o_cql_part_index = FALSE;
+  private $m_o_cql_part_relation = FALSE;
+  private $m_o_cql_part_search_term = FALSE;
+  private $m_o_cql_part_boolean = FALSE;
+  private $m_b_not_boolean = FALSE;
 
 
   /**
@@ -130,7 +103,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
   /**
    * Set a search term (has no modifiers)
    *
-   * @param object $o_cql_part_index
+   * @param object $o_cql_part_search_term
    */
   final public function mediamosa_cql_part_search_term_set($o_cql_part_search_term) {
     $this->m_o_cql_part_search_term = $o_cql_part_search_term;
@@ -148,7 +121,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
   /**
    * Set a boolean (is object, might have modifiers)
    *
-   * @param object $o_cql_part_relation
+   * @param object $o_cql_part_boolean
    */
   final public function mediamosa_cql_part_boolean_set($o_cql_part_boolean) {
     $this->m_o_cql_part_boolean = $o_cql_part_boolean;
@@ -224,8 +197,44 @@ class mediamosa_cql_part_relation extends mediamosa_cql_modifiers {
     $this->m_str_relation = $str_relation;
   }
 
+  /**
+   * Add the found modifier and its data.
+   *
+   * @param string $str_modifier
+   *   The name of the modifier in lowercase.
+   * @param int $i_pos
+   *   The position where the modifier was found in the CQL, used for exception.
+   * @param string $value
+   *   (optional) The value of the modifier.
+   * @param string $operator
+   *   (optional) The operator (e.g. '=').
+   */
+  public function mediamosa_cql_modifier_add($str_modifier, $i_pos, $value, $operator) {
+
+    if ($str_modifier === 'boost') {
+      if ($value === '') {
+        $value = '1';
+      }
+
+      if (!is_numeric($value)) {
+        throw new mediamosa_cql_exception_syntax_error(strtr('The value \'{value}\' of {modifier} is not an allowed modifier value', array('{modifier}' => $str_modifier, '{value}' => $value)), $i_pos - mediamosa_unicode::strlen($str_modifier));
+      }
+    }
+
+    parent::mediamosa_cql_modifier_add($str_modifier, $i_pos, $value, $operator);
+  }
+
+  /**
+   * Return if modifier is allowed.
+   *
+   * @param string $str
+   *   The modifier to test.
+   *
+   * @return bool
+   *   Returns TRUE when modifier is allowed, FALSE otherwise.
+   */
   protected function mediamosa_cql_modifier_allowed_modifier($str) {
-    return in_array($str, array(mediamosa_cql::IGNORECASE, mediamosa_cql::RESPECTCASE, mediamosa_cql::STEM)) ? TRUE : FALSE;
+    return in_array($str, array(mediamosa_cql::IGNORECASE, mediamosa_cql::RESPECTCASE, mediamosa_cql::STEM, mediamosa_cql::BOOST));
   }
 
   /**
@@ -310,17 +319,19 @@ class mediamosa_cql_part_boolean extends mediamosa_cql_modifiers {
   /**
    * Returns the boolean type
    *
-   * @return type
+   * @return string
+   *   The boolean used.
    */
   final public function mediamosa_cql_part_str_get() {
-    $a_booleans = array(MEDIAMOSA_CQL_BOOLEAN_OR => 'OR', MEDIAMOSA_CQL_BOOLEAN_AND => 'AND', MEDIAMOSA_CQL_BOOLEAN_NOT => 'NOT', MEDIAMOSA_CQL_BOOLEAN_PROX => 'PROX');
-    return $a_booleans[$this->m_type];
+    $booleans = array(MEDIAMOSA_CQL_BOOLEAN_OR => 'OR', MEDIAMOSA_CQL_BOOLEAN_AND => 'AND', MEDIAMOSA_CQL_BOOLEAN_NOT => 'NOT', MEDIAMOSA_CQL_BOOLEAN_PROX => 'PROX');
+    return $booleans[$this->m_type];
   }
 
   /**
    * Returns the boolean type
    *
-   * @return type
+   * @return string
+   *   The boolean type.
    */
   final public function mediamosa_cql_part_type_get() {
     return $this->m_type;

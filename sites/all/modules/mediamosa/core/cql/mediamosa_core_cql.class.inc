@@ -395,7 +395,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       $char = mediamosa_unicode::substr($str, $x, 1);
 
       // Is next char escaped?
-      if ($char == '\\' && ($x + 1) < mediamosa_unicode::strlen($str)) {
+      if ($char === '\\' && ($x + 1) < mediamosa_unicode::strlen($str)) {
         $char = drupal_substr($str, ++$x, 1);
 
         switch ($char) {
@@ -433,7 +433,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    *   Returns TRUE when operator is 'LIKE' (or 'NOT LIKE').
    */
   protected function mediamosa_cql_is_like($like) {
-    return (strtolower($like) == 'like' || strtolower($like) == 'not like');
+    return (strtolower($like) === 'like' || strtolower($like) === 'not like');
   }
 
   /**
@@ -553,7 +553,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
         $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
 
-        if ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] != mediamosa_sdk::TYPE_STRING) {
+        if ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] !== mediamosa_sdk::TYPE_STRING) {
           return; // leave.
         }
       }
@@ -578,11 +578,11 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     if ($o_cql_part_search_term === FALSE) {
 
       if ($o_cql_part_boolean) {
-        if (!$is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() == MEDIAMOSA_CQL_BOOLEAN_NOT) {
+        if (!$is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() === MEDIAMOSA_CQL_BOOLEAN_NOT) {
           return $o_cql_part_boolean->mediamosa_cql_part_str_get();
         }
 
-        if ($is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() != MEDIAMOSA_CQL_BOOLEAN_NOT) {
+        if ($is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() !== MEDIAMOSA_CQL_BOOLEAN_NOT) {
           return $o_cql_part_boolean->mediamosa_cql_part_str_get();
         }
       }
@@ -611,7 +611,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_part = $this->mediamosa_core_cql_context_index2column_finalize($o_cql_part, $o_part_relation, $a_result, $str_index, $do_having);
 
         // Make sure if we use NOT and is translated to 'AND ', that we don't start with AND.
-        if (empty($a_parts) && mediamosa_unicode::substr($str_part, 0, 4) == 'AND ') {
+        if (empty($a_parts) && mediamosa_unicode::substr($str_part, 0, 4) === 'AND ') {
           $str_part = mediamosa_unicode::substr($str_part, 4);
         }
 
@@ -631,12 +631,15 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   /**
    * Finalize the relation, index, search term
    *
-   * @param array $a_parts
-   * @param cql_part $o_cql_part
-   * @param cql_part_relation $o_part_relation
+   * @param mediamosa_cql_part $o_cql_part
+   * @param mediamosa_cql_part_relation $o_cql_part_relation
    * @param array $a_result
-   * @param string $str_index
-   * @return array
+   * @param type $str_index
+   * @param type $do_having
+   *
+   * @return string
+   *
+   * @throws mediamosa_cql_exception
    */
   public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $o_cql_part, mediamosa_cql_part_relation $o_cql_part_relation, array &$a_result, $str_index, $do_having) {
     $o_cql_part_search_term = $o_cql_part->mediamosa_cql_part_search_term_get();
@@ -647,7 +650,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       $str_index = mediamosa_unicode::substr($str_index, $pos + 1); // default context set id
     }
 
-    $a_relation_modifiers = $o_cql_part_relation->mediamosa_cql_modifier_get_array();
+    $relation_modifiers = $o_cql_part_relation->mediamosa_cql_modifier_get_array();
 
     $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
     assert($index2column);// use verify 1st so this will not happen
@@ -694,25 +697,27 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
       case mediamosa_sdk::TYPE_INT:
         $str_quotes = '';
-        if ($str_relation != 'within') {
+        if ($str_relation !== 'within') {
           $str_search_term = (int) $str_search_term; // make sure its an integer.... :)
         }
         break;
+
       case mediamosa_sdk::TYPE_DATETIME:
-        if ($str_relation != 'within') {
+        if ($str_relation !== 'within') {
           // Now into DB
           $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
 
-          if ($str_relation == '=' || $str_relation == 'any') {
+          if ($str_relation === '=' || $str_relation === 'any') {
             $str_relation = '==';
           }
           $str_quotes = '\'';
         }
         break;
+
       case mediamosa_sdk::TYPE_DOMAIN:
       case mediamosa_sdk::TYPE_REALM:
       case mediamosa_sdk::TYPE_STRING:
-        if (in_array(mediamosa_cql::RESPECTCASE, $a_relation_modifiers)) {
+        if (isset($relation_modifiers[mediamosa_cql::RESPECTCASE])) {
           $str_binary = 'BINARY ';
         }
         $str_quotes = '\'';
@@ -721,7 +726,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
 
         if (drupal_strlen($str_search_term) > 1) {
-          if (mediamosa_unicode::substr($str_search_term, -1) != '*' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -1) != '\*' && mediamosa_unicode::substr($str_search_term, -1) != '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+          if (mediamosa_unicode::substr($str_search_term, -1) !== '*' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -1) !== '\*' && mediamosa_unicode::substr($str_search_term, -1) !== '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) !== '\^') {
             $str_search_term .= '*';
           }
         }
@@ -729,15 +734,15 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         break;
 
       case mediamosa_sdk::TYPE_BOOL:
-        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == "true" ? "TRUE" : "FALSE");
+        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) === "true" ? "TRUE" : "FALSE");
         $str_quotes = '\'';
         $str_like = '=';
         $str_relation = '==';
         break;
 
       case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
-        $is_slaved = mediamosa_unicode::strtolower($str_search_term) == "true";
-        $is_slaved = $str_relation == '<>' ? !$is_slaved : $is_slaved;
+        $is_slaved = mediamosa_unicode::strtolower($str_search_term) === "true";
+        $is_slaved = $str_relation === '<>' ? !$is_slaved : $is_slaved;
 
         $str_search_term = reset($this->app_ids);
         $str_quotes = '';
@@ -774,7 +779,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
               $tmp[] = sprintf('%d', (int) $str_word);
             }
 
-            if (count($tmp)  == 1) {
+            if (count($tmp) == 1) {
               $a_sub_parts[] = sprintf('%s = %s', $str_table_column, implode(',', $tmp));
             }
             else {
@@ -788,18 +793,18 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
                 continue;
               }
 
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) != '\^') {
+              if (mediamosa_unicode::substr($str_word, 0, 1) === '^' && mediamosa_unicode::substr($str_word, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) !== '\^') {
                 $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
               }
 
               $ancor_right = $ancor_left = '%';
 
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^') {
+              if (mediamosa_unicode::substr($str_word, 0, 1) === '^') {
                 $str_word = mediamosa_unicode::substr($str_word, 1);
                 $ancor_left = '';
               }
 
-              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) != '\^') {
+              if (mediamosa_unicode::substr($str_word, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) !== '\^') {
                 $str_word = mediamosa_unicode::substr($str_word, 0, -1);
                 $ancor_right = '';
               }
@@ -809,20 +814,22 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             break;
         }
         break;
+
       case '<>':
         $str_like = 'NOT LIKE';
         $str_compare = '<>';
         $do_null = TRUE;
+
       case '==':
       case 'adj':
         // Check if we can use escape_like().
         $is_like = $this->mediamosa_cql_is_like($str_like);
 
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+        if (mediamosa_unicode::substr($str_search_term, 0, 1) === '^' && mediamosa_unicode::substr($str_search_term, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) !== '\^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
         }
 
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
+        if (mediamosa_unicode::substr($str_search_term, 0, 1) === '^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1);
 
           if ($is_like) {
@@ -832,7 +839,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             $a_sub_parts[] = sprintf("%s%s %s %s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape($str_search_term), $str_quotes);
           }
         }
-        elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+        elseif (mediamosa_unicode::substr($str_search_term, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) !== '\^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 0, -1);
 
           if ($is_like) {
@@ -890,7 +897,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
     if ($o_cql_part_boolean) {
       $str_boolean = $o_cql_part_boolean->mediamosa_cql_part_str_get();
-      $a_parts[] = ($str_boolean == 'NOT' ? 'AND ' : '') . $str_boolean;
+      $a_parts[] = ($str_boolean === 'NOT' ? 'AND ' : '') . $str_boolean;
     }
 
     $a_parts_or[] = (($has_not && count($a_parts) ? 'NOT ' : '') . implode(' ', $a_parts));
@@ -918,7 +925,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   /**
    * Translate the index text into a valid column.
    *
-   * @param cql_part $o_cql_part
+   * @param string $str_index
    * @return array
    */
   final public function mediamosa_core_cql_context_index2column($str_index) {
@@ -991,6 +998,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    *
    * @param array $a_mediamosa_core_cql_context
    * @param string $str_index
+   *
    * @return array
    */
   final protected function mediamosa_core_cql_context_index2column_find_column($a_mediamosa_core_cql_context, $str_index) {
@@ -1001,7 +1009,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     }
 
     if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES])) {
-      foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $sub_context_set => $a_mediamosa_core_cql_context_2) {
+      foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $a_mediamosa_core_cql_context_2) {
         $mixed_result = $this->mediamosa_core_cql_context_index2column_find_column($a_mediamosa_core_cql_context_2, $str_index);
         if ($mixed_result !== FALSE) {
           return $mixed_result;
@@ -1015,15 +1023,19 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   /**
    * Hook function that translates cql to sql (order by part)
    *
-   * @param cql_part $o_cql_part
-   * @return string to use as sql
+   * @param mediamosa_cql_sub_sortby $o_cql_sub_sortby
+   *
+   * @return array
+   *   The CQL context array.
+   *
+   * @throws mediamosa_exception_error_sort_field_error
    */
   final public function mediamosa_core_cql_hook_cql2sql_orderby(mediamosa_cql_sub_sortby $o_cql_sub_sortby) {
 
     $str_direction = 'ASC';
 
-    $a_modifiers = $o_cql_sub_sortby->mediamosa_cql_modifier_get_array();
-    foreach ($a_modifiers as $str_modifier) {
+    $relation_modifiers = $o_cql_sub_sortby->mediamosa_cql_modifier_get_array();
+    foreach (array_keys($relation_modifiers) as $str_modifier) {
       switch ($str_modifier) {
         case 'sort.descending':
         case 'descending':
@@ -1049,7 +1061,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     }
 
     return array(
-      MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $a_index['column'] == 'val_char' ? 'val_char_lft' : $a_index['column'],
+      MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $a_index['column'] === 'val_char' ? 'val_char_lft' : $a_index['column'],
       MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE],
       MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION => $str_direction,
       MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT],
