@@ -718,7 +718,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $parse_url['query']['transcode'] = $options['transcode'];
     }
 
-    if ($options['use_filename_as_dctitle'] == 'TRUE') {
+    if (isset($options['use_filename_as_dctitle']) && ($options['use_filename_as_dctitle'] == 'TRUE')) {
       $parse_url['query']['use_filename_as_dctitle'] = $options['use_filename_as_dctitle'];
     }
 
