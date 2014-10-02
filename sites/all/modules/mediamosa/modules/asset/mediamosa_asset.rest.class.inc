@@ -1527,8 +1527,6 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
  * Method: POST
  *
  * Create asset.
- *
- * 1.x: media_management_create_asset
  */
 class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
@@ -1562,7 +1560,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
           self::VAR_RANGE_END => mediamosa_asset_db::REFERENCE_ID_LENGTH,
         ),
         self::PROVIDER_ID => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The provider ID.',
           self::VAR_RANGE_END => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         ),
