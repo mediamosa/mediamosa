@@ -207,7 +207,7 @@ class mediamosa_profile {
       'title' => '<b>LUA 5.1:</b>',
       'value' => $lua_installed ? 'Installed' : 'LUA is not installed.' ,
       'severity' => $lua_installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      'description' => $lua_installed ? st('Found @found', array('@found' => reset($exec_output))) : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
+      'description' => $lua_installed ? st('Found @found', array('@found' => reset($exec_output))) : st('Install LUA 5.1.'),
     );
 
     // LUA test.
@@ -233,7 +233,7 @@ class mediamosa_profile {
     exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_lpeg_test', $exec_output);
     $lua_lpeg_found = !empty($exec_output) && reset($exec_output) == 'lpeg works';
     if (!$lua_lpeg_found) {
-      $text = array(st('Install LHA 5.1 Lpeg extension. You can find more information how to install Lpeg !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))));
+      $text = array(st('Install LHA 5.1 Lpeg extension.'));
       if ($lua_installed) {
         $text[] = st("LUA was detected, but was not able to execute our test script. Please check if execute flags are our test scripts located at location '!scripts'", array('!scripts' => DRUPAL_ROOT . '/profiles/mediamosa_profile/lua/'));
       }
@@ -273,7 +273,7 @@ class mediamosa_profile {
   public static function requirements_php_settings() {
 
     $requirements = array();
- 
+
     $php_upload_max_filesize = ini_get('upload_max_filesize');
     $too_low = ($php_upload_max_filesize > 0) && (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
     $requirements['upload_max_filesize'] = array(
