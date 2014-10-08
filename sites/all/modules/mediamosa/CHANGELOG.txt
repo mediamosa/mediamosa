@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2106)
+MediaMosa 3.5.1-dev (build 2107)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -110,6 +110,8 @@ MediaMosa 3.5.1-dev (build 2106)
 - Fixed NOT operator on mysql and Solr. Some combinations of NOT operator did
   not return the correct results. MySQL ended in SQL exception, Solr returned
   wrong results.
+- Fixed bug in backend asset listing, only showing limited assets when more than
+  one client application was created.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
