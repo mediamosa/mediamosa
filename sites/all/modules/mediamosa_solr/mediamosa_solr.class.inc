@@ -1065,7 +1065,8 @@ class mediamosa_solr {
     }
 
     // User fav.
-    if (!empty($asset_for_index['user_favorites'])) {
+    if ($asset_for_index['user_favorites']->rowCount()) {
+      $user_favorites = array();
       foreach ($asset_for_index['user_favorites'] as $user_favorite) {
         $user_favorites[] = implode('_', array($user_favorite[mediamosa_user_favorite_db::APP_ID], mediamosa_solr_apache_solr_service::filterDelimeters($user_favorite[mediamosa_user_favorite_db::NAME])));
       }
@@ -1084,12 +1085,17 @@ class mediamosa_solr {
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
-            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_vc'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vc_exact'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vc_exact_cs'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
+
+            foreach ($metadata['values'] as &$value) {
+              $value = drupal_truncate_bytes($value, variable_get('mediamosa_solr_max_term_length', 32760));
+            }
+
+            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vc_exact'} = $metadata['values'];
+            $document->{$group_name_short. '_' . $name . '_vc_exact_cs'} = $metadata['values'];
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:

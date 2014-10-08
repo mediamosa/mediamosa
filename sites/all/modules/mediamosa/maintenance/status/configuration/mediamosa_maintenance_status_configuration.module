@@ -265,34 +265,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'description' => $lua_lpeg_found ? '' : t('Install Lpeg extension for LUA. You can find more information how to install Lpeg !here', array('!here' => $helper_links['lpeg'])),
   );
 
-  // Yamdi.
-  $yamdi_found = mediamosa_io::command_installed('yamdi -h', $exec_output, array(0, 1));
-  $results['app_yamdi'] = array(
-    'title' => t('Yamdi'),
-    'severity' => _mediamosa_maintenance_status_okwarning($yamdi_found),
-    'value' => $yamdi_found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('Not installed'),
-    'description' => $yamdi_found ? '' : t('Yamdi is not installed, but is optional. You can find more information how to install Yamdi !here', array('!here' => $helper_links['yamdi'])),
-  );
-
-  // MP4Box.
-  $mp4box_found = mediamosa_io::command_installed('MP4Box -version', $exec_output);
-
-  $results['app_mp4box'] = array(
-    'title' => t('MP4Box'),
-    'value' => $mp4box_found ? reset($exec_output) : 'Not installed',
-    'severity' => _mediamosa_maintenance_status_okwarning($mp4box_found),
-    'description' => $mp4box_found ? '' : t('MP4Box is not installed, but is optional. You can find more information how to install MP4Box !here', array('!here' => $helper_links['mp4box'])),
-  );
-
-  // Lav2yuv.
-  $lav2yuv_found = mediamosa_io::command_installed('lav2yuv', $exec_output);
-  $results['app_lav2yuv'] = array(
-    'title' => t('Lav2yuv'),
-    'value' => $lav2yuv_found ? t('Installed') : t('Not installed'),
-    'severity' => _mediamosa_maintenance_status_okwarning($lav2yuv_found),
-    'description' => $lav2yuv_found ? '' : t('Lav2yuv is not installed, but is optional. You can find more information how to install lav2yuv !here', array('!here' => $helper_links['lav2yuv'])),
-  );
-
   $found_apache = drupal_substr(drupal_strtolower($_SERVER['SERVER_SOFTWARE']), 0, 7) == 'apache/';
   $version = $found_apache ? (int) drupal_substr(drupal_strtolower($_SERVER['SERVER_SOFTWARE']), 7) : 0;
   $version_ok = $found_apache ? $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING : TRUE;
