@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2105)
+MediaMosa 3.5.1-dev (build 2106)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -107,6 +107,9 @@ MediaMosa 3.5.1-dev (build 2105)
 - Fixed related search; now respects ACL rules and master-slave.
 - Added boost modifier to CQL. Only Solr atm will use the parameter. Use as
   title =/boost=2 "something" in CQL.
+- Fixed NOT operator on mysql and Solr. Some combinations of NOT operator did
+  not return the correct results. MySQL ended in SQL exception, Solr returned
+  wrong results.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
