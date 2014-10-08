@@ -321,8 +321,8 @@ class mediamosa_solr {
   public static function build_access_where(&$solr_query, $acl_type, $object_id, array $master_app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $granted = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
 
     // Only supports mediamosa_acl::ACL_TYPE_MEDIAFILE.
-    if ($acl_type != mediamosa_acl::ACL_TYPE_MEDIAFILE) {
-      return mediamosa_acl::build_access_where($solr_query, $acl_type, $object_id, $master_app_ids, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves, $is_app_admin, $granted, $do_master_slave_null, $app_id_table_prefix);
+    if ($acl_type !== mediamosa_acl::ACL_TYPE_MEDIAFILE) {
+      return '';
     }
 
     if (empty($slaves)) {
@@ -395,7 +395,7 @@ class mediamosa_solr {
       else {
         // When $do_master_slave_only is TRUE, we have always access to media of our own app_id(s)
         foreach ($master_app_ids as $app_id) {
-          $solr_query[self::WHERE_AND][self::ACL][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR]['master_app_id'][self::WHERE_AND]['ms'][] = 'app_id:' . (int) $app_id;
+          $solr_query[self::WHERE_AND][self::ACL][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR]['master_app_id'][self::WHERE_AND]['ms'][self::WHERE_OR][] = 'app_id:' . (int) $app_id;
         }
       }
 
