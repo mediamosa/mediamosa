@@ -161,7 +161,6 @@ class mediamosa_user_favorite {
       ->fields('uf')
       ->condition(mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_TYPE_ASSET)
       ->condition(mediamosa_user_favorite_db::FAV_ID, $asset_id)
-      ->execute()
-      ->fetchAssoc();
+      ->execute();
   }
 }
