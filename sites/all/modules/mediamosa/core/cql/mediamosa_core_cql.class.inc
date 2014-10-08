@@ -598,7 +598,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $this->mediamosa_core_cql_add_keyword($o_cql_part);
 
     $o_cql_part_relation = $o_cql_part->mediamosa_cql_part_relation_get();
-    $a_parts = array();
+    $parts = array();
 
     if (!$o_cql_part_relation) {
       $a_mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
@@ -611,16 +611,16 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_part = $this->mediamosa_core_cql_context_index2column_finalize($o_cql_part, $o_part_relation, $a_result, $str_index, $do_having);
 
         // Make sure if we use NOT and is translated to 'AND ', that we don't start with AND.
-        if (empty($a_parts) && mediamosa_unicode::substr($str_part, 0, 4) === 'AND ') {
+        if (empty($parts) && mediamosa_unicode::substr($str_part, 0, 4) === 'AND ') {
           $str_part = mediamosa_unicode::substr($str_part, 4);
         }
 
         if (trim($str_part) != '') {
-          $a_parts[] = $str_part;
+          $parts[] = $str_part;
         }
       }
 
-      return implode(' OR ', $a_parts);
+      return implode(' OR ', $parts);
     }
 
     $o_cql_part_index = $o_cql_part->mediamosa_cql_part_index_get();
@@ -683,7 +683,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
     $str_search_term = $o_cql_part_search_term->mediamosa_cql_part_str_get();
 
-    $a_parts_or = $a_parts = $a_sub_parts = array();
+    $part_or = $parts = $a_sub_parts = array();
     $str_sub_parts_glue = ' OR ';
     $str_like = 'LIKE';
     $str_compare = '=';
@@ -893,20 +893,20 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
     }
 
-    $a_parts[] = ( (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX] : '') . (count($a_sub_parts) ? '(' : '') . implode($str_sub_parts_glue, $a_sub_parts) . (count($a_sub_parts) ? ')' : '') . (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX] : ''));
+    $parts[] = ( (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX] : '') . (count($a_sub_parts) > 1 ? '(' : '') . implode($str_sub_parts_glue, $a_sub_parts) . (count($a_sub_parts) > 1 ? ')' : '') . (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX] : ''));
 
     if ($o_cql_part_boolean) {
       $str_boolean = $o_cql_part_boolean->mediamosa_cql_part_str_get();
-      $a_parts[] = ($str_boolean === 'NOT' ? 'AND ' : '') . $str_boolean;
+      $str_boolean = ($str_boolean === 'NOT' ? ' AND NOT ' : ' ' . $str_boolean . ' ');
     }
 
-    $a_parts_or[] = (($has_not && count($a_parts) ? 'NOT ' : '') . implode(' ', $a_parts));
+    $part_or[] = (($has_not && count($parts) ? 'NOT ' : '') . implode(' ', $parts));
 
     if ( ($do_null || $has_not) && $has_null) {
-      $a_parts_or[] = sprintf('%s IS NULL', $str_table_column);
+      $part_or[] = sprintf('%s IS NULL', $str_table_column);
     }
 
-    return count($a_parts_or) > 1 ? '(' . implode(' OR ', $a_parts_or) . ')' : reset($a_parts_or);
+    return (count($part_or) > 1 ? '(' : '') . implode(' OR ', $part_or) . (count($part_or) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean);
   }
 
   /**

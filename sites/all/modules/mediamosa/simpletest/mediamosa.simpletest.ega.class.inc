@@ -134,6 +134,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Dump assets.
     $this->dumpAssets();
 
+    // Dump metadata.
+    $this->dumpMetadata();
+
     // Dump mediafiles.
     $this->dumpMediafiles();
 
@@ -197,6 +200,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     mediamosa_watchdog::log('Dumping asset table contents.');
     foreach ($assets as $asset) {
       mediamosa_watchdog::log_export($asset);
+    }
+  }
+
+  /**
+   * Dump metadata
+   */
+  protected function dumpMetadata() {
+    $metadatas = mediamosa_db::db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'amd')->fields('amd')->orderBy(mediamosa_asset_metadata_db::ASSET_ID)->execute();
+    mediamosa_watchdog::log('Dumping asset metadata table contents.');
+    foreach ($metadatas as $metadata) {
+      mediamosa_watchdog::log_export($metadata);
     }
   }
 

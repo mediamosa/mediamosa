@@ -1117,7 +1117,7 @@ class Apache_Solr_Service
 	 */
 	public function optimize($waitFlush = true, $waitSearcher = true, $timeout = 3600)
 	{
-		$flushValue = $waitFlush ? 'true' : 'false';
+		//$flushValue = $waitFlush ? 'true' : 'false';
 		$searcherValue = $waitSearcher ? 'true' : 'false';
 
 		//$rawPost = '<optimize waitFlush="' . $flushValue . '" waitSearcher="' . $searcherValue . '" />';
@@ -1166,11 +1166,6 @@ class Apache_Solr_Service
 		$params['rows'] = $limit;
 
 		$queryString = $this->_generateQueryString($params);
-// @todo: remove from release.
-    mediamosa_watchdog::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_watchdog::log_export(urldecode($queryString));
-// @todo: remove from release.
-
 
     if ($method == self::METHOD_GET)
 		{

@@ -1,0 +1,84 @@
+<?php
+/**
+ * @file
+ * CQL test file.
+ */
+
+class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Extended search',
+      'description' => 'Extra searches to cover optimizations.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+
+  public function testCQLExtended() {
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $asset_id_5 = $this->createAsset();
+
+    // Mediafile.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+    $mediafile_id_2 = $this->createMediafile($asset_id_3);
+    $mediafile_id_4 = $this->createMediafile($asset_id_4);
+    $mediafile_id_5 = $this->createMediafile($asset_id_5);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'goeie tijden slechte tijden',
+        'description' => 'lego artist Iain Heath built an incredible 6-foot-long Lego model of scenes from the 1993 classic video game Doom.',
+        'subject' => array(
+          'criminaliteit',
+          'gedragsonderzoek',
+          'gevangenen',
+          'hersenen',
+          'medisch onderzoek',
+          'tbs',
+        ),
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'lego artist Iain Heath built an incredible 6-foot-long Lego model of scenes from the 1993 classic video game Doom.',
+        'description' => "Samenwerkingsverband tussen geschiedenisprogramma 'Andere Tijden' (NPS/VPRO) en sportprogramma 'Studio Sport' (NOS) waarin a.d.h.v. archiefmateriaal en interviews memorabele momenten uit de Nederlandse sporthistorie",
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'Mediamosa was build with lego',
+        'description' => 'Serie praatprogramma\'s voor jongeren, waarin in elke aflevering enkele jongeren praten over een ingrijpende gebeurtenis of situatie in hun leven.',
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'goeie lego is niet slecht',
+        'description' => 'For information on the use of archive material, please contact the Customer Service department',
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_5,
+      array(
+        'title' => 'this is some random title',
+        'description' => 'Aan de orde komen de televisieserie "Kunt u mij de weg naar Hamelen vertellen, mijnheer?"',
+      )
+    );
+
+    // Only asset 5.
+    $this->cql_do_search_test_assets_1('dc.title <> "*lego*" AND NOT dc.description <> "*lego*"', array($asset_id_1 => TRUE));
+
+    // Only asset 5.
+    $this->cql_do_search_test_assets_1('NOT dc.title any "lego" AND NOT dc.description any "lego"', array($asset_id_5 => TRUE));
+  }
+}

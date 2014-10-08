@@ -1,0 +1,264 @@
+<?php
+/**
+ * @file
+ * Default test.
+ */
+
+class MediaMosaSolrRelatedTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'SOLR - related tests',
+      'description' => 'Do related search and check its results.',
+      'group' => 'MediaMosa Solr',
+      'automatic_run_disabled' => module_exists('mediamosa_solr') ? FALSE : TRUE,
+    );
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    // Get Solr url from parent install.
+    $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
+
+    // Change app timezones to UTC default.
+    $this->default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL;
+
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_solr',
+    ), $args));
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Solr set url.
+    variable_set('mediamosa_solr_url', $mediamosa_solr_url);
+
+    // Turn on Solr as search engine.
+    variable_set('mediamosa_search_engine', 'mediamosa_solr');
+  }
+
+  /**
+   * Implements tearDown().
+   */
+  protected function tearDown() {
+
+    $app_ids = array();
+    if (!empty($this->a_app['app_id'])) {
+      $app_ids[] = $this->a_app['app_id'];
+    }
+    if (!empty($this->a_app_2['app_id'])) {
+      $app_ids[] = $this->a_app_2['app_id'];
+    }
+    if (!empty($this->a_app_3['app_id'])) {
+      $app_ids[] = $this->a_app_3['app_id'];
+    }
+
+    // Teardown first (else teardown will sync assets sometimes to SOLR).
+    parent::tearDown();
+
+    // Remove it.
+    if (!empty($app_ids)) {
+      mediamosa_solr::delete_simpletest_documents($app_ids);
+    }
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  /**
+   * Related does not search within the ACL and APP range, needs fixing.
+   */
+  function testCustomTagWithRelated() {
+    // ------------------------------------------------------ Create custom tag.
+    // Property.
+    $definition = 'custom_tag';
+
+    // Type.
+    $type = 'char';
+
+    // Create the metadata definition.
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $this->var_export($response);
+
+    // Check if the mediamosa_asset_metadata_property has the right values.
+    // Name.
+    $this->assertTrue(
+      (string) $response->items->item[0]->prop_name == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => (string) $response->items->item[0]->prop_name))
+    );
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
+    $this->assertTrue(
+      (string) $response->items->item[0]->type == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => (string) $response->items->item[0]->type))
+    );
+
+    // ------------------------------------------------------------- Setup apps.
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // Enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // ------------------------------------- Create asset and metadata property.
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+    $upload_4 = $this->uploadTestFile();
+
+    // Create transcode for all.
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Setup simple search stuff
+    $upload_5 = $this->uploadTestFile();
+    $upload_6 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_5['mediafile_id']);
+    $this->createMediafileTranscode($upload_6['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Create asset metadata.
+    $response = $this->createAssetMetadata($upload_1['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test',
+        'subject' => 'video',
+        $definition => 'videoos',
+      )
+    );
+    $this->createAssetMetadata($upload_2['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test 2',
+        'subject' => 'audio',
+        $definition => 'audioos',
+      )
+    );
+    $this->createAssetMetadata($upload_3['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test 3',
+        'subject' => 'video',
+        $definition => 'audioos',
+      )
+    );
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    $this->createAssetMetadata($upload_5['asset_id'],
+      array(
+        'title' => 'test app 2',
+        'description' => 'some test 4',
+        'subject' => 'video',
+        $definition => 'videoos',
+      )
+    );
+    $this->createAssetMetadata($upload_6['asset_id'],
+      array(
+        'title' => 'test app 2',
+        'description' => 'some test 5',
+        'subject' => 'audio',
+        $definition => 'audioos',
+      )
+    );
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Related tests.
+    $parameters = array(
+      mediamosa_rest_call_asset_search::CQL => 'dc.subject == "^video^"',
+      mediamosa_rest_call_asset_search::RELATED => 'true',
+      mediamosa_rest_call_asset_search::RELATED_FIELD => 'dc.subject',
+    );
+    $assets = $this->searchAsset(10, $parameters);
+
+    // Must find 2 assets.
+    $this->assertTrue($assets['header']['item_count'] == 2, 'Must find 2 assets.');
+
+    for ($x = 0; $x < 2; $x++) {
+      $asset = $assets['items']['item'][$x];
+
+      // Only one related.
+      $this->assertTrue($asset['related']['count_total'] == 1, 'Must find 1 related asset.');
+
+      if ($asset['asset_id'] === $upload_1['asset_id']) {
+        $this->assertTrue($asset['related']['assets']['asset']['asset_id'] == $upload_3['asset_id'], 'Must find correct related asset.');
+      }
+      else {
+        $this->assertTrue($asset['related']['assets']['asset']['asset_id'] == $upload_1['asset_id'], 'Must find correct related asset.');
+      }
+
+      $this->var_export($asset);
+    }
+
+    // Do the same test, but with single asset.
+    // Related tests.
+    $parameters = array(
+      mediamosa_rest_call_asset_search::RELATED => 'true',
+      mediamosa_rest_call_asset_search::RELATED_FIELD => 'dc.subject',
+    );
+    $asset = $this->getAsset($upload_1['asset_id'], $parameters);
+
+    // Must find 1 asset.
+    $this->assertTrue($asset['asset_id'] === $upload_1['asset_id'], 'Found asset.');
+
+    $this->assertTrue($asset['related']['count_total'] == 1, 'Must find 1 related asset.');
+
+    $this->assertTrue($asset['related']['assets']['asset']['asset_id'] == $upload_3['asset_id'], 'Must find correct related asset.');
+
+    $this->var_export($response);
+  }
+}

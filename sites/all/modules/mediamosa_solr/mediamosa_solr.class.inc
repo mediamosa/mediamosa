@@ -136,6 +136,7 @@ class mediamosa_solr {
       $solr_query[self::WHERE_AND][self::ASSET][self::ACL][self::WHERE_AND][] = 'is_empty_asset:FALSE';
     }
 
+    $query_cql = '*:*';
     if (!empty($parameters['cql'])) {
       $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['cql_store_stats'], $parameters['app_ids']);
 
@@ -156,9 +157,10 @@ class mediamosa_solr {
         }
       }
 
-      // We got something from cql?
+      // We got something from cql? The *:* will return all, as fq (filter
+      // query) will be used on Solr for ACL and other default filtering.
       if (!empty($result['str_where'])) {
-        $solr_query[self::WHERE_AND][self::CQL] = $result['str_where'];
+        $query_cql = self::where($result['str_where']);
       }
 
       $order_bys = reset($result['a_order_by']);
@@ -268,8 +270,11 @@ class mediamosa_solr {
       $query_params['facet.date.include'] = $parameters['solr_facet_date_include'];
     }
 
+    // Do the acl and solr query in the fq parameter.
+    $query_params['fq'] = $query;
+
     // Do query.
-    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, $parameters['offset'], $parameters['limit'], $query_params);
+    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query_cql, $parameters['offset'], $parameters['limit'], $query_params);
 
     // Check for related.
     $related = array();
@@ -286,10 +291,8 @@ class mediamosa_solr {
       $query_params['mlt.mintf'] = '1';
       $query_params['fl'] = '*,score';
       $query_params['mlt.boost'] = $parameters['related_boost'] ? 'true' : 'false';
-      if (isset($solr_query[self::WHERE_AND])) {
-        unset($solr_query[self::WHERE_AND][self::CQL]);
-      }
-      $query_params['fq'] = self::where($solr_query);
+
+      $query_params['fq'] = $query;
       foreach ($asset_ids as $asset_id) {
         $mediamosa_solr_apache_solr_response = mediamosa_solr::search('asset_id:' . mediamosa_solr_apache_solr_service::escape($asset_id), 0, $parameters['related_count'], $query_params);
         $related[$asset_id] = $mediamosa_solr_apache_solr_response->getRelated();
@@ -711,6 +714,7 @@ class mediamosa_solr {
     if (!$mediamosa_solr_enable_queue) {
       // Always Optimize when we have nothing queued.
       self::optimizeSolr();
+      lock_release(self::LOCK_NAME_PROCESSING);
       return;
     }
 
@@ -753,7 +757,7 @@ class mediamosa_solr {
 
             // So its removed from queue.
             $documents['asset_ids'][] = $asset_id;
-            continue; // Not found.
+            continue;
           }
 
           // Create the document.
@@ -1362,14 +1366,14 @@ class mediamosa_solr {
    * @param array|string $where
    *   Array that describes the query OR processed string.
    * @param string $glue
-   *   Either ' AND ' or ' OR '.
+   *   Either 'AND' or 'OR'.
    * @param string $previous_glue
    *   The previous used glue to prevent unnessary ( ).
    *
    * @return string
    *   Return the created where string.
    */
-  public static function where($where, $glue = ' AND ', $previous_glue = ' AND ') {
+  public static function where($where, $glue = self::WHERE_AND, $previous_glue = self::WHERE_AND) {
     if (!is_array($where)) {
       return $where;
     }
@@ -1377,7 +1381,7 @@ class mediamosa_solr {
     $result = array();
     foreach ($where as $type => $statements) {
       if (in_array($type, array(self::WHERE_AND, self::WHERE_OR))) {
-        $result[] = self::where($statements, ' ' . $type . ' ', $glue);
+        $result[] = self::where($statements, $type, $glue);
       }
       else {
         $result[] = self::where($statements, $glue, $previous_glue);
@@ -1392,7 +1396,7 @@ class mediamosa_solr {
       $r = ')';
     }
 
-    return $l . implode($glue, $result) . $r;
+    return $l . implode(' ' . $glue . ' ', $result) . $r;
   }
 
   /**

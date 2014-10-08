@@ -574,13 +574,13 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     if ($cql_part_boolean) {
       $str_boolean = $cql_part_boolean->mediamosa_cql_part_str_get();
-      $str_boolean = ($str_boolean == 'NOT' ? ' AND ' : ' ' . $str_boolean . ' ');
+      $str_boolean = ($str_boolean === 'NOT' ? ' AND ' : ' ' . $str_boolean . ' ');
     }
 
     // Into one.
-    $parts[] = (count($sub_parts) < 2 ? '' : '(') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) < 2 ? '' : ')');
+    $parts[] = (count($sub_parts) > 1 ? '(' : '') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) > 1 ? ')' : '');
 
-    return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')') . (empty($str_boolean) ? '' : $str_boolean);
+    return ($has_not ? '-' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean);
   }
 
   /**
