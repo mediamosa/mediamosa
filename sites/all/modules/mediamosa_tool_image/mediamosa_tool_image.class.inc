@@ -63,14 +63,16 @@ class mediamosa_tool_image {
     $job_server = mediamosa_job_server::get($jobserver_job_id);
     $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
 
+    $parameter_string = array();
     if ($job_server_still) {
+
       // WxH.
       $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
 
       // Resize.
-      $parameter_string = array(
-        '-resize ' => $size,
-      );
+      if ($size != '') {
+        $parameter_string[] = '-resize ' . $size;
+      }
 
       // Source.
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
