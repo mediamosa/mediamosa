@@ -1087,7 +1087,7 @@ class mediamosa_solr {
 
             $document->{$group_name_short. '_' . $name . '_vc'} = $metadata['values'];
             $document->{$group_name_short. '_' . $name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
-            $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
+            $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(end($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
 
             foreach ($metadata['values'] as &$value) {
               $value = drupal_truncate_bytes($value, variable_get('mediamosa_solr_max_term_length', 32760));
