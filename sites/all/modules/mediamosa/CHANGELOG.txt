@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2108)
+MediaMosa 3.5.1-dev (build 2109)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -115,9 +115,11 @@ MediaMosa 3.5.1-dev (build 2108)
 - Removed status tests for Yamdi, MP4Box and Lav2yuv.
 - Fixed indexing bug on user favorites when using Solr and Asset search.
 - Added truncates on metadata indexing on solr for text, as Solr does not index
-  documents with metadata fields larger than 32766 bytes. Truncate value is
+  terms with metadata fields larger than 32766 bytes. Truncate value is
   stored in Drupal variable with name 'mediamosa_solr_max_term_length' and is
   used as default 32760 length when not set.
+- Fixed image still resize bug.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
