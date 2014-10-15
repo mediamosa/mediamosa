@@ -584,6 +584,65 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
   }
 
   /**
+   * Convert the CQL array result to a string.
+   *
+   * @param array $parse_result
+   *   The parse result to convert to string.
+   * @param string $outside
+   *   The last conjuction type of our parent.
+   * @param bool $first
+   *   Is first call, or child call.
+   *
+   * @return string
+   */
+  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = null, $first = true) {
+    $inside = array();
+    foreach ($parse_result as &$item) {
+      if (!is_string($item)) {
+        continue;
+      }
+
+      $item = trim($item);
+
+      foreach (array(' AND', ' OR') as $conjunction) {
+        if (mediamosa_unicode::strlen($item) > $conjunction && mediamosa_unicode::substr($item, -mediamosa_unicode::strlen($conjunction)) === $conjunction) {
+          $inside[] = $conjunction;
+        }
+      }
+    }
+
+    $inside = array_unique($inside);
+    $inside = count($inside) > 1 ? null : reset($inside);
+
+    foreach ($parse_result as &$item) {
+      if (!is_string($item)) {
+        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, false);
+      }
+    }
+
+    $str_ql = implode(' ', $parse_result);
+
+    // The end can not end with a conjuction.
+    while (true) {
+      if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
+        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR'));
+      }
+      elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
+        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND'));
+      }
+      else {
+        break;
+      }
+    }
+
+    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside)) {
+      $str_ql = '(' . ($outside === ' OR' ? '*:* AND ' : '') .  $str_ql . ')';
+    }
+
+    return $str_ql;
+  }
+
+  /**
    * Converts a any date into a db Solr date (YYYY-MM-DDTHH:MM:SS)
    *
    * Will convert to timezone set in CQL object.

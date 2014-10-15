@@ -80,5 +80,11 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
 
     // Only asset 5.
     $this->cql_do_search_test_assets_1('NOT dc.title any "lego" AND NOT dc.description any "lego"', array($asset_id_5 => TRUE));
+
+    // Only asset 2 and 4.
+    $this->cql_do_search_test_assets_1('dc.title any "lego" AND (dc.description <> "jongeren" AND dc.description <> "jongeren")', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
+
+    // Only asset 5.
+    $this->cql_do_search_test_assets_1('dc.title any "lego" OR (dc.description <> "jongeren" AND dc.description <> "jongeren")', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
   }
 }

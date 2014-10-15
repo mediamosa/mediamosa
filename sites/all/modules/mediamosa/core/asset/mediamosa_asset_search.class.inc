@@ -141,12 +141,12 @@ class mediamosa_asset_search {
       $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $cql_store_stats, $a_app_ids);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != '') {
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] = $a_result_cql2sql['str_where'];
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] = '(' . $a_result_cql2sql['str_where'] . ')';
       }
 
-      if (isset($a_result_cql2sql['str_having']) && $a_result_cql2sql['str_having'] != '') {
+      if (isset($a_result_cql2sql['str_having']) && $a_result_cql2sql['str_having'] !== '') {
         $a_query[mediamosa_db_query::A_HAVING][] = $a_result_cql2sql['str_having'];
-        $a_query[VPX_DB_QUERYB_ALLOW_DISTINCT] = FALSE;
+        $a_query[mediamosa_db_query::ALLOW_DISTINCT] = FALSE;
       }
 
       if (!empty($a_result_cql2sql['a_joins'])) {

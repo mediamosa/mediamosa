@@ -321,8 +321,8 @@ abstract class mediamosa_cql {
         return $this->mediamosa_cql_next_quoted($str_cql, $i_pos, $is_escaped);
       }
 
-      // If it starts with '(', then we are opening a new dimension
-      // If it starts with ')', then we are closing a new dimension
+      // If it starts with '(', then we are opening a scope.
+      // If it starts with ')', then we are closing a scope.
       if (!$is_quoted && $str_result == '(') {
         $i_pos++;
         return $str_result;
@@ -389,11 +389,11 @@ abstract class mediamosa_cql {
     }
     catch (mediamosa_cql_exception_eos $e) {
       // No problem if we catch this
-      if ($str_result == '' || $str_result == '/') {
-        throw $e; // rethrow, there was nothing left
+      if ($str_result === '' || $str_result === '/') {
+        throw $e;
       }
 
-      assert($str_result != '"'); // removed code here that handled this, but $str_result can never be '"'...
+      assert($str_result !== '"');
     }
 
     return $is_quoted ? stripslashes($str_result) : $str_result;
@@ -798,48 +798,67 @@ abstract class mediamosa_cql {
   }
 
   /**
-   * Build SQL string using array
+   * Convert the CQL array result to a string.
+   *
+   * @param array $parse_result
+   *   The parse result to convert to string.
+   * @param string $outside
+   *   The last conjuction type of our parent.
+   * @param bool $first
+   *   Is first call, or child call.
+   *
+   * @return string
    */
-  protected function mediamosa_cql_parseresult_2_sql($a_results, $a_booleans = array('OR', 'AND')) {
-    $a_return = array();
-    $do_boolean = FALSE;
-
-    foreach ($a_results as $mixed_result) {
-      if (is_array($mixed_result)) {
-        $mixed_result = $this->mediamosa_cql_parseresult_2_sql($mixed_result, $a_booleans);
+  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = null, $first = true) {
+    $inside = array();
+    foreach ($parse_result as &$item) {
+      if (!is_string($item)) {
+        continue;
       }
 
-      if (in_array($mixed_result, $a_booleans) && !$do_boolean) {
-        return '';
-      }
+      $item = trim($item);
 
-      $do_boolean = FALSE;
-      if ($mixed_result != '') {
-        $a_return[] = $mixed_result;
-        $do_boolean = !in_array($mixed_result, $a_booleans);
-      }
-    }
-
-    // The last one can not end with an boolean, so make sure its removed
-    if (count($a_return)) {
-      $str_pop = array_pop($a_return);
-
-      foreach ($a_booleans as $str_bool) {
-        $str_bool = ' ' . $str_bool;
-        while (mediamosa_unicode::strlen($str_pop) >= mediamosa_unicode::strlen($str_bool)) {
-          if (mediamosa_unicode::substr($str_pop, -mediamosa_unicode::strlen($str_bool)) == $str_bool) {
-            $str_pop = mediamosa_unicode::substr($str_pop, 0, mediamosa_unicode::strlen($str_pop) - mediamosa_unicode::strlen($str_bool));
-          }
-          else {
-            break;
-          }
+      foreach (array(' AND', ' OR') as $conjunction) {
+        if (mediamosa_unicode::strlen($item) > $conjunction && mediamosa_unicode::substr($item, -mediamosa_unicode::strlen($conjunction)) === $conjunction) {
+          $inside[] = $conjunction;
         }
       }
-
-      $a_return[] = $str_pop;
     }
 
-    return (count($a_return) > 1 ? "(" . implode(" ", $a_return) . ")" : implode(" ", $a_return));
+    $inside = array_unique($inside);
+    $inside = count($inside) > 1 ? null : reset($inside);
+
+    foreach ($parse_result as &$item) {
+      if (!is_string($item)) {
+        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, false);
+      }
+    }
+
+    $str_ql = implode(' ', $parse_result);
+
+    // Fix conjunction bug.
+    if ($str_ql === 'OR' || $str_ql === 'AND') {
+      $str_ql = '';
+    }
+
+    // The end can not end with a conjuction.
+    while (true) {
+      if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
+        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR'));
+      }
+      elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
+        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND'));
+      }
+      else {
+        break;
+      }
+    }
+
+    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside)) {
+      $str_ql = '(' . $str_ql . ')';
+    }
+
+    return $str_ql;
   }
 }
 
