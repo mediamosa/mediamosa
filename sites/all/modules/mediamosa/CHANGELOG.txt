@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2110)
+MediaMosa 3.5.1-dev (build 2111)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -121,6 +121,7 @@ MediaMosa 3.5.1-dev (build 2110)
 - Fixed image still resize bug.
 - Fixed Solr generation when using OR in combination with negative searches. It
   will now properly use *:* in combination with OR'd negative searches.
+- Upgraded Drupal to 7.32.
 
 
 MediaMosa 3.5.x (build 2072)
