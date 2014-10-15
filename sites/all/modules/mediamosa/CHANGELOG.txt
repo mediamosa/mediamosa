@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2109)
+MediaMosa 3.5.1-dev (build 2110)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -119,6 +119,8 @@ MediaMosa 3.5.1-dev (build 2109)
   stored in Drupal variable with name 'mediamosa_solr_max_term_length' and is
   used as default 32760 length when not set.
 - Fixed image still resize bug.
+- Fixed Solr generation when using OR in combination with negative searches. It
+  will now properly use *:* in combination with OR'd negative searches.
 
 
 MediaMosa 3.5.x (build 2072)
