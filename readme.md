@@ -1,7 +1,7 @@
 MediaMosa is Open Source Software to build a Full Featured, Webservice
 Oriented Media Management and Distribution platform (http://mediamosa.org)
 
-Copyright (C) 2013 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+Copyright (C) 2014 SURFnet BV (http://www.surfnet.nl) and Kennisnet
 (http://www.kennisnet.nl)
 
 MediaMosa is based on the open source Drupal platform and was originally
@@ -36,7 +36,7 @@ The following modules are now submodules;
 To complete a pull from GitHub, you must pull its submodules as well. You can do
 this by using these git commands;
 
-git submodule init  
+git submodule init
 git submodule update
 
 If you re-pulling from MediaMosa, also include the following command to ensure
