@@ -69,12 +69,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     }
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_db::TABLE_NAME,
-      array(
-        mediamosa_asset_db::ID => $asset_id,
-      )
-    );
+    mediamosa_asset::must_exists($asset_id);
 
     if ($mediafile_id) {
       // Mediafiles must exist.

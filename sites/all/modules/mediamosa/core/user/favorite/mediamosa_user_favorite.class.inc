@@ -114,7 +114,7 @@ class mediamosa_user_favorite {
     switch ($fav_type) {
       case mediamosa_user_favorite_db::FAV_TYPE_ASSET:
         // Must exist.
-        mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $fav_id));
+        mediamosa_asset::must_exists($fav_id);
         break;
 
       case mediamosa_user_favorite_db::FAV_TYPE_COLLECTION:

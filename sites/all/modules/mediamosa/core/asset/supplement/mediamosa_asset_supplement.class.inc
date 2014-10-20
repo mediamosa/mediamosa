@@ -1,39 +1,16 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Functions of asset supplement.
  */
-
- /**
-  * @file
-  * Functions of asset supplement.
-  */
 
 class mediamosa_asset_supplement {
 
+  // ------------------------------------------------------------------- Consts.
   // The maximum size of the supplement in Kb.
   const DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE = 256;
 
+  // ---------------------------------------------------------------- Functions.
   /**
    * Get the asset supplement.
    *
@@ -72,8 +49,8 @@ class mediamosa_asset_supplement {
    */
   public static function create($app_id, $asset_id, $user_id) {
 
-    // Asset must exist to be deleted.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    // Asset must exist for supplement to be inserted.
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Check if maximum supplments is reached.
     $rows = mediamosa_db::db_count_rows(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ASSET_ID => $asset_id));
@@ -82,11 +59,8 @@ class mediamosa_asset_supplement {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_SUPPLEMENT_LIMIT_REACHED, array('@max' => mediamosa_settings::MAX_SUPPLEMENT_PER_ASSET));
     }
 
-    // Get the asset.
-    $a_asset = mediamosa_asset::get($asset_id);
-
     // Must be owner.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID]);
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID]);
 
     // Create a new ID.
     $supplement_id = mediamosa_db::uuid($app_id);
@@ -126,42 +100,39 @@ class mediamosa_asset_supplement {
   public static function update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement) {
 
     // Supplement must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ID => $supplement_id));
-
-    // Get the supplement.
-    $a_supplement = mediamosa_asset_supplement::get($supplement_id);
+    $supplement = mediamosa_db::db_must_exists(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ID => $supplement_id));
 
     // Get the asset.
-    $a_asset = mediamosa_asset::get($a_supplement[mediamosa_asset_supplement_db::ASSET_ID]);
+    $asset = mediamosa_asset::must_exists($supplement[mediamosa_asset_supplement_db::ASSET_ID]);
 
     // Must be owner.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID]);
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID]);
 
-    $a_fields = array();
+    $fields = array();
     if (!is_null($oai_prefix)) {
-      $a_fields[mediamosa_asset_supplement_db::OAI_PREFIX] = $oai_prefix;
+      $fields[mediamosa_asset_supplement_db::OAI_PREFIX] = $oai_prefix;
     }
     if (!is_null($oai_namespaceuri)) {
-      $a_fields[mediamosa_asset_supplement_db::OAI_NAMESPACEURI] = $oai_namespaceuri;
+      $fields[mediamosa_asset_supplement_db::OAI_NAMESPACEURI] = $oai_namespaceuri;
     }
     if (!is_null($oai_schemalocation)) {
-      $a_fields[mediamosa_asset_supplement_db::OAI_SCHEMALOCATION] = $oai_schemalocation;
+      $fields[mediamosa_asset_supplement_db::OAI_SCHEMALOCATION] = $oai_schemalocation;
     }
     if (!is_null($supplement)) {
-      $a_fields[mediamosa_asset_supplement_db::SUPPLEMENT] = $supplement;
+      $fields[mediamosa_asset_supplement_db::SUPPLEMENT] = $supplement;
     }
 
     // Must update something.
-    if (!count($a_fields)) {
+    if (!count($fields)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
 
     // Add changed value.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $fields = mediamosa_db::db_update_enrich($fields);
 
     // Update set fields.
     mediamosa_db::db_update(mediamosa_asset_supplement_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_asset_supplement_db::ID, $supplement_id)
       ->execute();
   }

@@ -2229,6 +2229,7 @@ function mediamosa_update_7100() {
     );
   }
 }
+
 /**
  * Update the mediamosa_app table schema with oAuth fields.
  */
@@ -4765,4 +4766,222 @@ function mediamosa_update_7181() {
   variable_del(__FUNCTION__);
 
   return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}
+
+/**
+ * Create the asset metadata group (if missing) and its properties.
+ */
+function mediamosa_update_7182() {
+
+  $property_group = FALSE;
+
+  while (empty($property_group)) {
+    $property_group = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+      ->fields('ampg')
+      ->condition('propgroup_name', 'asset')
+      ->execute()
+      ->fetchAssoc();
+
+    if (empty($property_group)) {
+      $property_group_id = db_insert('mediamosa_asset_metadata_property_group')
+        ->fields(array(
+          'propgroup_name' => 'asset',
+          'created' => mediamosa_datetime::utc_current_timestamp_now(),
+          'changed' => mediamosa_datetime::utc_current_timestamp_now(),
+        ))
+        ->execute();
+
+      if (empty($property_group_id)) {
+        throw new Exception('Unable to create asset metadata property');
+      }
+    }
+  }
+
+  // The properties to create.
+  $properties = array(
+    array(
+      'name' => 'tag',
+      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      'is_hidden' => TRUE,
+    ),
+    array(
+      'name' => 'published',
+      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      'is_hidden' => FALSE,
+    ),
+    array(
+      'name' => 'deleted',
+      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      'is_hidden' => FALSE,
+    ),
+  );
+
+  // Create the properties.
+  foreach ($properties as $property) {
+    if (db_select('mediamosa_asset_metadata_property', 'ampg')
+      ->fields('ampg')
+      ->condition('propgroup_id', $property_group['propgroup_id'])
+      ->condition('prop_name', $property['name'])
+      ->execute()
+      ->fetchAssoc() === FALSE) {
+      db_insert('mediamosa_asset_metadata_property')
+        ->fields(array(
+            'app_id' => 0,
+            'propgroup_id' => $property_group['propgroup_id'],
+            'prop_name' => $property['name'],
+            'type' => $property['type'],
+            'is_hidden' => $property['is_hidden'] ? 'TRUE' : 'FALSE',
+            'created' => mediamosa_datetime::utc_current_timestamp_now(),
+            'changed' => mediamosa_datetime::utc_current_timestamp_now(),
+        ))
+      ->execute();
+    }
+  }
+}
+
+/**
+ * Create default publish setting on client application.
+ */
+function mediamosa_update_7183() {
+  if (!db_field_exists('mediamosa_app', 'published_asset_default')) {
+    db_add_field(
+      'mediamosa_app',
+      'published_asset_default',
+      array(
+        'description' => 'The default value for asset publish state when creating new assets.',
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'default' => 'TRUE',
+      )
+    );
+  }
+}
+
+/**
+ * Remove session for REST call browser so we see the new REST calls.
+ */
+function mediamosa_update_7184() {
+  unset($_SESSION['mediamosa_restcalls_filter']);
+}
+
+/**
+ * Change mediamosa_asset_metadata_property table.
+ *
+ * Add new field: is_protected.
+ */
+function mediamosa_update_7185() {
+  if (!db_field_exists('mediamosa_asset_metadata_property', 'is_protected')) {
+    // Add is_protected field.
+    db_add_field(
+      'mediamosa_asset_metadata_property',
+      is_protected,
+      array(
+        'description' => t('True if the property is protected against removal when asset metadata replace is used.'),
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'default' => 'FALSE',
+      )
+    );
+  }
+
+  $propgroup_id = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+    ->fields('ampg', array('propgroup_id'))
+    ->condition('propgroup_name', 'asset')
+    ->execute()
+    ->fetchColumn();
+  assert($propgroup_id);
+
+  db_update('mediamosa_asset_metadata_property')
+    ->fields(array('is_protected' => 'TRUE'))
+    ->condition('propgroup_id', $propgroup_id)
+    ->condition(db_or()->condition('prop_name', 'published')->condition('prop_name' , 'deleted'))
+    ->execute();
+}
+
+/**
+ * Publish all assets.
+ *
+ * This might take some time depending on the size of your database. If this
+ * update times out or stops because of OOM errors, just run update again. The
+ * update will continue where it was interrupted.
+ */
+function mediamosa_update_7186() {
+
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  $propgroup_id = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+    ->fields('ampg', array('propgroup_id'))
+    ->condition('propgroup_name', 'asset')
+    ->execute()
+    ->fetchColumn();
+  assert($propgroup_id);
+
+  $prop_id = db_select('mediamosa_asset_metadata_property', 'amp')
+    ->fields('amp', array('prop_id'))
+    ->condition('propgroup_id', $propgroup_id)
+    ->condition('prop_name', 'published')
+    ->execute()
+    ->fetchColumn();
+  assert($prop_id);
+
+  while (TRUE) {
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+
+    db_delete('mediamosa_asset_metadata')
+      ->condition('prop_id', $prop_id)
+      ->condition('asset_id', $asset_ids)
+      ->execute();
+
+    foreach ($asset_ids as $asset_id) {
+      db_insert('mediamosa_asset_metadata')
+        ->fields(array(
+        'asset_id' => $asset_id,
+        'prop_id' => $prop_id,
+        'val_char' =>'TRUE',
+        'val_char_lft' => 'TRUE',
+        'val_char_rght' => 'EURT',
+        'val_datetime' => NULL,
+        'val_int' => 0,
+        'created' => mediamosa_datetime::db_current_timestamp_now(),
+        'changed' => mediamosa_datetime::db_current_timestamp_now()
+      ))
+      ->execute();
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+
+    // Next position.
+    $start += count($asset_ids);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  // Now start a reindex in solr (if enabled).
+  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
+    _mediamosa_solr_batch_reindex_start(FALSE);
+  }
+
+  return strtr('Successfully published {published} asset(s).', array('{published}' => $start));
 }

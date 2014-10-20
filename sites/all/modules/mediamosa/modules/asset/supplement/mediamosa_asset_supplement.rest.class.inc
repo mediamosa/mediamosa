@@ -1,41 +1,14 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * REST calls of asset supplement.
  */
-
- /**
-  * @file
-  * REST calls of asset supplement.
-  */
 
 /**
  * URI: /asset/$asset_id/supplement
  * Method: GET
  *
  * Get the asset supplement.
- *
- * 1.x media_management_get_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -65,13 +38,12 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
 
     // Asset ID.
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_asset::must_exists($asset_id);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
@@ -100,8 +72,6 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
  * Method: POST
  *
  * Create the asset supplement.
- *
- * 1.x media_management_create_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -160,8 +130,6 @@ public function get_var_setup() {
  * Method: POST
  *
  * Update the asset supplement.
- *
- * 1.x media_management_update_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
   // ------------------------------------------------=------------------ Consts.
@@ -279,7 +247,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     $supplement = $this->get_param_value(self::SUPPLEMENT);
 
     // Must exists.
-    $asset = mediamosa_asset::must_exists($asset_id);
+    mediamosa_asset::must_exists($asset_id);
 
     // Update the supplement.
     mediamosa_asset_supplement::update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement);
@@ -296,8 +264,6 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
  * Method: POST
  *
  * Update the asset supplement.
- *
- * 1.x media_management_delete_asset_supplement
  */
 class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
   // ---------------------------------------------------------=--------- Consts.

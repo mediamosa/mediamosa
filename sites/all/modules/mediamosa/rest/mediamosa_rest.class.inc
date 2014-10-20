@@ -47,10 +47,13 @@ class mediamosa_rest {
   /**
    * Match the current URL to REST call, and return the REST call object.
    *
-   * @param string $uri
-   *  The request URL.
-   * @param string $method
-   *  The method.
+   * @param string $request_uri
+   *   The request URL.
+   * @param string $request_method
+   *   The method.
+   *
+   * @return array|FALSE
+   *   Either the uri definition array or FALSE.
    */
   public static function get_uri_definition($request_uri, $request_method = FALSE) {
 

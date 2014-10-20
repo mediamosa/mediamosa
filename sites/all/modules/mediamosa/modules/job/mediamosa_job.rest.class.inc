@@ -762,7 +762,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $offset =  $this->get_param_value_offset();
 
     // Must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_asset::must_exists($asset_id);
 
     // We show all data is it is app_admin or first element in application ID array is zero.
     $is_full_access = $is_app_admin || ($first_app_id == 0);

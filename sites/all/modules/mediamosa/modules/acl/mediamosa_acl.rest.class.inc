@@ -1292,7 +1292,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     $app_id = reset($app_ids);
 
     // Make sure the asset exists
-    $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::APP_ID => $app_id, mediamosa_asset_db::ID => $asset_id));
+    $asset = mediamosa_asset::must_exists($asset_id, $app_id);
 
     $a_acl_app_ids = $this->get_param_value(self::ACL_APP);
     $a_acl_user_ids = $this->get_param_value(self::ACL_USER);
@@ -1321,7 +1321,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     }
 
     // Set access rights
-    $result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $a_acl_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
+    $result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $asset, $a_acl_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
 
     if (mediamosa::is_v3_output()) {
       $types = array(
@@ -1534,21 +1534,22 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
     // Go through the asset ids.
     foreach ($asset_ids as $asset_id) {
       // Make sure the asset exists
-      $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::APP_ID => $app_id, mediamosa_asset_db::ID => $asset_id));
+      $asset = mediamosa_asset::must_exists($asset_id, $app_id);
 
       // Get all of the mediafiles belonging to the asset.
-      $result = mediamosa_db::db_query("
+      $result = mediamosa_db::db_query('
         SELECT m.#mediafile_id
         FROM {#mediamosa_asset} a
         JOIN {#mediamosa_asset_mediafile} m USING (#asset_id)
-        WHERE a.#asset_id = :asset_id
-      ", array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id,
-      ));
+        WHERE a.#asset_id = :asset_id',
+        array(
+          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#asset_id' => mediamosa_asset_db::ID,
+          ':asset_id' => $asset_id,
+        )
+      );
 
       if (mediamosa::is_v3_output()) {
         $types = array(
@@ -1663,10 +1664,7 @@ class mediamosa_rest_call_acl_asset_delete_rights extends mediamosa_rest_call {
     $app_id = reset($app_ids);
 
     // Make sure the asset exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
-
-    // Get the media file.
-    $asset = mediamosa_asset::get($asset_id, $app_id);
+    $asset = mediamosa_asset::must_exists($asset_id, $app_id);
 
     // Remove rights.
     mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $asset);
@@ -1721,11 +1719,12 @@ class mediamosa_rest_call_acl_asset_get_rights extends mediamosa_rest_call {
 
     // Make sure the asset exists.
     // Removed the app_id so the asset can be accessed by other app.
-    // vpx_acl_rights_get() will check if its in the right app or you have access through slave.
-    $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    // mediamosa_acl::rights_get() will check if its in the right app or you
+    // have access through slave.
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Get the rights on asset.
-    $rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $is_app_admin);
+    $rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $asset, $is_app_admin);
 
     foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $right) {
       $right['type'] = ($right['type'] == 'acl_user_group' ? 'acl_group' : $right['type']);

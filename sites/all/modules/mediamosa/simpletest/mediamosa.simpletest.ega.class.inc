@@ -3386,7 +3386,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
 
-  // ------------------------------------------------------------------ Delete items functions.
+  // --------------------------------------------------- Delete items functions.
   /**
    * Delete a asset.
    * Based on the REST call /asset/$asset_id/delete (POST)
@@ -4322,5 +4322,200 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Is the first row.
     $storage_profile_app = mediamosa_storage_profile_app::get(1);
     $this->var_export($storage_profile_app, 'Storage profile App');
+  }
+
+  // -------------------------------------------------------- Publish functions.
+  /**
+   * Publish a asset.
+   *
+   * Based on the REST call /asset/$asset_id/publish (POST)
+   *
+   * @param string $asset_id
+   *   The asset ID to publish.
+   * @param array $parameters
+   *   Parameters for the REST call.
+   * @param array $expected_result_ids
+   *   Experted result IDs to specify.
+   * @param bool $do_internal
+   *   Do internal call instead of client application call.
+   *
+   * @return array
+   *   Associative array with keys;
+   *   - 'xml': The XML object.
+   *   - 'body': The string body from response.
+   *   - 'header': The HTTP header.
+   */
+  protected function publishAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_delete::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/{asset_id}/publish', array('{asset_id}' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        'Published asset with ID: {asset_id}, got result {result} ({result_description})',
+        array(
+          '{asset_id}' => $asset_id,
+          '{result}' => (string) $response['xml']->header->request_result_id,
+          '{result_description}' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Unpublish a asset.
+   *
+   * Based on the REST call /asset/$asset_id/unpublish (POST)
+   *
+   * @param string $asset_id
+   *   The asset ID to unpublish.
+   * @param array $parameters
+   *   Parameters for the REST call.
+   * @param array $expected_result_ids
+   *   Experted result IDs to specify.
+   * @param bool $do_internal
+   *   Do internal call instead of client application call.
+   *
+   * @return array
+   *   Associative array with keys;
+   *   - 'xml': The XML object.
+   *   - 'body': The string body from response.
+   *   - 'header': The HTTP header.
+   */
+  protected function unpublishAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_delete::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/{asset_id}/unpublish', array('{asset_id}' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        'Published asset with ID: {asset_id}, got result {result} ({result_description})',
+        array(
+          '{asset_id}' => $asset_id,
+          '{result}' => (string) $response['xml']->header->request_result_id,
+          '{result_description}' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Publish a asset.
+   *
+   * Based on the REST call /asset/publish (POST)
+   *
+   * @param array $asset_ids
+   *   The asset IDs to publish.
+   * @param array $parameters
+   *   Parameters for the REST call.
+   * @param array $expected_result_ids
+   *   Experted result IDs to specify.
+   * @param bool $do_internal
+   *   Do internal call instead of client application call.
+   *
+   * @return array
+   *   Associative array with keys;
+   *   - 'xml': The XML object.
+   *   - 'body': The string body from response.
+   *   - 'header': The HTTP header.
+   */
+  protected function publishAssetMulti(array $asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_delete::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    $parameters['asset_id'] = $asset_ids;
+
+    // The uri.
+    $uri = 'asset/publish';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        'Published assets, got result {result} ({result_description})',
+        array(
+          '{result}' => (string) $response['xml']->header->request_result_id,
+          '{result_description}' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Publish a asset.
+   *
+   * Based on the REST call /asset/publish (POST)
+   *
+   * @param array $asset_ids
+   *   The asset IDs to publish.
+   * @param array $parameters
+   *   Parameters for the REST call.
+   * @param array $expected_result_ids
+   *   Experted result IDs to specify.
+   * @param bool $do_internal
+   *   Do internal call instead of client application call.
+   *
+   * @return array
+   *   Associative array with keys;
+   *   - 'xml': The XML object.
+   *   - 'body': The string body from response.
+   *   - 'header': The HTTP header.
+   */
+  protected function unpublishAssetMulti(array $asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_delete::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    $parameters['asset_id'] = $asset_ids;
+
+    // The uri.
+    $uri = 'asset/unpublish';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        'Published assets, got result {result} ({result_description})',
+        array(
+          '{result}' => (string) $response['xml']->header->request_result_id,
+          '{result_description}' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
   }
 }

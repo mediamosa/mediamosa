@@ -60,7 +60,7 @@
  * 'not', and 'prox' (case insensitive). When a reserved word is used in a search term,
  * case is preserved.
  *
- * charString2        := Souble quotes enclosing a sequence of any characters except double quote
+ * charString2        := Double quotes enclosing a sequence of any characters except double quote
  *                       (unless preceded by backslash (\)). Backslash escapes the character
  *                       following it. The resultant value includes all backslash characters except
  *                       those releasing a double quote (this allows other systems to interpret the

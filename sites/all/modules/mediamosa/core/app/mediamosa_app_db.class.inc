@@ -82,6 +82,9 @@ class mediamosa_app_db {
   const STILL_MAINTAIN_ASPECT_RATIO_YES = 'YES';
   const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
   const TOOL_ANALYSE = 'tool_analyse';
+  const PUBLISHED_ASSET_DEFAULT = 'published_asset_default';
+  const PUBLISHED_ASSET_DEFAULT_TRUE = 'TRUE';
+  const PUBLISHED_ASSET_DEFAULT_FALSE = 'FALSE';
 
   // Pseudo fields; these are not stored or are part of the installation.
   const STORAGE_URI = 'storage_uri';

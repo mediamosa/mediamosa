@@ -22,6 +22,7 @@ files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.acl.user_usergroup.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
+files[] = mediamosa_asset.publish.test
 files[] = mediamosa_asset.vpx_still_url.test
 
 ; Collection <-> Asset link table.
@@ -72,6 +73,6 @@ files[] = metadata/property/group/mediamosa_asset_metadata_property_group.rest.c
 
 ; Supplement.
 files[] = supplement/mediamosa_asset_supplement.rest.class.inc
-files[] = supplement/mediamosa_asset_supplement.test
-files[] = supplement/mediamosa_asset_supplement_delete.test
-files[] = supplement/mediamosa_asset_supplement_add.test
+;files[] = supplement/mediamosa_asset_supplement.test
+;files[] = supplement/mediamosa_asset_supplement_delete.test
+;files[] = supplement/mediamosa_asset_supplement_add.test

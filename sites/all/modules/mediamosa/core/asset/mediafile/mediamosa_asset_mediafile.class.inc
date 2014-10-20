@@ -733,7 +733,7 @@ class mediamosa_asset_mediafile {
   public static function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_asset::must_exists($asset_id);
 
     // FIXME write me to normal db_query.
     $a_query = array();

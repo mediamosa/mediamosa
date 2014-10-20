@@ -107,6 +107,8 @@ class mediamosa_search {
 
       'fav_user_id' => NULL,
 
+      'published' => mediamosa_asset::METADATA_PUBLISHED_TRUE,
+
       'granted' => FALSE,
       'is_public_list' => FALSE,
       'is_app_admin' => FALSE,
@@ -211,6 +213,8 @@ class mediamosa_search {
 
       $parameters['fav_user_id'],
 
+      $parameters['published'],
+
       $parameters['granted'],
       $parameters['is_public_list'],
       $parameters['is_app_admin'],
@@ -243,7 +247,11 @@ class mediamosa_search {
   /**
    * Reindex assets on external databases.
    *
-   * @param $parameters
+   * @param array $asset_ids
+   *   The assets to reindex.
+   * @param string $search_index_type
+   *   The type of indexing.
+   *   @see mediamosa_settings::search_index_type_*
    */
   public static function asset_reindex(array $asset_ids, $search_index_type) {
     // Trigger the reindex hook for external search engines.
@@ -261,7 +269,8 @@ class mediamosa_search {
   /**
    * Delete asset from external databases.
    *
-   * @param $parameters
+   * @param array $asset_ids
+   *   The Ids of assets to delete.
    */
   public static function asset_delete(array $asset_ids) {
     // Trigger the reindex hook for external search engines.
@@ -279,7 +288,8 @@ class mediamosa_search {
   /**
    * Queue asset on external databases.
    *
-   * @param $parameters
+   * @param array $asset_ids
+   *   The IDs of the assets to queue.
    */
   public static function asset_queue(array $asset_ids) {
     // Trigger the reindex hook for external search engines.

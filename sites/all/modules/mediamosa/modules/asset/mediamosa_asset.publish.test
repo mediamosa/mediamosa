@@ -1,0 +1,128 @@
+<?php
+/**
+ * @file
+ * Publish and unpublish tests.
+ */
+
+class MediaMosaAssetPublishTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - publish',
+      'description' => 'Testing asset publish functionality',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testAssetPublishBeginStates() {
+
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // Set default of client app published to false.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    db_update(mediamosa_app_db::TABLE_NAME)
+      ->fields(array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT => mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE))
+      ->condition('app_id', $app_id)
+      ->execute();
+    $asset_id_3 = $this->createAsset();
+    $asset = $this->getAsset($asset_id_3);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+    $this->var_export($asset);
+
+    // Mediafile.
+    $this->createMediafile($asset_id_1);
+    $this->createMediafile($asset_id_2);
+    $this->createMediafile($asset_id_3);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'aap noot mies',
+      )
+    );
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'aap noot',
+      )
+    );
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'some title',
+      )
+    );
+
+    // By default new assets are published.
+    $asset = $this->getAsset($asset_id_1);
+
+    $this->var_export($asset);
+
+    // Default value is true for published.
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->unpublishAsset($asset_id_1);
+    $asset = $this->getAsset($asset_id_1);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+
+    $this->publishAsset($asset_id_1);
+    $asset = $this->getAsset($asset_id_1);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->unpublishAsset($asset_id_2);
+    $asset = $this->getAsset($asset_id_2);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_2 => TRUE, $asset_id_3 => TRUE), array('published' => 'FALSE'));
+
+    $this->cql_do_search_test_assets_1('title = "aap"', array($asset_id_1 => TRUE));
+
+    $this->cql_do_search_test_assets_1('title = "some"', array($asset_id_3 => TRUE), array('published' => 'FALSE'));
+
+    $this->publishAsset($asset_id_2);
+    $asset = $this->getAsset($asset_id_2);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->cql_do_search_test_assets_1('title = "aap"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('title = "aap"', array(), array('published' => 'FALSE'));
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE), array('published' => 'all'));
+
+    $this->publishAssetMulti(array($asset_id_1, $asset_id_2, $asset_id_3));
+    $asset = $this->getAsset($asset_id_1);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+    $asset = $this->getAsset($asset_id_2);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+    $asset = $this->getAsset($asset_id_3);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->unpublishAssetMulti(array($asset_id_1, $asset_id_2, $asset_id_3));
+    $asset = $this->getAsset($asset_id_1);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+    $asset = $this->getAsset($asset_id_2);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+    $asset = $this->getAsset($asset_id_3);
+    $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
+
+    $this->publishAssetMulti(array($asset_id_1, $asset_id_2, $asset_id_3));
+    $asset = $this->getAsset($asset_id_1);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+    $asset = $this->getAsset($asset_id_2);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+    $asset = $this->getAsset($asset_id_3);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->unpublishAssetMulti(array($asset_id_1, $asset_id_3));
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE), array('published' => 'all'));
+    $this->cql_do_search_test_assets_1('asset.published = "^TRUE^"', array($asset_id_2 => TRUE), array('published' => 'all'));
+    $this->cql_do_search_test_assets_1('asset.published = "^FALSE^"', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array('published' => 'all'));
+    $this->cql_do_search_test_assets_1('asset.published = "^TRUE^ ^FALSE^"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE), array('published' => 'all'));
+  }
+}

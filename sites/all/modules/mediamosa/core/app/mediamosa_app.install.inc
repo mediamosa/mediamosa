@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Installer for the App module.
  */
-
- /**
-  * @file
-  * Installer for the App module.
-  */
 
 require_once 'mediamosa_app.class.inc';
 require_once 'mediamosa_app_db.class.inc';
@@ -306,8 +281,15 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
         'default' => NULL,
       ),
+      mediamosa_app_db::PUBLISHED_ASSET_DEFAULT => array(
+        'description' => 'The default value for asset publish state when creating new assets.',
+        'type' => "enum('" . implode("','", array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE, mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE, mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE)) . "')",
+        'default' => mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE,
+      ),
     ),
-    'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
+    'primary key' => array(mediamosa_app_db::NID),
     'unique keys' => array(
       'uni_appid' => array(mediamosa_app_db::APP_ID),
     ),

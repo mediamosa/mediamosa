@@ -105,7 +105,7 @@ class mediamosa_collection_search {
     // Include possible asset restriction.
     if ($asset_id) {
       // Check if asset exists.
-      mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+      mediamosa_asset::must_exists($asset_id);
 
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ac'][] = sprintf("ac.asset_id = '%s'", mediamosa_db::escape_string($asset_id));
     }

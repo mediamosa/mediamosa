@@ -189,8 +189,6 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-
-    // Get the 1st app.
     $app_id = reset($app_ids);
 
     $group_id = $this->get_param_value(self::GROUP_ID);
@@ -213,7 +211,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const RETURN_ASSET_IDS = 'return_asset_ids';
   const FAV_USER_ID = 'fav_user_id';
   const USER_ID = 'user_id';
-  const ACL_USER_ID = 'acl_user_id'; // Alias for user_id.
+  // Alias for user_id.
+  const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
   const ACL_DOMAIN = 'acl_domain';
   const ACL_REALM = 'acl_realm';
@@ -229,6 +228,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const SHOW_COLLECTIONS = 'show_collections';
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
+  const PUBLISHED = 'published';
 
   // Search engine specific.
   const RELATED = 'related';
@@ -516,10 +516,19 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Now include metadata search stuff.
     $var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, $var_setup, self::get_search_params());
 
+    // Overrule the publish metadata autocreate.
+    $var_setup[self::VARS][self::PUBLISHED] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+      self::VAR_DESCRIPTION => "Filtering on published state. The default published states are 'TRUE' and 'FALSE'. To search within all published assets, supply 'TRUE'. For all unpublished, supply 'FALSE'. To search on all assets supply 'all'. If you want to let CQL handle the publish state, supply 'all' too, and use asset.published == \"^TRUE^\", asset.published == \"^FALSE^\" or for both asset.published = \"^TRUE^ ^FALSE^\"",
+      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'all'),
+    );
+    unset($var_setup[self::VARS][self::PUBLISHED . '_match']);
+
     return $var_setup;
   }
 
-  // ------------------------------------------------------------------ Override Process Rest Args.
+  // ----------------------------------------------- Override Process Rest Args.
   // Fix for alias of user_id / acl_user_id.
   protected function process_rest_args(array $var_setup) {
 
@@ -537,7 +546,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     return $var_setup;
   }
 
-  // ------------------------------------------------------------------ Override Validate Rest Args.
+  // ---------------------------------------------- Override Validate Rest Args.
   // Override for checking CQL string.
   protected function validate_rest_args(array $var_setup) {
 
@@ -555,12 +564,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $a_cql = array();
     $translate_to = array();
     foreach ($var_setup_search[mediamosa_rest_call::VARS] as $param_name => $param) {
-      if ($param[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_SEARCH_MATCH) {
+      if ($param[mediamosa_rest_call::VAR_TYPE] === mediamosa_sdk::TYPE_SEARCH_MATCH) {
         continue;
       }
 
       // When provided, then convert.
-      if (!self::empty_param($param_name)) {
+      if (!self::empty_param($param_name) && !self::empty_param($param_name . '_match')) {
         $value = $this->get_param_value($param_name);
         $match = $this->get_param_value($param_name . '_match');
         $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param_name, $match, $value, $param[mediamosa_rest_call::PARAM_TYPE], $translate_to);
@@ -646,6 +655,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       'coll_id' => $this->get_param_value(self::COLL_ID),
 
       'fav_user_id' => $this->get_param_value(self::FAV_USER_ID),
+
+      'published' => $this->get_param_value(self::PUBLISHED),
 
       'granted' => $this->get_param_value(self::GRANTED),
       'is_public_list' => $this->get_param_value(self::IS_PUBLIC_LIST),
@@ -833,22 +844,11 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Asset must exist to be deleted.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
-
     // Get asset.
-    $a_asset = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id  = :asset_id',
-      array(
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#owner_id' => mediamosa_asset_db::OWNER_ID,
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id,
-      )
-    )->fetchAssoc();
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Must be owner / app_admin to delete.
-    mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Delete the asset (and all other stuff related).
     mediamosa_asset::delete($asset_id, $delete == 'cascade');
@@ -1030,7 +1030,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $granted = TRUE;
 
     // Asset must exits.
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id), NULL, array(), FALSE);
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Fix app_id.
     if (in_array($asset['app_id'], $app_ids)) {
@@ -1536,10 +1536,22 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   const REFERENCE_ID = 'reference_id';
   const PROVIDER_ID = 'provider_id';
   const PARENT_ID = 'parent_id';
+  const PUBLISHED = 'published';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $publish_default = 'TRUE';
+    if ($app_id) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        $publish_default = $app[mediamosa_app_db::PUBLISHED_ASSET_DEFAULT];
+      }
+    }
 
     $var_setup = array(
       self::VARS => array(
@@ -1564,13 +1576,15 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The provider ID.',
           self::VAR_RANGE_END => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         ),
-        self::PARENT_ID => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => 'The parent ID. Is deprecated, do not supply, value will be ignored.',
-          self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
+        self::PUBLISHED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "The default published value of the asset. This default is overridden by the client application default, which is by default 'TRUE'.",
+          self::VAR_DEFAULT_VALUE => $publish_default,
         ),
       )
     );
+
+    // The default value is depended on the value set on the client application.
 
     // Include default.
     return self::get_var_setup_default($var_setup);
@@ -1582,20 +1596,18 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $owner_id = $this->get_param_value(self::USER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
     $reference_id = $this->get_param_value(self::REFERENCE_ID);
     $provider_id = $this->get_param_value(self::PROVIDER_ID);
-    assert($this->get_param_value(self::PARENT_ID) == NULL); // Not allowed anymore.
-    $parent_id = NULL; // $this->get_param_value(self::PARENT_ID);
+    $published = $this->get_param_value(self::PUBLISHED);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Create the asset.
-    $asset_id = mediamosa_asset::create($app_id, $owner_id, $group_id, $reference_id, $provider_id, $parent_id);
+    $asset_id = mediamosa_asset::create($app_id, $owner_id, $group_id, $reference_id, $provider_id, $published);
 
     $mediamosa->add_item(array('asset_id' => $asset_id));
   }
@@ -1624,6 +1636,8 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const REFERENCE_ID = 'reference_id';
   const PROVIDER_ID = 'provider_id';
   const ASSET_TYPE = 'asset_type';
+  const PUBLISHED = 'published';
+  const DELETED = 'deleted';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -1741,6 +1755,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_asset_get_deleted extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
+
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
@@ -1782,5 +1797,318 @@ class mediamosa_rest_call_asset_get_deleted extends mediamosa_rest_call {
     }
 
     $mediamosa->item_count_total = $asset_deleted['item_count_total'];
+  }
+}
+
+/**
+ * URI: /asset/$asset_id/publish
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_publish extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The ID of the asset to publish.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user ID used for authorization.',
+        ),
+      ),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_app_admin($var_setup);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    $asset = mediamosa_asset::must_exists($asset_id);
+
+    // Must be owner / app_admin to publish.
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+    // Publish.
+    mediamosa_asset::publish($asset_id);
+
+    // Default OK.
+    $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/publish
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_publish_multi extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The ID of the assets to publish.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user ID used for authorization, must be the owner of all assets to publish. Use is_app_admin=TRUE to skip owner check, if you do not require per asset owner testing.',
+        ),
+      ),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_app_admin($var_setup);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_ids = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    $result[] = array();
+    $failed = 0;
+    foreach ($asset_ids as $asset_id) {
+      try {
+        $asset = mediamosa_asset::must_exists($asset_id);
+
+        // Must be owner / app_admin to publish.
+        mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+        // Publish.
+        mediamosa_asset::publish($asset_id);
+
+        $result[$asset_id] = array(
+          'code' => mediamosa_sdk::ERRORCODE_OKAY,
+        );
+      }
+      catch (mediamosa_exception $e) {
+        $result[$asset_id] = array(
+          'code' => $e->getCode(),
+          'error' => $e->getMessage(),
+        );
+        $failed++;
+      }
+    }
+
+    $mediamosa->set_result(array(
+      'total' => count($result),
+      'failed' => $failed,
+      'result' => $result,
+      ),
+      mediamosa_sdk::ERRORCODE_OKAY
+    );
+
+
+    // Default OK.
+    $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/$asset_id/unpublish
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_unpublish extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The ID of the asset to publish.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user ID used for authorization.',
+        ),
+      ),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_app_admin($var_setup);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    $asset = mediamosa_asset::must_exists($asset_id);
+
+    // Must be owner / app_admin to publish.
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+    // Publish.
+    mediamosa_asset::unpublish($asset_id);
+
+    // Default OK.
+    $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/unpublish
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_unpublish_multi extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The ID of the assets to unpublish.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user ID used for authorization, must be the owner of all assets to unpublish. Use is_app_admin=TRUE to skip owner check, if you do not require per asset owner testing.',
+        ),
+      ),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_app_admin($var_setup);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_ids = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    $result[] = array();
+    $failed = 0;
+    foreach ($asset_ids as $asset_id) {
+      try {
+        $asset = mediamosa_asset::must_exists($asset_id);
+
+        // Must be owner / app_admin to publish.
+        mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+        // Publish.
+        mediamosa_asset::unpublish($asset_id);
+
+        $result[$asset_id] = array(
+          'code' => mediamosa_sdk::ERRORCODE_OKAY,
+        );
+      }
+      catch (mediamosa_exception $e) {
+        $result[$asset_id] = array(
+          'code' => $e->getCode(),
+          'error' => $e->getMessage(),
+        );
+        $failed++;
+      }
+    }
+
+    $mediamosa->set_result(array(
+      'total' => count($result),
+      'failed' => $failed,
+      'result' => $result,
+      ),
+      mediamosa_sdk::ERRORCODE_OKAY
+    );
+
+    // Default OK.
+    $mediamosa->set_result_okay();
   }
 }

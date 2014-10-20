@@ -38,6 +38,7 @@ class mediamosa_solr {
   const IS_PROTECTED = 'is_protected';
   const IS_PROTECTED_FALSE = 'is_protected_false';
   const IS_PROTECTED_TRUE = 'is_protected_true';
+  const PUBLISHED = 'published';
   const ACL = 'acl';
   const ACL_NAME = 'name';
   const ACL_GRP = 'group';
@@ -61,6 +62,7 @@ class mediamosa_solr {
    *   - 'batch_id': The batch ID to search through.
    *   - 'coll_id': The Collection to search through.
    *   - 'fav_user_id': The user ID.
+   *   - 'published': The published state: 'TRUE', 'FALSE', 'all'.
    *   - 'granted': When true, assets are include on which we dont have access
    *      on. The granted parameter with the asset indicates if we have access.
    *   - 'is_public_list': Used to include or exclude unappropriate assets.
@@ -78,7 +80,7 @@ class mediamosa_solr {
    *   - 'related': The related data.
    *   - 'solr_facet': The facet data (solr specific).
    */
-  public static function asset_search($parameters) {
+  public static function asset_search(array $parameters) {
     // Make sure its unique.
     $parameters['app_ids'] = array_unique($parameters['app_ids']);
 
@@ -134,6 +136,10 @@ class mediamosa_solr {
     if ($parameters['hide_empty_assets']) {
       // Exclude empty assets.
       $solr_query[self::WHERE_AND][self::ASSET][self::ACL][self::WHERE_AND][] = 'is_empty_asset:FALSE';
+    }
+
+    if ($parameters['published'] === 'TRUE' || $parameters['published'] === 'FALSE') {
+      $solr_query[self::WHERE_AND][self::ASSET][self::PUBLISHED][self::WHERE_AND][] = 'asset_published_vc_exact:' . $parameters['published'];
     }
 
     $query_cql = '*:*';
@@ -272,6 +278,9 @@ class mediamosa_solr {
 
     // Do the acl and solr query in the fq parameter.
     $query_params['fq'] = $query;
+
+    mediamosa_debug::log('CQL ACL: ' . $query);
+    mediamosa_debug::log('CQL: ' . $query_cql);
 
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query_cql, $parameters['offset'], $parameters['limit'], $query_params);

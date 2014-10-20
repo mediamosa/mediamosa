@@ -22,6 +22,18 @@ function _mediamosa_metadata_asset_install() {
       'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
       'is_hidden' => TRUE,
     ),
+    array(
+      'name' => 'published',
+      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      'is_hidden' => FALSE,
+      'is_protected' => TRUE,
+    ),
+    array(
+      'name' => 'deleted',
+      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      'is_hidden' => FALSE,
+      'is_protected' => TRUE,
+    ),
   );
 
   // Create the properties.
@@ -29,7 +41,10 @@ function _mediamosa_metadata_asset_install() {
     mediamosa_metadata_asset::property_create(
       $property_group_id, $property['name'],
       $property['type'],
-      array('is_hidden' => empty($property['is_hidden']) ? FALSE : $property['is_hidden'])
+      array(
+        mediamosa_asset_metadata_property_db::IS_HIDDEN => empty($property[mediamosa_asset_metadata_property_db::IS_HIDDEN]) ? mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE : mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE,
+        mediamosa_asset_metadata_property_db::IS_PROTECTED => empty($property[mediamosa_asset_metadata_property_db::IS_PROTECTED]) ? mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE : mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE,
+      )
     );
   }
 }

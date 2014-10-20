@@ -52,7 +52,7 @@ class mediamosa_asset_collection {
 
     // Asset must exist.
     if ($asset_id) {
-      mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+      mediamosa_asset::must_exists($asset_id);
     }
     else {
       // We need the asset_ids to reindex.
@@ -107,7 +107,7 @@ class mediamosa_asset_collection {
   public static function delete_asset_from_all_collections($app_id, $user_id, $is_app_admin, $asset_id) {
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_asset::must_exists($asset_id);
 
     // Check if we can delete the links first.
     $asset = mediamosa_asset::get($asset_id);
@@ -214,7 +214,7 @@ class mediamosa_asset_collection {
    */
   public static function create($app_id, $user_id, $is_app_admin, $asset_id, $coll_id) {
     // Asset must exist.
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    $asset = mediamosa_asset::must_exists($asset_id);;
 
     // Check if relation already exist.
     if (mediamosa_db::db_exists(
@@ -260,7 +260,7 @@ class mediamosa_asset_collection {
   public static function count_collections($asset_id) {
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    mediamosa_asset::must_exists($asset_id);
 
     // Return the number of found rows.
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'mac');

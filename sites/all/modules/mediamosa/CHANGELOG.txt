@@ -122,6 +122,8 @@ MediaMosa 3.5.1-dev (build 2111)
 - Fixed Solr generation when using OR in combination with negative searches. It
   will now properly use *:* in combination with OR'd negative searches.
 - Upgraded Drupal to 7.32.
+- Added publish and unpublish for assets. See new 3.6.0 REST calls using the
+  REST call browser in backend.
 
 
 MediaMosa 3.5.x (build 2072)

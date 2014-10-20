@@ -205,7 +205,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       case mediamosa_sdk::TYPE_DATETIME:
         $is_case_sensitive = TRUE;
 
-        if ($str_relation != 'within') {
+        if ($str_relation !== 'within') {
           // Convert to DB Date.
           $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
         }
@@ -215,7 +215,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       case mediamosa_sdk::TYPE_REALM:
       case mediamosa_sdk::TYPE_STRING:
         // Do NULL compare?
-        if (mediamosa_unicode::strtolower($str_search_term) == 'null') {
+        if (mediamosa_unicode::strtolower($str_search_term) === 'null') {
           switch ($str_relation) {
             case '<>':
               $str_relation = 'IS NOT NULL';
@@ -233,12 +233,12 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
         $is_case_sensitive = TRUE;
 
-        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == 'true' ? 'TRUE' : 'FALSE');
+        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) === 'true' ? 'TRUE' : 'FALSE');
 
-        $bool_is_true = $str_search_term == 'TRUE';
+        $bool_is_true = $str_search_term === 'TRUE';
 
         // Lets prevent usage of NOT.
-        $bool_is_true = ($str_relation == '<>' ? !$bool_is_true : $bool_is_true);
+        $bool_is_true = ($str_relation === '<>' ? !$bool_is_true : $bool_is_true);
 
         // Back into text.
         $str_search_term = $bool_is_true ? 'TRUE' : 'FALSE';

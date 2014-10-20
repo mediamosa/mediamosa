@@ -189,15 +189,15 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadataAppend($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
     $this->createAssetMetadataAppend($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
 
-    // Create some supplements.
-    $asset_supplement_id_1 = $this->createAssetSupplement($asset_id_1);
-    $asset_supplement_id_2 = $this->createAssetSupplement($asset_id_2);
-    $asset_supplement_id_3 = $this->createAssetSupplement($asset_id_3);
-
-    // Add sub.
-    $this->updateAssetSupplement($asset_id_1, $asset_supplement_id_1, 'taaatuuuutaaaatuuu');
-    $this->updateAssetSupplement($asset_id_2, $asset_supplement_id_2, 'toeeetoeeeeetttttt');
-    $this->updateAssetSupplement($asset_id_3, $asset_supplement_id_3, 'weeeeeommmgpffffff');
+//    // Create some supplements.
+//    $asset_supplement_id_1 = $this->createAssetSupplement($asset_id_1);
+//    $asset_supplement_id_2 = $this->createAssetSupplement($asset_id_2);
+//    $asset_supplement_id_3 = $this->createAssetSupplement($asset_id_3);
+//
+//    // Add sub.
+//    $this->updateAssetSupplement($asset_id_1, $asset_supplement_id_1, 'taaatuuuutaaaatuuu');
+//    $this->updateAssetSupplement($asset_id_2, $asset_supplement_id_2, 'toeeetoeeeeetttttt');
+//    $this->updateAssetSupplement($asset_id_3, $asset_supplement_id_3, 'weeeeeommmgpffffff');
 
     // Created is time, so lets create in default timezone time.
     $utc_timestamp = mediamosa_datetime::utc_current_timestamp_now();
@@ -314,6 +314,9 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename',
       'media/simpletest/media/$app_id/$mediafile_id_prefix/$mediafile_id/$filename',
       'media/simpletest/media/ticket/$app_id/$ticket_id_prefix/$ticket_id/$filename',
+      'asset/$asset_id/supplement',
+      'asset/$asset_id/supplement/create',
+      'asset/$asset_id/supplement/$supplement_id/update',
     );
 
     $uri_fixed_params = array(

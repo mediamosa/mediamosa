@@ -1,0 +1,105 @@
+<?php
+/**
+ * @file
+ * Solr version of MediaMosaAssetCQLTestCaseEga
+ */
+
+class MediaMosaSolrAssetPublishTestCaseEga extends MediaMosaAssetPublishTestCaseEga {
+  // ------------------------------------------------------------------ Members.
+
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+
+    $info = parent::getInfo();
+    $info['name'] = 'SOLR - ' . $info['name'];
+    $info['group'] = 'MediaMosa Solr';
+    $info['automatic_run_disabled'] = module_exists('mediamosa_solr') ? FALSE : TRUE;
+
+    return $info;
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+
+  /**
+   * Implements setUp().
+   *
+   * Any changes; see other classes(!)
+   */
+  protected function setUp() {
+    // Get Solr url from parent install.
+    $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
+
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_solr',
+    ), $args));
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Solr set url.
+    variable_set('mediamosa_solr_url', $mediamosa_solr_url);
+
+    // Turn on Solr as search engine.
+    variable_set('mediamosa_search_engine', 'mediamosa_solr');
+  }
+
+  /**
+   * Implements tearDown().
+   *
+   * Any changes; see other classes(!)
+   */
+  protected function tearDown() {
+
+    $app_ids = array();
+    if (!empty($this->a_app['app_id'])) {
+      $app_ids[] = $this->a_app['app_id'];
+    }
+    if (!empty($this->a_app_2['app_id'])) {
+      $app_ids[] = $this->a_app_2['app_id'];
+    }
+    if (!empty($this->a_app_3['app_id'])) {
+      $app_ids[] = $this->a_app_3['app_id'];
+    }
+
+    // Teardown first (else teardown will sync assets sometimes to SOLR).
+    parent::tearDown();
+
+    // Remove it.
+    if (!empty($app_ids)) {
+      mediamosa_solr::delete_simpletest_documents($app_ids);
+    }
+  }
+
+  /**
+   * Can find "" around word(s).
+   *
+   * Solr does not index ".
+   */
+  public function engine_fulltext_can_find_with_quotes() {
+    return FALSE;
+  }
+
+  /**
+   * Indexes per word or per line?
+   *
+   * Text; master : m*r will match?
+   *       maste foor : m*r will match?
+   */
+  public function engine_fulltext_wildcard_indexes_lines() {
+    return TRUE;
+  }
+}

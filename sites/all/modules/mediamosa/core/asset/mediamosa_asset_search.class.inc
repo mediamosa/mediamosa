@@ -20,43 +20,46 @@ class mediamosa_asset_search {
    * Search for assets with given parameters.
    *
    * @param array $a_app_ids
-   *  Application IDs.
+   *   Application IDs.
    * @param string $cql
-   *  The CQL search string.
+   *   The CQL search string.
    * @param bool $cql_store_stats
-   *  Process the CQL into keywords and store it for statistics. Should be TRUE
-   *  only when CQL has been provided by user input (not for internal searches).
+   *   Process the CQL into keywords and store it for statistics. Should be TRUE
+   *   only when CQL has been provided by user input (not for internal
+   *   searches).
    * @param string $acl_user_id
-   *  The authentication user.
+   *   The authentication user.
    * @param array $acl_group_ids
-   *  The authentication group.
+   *   The authentication group.
    * @param string $acl_domain
-   *  The authentication domain.
+   *   The authentication domain.
    * @param string $acl_realm
-   *  The authentication realm.
+   *   The authentication realm.
    * @param string $batch_id
-   *  The batch ID to search through.
+   *   The batch ID to search through.
    * @param string $coll_id
-   *  The Collection to search through.
+   *   The Collection to search through.
    * @param string $fav_user_id
-   *  The user ID.
+   *   The user ID.
+   * @param string $published
+   *   The published state: 'TRUE', 'FALSE', 'all'.
    * @param bool $granted
-   *  When true, assets are include on which we dont have access on. The granted
-   *  parameter with the asset indicates if we have access.
+   *   When true, assets are include on which we dont have access on. The
+   *   granted parameter with the asset indicates if we have access.
    * @param bool $is_public_list
-   *  Used to include or exclude unappropriate assets.
+   *   Used to include or exclude unappropriate assets.
    * @param bool $is_app_admin
-   *  Used for unappropriate.
+   *   Used for unappropriate.
    * @param bool $hide_empty_assets
-   *  Don't include empty assets.
+   *   Don't include empty assets.
    * @param bool $show_deleted
-   *  Include deleted.
+   *   Include deleted.
    * @param bool $calculate_total_count
-   *  Calculate all found rows.
+   *   Calculate all found rows.
    * @param int $limit
-   *  Maximum number of results.
+   *   Maximum number of results.
    * @param int $offset
-   *  Offset within the result rows.
+   *   Offset within the result rows.
    */
   public static function asset_search(
     array $a_app_ids,
@@ -72,6 +75,8 @@ class mediamosa_asset_search {
     $coll_id = 0,
 
     $fav_user_id = NULL,
+
+    $published = mediamosa_asset::METADATA_PUBLISHED_TRUE,
 
     $granted = FALSE,
     $is_public_list = FALSE,
@@ -136,8 +141,19 @@ class mediamosa_asset_search {
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = 'a.is_empty_asset IS NOT NULL'; // Never NULL, will always match index
     }
 
-    if ($cql) {
-      // Create the seach CQL.
+    if ($published === 'TRUE' || $published === 'FALSE') {
+      $propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('asset');
+      $propgroup_id = $propgroup[mediamosa_asset_metadata_property_group_db::ID];
+      assert($propgroup_id);
+
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name('published', $propgroup_id);
+      $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+      assert($prop_id);
+      $a_query[mediamosa_db_query::A_JOIN]['asset_published'] = 'JOIN {mediamosa_asset_metadata} AS mam_asset_published ON mam_asset_published.asset_id = a.asset_id AND mam_asset_published.prop_id = ' . $prop_id . " AND mam_asset_published.val_char_lft = '" . $published . "'";
+    }
+
+    if ($cql !== '' && $cql !== NULL) {
+      // Create the search CQL.
       $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $cql_store_stats, $a_app_ids);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != '') {

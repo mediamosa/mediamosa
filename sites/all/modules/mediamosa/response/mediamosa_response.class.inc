@@ -543,7 +543,7 @@ class mediamosa_response extends mediamosa {
   /**
    * Add an error to the header.
    *
-   * @param array/string $mixed_item
+   * @param array|string $mixed_item
    */
   public function add_program_error($mixed_item) {
 
@@ -583,8 +583,10 @@ class mediamosa_response extends mediamosa {
   /**
    * For setting additional custom info in header.
    *
-   * @param array/string $data
+   * @param array|string $mixed_data
+   *   The data to set.
    * @param string $name
+   *   The parameter name.
    */
   public function set_result_header_extra($mixed_data, $name = 'additional_info') {
     $this->response['header'][$name] = $mixed_data;
@@ -611,7 +613,8 @@ class mediamosa_response extends mediamosa {
   /**
    * Set the class in the header.
    *
-   * @param string $uri
+   * @param string $class_name
+   *   The class name to set.
    */
   public function set_class($class_name) {
     $this->response['header']['request_class'] = $class_name;

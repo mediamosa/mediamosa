@@ -5,7 +5,6 @@
  */
 
 class mediamosa_asset_metadata {
-
   // ------------------------------------------------------------------ Consts.
   const MATCH_TYPE_CONTAINS = 'contains';
   const MATCH_TYPE_EXACT = 'exact';
@@ -18,23 +17,20 @@ class mediamosa_asset_metadata {
   const MATCH_TYPE_RANGE_FROM = 'range_from';
   const MATCH_TYPE_RANGE_TO = 'range_to';
 
-  // ------------------------------------------------------------------ Static Function.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Return a list of property values and their count per given property.
    *
    * @param int $app_id
-   *  The application ID.
+   *   The application ID.
    * @param int $prop_id
-   *  The property ID.
+   *   The property ID.
    * @param int $offset
-   *  The offset in the result set.
+   *   The offset in the result set.
    * @param int $limit
-   *  Maximum number of rows in result.
+   *   Maximum number of rows in result.
    */
   public static function tagcount($app_id, $prop_id, $offset, $limit) {
-
-    // FIXME test if prop_id exists.
-
     return mediamosa_db::db_query_range(
       'SELECT COUNT(#val_char) AS tagcount, #val_char FROM {#mediamosa_asset} AS a
        INNER JOIN {#mediamosa_asset_metadata} AS ap ON a.#asset_id = ap.#asset_id
@@ -59,33 +55,40 @@ class mediamosa_asset_metadata {
   /**
    * Create metadata for asset.
    *
-   * @param $asset_id
-   *  The asset ID.
-   * @param $a_metadata_definitions_full
-   *  The allowed metadata properties.
-   * @param $params
-   *  The values for metadata array(name => value)
-   * @param $action
-   *  The action; append, replace, update.
+   * @param string $asset_id
+   *   The asset ID.
+   * @param array $metadata_definitions_full
+   *   The allowed metadata properties.
+   * @param array $params
+   *   The values for metadata array(name => value)
+   * @param string $action
+   *   The actions;
+   *     - 'append': Append new metadata to existing metadata.
+   *     - 'replace': Remove all metadata (of given defintions) and replace with
+   *                  new.
+   *     - 'update': Remove all metadata from single property and insert new.
    */
-  public static function metadata_create($asset_id, array $a_metadata_definitions_full, array $params, $action) {
+  public static function metadata_create($asset_id, array $metadata_definitions_full, array $params, $action) {
     $values_set = array();
 
     // Transaction in.
     $transaction = mediamosa_db::db_transaction();
 
     try {
-      foreach ($a_metadata_definitions_full as $name => $a_definition) {
+      foreach ($metadata_definitions_full as $name => $definition) {
         // All off.
         $do_delete = FALSE;
 
-        // lets not use the alias.
-        $prop_id = $a_definition['propdef_id'];
+        // Lets not use the alias.
+        $prop_id = $definition['propdef_id'];
 
         // Based on action, set it.
         switch ($action) {
           case 'replace':
-            $do_delete = TRUE;
+            if ($definition['propdef_is_protected'] !== mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE || ($definition['propdef_is_protected'] === mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE && isset($params[$name]))) {
+              $do_delete = TRUE;
+            }
+            break;
 
           case 'append':
             break;
@@ -117,16 +120,12 @@ class mediamosa_asset_metadata {
         // Get the value.
         $values = $params[$name];
         foreach ($values as $value) {
-
-          // We do not store empty values.
-          if (trim($value) == '') {
+          // We do not store empty or null strings.
+          if (trim($value) === '' || $value === null) {
             continue;
           }
 
           $query = mediamosa_db::db_insert(mediamosa_asset_metadata_db::TABLE_NAME);
-          // FIXME: changed date will never be right if we just delete, and then
-          //        replace. Really should rewrite this properly with updating
-          //        the metadata instead of deleting it.
           $fields = array(
             mediamosa_asset_metadata_db::ASSET_ID => $asset_id,
             mediamosa_asset_metadata_db::PROP_ID => $prop_id,
@@ -135,10 +134,7 @@ class mediamosa_asset_metadata {
           // Add created value.
           $fields = mediamosa_db::db_insert_enrich($fields);
 
-          // Change from 1.x, we don't store all values in every
-          // val_[char/int/datetime] type. No more int value also in val_char
-          // etc.
-          switch ($a_definition['propdef_type']) {
+          switch ($definition['propdef_type']) {
             case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
               $fields[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
               break;
@@ -155,17 +151,17 @@ class mediamosa_asset_metadata {
 
             default:
               assert(0);
-              throw new mediamosa_exception_program_error('unknown metadata type');
+              throw new mediamosa_exception_program_error('Unknown metadata type');
           }
 
           // Insert it.
           $query->fields($fields)->execute();
 
-          $values_set[$name] = $value;
+          $values_set[$name][] = $value;
         }
       }
 
-      // update de timestamps van de asset
+      // Update de timestamps van de asset.
       mediamosa_asset::update_asset_timestamps($asset_id);
     }
     catch (Exception $e) {
@@ -182,9 +178,21 @@ class mediamosa_asset_metadata {
 
   /**
    * Collect the metadata of the asset.
-   * In array -> [groupname][propertyname] = array('values' => array(value, value), 'type' => type).
    *
-   * @param $asset_id
+   * In array ->
+   * [groupname][propertyname] = array(
+   *   'values' => array(
+   *     value,
+   *     value,
+   *   ),
+   *   'type' => type,
+   * ).
+   *
+   * @param string $asset_id
+   *   The asset to get metadata from.
+   *
+   * @return array
+   *   The metadata of the asset.
    */
   public static function metadata_get($asset_id) {
     $result = mediamosa_db::db_query(
@@ -211,9 +219,11 @@ class mediamosa_asset_metadata {
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
           $value = $metadata[mediamosa_asset_metadata_db::VAL_CHAR];
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
           $value = $metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_INT:
           $value = $metadata[mediamosa_asset_metadata_db::VAL_INT];
           break;
@@ -231,9 +241,12 @@ class mediamosa_asset_metadata {
    * Collect the metadata of the asset of a single property.
    *
    * @param string $asset_id
-   *   asset id.
+   *   The asset id.
    * @param int $prop_id
-   *   property id.
+   *   The property id.
+   *
+   * @return array
+   *   The metadata property values.
    */
   public static function metadata_prop_get($asset_id, $prop_id) {
     $result = mediamosa_db::db_query(
@@ -268,4 +281,23 @@ class mediamosa_asset_metadata {
     return $value;
   }
 
+  /**
+   * Create or replace metadata specific for asset set.
+   *
+   * @param string $asset_id
+   *   The ID of the asset.
+   * @param array $params
+   *   The name => key value pairs.
+   *
+   * @return array
+   *   The set values.
+   */
+  public static function metadata_asset_create($asset_id, $params) {
+    return static::metadata_create(
+      $asset_id,
+      mediamosa_asset_metadata_property::get_metadata_properties_full(FALSE, array('asset')),
+      $params,
+      'update'
+    );
+  }
 }

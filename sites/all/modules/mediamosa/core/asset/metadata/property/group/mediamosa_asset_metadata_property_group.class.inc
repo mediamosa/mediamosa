@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The database class of the asset metadata property group module.
  */
-
- /**
-  * @file
-  * The database class of the asset metadata property group module.
-  */
 
 class mediamosa_asset_metadata_property_group {
 
@@ -140,14 +115,17 @@ class mediamosa_asset_metadata_property_group {
    * Create global property.
    *
    * @param int $property_group_id
+   *   The parent property group ID.
    * @param string $property_name
+   *   The name of the property.
    * @param string $type
+   *   The type of the propert, CHAR, DATETIME or INT.
    * @param array $options
    *  An array of options;
    *   - min_occurences: minimum of occurences as data (reserved).
    *   - max_occurences: maximum of occurences as data (reserved).
    *   - is_hidden: hide metadata when generating output.
-   *
+   *   - is_protected: metadata can not be removed.
    */
   public static function property_create($property_group_id, $property_name, $type, array $options = array()) {
     // Default options.
@@ -155,6 +133,7 @@ class mediamosa_asset_metadata_property_group {
       'min_occurences' => 0,
       'max_occurences' => 0,
       'is_hidden' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      'is_protected' => mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE,
       'app_id' => 0,
     );
 
@@ -166,6 +145,7 @@ class mediamosa_asset_metadata_property_group {
       mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $options['max_occurences'],
       mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $options['min_occurences'],
       mediamosa_asset_metadata_property_db::IS_HIDDEN => $options['is_hidden'],
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => $options['is_protected'],
     );
 
     // Add created value.

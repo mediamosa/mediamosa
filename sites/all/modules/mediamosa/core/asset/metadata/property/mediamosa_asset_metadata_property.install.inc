@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * The installation file of the asset metadata module.
  */
-
- /**
-  * @file
-  * The installation file of the asset metadata module.
-  */
 
 require_once 'mediamosa_asset_metadata_property.class.inc';
 require_once 'mediamosa_asset_metadata_property_db.class.inc';
@@ -124,6 +99,13 @@ function mediamosa_asset_metadata_property_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
         'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      ),
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => array(
+        'description' => 'True if the property is protected against removal when asset metadata replace is used.',
+        'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE, mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE, mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE)) . "')",
+        'default' => mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE,
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_db::ID),

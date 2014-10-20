@@ -1,34 +1,8 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ /*
+ * @file
+ * Asset metadata related REST calls.
  */
-
- /**
-  * @file
-  *
-  */
-
 
 /**
  * URI: /asset/$asset_id/metadata
@@ -60,9 +34,9 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
@@ -105,16 +79,18 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     // Get full definitions.
     $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
 
-    // We need to add the allowed definitions to the $a_var_setup.
-    foreach ($metadata_definitions_full as $name => $a_definition) {
+    // We need to add the allowed definitions to the $var_setup.
+    foreach ($metadata_definitions_full as $name => $definitions) {
 
-      switch ($a_definition['propdef_type']) {
+      switch ($definitions['propdef_type']) {
         case mediamosa_asset_metadata_property_db::TYPE_INT:
           $type = mediamosa_sdk::TYPE_INT;
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
           $type = mediamosa_sdk::TYPE_DATETIME;
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
         default:
           // Default is string.
@@ -132,63 +108,64 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
       $this->used_metadata_definitions[] = $name;
 
       // Do not setup a default value, for any value(!).
-      $a_var_setup[self::VARS][$name] = array(
+      $var_setup[self::VARS][$name] = array(
         self::VAR_TYPE => $type,
         self::VAR_DESCRIPTION => 'A metadata property.',
         self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES, // always array.
       );
     }
 
-    return self::get_var_setup_app_admin($a_var_setup);
+    return self::get_var_setup_app_admin($var_setup);
   }
 
   // ----------------------------------------------- Override process_rest_args.
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
     // process current args so we can use them.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
     // 1st unset what we might not need from var_setup. Situation may change
     // during this call.
     foreach ($this->used_metadata_definitions as $name) {
-      unset($a_var_setup[self::VARS][$name]);
+      unset($var_setup[self::VARS][$name]);
     }
 
     // Now we can add the metadata definition input to our var setup.
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Asset must exist.
-    $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // If the app match, we check ownership or else a master slave record must exist
-    if ($app_id == $a_asset[mediamosa_asset_db::APP_ID]) {
-      mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    if ($app_id == $asset[mediamosa_asset_db::APP_ID]) {
+      mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
       // Get full definitions.
       $this->metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
     }
     else {
       // Check if there is a master / slave record on the asset / mediafile we are trying to add metadata to.
-      mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_ASSET, $asset_id, $a_app_ids);
+      mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_ASSET, $asset_id, $app_ids);
 
       // Only allow own definitions, not dc, qdc etc.
       $this->metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id, array());
     }
 
-    // We need to add the allowed definitions to the $a_var_setup.
-    foreach ($this->metadata_definitions_full as $name => $a_definition) {
-
-      switch ($a_definition['propdef_type']) {
+    // We need to add the allowed definitions to the $var_setup.
+    foreach ($this->metadata_definitions_full as $name => $definitions) {
+      switch ($definitions['propdef_type']) {
         case mediamosa_asset_metadata_property_db::TYPE_INT:
           $type = mediamosa_sdk::TYPE_INT;
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
           $type = mediamosa_sdk::TYPE_DATETIME;
           break;
+
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
         default:
           // Default is string.
@@ -198,12 +175,12 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
       // FIXME Don't like this hack. Rather see extension on metadata property
       //       with a allowed values.
-      if ($name == 'language') {
+      if ($name === 'language') {
         $type = mediamosa_sdk::TYPE_LANGUAGE_CODE;
       }
 
       // Do not setup a default value, for any value(!).
-      $a_var_setup[self::VARS][$name] = array(
+      $var_setup[self::VARS][$name] = array(
         self::VAR_TYPE => $type,
         self::VAR_DESCRIPTION => 'A metadata property.',
         self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES, // always array.
@@ -211,21 +188,16 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     }
 
     // Now again process the args with the metadata properties.
-    return parent::process_rest_args($a_var_setup);
+    return parent::process_rest_args($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $asset_id = $this->get_param_value(self::ASSET_ID);
-
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    // Access is checked in process_rest_args().
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
-    $user_id = $this->get_param_value(self::USER_ID);
 
     // Can't be set both.
     if ($this->isset_given_param(self::ACTION) && $this->isset_given_param(self::REPLACE)) {
@@ -246,26 +218,30 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     $action = $this->get_param_value(self::ACTION);
 
     // Fill the values.
-    $a_params = array();
-    foreach ($this->metadata_definitions_full as $name => $a_definition) {
+    $params = array();
+    foreach ($this->metadata_definitions_full as $name => $definitions) {
       if ($this->isset_given_param($name)) {
-        $a_params[$name] = $this->get_param_value($name);
+        $params[$name] = $this->get_param_value($name);
       }
     }
 
     // Create the metadata.
-    $a_value_set = mediamosa_asset_metadata::metadata_create($asset_id, $this->metadata_definitions_full, $a_params, $action);
+    $value_set = mediamosa_asset_metadata::metadata_create($asset_id, $this->metadata_definitions_full, $params, $action);
 
     // Return what has been changed/inserted.
-    foreach ($a_value_set as $name => $value) {
-      $a_definition = $this->metadata_definitions_full[$name];
+    foreach ($value_set as $name => $values) {
+      $definitions = $this->metadata_definitions_full[$name];
 
       // Datetime values shall be converted to user timezone.
-      if ($a_definition['propdef_type'] == mediamosa_asset_metadata_property_db::TYPE_DATETIME) {
-        $value = mediamosa::utcdate2appdate($value);
+      if ($definitions['propdef_type'] == mediamosa_asset_metadata_property_db::TYPE_DATETIME) {
+        if (is_array($values)) {
+          foreach ($values as &$value) {
+            $value = mediamosa::utcdate2appdate($value);
+          }
+        }
       }
 
-      $o_mediamosa->add_item(array($name => $value));
+      $o_mediamosa->add_item(array($name => $values));
     }
   }
 }

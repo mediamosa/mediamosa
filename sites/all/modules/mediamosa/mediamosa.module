@@ -364,7 +364,7 @@ function _mediamosa_user_access($perms, $one_part_test = FALSE) {
       }
 
       // Part of role?
-      if ($perms == substr($role_permission, 0, drupal_strlen($perms))) {
+      if ($perms === substr($role_permission, 0, drupal_strlen($perms))) {
         return TRUE;
       }
     }

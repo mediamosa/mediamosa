@@ -60,7 +60,6 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 
     // Get the app_id.
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
 
     // limit, offset.
     $limit = $this->get_param_value(self::LIMIT);
@@ -97,6 +96,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
           'created' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CREATED]),
           'changed' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CHANGED]),
           'is_hidden' => $property[mediamosa_asset_metadata_property_db::IS_HIDDEN],
+          'is_protected' => $property[mediamosa_asset_metadata_property_db::IS_PROTECTED],
         )
       );
     }
@@ -107,18 +107,17 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 /**
  * URI: /metadata_tag/create
  * Create a asset metadata property.
- *
- * 1.x: media_management_metadata_definition_create
- *
  */
 class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
-  const NAME = 'name'; // Property name.
-  const TYPE = 'type'; // Property type.
-  const IS_HIDDEN = 'is_hidden'; // Is hidden?
-  // ------------------------------------------------------------------ Get Var Setup.
+  const NAME = 'name';
+  const TYPE = 'type';
+  const IS_HIDDEN = 'is_hidden';
+  const IS_PROTECTED = 'is_protected';
+
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
@@ -138,7 +137,13 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_ALLOWED_VALUES => array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE),
           self::VAR_DEFAULT_VALUE => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
-          self::DESCRIPTION => "True if the property is hidden.",
+          self::DESCRIPTION => 'True if the property is hidden.',
+        ),
+        self::IS_PROTECTED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_ALLOWED_VALUES => array(mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE, mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE,
+          self::DESCRIPTION => 'True if the property is protected against removal when asset metadata replace is used. Protected properties can not be unset or lose their value.',
         ),
       ),
     );
@@ -164,8 +169,10 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     // Is the new property hidden.
     $is_hidden = $this->get_param_value(self::IS_HIDDEN);
 
+    $is_protected = $this->get_param_value(self::IS_PROTECTED);
+
     // Create the property. Any problems will throw exception.
-    $property_id = mediamosa_asset_metadata_property::property_create($app_id, $name, $type, 0, 0, $is_hidden);
+    $property_id = mediamosa_asset_metadata_property::property_create($app_id, $name, $type, 0, 0, $is_hidden, $is_protected);
 
     // Get the property.
     $property = mediamosa_asset_metadata_property::property_get_row($property_id);
@@ -179,15 +186,14 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
 
 /**
  * URI: /metadata_tag/delete
- * Delete a asset metadata property.
  *
- * 1.x: media_management_metadata_definition_delete
+ * Delete a asset metadata property.
  */
 class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
-  const NAME = 'name'; // Enter property name.
+  const NAME = 'name';
   const DELETE = 'delete';
 
   // ------------------------------------------------------------------ Get Var Setup.
@@ -239,9 +245,8 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
  *
  * Count the tags per tag per prop_id.
  *
- * FIXME: Why this weird rest call? ITS DB HEAVY. Maybe do group by on val_char_lft.
- *
- * 1.x: media_management_asset_tagcount
+ * FIXME: Why this weird rest call? ITS DB HEAVY. Maybe do group by on
+ * val_char_lft.
  */
 class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_rest_call {
 
@@ -287,11 +292,11 @@ class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_res
     $result = mediamosa_asset_metadata::tagcount($app_id, $prop_id, $offset, $limit);
 
     // Set the result.
-    $a_item = array();
-    foreach ($result as $a_row) {
-      $a_item['count'] = $a_row['tagcount'];
-      $a_item['tag'] = $a_row[mediamosa_asset_metadata_db::VAL_CHAR];
-      $mediamosa->add_item($a_item);
+    $item = array();
+    foreach ($result as $row) {
+      $item['count'] = $row['tagcount'];
+      $item['tag'] = $row[mediamosa_asset_metadata_db::VAL_CHAR];
+      $mediamosa->add_item($item);
     }
   }
 }

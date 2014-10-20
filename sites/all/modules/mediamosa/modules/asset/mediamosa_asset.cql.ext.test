@@ -32,9 +32,12 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id_5 = $this->createMediafile($asset_id_5);
 
     // Create asset metadata.
+    //
+    // Title lego: no.
+    // Desc lego: yes.
     $this->createAssetMetadata($asset_id_1,
       array(
-        'title' => 'goeie tijden slechte tijden',
+        'title' => 'goeie tijden slechte tijden in zuid-holland',
         'description' => 'lego artist Iain Heath built an incredible 6-foot-long Lego model of scenes from the 1993 classic video game Doom.',
         'subject' => array(
           'criminaliteit',
@@ -47,6 +50,8 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
       )
     );
 
+    // Title lego: yes.
+    // Desc lego: no.
     $this->createAssetMetadata($asset_id_2,
       array(
         'title' => 'lego artist Iain Heath built an incredible 6-foot-long Lego model of scenes from the 1993 classic video game Doom.',
@@ -54,6 +59,8 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
       )
     );
 
+    // Title lego: yes.
+    // Desc lego: no.
     $this->createAssetMetadata($asset_id_3,
       array(
         'title' => 'Mediamosa was build with lego',
@@ -61,6 +68,8 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
       )
     );
 
+    // Title lego: yes.
+    // Desc lego: no.
     $this->createAssetMetadata($asset_id_4,
       array(
         'title' => 'goeie lego is niet slecht',
@@ -68,6 +77,8 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
       )
     );
 
+    // Title lego: no.
+    // Desc lego: no.
     $this->createAssetMetadata($asset_id_5,
       array(
         'title' => 'this is some random title',
@@ -75,7 +86,7 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
       )
     );
 
-    // Only asset 5.
+    // Only asset 1.
     $this->cql_do_search_test_assets_1('dc.title <> "*lego*" AND NOT dc.description <> "*lego*"', array($asset_id_1 => TRUE));
 
     // Only asset 5.
@@ -84,7 +95,12 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
     // Only asset 2 and 4.
     $this->cql_do_search_test_assets_1('dc.title any "lego" AND (dc.description <> "jongeren" AND dc.description <> "jongeren")', array($asset_id_2 => TRUE, $asset_id_4 => TRUE));
 
-    // Only asset 5.
+    // Only asset 1, 2, 3, 4 and 5.
     $this->cql_do_search_test_assets_1('dc.title any "lego" OR (dc.description <> "jongeren" AND dc.description <> "jongeren")', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+
+    // Only asset 2,3 and 4.
+    $this->cql_do_search_test_assets_1('dc.title any "lego" AND NOT dc.description any "lego"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
+
+    $this->cql_do_search_test_assets_1('dc.title any "zuid-holland"', array($asset_id_1 => TRUE));
   }
 }

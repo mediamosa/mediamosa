@@ -635,6 +635,38 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
   $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
 
+  // Publish the asset.
+  $rest_calls['asset/$asset_id/publish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_publish',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  // Publish multiple assets.
+  $rest_calls['asset/publish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_publish_multi',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  // Unpublish the asset.
+  $rest_calls['asset/$asset_id/unpublish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_unpublish',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  // Unpublish multiple assets.
+  $rest_calls['asset/unpublish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_unpublish_multi',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
   return $rest_calls;
 }
 
@@ -2038,9 +2070,40 @@ user_id=admin',
   $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
   $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_OPTIONS] = $rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_OPTIONS];
 
+  $rest_calls['asset/$asset_id/publish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Publish a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'The publish state is used during asset searches to return only published, unpublished or all assets. The default value when creating assets is TRUE (published). This setting can be changed under each client application.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] asset/$asset_id/publish',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['asset/publish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Publish multiple assets.',
+    mediamosa_rest_call::DESCRIPTION => 'The publish state is used during asset searches to return only published, unpublished or all assets. The default value when creating assets is TRUE (published). This setting can be changed under each client application.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] asset/publish',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['asset/$asset_id/unpublish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Unpublish a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'The publish state is used during asset searches to return only published, unpublished or all assets. The default value when creating assets is TRUE (published). This setting can be changed under each client application.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] asset/$asset_id/unpublish',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $rest_calls['asset/unpublish'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Unpublish multiple assets.',
+    mediamosa_rest_call::DESCRIPTION => 'The publish state is used during asset searches to return only published, unpublished or all assets. The default value when creating assets is TRUE (published). This setting can be changed under each client application.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] asset/unpublish',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
   return $rest_calls;
 }
-
 
 /**
  * Implements hook_mediamosa_configuration_collect().

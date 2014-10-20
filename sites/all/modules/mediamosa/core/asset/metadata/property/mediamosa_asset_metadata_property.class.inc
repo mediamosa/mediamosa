@@ -89,7 +89,7 @@ class mediamosa_asset_metadata_property {
    * @return
    *   The new prop_id.
    */
-  public static function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE) {
+  public static function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, $is_protected = mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE) {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
@@ -125,6 +125,7 @@ class mediamosa_asset_metadata_property {
       mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $max_occurences,
       mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $min_occurences,
       mediamosa_asset_metadata_property_db::IS_HIDDEN => $is_hidden,
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => $is_protected,
     );
 
     // Add created value.
@@ -173,7 +174,7 @@ class mediamosa_asset_metadata_property {
   /**
    * Delete a metadata property.
    *
-   * @param int $app_ids
+   * @param int $app_id
    *   The app id.
    * @param string $name
    *   The name of the property to delete.
@@ -249,8 +250,8 @@ class mediamosa_asset_metadata_property {
   public static function property_get_row_with_name($name, $propgroup_id) {
     return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
       ->fields('amp')
-      ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $propgroup_id, '=')
-      ->condition(mediamosa_asset_metadata_property_db::NAME, $name, '=')
+      ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $propgroup_id)
+      ->condition(mediamosa_asset_metadata_property_db::NAME, $name)
       ->execute()->fetchAssoc();
   }
 
@@ -296,6 +297,7 @@ class mediamosa_asset_metadata_property {
     $query->addField('amp', mediamosa_asset_metadata_property_db::ID, 'propdef_id');
     $query->addField('amp', mediamosa_asset_metadata_property_db::NAME, 'propdef_name');
     $query->addField('amp', mediamosa_asset_metadata_property_db::IS_HIDDEN, 'propdef_is_hidden');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::IS_PROTECTED, 'propdef_is_protected');
 
     // Now where to search.
     $query->condition(mediamosa_asset_metadata_property_group_db::NAME, $metadata_property_groups, 'IN');

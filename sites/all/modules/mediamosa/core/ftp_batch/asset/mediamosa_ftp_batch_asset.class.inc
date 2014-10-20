@@ -56,7 +56,7 @@ class mediamosa_ftp_batch_asset {
 
     // Make sure all assets exist.
     foreach ($asset_ids as $asset_id) {
-      mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::APP_ID => $app_id));
+      mediamosa_asset::must_exists($asset_id, $app_id);
     }
 
     // Now create relations.

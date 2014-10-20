@@ -190,7 +190,7 @@ abstract class mediamosa_rest_call {
   /**
    * Main constructor.
    *
-   * @param rest_call $o_rest_call
+   * @param rest_call $rest_call
    */
   function __construct($rest_call) {
     // Copy us.
@@ -330,7 +330,8 @@ abstract class mediamosa_rest_call {
    */
   protected function get_var_setup_default(array $var_setup, $app_id_required = TRUE) {
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
-      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+      // Once set, dont change.
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES,
       self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,

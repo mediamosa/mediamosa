@@ -39,6 +39,7 @@ files[] = tests/mediamosa_solr.acl.slave.rights.test
 files[] = tests/mediamosa_solr.acl.test
 files[] = tests/mediamosa_solr.asset_mediafiles.test
 files[] = tests/mediamosa_solr.asset.metadata.test
+files[] = tests/mediamosa_solr.asset.publish.test
 
 ; Add 3rdparty so classes are autoload by Drupal.
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Service.php

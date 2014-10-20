@@ -471,6 +471,14 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 
+  $form['client_application'][mediamosa_app_db::PUBLISHED_ASSET_DEFAULT] = array(
+    '#type' => 'select',
+    '#title' => t('Publish status on new assets'),
+    '#description' => t("Default publish status when creating assets. By default all new assets are published. Use 'not published' when new assets should not be visible in normal searches until they are published."),
+    '#options' => array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE => t('Published'), mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE => t('Not published')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT, $node, mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE),
+  );
+
   if (module_exists('mediamosa_storage')) {
     $form['storage'] = array(
       '#type' => 'fieldset',
