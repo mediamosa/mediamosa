@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2112)
+MediaMosa 3.5.1-dev (build 2113)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -124,7 +124,7 @@ MediaMosa 3.5.1-dev (build 2112)
 - Upgraded Drupal to 7.32.
 - Added publish and unpublish for assets. See new 3.6.0 REST calls using the
   REST call browser in backend.
-
+- Added setting for default published value for search per client application.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
