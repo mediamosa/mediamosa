@@ -516,11 +516,21 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Now include metadata search stuff.
     $var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, $var_setup, self::get_search_params());
 
+    $app_id = reset($app_ids);
+
+    $publish_default = 'TRUE';
+    if ($app_id) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        $publish_default = $app[mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT];
+      }
+    }
+
     // Overrule the publish metadata autocreate.
     $var_setup[self::VARS][self::PUBLISHED] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       self::VAR_DESCRIPTION => "Filtering on published state. The default published states are 'TRUE' and 'FALSE'. To search within all published assets, supply 'TRUE'. For all unpublished, supply 'FALSE'. To search on all assets supply 'all'. If you want to let CQL handle the publish state, supply 'all' too, and use asset.published == \"^TRUE^\", asset.published == \"^FALSE^\" or for both asset.published = \"^TRUE^ ^FALSE^\"",
-      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_DEFAULT_VALUE => $publish_default,
       self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'all'),
     );
     unset($var_setup[self::VARS][self::PUBLISHED . '_match']);

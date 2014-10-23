@@ -479,6 +479,14 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT, $node, mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE),
   );
 
+  $form['client_application'][mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT] = array(
+    '#type' => 'select',
+    '#title' => t('Publish default status when searching'),
+    '#description' => t("The default value for asset 'published' parameter when using asset search REST call."),
+    '#options' => array(mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE => t('Show only published by default'), mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_FALSE => t('Show not published by default'), mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_ALL => t('Show all, published and unpublished by default')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT, $node, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE),
+  );
+
   if (module_exists('mediamosa_storage')) {
     $form['storage'] = array(
       '#type' => 'fieldset',

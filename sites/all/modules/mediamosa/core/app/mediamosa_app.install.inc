@@ -288,6 +288,13 @@ function mediamosa_app_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE, mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE)) . "')",
         'default' => mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_TRUE,
       ),
+      mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT => array(
+        'description' => "The default value for asset 'published' parameter when using asset search REST call.",
+        'type' => "enum('" . implode("','", array(mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_FALSE, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_ALL)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_FALSE, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_ALL)) . "')",
+        'default' => mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE,
+      ),
     ),
     'primary key' => array(mediamosa_app_db::NID),
     'unique keys' => array(

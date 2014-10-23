@@ -24,9 +24,13 @@ class MediaMosaAssetPublishTestCaseEga extends MediaMosaTestCaseEga {
     // Set default of client app published to false.
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
     db_update(mediamosa_app_db::TABLE_NAME)
-      ->fields(array(mediamosa_app_db::PUBLISHED_ASSET_DEFAULT => mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE))
+      ->fields(array(
+        mediamosa_app_db::PUBLISHED_ASSET_DEFAULT => mediamosa_app_db::PUBLISHED_ASSET_DEFAULT_FALSE,
+        mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT => mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE,
+      ))
       ->condition('app_id', $app_id)
       ->execute();
+
     $asset_id_3 = $this->createAsset();
     $asset = $this->getAsset($asset_id_3);
     $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');

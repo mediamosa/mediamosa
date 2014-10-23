@@ -85,6 +85,10 @@ class mediamosa_app_db {
   const PUBLISHED_ASSET_DEFAULT = 'published_asset_default';
   const PUBLISHED_ASSET_DEFAULT_TRUE = 'TRUE';
   const PUBLISHED_ASSET_DEFAULT_FALSE = 'FALSE';
+  const PUBLISHED_ASSET_SEARCH_DEFAULT = 'published_asset_search_default';
+  const PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE = 'TRUE';
+  const PUBLISHED_ASSET_SEARCH_DEFAULT_FALSE = 'FALSE';
+  const PUBLISHED_ASSET_SEARCH_DEFAULT_ALL = 'all';
 
   // Pseudo fields; these are not stored or are part of the installation.
   const STORAGE_URI = 'storage_uri';

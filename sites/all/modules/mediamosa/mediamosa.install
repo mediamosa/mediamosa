@@ -4985,3 +4985,22 @@ function mediamosa_update_7186() {
 
   return strtr('Successfully published {published} asset(s).', array('{published}' => $start));
 }
+
+/**
+ * Create default publish setting on client application.
+ */
+function mediamosa_update_7187() {
+  if (!db_field_exists('mediamosa_app', 'published_asset_search_default')) {
+    db_add_field(
+      'mediamosa_app',
+      'published_asset_search_default',
+      array(
+        'description' => "The default value for asset 'published' parameter when using asset search REST call.",
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'all')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'all')) . "')",
+        'default' => 'TRUE',
+      )
+    );
+  }
+}
