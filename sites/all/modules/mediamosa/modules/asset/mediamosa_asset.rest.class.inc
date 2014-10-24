@@ -529,9 +529,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Overrule the publish metadata autocreate.
     $var_setup[self::VARS][self::PUBLISHED] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-      self::VAR_DESCRIPTION => "Filtering on published state. The default published states are 'TRUE' and 'FALSE'. To search within all published assets, supply 'TRUE'. For all unpublished, supply 'FALSE'. To search on all assets supply 'all'. If you want to let CQL handle the publish state, supply 'all' too, and use asset.published == \"^TRUE^\", asset.published == \"^FALSE^\" or for both asset.published = \"^TRUE^ ^FALSE^\"",
+      self::VAR_DESCRIPTION => "Filtering on published state. The default published states are 'TRUE' and 'FALSE'. To search within all published assets, supply 'TRUE'. For all unpublished, supply 'FALSE'. To search on all assets supply 'ALL'. If you want to use CQL, make sure you supply 'ALL' as value for 'published' on the REST call besides CQL. Once you supply 'ALL', use in CQL asset.published == \"^TRUE^\", asset.published == \"^FALSE^\" or for both asset.published = \"^TRUE^ ^FALSE^\". The default value for published parameter can be overridden per client application on its settings page.",
       self::VAR_DEFAULT_VALUE => $publish_default,
-      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'all'),
+      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
     );
     unset($var_setup[self::VARS][self::PUBLISHED . '_match']);
 

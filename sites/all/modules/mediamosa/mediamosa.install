@@ -4996,9 +4996,9 @@ function mediamosa_update_7187() {
       'published_asset_search_default',
       array(
         'description' => "The default value for asset 'published' parameter when using asset search REST call.",
-        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'all')) . "')",
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'all')) . "')",
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
         'default' => 'TRUE',
       )
     );

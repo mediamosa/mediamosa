@@ -360,6 +360,8 @@ class mediamosa_media {
    *     The finished server uri.
    */
   public static function process_media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+    assert($app_id);
+
     // Get normal uri to mediafile.
     $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
@@ -1011,6 +1013,7 @@ class mediamosa_media {
    * @throws mediamosa_exception_error
    */
   public static function do_response_still($app_id, $user_id, $is_app_admin, $still, array $filtered_stills = array()) {
+    assert($app_id);
 
     // Build the mediaview.
     $media_view = mediamosa_media::process_media_view($app_id, $user_id, $still, mediamosa_media::RESPONSE_STILL, $is_app_admin);

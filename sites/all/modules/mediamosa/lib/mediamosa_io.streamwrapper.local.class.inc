@@ -316,6 +316,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
    *     Public urls have no ACL rules.
    */
    public function media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
+    assert($app_id);
 
     // Get the stuff we need.
     $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
