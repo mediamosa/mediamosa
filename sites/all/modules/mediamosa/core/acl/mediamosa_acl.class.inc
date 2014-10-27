@@ -1388,8 +1388,7 @@ class mediamosa_acl {
             }
 
             foreach ($slaves as $app_id_slave => $a_slave) {
-              assert($app_id_slave);// should not happen
-              // Only for app_ids that are present
+              mediamosa_exception::assert($app_id_slave, 'Must have slave app ID');
 
               // Must be same app_id for slaves
               $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = $app_id_table_prefix . '.app_id=' . mediamosa_db::escape_string($app_id_slave);
@@ -1523,8 +1522,7 @@ class mediamosa_acl {
             }
 
             foreach ($slaves as $app_id_slave => $a_slave) {
-              assert($app_id_slave);// should not happen
-              // Only for app_ids that are present
+              mediamosa_exception::assert($app_id_slave, 'Must have slave app ID');
 
               // Must be same app_id for slaves
               $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = "a.app_id ='" . mediamosa_db::escape_string($app_id_slave);

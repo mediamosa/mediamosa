@@ -360,8 +360,6 @@ class mediamosa_media {
    *     The finished server uri.
    */
   public static function process_media_view($app_id, $user_id, array $mediafile, $response_type, $is_app_admin) {
-    assert($app_id);
-
     // Get normal uri to mediafile.
     $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
 
@@ -424,10 +422,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
-   * @param array $mediafile
-   *   The mediafile to download.
    * @param bool $is_app_admin
    *   Is user application admin.
+   * @param array $mediafile
+   *   The mediafile to download.
    *
    * @return array
    *   An associative array;
@@ -994,10 +992,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The user ID for ticket owner.
-   * @param array $still
-   *   The still mediafile.
    * @param bool $is_app_admin
    *   Is app admin.
+   * @param array $still
+   *   The still mediafile.
    * @param array $filtered_stills
    *   The filtered stills result or empty.
    *
@@ -1013,7 +1011,7 @@ class mediamosa_media {
    * @throws mediamosa_exception_error
    */
   public static function do_response_still($app_id, $user_id, $is_app_admin, $still, array $filtered_stills = array()) {
-    assert($app_id);
+    mediamosa_exception::assert($app_id, 'Must supply app ID');
 
     // Build the mediaview.
     $media_view = mediamosa_media::process_media_view($app_id, $user_id, $still, mediamosa_media::RESPONSE_STILL, $is_app_admin);
