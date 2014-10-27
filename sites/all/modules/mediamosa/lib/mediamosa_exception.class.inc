@@ -61,6 +61,34 @@ class mediamosa_exception extends Exception {
   public function mediamosa_exception_rest_response() {
     mediamosa::get()->set_result(mediamosa_response::ERROR, $this->getCode(), $this->getMessage());
   }
+
+  /**
+   * Test the value $test and fail when not true.
+   *
+   * @param mixed $test
+   *   Any value that needs to be tested.
+   * @param string $message
+   *   (optional) The message to show.
+   *
+   * @throws RtmException
+   *   When test fails.
+   */
+  public static function assert($test, $message = '') {
+
+    if (!$test) {
+      $caller = _drupal_get_last_caller(debug_backtrace());
+
+      throw new mediamosa_exception_program_error(
+        '{message}Assertion failed in {function} {file} ({line}).',
+        array(
+          '{function}' => $caller['function'],
+          '{line}' => $caller['line'],
+          '{file}' => $caller['file'],
+          '{message}' => empty($message) ? '' : ($message . ', '),
+        )
+      );
+    }
+  }
 }
 
 /**
