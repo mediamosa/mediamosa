@@ -982,7 +982,7 @@ class mediamosa_asset {
                 $still = mediamosa_asset_mediafile::get($still_id);
               }
 
-              if ($still) {
+              if ($still && $app_id) {
                 // Create still response.
                 $response = mediamosa_media::do_response_still($app_id, $acl_user_id, $is_app_admin, $still);
                 $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
