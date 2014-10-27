@@ -53,6 +53,14 @@ function mediamosa_browse_asset_filter_form() {
     '#default_value' => isset($session['hide_empty_assets']) ? $session['hide_empty_assets'] : 0,
   );
 
+  $form['actions']['filters']['published'] = array(
+    '#type' => 'select',
+    '#title' => t('Published state'),
+    '#description' => t('Show either publish, not published or all assets.'),
+    '#options' => array('ALL' => t('Show all assets'), 'TRUE' => t('Show only published'), 'FALSE' => t('Show only unpublished')),
+    '#default_value' => isset($session['published']) ? $session['published'] : 'ALL',
+  );
+
   $form['actions']['filters']['operator'] = array(
     '#type' => 'select',
     '#title' => t('Search criteria operator'),
@@ -65,7 +73,7 @@ function mediamosa_browse_asset_filter_form() {
     $form['actions']['filters']['coll_id'] = array(
       '#type' => 'select',
       '#title' => t('Search within collection'),
-      '#description' => t("Select collection to be searched. Leave empty for all collections."),
+      '#description' => t('Select collection to be searched. Leave empty for all collections.'),
       '#options' => $collections,
       '#default_value' => isset($session['coll_id']) ? $session['coll_id'] : 0,
     );
@@ -300,6 +308,7 @@ function _mediamosa_browse_asset_execute() {
   $limit = $session['limit'];
   $page = $session['page'];
   $op = $session['op'];
+  $published = $session['published'];
   $hide_empty_assets = $session['hide_empty_assets'];
 
   switch ($order) {
@@ -357,6 +366,8 @@ function _mediamosa_browse_asset_execute() {
     $params['hide_empty_assets'] = 'TRUE';
   }
 
+  $params['published'] = $published;
+
   // Do the rest call.
   return mediamosa_response_connector::static_do_restcall_drupal('asset', 'GET', $params);
 }
@@ -377,7 +388,7 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
   }
 
   if (isset($filter_form_state['input'])) {
-    foreach (array('operator', 'coll_id', 'filters', 'cql', 'op') as $param) {
+    foreach (array('operator', 'coll_id', 'filters', 'cql', 'op', 'published') as $param) {
       if (isset($filter_form_state['input'][$param])) {
         $session[$param] = $filter_form_state['input'][$param];
       }
@@ -398,6 +409,7 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
     'limit' => mediamosa_settings::maintenance_items_per_page(),
     'hide_empty_assets' => 1,
     'op' => t('Apply filter'),
+    'published' => 'ALL',
   );
 
   // Set it again.
