@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2114)
+MediaMosa 3.5.1-dev (build 2115)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -125,6 +125,11 @@ MediaMosa 3.5.1-dev (build 2114)
 - Added publish and unpublish for assets. See new 3.6.0 REST calls using the
   REST call browser in backend.
 - Added setting for default published value for search per client application.
+- Added exception throwing instead of assert().
+- Added published filter to asset browser.
+- Added assert exception function to use instead of assert().
+- Fixed warnings for stills when using asset browser in backend in watchdog.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
