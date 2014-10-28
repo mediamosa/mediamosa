@@ -398,17 +398,19 @@ class mediamosa_asset {
       )
     )->fetchAssoc();
 
-    // Does the asset have metadata?
-    $has_metadata = mediamosa_db::db_query(
-      'select count(*) total from mediamosa_asset_metadata md where md.asset_id = :asset_id', array(":asset_id" => $asset_id)
-    )->fetchField();
+    $query = db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'am');
+    $query->addJoin('INNER', mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp', 'amp.prop_id = am.prop_id');
+    $query->addJoin('INNER', mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg', 'ampg.propgroup_id = amp.propgroup_id');
+    $query->condition('am.' . mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
+    $query->condition('ampg.' . mediamosa_asset_metadata_property_group_db::NAME, 'asset', '!=');
+    $has_metadata = $query->countQuery()->execute()->fetchField() > 0;
 
     // An asset is empty if it has no files with content and no metadata.
-    $is_empty_asset = (($has_metadata == 0) && !$mediafile) ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE;
+    $is_empty_asset = (!$has_metadata && !$mediafile) ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE;
 
     // Set is_empty_asset.
     mediamosa_db::db_query(
-      "UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
+      'UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
@@ -420,7 +422,7 @@ class mediamosa_asset {
 
     // Set is_empty_asset in asset_relation.
     mediamosa_db::db_query(
-      "UPDATE {#mediamosa_asset_collection} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
+      'UPDATE {#mediamosa_asset_collection} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
       array(
         '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
         '#is_empty_asset' => mediamosa_asset_collection_db::IS_EMPTY_ASSET,
