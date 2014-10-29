@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2116)
+MediaMosa 3.5.1-dev (build 2117)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -131,6 +131,9 @@ MediaMosa 3.5.1-dev (build 2116)
 - Fixed warnings for stills when using asset browser in backend in watchdog.
 - Asset metadata belonging to the asset metadata set (which contains f.e.
   'published' flag) no longer effects the is_empty_asset flag on a asset.
+- Fixed file upload with transcoding parameters; current code only allowed
+  transcode profiles from the same client application that uploaded the file.
+- Fixed drupal alter call for asset enrich on output.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
