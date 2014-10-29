@@ -4,7 +4,7 @@
  * Upload test of files (videos / stills).
  */
 
-class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
@@ -23,9 +23,6 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
    * Upload using POST and PUT.
    */
   function testUploadPost() {
-    // Code moved to lower class so we can use it in other tests that need
-    // uploaded test file.
-
     // POST upload test.
     $this->uploadTestFile();
 
@@ -38,5 +35,32 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
 
     // PUT upload test.
     $this->uploadTestFile(array('use_put' => TRUE));
+  }
+
+  /**
+   * Upload using POST and PUT.
+   */
+  function testUploadTranscode() {
+    // POST upload test.
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg(), 'transcode' => array($this->getDefaultTranscodeProfile())));
+
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create still.
+    $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the mediafiles belonging to an asset.
+    $asset_mediafiles = $this->getAssetMediafile($asset_id);
+
+    // Check the result.
+    $expected = 2;
+    $this->assertTrue(
+      count($asset_mediafiles['items']['item']) == $expected,
+      t("Get the mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => count($asset_mediafiles['items']['item']), '@expected' => $expected))
+    );
   }
 }

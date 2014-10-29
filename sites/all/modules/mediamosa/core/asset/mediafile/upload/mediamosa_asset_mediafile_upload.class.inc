@@ -248,8 +248,14 @@ class mediamosa_asset_mediafile_upload {
       // Start transcodes.
       foreach ($transcode_profiles as $profile_id) {
         try {
-          // Only start existing profiles.
-          mediamosa_transcode_profile::must_exists($app_id, $profile_id);
+          try {
+            // Try global first.
+            mediamosa_transcode_profile::must_exists(0, $profile_id);
+          }
+          catch (Exception $e) {
+            // Only start existing profiles that we own.
+            mediamosa_transcode_profile::must_exists($app_id, $profile_id);
+          }
 
           mediamosa_job::create_job_transcode(
             $app_id,

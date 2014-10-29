@@ -230,7 +230,7 @@ class mediamosa_asset_metadata {
       }
 
       // Collect the value.
-      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] =  $metadata[mediamosa_asset_metadata_property_db::TYPE];
+      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] = $metadata[mediamosa_asset_metadata_property_db::TYPE];
       $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['values'][] = $value;
     }
 
