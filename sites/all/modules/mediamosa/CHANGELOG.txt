@@ -1,4 +1,4 @@
-MediaMosa 3.5.1-dev (build 2117)
+MediaMosa 3.6.0-dev (build 2118)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -134,6 +134,10 @@ MediaMosa 3.5.1-dev (build 2117)
 - Fixed file upload with transcoding parameters; current code only allowed
   transcode profiles from the same client application that uploaded the file.
 - Fixed drupal alter call for asset enrich on output.
+- Added trashcan and restore functionality for assets. This allows client
+  application to keep deleted assets and restore them later back to its original
+  state.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
