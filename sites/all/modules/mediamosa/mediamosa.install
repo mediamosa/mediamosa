@@ -5054,3 +5054,144 @@ function mediamosa_update_7188() {
 
   return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
 }
+
+/**
+ * Create default asset trashcan setting on client application.
+ */
+function mediamosa_update_7189() {
+  if (!db_field_exists('mediamosa_app', 'trashcan_asset_default')) {
+    db_add_field(
+      'mediamosa_app',
+      'trashcan_asset_default',
+      array(
+        'description' => 'The default value for the parameter asset trashcan flag when deleting assets.',
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE')) . "')",
+        'default' => 'FALSE',
+      )
+    );
+  }
+}
+
+/**
+ * Create default trashcan setting on client application.
+ */
+function mediamosa_update_7190() {
+  if (!db_field_exists('mediamosa_app', 'trashcan_asset_search_default')) {
+    db_add_field(
+      'mediamosa_app',
+      'trashcan_asset_search_default',
+      array(
+        'description' => "The default value for asset 'deleted' parameter when using asset search REST call.",
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'default' => 'TRUE',
+      )
+    );
+  }
+}
+
+/**
+ * Rename the 'deleted' metadata flag into 'trashcan'.
+ */
+function mediamosa_update_7191() {
+  $property_group = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+    ->fields('ampg')
+    ->condition('propgroup_name', 'asset')
+    ->execute()
+    ->fetchAssoc();
+
+  db_update('mediamosa_asset_metadata_property')
+    ->fields(array('prop_name' => 'trashcan'))
+    ->condition('propgroup_id', $property_group['propgroup_id'])
+    ->condition('prop_name' , 'deleted')
+    ->execute();
+}
+
+/**
+ * Give all assets an undeleted status.
+ *
+ * This might take some time depending on the size of your database. If this
+ * update times out or stops because of OOM errors, just run update again. The
+ * update will continue where it was interrupted.
+ */
+function mediamosa_update_7192() {
+
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  $propgroup_id = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+    ->fields('ampg', array('propgroup_id'))
+    ->condition('propgroup_name', 'asset')
+    ->execute()
+    ->fetchColumn();
+  assert($propgroup_id);
+
+  $prop_id = db_select('mediamosa_asset_metadata_property', 'amp')
+    ->fields('amp', array('prop_id'))
+    ->condition('propgroup_id', $propgroup_id)
+    ->condition('prop_name', 'trashcan')
+    ->execute()
+    ->fetchColumn();
+  assert($prop_id);
+
+  while (TRUE) {
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+
+    db_delete('mediamosa_asset_metadata')
+      ->condition('prop_id', $prop_id)
+      ->condition('asset_id', $asset_ids)
+      ->execute();
+
+    foreach ($asset_ids as $asset_id) {
+      db_insert('mediamosa_asset_metadata')
+        ->fields(array(
+        'asset_id' => $asset_id,
+        'prop_id' => $prop_id,
+        'val_char' => 'FALSE',
+        'val_char_lft' => 'FALSE',
+        'val_char_rght' => 'ESLAF',
+        'val_datetime' => NULL,
+        'val_int' => 0,
+        'created' => mediamosa_datetime::db_current_timestamp_now(),
+        'changed' => mediamosa_datetime::db_current_timestamp_now()
+      ))
+      ->execute();
+    }
+
+    // Next position.
+    $start += count($asset_ids);
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  // Now start a reindex in solr (if enabled).
+  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
+    _mediamosa_solr_batch_reindex_start(FALSE);
+  }
+
+  return strtr('Successfully set trashcan state to off for {trashcan} asset(s).', array('{trashcan}' => $start));
+}

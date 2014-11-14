@@ -10,4 +10,9 @@
 class mediamosa_metadata_asset extends mediamosa_asset_metadata_property_group {
 
   const METADATA_PROPERTY_GROUP_NAME = 'asset';
+
+  // Property list (core).
+  const TAG = 'tag';
+  const PUBLISHED = 'published';
+  const TRASHCAN = 'trashcan';
 }

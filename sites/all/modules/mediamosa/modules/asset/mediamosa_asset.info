@@ -22,6 +22,7 @@ files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.acl.user_usergroup.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
+files[] = mediamosa_asset.trashcan.test
 files[] = mediamosa_asset.publish.test
 files[] = mediamosa_asset.vpx_still_url.test
 

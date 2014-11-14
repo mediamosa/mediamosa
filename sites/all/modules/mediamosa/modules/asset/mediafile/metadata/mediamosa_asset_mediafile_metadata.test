@@ -18,32 +18,33 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
   function testMediafileMetadata() {
-
-    //
-    // Make a test asset with metadatas.
-    //
-
     // Create an asset.
     $asset_id = $this->createAsset();
 
-    // Get the metadata definitions.
-    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
+    $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();;
 
-    // Collect metadatas.
     $parameters = array();
-    foreach ($a_metadata_definitions_full as $key => $value) {
+    $protected = array();
+    foreach ($metadata_definitions_full as $key => $metadata_definition) {
+      if ($metadata_definition['propdef_is_protected'] === 'TRUE') {
+        $protected[] = $key;
+        continue;
+      }
+
       // Type.
-      switch ($value['propdef_type']) {
-        case "DATETIME":
-          $parameters[$key] = "2010-01-01 23:59:59";
+      switch ($metadata_definition['propdef_type']) {
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          $parameters[$key] = '2010-01-01 23:59:59';
           break;
+
         default:
           $parameters[$key] = mediamosa_db::uuid(mt_rand(1, 9999));
       }
+
       // Key.
       switch ($key) {
-        case "language":
-          $parameters[$key] = "nl";
+        case 'language':
+          $parameters[$key] = 'nl';
           break;
       }
     }
@@ -83,6 +84,10 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     }
     // From get.
     foreach ($metadata as $key => $value) {
+      if (in_array($key, $protected)) {
+        continue;
+      }
+
       $this->assertTrue(
         $value == $parameters[$key],
         t("Database metadata lookup on '@key'. ('@sent'=='@get')", array('@key' => $key, '@sent' => $parameters[$key], '@get' => $value))

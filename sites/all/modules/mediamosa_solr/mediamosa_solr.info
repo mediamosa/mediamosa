@@ -28,6 +28,7 @@ files[] = tests/mediamosa_solr.asset.cql.isprivate.test
 files[] = tests/mediamosa_solr.asset.cql.app.coll.test
 files[] = tests/mediamosa_solr.asset.cql.acl.context.test
 files[] = tests/mediamosa_solr.asset.collection.cql.test
+files[] = tests/mediamosa_solr.asset.trashcan.test
 files[] = tests/mediamosa_solr.acl.ega.test
 files[] = tests/mediamosa_solr.acl.granted.test
 files[] = tests/mediamosa_solr.acl.groups.master.slave.test

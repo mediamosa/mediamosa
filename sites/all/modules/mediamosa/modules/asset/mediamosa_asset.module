@@ -440,12 +440,28 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  // Delete the asset.
+  $rest_calls['asset/$asset_id/restore'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_restore',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
   // Delete all given asset.
   $rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete_all',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset.
+  $rest_calls['asset/restore'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_restore_all',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
   );
 
   // Return all IDs of deleted assets.
@@ -1823,10 +1839,19 @@ user_id = "username"',
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
+  // Delete the asset.
+  $rest_calls['asset/$asset_id/restore'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Restore a asset from the trashcan.',
+    mediamosa_rest_call::DESCRIPTION => "When the asset was deleted with the setting 'trashcan=TRUE', then the asset can be restored to its original state.",
+    mediamosa_rest_call::EXAMPLE_REQUEST => '<p>/asset/q1WmtebDr9F8eberUIjKrhTa/delete</p><p>delete = "cascade"</p>',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
   // Delete all given asset.
   $rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete all assets using the given asset IDs.',
-    mediamosa_rest_call::DESCRIPTION => 'Same as asset/$asset_id/delete, except it wiil allow you to delete more than one asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Same as asset/$asset_id/delete, except it will allow you to delete more than one asset.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/delete<br /><br />asset_id[] = "S2Eg3Fzh2Rdw5dLbArmgqRKr"<br />asset_id[] = "Eg3Fzh2Rdw5dLbArmgqRKrer"<br />userid = "SURFgroepen.frans"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
@@ -1835,6 +1860,28 @@ user_id = "username"',
     <result>error</result>
     <result_id>709</result_id>
     <result_description>MM - there are still 4 mediafile(s) present in this asset.</result_description>
+  </item>
+  <item id="2">
+    <asset_id>Eg3Fzh2Rdw5dLbArmgqRKrer</asset_id>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+  </item>
+</items>',
+  );
+
+  // Delete all given asset.
+  $rest_calls['asset/restore'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Restore all assets from the trashcan using the given asset IDs.',
+    mediamosa_rest_call::DESCRIPTION => 'Same as asset/$asset_id/restore, except it will allow you to restore more than one asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/restore<br /><br />asset_id[] = "S2Eg3Fzh2Rdw5dLbArmgqRKr"<br />asset_id[] = "Eg3Fzh2Rdw5dLbArmgqRKrer"<br />userid = "SURFgroepen.frans"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>S2Eg3Fzh2Rdw5dLbArmgqRKr</asset_id>
+    <result>error</result>
+    <result_id>404</result_id>
+    <result_description>Not found</result_description>
   </item>
   <item id="2">
     <asset_id>Eg3Fzh2Rdw5dLbArmgqRKrer</asset_id>

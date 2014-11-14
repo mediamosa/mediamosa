@@ -1033,7 +1033,7 @@ class mediamosa_job_scheduler {
 
     // Don't start a media job if some other kind of job is running.
     $sql_ands[] = '
-      (job_type not in (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE)
+      (job_type NOT IN (:JOBTYPE_MEDIA_DOWNLOAD, :JOBTYPE_MEDIA_UPLOAD, :JOBTYPE_MEDIA_MOVE)
        AND mj.asset_id NOT IN
          (SELECT asset_id FROM {#mediamosa_job} AS mj2
           JOIN {#mediamosa_server_job} AS msj USING(job_id)))';

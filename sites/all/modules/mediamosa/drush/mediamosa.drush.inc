@@ -530,7 +530,31 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   }
   if (is_numeric($asset_id)) {
     // We get the nth asset from the mm-asset-list.
-    $assets = mediamosa_asset_search::asset_search(array(1), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, 1, $asset_id);
+    $assets = mediamosa_asset_search::asset_search(
+      array(1),
+      'sortby asset_created/sort.descending',
+      FALSE,
+      NULL,
+      array(),
+      NULL,
+      NULL,
+      0,
+      0,
+      // fav_user_id.
+      NULL,
+      // Published,
+      mediamosa_asset::METADATA_PUBLISHED_TRUE,
+      // Trashcan.
+      mediamosa_asset::METADATA_TRASHCAN_FALSE,
+      TRUE,
+      FALSE,
+      FALSE,
+      FALSE,
+      FALSE,
+      TRUE,
+      1,
+      $asset_id
+    );
     if ($assets['total_count'] == 0) {
       return drush_set_error('', dt('No Asset found.'));
     }
@@ -636,6 +660,8 @@ function drush_mediamosa_mm_asset_mediafile_delete($mediafile_id = NULL) {
 /**
  * Callback function for mediamosa-mm-asset-delete command.
  *
+ * @todo Add parameters for casade and permanent.
+ *
  * @param int $asset_id
  *   Asset id of the asset to delete.
  */
@@ -643,7 +669,7 @@ function drush_mediamosa_mm_asset_delete($asset_id = NULL) {
   if ($asset_id == NULL) {
     return drush_set_error('', dt('Invalid asset_id.'));
   }
-  mediamosa_asset::delete($asset_id);
+  mediamosa_asset::delete($asset_id, TRUE, TRUE);
 }
 
 /**
@@ -1185,7 +1211,31 @@ function drush_mediamosa_mm_asset_job_queue($asset_id = NULL) {
 
   if ($asset_id == NULL) {
     // Get latest asset of app_id 1.
-    $assets = mediamosa_asset_search::asset_search(array(1), 'sortby asset_created/sort.descending', FALSE, NULL, array(), NULL, NULL, 0, 0, NULL, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, 1, 0);
+    $assets = mediamosa_asset_search::asset_search(
+      array(1),
+      'sortby asset_created/sort.descending',
+      FALSE,
+      NULL,
+      array(),
+      NULL,
+      NULL,
+      0,
+      0,
+      // fav_user_id.
+      NULL,
+      // Published,
+      mediamosa_asset::METADATA_PUBLISHED_TRUE,
+      // Trashcan.
+      mediamosa_asset::METADATA_TRASHCAN_FALSE,
+      FALSE,
+      FALSE,
+      FALSE,
+      FALSE,
+      FALSE,
+      TRUE,
+      1,
+      0
+    );
     if (isset($assets['asset_ids'])) {
       $asset_id = $assets['asset_ids'][0];
     }

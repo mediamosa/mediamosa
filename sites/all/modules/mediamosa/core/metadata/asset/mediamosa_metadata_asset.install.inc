@@ -18,29 +18,30 @@ function _mediamosa_metadata_asset_install() {
   // The properties to create.
   $properties = array(
     array(
-      'name' => 'tag',
-      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
-      'is_hidden' => TRUE,
+      mediamosa_asset_metadata_property_db::NAME => mediamosa_metadata_asset::TAG,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => TRUE,
     ),
     array(
-      'name' => 'published',
-      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
-      'is_hidden' => FALSE,
-      'is_protected' => TRUE,
+      mediamosa_asset_metadata_property_db::NAME => mediamosa_metadata_asset::PUBLISHED,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => FALSE,
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => TRUE,
     ),
     array(
-      'name' => 'deleted',
-      'type' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
-      'is_hidden' => FALSE,
-      'is_protected' => TRUE,
+      mediamosa_asset_metadata_property_db::NAME => mediamosa_metadata_asset::TRASHCAN,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_CHAR,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => FALSE,
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => TRUE,
     ),
   );
 
   // Create the properties.
   foreach ($properties as $property) {
     mediamosa_metadata_asset::property_create(
-      $property_group_id, $property['name'],
-      $property['type'],
+      $property_group_id,
+      $property[mediamosa_asset_metadata_property_db::NAME],
+      $property[mediamosa_asset_metadata_property_db::TYPE],
       array(
         mediamosa_asset_metadata_property_db::IS_HIDDEN => empty($property[mediamosa_asset_metadata_property_db::IS_HIDDEN]) ? mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE : mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE,
         mediamosa_asset_metadata_property_db::IS_PROTECTED => empty($property[mediamosa_asset_metadata_property_db::IS_PROTECTED]) ? mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE : mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE,

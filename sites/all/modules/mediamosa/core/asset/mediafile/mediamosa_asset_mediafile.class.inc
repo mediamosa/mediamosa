@@ -732,8 +732,8 @@ class mediamosa_asset_mediafile {
    */
   public static function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
 
-    // Asset must exist.
-    mediamosa_asset::must_exists($asset_id);
+    // Asset must exist. In trashcan is allowed.
+    mediamosa_asset::must_exists($asset_id, NULL, TRUE);
 
     // FIXME write me to normal db_query.
     $a_query = array();

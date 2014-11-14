@@ -2068,7 +2068,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return mediamosa_lib::responsexml2array($response['xml']);
   }
 
-  // ------------------------------------------------------------------ Create items functions.
+  // --------------------------------------------------- Create items functions.
   /**
    * Create an asset.
    * Based on REST call /asset/create (POST)
@@ -3420,6 +3420,39 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Restore a asset from the trashcan.
+   *
+   * Based on the REST call /asset/$asset_id/restore (POST)
+   */
+  protected function restoreAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_restore::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/@asset_id/restore', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Restore asset with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
    * Delete multiple assets.
    * Based on the REST call /asset/delete (POST)
    */
@@ -3434,6 +3467,41 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // The uri.
     $uri = 'asset/delete';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Delete assets, got result @result (@result_description)",
+        array(
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Restore multiple assets.
+   *
+   * Based on the REST call /asset/restore (POST)
+   */
+  protected function restoreAssetMultiple(array $asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Add the asset ids to the parameters
+    $parameters[mediamosa_rest_call_asset_restore_all::ASSET_ID] = $asset_ids;
+
+    // The uri.
+    $uri = 'asset/restore';
 
     // Do Post call.
     $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);

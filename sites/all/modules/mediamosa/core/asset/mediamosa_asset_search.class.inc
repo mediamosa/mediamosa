@@ -42,7 +42,9 @@ class mediamosa_asset_search {
    * @param string $fav_user_id
    *   The user ID.
    * @param string $published
-   *   The published state: 'TRUE', 'FALSE', 'all'.
+   *   The published state: 'TRUE' (default), 'FALSE', 'all'.
+   * @param string $trashcan
+   *   The trashcan state: 'TRUE', 'FALSE' (default), 'all'.
    * @param bool $granted
    *   When true, assets are include on which we dont have access on. The
    *   granted parameter with the asset indicates if we have access.
@@ -77,6 +79,7 @@ class mediamosa_asset_search {
     $fav_user_id = NULL,
 
     $published = mediamosa_asset::METADATA_PUBLISHED_TRUE,
+    $trashcan = mediamosa_asset::METADATA_TRASHCAN_FALSE,
 
     $granted = FALSE,
     $is_public_list = FALSE,
@@ -141,7 +144,7 @@ class mediamosa_asset_search {
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = 'a.is_empty_asset IS NOT NULL'; // Never NULL, will always match index
     }
 
-    if ($published === 'TRUE' || $published === 'FALSE') {
+    if ($published === mediamosa_asset::METADATA_PUBLISHED_TRUE || $published === mediamosa_asset::METADATA_PUBLISHED_FALSE) {
       $propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('asset');
       $propgroup_id = $propgroup[mediamosa_asset_metadata_property_group_db::ID];
       assert($propgroup_id);
@@ -150,6 +153,17 @@ class mediamosa_asset_search {
       $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
       assert($prop_id);
       $a_query[mediamosa_db_query::A_JOIN]['asset_published'] = 'JOIN {mediamosa_asset_metadata} AS mam_asset_published ON mam_asset_published.asset_id = a.asset_id AND mam_asset_published.prop_id = ' . $prop_id . " AND mam_asset_published.val_char_lft = '" . $published . "'";
+    }
+
+    if ($trashcan === mediamosa_asset::METADATA_TRASHCAN_TRUE || $trashcan === mediamosa_asset::METADATA_TRASHCAN_FALSE) {
+      $propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('asset');
+      $propgroup_id = $propgroup[mediamosa_asset_metadata_property_group_db::ID];
+      assert($propgroup_id);
+
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name(mediamosa_metadata_asset::TRASHCAN, $propgroup_id);
+      $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+      assert($prop_id);
+      $a_query[mediamosa_db_query::A_JOIN]['asset_trashcan'] = 'JOIN {mediamosa_asset_metadata} AS mam_asset_trashcan ON mam_asset_trashcan.asset_id = a.asset_id AND mam_asset_trashcan.prop_id = ' . $prop_id . " AND mam_asset_trashcan.val_char_lft = '" . $trashcan . "'";
     }
 
     if ($cql !== '' && $cql !== NULL) {

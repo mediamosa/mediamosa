@@ -47,9 +47,9 @@ class mediamosa_job_server {
    * Log mediafile ids.
    *
    * @param string $mediafile_id
-   * @param string $asset_id
    * @param string $message
    * @param array $variables
+   * @param string $asset_id
    * @param string $severity
    */
   public static function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
@@ -70,9 +70,9 @@ class mediamosa_job_server {
    * Log debug mediafile id for job_server.
    *
    * @param string $mediafile_id
-   * @param string $asset_id
    * @param string $message
    * @param array $variables
+   * @param string $asset_id
    */
   public static function log_debug_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL) {
     mediamosa_debug::log_mediafile($mediafile_id, $message, $variables, $asset_id, 'job_server');
@@ -356,7 +356,7 @@ class mediamosa_job_server {
     $jobserver_job_id = $job_server_job[mediamosa_job_server_db::ID];
 
     // Need mediafile.
-    $mediafile_src = mediamosa_asset_mediafile::must_exists($mediafile_id_src);
+    mediamosa_asset_mediafile::must_exists($mediafile_id_src);
 
     // Based on jobtype we execute the job.
     $execution_string = '';

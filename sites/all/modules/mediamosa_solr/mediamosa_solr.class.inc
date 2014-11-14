@@ -39,6 +39,7 @@ class mediamosa_solr {
   const IS_PROTECTED_FALSE = 'is_protected_false';
   const IS_PROTECTED_TRUE = 'is_protected_true';
   const PUBLISHED = 'published';
+  const TRASHCAN = 'trashcan';
   const ACL = 'acl';
   const ACL_NAME = 'name';
   const ACL_GRP = 'group';
@@ -63,6 +64,7 @@ class mediamosa_solr {
    *   - 'coll_id': The Collection to search through.
    *   - 'fav_user_id': The user ID.
    *   - 'published': The published state: 'TRUE', 'FALSE', 'all'.
+   *   - 'trashcan': The trashcan state: 'TRUE', 'FALSE', 'all'.
    *   - 'granted': When true, assets are include on which we dont have access
    *      on. The granted parameter with the asset indicates if we have access.
    *   - 'is_public_list': Used to include or exclude unappropriate assets.
@@ -140,6 +142,10 @@ class mediamosa_solr {
 
     if ($parameters['published'] === 'TRUE' || $parameters['published'] === 'FALSE') {
       $solr_query[self::WHERE_AND][self::ASSET][self::PUBLISHED][self::WHERE_AND][] = 'asset_published_vc_exact:' . $parameters['published'];
+    }
+
+    if ($parameters['trashcan'] === 'TRUE' || $parameters['trashcan'] === 'FALSE') {
+      $solr_query[self::WHERE_AND][self::ASSET][self::TRASHCAN][self::WHERE_AND][] = 'asset_trashcan_vc_exact:' . $parameters['trashcan'];
     }
 
     $query_cql = '*:*';

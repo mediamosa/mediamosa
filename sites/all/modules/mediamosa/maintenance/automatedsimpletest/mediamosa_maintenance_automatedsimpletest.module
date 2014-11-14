@@ -546,7 +546,6 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
     }
   }
 
-  // Is Valid?
   if (!$valid) {
     drupal_set_message(t('Invalid unit test name!'), 'error');
   }
@@ -557,7 +556,7 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
     $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
 
     if (!in_array($class_name, $queue)) {
-      drupal_set_message(t('Test add to queue.'));
+      drupal_set_message(t('Test added to queue.'));
       $queue[] = $class_name;
 
       // Set the queue.

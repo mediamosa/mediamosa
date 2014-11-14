@@ -856,7 +856,7 @@ The collection is deleted only if all underlying assets successfully removed.',
         $result_description = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY);
 
         try {
-          mediamosa_asset::delete($asset_id, TRUE);
+          mediamosa_asset::delete($asset_id, TRUE, NULL);
         }
         catch (mediamosa_exception $e) {
           $result = mediamosa_response::ERROR;

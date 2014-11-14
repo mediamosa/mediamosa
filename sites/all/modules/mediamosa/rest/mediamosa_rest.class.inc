@@ -187,9 +187,7 @@ class mediamosa_rest {
     // Make sure all are valid values.
     assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT, mediamosa_rest_call::METHOD_OPTIONS)));
     assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::STATUS_DISABLED)));
-    assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]));
-    assert(isset($rest_call[mediamosa_rest_call::MODULE_NAME]));
-    assert(isset($rest_call[mediamosa_rest_call::VERSION]));
+    assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]) && isset($rest_call[mediamosa_rest_call::MODULE_NAME]) && isset($rest_call[mediamosa_rest_call::VERSION]));
 
     // Default values.
     $rest_call += array(
@@ -245,7 +243,7 @@ class mediamosa_rest {
     $results = array();
 
     if (!$limit) {
-      $limit = -1; // get all.
+      $limit = -1;
     }
 
     if ($options['restrict_interface']) {

@@ -317,7 +317,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     mediamosa_asset_mediafile::delete($mediafile_id);
 
     if ($delete_asset) {
-      mediamosa_asset::delete($a_asset[mediamosa_asset_db::ID]);
+      mediamosa_asset::delete($a_asset[mediamosa_asset_db::ID], TRUE, TRUE);
     }
 
     // Set the new original mediafile.

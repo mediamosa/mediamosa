@@ -181,15 +181,16 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
     $asset_id = $this->createAsset();
 
     // Get metadata def.
-    $a_metadata_definitions_full = $this->getMetadataDefinitions();
-
-    // Metadata def.
-    $this->assertTrue(count($a_metadata_definitions_full), 'Must have metadata definitions');
+    $metadata_definitions_full = $this->getMetadataDefinitions();
 
     $a_parameters = array();
-    foreach ($a_metadata_definitions_full as $a_metadata_definition) {
-      $name = $a_metadata_definition['name'];
-      $type = $a_metadata_definition['type'];
+    foreach ($metadata_definitions_full as $metadata_definition) {
+      $name = $metadata_definition['name'];
+      $type = $metadata_definition['type'];
+
+      if ($metadata_definition['is_protected'] === 'TRUE') {
+        continue;
+      }
 
       switch ($type) {
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
@@ -220,6 +221,9 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
 
     // Now change user.
     $a_parameters[mediamosa_rest_call_asset_supplement_create::USER_ID] = 'foo';
+
+    $asset = $this->getAsset($asset_id, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
+    $this->var_export($asset['asset']);
 
     // Create it (should fail).
     $this->createAssetMetadata($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));

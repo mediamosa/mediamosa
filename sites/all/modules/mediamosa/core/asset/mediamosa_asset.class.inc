@@ -9,9 +9,9 @@ class mediamosa_asset {
   const METADATA_PUBLISHED = 'published';
   const METADATA_PUBLISHED_TRUE = 'TRUE';
   const METADATA_PUBLISHED_FALSE = 'FALSE';
-  const METADATA_DELETED = 'deleted';
-  const METADATA_DELETED_TRUE = 'TRUE';
-  const METADATA_DELETED_FALSE = 'FALSE';
+  const METADATA_TRASHCAN = 'trashcan';
+  const METADATA_TRASHCAN_TRUE = 'TRUE';
+  const METADATA_TRASHCAN_FALSE = 'FALSE';
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -118,14 +118,36 @@ class mediamosa_asset {
    * Remove asset from database.
    *
    * @param string $asset_id
-   *  The asset to delete.
+   *   The asset to delete.
    * @param bool $cascade
-   *  Cascade mode will allow deletion of mediafiles. If FALSE and mediafiles (not counting
-   *  stills) are present, then deletion will fail.
-   *
-   * Note: does not return boolean, will throw exception when failure.
+   *   Cascade mode will allow deletion of mediafiles. If FALSE and mediafiles
+   *   (not counting stills) are present, then deletion will fail.
+   * @param bool|null $trashcan
+   *   Supply FALSE for removing all data from database and disk. TRUE will keep
+   *   all related data and will give the asset.trashcan flag the value TRUE.
+   *   NULL value will retrieve the app trashcan setting and use it.
    */
-  public static function delete($asset_id, $cascade = TRUE) {
+  public static function delete($asset_id, $cascade = TRUE, $trashcan = FALSE) {
+
+    // Null value will retrieve the setting from app.
+    if (is_null($trashcan)) {
+      $trashcan = mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_FALSE;
+
+      $asset = mediamosa_asset::get();
+      if (!empty($asset)) {
+        $app = mediamosa_app::get_by_appid($asset['app_id']);
+        mediamosa_exception::assert($app, 'Unable to find app with ID ' . $asset['app_id']);
+        if (!empty($app)) {
+          $trashcan = $app[mediamosa_app_db::TRASHCAN_ASSET_DEFAULT] === mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_TRUE;
+        }
+      }
+    }
+
+    // When trashcan, we ignore cascade.
+    if ($trashcan) {
+      static::trashcan($asset_id);
+      return;
+    }
 
     // Start transaction.
     $transaction = mediamosa_db::db_transaction();
@@ -214,7 +236,7 @@ class mediamosa_asset {
 
       // Foreach my children and call myself again.
       foreach ($result as $child_asset_id) {
-        mediamosa_asset::delete($child_asset_id);
+        mediamosa_asset::delete($child_asset_id, $cascade, $trashcan);
       }
 
       // Now we removed our children, lets remove us.
@@ -291,6 +313,34 @@ class mediamosa_asset {
       $transaction->rollback();
       throw $e;
     }
+  }
+
+  /**
+   * Trashcan the asset.
+   *
+   * Only assets that where put in the trashcan can be restored. Expects the
+   * asset to exist.
+   *
+   * @param string $asset_id
+   *   The ID of the asset to put into trashcan.
+   */
+  protected static function trashcan($asset_id) {
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)));
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
+  }
+
+  /**
+   * Undelete the asset.
+   *
+   * Only asset that where not permanent deleted can be restored. Expects the
+   * asset to exist.
+   *
+   * @param string $asset_id
+   *   The ID of the asset to restore.
+   */
+  public static function restore($asset_id) {
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_FALSE)));
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
   }
 
   /**
@@ -1216,11 +1266,13 @@ class mediamosa_asset {
    *   The provider ID
    * @param bool $published
    *   The asset is published.
+   * @param bool $trashcan
+   *   The asset is by default in trashcan.
    *
    * @param string
    *   The new asset ID of the created asset.
    */
-  public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $published = TRUE) {
+  public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $published = TRUE, $trashcan = FALSE) {
 
     $asset_id = mediamosa_db::uuid($app_id);
 
@@ -1257,6 +1309,13 @@ class mediamosa_asset {
       }
       else {
         mediamosa_asset::unpublish($asset_id, FALSE);
+      }
+
+      if ($trashcan) {
+        mediamosa_asset::trashcan($asset_id);
+      }
+      else {
+        mediamosa_asset::restore($asset_id);
       }
 
       // Reindex the asset.
@@ -1411,24 +1470,47 @@ class mediamosa_asset {
   }
 
   /**
-   * Given asset must exist.
+   * The asset must exist.
    *
    * @param string $asset_id
    *   The asset to check.
    * @param int $app_id
    *   (optional) Application ID.
+   * @param bool $include_trashcan
+   *   Allow exists test on assets in the trashcan, using trashcan metadata flag.
    *
-   * @return bool
-   *   Returns TRUE when asset is exists or FALSE.
+   * @return array|FALSE
+   *   Returns the asset row or throws exception.
    */
-  public static function must_exists($asset_id, $app_id = NULL) {
+  public static function must_exists($asset_id, $app_id = NULL, $include_trashcan = FALSE) {
+    $query = db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+    $query->fields('a');
+    $query->condition('a.' . mediamosa_asset_db::ID, $asset_id);
+
     if (isset($app_id)) {
-      // Asset must exist.
-      return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::APP_ID => $app_id));
+      $query->condition('a.' . mediamosa_asset_db::APP_ID, $app_id);
     }
 
-    // Asset must exist.
-    return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    // Exclude trashcan.
+    if (!$include_trashcan) {
+      $query->join(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg', 'ampg.' . mediamosa_asset_metadata_property_group_db::NAME . '= :name', array(':name' => mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME));
+      $query->join(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp', 'amp.' . mediamosa_asset_metadata_property_db::PROPGROUP_ID . '= ampg.'. mediamosa_asset_metadata_property_group_db::ID);
+      $query->leftJoin(mediamosa_asset_metadata_db::TABLE_NAME, 'am', 'am.' . mediamosa_asset_metadata_db::ASSET_ID . '= a.' . mediamosa_asset_db::ID . ' AND am.' . mediamosa_asset_metadata_db::PROP_ID . '= amp.' . mediamosa_asset_metadata_property_db::ID);
+      $query->condition('amp.' . mediamosa_asset_metadata_property_db::NAME, mediamosa_metadata_asset::TRASHCAN);
+      // Is null is tested because the asset could have lost all his metadata,
+      // e.g. metadata is deleted before the asset is deleted.
+      $query->condition(
+        db_or()
+          ->condition('am.' . mediamosa_asset_metadata_db::VAL_CHAR, 'FALSE')
+          ->isNull('am.' . mediamosa_asset_metadata_db::VAL_CHAR)
+      );
+    }
+    $asset = $query->range(0, 1)->execute()->fetchAssoc();
+    if (!$asset) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
+    }
+
+    return $asset;
   }
 
   /**
@@ -1461,7 +1543,7 @@ class mediamosa_asset {
     $asset_log = array();
     foreach ($result as $row) {
       $asset_log[] = $row['asset_id'];
-      mediamosa_asset::delete($row["asset_id"]);
+      mediamosa_asset::delete($row["asset_id"], TRUE, FALSE);
     }
     if (count($asset_log) > 0) {
       mediamosa_watchdog::log('Garbage cleanup: @assets deleted.', array('@assets' => implode(' ', $asset_log)), WATCHDOG_NOTICE, 'mediamosa_asset');
@@ -1592,12 +1674,9 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   public static function publish($asset_id, $reindex = TRUE) {
-
-    // Publish.
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_TRUE)));
 
     if ($reindex) {
-      // Reindex the asset.
       mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
     }
   }
@@ -1611,12 +1690,9 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   public static function unpublish($asset_id, $reindex = TRUE) {
-
-    // Publish.
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_FALSE)));
 
     if ($reindex) {
-      // Reindex the asset.
       mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
     }
   }

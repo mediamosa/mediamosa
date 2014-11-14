@@ -25,11 +25,11 @@ class MediaMosaAssetCQLExtendedTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id_5 = $this->createAsset();
 
     // Mediafile.
-    $mediafile_id_1 = $this->createMediafile($asset_id_1);
-    $mediafile_id_2 = $this->createMediafile($asset_id_2);
-    $mediafile_id_2 = $this->createMediafile($asset_id_3);
-    $mediafile_id_4 = $this->createMediafile($asset_id_4);
-    $mediafile_id_5 = $this->createMediafile($asset_id_5);
+    $this->createMediafile($asset_id_1);
+    $this->createMediafile($asset_id_2);
+    $this->createMediafile($asset_id_3);
+    $this->createMediafile($asset_id_4);
+    $this->createMediafile($asset_id_5);
 
     // Create asset metadata.
     //

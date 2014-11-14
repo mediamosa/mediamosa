@@ -108,6 +108,7 @@ class mediamosa_search {
       'fav_user_id' => NULL,
 
       'published' => mediamosa_asset::METADATA_PUBLISHED_TRUE,
+      'trashcan' => mediamosa_asset::METADATA_TRASHCAN_FALSE,
 
       'granted' => FALSE,
       'is_public_list' => FALSE,
@@ -214,6 +215,7 @@ class mediamosa_search {
       $parameters['fav_user_id'],
 
       $parameters['published'],
+      $parameters['trashcan'],
 
       $parameters['granted'],
       $parameters['is_public_list'],

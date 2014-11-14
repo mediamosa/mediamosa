@@ -1,0 +1,283 @@
+<?php
+/**
+ * @file
+ * Unittests for delete multiple assets simultaneously.
+ */
+
+class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset - deleting assets with the trashcan',
+      'description' => 'Testing the delete and undelete for assets using the trashcan.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testDeleteAndUndelete() {
+
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+    $asset_id_3 = $this->createAsset();
+    $asset_id_4 = $this->createAsset();
+    $asset_id_5 = $this->createAsset();
+
+    // Mediafile.
+    $this->createMediafile($asset_id_1);
+    $this->createMediafile($asset_id_2);
+    $this->createMediafile($asset_id_3);
+    $this->createMediafile($asset_id_4);
+    $this->createMediafile($asset_id_5);
+
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'A title.',
+        'description' => 'A description',
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'lego artist Iain Heath built an incredible 6-foot-long Lego model of scenes from the 1993 classic video game Doom.',
+        'description' => "Samenwerkingsverband tussen geschiedenisprogramma 'Andere Tijden' (NPS/VPRO) en sportprogramma 'Studio Sport' (NOS) waarin a.d.h.v. archiefmateriaal en interviews memorabele momenten uit de Nederlandse sporthistorie",
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'title' => 'Mediamosa was build with lego',
+        'description' => 'Serie praatprogramma\'s voor jongeren, waarin in elke aflevering enkele jongeren praten over een ingrijpende gebeurtenis of situatie in hun leven.',
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_4,
+      array(
+        'title' => 'goeie lego is niet slecht',
+        'description' => 'For information on the use of archive material, please contact the Customer Service department',
+      )
+    );
+
+    $this->createAssetMetadata($asset_id_5,
+      array(
+        'title' => 'this is some random title',
+        'description' => 'Aan de orde komen de televisieserie "Kunt u mij de weg naar Hamelen vertellen, mijnheer?"',
+      )
+    );
+
+    // Test for trashcan flag FALSE.
+    foreach (array($asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5) as $key => $asset_id) {
+      $asset = $this->getAsset($asset_id);
+      $this->var_export($asset['asset']);
+      $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+    $this->cql_do_search_test_assets_1('', array(), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
+
+    // Delete number 3.
+    try {
+      mediamosa_asset::must_exists($asset_id_3);
+      $this->pass('Asset exists outside trashcan.');
+    }
+    catch (Exception $e) {
+      $this->fail('Asset does not exist, must be deleted; ' . $e->getMessage());
+    }
+
+    $asset = $this->getAsset($asset_id_3);
+    $this->var_export($asset['asset']);
+
+    $this->deleteAsset($asset_id_3, array('delete' => 'cascade'));
+    try {
+      mediamosa_asset::must_exists($asset_id_3);
+      $this->fail('Asset exists, must be deleted');
+    }
+    catch (Exception $e) {
+      $this->pass('Asset was deleted: ' . $e->getMessage());
+    }
+
+    // Test for trashcan flag FALSE.
+    foreach (array($asset_id_1, $asset_id_2, $asset_id_4, $asset_id_5) as $key => $asset_id) {
+      $asset = $this->getAsset($asset_id);
+      $this->var_export($asset['asset']);
+      $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+    $this->cql_do_search_test_assets_1('', array(), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
+
+    // Now delete with trashcan on.
+    // Trashcan number 2.
+    $this->deleteAsset($asset_id_4, array('delete' => 'cascade', 'trashcan' => 'TRUE'));
+
+    // Test for trashcan flag FALSE.
+    foreach (array($asset_id_1, $asset_id_2, $asset_id_5) as $key => $asset_id) {
+      $asset = $this->getAsset($asset_id);
+      $this->var_export($asset['asset']);
+      $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+    }
+
+    // Test for trashcan flag TRUE.
+    foreach (array($asset_id_4) as $asset_id) {
+      $asset = $this->getAsset($asset_id, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
+      $this->var_export($asset['asset']);
+      $this->assert($asset['asset']['trashcan'] === 'TRUE', 'Is in trashcan (' . $key . ')');
+      mediamosa_asset::must_exists($asset_id, NULL, TRUE);
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
+
+
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    db_update(mediamosa_app_db::TABLE_NAME)
+      ->fields(array(
+        // Keep them in trashcan now by default when deleting.
+        mediamosa_app_db::TRASHCAN_ASSET_DEFAULT => mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_TRUE,
+      ))
+      ->condition('app_id', $app_id)
+      ->execute();
+
+    $asset_id_6 = $this->createAsset();
+
+    // Mediafile.
+    $this->createMediafile($asset_id_6);
+
+    $this->createAssetMetadata($asset_id_6,
+      array(
+        'title' => 'A title.',
+        'description' => 'A description',
+      )
+    );
+
+    foreach (array($asset_id_1, $asset_id_2, $asset_id_5, $asset_id_6) as $key => $asset_id) {
+      $asset = $this->getAsset($asset_id);
+      $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+    }
+
+    // Test for trashcan flag TRUE.
+    foreach (array($asset_id_4) as $asset_id) {
+      $asset = $this->getAsset($asset_id, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
+      mediamosa_asset::must_exists($asset_id, NULL, TRUE);
+      $this->var_export($asset['asset']);
+      $this->assert($asset['asset']['trashcan'] === 'TRUE', 'Is in trashcan (' . $key . ')');
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    $this->deleteAsset($asset_id_6, array('delete' => 'cascade'));
+    $asset = $this->getAsset($asset_id_6, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
+    $this->var_export($asset['asset']);
+    $this->assert($asset['asset']['trashcan'] === 'TRUE', 'Is in trashcan (' . $key . ')');
+
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, FALSE);
+      $this->fail('Asset must not exists outside trashcan');
+    }
+    catch (Exception $e) {
+      $this->pass('Asset was deleted: ' . $e->getMessage());
+    }
+
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, TRUE);
+      $this->pass('Asset was put in trashcan.');
+    }
+    catch (Exception $e) {
+      $this->fail('Asset exists, must be deleted; ' . $e->getMessage());
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    db_update(mediamosa_app_db::TABLE_NAME)
+      ->fields(array(
+        // Include all by default, no matter the trashcan status.
+        mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT=> mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT_ALL,
+      ))
+      ->condition('app_id', $app_id)
+      ->execute();
+
+    $app = db_select(mediamosa_app_db::TABLE_NAME, 'a')
+      ->fields('a')
+      ->condition(mediamosa_app_db::APP_ID, $app_id)
+      ->execute()
+      ->fetchAssoc();
+
+    $this->var_export($app);
+    $this->assert($app[mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT] === mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT_ALL, 'Got all setting on app.');
+    $this->assert($app[mediamosa_app_db::TRASHCAN_ASSET_DEFAULT] === mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_TRUE, 'Got trashcan setting on app.');
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    // Now restore our assets.
+    $this->restoreAsset($asset_id_6);
+
+    $asset = $this->getAsset($asset_id_6);
+    $this->var_export($asset['asset']);
+    $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    $this->deleteAsset($asset_id_6, array('delete' => 'cascade'));
+    $asset = $this->getAsset($asset_id_6, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
+    $this->var_export($asset['asset']);
+    $this->assert($asset['asset']['trashcan'] === 'TRUE', 'Is in trashcan (' . $key . ')');
+
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, FALSE);
+      $this->fail('Asset must not exists outside trashcan');
+    }
+    catch (Exception $e) {
+      $this->pass('Asset was deleted: ' . $e->getMessage());
+    }
+
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, TRUE);
+      $this->pass('Asset was put in trashcan.');
+    }
+    catch (Exception $e) {
+      $this->fail('Asset exists, must be deleted; ' . $e->getMessage());
+    }
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    // Now restore our assets.
+    $this->restoreAssetMultiple(array($asset_id_4, $asset_id_6));
+
+    $asset = $this->getAsset($asset_id_4);
+    $this->var_export($asset['asset']);
+    $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+
+    $asset = $this->getAsset($asset_id_6);
+    $this->var_export($asset['asset']);
+    $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_1('', array(), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'FALSE'));
+    $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+  }
+}

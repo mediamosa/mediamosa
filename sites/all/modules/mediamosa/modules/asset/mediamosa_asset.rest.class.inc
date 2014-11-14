@@ -229,6 +229,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
   const PUBLISHED = 'published';
+  const TRASHCAN = 'trashcan';
 
   // Search engine specific.
   const RELATED = 'related';
@@ -518,11 +519,13 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
     $app_id = reset($app_ids);
 
-    $publish_default = 'TRUE';
+    $publish_default = mediamosa_asset::METADATA_PUBLISHED_TRUE;
+    $trashcan_default = mediamosa_asset::METADATA_TRASHCAN_FALSE;
     if ($app_id) {
       $app = mediamosa_app::get_by_appid($app_id);
       if (!empty($app)) {
         $publish_default = $app[mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT];
+        $trashcan_default = $app[mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT];
       }
     }
 
@@ -534,6 +537,14 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
     );
     unset($var_setup[self::VARS][self::PUBLISHED . '_match']);
+
+    $var_setup[self::VARS][self::TRASHCAN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+      self::VAR_DESCRIPTION => "Include or skip assets in the trashcan. Assets that where put in the trashcan will not show up by default in the asset search. The value 'FALSE' will hide all assets that where stored in the trashcan. Supply 'TRUE' to search the trashcan, or supply 'ALL' to search on all assets, regardless of its in the trashcan. If you u want to use CQL, make sure you supply 'ALL' as value for 'trashcan' on the REST call besides CQL. Once you supply 'ALL', use in CQL asset.trashcan == \"^TRUE^\", asset.trashcan == \"^FALSE^\" or for both asset.trashcan = \"^TRUE^ ^FALSE^\".",
+      self::VAR_DEFAULT_VALUE => $trashcan_default,
+      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
+    );
+    unset($var_setup[self::VARS][self::TRASHCAN . '_match']);
 
     return $var_setup;
   }
@@ -667,6 +678,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       'fav_user_id' => $this->get_param_value(self::FAV_USER_ID),
 
       'published' => $this->get_param_value(self::PUBLISHED),
+      'trashcan' => $this->get_param_value(self::TRASHCAN),
 
       'granted' => $this->get_param_value(self::GRANTED),
       'is_public_list' => $this->get_param_value(self::IS_PUBLIC_LIST),
@@ -808,10 +820,22 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
   const DELETE = 'delete';
+  const TRASHCAN = 'trashcan';
 
   // ------------------------------------------------------------------ Functions.
   public function get_var_setup() {
     $var_setup = array();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $trashcan_default = 'TRUE';
+    if ($app_id) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        $trashcan_default = $app[mediamosa_app_db::TRASHCAN_ASSET_DEFAULT];
+      }
+    }
 
     $var_setup = array(
       self::VARS => array(
@@ -831,6 +855,12 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
         ),
+        self::TRASHCAN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Assets can be deleted trashcanly (default) or kept in the database with an trashcan flag. To remove the asset trashcanly, supply 'TRUE' (default). With 'FALSE', the asset is kept and will get the flag asset.trashcan 'TRUE'. Asset search will exclude these 'trashcanned' assets automaticly and can also be used to retrieve and search on trashcanned assets. The default value for this parameter can be overridden by the client application setting, which by default is 'TRUE'.",
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_DEFAULT_VALUE => $trashcan_default,
+        ),
       ),
     );
 
@@ -849,6 +879,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
     $delete = $this->get_param_value(self::DELETE);
+    $trashcan = $this->get_param_value(self::TRASHCAN);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
@@ -861,13 +892,151 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Delete the asset (and all other stuff related).
-    mediamosa_asset::delete($asset_id, $delete == 'cascade');
+    mediamosa_asset::delete($asset_id, $delete === 'cascade', $trashcan);
 
     // All ok.
     $mediamosa->set_result_okay();
   }
 }
 
+/**
+ * URI: /asset/$asset_id/restore
+ *
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_restore extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ------------------------------------------------------------------ Functions.
+  public function get_var_setup() {
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID to restore.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User ID, must be the owner of trashcanned asset.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      ),
+    );
+
+    return self::get_var_setup_default($var_setup);
+  }
+
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
+
+    $asset = mediamosa_asset::must_exists($asset_id, NULL, TRUE);
+
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+    mediamosa_asset::restore($asset_id);
+
+    $mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/restore
+ * Method: POST
+ *
+ * Undelete assets.
+ */
+class mediamosa_rest_call_asset_restore_all extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset IDs to restore.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User ID, must be owner of the trashcanned asset.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Include default.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    // Get the asset ids we need to delete.
+    $asset_ids = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    $assets = mediamosa_asset::getAllAssoc($asset_ids);
+    foreach ($asset_ids as $asset_id) {
+      try {
+        mediamosa_asset::must_exists($asset_id, NULL, TRUE);
+
+        if (empty($assets[$asset_id])) {
+          throw new mediamosa_exception_error_404;
+        }
+
+        mediamosa_acl::owner_check($app_id, $user_id, $assets[$asset_id][mediamosa_asset_db::APP_ID], $assets[$asset_id][mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+        mediamosa_asset::restore($asset_id);
+
+        $mediamosa->add_item(
+          array(
+            'asset_id' => $asset_id,
+            'result' => mediamosa_response::SUCCESS,
+            'result_id' => mediamosa_error::ERRORCODE_OKAY,
+            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY)
+          )
+        );
+      }
+      catch (mediamosa_exception_error $e) {
+        $mediamosa->add_item(
+          array(
+            'asset_id' => $asset_id,
+            'result' => mediamosa_response::ERROR,
+            'result_id' => $e->getCode(),
+            'result_description' => $e->getMessage()
+          )
+        );
+      }
+    }
+
+    $mediamosa->set_result_okay();
+  }
+}
 
 /**
  * URI: /asset/$asset_id
@@ -890,6 +1059,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
   const COUNT_VIEW = 'count_view';
+  const TRASHCAN = 'trashcan';
 
   // Search engine specific.
   const RELATED = 'related';
@@ -1003,6 +1173,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'If true, include the view count of the asset in the related asset data.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::TRASHCAN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Allow retrieval of the asset when in the trashcan.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
       ),
     );
 
@@ -1039,8 +1214,10 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
     $granted = TRUE;
 
+    $trashcan = $this->get_param_value(self::TRASHCAN);
+
     // Asset must exits.
-    $asset = mediamosa_asset::must_exists($asset_id);
+    $asset = mediamosa_asset::must_exists($asset_id, NULL, $trashcan);
 
     // Fix app_id.
     if (in_array($asset['app_id'], $app_ids)) {
@@ -1444,10 +1621,22 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
   const DELETE = 'delete';
+  const TRASHCAN = 'trashcan';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $trashcan_default = mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_FALSE;
+    if ($app_id) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        $trashcan_default = $app[mediamosa_app_db::TRASHCAN_ASSET_DEFAULT];
+      }
+    }
 
     $var_setup = array(
       self::VARS => array(
@@ -1468,6 +1657,12 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
         ),
+        self::TRASHCAN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Assets can be deleted (default) or kept in the database in the trashcan. To remove the asset completly, supply 'FALSE' (default). With 'TRUE', the asset is kept in the trashcan and will get the flag asset.trashcan = TRUE. Asset search will exclude these 'trashcanned' assets automaticly and can also be used to retrieve and search on assets in the trashcan. The default value for this parameter can be overridden by the client application setting, which by default is 'FALSE'.",
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_DEFAULT_VALUE => $trashcan_default,
+        ),
       )
     );
 
@@ -1485,10 +1680,9 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
     // Get the asset ids we need to delete.
     $a_asset_ids = $this->get_param_value(self::ASSET_ID);
-    // User id
     $user_id = $this->get_param_value(self::USER_ID);
-    // Delete
     $delete = $this->get_param_value(self::DELETE);
+    $trashcan = $this->get_param_value(self::TRASHCAN);
 
     foreach ($a_asset_ids as $asset_id) {
       try {
@@ -1507,7 +1701,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
         // Must be owner / app_admin to delete.
         mediamosa_acl::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
-        mediamosa_asset::delete($asset_id, $delete == 'cascade');
+        mediamosa_asset::delete($asset_id, $delete === 'cascade', $trashcan);
 
         $mediamosa->add_item(
           array(

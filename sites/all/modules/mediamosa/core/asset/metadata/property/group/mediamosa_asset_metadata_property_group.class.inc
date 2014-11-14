@@ -31,17 +31,23 @@ class mediamosa_asset_metadata_property_group {
    * Get a property group by name.
    *
    * @param string $property_group_name
+   *   The name of the group.
+   *
    * @return array
+   *   The found propery group or FALSE.
    */
   public static function property_group_row_get_with_name($property_group_name) {
-    return mediamosa_db::db_query(
-      'SELECT * FROM {#table_name} WHERE #propgroup_name = :propgroup_name',
-      array(
-        '#table_name' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
-        '#propgroup_name' => mediamosa_asset_metadata_property_group_db::NAME,
-        ':propgroup_name' => $property_group_name,
-      )
-    )->fetchAssoc();
+    static $property_groups = array();
+
+    if (!isset($property_groups[$property_group_name])) {
+      $property_groups[$property_group_name] = db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg')
+        ->fields('ampg')
+        ->condition(mediamosa_asset_metadata_property_group_db::NAME, $property_group_name)
+        ->execute()
+        ->fetchAssoc();
+    }
+
+    return $property_groups[$property_group_name];
   }
 
   /**

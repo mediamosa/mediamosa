@@ -89,6 +89,13 @@ class mediamosa_app_db {
   const PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE = 'TRUE';
   const PUBLISHED_ASSET_SEARCH_DEFAULT_FALSE = 'FALSE';
   const PUBLISHED_ASSET_SEARCH_DEFAULT_ALL = 'ALL';
+  const TRASHCAN_ASSET_DEFAULT = 'trashcan_asset_default';
+  const TRASHCAN_ASSET_DEFAULT_TRUE = 'TRUE';
+  const TRASHCAN_ASSET_DEFAULT_FALSE = 'FALSE';
+  const TRASHCAN_ASSET_SEARCH_DEFAULT = 'trashcan_asset_search_default';
+  const TRASHCAN_ASSET_SEARCH_DEFAULT_TRUE = 'TRUE';
+  const TRASHCAN_ASSET_SEARCH_DEFAULT_FALSE = 'FALSE';
+  const TRASHCAN_ASSET_SEARCH_DEFAULT_ALL = 'ALL';
 
   // Pseudo fields; these are not stored or are part of the installation.
   const STORAGE_URI = 'storage_uri';

@@ -487,6 +487,22 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT, $node, mediamosa_app_db::PUBLISHED_ASSET_SEARCH_DEFAULT_TRUE),
   );
 
+  $form['client_application'][mediamosa_app_db::TRASHCAN_ASSET_DEFAULT] = array(
+    '#type' => 'select',
+    '#title' => t('Trashcan state of assets'),
+    '#description' => t("Assets are by default setting not kept after deletion, mediafiles, metadata and other related data are removed. This setting will allow you to keep the assets, its mediafiles and all its data after deletion. Each deleted asset will receive an deleted status and is filtered out searches. Front ends need to support the trashcan flag to be able to see them and restore (undelete) these assets."),
+    '#options' => array(mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_TRUE => t('Permanent, delete from database'), mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_FALSE => t('Keep assets and set deleted flag')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TRASHCAN_ASSET_DEFAULT, $node, mediamosa_app_db::TRASHCAN_ASSET_DEFAULT_TRUE),
+  );
+
+  $form['client_application'][mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT] = array(
+    '#type' => 'select',
+    '#title' => t('Trashcan default status when searching'),
+    '#description' => t("The default value for asset 'trashcan' parameter when using asset search REST call. Default is 'FALSE', meaning not to include deleted assets when searching."),
+    '#options' => array(mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT_FALSE => t('Hide trashcan assets by default'), mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT_ALL => t('Show all, assets in and out the trashcan by default')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT, $node, mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT_FALSE),
+  );
+
   if (module_exists('mediamosa_storage')) {
     $form['storage'] = array(
       '#type' => 'fieldset',
