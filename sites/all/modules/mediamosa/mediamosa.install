@@ -5233,6 +5233,14 @@ function mediamosa_update_7193() {
   foreach ($nids as $nid) {
     $node = node_load($nid);
     $changed = FALSE;
+    if (is_null($node->published_asset_default)) {
+      $node->published_asset_default = 'TRUE';
+      $changed = TRUE;
+    }
+    if (is_null($node->published_asset_search_default)) {
+      $node->published_asset_search_default = 'TRUE';
+      $changed = TRUE;
+    }
     if (is_null($node->trashcan_asset_default)) {
       $node->trashcan_asset_default = 'FALSE';
       $changed = TRUE;
