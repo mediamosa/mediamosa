@@ -5087,7 +5087,7 @@ function mediamosa_update_7190() {
         'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
-        'default' => 'TRUE',
+        'default' => 'FALSE',
       )
     );
   }
@@ -5194,4 +5194,55 @@ function mediamosa_update_7192() {
   }
 
   return strtr('Successfully set trashcan state to off for {trashcan} asset(s).', array('{trashcan}' => $start));
+}
+
+/**
+ * Change the default value for client application regarding trashcan.
+ */
+function mediamosa_update_7193() {
+  if (db_field_exists('mediamosa_app', 'trashcan_asset_search_default')) {
+    db_change_field(
+      'mediamosa_app',
+      'trashcan_asset_search_default',
+      'trashcan_asset_search_default',
+      array(
+        'description' => "The default value for asset 'deleted' parameter when using asset search REST call.",
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'default' => 'FALSE',
+      )
+    );
+  }
+  else {
+    db_add_field(
+      'mediamosa_app',
+      'trashcan_asset_search_default',
+      array(
+        'description' => "The default value for asset 'deleted' parameter when using asset search REST call.",
+        'type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array('FALSE', 'TRUE', 'ALL')) . "')",
+        'default' => 'FALSE',
+      )
+    );
+  }
+
+  $nids = db_select('mediamosa_app', 'a')->fields('a', array('nid'))->execute()->fetchCol();
+
+  foreach ($nids as $nid) {
+    $node = node_load($nid);
+    $changed = FALSE;
+    if (is_null($node->trashcan_asset_default)) {
+      $node->trashcan_asset_default = 'FALSE';
+      $changed = TRUE;
+    }
+    if (strtoupper($node->trashcan_asset_search_default) === 'TRUE' || is_null($node->trashcan_asset_search_default)) {
+      $node->trashcan_asset_search_default = 'FALSE';
+      $changed = TRUE;
+    }
+    if ($changed) {
+      node_save($node);
+    }
+  }
 }
