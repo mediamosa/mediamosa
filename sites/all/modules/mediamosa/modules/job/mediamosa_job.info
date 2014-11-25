@@ -22,3 +22,4 @@ files[] = server/mediamosa_job_server.rest.class.inc
 files[] = failure/mediamosa_job_failure.rest.class.inc
 
 files[] = scheduler/mediamosa_job_scheduler.slot.assign.test
+files[] = scheduler/mediamosa_job_scheduler.slot.parallel.test

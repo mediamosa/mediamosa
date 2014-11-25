@@ -629,7 +629,11 @@ class mediamosa_job_server {
    * Get the job.
    * (only from this installation(!))
    *
-   * @param int $job_id
+   * @param int $jobserver_job_id
+   *   The job server ID.
+   *
+   * @return array
+   *   The job server or FALSE.
    */
   public static function get($jobserver_job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
@@ -641,17 +645,18 @@ class mediamosa_job_server {
 
   /**
    * Get the job.
-   * (only from this installation(!))
    *
    * @param int $job_id
    */
-  public static function get_with_jobid($job_id) {
-    return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
+  public static function get_with_jobid($job_id, $server_only = true) {
+    $query = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
-      ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
-      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id())
-      ->execute()
-      ->fetchAssoc();
+      ->condition(mediamosa_job_server_db::JOB_ID, $job_id);
+
+    if ($server_only) {
+      $query->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id());
+    }
+    return $query->execute()->fetchAssoc();
   }
 
   /**
@@ -737,7 +742,7 @@ class mediamosa_job_server {
   /**
    * Create the string send with the vpx-analyse script.
    *
-   * @param string $mediafile_src
+   * @param string $mediafile_id
    * @param $job_id
    */
   public static function get_analyse_string($mediafile_id, $job_id) {

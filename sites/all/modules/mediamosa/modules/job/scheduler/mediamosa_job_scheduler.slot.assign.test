@@ -4,7 +4,7 @@
  * Job tests for transcode jobs.
  */
 
-class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
+class MediaMosaJobSlotAssignmentTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Members.
   // ---------------------------------------------------------------- Functions.
   /**
@@ -90,7 +90,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Because we no longer create a download job for local files, will need to
     // create one here for testing. Does not do anything when local, but thats
     // fine.
-    return mediamosa_job::create_job(
+    mediamosa_job::create_job(
       mediamosa_job_db::JOB_TYPE_TRANSFER_MEDIA_DOWNLOAD,
       $app_id,
       self::SIMPLETEST_USER_ID,
@@ -136,6 +136,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Job 2.
     foreach ($job_servers as $tools => $job_server) {
       $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
       $this->assertFalse($job, 'Can not create job on job server.' );
     }
 
@@ -144,6 +145,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Job 3.
     foreach ($job_servers as $tools => $job_server) {
       $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
       $this->assertFalse($job, 'Can not create job on job server.' );
     }
 
@@ -152,6 +154,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Job 4.
     foreach ($job_servers as $tools => $job_server) {
       $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
       $this->assertFalse($job, 'Can not create job on job server.' );
     }
 
@@ -160,6 +163,7 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Job 5.
     foreach ($job_servers as $tools => $job_server) {
       $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
       $this->assertFalse($job, 'Can not create job on job server.' );
     }
 

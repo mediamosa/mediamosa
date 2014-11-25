@@ -63,11 +63,9 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
     }
 
     $result = db_query('SELECT * FROM {mediamosa_server_job}');
-    if ($result->rowCount()) {
-      $texts[] = 'Dumping contents of job server table';
-      foreach ($result as $log_item) {
-        $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
-      }
+    $texts[] = strtr('Dumping contents (@total) of job server table', array('@total' => $result->rowCount()));
+    foreach ($result as $log_item) {
+      $texts[] = highlight_string('<?php ' . var_export($log_item, TRUE), TRUE);
     }
 
     // In verbose mode only.
@@ -444,15 +442,22 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
   /**
    * Run and execute the current jobs (one cycle).
+   *
+   * @param bool $trigger_scheduler
+   *   Trigger the scheduler, to handout and start new jobs.
    */
-  protected function doQueueCycle() {
+  public function doQueueCycle($trigger_scheduler = true) {
 
     try {
-      // Trigger process servers.
       mediamosa_server::trigger();
 
-      // Trigger job scheduler.
-      mediamosa_job_scheduler::trigger();
+      if ($trigger_scheduler) {
+        mediamosa_job_scheduler::trigger();
+      }
+      else {
+        // Do update the server jobs.
+        mediamosa_job_scheduler::check_status_all_servers();
+      }
     }
     catch (Exception $e) {
       $this->var_export_fail('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), 'Job Cycle');
@@ -462,18 +467,22 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
   /**
    * Run and execute the current jobs (one cycle).
+   *
+   * @param bool $trigger_scheduler
+   *   Trigger the scheduler, to handout and start new jobs.
    */
-  protected function doQueueCycleAll() {
+  protected function doQueueCycleAll($trigger_scheduler = true) {
 
     // Keep in mind that with less slots, this needs to be 18.
     $max_runs = 20;
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.
-      self::doQueueCycle();
+      self::doQueueCycle($trigger_scheduler);
 
       // Set flag to know if all jobs are finished or failed.
       $running_jobs = 0;
+      $waiting_jobs = 0;
 
       // Get all jobs.
       $jobs = mediamosa_job::get_job_list(0, '', TRUE);
@@ -488,11 +497,19 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
           )
         )) {
           $running_jobs++;
+
+          if ($job[mediamosa_job_db::JOB_STATUS] === mediamosa_job_db::JOB_STATUS_WAITING) {
+            // Waiting jobs stay waiting when trigger scheduler is off.
+            if (!$trigger_scheduler) {
+              $running_jobs--;
+            }
+            $waiting_jobs++;
+          }
         }
       }
 
       if ($running_jobs) {
-        $this->pass(strtr('Found @running running jobs, waiting for next cycle.', array('@running' => $running_jobs)));
+        $this->pass(strtr('Found @running running jobs of which where @waiting waiting jobs, waiting for next cycle.', array('@running' => $running_jobs, '@waiting' => $waiting_jobs)));
         // Wait 5 seconds.
         Sleep(5);
       }

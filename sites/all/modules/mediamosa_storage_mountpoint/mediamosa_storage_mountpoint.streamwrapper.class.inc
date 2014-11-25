@@ -1,8 +1,8 @@
 <?php
 /**
  * @file
- * The mediamose storage s3 wrapper handles files that are either in transition
- * or on the S3 storage.
+ * The mediamose storage mountpoint wrapper handles files that are on local
+ * storage.
  */
 
 class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrapper_local {
@@ -42,10 +42,6 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
     if (empty($target) || strpos($target, '/') === FALSE) {
       return '';
     }
-
-    // Expecting path is be
-    // [storage_profile_id]/[path]/mediafile_id[0]/[mediafile_id].
-    list(, $target) = explode('/', $target, 2);
 
     return $target;
   }
@@ -108,7 +104,7 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
     }
 
     $matches = array();
-    $reg = '#^(?P<scheme>.+)://(?P<strorage_profile_id>[0-9]+)/?(?:(?P<path>.*)/-/(?P<mediafile_path>.*)|(?P<altpath>.+))?$#';
+    $reg = '#^(?P<scheme>.+)://(?P<strorage_profile_id>[0-9]+)(?:(?P<path>.*)/-/(?P<mediafile_path>.*)|(?P<altpath>.+))?$#';
     if (!preg_match($reg, $uri, $matches)) {
       // External and mount point module uri's must have valid URI's. Local
       // stream wrappers work fine with only the scheme.

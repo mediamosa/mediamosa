@@ -90,3 +90,86 @@ function mediamosa_storage_mountpoint_schema() {
 
   return $schema;
 }
+
+/**
+ * Fix mountpoint information on corrupt mediafile mointpoints.
+ */
+function mediamosa_storage_mountpoint_update_7000() {
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  $fixed = 0;
+
+  while (TRUE) {
+    $mediafiles = mediamosa_db::db_select('mediamosa_asset_mediafile', 'mf')
+      ->fields('mf', array('mediafile_id', 'sannas_mount_point'))
+      ->orderBy('created')
+      ->orderBy('mediafile_id')
+      ->range($start, $length)
+      ->execute();
+
+    // Done?
+    if (!$mediafiles->rowCount()) {
+      break;
+    }
+
+    // Now check every mount point.
+    foreach ($mediafiles as $mediafile) {
+      $start++;
+      if (empty($mediafile['sannas_mount_point'])) {
+        continue;
+      }
+
+      $wrapper = mediamosa_io::require_stream_wrapper_instance_by_uri($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      // Only this wrapper was corrupt.
+      if (!($wrapper instanceof mediamosa_storage_mountpoint_streamwrapper)) {
+        continue;
+      }
+
+      // File exists, then skip, uri is ok.
+      $uri = mediamosa_storage::get_uri_mediafile($mediafile);
+      if (mediamosa_io::file_exists($uri)) {
+        continue;
+      }
+
+      $uri_parts = $wrapper->validate_uri($uri);
+      if ($uri_parts['path'] === '' || is_null($uri_parts['path'])) {
+        continue;
+      }
+
+      $mediafile['sannas_mount_point'] = rtrim($mediafile['sannas_mount_point'], '/');
+      $mediafile['sannas_mount_point'] = drupal_substr($mediafile['sannas_mount_point'], 0, -drupal_strlen($uri_parts['path']));
+      $mediafile['sannas_mount_point'] = rtrim($mediafile['sannas_mount_point'], '/') . '/';
+
+      $uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+      // If file exists on this location, fix the mount point on the mediafile.
+      if (mediamosa_io::file_exists($uri)) {
+        $fixed++;
+        mediamosa_db::db_update('mediamosa_asset_mediafile')
+          ->fields(array('sannas_mount_point' => $mediafile['sannas_mount_point']))
+          ->condition('mediafile_id', $mediafile['mediafile_id'])
+          ->execute();
+      }
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  if ($fixed) {
+    return strtr('Successfully repaired {fixed} mediafile mountpoint locations. Please visit the storage section under the client applications to move these mediafiles to their correct locations.', array('{fixed}' => $fixed));
+  }
+
+  return 'Did not find any corrupt mountpoint uri\'s on mediafiles.';
+}

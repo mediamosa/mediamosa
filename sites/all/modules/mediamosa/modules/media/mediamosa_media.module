@@ -37,7 +37,6 @@ function mediamosa_media_cron() {
   }
 }
 
-
 /**
  * Implements hook_mediamosa_register_rest_call().
  */

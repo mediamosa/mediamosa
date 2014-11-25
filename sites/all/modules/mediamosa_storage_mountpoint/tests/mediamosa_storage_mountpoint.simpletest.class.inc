@@ -37,7 +37,7 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
    * @return array
    *   The storage profile.
    */
-  protected function createMountPointProfile($app_id = 0) {
+  protected function createMountPointProfile($app_id = 0, $path = 'mountpoint', $path_stills = 'mountpoint/stills') {
     // Create wrapper.
     $wrapper = new mediamosa_storage_simpletest_stream_wrapper();
 
@@ -59,7 +59,7 @@ class MediaMosaStorageMountPointBaseTestCaseEga extends MediaMosaTestCaseEgaJob 
     $this->var_export($storage_profile);
 
     // Attach storage profile to my app.
-    $this->attachStorageProfile($app_id ? $app_id : $this->a_app['app_id'], $storage_profile[mediamosa_storage_profile_db::ID], 'mountpoint', $storage_profile[mediamosa_storage_profile_db::ID], 'mountpoint/stills');
+    $this->attachStorageProfile($app_id ? $app_id : $this->a_app['app_id'], $storage_profile[mediamosa_storage_profile_db::ID], $path, $storage_profile[mediamosa_storage_profile_db::ID], $path_stills);
 
     return $storage_profile;
   }

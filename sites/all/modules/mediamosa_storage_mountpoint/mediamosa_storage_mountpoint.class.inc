@@ -61,7 +61,7 @@ class mediamosa_storage_mountpoint extends mediamosa_storage_local {
     $options = array();
 
     $mountpoint = preg_replace('/\/$/', '', $this->storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT]) . '/';
-    $options[$this->storage_profile[mediamosa_storage_profile_db::ID] . '/'] = $mountpoint;
+   // $options[$this->storage_profile[mediamosa_storage_profile_db::ID] . '/'] = $mountpoint;
 
     foreach (glob($this->storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT] . '/*', GLOB_ONLYDIR) as $path) {
       if (is_writable($path)) {

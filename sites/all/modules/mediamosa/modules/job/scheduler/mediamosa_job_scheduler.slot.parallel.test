@@ -1,0 +1,251 @@
+<?php
+/**
+ * @file
+ * Job tests for transcode jobs.
+ */
+
+class MediaMosaJobSlotParallelCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - slot parallel and serial tests',
+      'description' => 'Testing how scheduler assigns parallel and serial assignment jobs to servers.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+    );
+  }
+
+  public function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge(array(
+      'mediamosa_storage',
+      'mediamosa_storage_mountpoint',
+    ), $args));
+
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Create upload file.
+    $this->upload = $this->uploadTestFile(array('filename' => $this->getTestVideo()));
+
+    $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAll();
+    $job_server = reset($job_servers);
+
+    // Set all job proc. on off.
+    mediamosa_db::db_update(mediamosa_server_db::TABLE_NAME)
+      ->fields(array(mediamosa_server_db::SERVER_STATUS => mediamosa_server_db::SERVER_STATUS_OFF))
+      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR)
+      ->execute();
+
+    // Get URL of the current server, stripped from schema.
+    $server_url = url('', array('absolute' => TRUE));
+    $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/');
+
+    // Create 4 job servers for each type. The urls don't exists, but that does
+    // not matter.
+    $default_servers = array(
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 1', 1, 'ffmpeg|TRANSFER', '', 'APC', ''),
+      array(0, 'ON', 'JOB_PROCESSOR', $job_server[mediamosa_server_db::SERVER_URI], mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', '', 'Job processor 2', 1, 'ffmpeg|TRANSFER', '', 'APC', ''),
+    );
+
+    foreach ($default_servers as $default_server) {
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[8]);
+
+      $node->{mediamosa_server_db::VERSION} = $default_server[0];
+      $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[1];
+      $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[2];
+      $node->{mediamosa_server_db::SERVER_URI} = $default_server[3];
+      $node->{mediamosa_server_db::SERVER_PATH} = $default_server[4];
+      $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
+      $node->{mediamosa_server_db::MIME_TYPE} = $default_server[6];
+      $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[7];
+      $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[8];
+      $node->{mediamosa_server_db::SLOTS} = (int) $default_server[9];
+      $node->{mediamosa_server_db::TOOLS} = $default_server[10];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[11];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[12];
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[13];
+
+      $node = node_save($node);
+    }
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testParallelJobs() {
+    $app_id = $this->a_app['app_id'];
+
+    // Get servers
+    $job_servers = mediamosa_server::get_enabled_job_processor()->fetchAllAssoc(mediamosa_server_db::NID);
+    $this->var_export($job_servers);
+
+    // Create 2nd upload file.
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo()));
+    $mediafile_id_2 = $upload_2['mediafile_id'];
+
+    // All jobs must be finshed.
+    $this->doQueueCycleAll();
+
+    // Nothing in mediamosa_job_server.
+    $this->assert(mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')->countQuery()->execute()->fetchField() == 0, 'No more jobs on servers');
+
+    // All finished.
+    $this->assert(mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'js')->condition(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_FINISHED , '!=')->countQuery()->execute()->fetchField() == 0, 'All Jobs are finished.');
+
+    $mediafile_id_1 = $this->upload['mediafile_id'];
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id_1);
+
+    // Show the mediafile.
+    $this->var_export($mediafile);
+
+    // Create transcode job for the same asset.
+    $job_1 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $this->var_export($job_1);
+    $job_1 = $this->getJob($job_1['job_id']);
+    foreach ($job_1->get()->xpath('items/item') as $job_item) {
+      $job_id_1 = $job_item->id;
+      $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_WAITING, 'Job is waiting');
+      break;
+    }
+
+    // Go through the servers and see if the job is matched against the
+    // server(s).
+    foreach ($job_servers as $job_server) {
+      $job = mediamosa_job_scheduler::fetch_single_available_job($job_server[mediamosa_server_db::NID]);
+      $this->var_export($job);
+      $this->assert(!empty($job), 'Was able to match job to server' );
+    }
+
+    // Create transcode job for the same asset.
+    $job_2 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $this->var_export($job_2);
+    $job_2 = $this->getJob($job_2['job_id']);
+    foreach ($job_2->get()->xpath('items/item') as $job_item) {
+      $job_id_2 = $job_item->id;
+      $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_WAITING, 'Job is waiting');
+      break;
+    }
+
+    // Trigger all jobs once.
+    $jobs_started = mediamosa_job_scheduler::start_new_jobs();
+    $this->var_export($jobs_started);
+    $this->assert(count($jobs_started) == 2, 'Started 2 jobs');
+
+    $this->doQueueCycleAll(false);
+
+    foreach (array($job_id_1, $job_id_2) as $job_id) {
+      $job = $this->getJob($job_id);
+      $this->var_export($job);
+      foreach ($job->get()->xpath('items/item') as $job_item) {
+        $this->var_export((string) $job_item->status);
+        $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_FINISHED, 'Job is finished');
+        break;
+      }
+    }
+
+    // -------------------------------- Now do the same, but 2 different assets.
+    $job_1 = $this->createMediafileTranscode($mediafile_id_1, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $job_1 = $this->getJob($job_1['job_id']);
+    $this->var_export($job_1);
+    $job_2 = $this->createMediafileTranscode($mediafile_id_2, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $job_2 = $this->getJob($job_2['job_id']);
+    $this->var_export($job_2);
+
+    // Trigger all jobs once.
+    $jobs_started = mediamosa_job_scheduler::start_new_jobs();
+    $this->var_export($jobs_started);
+    $this->assert(count($jobs_started) == 2, 'Started 2 jobs');
+
+    $this->doQueueCycleAll(false);
+
+    foreach (array($job_id_1, $job_id_2) as $job_id) {
+      $job = $this->getJob($job_id);
+      $this->var_export($job);
+      foreach ($job->get()->xpath('items/item') as $job_item) {
+        $this->var_export((string) $job_item->status);
+        $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_FINISHED, 'Job is finished');
+        break;
+      }
+    }
+
+    // Now test move jobs, these must be run serial (one by one) for same asset.
+    // ------------------------------------------------------------------------.
+    // Create 2nd upload file to same asset.
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo(), 'asset_id' => $this->upload['asset_id']));
+    $mediafile_id_2 = $upload_2['mediafile_id'];
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    $this->var_export($storage_profile_app);
+
+    // Create the destination uri.
+    $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app);
+    $this->var_export($destination_uri);
+
+    $destination_uri_stills = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app, TRUE);
+    $this->var_export($destination_uri_stills);
+
+    // Create the mountpoint dir.
+    $this->mkdir($destination_uri, FALSE);
+    $this->realpath($destination_uri);
+
+    $this->mkdir($destination_uri_stills, FALSE);
+    $this->realpath($destination_uri_stills);
+
+    // Now move the file to storage.
+    $job_id_1 = $this->doMediafileMove($mediafile_id_1, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
+    $job_id_2 = $this->doMediafileMove($mediafile_id_2, $storage_profile_app[mediamosa_storage_profile_app_db::PROFILE_ID], $storage_profile_app[mediamosa_storage_profile_app_db::PATH]);
+    foreach (array($job_id_1, $job_id_2) as $job_id) {
+      $job = $this->getJob($job_id);
+      $this->var_export($job);
+      foreach ($job->get()->xpath('items/item') as $job_item) {
+        $this->var_export((string) $job_item->status);
+        $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_WAITING, 'Job is waiting');
+        break;
+      }
+    }
+
+    // Trigger all jobs once.
+    $jobs_started = mediamosa_job_scheduler::start_new_jobs();
+    $this->dump_jobs();
+    $this->dump_watchdog();
+    $this->var_export($jobs_started);
+    $this->assert(count($jobs_started) == 1, 'Started 1 job');
+
+    $jobs_started = mediamosa_job_scheduler::start_new_jobs();
+    $this->assert(count($jobs_started) == 0, 'Can not start another transport job');
+
+    $this->doQueueCycleAll(false);
+
+    $jobs_started = mediamosa_job_scheduler::start_new_jobs();
+    $this->dump_jobs();
+    $this->dump_watchdog();
+    $this->var_export($jobs_started);
+    $this->assert(count($jobs_started) == 1, 'Started 1 job');
+
+    $this->doQueueCycleAll(false);
+
+    foreach (array($job_id_1, $job_id_2) as $job_id) {
+      $job = $this->getJob($job_id);
+      $this->var_export($job);
+      foreach ($job->get()->xpath('items/item') as $job_item) {
+        $this->var_export((string) $job_item->status);
+        $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_FINISHED, 'Job is finished');
+        break;
+      }
+    }
+  }
+}
