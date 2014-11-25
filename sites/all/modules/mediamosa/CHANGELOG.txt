@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2118)
+MediaMosa 3.6.0-dev (build 2122)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -137,7 +137,12 @@ MediaMosa 3.6.0-dev (build 2118)
 - Added trashcan and restore functionality for assets. This allows client
   application to keep deleted assets and restore them later back to its original
   state.
-
+- Fixed: Job scheduler not starting transfer and storage jobs.
+- Fixed: Mountpoint module; streamwrapper created incorrect path from uri.
+- Fixed: Mountpoint module will no longer use the root location of an storage
+  profile. Create folder within the storage location where client application
+  can store its media.
+- Added new unit test for testing jobscheduler parallel and serial job runs.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
@@ -396,9 +401,9 @@ MediaMosa 3.5.x (build 2072)
     Although update hooks are written for the change, we do advice to finish all
     running jobs before upgrading.
   * Renamed mediamosa_http::expect_url() to mediamosa_http::expectHTTP().
-  * Moved & rewrote mediamosa_job_schedular::calc_aspect_ratio() to
+  * Moved & rewrote mediamosa_job_scheduler::calc_aspect_ratio() to
     mediamosa_gd::calcAspectRatio().
-  * Moved specific ffmpeg code from mediamosa_job_schedular::calc_aspect_ratio()
+  * Moved specific ffmpeg code from mediamosa_job_scheduler::calc_aspect_ratio()
     to mediamosa_tool_ffmpeg::calcAspectRatio().
   * Moved specific ffmpeg code from mediamosa_settings::get_ffmpeg_pad() to
     mediamosa_tool_ffmpeg::useVideoFilter().
