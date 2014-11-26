@@ -173,3 +173,34 @@ function mediamosa_storage_mountpoint_update_7000() {
 
   return 'Did not find any corrupt mountpoint uri\'s on mediafiles.';
 }
+
+/**
+ * Clean up play ticket and permanent links to files.
+ */
+function mediamosa_storage_mountpoint_update_7001() {
+
+  $media_location = mediamosa_storage::get_realpath_media();
+  if (mediamosa_io::file_exists($media_location)) {
+    mediamosa_io::exec(
+      strtr(
+        'find @media_location -maxdepth 4 -mindepth 4 -type l -delete',
+        array(
+          '@media_location' => $media_location,
+        )
+      )
+    );
+  }
+
+  $media_location = mediamosa_storage::get_realpath_media_ticket();
+  if (mediamosa_io::file_exists($media_location)) {
+    mediamosa_io::exec(
+      strtr(
+        'find @media_location -maxdepth 5 -mindepth 5 -type l -delete',
+        array(
+          '@media_location' => $media_location,
+        )
+      )
+    );
+  }
+
+}

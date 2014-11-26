@@ -1159,7 +1159,6 @@ class mediamosa_media {
           'find @media_location -maxdepth 1 -mindepth 1 -type l -delete',
           array(
             '@media_location' => $media_location,
-            '@wildmatch' => $mediafile_id,
           )
         )
       );
