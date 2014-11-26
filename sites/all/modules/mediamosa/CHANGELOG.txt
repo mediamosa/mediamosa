@@ -143,7 +143,8 @@ MediaMosa 3.6.0-dev (build 2122)
   profile. Create folder within the storage location where client application
   can store its media.
 - Added new unit test for testing jobscheduler parallel and serial job runs.
-- Added update hook to mount point module to release all play links. 
+- Added update hook to mount point module to release all play links.
+- Updated Drupal to 7.34.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
