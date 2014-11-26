@@ -1826,10 +1826,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $user = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
     // Did we get something?
-    $this->assertTrue(
-      isset($user[mediamosa_user_db::CREATED]),
-      'Got the user'
-    );
+    if (in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      $this->assertTrue(
+        isset($user[mediamosa_user_db::CREATED]),
+        'Got the user'
+      );
+    }
 
     // Return data.
     return $user;
@@ -1888,16 +1890,18 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Get response.
-    $a_group = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+    $group = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
     // Did we get something?
-    $this->assertTrue(
-      isset($a_group[mediamosa_user_group_db::CREATED]),
-      'Got the user group'
-    );
+    if (in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      $this->assertTrue(
+        isset($group[mediamosa_user_group_db::CREATED]),
+        'Got the user group'
+      );
+    }
 
     // Return data.
-    return $a_group;
+    return $group;
   }
 
   /**
@@ -2467,6 +2471,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Create a quota user.
+   *
    * Based on REST call user/create (POST)
    */
   protected function createUser($user_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -2489,6 +2494,40 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
       strtr(
         "Created user with ID '@user_id', got result @result (@result_description)",
+        array(
+          '@user_id' => $user_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
+  /**
+   * Create a quota user.
+   *
+   * Based on REST call user/$user_id/delete (POST)
+   */
+  protected function deleteUser($user_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_user_create::QUOTUM => 0,
+    );
+
+    // Required.
+    $parameters[mediamosa_rest_call_user_create::USER_ID] = $user_id;
+
+    // Set the URI.
+    $uri = strtr('user/$user_id/delete', array('$user_id' => $user_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Deleted user with ID '@user_id', got result @result (@result_description)",
         array(
           '@user_id' => $user_id,
           '@result' => (string) $response['xml']->header->request_result_id,

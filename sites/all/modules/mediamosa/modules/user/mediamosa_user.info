@@ -16,6 +16,7 @@ dependencies[] = mediamosa_collection
 ; Used files.
 files[] = mediamosa_user.rest.class.inc
 files[] = mediamosa_user.test
+files[] = mediamosa_user.create.test
 files[] = mediamosa_user.quota.test
 files[] = group/mediamosa_user_group.rest.class.inc
 files[] = favorite/mediamosa_user_favorite.rest.class.inc

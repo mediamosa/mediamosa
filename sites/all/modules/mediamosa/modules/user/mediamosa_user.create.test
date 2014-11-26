@@ -1,0 +1,65 @@
+<?php
+/**
+ * @file
+ * Unit test for User / Group.
+ */
+
+class MediaMosaUserCreateTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'User/Group - user create and updates',
+      'description' => 'Basic user unit tests.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testUserCreate() {
+    $user_id = $this->randomName();
+    $group_id = $this->randomName();
+
+    // Check if created (is done by getGroup).
+    $group = $this->getGroup($group_id, array(), array(mediamosa_sdk::ERRORCODE_USERMAN_INVALID_GROUP));
+    $this->var_export($group);
+
+    // User get should fail.
+    $user = $this->getUser($user_id, array(), array(mediamosa_sdk::ERRORCODE_USERMAN_INVALID_USER));
+    $this->var_export($user);
+
+    $parameters = array(
+      mediamosa_rest_call_user_create::GROUP_ID => array($group_id),
+    );
+
+    // Update user.
+    $this->updateUser($user_id, $parameters, 'trying to fail', array(mediamosa_sdk::ERRORCODE_USERMAN_INVALID_USER));
+
+    // Create group.
+    $this->createGroup($group_id);
+
+    // Update user, fail, no user.
+    $this->updateUser($user_id, $parameters, 'trying to fail', array(mediamosa_sdk::ERRORCODE_USERMAN_INVALID_USER));
+
+    // Again with auto create.
+    $parameters['auto_create'] = 'TRUE';
+    $this->updateUser($user_id, $parameters, 'with auto create');
+
+    // Check if we have the user.
+    $this->getUser($user_id);
+
+    // Create user.
+    $this->createUser($user_id, array(), array(mediamosa_sdk::ERRORCODE_USERMAN_USER_EXISTS));
+
+    // Delete user.
+    $this->deleteUser($user_id);
+
+    // Check if we have the user.
+    $this->getUser($user_id, array(), array(mediamosa_sdk::ERRORCODE_USERMAN_INVALID_USER));
+
+    // Create user.
+    $this->createUser($user_id);
+  }
+}

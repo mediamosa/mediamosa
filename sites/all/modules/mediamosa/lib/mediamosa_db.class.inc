@@ -764,9 +764,9 @@ class mediamosa_db {
    * Returns TRUE/FALSE if rows where found.
    *
    * @param string $table_name
-   *  The table name.
+   *   The table name.
    * @param array $columns_and
-   *  column => value.
+   *   The column => value array.
    *
    * @return bool
    *  Returns TRUE if one or more rows where found.
@@ -790,26 +790,31 @@ class mediamosa_db {
   /**
    * Count rows depending on the app, owner and group.
    *
-   * @param string $table
+   * @param string $table_name
+   *   The table name.
    * @param int $app_id
+   *   The app ID to match.
    * @param string $owner_id
+   *   Owner or user ID.
    * @param string $group_id
-   * @return integer
+   *   The group ID.
+   *
+   * @return int
+   *   The total found rows.
    */
-  public static function db_count_items($table_name, $app_id, $owner_id, $group_id) {
+  public static function db_count_items($table_name, $app_id, $owner_id = '', $group_id = '') {
 
     // Create select query.
-    $query = mediamosa_db::db_select($table_name, 'tbl');
-    $query->fields('tbl', array('app_id'));
+    $query = mediamosa_db::db_select($table_name, 't');
+    $query->fields('t', array('app_id'));
     $query->condition('app_id', $app_id);
-    if ($owner_id != '') {
+    if ($owner_id !== '') {
       $query->condition('owner_id', $owner_id);
     }
-    if ($group_id != '') {
+    if ($group_id !== '') {
       $query->condition('group_id', $group_id);
     }
 
-    // return count.
     return $query->countQuery()->execute()->fetchField();
   }
 
@@ -821,13 +826,13 @@ class mediamosa_db {
     return count($tables);
   }
 
-
   /**
    * Return the column names from an table.
+   *
    * NOTE: might not work on all databases, mysql only for now.
    *
    * @return array
-   *  Array containing columns.
+   *   Array containing columns.
    */
   public static function db_get_columns($table_name, $schema = NULL) {
     global $databases;

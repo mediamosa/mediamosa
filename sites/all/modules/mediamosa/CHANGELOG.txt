@@ -145,6 +145,14 @@ MediaMosa 3.6.0-dev (build 2122)
 - Added new unit test for testing jobscheduler parallel and serial job runs.
 - Added update hook to mount point module to release all play links.
 - Updated Drupal to 7.34.
+- The rest call /user/$user_id did not correctly checked every group supplied
+  for existence.
+- The rest call /user/$user_id now removes the user when group_id is supplied as
+  empty array. This feature has been added to allow the user to be removed from
+  groups.
+- The rest call /user/$user_id can not auto create the user when supplied with
+  auto_create = 'TRUE'.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------

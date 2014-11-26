@@ -116,19 +116,19 @@ class mediamosa_user {
    * Update the user.
    *
    * @param int $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $user_id
-   *  User ID.
+   *   User ID.
    * @param int $quotum
-   *  The allowed disk usage.
+   *   The allowed disk usage.
    * @param array $group_ids
-   *  Group ID.
+   *   Group ID.
    */
   public static function update($app_id, $user_id, $quotum, $group_ids) {
 
-    if (isset($quotum)) {
-      $user_key = mediamosa_user::key($app_id, $user_id);
+    $user_key = mediamosa_user::key($app_id, $user_id);
 
+    if (isset($quotum)) {
       // Add changed value.
       $fields[mediamosa_user_db::QUOTUM] = $quotum;
       $fields = mediamosa_db::db_update_enrich($fields);
@@ -139,9 +139,7 @@ class mediamosa_user {
         ->execute();
     }
 
-    if (!empty($group_ids)) {
-      // If we need to update groups...
-
+    if (isset($group_ids)) {
       // Clear old data first.
       mediamosa_db::db_delete(mediamosa_user_in_group_db::TABLE_NAME)
         ->condition(mediamosa_user_in_group_db::USER_KEY, $user_key)
@@ -152,16 +150,15 @@ class mediamosa_user {
         mediamosa_user::add_group_by_key($app_id, $user_key, $group_id);
       }
     }
-
   }
 
   /**
    * Delete the user.
    *
    * @param int $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $user_id
-   *  User ID.
+   *   User ID.
    */
   public static function delete($app_id, $user_id) {
 
@@ -190,17 +187,18 @@ class mediamosa_user {
    * Create a user.
    *
    * @param int $app_id
-   *  Application ID.
+   *   Application ID.
    * @param string $user_id
-   *  User ID.
+   *   User ID.
    * @param int $quotum
-   *  The allowed disk usage.
+   *   The allowed disk usage.
    * @param array $group_ids
-   *  Group IDs.
+   *   Group IDs.
+   *
+   * @return int
+   *   The ID of the user row (user_key).
    */
   public static function create($app_id, $user_id, $quotum, $group_ids) {
-
-    // Values to insert.
     $fields = array(
       mediamosa_user_db::APP_ID => $app_id,
       mediamosa_user_db::NAME => $user_id,
@@ -227,11 +225,12 @@ class mediamosa_user {
   /**
    * Get quota of user.
    *
-   * 1.x: _user_management_get_quota
-   *
    * @param int $app_id
+   *   Application ID.
    * @param string $user_id
+   *   User ID.
    * @param string $group_id
+   *   The group ID.
    */
   public static function get_quota($app_id, $user_id = '', $group_id = '') {
 
@@ -505,13 +504,12 @@ class mediamosa_user {
    *  key value if user exists.
    */
   public static function key($app_id, $user_id) {
-    $user_key = mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
+    return mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
       ->fields('u', array(mediamosa_user_db::KEY))
       ->condition(mediamosa_user_db::NAME, $user_id)
       ->condition(mediamosa_user_db::APP_ID, $app_id)
       ->execute()
       ->fetchField();
-    return $user_key;
   }
 
   /**

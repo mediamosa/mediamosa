@@ -259,6 +259,7 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
   const QUOTUM = 'quotum';
+  const AUTO_CREATE = 'auto_create';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -268,19 +269,24 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'User name.',
+          self::VAR_DESCRIPTION => 'User name or other indentifier.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DESCRIPTION => 'A list of the groups in which to link the user to. Will replace all existing links when supplied.',
+          self::VAR_DESCRIPTION => 'A list of the groups in which to link the user to. Will replace all existing links when supplied. Supply empty array to remove from all groups.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The upload quotum of the user in megabytes.',
+        ),
+        self::AUTO_CREATE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Supply TRUE to create user when not found.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       )
     );
@@ -293,28 +299,33 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $user_id = $this->get_param_value(self::USER_ID);
-    $group_id = $this->get_param_value(self::GROUP_ID);
+    $group_ids = $this->get_param_value(self::GROUP_ID);
     $quotum = $this->get_param_value(self::QUOTUM);
+    $auto_create = $this->get_param_value(self::AUTO_CREATE);
 
     // Either one must be given.
     if (!$this->isset_given_param(self::GROUP_ID) && !$this->isset_given_param(self::QUOTUM)) {
       throw new mediamosa_exception_error_empty_result();
     }
 
-    // Must exist.
+    if ($auto_create && !mediamosa_db::db_exists(mediamosa_user_db::TABLE_NAME, array(mediamosa_user_db::ID => $user_id, mediamosa_user_db::APP_ID => $app_id))) {
+      mediamosa_user::create($app_id, $user_id, (empty($quotum) ? 0 : $quotum), $group_ids);
+    }
+
     mediamosa_db::db_must_exists(mediamosa_user_db::TABLE_NAME, array(mediamosa_user_db::ID => $user_id, mediamosa_user_db::APP_ID => $app_id));
 
-    // Must exist.
     if ($this->isset_given_param(self::GROUP_ID)) {
-      mediamosa_db::db_must_exists(mediamosa_user_group_db::TABLE_NAME, array(mediamosa_user_group_db::ID => $group_id, mediamosa_user_group_db::APP_ID => $app_id));
+      foreach ($group_ids as $group_id) {
+        mediamosa_db::db_must_exists(mediamosa_user_group_db::TABLE_NAME, array(mediamosa_user_group_db::ID => $group_id, mediamosa_user_group_db::APP_ID => $app_id));
+      }
     }
 
     // Update the user.
-    mediamosa_user::update($app_id, $user_id, $quotum, $group_id);
+    mediamosa_user::update($app_id, $user_id, $quotum, $group_ids);
 
     // Set Ok.
     $o_mediamosa->set_result_okay();
