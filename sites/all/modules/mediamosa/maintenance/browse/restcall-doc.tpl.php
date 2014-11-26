@@ -28,7 +28,7 @@
 
   $request_authorization = $variables['rest_call']->request_authorization;
   $warnings = $variables['warnings'];
-  $example_request = is_array($variables['rest_call']->example_request) ? '<p>' . implode("</p>\n<p>", $variables['rest_call']->example_request) . '</p>' : $variables['rest_call']->example_request;
+  $example_request = is_array($variables['rest_call']->example_request) ? '<p>' . implode("</p>\n<p>", check_plain($variables['rest_call']->example_request)) . '</p>' : check_plain($variables['rest_call']->example_request);
   $example_response = $variables['rest_call']->example_response;
 ?>
 <div id="restcall-details">
