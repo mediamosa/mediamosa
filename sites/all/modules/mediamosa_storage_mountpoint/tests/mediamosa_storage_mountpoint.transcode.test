@@ -1,0 +1,217 @@
+<?php
+/**
+ * @file
+ * Job tests for transcode jobs.
+ */
+
+class MediaMosaStorageMountPointTranscodeTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'MediaMosa Storage - Mountpoint transcode test',
+      'description' => 'Testing the transcoding jobs.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Methods.
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge(array(
+      'mediamosa_storage',
+      'mediamosa_storage_mountpoint',
+    ), $args));
+
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Basic job transcode test.
+   */
+  public function testJobTranscode() {
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Create default profile.
+    $this->createMountPointProfile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    $this->var_export($storage_profile_app);
+
+    // Create upload file.
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Add mediafile clean up and get the first transcoded mediafile.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          if (!$mediafile_id_transcoded && $mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
+    }
+
+    // Make a retranscode job.
+    //
+    // Get the transcoded mediafile_id.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if ($mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break;
+          }
+        }
+      }
+    }
+    $this->assertTrue($mediafile_id_transcoded, 'Found transcoded mediafile');
+
+    if ($mediafile_id_transcoded) {
+      $mediamosa_uri = mediamosa_storage::get_uri_mediafile($mediafile_id_transcoded);
+
+      // Delete the transcoded file.
+      mediamosa_io::unlink($mediamosa_uri);
+
+      // Create transcode job.
+      $job_id = $this->createMediafileRetranscode($mediafile_id_transcoded, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+      // Parse the queue.
+      $this->doQueueCycleAll();
+
+      $this->assertTrue(
+        mediamosa_io::is_file($mediamosa_uri),
+        strtr("The mediafile was successfuly retranscoded: @filename", array('@filename' => mediamosa_io::realpath_safe($mediamosa_uri)))
+      );
+    }
+    else {
+      $this->fail('Expected to find transcoded file!');
+    }
+  }
+
+  /**
+   * Basic job transcode test.
+   */
+  public function testJobTranscodeExtended() {
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Create default profile.
+    $this->createMountPointProfile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    $this->var_export($storage_profile_app);
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $default_profiles = array(
+      array(
+        'Test profile',
+        'TRUE',
+        'ffmpeg',
+        'ogv',
+        array(
+          'audiocodec' => 'libvorbis',
+          'audiobitrate' => '128000',
+          'audiosamplingrate' => '44100',
+          'audiochannels' => '2',
+          'videocodec' => 'libtheora',
+          'videobitrate' => '1000000',
+          'fps' => '30',
+          'size' => '640x360',
+          'aspect' => '16:9',
+        ),
+      ),
+    );
+
+    // Create new transcode profiles.
+    foreach ($default_profiles as $default_profile) {
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+      $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+      $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+      $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+      $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+      $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+      $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+      $node->{mediamosa_transcode_profile_db::COMMAND} = mediamosa_transcode_profile::arrayToCommand($default_profile[4]);
+
+      if ($node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} == mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE) {
+        // Clear others, so mine will become default.
+        _mediamosa_transcode_profile_update_isdefault($node);
+      }
+
+      node_save($node);
+    }
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Might be swapped in results, so check what is the transcode.
+    if ($asset['mediafiles']['mediafile'][0]['is_original_file'] == 'TRUE') {
+      $metadata = $asset['mediafiles']['mediafile'][1]['metadata'];
+    }
+    else {
+      $metadata = $asset['mediafiles']['mediafile'][0]['metadata'];
+    }
+
+    // Must be converted to '640x360'.
+    $this->assertTrue($metadata['width'] == 640, 'New transcoding is 640 wide.');
+    $this->assertTrue($metadata['height'] == 360, 'New transcoding is 360 high.');
+
+    // Clean up.
+    $this->addMediafilesToCleanUp($asset['mediafiles']);
+  }
+}

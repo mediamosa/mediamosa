@@ -5254,3 +5254,12 @@ function mediamosa_update_7193() {
     }
   }
 }
+
+/**
+ * Drop old forgotton field in mediamosa_server which is no longer used.
+ */
+function mediamosa_update_7194() {
+  if (db_field_exists('mediamosa_server', 'server_cupertino_path')) {
+    db_drop_field('mediamosa_server', 'server_cupertino_path');
+  }
+}

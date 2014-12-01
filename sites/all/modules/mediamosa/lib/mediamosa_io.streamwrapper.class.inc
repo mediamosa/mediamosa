@@ -326,9 +326,7 @@ abstract class mediamosa_io_streamwrapper extends DrupalLocalStreamWrapper {
    */
   public function realpath() {
     // Extra debug.
-//    if (mediamosa::in_simpletest_sandbox()) {
-      $this->validate_uri($this->uri);
-//   }
+    $this->validate_uri($this->uri);
 
     return $this->getDirectoryPath() . '/' . $this->getTarget();
   }

@@ -150,7 +150,7 @@ MediaMosa 3.6.0-dev (build 2123)
 - The rest call /user/$user_id now removes the user when group_id is supplied as
   empty array. This feature has been added to allow the user to be removed from
   groups.
-- The rest call /user/$user_id can not auto create the user when supplied with
+- The rest call /user/$user_id can now auto create the user when supplied with
   auto_create = 'TRUE'.
 
 

@@ -482,7 +482,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
       t('is private') => $asset['isprivate'],
       t('is empty asset') => $asset['is_empty_asset'],
       t('is protected') => $asset['is_protected'],
-      t('is inappropriate') => $asset['is_inappropriate'],
+      t('is inappropriate') => $asset[mediamosa_asset_db::IS_INAPPROPRIATE],
       t('Asset type') => $asset['asset_type'],
       t('is private') => $asset['isprivate'],
       t('viewed') => $asset['viewed'],

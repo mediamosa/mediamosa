@@ -19,33 +19,6 @@ class mediamosa_storage_mountpoint_streamwrapper extends mediamosa_io_streamwrap
       $storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT_WINDOWS] : $storage_profile[mediamosa_storage_mountpoint_db::MOUNTPOINT]);
   }
 
-  /**
-   * Returns the working path.
-   *
-   * Any info used by storage profile object is stripped from the path.
-   *
-   * Expects the path to be [storage_profile_id]/[path][/-/mediafile_path].
-   *
-   * @return string
-   *   The storage path.
-   */
-  public function getTarget($uri = NULL) {
-    // When $uri is provided, then we must assume that we are not in 'realpath'
-    // mode.
-    if (!empty($uri)) {
-      return parent::getTarget($uri);
-    }
-
-    // Need path.
-    $target = parent::getTarget();
-
-    if (empty($target) || strpos($target, '/') === FALSE) {
-      return '';
-    }
-
-    return $target;
-  }
-
   // --------------------------------------------------------- Abstract methods.
   /**
    * Build the storage object that belongs to this streamwrapper.

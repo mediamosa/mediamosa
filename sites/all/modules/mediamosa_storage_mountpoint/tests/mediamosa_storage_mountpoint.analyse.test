@@ -4,7 +4,7 @@
  * Job tests for transcode jobs.
  */
 
-class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
+class MediaMosaStorageMountpointJobAnalyseTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {
   // ------------------------------------------------------------------ Members.
   // ---------------------------------------------------------------- Functions.
   /**
@@ -12,10 +12,9 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   public static function getInfo() {
     return array(
-      'name' => 'JOB - analyse test',
+      'name' => 'MediaMosa Storage - Mountpoint analyse test',
       'description' => 'Testing the transcoding jobs.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
     );
   }
 
@@ -23,11 +22,33 @@ class MediaMosaJobAnalyseTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Basic job transcode test.
    */
-  public function testJobAnalyse() {
+  public function testMountpointJobAnalyse() {
+    // My app ID.
+    $app_id = $this->a_app['app_id'];
+
+    // Create default profile.
+    $this->createMountPointProfile();
+
+    // Get my default app storage.
+    $storage_profile_app = mediamosa_storage_profile_app::get_app_storage_profile($app_id);
+
+    $this->var_export($storage_profile_app);
 
     // Create upload file.
     $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
     $mediafile_id = $upload['mediafile_id'];
+
+    $uri = mediamosa_storage::create_local_mediafile_uri($app_id, $mediafile_id);
+    $this->assert($uri === 'mediamosa-storage-mountpoint://2/mountpoint/-/' . substr($mediafile_id, 0 ,1) . '/' . $mediafile_id, 'Correct URI');
+
+    mediamosa_io::mkdir(mediamosa_io::dirname($uri));
+
+    $uri = mediamosa_io::dirname($uri);
+    $this->var_export($uri);
+
+    $this->var_export(mediamosa_io::realpath($uri));
+
+    $this->var_export(mediamosa_storage::get_local_mediafile_path($mediafile_id));
 
     // Get the mediafile.
     $mediafile = $this->getMediafile($mediafile_id);

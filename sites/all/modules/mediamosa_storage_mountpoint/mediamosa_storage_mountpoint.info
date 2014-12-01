@@ -15,4 +15,6 @@ files[] = mediamosa_storage_mountpoint.streamwrapper.class.inc
 files[] = tests/mediamosa_storage_mountpoint.simpletest.class.inc
 
 ; Tests.
+files[] = tests/mediamosa_storage_mountpoint.analyse.test
 files[] = tests/mediamosa_storage_mountpoint.jobs.test
+files[] = tests/mediamosa_storage_mountpoint.transcode.test

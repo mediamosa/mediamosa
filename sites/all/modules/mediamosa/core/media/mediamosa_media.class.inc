@@ -712,10 +712,10 @@ class mediamosa_media {
    *   The application ID.
    * @param string $user_id
    *   The owner of the ticket.
-   * @param array $mediafile
-   *   The mediafile to use.
    * @param bool $is_app_admin
    *   Is app admin.
+   * @param array $mediafile
+   *   The mediafile to use.
    * @param int $width
    *   The width of the video.
    * @param int $height
@@ -814,6 +814,8 @@ class mediamosa_media {
       '{AUTOPLAY}' => $autostart ? 'true' : 'false',
       '{AUTOPLAY_NUM}' => $autostart ? '1' : '0',
       '{AUTOPLAY_TEXT}' => $autostart ? 'autoplay' : '',
+      '{IF_AUTOPLAY}' => '',
+      '{/IF_AUTOPLAY}' => '',
       '{IF_START}' => '',
       '{/IF_START}' => '',
       '{IF_DURATION}' => '',
@@ -842,6 +844,10 @@ class mediamosa_media {
       // Remove code {IF_START} (Exclude from output)
       // \{IF_START\}(.*?)\{/IF_START\}/is.
       $output = preg_replace('@\{IF_START\}.*?\{/IF_START\}@si', '', $output);
+    }
+
+    if (!$autostart) {
+      $output = preg_replace('@\{IF_AUTOPLAY\}.*?\{/IF_AUTOPLAY\}@si', '', $output);
     }
 
     if (isset($duration)) {
