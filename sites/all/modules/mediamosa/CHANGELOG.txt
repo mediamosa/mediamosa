@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2123)
+MediaMosa 3.6.0-dev (build 2124)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -152,6 +152,10 @@ MediaMosa 3.6.0-dev (build 2123)
   groups.
 - The rest call /user/$user_id can now auto create the user when supplied with
   auto_create = 'TRUE'.
+- Updated submodule mediamosa_ck to latest, use git submodule to update to
+  latest.
+- Fixed mountpoint streamwrapper; Did not correctly translated uris to their
+  physical location.
 
 
 MediaMosa 3.5.x (build 2072)
