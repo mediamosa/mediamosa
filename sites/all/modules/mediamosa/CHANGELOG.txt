@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2124)
+MediaMosa 3.6.0-dev (build 2125)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -156,7 +156,9 @@ MediaMosa 3.6.0-dev (build 2124)
   latest.
 - Fixed mountpoint streamwrapper; Did not correctly translated uris to their
   physical location.
-
+- Added alter hook to manipulate the version shown in MediaMosa. Allows
+  platforms to change the version string.
+- Fixed new tests for preloading errors when module was not on.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
