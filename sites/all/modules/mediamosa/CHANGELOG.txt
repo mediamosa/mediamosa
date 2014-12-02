@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2125)
+MediaMosa 3.6.0-dev (build 2126)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -159,6 +159,7 @@ MediaMosa 3.6.0-dev (build 2125)
 - Added alter hook to manipulate the version shown in MediaMosa. Allows
   platforms to change the version string.
 - Fixed new tests for preloading errors when module was not on.
+- Updated ctools contrib module to version 1.5.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
