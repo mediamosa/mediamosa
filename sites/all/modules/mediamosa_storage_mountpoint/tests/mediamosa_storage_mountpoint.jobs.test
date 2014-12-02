@@ -4,10 +4,8 @@
  * MediaMosa storage IO test.
  */
 
-// Registry indexes all .test files, while the base is not indexed (module is
-// not on.
 if (!class_exists('MediaMosaStorageMountPointBaseTestCaseEga')) {
-  return;
+  require_once('mediamosa_storage_mountpoint.simpletest.class.inc');
 }
 
 class MediaMosaStorageMountPointJobsTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {

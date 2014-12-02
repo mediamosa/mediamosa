@@ -4,6 +4,10 @@
  * Job tests for transcode jobs.
  */
 
+if (!class_exists('MediaMosaStorageMountPointBaseTestCaseEga')) {
+  require_once('mediamosa_storage_mountpoint.simpletest.class.inc');
+}
+
 class MediaMosaStorageMountPointTranscodeTestCaseEga extends MediaMosaStorageMountPointBaseTestCaseEga {
   // ---------------------------------------------------------------- Functions.
   /**
