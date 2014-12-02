@@ -145,5 +145,21 @@ function hook_mediamosa_app_authorized() {
 }
 
 /**
+ * Change the version shown.
+ *
+ * @param array $version
+ *   The version array;
+ *   - 'major': The major version.
+ *   - 'minor': The minor part of version.
+ *   - 'release': The release part of version.
+ *   - 'build': The current build.
+ *   - 'info': The info string. This field is optional and can be used to
+ *     indicate special platform or version.
+ */
+function hook_mediamosa_version_alter(&$version) {
+  $version['info'] = 'MediaPlatform 66';
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

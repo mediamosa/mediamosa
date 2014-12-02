@@ -71,13 +71,19 @@ class mediamosa_version {
    */
   public static function get_current_version($return_full = FALSE) {
     list($major, $minor, $release, $build, $info) = preg_split('/[.:-]+/', ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
-    return array(
+    $version = array(
       self::MAJOR => (int) $major,
       self::MINOR => (int) $minor,
       self::RELEASE => (int) $release,
       self::BUILD => $build,
       self::INFO => $info,
     );
+
+    // Allow other modules to change the version, useful for different
+    // platforms.
+    drupal_alter('mediamosa_version', $version);
+
+    return $version;
   }
 
   /**
