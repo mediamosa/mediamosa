@@ -279,5 +279,24 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
 
+    // Put asset in trashcan.
+    $this->deleteAsset($asset_id_6, array('delete' => 'cascade', 'trashcan' => 'TRUE'));
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, TRUE);
+      $this->pass('Asset was put in trashcan.');
+    }
+    catch (Exception $e) {
+      $this->fail('Asset exists, must be deleted; ' . $e->getMessage());
+    }
+
+    // Now delete completely.
+    $this->deleteAsset($asset_id_6, array('delete' => 'cascade', 'trashcan' => 'FALSE'));
+    try {
+      mediamosa_asset::must_exists($asset_id_6, NULL, TRUE);
+      $this->fail('Asset exists, must be deleted');
+    }
+    catch (Exception $e) {
+      $this->pass('Asset was deleted.');
+    }
   }
 }

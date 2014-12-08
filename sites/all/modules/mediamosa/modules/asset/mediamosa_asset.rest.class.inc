@@ -886,7 +886,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
 
     // Asset must exist to be deleted.
     // Get asset.
-    $asset = mediamosa_asset::must_exists($asset_id);
+    $asset = mediamosa_asset::must_exists($asset_id, null, TRUE);
 
     // Must be owner / app_admin to delete.
     mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
