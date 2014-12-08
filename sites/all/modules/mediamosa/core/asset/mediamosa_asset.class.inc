@@ -326,7 +326,6 @@ class mediamosa_asset {
    */
   protected static function trashcan($asset_id) {
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)));
-    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
   }
 
   /**
@@ -340,7 +339,6 @@ class mediamosa_asset {
    */
   public static function restore($asset_id) {
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_FALSE)));
-    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
   }
 
   /**

@@ -423,17 +423,24 @@ function mediamosa_maintenance_browse_menu() {
  *   The asset.
  */
 function _mediamosa_browse_asset_title($asset_id) {
-  // Get the asset.
-  $params = array(
-    'view_hidden_metadata' => 'TRUE',
-  );
-  $response = mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
-  if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
-    return t('Asset not found');
+  static $titles = array();
+
+  if (!isset($titles[$asset_id])) {
+    // Get the asset.
+    $params = array(
+      'view_hidden_metadata' => 'TRUE',
+      'trashcan' => 'TRUE',
+    );
+    $response = mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
+    if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
+      return t('Asset not found');
+    }
+
+    // Get the asset.
+    $asset = reset($response['items']);
+
+    $titles[$asset_id] = _mediamosa_browse_asset_get_title($asset, t('@asset_id (asset has no title)', array('@asset_id' => $asset_id)));
   }
 
-  // Get the asset.
-  $asset = reset($response['items']);
-
-  return _mediamosa_browse_asset_get_title($asset, t('@asset_id (asset has no title)', array('@asset_id' => $asset_id)));
+  return $titles[$asset_id];
 }

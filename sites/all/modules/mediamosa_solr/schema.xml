@@ -319,6 +319,7 @@
       be non-multi. Depending on the sort order, lo or hi field is used. These
       fields hold either the highest or the lowest value of the same field.
       -->
+    <copyField source="provider_id" dest="provider_id_md" />
 
     <!-- Searchable fields -->
     <dynamicField name="*_md" type="string" indexed="true" stored="true" multiValued="true"/>

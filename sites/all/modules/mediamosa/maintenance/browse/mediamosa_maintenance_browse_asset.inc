@@ -61,6 +61,14 @@ function mediamosa_browse_asset_filter_form() {
     '#default_value' => isset($session['published']) ? $session['published'] : 'ALL',
   );
 
+  $form['actions']['filters']['trashcan'] = array(
+    '#type' => 'select',
+    '#title' => t('Trashcan state'),
+    '#description' => t('Show either publish, not published or all assets.'),
+    '#options' => array('ALL' => t('Show all assets'), 'TRUE' => t('Show assets in trashcan'), 'FALSE' => t('Show assets not in trashcan')),
+    '#default_value' => isset($session['trashcan']) ? $session['trashcan'] : 'ALL',
+  );
+
   $form['actions']['filters']['operator'] = array(
     '#type' => 'select',
     '#title' => t('Search criteria operator'),
@@ -309,6 +317,7 @@ function _mediamosa_browse_asset_execute() {
   $page = $session['page'];
   $op = $session['op'];
   $published = $session['published'];
+  $trashcan = $session['trashcan'];
   $hide_empty_assets = $session['hide_empty_assets'];
 
   switch ($order) {
@@ -367,6 +376,7 @@ function _mediamosa_browse_asset_execute() {
   }
 
   $params['published'] = $published;
+  $params['trashcan'] = $trashcan;
 
   // Do the rest call.
   return mediamosa_response_connector::static_do_restcall_drupal('asset', 'GET', $params);
@@ -388,7 +398,7 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
   }
 
   if (isset($filter_form_state['input'])) {
-    foreach (array('operator', 'coll_id', 'filters', 'cql', 'op', 'published') as $param) {
+    foreach (array('operator', 'coll_id', 'filters', 'cql', 'op', 'published', 'trashcan') as $param) {
       if (isset($filter_form_state['input'][$param])) {
         $session[$param] = $filter_form_state['input'][$param];
       }
@@ -410,6 +420,7 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
     'hide_empty_assets' => 1,
     'op' => t('Apply filter'),
     'published' => 'ALL',
+    'trashcan' => 'ALL',
   );
 
   // Set it again.
@@ -425,6 +436,7 @@ function _mediamosa_browse_asset_page_view($form, $form_state, $asset_id) {
   // Get the asset.
   $params = array(
     'view_hidden_metadata' => 'TRUE',
+    'trashcan' => 'TRUE',
   );
   $response = mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))), 'GET', $params);
 

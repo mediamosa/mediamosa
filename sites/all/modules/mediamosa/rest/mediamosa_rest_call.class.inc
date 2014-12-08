@@ -12,7 +12,7 @@ abstract class mediamosa_rest_call {
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
 
-  // default parameter description.
+  // Default parameter description.
   protected $mediamosa_parameter_docs = array(
     'asset_id' => 'Unique asset id',
     'coll_id' => 'Unique collection id',
@@ -339,13 +339,16 @@ abstract class mediamosa_rest_call {
       self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
     );
 
-    // @todo: remove when all calls are scanned, see next function.
-    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
-      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
-      self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
-      self::VAR_DEFAULT_VALUE => 'false',
-    );
+    // @todo: check every rest call to see if is_app_admin is used and
+    // specified in var_setup.
+    if (!isset($var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN])) {
+      $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+        self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+        self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
+        self::VAR_DEFAULT_VALUE => 'false',
+      );
+    }
 
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::MEDIAMOSA_VERSION] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAMOSA_VERSION,
