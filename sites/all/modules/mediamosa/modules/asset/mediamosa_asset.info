@@ -74,6 +74,6 @@ files[] = metadata/property/group/mediamosa_asset_metadata_property_group.rest.c
 
 ; Supplement.
 files[] = supplement/mediamosa_asset_supplement.rest.class.inc
-;files[] = supplement/mediamosa_asset_supplement.test
-;files[] = supplement/mediamosa_asset_supplement_delete.test
-;files[] = supplement/mediamosa_asset_supplement_add.test
+files[] = supplement/mediamosa_asset_supplement.test
+files[] = supplement/mediamosa_asset_supplement_delete.test
+files[] = supplement/mediamosa_asset_supplement_add.test
