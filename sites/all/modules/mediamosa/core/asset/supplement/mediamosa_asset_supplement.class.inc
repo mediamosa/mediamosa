@@ -95,9 +95,9 @@ class mediamosa_asset_supplement {
    * @param string $oai_prefix
    * @param string $oai_namespaceuri
    * @param string $oai_schemalocation
-   * @param string $supplement
+   * @param string $supplement_value
    */
-  public static function update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement) {
+  public static function update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement_value) {
 
     // Supplement must exist.
     $supplement = mediamosa_db::db_must_exists(mediamosa_asset_supplement_db::TABLE_NAME, array(mediamosa_asset_supplement_db::ID => $supplement_id));
@@ -119,7 +119,7 @@ class mediamosa_asset_supplement {
       $fields[mediamosa_asset_supplement_db::OAI_SCHEMALOCATION] = $oai_schemalocation;
     }
     if (!is_null($supplement)) {
-      $fields[mediamosa_asset_supplement_db::SUPPLEMENT] = $supplement;
+      $fields[mediamosa_asset_supplement_db::SUPPLEMENT] = $supplement_value;
     }
 
     // Must update something.
