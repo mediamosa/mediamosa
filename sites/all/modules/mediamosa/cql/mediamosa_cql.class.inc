@@ -114,6 +114,7 @@ abstract class mediamosa_cql {
 
   // Mediamosa specific.
   const BOOST = 'boost';
+  const KEEPORDER = 'keeporder';
 
   private $m_str_cql = FALSE;
   private $m_o_cql_part_group = FALSE;

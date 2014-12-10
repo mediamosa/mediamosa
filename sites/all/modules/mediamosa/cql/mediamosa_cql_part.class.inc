@@ -234,7 +234,7 @@ class mediamosa_cql_part_relation extends mediamosa_cql_modifiers {
    *   Returns TRUE when modifier is allowed, FALSE otherwise.
    */
   protected function mediamosa_cql_modifier_allowed_modifier($str) {
-    return in_array($str, array(mediamosa_cql::IGNORECASE, mediamosa_cql::RESPECTCASE, mediamosa_cql::STEM, mediamosa_cql::BOOST));
+    return in_array($str, array(mediamosa_cql::IGNORECASE, mediamosa_cql::RESPECTCASE, mediamosa_cql::STEM, mediamosa_cql::BOOST, mediamosa_cql::KEEPORDER));
   }
 
   /**

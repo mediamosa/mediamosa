@@ -279,11 +279,18 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           $str_search_term = mediamosa_unicode::strtolower($str_search_term);
         }
 
+        $keeporder = isset($relation_modifiers[mediamosa_cql::KEEPORDER]);
+
         // Split whitespace up into words.
         $words = preg_split('/\s+/', $str_search_term);
+        $keeporder_count = count($words);
+
         foreach ($words as $word) {
           if (trim($word) === '') {
             continue;
+          }
+          if ($keeporder) {
+            $boost = '^' . $keeporder_count--;
           }
 
           switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
