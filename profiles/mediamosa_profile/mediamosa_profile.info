@@ -49,6 +49,7 @@ dependencies[] = mediamosa_viewer
 dependencies[] = mediamosa_webservice
 dependencies[] = mediamosa_tool
 dependencies[] = mediamosa_tool_ffmpeg
+dependencies[] = mediamosa_tool_image
 dependencies[] = mediamosa_storage
 
 ; Contrib modules.
