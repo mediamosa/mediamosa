@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2130)
+MediaMosa 3.6.0-dev (build 2131)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -163,6 +163,10 @@ MediaMosa 3.6.0-dev (build 2130)
 - Fixed browse asset and backend asset display to display trashcanned assets.
 - Fixed bug in asset supplement update. Re-enabled the unit tests.
 - Fixed delete asset when asset is in trashcan.
+- Included tool_image in a default installation.
+- Added cql modifier 'keeporder'.
+- Introduced group_id on owner_check().
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
