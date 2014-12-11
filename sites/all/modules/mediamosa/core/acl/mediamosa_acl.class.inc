@@ -392,7 +392,7 @@ class mediamosa_acl {
    * Internal function to check autorisation
    * based on ownership.
    */
-  public static function owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
+  public static function owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE, $group_id = NULL, $object_group_id = NULL) {
     assert(is_bool($is_app_admin));
     assert(!is_array($app_id));
 
@@ -408,7 +408,10 @@ class mediamosa_acl {
 
     // basic check op owner rights : an owner has full access, the rest has none.
     if ($user_id != $user_id_owner) {
-      throw new mediamosa_exception_error_access_denied(array('@reason' => 'user not allowed'));
+      // If group is given, the group may have access.
+      if (($group_id != $object_group_id) or ($group_id == NULL)) {
+        throw new mediamosa_exception_error_access_denied(array('@reason' => 'user not allowed'));
+      }
     }
   }
 
