@@ -359,11 +359,12 @@ class mediamosa_rest {
       }
 
       // Throw so mediamosa handles the output.
-      throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND, array(
-        '@uri' => print_r($uri, TRUE),
-        '@method' => ($method ? print_r($method, TRUE) : '-'),
-        '@params' => '-',
-      ));
+      throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND,
+        array(
+          '@uri' => print_r($uri, TRUE),
+          '@method' => ($method ? print_r($method, TRUE) : '-'),
+          '@params' => '-',
+        ), mediamosa_exception_error::MEDIAMOSA_EXCEPTION_SEVERITY_LOW);
     }
 
     // Add the matched uri to the response.
