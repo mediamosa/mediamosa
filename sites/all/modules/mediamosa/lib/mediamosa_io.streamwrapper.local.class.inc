@@ -228,7 +228,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     // Return parts.
     return array(
       'scheme' => $matches['scheme'],
-      'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+      'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
       'path' => empty($matches['path']) ? '' : trim($matches['path'], '\/'),
       'mediafile_path' => empty($matches['mediafile_path']) ? '' : trim($matches['mediafile_path'], '\/'),
     );

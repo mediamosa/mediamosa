@@ -6,10 +6,7 @@
 
 class mediamosa_storage_profile {
   // ------------------------------------------------------------------- Consts.
-  /**
-   * The ID of the main storage profile is always 1.
-   */
-  const DEFAULT_STORAGE_PROFILE_ID = 1;
+
   // ---------------------------------------------------------------- Functions.
   /**
    * Get storage profile.
@@ -37,8 +34,32 @@ class mediamosa_storage_profile {
    * @see mediamosa_storage_profile::get()
    */
   public static function get_default() {
-    // Default is always profile 1.
-    return self::get(self::DEFAULT_STORAGE_PROFILE_ID);
+    static $default_storage_profile = null;
+
+    if (!isset($default_storage_profile)) {
+      return mediamosa_db::db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
+        ->fields('sp')
+        ->condition(mediamosa_storage_profile_db::APP_ID, 0)
+        ->orderBy(mediamosa_storage_profile_db::ID, 'ASC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchAssoc();
+    }
+
+    return $default_storage_profile;
+  }
+
+  /**
+   * Get the default storage profile ID.
+   *
+   * @return int
+   *   The default storage profile ID..
+   *
+   * @see mediamosa_storage_profile::get()
+   */
+  public static function get_default_id() {
+    $default_storage_profile = self::get_default();
+    return $default_storage_profile[mediamosa_storage_profile_db::ID];
   }
 
   /**
@@ -137,7 +158,7 @@ class mediamosa_storage_profile {
   /**
    * Create storage instance based on a storage profile.
    *
-   * @param array $storage_profile_id
+   * @param array $storage_profile
    *   The storage profile.
    *
    * @return mediamosa_storage

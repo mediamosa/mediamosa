@@ -117,43 +117,43 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
     $tests = array(
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => 'foo',
         'mediafile_path' => 'boo',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => 'foo',
         'mediafile_path' => '',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => '',
         'mediafile_path' => 'boo',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => '',
         'mediafile_path' => '',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => 'something/foo',
         'mediafile_path' => 's/someid/somethingextra',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => '',
         'mediafile_path' => 's/someid/somethingextra',
       ),
       array(
         'scheme' => 'mediamosa-storage-data',
-        'storage_profile_id' => mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID,
+        'storage_profile_id' => mediamosa_storage_profile::get_default_id(),
         'path' => '',
         'mediafile_path' => 's/someid/somethingextra',
       ),
@@ -169,13 +169,13 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
       // Rebuild result.
       $uri_result = $result['scheme'] . '://' . (empty($result['path']) ? '' : ('/' .  $result['path'])) . (empty($result['mediafile_path']) ? '': ('/-/' . $result['mediafile_path']));
 
-      $this->assert($uri == $uri_result && $result['storage_profile_id'] == mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID, t("Uris are the same; '@uri' <-> '@uri_result'.", array('@uri' => $uri, '@uri_result' => $uri)));
+      $this->assert($uri == $uri_result && $result['storage_profile_id'] == mediamosa_storage_profile::get_default_id(), t("Uris are the same; '@uri' <-> '@uri_result'.", array('@uri' => $uri, '@uri_result' => $uri)));
     }
 
 //    $streamwrapper_external = new mediamosa_io_streamwrapper_external_example();
 //    foreach ($tests as $test) {
 //      // Make sure its not default.
-//      $test['storage_profile_id'] = mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID + 1;
+//      $test['storage_profile_id'] = mediamosa_storage_profile::get_default_id() + 1;
 //
 //      // Rebuild.
 //      $uri = $test['scheme'] . '://' . $test['storage_profile_id'] . (empty($test['path']) ? '' : ('/' .  $test['path'])) . (empty($test['mediafile_path']) ? '': ('/-/' . $test['mediafile_path']));

@@ -192,7 +192,7 @@ function _mediamosa_storage_profile_app_options($app_id) {
       $options[$storage_profile[mediamosa_storage_profile_db::PROFILE]][$key] = $label;
 
       // Find the first default.
-      if ($storage_profile[mediamosa_storage_profile_db::ID] == mediamosa_storage_profile::DEFAULT_STORAGE_PROFILE_ID) {
+      if ($storage_profile[mediamosa_storage_profile_db::ID] == mediamosa_storage_profile::get_default_id()) {
         $default_storage_option = $key;
       }
     }
