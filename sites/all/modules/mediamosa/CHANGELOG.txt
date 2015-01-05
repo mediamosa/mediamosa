@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2131)
+MediaMosa 3.6.0-dev (build 2132)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -166,6 +166,7 @@ MediaMosa 3.6.0-dev (build 2131)
 - Included tool_image in a default installation.
 - Added cql modifier 'keeporder'.
 - Introduced group_id on owner_check().
+- Fixed default storage ID to be fixed on ID 1.
 
 
 MediaMosa 3.5.x (build 2072)
