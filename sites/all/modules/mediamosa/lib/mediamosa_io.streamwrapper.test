@@ -61,13 +61,15 @@ class MediaMosaMountPointTestCaseEga extends MediaMosaTestCaseEga {
     $this->assert($mount_point == 'mediamosa-storage-data://', t("Mount point matches default, got '@mountpoint'", array('@mountpoint' => $mount_point)));
 
     // Get local storage profile.
-    $storage_profile = $this->getStorageProfile(1);
+    $storage_profile_id = mediamosa_storage_profile::get_default_id();
+    $storage_profile = $this->getStorageProfile($storage_profile_id);
+    $this->assert(!empty($storage_profile), 'Found storage profile');
 
     // Create class object.
     $storage_profile_object = mediamosa_storage_profile::create_storage_instance_by_profile($storage_profile);
 
-    $mount_point = $storage_profile_object->build_mount_point_uri(1, 'global');
-    $mount_point_stills = $storage_profile_object->build_mount_point_uri(1, 'global', TRUE);
+    $mount_point = $storage_profile_object->build_mount_point_uri($storage_profile_id, 'global');
+    $mount_point_stills = $storage_profile_object->build_mount_point_uri($storage_profile_id, 'global', TRUE);
 
     $this->assert($mount_point == 'mediamosa-storage-data://', t("Mount point matches default, got '@mountpoint'", array('@mountpoint' => $mount_point)));
     $this->assert($mount_point_stills == 'mediamosa-storage-stills://', t("Mount point stills matches default, got '@mountpoint'", array('@mountpoint' => $mount_point_stills)));

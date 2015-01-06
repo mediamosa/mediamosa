@@ -177,8 +177,8 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create some mediafiles.
     $mediafile_id_1 = $upload['mediafile_id'];
-    $mediafile_id_2 = $this->createMediafile($asset_id_2);
-    $mediafile_id_3 = $this->createMediafile($asset_id_3);
+    $this->createMediafile($asset_id_2);
+    $this->createMediafile($asset_id_3);
 
     // Some metadata.
     $this->createAssetMetadata($asset_id_1, array('title' => 'aap noot mies'));
@@ -244,6 +244,10 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create aut group.
     $this->createAclGroup('fooocom.group', mediamosa_acl::ACL_NAME_TYPE_DOMAIN);
+    $job_id = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')->fields('j', array(mediamosa_job_db::ID))->range(0, 1)->execute()->fetchField();
+    $this->assert($job_id > 0, 'Found job to test');
+    $profile_id = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 't')->fields('t', array(mediamosa_transcode_profile_db::ID))->range(0, 1)->execute()->fetchField();
+    $this->assert($profile_id > 0, 'Found transcode profile to test');
 
     // ID values we use inside the URI.
     $ids = array(
@@ -254,9 +258,9 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       '$groupname' => 'fooocom.group',
       '$code' => 601,
       '$user_id' => self::SIMPLETEST_USER_ID,
-      '$job_id' => 1,
+      '$job_id' => $job_id,
       '$group_id' => self::SIMPLETEST_GROUP_ID,
-      '$profile_id' => 1,
+      '$profile_id' => $profile_id,
     );
 
     // Some are not needed to check.
