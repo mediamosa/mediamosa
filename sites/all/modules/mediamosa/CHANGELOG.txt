@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2132)
+MediaMosa 3.6.0-dev (build 2133)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -167,6 +167,8 @@ MediaMosa 3.6.0-dev (build 2132)
 - Added cql modifier 'keeporder'.
 - Introduced group_id on owner_check().
 - Fixed default storage ID to be fixed on ID 1.
+- Fixed more problems when MySQL settings auto_increment_increment or
+  auto_increment_offset are not default in unit tests.
 
 
 MediaMosa 3.5.x (build 2072)
