@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2134)
+MediaMosa 3.6.0-dev (build 2135)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -169,6 +169,7 @@ MediaMosa 3.6.0-dev (build 2134)
 - Fixed default storage ID to be fixed on ID 1.
 - Fixed several problems when MySQL settings auto_increment_increment or
   auto_increment_offset are not default in multiple unit tests.
+- Fixed default storage profile call not being staticly cached.
 
 
 MediaMosa 3.5.x (build 2072)
