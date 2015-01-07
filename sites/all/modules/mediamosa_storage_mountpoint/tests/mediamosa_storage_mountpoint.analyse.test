@@ -45,7 +45,7 @@ class MediaMosaStorageMountpointJobAnalyseTestCaseEga extends MediaMosaStorageMo
     $mediafile_id = $upload['mediafile_id'];
 
     $uri = mediamosa_storage::create_local_mediafile_uri($app_id, $mediafile_id);
-    $this->assert($uri === 'mediamosa-storage-mountpoint://2/mountpoint/-/' . substr($mediafile_id, 0 ,1) . '/' . $mediafile_id, 'Correct URI');
+    $this->assert($uri === 'mediamosa-storage-mountpoint://' . $storage_profile_app['storage_profile_id'] . '/mountpoint/-/' . substr($mediafile_id, 0 ,1) . '/' . $mediafile_id, 'Correct URI');
 
     mediamosa_io::mkdir(mediamosa_io::dirname($uri));
 

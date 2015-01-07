@@ -64,20 +64,20 @@ class MediaMosaStorageMountPointJobsTestCaseEga extends MediaMosaStorageMountPoi
 
     // Create the destination uri.
     $destination_uri = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app);
-    $this->assert($destination_uri == 'mediamosa-storage-mountpoint://2/mountpoint', 'Mount point correct');
+    $this->assert($destination_uri == 'mediamosa-storage-mountpoint://' . $storage_profile_app['storage_profile_id'] . '/mountpoint', 'Mount point correct');
     $this->var_export($destination_uri);
 
     $destination_uri_stills = mediamosa_storage::get_mount_point_uri_by_storage_profile_app($storage_profile_app, TRUE);
-    $this->assert($destination_uri_stills == 'mediamosa-storage-mountpoint://2/mountpoint/stills', 'Mount point correct');
+    $this->assert($destination_uri_stills == 'mediamosa-storage-mountpoint://' . $storage_profile_app['storage_profile_id'] . '/mountpoint/stills', 'Mount point correct');
     $this->var_export($destination_uri_stills);
 
     $this->realpath($source_uri);
 
     // Create the mountpoint dir.
-    $this->mkdir('mediamosa-storage-mountpoint://2/mountpoint', FALSE);
+    $this->mkdir('mediamosa-storage-mountpoint://' . $storage_profile_app['storage_profile_id'] . '/mountpoint', FALSE);
     $this->realpath($destination_uri);
 
-    $this->mkdir('mediamosa-storage-mountpoint://2/mountpoint/stills', FALSE);
+    $this->mkdir('mediamosa-storage-mountpoint://' . $storage_profile_app['storage_profile_id'] . '/mountpoint/stills', FALSE);
     $this->realpath($destination_uri_stills);
 
     // Now move the file to storage.
