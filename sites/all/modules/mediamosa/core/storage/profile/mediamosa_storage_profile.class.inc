@@ -37,7 +37,7 @@ class mediamosa_storage_profile {
     static $default_storage_profile = null;
 
     if (!isset($default_storage_profile)) {
-      return mediamosa_db::db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
+      $default_storage_profile = mediamosa_db::db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
         ->fields('sp')
         ->condition(mediamosa_storage_profile_db::APP_ID, 0)
         ->orderBy(mediamosa_storage_profile_db::ID, 'ASC')
@@ -53,13 +53,13 @@ class mediamosa_storage_profile {
    * Get the default storage profile ID.
    *
    * @return int
-   *   The default storage profile ID..
+   *   The default storage profile ID or 0.
    *
    * @see mediamosa_storage_profile::get()
    */
   public static function get_default_id() {
     $default_storage_profile = self::get_default();
-    return $default_storage_profile[mediamosa_storage_profile_db::ID];
+    return $default_storage_profile ? $default_storage_profile[mediamosa_storage_profile_db::ID] : 0;
   }
 
   /**
