@@ -69,13 +69,13 @@ function mediamosa_asset_metadata_property_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::TYPE_DATETIME, mediamosa_asset_metadata_property_db::TYPE_INT, mediamosa_asset_metadata_property_db::TYPE_CHAR)) . "')",
         'default' => mediamosa_asset_metadata_property_db::TYPE_CHAR,
       ),
-      mediamosa_asset_metadata_property_db::MIN_OCCURENCES => array(
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => array(
         'type' => 'int',
         'not null' => TRUE,
         'description' => 'The minimal occurence of the property.',
         'default' => 0,
       ),
-      mediamosa_asset_metadata_property_db::MAX_OCCURENCES => array(
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => array(
         'type' => 'int',
         'not null' => TRUE,
         'description' => 'The maximum occurence of the property.',

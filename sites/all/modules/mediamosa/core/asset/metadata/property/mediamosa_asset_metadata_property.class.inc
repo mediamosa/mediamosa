@@ -79,9 +79,9 @@ class mediamosa_asset_metadata_property {
    *   Name of the property.
    * @param string $type
    *   Type: char, datetime, int.
-   * @param int $min_occurences
+   * @param int $min_occurrences
    *   (reserved).
-   * @param int $max_occurences
+   * @param int $max_occurrences
    *   (reserved).
    * @param bool $is_hidden
    *   Is hidden in REST output.
@@ -89,7 +89,7 @@ class mediamosa_asset_metadata_property {
    * @return
    *   The new prop_id.
    */
-  public static function property_create($app_id, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, $is_protected = mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE) {
+  public static function property_create($app_id, $name, $type, $min_occurrences = 0, $max_occurrences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, $is_protected = mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE) {
 
     // No longer accept array (3.0 change).
     assert(!is_array($app_id));
@@ -122,8 +122,8 @@ class mediamosa_asset_metadata_property {
       mediamosa_asset_metadata_property_db::TYPE => mediamosa_unicode::strtoupper($type),
       mediamosa_asset_metadata_property_db::PROPGROUP_ID => $propgroup_id,
       mediamosa_asset_metadata_property_db::APP_ID => $app_id,
-      mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $max_occurences,
-      mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $min_occurences,
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => $max_occurrences,
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => $min_occurrences,
       mediamosa_asset_metadata_property_db::IS_HIDDEN => $is_hidden,
       mediamosa_asset_metadata_property_db::IS_PROTECTED => $is_protected,
     );
@@ -259,7 +259,7 @@ class mediamosa_asset_metadata_property {
    * Get definitions from the asset_property_definitions array
    *
    * @param array $metadata_property_groups
-   * @param bool $get_all_aps
+   * @param bool $get_all_apps
    *
    * @return array
    */
@@ -298,6 +298,8 @@ class mediamosa_asset_metadata_property {
     $query->addField('amp', mediamosa_asset_metadata_property_db::NAME, 'propdef_name');
     $query->addField('amp', mediamosa_asset_metadata_property_db::IS_HIDDEN, 'propdef_is_hidden');
     $query->addField('amp', mediamosa_asset_metadata_property_db::IS_PROTECTED, 'propdef_is_protected');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::MIN_OCCURRENCES, 'propdef_min_occurrences');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::MAX_OCCURRENCES, 'propdef_max_occurrences');
 
     // Now where to search.
     $query->condition(mediamosa_asset_metadata_property_group_db::NAME, $metadata_property_groups, 'IN');

@@ -19,8 +19,8 @@ class mediamosa_asset_metadata_property_db {
   const TYPE_DATETIME = 'DATETIME';
   const TYPE_INT = 'INT';
   const TYPE_CHAR = 'CHAR';
-  const MIN_OCCURENCES = 'min_occurences';
-  const MAX_OCCURENCES = 'max_occurences';
+  const MIN_OCCURRENCES = 'min_occurrences';
+  const MAX_OCCURRENCES = 'max_occurrences';
   const CREATED = 'created';
   const CHANGED = 'changed';
   const IS_HIDDEN = 'is_hidden';

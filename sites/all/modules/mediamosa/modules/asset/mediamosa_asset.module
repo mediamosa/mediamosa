@@ -1347,8 +1347,8 @@ name=Example&type=char',
     <propgroup_id>5</propgroup_id>
     <prop_name>Example</prop_name>
     <type>CHAR</type>
-    <min_occurences>0</min_occurences>
-    <max_occurences>0</max_occurences>
+    <min_occurrences>0</min_occurrences>
+    <max_occurrences>0</max_occurrences>
     <created>2010-04-08 16:08:01</created>
     <changed>2010-04-08 16:08:01</changed>
   </item>

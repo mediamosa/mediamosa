@@ -80,6 +80,8 @@ function _mediamosa_error_install() {
     'ERRORCODE_APP_DISABLED' => 'This application has been disabled',
     'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL' => 'The mediafile (@mediafile_id) is not original',
     'ERRORCODE_INVALID_MEDIAFILE_RELATION' => 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)',
+    'ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE' => 'The metadata property @name must at least occour @times time(s) as value',
+    'ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE' => 'The metadata property @name can not occour more than @times time(s) as value',
 
     'ERRORCODE_UNKNOWN_JOB' => 'Unknown job specified',
 

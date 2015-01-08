@@ -81,6 +81,7 @@ class mediamosa_asset_metadata {
 
         // Lets not use the alias.
         $prop_id = $definition['propdef_id'];
+        $prop_count = array();
 
         // Based on action, set it.
         switch ($action) {
@@ -91,6 +92,7 @@ class mediamosa_asset_metadata {
             break;
 
           case 'append':
+            $prop_count = mediamosa_db::db_query('SELECT prop_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id GROUP BY prop_id', array(':asset_id' => $asset_id))->fetchAllKeyed();
             break;
 
           case 'update':
@@ -119,6 +121,22 @@ class mediamosa_asset_metadata {
 
         // Get the value.
         $values = $params[$name];
+
+        if (!empty($definition['propdef_min_occurrences']) || !empty($definition['propdef_max_occurrences'])) {
+          $value_count = count($values);
+          // Need to add the already present.
+          if ($action === 'append') {
+            $value_count += isset($prop_count[$prop_id]) ? $prop_count[$prop_id] : 0;
+          }
+
+          if (!empty($definition['propdef_min_occurrences']) && $value_count < $definition['propdef_min_occurrences']) {
+            throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE, array('@name' => $name, '@times' => $definition['propdef_min_occurrences']));
+          }
+          if (!empty($definition['propdef_min_occurrences']) && $value_count > $definition['propdef_max_occurrences']) {
+            throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE, array('@name' => $name, '@times' => $definition['propdef_max_occurrences']));
+          }
+        }
+
         foreach ($values as $value) {
           // We do not store empty or null strings.
           if (trim($value) === '' || $value === null) {

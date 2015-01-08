@@ -170,6 +170,15 @@ MediaMosa 3.6.0-dev (build 2135)
 - Fixed several problems when MySQL settings auto_increment_increment or
   auto_increment_offset are not default in multiple unit tests.
 - Fixed default storage profile call not being staticly cached.
+- Fixed typos in mediamosa_asset_metadata_property field names; min_occurrences
+  and max_occurrences (from min_occurences and min_occurences).
+- Added unit test for testing min_occurrences and min_occurrences properties on
+  metadata property.
+- Metadata properties will now use the min_occurrences and max_occurrences
+  properties, will return errors 725 and 726. Requires mediamosa_sdk module
+  v3.6 or higher.
+- Removed property 'asset_property_is_hidden' from asset output, as this
+  property can not be used is used internally during output generation.
 
 
 MediaMosa 3.5.x (build 2072)

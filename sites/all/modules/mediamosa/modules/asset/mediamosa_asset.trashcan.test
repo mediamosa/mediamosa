@@ -9,7 +9,7 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset - deleting assets with the trashcan',
+      'name' => 'Asset - Deleting assets with the trashcan',
       'description' => 'Testing the delete and undelete for assets using the trashcan.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

@@ -128,16 +128,16 @@ class mediamosa_asset_metadata_property_group {
    *   The type of the propert, CHAR, DATETIME or INT.
    * @param array $options
    *  An array of options;
-   *   - min_occurences: minimum of occurences as data (reserved).
-   *   - max_occurences: maximum of occurences as data (reserved).
+   *   - min_occurrences: minimum of occurrences as data.
+   *   - max_occurrences: maximum of occurrences as data.
    *   - is_hidden: hide metadata when generating output.
    *   - is_protected: metadata can not be removed.
    */
   public static function property_create($property_group_id, $property_name, $type, array $options = array()) {
     // Default options.
     $options += array(
-      'min_occurences' => 0,
-      'max_occurences' => 0,
+      'min_occurrences' => 0,
+      'max_occurrences' => 0,
       'is_hidden' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
       'is_protected' => mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE,
       'app_id' => 0,
@@ -148,8 +148,8 @@ class mediamosa_asset_metadata_property_group {
       mediamosa_asset_metadata_property_db::TYPE => mediamosa_unicode::strtoupper($type),
       mediamosa_asset_metadata_property_db::PROPGROUP_ID => $property_group_id,
       mediamosa_asset_metadata_property_db::APP_ID => $options['app_id'],
-      mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $options['max_occurences'],
-      mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $options['min_occurences'],
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => $options['max_occurrences'],
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => $options['min_occurrences'],
       mediamosa_asset_metadata_property_db::IS_HIDDEN => $options['is_hidden'],
       mediamosa_asset_metadata_property_db::IS_PROTECTED => $options['is_protected'],
     );

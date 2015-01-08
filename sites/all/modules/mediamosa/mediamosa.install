@@ -5263,3 +5263,76 @@ function mediamosa_update_7194() {
     db_drop_field('mediamosa_server', 'server_cupertino_path');
   }
 }
+
+/**
+ * Make published and trashcan metadata maximum occourance of 1.
+ */
+function mediamosa_update_7195() {
+  mediamosa_db::db_update('mediamosa_asset_metadata_property')
+    ->fields(array('min_occurences' => 1, 'max_occurences' => 1))
+    ->condition('prop_name', array('published', 'trashcan'))
+    ->execute();
+
+  $prop_ids = mediamosa_db::db_select('mediamosa_asset_metadata_property', 'p')
+    ->fields('p', array('prop_id'))
+    ->condition('prop_name', array('published', 'trashcan'))
+    ->execute()
+    ->fetchCol();
+
+  foreach ($prop_ids as $prop_id) {
+    $assets = mediamosa_db::db_query('SELECT asset_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE prop_id = :prop_id GROUP BY asset_id HAVING total > 1', array(':prop_id' => $prop_id));
+    foreach ($assets as $asset) {
+      mediamosa_db::db_query('DELETE FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id AND prop_id = :prop_id ORDER BY metadata_id ASC LIMIT ' . ($asset['total'] - 1), array(':asset_id' => $asset['asset_id'], ':prop_id' => $prop_id));
+    }
+  }
+}
+
+/**
+ * Add new descriptions for our new errors.
+ */
+function mediamosa_update_7196() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE',
+      mediamosa_error_db::MESSAGE => 'The metadata property @name must at least occour @times time(s) as value',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE,
+    ))
+  ->execute();
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE',
+      mediamosa_error_db::MESSAGE => 'The metadata property @name can not occour more than @times time(s) as value',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE,
+    ))
+  ->execute();
+}
+
+/**
+ * Fix typo in mediamosa_asset_metadata_property fields.
+ */
+function mediamosa_update_7197() {
+  db_change_field(
+    'mediamosa_asset_metadata_property',
+    'min_occurences',
+    'min_occurrences',
+    array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'description' => 'The minimal occurence of the property.',
+      'default' => 0,
+    )
+  );
+
+  db_change_field(
+    'mediamosa_asset_metadata_property',
+    'max_occurences',
+    'max_occurrences',
+    array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'description' => 'The maximum occurence of the property.',
+      'default' => 0,
+    )
+  );
+}

@@ -8,7 +8,7 @@ class MediaMosaAssetPublishTestCaseEga extends MediaMosaTestCaseEga {
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset - publish',
+      'name' => 'Asset - Publish',
       'description' => 'Testing asset publish functionality',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

@@ -10,7 +10,7 @@ class MediaMosaAssetSearchAclUserUserGroupTestCaseEga extends MediaMosaTestCaseE
   // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset - search ACL user and usergroups',
+      'name' => 'Asset - Search ACL user and usergroups',
       'description' => 'Testing asset search for ACL users and groups.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

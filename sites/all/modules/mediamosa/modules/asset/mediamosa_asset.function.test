@@ -11,7 +11,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Asset - function tests',
+      'name' => 'Asset - Function tests',
       'description' => 'Testing asset related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

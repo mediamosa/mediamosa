@@ -27,12 +27,16 @@ function _mediamosa_metadata_asset_install() {
       mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_CHAR,
       mediamosa_asset_metadata_property_db::IS_HIDDEN => FALSE,
       mediamosa_asset_metadata_property_db::IS_PROTECTED => TRUE,
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => 1,
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => 1,
     ),
     array(
       mediamosa_asset_metadata_property_db::NAME => mediamosa_metadata_asset::TRASHCAN,
       mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_CHAR,
       mediamosa_asset_metadata_property_db::IS_HIDDEN => FALSE,
       mediamosa_asset_metadata_property_db::IS_PROTECTED => TRUE,
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => 1,
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => 1,
     ),
   );
 
@@ -45,6 +49,8 @@ function _mediamosa_metadata_asset_install() {
       array(
         mediamosa_asset_metadata_property_db::IS_HIDDEN => empty($property[mediamosa_asset_metadata_property_db::IS_HIDDEN]) ? mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE : mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE,
         mediamosa_asset_metadata_property_db::IS_PROTECTED => empty($property[mediamosa_asset_metadata_property_db::IS_PROTECTED]) ? mediamosa_asset_metadata_property_db::IS_PROTECTED_FALSE : mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE,
+        mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => isset($property[mediamosa_asset_metadata_property_db::MIN_OCCURRENCES]) ? $property[mediamosa_asset_metadata_property_db::MIN_OCCURRENCES] : 0,
+        mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => isset($property[mediamosa_asset_metadata_property_db::MAX_OCCURRENCES]) ? $property[mediamosa_asset_metadata_property_db::MAX_OCCURRENCES] : 0,
       )
     );
   }

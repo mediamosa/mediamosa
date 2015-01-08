@@ -64,6 +64,7 @@ files[] = mediafile/upload/mediamosa_asset_mediafile_upload_ticket.test
 
 ; Metadata.
 files[] = metadata/mediamosa_asset_metadata.rest.class.inc
+files[] = metadata/mediamosa_asset_metadata.test
 
 ; Metadata Property.
 files[] = metadata/property/mediamosa_asset_metadata_property.rest.class.inc

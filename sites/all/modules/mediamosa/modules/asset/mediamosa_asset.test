@@ -12,7 +12,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Asset - common tests',
+      'name' => 'Asset - Common tests',
       'description' => 'Testing asset related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
