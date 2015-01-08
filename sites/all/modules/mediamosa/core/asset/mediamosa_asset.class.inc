@@ -40,7 +40,8 @@ class mediamosa_asset {
       $asset['asset_property_type'],
       $asset['asset_property_val_char'],
       $asset['asset_property_val_int'],
-      $asset['asset_property_val_datetime']
+      $asset['asset_property_val_datetime'],
+      $asset['asset_property_is_hidden']
     );
 
     // Convert dates to local timezone.
