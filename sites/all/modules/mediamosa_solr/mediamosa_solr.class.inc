@@ -68,7 +68,7 @@ class mediamosa_solr {
    *   - 'granted': When true, assets are include on which we dont have access
    *      on. The granted parameter with the asset indicates if we have access.
    *   - 'is_public_list': Used to include or exclude unappropriate assets.
-   *   - 'is_app_admin': Used for unappropriate.
+   *   - 'is_app_admin': Used for unappropriate and play_restriction.
    *   - 'hide_empty_assets': Don't include empty assets.
    *   - 'show_deleted': Include deleted.
    *   - 'calculate_total_count': Calculate all found rows.
@@ -240,7 +240,7 @@ class mediamosa_solr {
     }
 
     // ACL layer.
-    self::build_access_where($solr_query, mediamosa_acl::ACL_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], $slave_mediafiles, FALSE, $parameters['granted']);
+    self::build_access_where($solr_query, mediamosa_acl::ACL_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], $slave_mediafiles, $parameters['is_app_admin'], $parameters['granted']);
 
     // Build query.
     $query = self::where($solr_query);
@@ -356,11 +356,17 @@ class mediamosa_solr {
     // so we know his/her access.
     $acl_ids = mediamosa_acl::build_access($build_access_app_ids, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves);
 
-    if (!$granted && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
+    if (!$is_app_admin && !$granted && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
       $now = mediamosa_datetime::utc_current_timestamp_now();
       $now = drupal_substr($now, 0, 10) . 'T' . drupal_substr($now, 11, 8) . 'Z';
-      $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_start:[* TO *] OR -play_restriction_start:[* TO :now])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
-      $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_end:[* TO *] OR -play_restriction_end:[:now TO *])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
+      if (!empty($acl_user_id)) {
+        $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(-owner_id:@owner_id OR play_restriction_start:[* TO *] OR -play_restriction_start:[* TO :now])', array(':now' => mediamosa_solr_apache_solr_service::escape($now), '@owner_id' => mediamosa_solr_apache_solr_service::phrase($acl_user_id)));
+        $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(-owner_id:@owner_id OR play_restriction_end:[* TO *] OR -play_restriction_end:[:now TO *])', array(':now' => mediamosa_solr_apache_solr_service::escape($now), '@owner_id' => mediamosa_solr_apache_solr_service::phrase($acl_user_id)));
+      }
+      else {
+        $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_start:[* TO *] OR -play_restriction_start:[* TO :now])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
+        $solr_query[self::WHERE_AND][self::ACL_PLAYRESTRICTION][self::WHERE_AND][] = strtr('-(play_restriction_end:[* TO *] OR -play_restriction_end:[:now TO *])', array(':now' => mediamosa_solr_apache_solr_service::escape($now)));
+      }
     }
 
     if (!empty($acl_user_id) || !empty($acl_group_ids) || count($acl_ids) || count($slaves)) {

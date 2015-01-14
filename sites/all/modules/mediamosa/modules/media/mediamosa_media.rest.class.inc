@@ -247,10 +247,16 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
 
     // Check play restrictions.
     if ($asset['play_restriction_start'] != '' || $asset['play_restriction_end'] != '') {
-      mediamosa_media::check_time_restrictions(
-        strtotime($asset['play_restriction_start']),
-        strtotime($asset['play_restriction_end'])
-      );
+      try {
+        mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+      }
+      catch (Exception $e) {
+        // Ignore the exception.
+        mediamosa_media::check_time_restrictions(
+          ($asset['play_restriction_start'] === NULL || $asset['play_restriction_start'] === '') ? NULL : strtotime($asset['play_restriction_start']),
+          ($asset['play_restriction_end'] === NULL || $asset['play_restriction_end'] === '') ? NULL : strtotime($asset['play_restriction_end'])
+        );
+      }
     }
 
     // All other response have mediafile_id as required.

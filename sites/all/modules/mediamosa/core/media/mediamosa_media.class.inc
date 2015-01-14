@@ -1327,13 +1327,13 @@ class mediamosa_media {
    * @throws mediamosa_exception_error()
    */
   public static function check_time_restrictions($time_restriction_start, $time_restriction_end) {
-    if (time() < $time_restriction_start) {
+    if ($time_restriction_start !== NULL && time() < $time_restriction_start) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array(
         '@date' => date('Y-m-d H:i:s', $time_restriction_start),
         '@timestamp' => $time_restriction_start,
       ));
     }
-    if (time() > $time_restriction_end) {
+    if ($time_restriction_end !== NULL && time() > $time_restriction_end) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array(
         '@date' => date('Y-m-d H:i:s', $time_restriction_end),
         '@timestamp' => $time_restriction_end,

@@ -1374,7 +1374,7 @@ class mediamosa_asset {
     }
 
     // Check if the start and end dates are not switched (start > end).
-    if (!is_null($play_restriction_start) && !is_null($play_restriction_end)) {
+    if (!is_null($play_restriction_start) && $play_restriction_start !== '' && !is_null($play_restriction_end) && $play_restriction_end !== '') {
       if (mediamosa_datetime::date2unix($play_restriction_start) > mediamosa_datetime::date2unix($play_restriction_end)) {
         // Swap start with end.
         list($play_restriction_end, $play_restriction_start) = array($play_restriction_start, $play_restriction_end);
@@ -1383,10 +1383,10 @@ class mediamosa_asset {
 
     $fields = array();
     if (!is_null($play_restriction_start)) {
-      $fields[mediamosa_asset_db::PLAY_RESTRICTION_START] = $play_restriction_start == '' ? NULL : $play_restriction_start;
+      $fields[mediamosa_asset_db::PLAY_RESTRICTION_START] = $play_restriction_start === '' ? NULL : $play_restriction_start;
     }
     if (!is_null($play_restriction_end)) {
-      $fields[mediamosa_asset_db::PLAY_RESTRICTION_END] = $play_restriction_end  == '' ? NULL : $play_restriction_end;
+      $fields[mediamosa_asset_db::PLAY_RESTRICTION_END] = $play_restriction_end  === '' ? NULL : $play_restriction_end;
     }
     if (!is_null($isprivate)) {
       $fields[mediamosa_asset_db::ISPRIVATE] = $isprivate ? mediamosa_asset_db::ISPRIVATE_TRUE : mediamosa_asset_db::ISPRIVATE_FALSE;

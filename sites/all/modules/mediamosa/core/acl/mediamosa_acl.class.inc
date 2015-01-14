@@ -396,7 +396,7 @@ class mediamosa_acl {
     assert(is_bool($is_app_admin));
     assert(!is_array($app_id));
 
-    // we do not allow inter ega changes
+    // We do not allow inter ega changes
     if ($app_id != $object_app_id) {
       throw new mediamosa_exception_error_access_denied(array('@reason' => 'application not allowed'));
     }
@@ -406,7 +406,8 @@ class mediamosa_acl {
       return;// ega admin is always owner
     }
 
-    // basic check op owner rights : an owner has full access, the rest has none.
+    // Basic check op owner rights : an owner has full access, the rest has
+    // none.
     if ($user_id != $user_id_owner) {
       // If group is given, the group may have access.
       if (($group_id != $object_group_id) or ($group_id == NULL)) {
@@ -1289,10 +1290,13 @@ class mediamosa_acl {
     // Get of this current user the acl_name/acl_group ids so we know his/her access.
     $a_acl_ids = mediamosa_acl::build_access($app_ids_tmp, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves);
 
-    if (!$do_master_slave_only && $app_id_table_prefix == 'a' && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
+    if (!$is_app_admin && !$do_master_slave_only && $app_id_table_prefix == 'a' && ($acl_type == mediamosa_acl::ACL_TYPE_ASSET || $acl_type == mediamosa_acl::ACL_TYPE_MEDIAFILE)) {
       $now = mediamosa_datetime::utc_current_timestamp_now();
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_start IS NULL OR a.play_restriction_start < :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
-      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_end IS NULL OR a.play_restriction_end > :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
+      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access']['play_restriction'][mediamosa_db_query::WHERE_OR][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_start IS NULL OR a.play_restriction_start < :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
+      $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access']['play_restriction'][mediamosa_db_query::WHERE_OR][mediamosa_db_query::WHERE_AND]['play_restriction'][] = strtr('(a.play_restriction_end IS NULL OR a.play_restriction_end > :now)', array(':now' => mediamosa_db::escape_string_quoted($now)));
+      if (!is_null($acl_user_id)) {
+        $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access']['play_restriction'][mediamosa_db_query::WHERE_OR]['owner'][] = "a.owner_id = '" . mediamosa_db::escape_string($acl_user_id) . "'";
+      }
     }
 
     if (!is_null($acl_user_id) || (!is_null($acl_group_ids) && !empty($acl_group_ids)) || count($a_acl_ids) || count($slaves)) {
@@ -1300,6 +1304,7 @@ class mediamosa_acl {
         case mediamosa_acl::ACL_TYPE_MEDIAFILE:
 
           $query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id";
+
           // Even if we return all stuff where we have access to, we must still grant only access to master/slave apps
           if (!$do_master_slave_only) {
             // If $do_master_slave_only is TRUE, granted is TRUE, meaning we need to return all assets
@@ -1312,8 +1317,8 @@ class mediamosa_acl {
             }
 
             // allow assets without mediafile for master app_id
-            $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["no_mf"][mediamosa_db_query::WHERE_AND][] = sprintf('a.app_id IN(%s)', implode(',', $app_ids));
-            $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["no_mf"][mediamosa_db_query::WHERE_AND][] = 'mf.asset_id IS NULL';
+            $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['no_mf'][mediamosa_db_query::WHERE_AND][] = sprintf('a.app_id IN(%s)', implode(',', $app_ids));
+            $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['no_mf'][mediamosa_db_query::WHERE_AND][] = 'mf.asset_id IS NULL';
 
             if (is_null($object_id)) {
               // Removed according to ticket #432.
@@ -1684,7 +1689,6 @@ class mediamosa_acl {
     assert(!is_null($object_id));
     switch ($acl_type) {
       case mediamosa_acl::ACL_TYPE_MEDIAFILE:
-
         $query = array();
 
         $query[mediamosa_db_query::A_SELECT_EXPR][] = "a.asset_id";
@@ -1699,7 +1703,9 @@ class mediamosa_acl {
         if (!$is_app_admin) {
           $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_OR][] = "a.is_unappropriate = 'FALSE'";
 
-          if ($acl_user_id) {// if provided, then we must be owner to access unappropiate assets
+          if ($acl_user_id) {
+            // When provided, then we must be owner to access unappropiate
+            // assets.
             $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_OR][] = sprintf("(a.is_unappropriate = 'TRUE' AND a.owner_id='%s')", mediamosa_db::escape_string($acl_user_id));
           }
         }

@@ -1,28 +1,8 @@
 <?php
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Unittests for ACL play restriction.
  */
-
-/**
-  * @file
-  * Unittests for ACL play restriction.
-  */
 class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -79,8 +59,8 @@ class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE));
 
     // With ACL rule, asset 01 should not be granted.
-    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
-    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE);
 
     // Restrict mediafile 3, but in the future.
     $play_restriction_start = date('Y-m-d H:i:s', strtotime('+1 day'));
@@ -93,8 +73,8 @@ class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
 
     // With ACL rule, asset 01,03 should not be granted.
-    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
-    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), FALSE);
 
     // Restrict mediafile 2, but in the past and future.
     $play_restriction_start = date('Y-m-d H:i:s', strtotime('-1 week'));
@@ -107,8 +87,8 @@ class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
 
     // With ACL rule, asset 01,03 should not be granted.
-    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
-    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), FALSE);
 
     // Reverse the date, let MediaMosa flip it.
     // Restrict mediafile 3, but in the future.
@@ -122,8 +102,8 @@ class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE));
 
     // With ACL rule, asset 01,03 should not be granted.
-    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
-    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE), array(), FALSE);
 
     // Remove the date for asset 3.
     $play_restriction_end = '';
@@ -136,8 +116,8 @@ class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE));
 
     // With ACL rule, asset 01,03 should not be granted.
-    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
-    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), self::SIMPLETEST_USER_ID);
+    $this->cql_do_search_test_assets('', array($asset_id_01 => FALSE, $asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets('', array($asset_id_02 => TRUE, $asset_id_03 => TRUE), array(), FALSE);
 
 
     // -------------------------------------------------------------------------

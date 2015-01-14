@@ -44,6 +44,7 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the asset.
     $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
 
     // Check the values.
     foreach ($parameters as $key => $value) {
@@ -57,6 +58,29 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
+
+    // Ask mediafile download url, but as owner.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters);
+
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::IS_APP_ADMIN => 'TRUE',
+    );
+    $xml = $this->do_media_view($asset_id, $parameters);
+
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
+      mediamosa_rest_call_media_view::IS_APP_ADMIN => 'FALSE',
     );
     $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
 
@@ -105,6 +129,7 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
     );
     $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
 
@@ -155,6 +180,7 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
     $parameters = array(
       mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
     );
     $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
@@ -168,5 +194,43 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
     catch (Exception $e) {
       $this->fail(t("The check_time_restrictions() doesn't accepted the good values."));
     }
+
+    // Set the times.
+    $start_time = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $end_time = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => $end_time,
+    );
+    $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Update the asset.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => $start_time,
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_media_view::USER_ID => 'johndoe',
+    );
+    $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
   }
 }
