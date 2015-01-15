@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2137)
+MediaMosa 3.6.0-dev (build 2138)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -181,7 +181,8 @@ MediaMosa 3.6.0-dev (build 2137)
   property can not be used is used internally during output generation.
 - Fixed play restriction when being app admin or owner. Play restriction end
   date on asset can now be correctly reset when providing an empty string.
-
+- Added extra check in unit test for reseting status for asset time
+  restrictions.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
