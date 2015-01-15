@@ -232,5 +232,21 @@ class MediaMosaMediaTimeRestrictionsTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_media_view::USER_ID => 'johndoe',
     );
     $xml = $this->do_media_view($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Remove the restriction.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_OKAY));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Remove the restriction.
+    $parameters = array(
+    );
+    $this->updateAsset($asset_id, $parameters, 'Empty update on asset ID', array(mediamosa_error::ERRORCODE_NO_CHANGES));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
   }
 }

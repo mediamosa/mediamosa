@@ -1414,7 +1414,7 @@ class mediamosa_asset {
       }
     }
 
-    // retourneer een foutmelding als er geen wijzigingen gestuurd zijn
+    // No changes, just return.
     if (!count($fields)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }

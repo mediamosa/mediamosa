@@ -2793,8 +2793,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
-    // More than one, we need to do something.
-    $this->assertFalse(count($parameters) == 1, 'Any update parameters set');
+    // More than one, we need to do something, unless we are testing the no
+    // changes error.
+    if (!in_array(mediamosa_error::ERRORCODE_NO_CHANGES, $expected_result_ids)) {
+      $this->assertFalse(count($parameters) == 1, 'Any update parameters set');
+    }
 
     // The uri.
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
