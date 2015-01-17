@@ -143,6 +143,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Dump transitions.
     $this->dumpTransitions();
 
+    // Dump acl.
+    $this->dumpACL();
+
     // Clean up stuff.
     mediamosa_media_ticket::ticket_cleanup();
 
@@ -235,6 +238,32 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     mediamosa_watchdog::log('Dumping transition table contents.');
     foreach ($transitions as $transition) {
       mediamosa_watchdog::log_export($transition);
+    }
+  }
+
+  /**
+   * Dump transition registration table.
+   */
+  protected function dumpACL() {
+    $acls = mediamosa_db::db_select(mediamosa_acl_app_master_slave_db::TABLE_NAME, 't')->fields('t')->execute();
+    mediamosa_watchdog::log('Dumping master/slave table contents.');
+    foreach ($acls as $acl) {
+      mediamosa_watchdog::log_export($acl);
+    }
+    $acls = mediamosa_db::db_select(mediamosa_acl_group_db::TABLE_NAME, 't')->fields('t')->execute();
+    mediamosa_watchdog::log('Dumping acl group table contents.');
+    foreach ($acls as $acl) {
+      mediamosa_watchdog::log_export($acl);
+    }
+    $acls = mediamosa_db::db_select(mediamosa_acl_name_db::TABLE_NAME, 't')->fields('t')->execute();
+    mediamosa_watchdog::log('Dumping acl name table contents.');
+    foreach ($acls as $acl) {
+      mediamosa_watchdog::log_export($acl);
+    }
+    $acls = mediamosa_db::db_select(mediamosa_acl_object_db::TABLE_NAME, 't')->fields('t')->execute();
+    mediamosa_watchdog::log('Dumping acl object table contents.');
+    foreach ($acls as $acl) {
+      mediamosa_watchdog::log_export($acl);
     }
   }
 

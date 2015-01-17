@@ -163,9 +163,12 @@ class mediamosa_solr {
         // Special case.
         if (in_array('ACL_APP_MASTER_SLAVE', $result['a_joins'])) {
           // Get all assets of our app(s) and slave apps.
+          $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR][] = 'mf_app_id_slave:[* TO *]';
           foreach ($parameters['app_ids'] as $slave_app_id) {
-            $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR][] = 'mf_app_id_slave:' . (int) $slave_app_id;
+            $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR][] = '-mf_app_id_slave:' . (int) $slave_app_id;
           }
+
+          $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR] = '-(' . implode(' OR ', $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR]) . ')';
         }
       }
 

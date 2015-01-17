@@ -269,7 +269,7 @@ class mediamosa_asset_search {
           while ($key !== FALSE);
 
           $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
-          $a_query[mediamosa_db_query::A_JOIN]['acl_app_master_slave_2'] = sprintf("JOIN {mediamosa_acl_app_master_slave} AS acl_ms ON acl_ms.acl_object_type = 'MEDIAFILE' AND acl_ms.acl_object_id=mf.mediafile_id AND acl_ms.app_id_slave IN (%s)", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['acl_app_master_slave_2'] = sprintf("LEFT JOIN {mediamosa_acl_app_master_slave} AS acl_ms ON acl_ms.acl_object_type = 'MEDIAFILE' AND acl_ms.acl_object_id=mf.mediafile_id AND acl_ms.app_id_slave IN (%s)", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
           unset($a_query[mediamosa_db_query::A_JOIN]['acl_app_master_slave']);
@@ -432,6 +432,10 @@ class mediamosa_asset_search {
       // Normal behaviour
       // Do the query
       $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
+// @todo: remove from release.
+      mediamosa_watchdog::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+      mediamosa_watchdog::log_export($query);
+// @todo: remove from release.
 
       // If we specify data2, then we do our read queries on the slave.
       global $databases;
