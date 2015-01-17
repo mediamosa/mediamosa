@@ -697,9 +697,6 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
       case mediamosa_sdk::TYPE_INT:
         $str_quotes = '';
-        if ($str_relation !== 'within') {
-          $str_search_term = (int) $str_search_term; // make sure its an integer.... :)
-        }
         break;
 
       case mediamosa_sdk::TYPE_DATETIME:
@@ -769,7 +766,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_sub_parts_glue = ' AND ';
       case '=':
       case 'any':
-        $a_words = explode(' ', $str_search_term);
+        $a_words = preg_split('/\s+/', $str_search_term);
         switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_sdk::TYPE_INT:
           case mediamosa_sdk::TYPE_UINT:
