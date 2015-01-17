@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2138)
+MediaMosa 3.6.0-dev (build 2139)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -183,6 +183,9 @@ MediaMosa 3.6.0-dev (build 2138)
   date on asset can now be correctly reset when providing an empty string.
 - Added extra check in unit test for reseting status for asset time
   restrictions.
+- Fixed bug in CQL parser where on integer only metadata fields 'any' or '='
+  didn't work with multiple values.
+- Fixed bug when using acl.acl_app index in CQL.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
