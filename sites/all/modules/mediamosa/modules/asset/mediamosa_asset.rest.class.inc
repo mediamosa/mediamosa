@@ -1840,8 +1840,6 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const REFERENCE_ID = 'reference_id';
   const PROVIDER_ID = 'provider_id';
   const ASSET_TYPE = 'asset_type';
-  const PUBLISHED = 'published';
-  const DELETED = 'deleted';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {

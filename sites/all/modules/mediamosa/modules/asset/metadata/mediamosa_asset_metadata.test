@@ -33,10 +33,39 @@ class MediaMosaAssetMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Default value is true for published.
     $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
 
-    $this->createAssetMetadata($asset_id, array('published' => 'FALSE', 'action' => 'replace'));
+    $this->createAssetMetadata($asset_id, array('published' => 'FALSE'));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
     $this->assert($asset['asset']['published'] === 'FALSE', 'Is unpublished');
+
+    $this->createAssetMetadata($asset_id, array('published' => 'TRUE'));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->createAssetMetadata($asset_id, array('trashcan' => 'FALSE', 'published' => 'TRUE', 'title' => 'foo'));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->createAssetMetadata($asset_id, array('title' => 'foo2'));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->createAssetMetadata($asset_id, array('title' => 'foo3', 'action' => 'update'));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->updateAsset($asset_id, array('asset_type' => 'foo1'));
+
+    $this->createAssetMetadata($asset_id, array('title' => 'foo4', 'action' => 'append'));
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
+
+    $this->updateAsset($asset_id, array('asset_type' => 'foo2'));
 
     $this->createAssetMetadata($asset_id, array('published' => 'TRUE', 'action' => 'update'));
     $asset = $this->getAsset($asset_id);
@@ -48,7 +77,7 @@ class MediaMosaAssetMetadataTestCaseEga extends MediaMosaTestCaseEga {
     $this->var_export($asset);
     $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
 
-    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE'), 'action' => 'replace'), array(mediamosa_error::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE));
+    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE')), array(mediamosa_error::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
     $this->assert($asset['asset']['published'] === 'TRUE', 'Is published');
@@ -72,16 +101,16 @@ class MediaMosaAssetMetadataTestCaseEga extends MediaMosaTestCaseEga {
       ->condition(mediamosa_asset_metadata_property_db::NAME, 'published')
       ->execute();
 
-    $this->createAssetMetadata($asset_id, array('published' => array('TRUE'), 'action' => 'replace'), array(mediamosa_error::ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE));
+    $this->createAssetMetadata($asset_id, array('published' => array('TRUE')), array(mediamosa_error::ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
-    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE', 'TRUE', 'FALSE'), 'action' => 'replace'), array(mediamosa_error::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE));
+    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE', 'TRUE', 'FALSE')), array(mediamosa_error::ERRORCODE_METADATA_MAX_OCCURRENCE_FAILURE));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
-    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE'), 'action' => 'replace'));
+    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE')));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
-    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE', 'TRUE'), 'action' => 'replace'));
+    $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE', 'TRUE')));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
   }

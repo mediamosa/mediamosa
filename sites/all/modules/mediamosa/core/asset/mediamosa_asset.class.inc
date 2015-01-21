@@ -574,7 +574,8 @@ class mediamosa_asset {
     $show_stills = TRUE,
     $show_collections = FALSE,
     $add_has_streamable_mediafiles = FALSE,
-    $view_hidden_metadata = FALSE
+    $view_hidden_metadata = FALSE,
+    $options = array()
   ) {
     // Something to collect?
     if (empty($asset_ids)) {
@@ -751,7 +752,8 @@ class mediamosa_asset {
       $show_stills,
       $show_collections,
       $add_has_streamable_mediafiles,
-      $view_hidden_metadata
+      $view_hidden_metadata,
+      $options
     );
   }
 
@@ -862,7 +864,8 @@ class mediamosa_asset {
     $show_stills = TRUE,
     $show_collections = FALSE,
     $add_has_streamable_mediafiles = FALSE,
-    $view_hidden_metadata = FALSE
+    $view_hidden_metadata = FALSE,
+    $options = array()
   ) {
 
     $collections = array();
@@ -1090,7 +1093,12 @@ class mediamosa_asset {
         }
       }
       // Allow other modules to alter output.
-      drupal_alter('mediamosa_asset_enrich_response', $items_pre_sort[$asset[mediamosa_asset_db::ID]], $app_id, $acl_user_id, $is_app_admin);
+      $options += array(
+        'app_id' => $app_id,
+        'acl_user_id' => $acl_user_id,
+        'is_app_admin' => $is_app_admin,
+      );
+      drupal_alter('mediamosa_asset_enrich_response', $items_pre_sort[$asset[mediamosa_asset_db::ID]], $options);
     }
 
     $items = array();
@@ -1267,13 +1275,17 @@ class mediamosa_asset {
    *   The asset is published.
    * @param bool $trashcan
    *   The asset is by default in trashcan.
+   * @param bool $asset_id
+   *   If given, use this id to create new asset.
    *
    * @param string
    *   The new asset ID of the created asset.
    */
-  public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $published = TRUE, $trashcan = FALSE) {
+  public static function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $published = TRUE, $trashcan = FALSE, $asset_id = NULL) {
 
-    $asset_id = mediamosa_db::uuid($app_id);
+    if ($asset_id == NULL) {
+      $asset_id = mediamosa_db::uuid($app_id);
+    }
 
     $fields = array(
       mediamosa_asset_db::ID => $asset_id,
@@ -1466,6 +1478,34 @@ class mediamosa_asset {
 
     // Reindex the asset.
     mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE);
+  }
+
+  /**
+   * Clone an asset.
+   *
+   * @param string $asset_id
+   *   The asset ID.
+   * @param bool $symlink
+   *   Create symlink (unused, reserved).
+   */
+  public static function copy($asset_id, $symlink = TRUE) {
+
+    // @todo: may not be found in search results at any time.
+
+    $asset = self::get($asset_id);
+
+    // Create a new asset, but no reindex yet.
+    $new_asset_id = self::create($asset['app_id'], $asset['owner_id'], $asset['group_id'], $asset['reference_id'], $asset['provider_id'], NULL, FALSE);
+
+    // Remove the metadata from destination, copy metadata from source to dest.
+    mediamosa_asset_metadata::metadata_copy($asset_id, $new_asset_id, TRUE);
+
+    // Copy mediafiles.
+    mediamosa_asset_mediafile::copy($asset_id, $new_asset_id, $symlink);
+
+    // Do more stuff: collections, hooks.
+
+    return $new_asset_id;
   }
 
   /**

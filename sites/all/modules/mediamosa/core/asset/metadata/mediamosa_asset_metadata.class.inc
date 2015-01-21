@@ -64,8 +64,8 @@ class mediamosa_asset_metadata {
    * @param string $action
    *   The actions;
    *     - 'append': Append new metadata to existing metadata.
-   *     - 'replace': Remove all metadata (of given defintions) and replace with
-   *                  new.
+   *     - 'replace': Remove all metadata (of given definitions) and replace
+   *                  with new.
    *     - 'update': Remove all metadata from single property and insert new.
    */
   public static function metadata_create($asset_id, array $metadata_definitions_full, array $params, $action) {
@@ -75,24 +75,26 @@ class mediamosa_asset_metadata {
     $transaction = mediamosa_db::db_transaction();
 
     try {
+      $prop_count = array();
+      if ($action === 'append') {
+        $prop_count = mediamosa_db::db_query('SELECT prop_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id GROUP BY prop_id', array(':asset_id' => $asset_id))->fetchAllKeyed();
+      }
+
       foreach ($metadata_definitions_full as $name => $definition) {
-        // All off.
         $do_delete = FALSE;
 
         // Lets not use the alias.
         $prop_id = $definition['propdef_id'];
-        $prop_count = array();
 
         // Based on action, set it.
         switch ($action) {
           case 'replace':
             if ($definition['propdef_is_protected'] !== mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE || ($definition['propdef_is_protected'] === mediamosa_asset_metadata_property_db::IS_PROTECTED_TRUE && isset($params[$name]))) {
               $do_delete = TRUE;
+              break;
             }
-            break;
 
           case 'append':
-            $prop_count = mediamosa_db::db_query('SELECT prop_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id GROUP BY prop_id', array(':asset_id' => $asset_id))->fetchAllKeyed();
             break;
 
           case 'update':
@@ -113,6 +115,7 @@ class mediamosa_asset_metadata {
               ':prop_id' => $prop_id
             )
           );
+          $prop_count[$prop_id] = 0;
         }
 
         if (!isset($params[$name])) {
@@ -123,11 +126,7 @@ class mediamosa_asset_metadata {
         $values = $params[$name];
 
         if (!empty($definition['propdef_min_occurrences']) || !empty($definition['propdef_max_occurrences'])) {
-          $value_count = count($values);
-          // Need to add the already present.
-          if ($action === 'append') {
-            $value_count += isset($prop_count[$prop_id]) ? $prop_count[$prop_id] : 0;
-          }
+          $value_count = count($values) + (isset($prop_count[$prop_id]) ? $prop_count[$prop_id] : 0);
 
           if (!empty($definition['propdef_min_occurrences']) && $value_count < $definition['propdef_min_occurrences']) {
             throw new mediamosa_exception_error(mediamosa_sdk::ERRORCODE_METADATA_MIN_OCCURRENCE_FAILURE, array('@name' => $name, '@times' => $definition['propdef_min_occurrences']));
@@ -187,6 +186,9 @@ class mediamosa_asset_metadata {
       throw $e;
     }
 
+    // Set the empty asset.
+    mediamosa_asset::update_asset_info_is_empty_asset($asset_id, FALSE);
+
     // Reindex the asset.
     mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
 
@@ -208,26 +210,37 @@ class mediamosa_asset_metadata {
    *
    * @param string $asset_id
    *   The asset to get metadata from.
+   * @param string $propgroup_name
+   *   The name of the property group.
+   * @param string $prop_name
+   *   The property name.
    *
    * @return array
    *   The metadata of the asset.
    */
-  public static function metadata_get($asset_id) {
-    $result = mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_asset_metadata} AS am
+  public static function metadata_get($asset_id, $propgroup_name = NULL, $prop_name = NULL) {
+    $sql = 'SELECT * FROM {#mediamosa_asset_metadata} AS am
        JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id
        JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.#propgroup_id = amp.#propgroup_id
-       WHERE am.#asset_id = :asset_id',
-      array(
-        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
-        '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
-        '#prop_id' => mediamosa_asset_metadata_property_db::ID,
-        '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
-        '#propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
-        '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
-        ':asset_id' => $asset_id
-      )
+       WHERE am.#asset_id = :asset_id';
+    $params = array(
+      '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+      '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
+      '#prop_id' => mediamosa_asset_metadata_property_db::ID,
+      '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+      '#propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
+      '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
+      ':asset_id' => $asset_id,
     );
+    if ($propgroup_name) {
+      $sql .= ' AND ampg.propgroup_name = :propgroup_name';
+      $params[':propgroup_name'] = $propgroup_name;
+    }
+    if ($prop_name) {
+      $sql .= ' AND amp.prop_name = :prop_name';
+      $params[':prop_name'] = $prop_name;
+    }
+    $result = mediamosa_db::db_query($sql, $params);
 
     $result_metadata = array();
     foreach ($result as $metadata) {
@@ -297,6 +310,137 @@ class mediamosa_asset_metadata {
       }
     }
     return $value;
+  }
+
+  /**
+   * Deletes all metadata from a asset.
+   *
+   * @param string $asset_id
+   *   The asset id of the asset to delete all metadata from.
+   */
+  public static function metadata_asset_delete($asset_id) {
+    db_delete(mediamosa_asset_metadata_db::TABLE_NAME)
+      ->condition(mediamosa_asset_metadata_db::ASSET_ID, $asset_id)
+      ->execute();
+  }
+
+  /**
+   * Deletes all metadata from an asset of 1 property.
+   *
+   * @param string $asset_id
+   *   asset id.
+   * @param string $propgroup_name
+   *   property group_name.
+   * @param string $prop_name
+   *   property name.
+   */
+  public static function metadata_asset_delete_prop($asset_id, $propgroup_name, $prop_name) {
+    $prop_id = mediamosa_db::db_query(
+      'SELECT prop_id FROM {#mediamosa_asset_metadata_property} AS amp
+       JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.propgroup_id = amp.propgroup_id
+       WHERE ampg.propgroup_name = :propgroup_name AND amp.prop_name = :prop_name',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+        ':propgroup_name' => $propgroup_name,
+        ':prop_name' => $prop_name,
+      )
+    )->fetchField();
+
+    mediamosa_db::db_query(
+      'DELETE FROM {#mediamosa_asset_metadata} WHERE prop_id = :prop_id and asset_id = :asset_id',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        ':prop_id' => $prop_id,
+        ':asset_id' => $asset_id,
+      )
+    );
+  }
+
+  /**
+   * Deletes all properties with given prop_name and val_char value.
+   */
+  public static function metadata_asset_delete_prop_value($propgroup_name, $prop_name, $value) {
+    $prop_id = mediamosa_db::db_query(
+      'SELECT prop_id FROM {#mediamosa_asset_metadata_property} AS amp
+       JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.propgroup_id = amp.propgroup_id
+       WHERE ampg.propgroup_name = :propgroup_name AND amp.prop_name = :prop_name',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+        ':propgroup_name' => $propgroup_name,
+        ':prop_name' => $prop_name,
+      )
+    )->fetchField();
+
+    mediamosa_db::db_query(
+      'DELETE FROM {#mediamosa_asset_metadata} WHERE prop_id = :prop_id and val_char = :value',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        ':prop_id' => $prop_id,
+        ':value' => $value,
+      )
+    );
+  }
+
+  /**
+   * Copy the metadata of the asset to another asset.
+   *
+   * @param string $from_asset_id
+   *   The source asset id.
+   * @param string $to_asset_id
+   *   The destination asset id.
+   * @param bool $clear_metadata
+   *   (default: TRUE) Clear metadata on destination before copying. Some
+   *   properties must be removed when copying from other asset as some
+   *   properties can not exists more than once on the asset (published,
+   *   trashcan).
+   */
+  public static function metadata_copy($from_asset_id, $to_asset_id, $clear_metadata = TRUE) {
+    if ($clear_metadata) {
+      static::metadata_asset_delete($to_asset_id);
+    }
+
+    mediamosa_db::db_query('INSERT INTO {#mediamosa_asset_metadata} ' .
+      '(asset_id, prop_id, val_char, val_char_lft, val_char_rght, val_datetime, val_int, created, changed) ' .
+      'SELECT :to_asset_id, prop_id, val_char, val_char_lft, val_char_rght, val_datetime, val_int, created, changed ' .
+      'FROM {#mediamosa_asset_metadata} WHERE asset_id = :from_asset_id',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        ':to_asset_id' => $to_asset_id,
+        ':from_asset_id' => $from_asset_id,
+      )
+    );
+  }
+
+  /**
+   * Search for a val_char value.
+   *
+   * @param string $propgroup_name
+   *   property groupname.
+   * @param string $prop_name
+   *   property name.
+   * @param string $value
+   *   val_char value.
+   */
+  public static function metadata_search_val_char($propgroup_name, $prop_name, $value) {
+    $result = mediamosa_db::db_query(
+      'SELECT asset_id FROM {#mediamosa_asset_metadata} AS am
+       JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.prop_id = am.prop_id
+       JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.propgroup_id = amp.propgroup_id
+       WHERE ampg.propgroup_name = :propgroup_name AND amp.prop_name = :prop_name and am.val_char = :value',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+        ':propgroup_name' => $propgroup_name,
+        ':prop_name' => $prop_name,
+        ':value' => $value,
+      )
+    )->fetchAssoc();
+    return $result;
   }
 
   /**

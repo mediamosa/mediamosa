@@ -1185,4 +1185,63 @@ class mediamosa_asset_mediafile {
     // Get the container type from the mediafile metadata.
     return mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
   }
+
+  /**
+   * Copies all mediafiles from 1 asset to another.
+   *
+   * @param string $from_asset_id
+   *   Copy from the asset.
+   * @param string $to_asset_id
+   *   Copy to the asset.
+   * @param bool $symlink
+   *   Create symlink (unused, reserved).
+   */
+  public static function copy($from_asset_id, $to_asset_id, $symlink = TRUE) {
+
+    $mf_mapping = array();
+    $mfs = self::get_by_asset_id($from_asset_id, array('mediafile_id', 'app_id'), array());
+    foreach ($mfs as $mf) {
+
+      // Copy a mediafile, first the main record, then the metadata, then the
+      // file itself (can be symlinked).
+
+      // Copy mediamosa_asset_mediafile.
+      // @todo: mediafile_id_source.
+      $mediafile_id_new = mediamosa_db::uuid($mf['app_id']);
+      mediamosa_db::db_query("INSERT INTO {#mediamosa_asset_mediafile} " .
+        "(mediafile_id, asset_id, mediafile_id_source, tag, app_id, owner_id, group_id, is_original_file, is_downloadable, is_streamable, is_still, " .
+        " filename, uri, sannas_mount_point, transcode_profile_id, tool, command, file_extension, is_protected, created, changed, transcode_inherits_acl) " .
+        "SELECT :mediafile_id, :asset_id, mediafile_id_source, tag, app_id, owner_id, group_id, is_original_file, is_downloadable, is_streamable, is_still, " .
+        " filename, uri, sannas_mount_point, transcode_profile_id, tool, command, file_extension, is_protected, created, changed, transcode_inherits_acl " .
+        "FROM {#mediamosa_asset_mediafile} WHERE mediafile_id = :from_mediafile_id",
+        array(
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          ':mediafile_id' => $mediafile_id_new,
+          ':asset_id' => $to_asset_id,
+          ':from_mediafile_id' => $mf['mediafile_id'],
+        )
+      );
+      $mf_mapping[$mf['mediafile_id']] = $mediafile_id_new;
+
+      // @todo: acl rights.
+
+      // Copy mediamosa_asset_mediafile_metadata.
+      mediamosa_db::db_query("INSERT INTO {#mediamosa_asset_mediafile_metadata} " .
+        "(mediafile_id, prop_id, val_char, val_datetime, val_int) " .
+        "SELECT :mediafile_id, prop_id, val_char, val_datetime, val_int " .
+        "FROM {#mediamosa_asset_mediafile_metadata} WHERE mediafile_id = :from_mediafile_id",
+        array(
+          '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+          ':from_mediafile_id' => $mf['mediafile_id'],
+          ':mediafile_id' => $mediafile_id_new,
+        )
+      );
+
+      // Create a symlink. @todo: or filecopy.
+      mediamosa_io::symlink(
+        mediamosa_io::realpath(mediamosa_storage::create_storage_uri($mf['app_id'], $mf['mediafile_id'])),
+        mediamosa_io::realpath(mediamosa_storage::create_storage_uri($mf['app_id'], $mediafile_id_new))
+      );
+    }
+  }
 }
