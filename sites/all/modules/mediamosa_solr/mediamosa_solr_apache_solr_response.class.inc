@@ -104,17 +104,10 @@ class mediamosa_solr_apache_solr_response {
         foreach ($this->_response->facet_counts->facet_fields as $field => $data) {
           if (mediamosa_unicode::substr($field, -3) == '_md') {
             $field = mediamosa_unicode::substr($field, 0, -3);
-
-            $facets['solr_facet_fields'][$field] = array();
-            foreach ($data as $name => $value) {
-              $facets['solr_facet_fields'][$field][$name] = (string) $value;
-            }
           }
-          elseif ($field == 'asset_type') {
-            $facets['solr_facet_fields'][$field] = array();
-            foreach ($data as $name => $value) {
-              $facets['solr_facet_fields'][$field][$name] = (string) $value;
-            }
+          $facets['solr_facet_fields'][$field] = array();
+          foreach ($data as $name => $value) {
+            $facets['solr_facet_fields'][$field][$name] = (string) $value;
           }
         }
 

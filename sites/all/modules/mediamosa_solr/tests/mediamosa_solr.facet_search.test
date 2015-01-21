@@ -1,0 +1,254 @@
+<?php
+/**
+ * @file
+ * Default test.
+ */
+
+class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'SOLR - Facet search tests',
+      'description' => 'Do facet search and check its results.',
+      'group' => 'MediaMosa Solr',
+      'automatic_run_disabled' => module_exists('mediamosa_solr') ? FALSE : TRUE,
+    );
+  }
+
+  /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return module_exists('mediamosa_solr') ? TRUE : FALSE;
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    // Get Solr url from parent install.
+    $mediamosa_solr_url = mediamosa_solr_apache_solr_service::mediamosaGetUrl();
+
+    // Change app timezones to UTC default.
+    $this->default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL;
+
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_solr',
+    ), $args));
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+
+    // Solr set url.
+    variable_set('mediamosa_solr_url', $mediamosa_solr_url);
+
+    // Turn on Solr as search engine.
+    variable_set('mediamosa_search_engine', 'mediamosa_solr');
+  }
+
+  /**
+   * Implements tearDown().
+   */
+  protected function tearDown() {
+
+    $app_ids = array();
+    if (!empty($this->a_app['app_id'])) {
+      $app_ids[] = $this->a_app['app_id'];
+    }
+    if (!empty($this->a_app_2['app_id'])) {
+      $app_ids[] = $this->a_app_2['app_id'];
+    }
+    if (!empty($this->a_app_3['app_id'])) {
+      $app_ids[] = $this->a_app_3['app_id'];
+    }
+
+    // Teardown first (else teardown will sync assets sometimes to SOLR).
+    parent::tearDown();
+
+    // Remove it.
+    if (!empty($app_ids)) {
+      mediamosa_solr::delete_simpletest_documents($app_ids);
+    }
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  /**
+   * Related does not search within the ACL and APP range, needs fixing.
+   */
+  function testCustomTagWithRelated() {
+    // ------------------------------------------------------------- Setup apps.
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+    $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
+
+    // ------------------------------------- Create asset and metadata property.
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+    $upload_4 = $this->uploadTestFile();
+    $upload_5 = $this->uploadTestFile();
+    $upload_6 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+    $this->createMediafileTranscode($upload_5['mediafile_id']);
+    $this->createMediafileTranscode($upload_6['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Create asset metadata.
+    $this->createAssetMetadata($upload_1['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test',
+        'subject' => 'video',
+      )
+    );
+    $this->createAssetMetadata($upload_2['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test 2',
+        'subject' => 'audio',
+      )
+    );
+    $this->createAssetMetadata($upload_3['asset_id'],
+      array(
+        'title' => 'test app 1',
+        'description' => 'some test 3',
+        'subject' => 'video',
+      )
+    );
+    $this->createAssetMetadata($upload_5['asset_id'],
+      array(
+        'title' => 'test app 2',
+        'description' => 'some test 4',
+        'subject' => 'video',
+      )
+    );
+    $this->createAssetMetadata($upload_6['asset_id'],
+      array(
+        'title' => 'test app 2',
+        'description' => 'some test 5',
+        'subject' => 'audio',
+      )
+    );
+
+    $this->updateAsset($upload_1['asset_id'], array('provider_id' => 'source1'));
+    $this->updateAsset($upload_2['asset_id'], array('provider_id' => 'source2'));
+    $this->updateAsset($upload_3['asset_id'], array('provider_id' => 'source2'));
+    $this->updateAsset($upload_5['asset_id'], array('provider_id' => 'source1'));
+    $this->updateAsset($upload_6['asset_id'], array('provider_id' => 'source3'));
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Facet search tests.
+    $parameters = array(
+      mediamosa_rest_call_asset_search::SOLR_FACET => 'true',
+      mediamosa_rest_call_asset_search::SOLR_FACET_FIELD => 'dc.subject',
+    );
+    $assets = $this->searchAsset(10, $parameters);
+
+    // Must find 6 assets.
+    $this->assertTrue($assets['header']['item_count'] == 6, 'Must find 6 assets.');
+
+    $found = 0;
+    foreach ($assets['header']['solr_facet']['solr_facet_fields']['dc_subject']['fields'] as $fields) {
+      foreach ($fields as $field) {
+        $this->var_export($field);
+        if ($field['name'] === 'video') {
+          $this->assert($field['value'] == 3, 'Found 3 videos');
+          $found++;
+        }
+        elseif ($field['name'] === 'audio') {
+          $this->assert($field['value'] == 2, 'Found 2 audios');
+          $found++;
+        }
+      }
+    }
+    $this->assert($found == 2, 'found all properties.');
+
+    $parameters = array(
+      mediamosa_rest_call_asset_search::SOLR_FACET => 'true',
+      mediamosa_rest_call_asset_search::SOLR_FACET_FIELD => 'asset_type',
+    );
+    $assets = $this->searchAsset(10, $parameters);
+    $found = 0;
+    foreach ($assets['header']['solr_facet']['solr_facet_fields']['asset_type'] as $fields) {
+      foreach ($fields as $field) {
+        $this->var_export($field);
+        if ($field['name'] === 'video') {
+          $this->assert($field['value'] == 6, 'Found 6 videos');
+          $found++;
+        }
+      }
+    }
+    $this->assert($found == 1, 'found all properties.');
+
+    // Must find 6 assets.
+    $this->assertTrue($assets['header']['item_count'] == 6, 'Must find 6 assets.');
+
+    $parameters = array(
+      mediamosa_rest_call_asset_search::SOLR_FACET => 'true',
+      mediamosa_rest_call_asset_search::SOLR_FACET_FIELD => 'provider_id',
+    );
+    $assets = $this->searchAsset(10, $parameters);
+    $found = 0;
+    foreach ($assets['header']['solr_facet']['solr_facet_fields']['provider_id']['fields'] as $fields) {
+      foreach ($fields as $field) {
+        $this->var_export($field);
+        if ($field['name'] === 'source1') {
+          $this->assert($field['value'] == 2, 'Found 2 source1');
+          $found++;
+        }
+        elseif ($field['name'] === 'source2') {
+          $this->assert($field['value'] == 2, 'Found 2 source2');
+          $found++;
+        }
+        elseif ($field['name'] === 'source3') {
+          $this->assert($field['value'] == 1, 'Found 1 source3');
+          $found++;
+        }
+      }
+    }
+    $this->assert($found == 3, 'found all properties.');
+
+    $parameters = array(
+      mediamosa_rest_call_asset_search::SOLR_FACET => 'true',
+      mediamosa_rest_call_asset_search::SOLR_FACET_FIELD => 'provider_id',
+      mediamosa_rest_call_asset_search::CQL => 'provider_id any "source1 source2"',
+    );
+    $assets = $this->searchAsset(10, $parameters);
+    $found = 0;
+    foreach ($assets['header']['solr_facet']['solr_facet_fields']['provider_id']['fields'] as $fields) {
+      foreach ($fields as $field) {
+        $this->var_export($field);
+        if ($field['name'] === 'source1') {
+          $this->assert($field['value'] == 2, 'Found 2 source1');
+          $found++;
+        }
+        elseif ($field['name'] === 'source2') {
+          $this->assert($field['value'] == 2, 'Found 2 source2');
+          $found++;
+        }
+      }
+    }
+    $this->assert($found == 2, 'found all properties.');
+  }
+}
