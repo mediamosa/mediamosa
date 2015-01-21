@@ -5265,26 +5265,9 @@ function mediamosa_update_7194() {
 }
 
 /**
- * Make published and trashcan metadata maximum occourance of 1.
+ * This update has been removed and does nothing.
  */
 function mediamosa_update_7195() {
-  mediamosa_db::db_update('mediamosa_asset_metadata_property')
-    ->fields(array('min_occurences' => 1, 'max_occurences' => 1))
-    ->condition('prop_name', array('published', 'trashcan'))
-    ->execute();
-
-  $prop_ids = mediamosa_db::db_select('mediamosa_asset_metadata_property', 'p')
-    ->fields('p', array('prop_id'))
-    ->condition('prop_name', array('published', 'trashcan'))
-    ->execute()
-    ->fetchCol();
-
-  foreach ($prop_ids as $prop_id) {
-    $assets = mediamosa_db::db_query('SELECT asset_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE prop_id = :prop_id GROUP BY asset_id HAVING total > 1', array(':prop_id' => $prop_id));
-    foreach ($assets as $asset) {
-      mediamosa_db::db_query('DELETE FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id AND prop_id = :prop_id ORDER BY metadata_id ASC LIMIT ' . ($asset['total'] - 1), array(':asset_id' => $asset['asset_id'], ':prop_id' => $prop_id));
-    }
-  }
 }
 
 /**
@@ -5335,4 +5318,27 @@ function mediamosa_update_7197() {
       'default' => 0,
     )
   );
+}
+
+/**
+ * Make published and trashcan metadata maximum occourance of 1.
+ */
+function mediamosa_update_7198() {
+  mediamosa_db::db_update('mediamosa_asset_metadata_property')
+    ->fields(array('min_occurrences' => 1, 'max_occurrences' => 1))
+    ->condition('prop_name', array('published', 'trashcan'))
+    ->execute();
+
+  $prop_ids = mediamosa_db::db_select('mediamosa_asset_metadata_property', 'p')
+    ->fields('p', array('prop_id'))
+    ->condition('prop_name', array('published', 'trashcan'))
+    ->execute()
+    ->fetchCol();
+
+  foreach ($prop_ids as $prop_id) {
+    $assets = mediamosa_db::db_query('SELECT asset_id, COUNT(*) AS total FROM {mediamosa_asset_metadata} WHERE prop_id = :prop_id GROUP BY asset_id HAVING total > 1', array(':prop_id' => $prop_id));
+    foreach ($assets as $asset) {
+      mediamosa_db::db_query('DELETE FROM {mediamosa_asset_metadata} WHERE asset_id = :asset_id AND prop_id = :prop_id ORDER BY metadata_id ASC LIMIT ' . ($asset['total'] - 1), array(':asset_id' => $asset['asset_id'], ':prop_id' => $prop_id));
+    }
+  }
 }

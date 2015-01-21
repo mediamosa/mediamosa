@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2139)
+MediaMosa 3.6.0-dev (build 2140)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -186,6 +186,10 @@ MediaMosa 3.6.0-dev (build 2139)
 - Fixed bug in CQL parser where on integer only metadata fields 'any' or '='
   didn't work with multiple values.
 - Fixed bug when using acl.acl_app index in CQL.
+- Fixed asset copy function; new assets have default values for trashcan and
+  published metadata, these are now removed before copying the metadata from
+  another asset.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
