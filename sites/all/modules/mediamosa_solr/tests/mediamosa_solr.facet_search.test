@@ -84,9 +84,9 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Tests.
   /**
-   * Related does not search within the ACL and APP range, needs fixing.
+   * Test basic facet searching.
    */
-  function testCustomTagWithRelated() {
+  function testFacetSearchBasic() {
     // ------------------------------------------------------------- Setup apps.
     // App ids.
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
@@ -165,6 +165,13 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
     $assets = $this->searchAsset(10, $parameters);
 
+    // Fix single results.
+    if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
+      $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
+      unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
+      $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
+    }
+
     // Must find 6 assets.
     $this->assertTrue($assets['header']['item_count'] == 6, 'Must find 6 assets.');
 
@@ -190,7 +197,15 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
     $assets = $this->searchAsset(10, $parameters);
     $found = 0;
-    foreach ($assets['header']['solr_facet']['solr_facet_fields']['asset_type'] as $fields) {
+
+    // Fix single results.
+    if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
+      $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
+      unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
+      $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
+    }
+
+    foreach ($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields'] as $fields) {
       foreach ($fields as $field) {
         $this->var_export($field);
         if ($field['name'] === 'video') {
@@ -209,6 +224,14 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_rest_call_asset_search::SOLR_FACET_FIELD => 'provider_id',
     );
     $assets = $this->searchAsset(10, $parameters);
+
+    // Fix single results.
+    if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
+      $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
+      unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
+      $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
+    }
+
     $found = 0;
     foreach ($assets['header']['solr_facet']['solr_facet_fields']['provider_id']['fields'] as $fields) {
       foreach ($fields as $field) {
@@ -235,6 +258,14 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_rest_call_asset_search::CQL => 'provider_id any "source1 source2"',
     );
     $assets = $this->searchAsset(10, $parameters);
+
+    // Fix single results.
+    if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
+      $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
+      unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
+      $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
+    }
+
     $found = 0;
     foreach ($assets['header']['solr_facet']['solr_facet_fields']['provider_id']['fields'] as $fields) {
       foreach ($fields as $field) {
