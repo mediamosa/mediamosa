@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2140)
+MediaMosa 3.6.0-dev (build 2141)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -189,6 +189,7 @@ MediaMosa 3.6.0-dev (build 2140)
 - Fixed asset copy function; new assets have default values for trashcan and
   published metadata, these are now removed before copying the metadata from
   another asset.
+- Fixed issue when unit test facet search was run other mediamosa setup.
 
 
 MediaMosa 3.5.x (build 2072)
