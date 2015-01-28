@@ -4,7 +4,7 @@
  * Solr version of MediaMosaAclTestCaseEga
  */
 
-class MediaMosaSolrAssetMetadataTestCaseEga extends MediaMosaAssetMetadataTestCaseEga {
+class MediaMosaSolrAssetMetadataPropertyTestCaseEga extends MediaMosaAssetMetadataPropertyTestCaseEga {
   // ----------------------------------------------- ------------------ Members.
 
   // ---------------------------------------------------------------- Functions.

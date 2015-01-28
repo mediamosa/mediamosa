@@ -113,5 +113,38 @@ class MediaMosaAssetMetadataTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadata($asset_id, array('published' => array('TRUE', 'FALSE', 'TRUE')));
     $asset = $this->getAsset($asset_id);
     $this->var_export($asset);
+
+    // Make published metadata property min 2 and max 4 so we can test this.
+    mediamosa_db::db_update(mediamosa_asset_metadata_property_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => 1,
+        mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => 1,
+      ))
+      ->condition(mediamosa_asset_metadata_property_db::NAME, 'published')
+      ->execute();
+
+    // Create the asset.
+    $asset_id_2 = $this->createAsset();
+
+    // Some CQL fields are case insensitive.
+    // Update asset (provider_id, reference_id, asset_type).
+    $parameters = array(
+      mediamosa_rest_call_asset_update::ASSET_TYPE => 'document',
+    );
+    $this->updateAsset($asset_id, $parameters);
+
+    $parameters = array(
+      mediamosa_rest_call_asset_update::ASSET_TYPE => 'Document',
+    );
+    $this->updateAsset($asset_id_2, $parameters);
+
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $asset = $this->getAsset($asset_id_2);
+    $this->var_export($asset);
+
+    $this->cql_do_search_test_assets_1('asset_type = "document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset_type = "Document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset_type = "ocument"', array($asset_id => TRUE, $asset_id_2 => TRUE));
   }
 }
