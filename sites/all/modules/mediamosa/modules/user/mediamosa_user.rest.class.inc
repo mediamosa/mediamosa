@@ -46,10 +46,10 @@ class mediamosa_rest_call_user_get extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Get the user quota.
-    $a_result = mediamosa_user::get_user_quota($app_id, $user_id);
+    $result = mediamosa_user::get_user_quota($app_id, $user_id);
 
     // Add to response.
-    $o_mediamosa->add_item($a_result);
+    $o_mediamosa->add_item($result);
   }
 }
 

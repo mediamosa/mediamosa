@@ -131,7 +131,7 @@ class mediamosa_rest {
 
           // Replace + for space, seems arg() does urldecode the %## values into
           // chars, but not the + into spaces.
-          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = str_replace('+', ' ', ($request_uris[$pos]));
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
         }
         else {
           $regex_array[] = $uri_part;

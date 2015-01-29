@@ -366,4 +366,52 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       t('The vpx_still_url has not value')
     );
   }
+
+  /**
+   * Test if owner can have + sign in owner name.
+   */
+  public function testAssetOwner() {
+
+    $owner_id = 'foo+ba r@fooplus+ba r.com';
+    $asset_id = $this->createAsset(
+      array(mediamosa_rest_call_asset_create::USER_ID => $owner_id)
+    );
+
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
+
+    // Update the asset with the owner.
+    $provider_id = 'Its me';
+    $this->updateAsset($asset_id,
+      array(
+        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
+        mediamosa_rest_call_asset_update::PROVIDER_ID => $provider_id,
+      )
+    );
+
+    $asset = $this->getAsset($asset_id);
+    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
+    $this->assert($asset['provider_id'] === $provider_id, 'Provider ID matches');
+
+    $mediafile_id = $this->createMediafile($asset_id,
+      array(
+        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
+      )
+    );
+
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+    $this->assert($mediafile['owner_id'] === $owner_id, 'Owner ID matches');
+
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id, array(mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => $owner_id));
+    $this->var_export($uploadticket);
+    $result = db_select(mediamosa_media_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
+    foreach ($result as $row) {
+      $this->var_export($row, 'Dump Ticket');
+    }
+
+    $user = $this->getUser($owner_id);
+    $this->var_export($user);
+  }
 }

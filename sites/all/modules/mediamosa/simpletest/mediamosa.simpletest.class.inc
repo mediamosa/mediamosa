@@ -513,7 +513,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       CURLOPT_HEADER => TRUE,
     );
 
-
     if (strcasecmp($request_method, 'GET') == 0) {
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
