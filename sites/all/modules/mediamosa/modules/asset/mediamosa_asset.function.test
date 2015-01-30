@@ -411,7 +411,8 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
       $this->var_export($row, 'Dump Ticket');
     }
 
-    $user = $this->getUser($owner_id);
-    $this->var_export($user);
+    // Requires Apache 2.2.24 or higher.
+    //$user = $this->getUser($owner_id);
+    //$this->var_export($user);
   }
 }
