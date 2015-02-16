@@ -5376,7 +5376,7 @@ function mediamosa_update_7199() {
   }
 
   if (!db_index_exists('mediamosa_server', 'uni_machine_name')) {
-    db_add_unique_key('mediamosa_server', 'machine_name', array('machine_name'));
+    db_add_unique_key('mediamosa_server', 'uni_machine_name', array('machine_name'));
   }
 }
 
@@ -5413,6 +5413,6 @@ function mediamosa_update_7200() {
   }
 
   if (!db_index_exists('mediamosa_viewer', 'uni_machine_name')) {
-    db_add_unique_key('mediamosa_viewer', 'machine_name', array('machine_name'));
+    db_add_unique_key('mediamosa_viewer', 'uni_machine_name', array('machine_name'));
   }
 }
