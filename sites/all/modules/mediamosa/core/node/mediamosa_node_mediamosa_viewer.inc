@@ -127,6 +127,22 @@ function mediamosa_viewer_form($node, &$form_state) {
     '#maxlength' => mediamosa_viewer_db::NAME_LENGTH,
   );
 
+  $form['mediamosa_viewer']['machine_name'] = array(
+    '#type' => 'machine_name',
+    '#title' => t('Machine name'),
+    '#size' => 32,
+    '#description' => t('A unique machine-readable name containing letters, numbers, and underscores.'),
+    '#maxlength' => 255,
+    '#machine_name' => array(
+      'exists' => '_mediamosa_viewer_machine_name_exists',
+      'source' => array('title'),
+      'replace_pattern' => '[^0-9a-z_\-]',
+      'error' => t('Please only use lowercase alphanumeric characters, underscores (_), and hyphens (-) for style names.'),
+    ),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value('machine_name', $node),
+  );
+
   $form['mediamosa_viewer'][mediamosa_viewer_db::DESCRIPTION] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
@@ -152,4 +168,17 @@ function mediamosa_viewer_form($node, &$form_state) {
  * Implements hook_validate().
  */
 function mediamosa_viewer_validate($node) {
+}
+
+/**
+ * Render API callback: Checks if a field machine name is taken.
+ *
+ * @param $value
+ *   The machine name, not prefixed with 'field_'.
+ *
+ * @return
+ *   Whether or not the field machine name is taken.
+ */
+function _mediamosa_viewer_machine_name_exists($value) {
+  return mediamosa_db::exists_machine_name(mediamosa_viewer_db::MACHINE_NAME, $value, mediamosa_viewer_db::TABLE_NAME);
 }

@@ -189,6 +189,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
 
   // The fields we want to show.
   $fields = array(
+    mediamosa_server_db::MACHINE_NAME => t('Machine name'),
     mediamosa_server_db::SERVER_URI => t('URI / URL'),
     mediamosa_server_db::SERVER_PATH => t('Path'),
     mediamosa_server_db::URI_UPLOAD_PROGRESS => t('URI upload progress (client)'),
@@ -351,6 +352,22 @@ function mediamosa_server_form($node, &$form_state) {
     '#required' => TRUE,
     '#default_value' => mediamosa_node::default_value('title', $node),
     '#maxlength' => mediamosa_server_db::SERVER_NAME_LENGTH,
+  );
+
+  $form['mediamosa_server']['machine_name'] = array(
+    '#type' => 'machine_name',
+    '#title' => t('Machine name'),
+    '#size' => 32,
+    '#description' => t('A unique machine-readable name containing letters, numbers, and underscores.'),
+    '#maxlength' => 255,
+    '#machine_name' => array(
+      'exists' => '_mediamosa_server_machine_name_exists',
+      'source' => array('title'),
+      'replace_pattern' => '[^0-9a-z_\-]',
+      'error' => t('Please only use lowercase alphanumeric characters, underscores (_), and hyphens (-) for style names.'),
+    ),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value('machine_name', $node),
   );
 
   $form['mediamosa_server'][mediamosa_server_db::DESCRIPTION] = array(
@@ -529,4 +546,17 @@ function mediamosa_server_validate($node) {
       form_set_error(mediamosa_server_db::CONTAINERS, t('Containers or mime types must be set.'));
     }
   }
+}
+
+/**
+ * Render API callback: Checks if a field machine name is taken.
+ *
+ * @param $value
+ *   The machine name, not prefixed with 'field_'.
+ *
+ * @return
+ *   Whether or not the field machine name is taken.
+ */
+function _mediamosa_server_machine_name_exists($value) {
+  return mediamosa_db::exists_machine_name(mediamosa_server_db::MACHINE_NAME, $value, mediamosa_server_db::TABLE_NAME);
 }

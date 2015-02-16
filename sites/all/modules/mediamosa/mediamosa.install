@@ -5342,3 +5342,77 @@ function mediamosa_update_7198() {
     }
   }
 }
+
+/**
+ * Give MediaMosa server unique machine names.
+ */
+function mediamosa_update_7199() {
+
+  if (!db_field_exists('mediamosa_server', 'machine_name')) {
+    db_add_field(
+      'mediamosa_server',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa server machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_server}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+
+    if ($node->machine_name !== '' && $node->machine_name !== NULL) {
+      continue;
+    }
+
+    $machine_name = empty($node->server_name) ? 'mediamosa_server_' . $node->server_type : $node->server_name;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_server');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_server', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_server', 'machine_name', array('machine_name'));
+  }
+}
+
+/**
+ * Give MediaMosa viewers unique machine names.
+ */
+function mediamosa_update_7200() {
+
+  if (!db_field_exists('mediamosa_viewer', 'machine_name')) {
+    db_add_field(
+      'mediamosa_viewer',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa viewer machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_viewer}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+
+    if ($node->machine_name !== '' && $node->machine_name !== NULL) {
+      continue;
+    }
+
+    $machine_name = empty($node->title) ? 'mediamosa_viewer' : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_viewer');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_viewer', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_viewer', 'machine_name', array('machine_name'));
+  }
+}

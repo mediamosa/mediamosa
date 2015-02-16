@@ -1009,4 +1009,66 @@ class mediamosa_db {
    public static function db_like($string) {
     return db_like($string);
   }
+
+  /**
+   * Generate unique machine name.
+   *
+   * Provide table information when generating unique machine name for table.
+   *
+   * @param string $name
+   *   Either title or other text making the item unique. Can not be empty.
+   * @param string $table_name
+   *   The table of which machine_name is used.
+   * @param type $field_name
+   *   The field name where machine name is stored of table $table_name.
+   *   Defaults to 'machine_name'.
+   * @param string $replace_pattern
+   *   Typical replace pattern for machine names. Defaults to '[^a-z0-9_]+'.
+   * @param string $replace
+   *   The replace char of invalid chars. Defaults to '_'.
+   *
+   * @return string
+   *   The generated machine name.
+   */
+  public static function generate_machine_name($name, $table_name = '', $field_name = 'machine_name', $replace_pattern = '/[^a-z0-9_]+/', $replace = '_') {
+
+    $machine_name = preg_replace($replace_pattern, $replace, mediamosa_unicode::strtolower($name));
+    $count = 0;
+
+    if (empty($machine_name)) {
+      throw new mediamosa_exception_error_unexpected_error('Empty name used for machine name');
+    }
+
+    $machine_name_count = $machine_name;
+    while (!empty($table_name)) {
+      if (!static::exists_machine_name($field_name, $machine_name_count, $table_name)) {
+        break;
+      }
+
+      $machine_name_count = sprintf($machine_name . '%d', $count++);
+    }
+
+    return $machine_name_count;
+  }
+
+  /**
+   * Check if machine name is already taken in table.
+   *
+   * @param string $field_name
+   *   The name of the field.
+   * @param string $field_value
+   *   The value to test.
+   * @param string $table_name
+   *   The name of the table.
+   *
+   * @return bool
+   *   Returns TRUE when machine name exists, FALSE otherwise.
+   */
+  public static function exists_machine_name($field_name, $field_value, $table_name) {
+    return mediamosa_db::db_select($table_name, 't')
+      ->condition($field_name, $field_value)
+      ->countQuery()
+      ->execute()
+      ->fetchField() > 0;
+  }
 }

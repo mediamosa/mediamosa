@@ -14,6 +14,8 @@ require_once 'core/node/mediamosa_node_mediamosa_app.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 
+require_once 'mediamosa.features.inc';
+
 /**
  * Implements hook_mediamosa_storage_info().
  */
