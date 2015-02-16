@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2143)
+MediaMosa 3.6.0-dev (build 2144)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -192,6 +192,8 @@ MediaMosa 3.6.0-dev (build 2143)
 - Fixed issue when unit test facet search was run other mediamosa setup.
 - Fixed problem with REST urls containing + chars in their data being converted
   into spaces.
+- Added Drupal module feature 7.x-2.3 to contrib.
+- Added feature support for MediaMosa servers.
 
 
 MediaMosa 3.5.x (build 2072)
