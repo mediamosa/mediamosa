@@ -77,6 +77,8 @@ class MediaMosaJobSlotParallelCaseEga extends MediaMosaTestCaseEgaJob {
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[12];
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[13];
 
+      $node->{mediamosa_server_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($default_server[8], 'mediamosa_server');
+
       $node = node_save($node);
     }
   }
