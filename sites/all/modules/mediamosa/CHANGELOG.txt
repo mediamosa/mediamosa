@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2145)
+MediaMosa 3.6.0-dev (build 2146)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -195,6 +195,8 @@ MediaMosa 3.6.0-dev (build 2145)
 - Added Drupal module feature 7.x-2.3 to contrib.
 - Added feature support for MediaMosa servers.
 - Fixing unittests to support usage of machinename for mediamosa servers.
+- Fixing unittests to support usage of machinename for mediamosa viewers.
+- Fixed double occurrence of class name tests, while both are separate tests.
 
 
 MediaMosa 3.5.x (build 2072)
