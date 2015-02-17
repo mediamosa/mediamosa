@@ -366,7 +366,7 @@ function _mediamosa_maintenance_automatedsimpletest($show_tests = NULL) {
       // Test if the simpletest is enabled.
       if (method_exists($name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
         if (!call_user_func_array($name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
-          continue; // skip in listing.
+          continue;
         }
       }
 

@@ -5416,3 +5416,11 @@ function mediamosa_update_7200() {
     db_add_unique_key('mediamosa_viewer', 'uni_machine_name', array('machine_name'));
   }
 }
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7201() {
+  registry_rebuild();
+  cache_clear_all();
+}

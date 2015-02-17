@@ -4,7 +4,7 @@
  * Unit test for streaming server viewer.
  */
 
-class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
+class MediaMosaMediaViewerTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ---------------------------------------------------------------- Functions.
   /**
    * MediaTestcaseEga getInfo().
@@ -14,7 +14,6 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       'name' => 'Media - Viewer object code',
       'description' => 'Test if the correct viewer object code is select for client application.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_MEDIA,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_ALL,
     );
   }
 
@@ -34,6 +33,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $node_viewer = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, 'MediaMosa viewer');
     $node_viewer->{mediamosa_viewer_db::NAME} = 'test1';
+    $node_viewer->{mediamosa_viewer_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($node_viewer->{mediamosa_viewer_db::NAME}, mediamosa_viewer_db::TABLE_NAME);
     $node_viewer->{mediamosa_viewer_db::DESCRIPTION} = 'Destination.';
     $node_viewer->{mediamosa_viewer_db::OBJECT_CODE} = $object_code;
     node_save($node_viewer);
@@ -41,6 +41,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $node_viewer_2 = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, 'MediaMosa viewer 2');
     $node_viewer_2->{mediamosa_viewer_db::NAME} = 'test2';
+    $node_viewer_2->{mediamosa_viewer_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($node_viewer_2->{mediamosa_viewer_db::NAME}, mediamosa_viewer_db::TABLE_NAME);
     $node_viewer_2->{mediamosa_viewer_db::DESCRIPTION} = 'Destination.';
     $node_viewer_2->{mediamosa_viewer_db::OBJECT_CODE} = $object_code_2;
     node_save($node_viewer_2);

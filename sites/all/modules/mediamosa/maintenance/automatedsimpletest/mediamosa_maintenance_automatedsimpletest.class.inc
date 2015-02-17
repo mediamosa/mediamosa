@@ -261,7 +261,7 @@ class mediamosa_maintenance_automatedsimpletest {
       mediamosa::variable_set($run, REQUEST_TIME);
 
       // Seed them.
-      foreach ($default_tests[$run] as $class_name => $info) {
+      foreach (array_keys($default_tests[$run]) as $class_name) {
         // Check if there is a function on the class that returns TRUE or FALSE
         // if its allowed to run or display.
         if (method_exists($class_name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
