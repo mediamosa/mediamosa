@@ -1171,6 +1171,11 @@ class mediamosa_io {
       }
       fclose($fd);
 
+      if (!user_is_logged_in()) {
+        // Prevent session save if we have no session to save.
+        drupal_save_session(FALSE);
+      }
+
       drupal_exit();
     }
   }
