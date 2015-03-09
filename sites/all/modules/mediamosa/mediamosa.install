@@ -5424,3 +5424,39 @@ function mediamosa_update_7201() {
   registry_rebuild();
   cache_clear_all();
 }
+
+/**
+ * Give MediaMosa transcode profiles unique machine names.
+ */
+function mediamosa_update_7202() {
+
+  if (!db_field_exists('mediamosa_transcode_profile', 'machine_name')) {
+    db_add_field(
+      'mediamosa_transcode_profile',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa transcode profile machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_transcode_profile}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    if ($node->machine_name !== '') {
+      continue;
+    }
+
+    $machine_name = empty($node->title) ? (empty($node->profile) ? 'mediamosa_transcode_profile' : $node->profile) : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_transcode_profile');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_transcode_profile', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_transcode_profile', 'uni_machine_name', array('machine_name'));
+  }
+}

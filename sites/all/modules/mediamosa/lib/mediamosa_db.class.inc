@@ -1033,6 +1033,7 @@ class mediamosa_db {
   public static function generate_machine_name($name, $table_name = '', $field_name = 'machine_name', $replace_pattern = '/[^a-z0-9_]+/', $replace = '_') {
 
     $machine_name = preg_replace($replace_pattern, $replace, mediamosa_unicode::strtolower($name));
+    $machine_name = trim($machine_name, '_');
     $count = 0;
 
     if (empty($machine_name)) {

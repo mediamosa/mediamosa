@@ -1,0 +1,14 @@
+name = MediaMosa Feature
+core = 7.x
+package = Features
+version = 7.x-1.0
+project = mediamosa_feature
+dependencies[] = mediamosa
+features[features_api][] = api:2
+features[mediamosa_server][] = default_server_for_stills
+features[mediamosa_transcode_profile][] = mp4_h264_360p
+features[mediamosa_transcode_profile][] = mp4_h264_360p_mobile
+features[mediamosa_transcode_profile][] = mp4_h264_480p
+features[mediamosa_transcode_profile][] = mp4_h264_480p_mobile
+features[mediamosa_transcode_profile][] = mp4_h264_720p
+features[mediamosa_transcode_profile][] = mp4_h264_720p_mobile

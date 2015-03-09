@@ -1,27 +1,8 @@
 <?php
 /**
  * @file
- * Core - Features export and import hooks for MediaMosa objects.
+ * Core - Features export and import hooks for MediaMosa server objects.
  */
-
-/**
- * Implements hook_features_api().
- */
-function mediamosa_features_api() {
-  return array(
-    'mediamosa_server' => array(
-      'name' => t('MediaMosa Servers'),
-      'feature_source' => TRUE,
-      'default_hook' => 'mediamosa_servers',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED,
-    ),
-//    'mediamosa_viewer' => array(
-//      'name' => t('MediaMosa Viewers'),
-//      'feature_source' => TRUE,
-//      'default_file' => FEATURES_DEFAULTS_INCLUDED,
-//    ),
-  );
-}
 
 /**
  * Implements hook_features_export_options().
@@ -44,20 +25,7 @@ function mediamosa_server_features_export($data, &$export, $module_name = '') {
   $pipe = array();
   foreach ($data as $machine_name) {
     $export['dependencies']['mediamosa'] = 'mediamosa';
-    $export['features']['mediamosa_server'][$machine_name] = $machine_name;
-  }
-  return $pipe;
-}
-
-/**
- * Implements hook_features_export().
- */
-function mediamosa_viewer_features_export($data, &$export, $module_name = '') {
-  $pipe = array();
-  foreach ($data as $machine_name) {
-    $export['dependencies']['mediamosa'] = 'MediaMosa';
-    $export['dependencies']['mediamosa_server'] = 'MediaMosa Servers';
-    $export['features']['mediamosa_server'][$machine_name] = $machine_name;
+    $export['features'][FEATURE_MEDIAMOSA_SERVER][$machine_name] = $machine_name;
   }
   return $pipe;
 }
@@ -98,7 +66,7 @@ function mediamosa_server_features_export_render($module, $data) {
  *   The name of the feature module whose components should be reverted.
  */
 function mediamosa_server_features_revert($module_name) {
-  $mediamosa_servers = features_get_default('mediamosa_server', $module_name);
+  $mediamosa_servers = features_get_default(FEATURE_MEDIAMOSA_SERVER, $module_name);
 
   $fields = mediamosa_server_db::get_fields();
   foreach ($mediamosa_servers as $machine_name => $mediamosa_server) {
