@@ -1,0 +1,126 @@
+<?php
+/*
+ * @file features_diff.module
+ *
+ * Display a diff of one or all features in a browser window.
+ */
+
+/**
+ * Implementation of hook_perm()
+ */
+function features_diff_perm() {
+  return array(
+    'view diffs of features',
+  );
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function features_diff_menu() {
+
+  $items['features/diff/%'] = array(
+    'title' => 'Features Diff All',
+    'description' => 'View the diff output for all of the features',
+    'page callback' => '_features_diff_view',
+    'page arguments' => array(2),
+    'access arguments' => array('view diffs of features')
+  );
+
+  return $items;
+}
+
+/**
+ * Show the diff of a single feature module.
+ */
+function _features_diff_diff($module) {
+  $output = '';
+  $feature = feature_load($module);
+  if (!module_exists($module)) {
+    return t("No such feature is enabled: $module.") . "<br/>";
+  }
+  module_load_include('inc', 'features', 'features.export');
+  $overrides = features_detect_overrides($feature);
+  if (empty($overrides)) {
+    return t("Feature is in its default state. No diff needed.") . "<br/>";
+  }
+  module_load_include('inc', 'diff', 'diff.engine');
+
+  $formatter = new DiffFormatter();
+  $formatter->leading_context_lines = 2;
+  $formatter->trailing_context_lines = 2;
+  $formatter->show_header = FALSE;
+
+  $red = "<font color='red'>%s</font>";
+  $green = "<font color='green'>%s</font>";
+
+  // Print key for colors
+  $output .= "Legend: <br/>";
+  $output .= sprintf($red, t('Code: features revert will remove the overrides.')) . "<br/>";
+  $output .= sprintf($green, t('Overrides: features update will update the exported feature with the displayed overrides')) . "<br/>";
+  $output .= "<br/>";
+
+  foreach ($overrides as $component => $items) {
+    $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
+    $output .= "<br/>";
+    $output .= t("Component: !component", array('!component' => $component)) . "<br/>";
+    $rows = explode("\n", $formatter->format($diff));
+    foreach ($rows as $row) {
+      if (strpos($row, '>') === 0) {
+        $output .= sprintf($green, $row);
+      }
+      elseif (strpos($row, '<') === 0) {
+        $output .= sprintf($red, $row);
+      }
+      else {
+        $output .= $row;
+      }
+      $output .= "<br/>";
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Run a diff on all of the features.
+ */
+function _features_diff_diff_all() {
+
+  // Iterate through every feature module
+  foreach (features_get_features() as $module) {
+    // Make sure it is enabled
+    if ($module->status) {
+      $output .= "--- $module->name<br/>";
+      $output .= _features_diff_diff($module->name);
+      $output .= "<br/>";
+     }
+  }
+
+  return $output;
+}
+
+/*
+ * Menu callback for features/diff/%
+ */
+function _features_diff_view($feature_name) {
+  // This module needs the diff module. Make sure it is instaleld and enabled
+  module_load_include('inc', 'diff', 'diff.engine');
+  if (!class_exists('DiffFormatter')) {
+    // See comment below on why we print rather than return the output
+    print t('It seems that the Diff module is not available.');
+  }
+
+  // Check the last component of the path. It may be "all" or a feature name
+  if ($feature_name == "all") {
+    $output = _features_diff_diff_all();
+  }
+  else {
+    $output = print _features_diff_diff($feature_name);
+  }
+
+  // Normally, you should just return the output rather than printing it.
+  // But this is a special case as we want a "raw" output format.
+  print $output;
+}
+
