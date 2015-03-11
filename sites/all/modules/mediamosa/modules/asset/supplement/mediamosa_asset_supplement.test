@@ -3,11 +3,10 @@
  * @file
  * Unittests for supplement.
  */
+
 class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'Asset supplement - common tests',
@@ -16,9 +15,7 @@ class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
-
-  // Testing asset supplement, see: ticket 495.
+  // -------------------------------------------------------------------- Tests.
   function testQueryingSuplement() {
 
     // Create an asset.
