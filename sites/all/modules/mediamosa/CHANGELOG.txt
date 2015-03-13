@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2147)
+MediaMosa 3.6.0-dev (build 2148)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -203,6 +203,7 @@ MediaMosa 3.6.0-dev (build 2147)
   of type streaming.
 - Added feature support for MediaMosa transcode profiles.
 - Moved feature support to separate module.
+- Fixed deletion of client application when linked to storage profile.
 
 
 MediaMosa 3.5.x (build 2072)
