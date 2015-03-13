@@ -197,8 +197,8 @@ function _mediamosa_app_update_viewers($node) {
  * Implements hook_delete().
  */
 function mediamosa_app_delete($node) {
-  // Delete storage mappings if storage module enabled
-  mediamosa_storage_profile_app::delete_for_app(mediamosa_app_db::APP_ID);
+  // Delete storage mappings if storage module enabled.
+  mediamosa_storage_profile_app::delete_for_app($node->{mediamosa_app_db::APP_ID});
 
   // Delete revisions.
   mediamosa_node_revision::delete_ex($node, mediamosa_app_db::TABLE_NAME);

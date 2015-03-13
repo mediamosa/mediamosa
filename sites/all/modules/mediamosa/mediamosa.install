@@ -5402,8 +5402,7 @@ function mediamosa_update_7200() {
   $result = db_query('SELECT nid FROM {mediamosa_viewer}');
   foreach ($result as $record) {
     $node = node_load($record->nid);
-
-    if ($node->machine_name !== '' && $node->machine_name !== NULL) {
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== null) {
       continue;
     }
 
@@ -5447,7 +5446,7 @@ function mediamosa_update_7202() {
   $result = db_query('SELECT nid FROM {mediamosa_transcode_profile}');
   foreach ($result as $record) {
     $node = node_load($record->nid);
-    if ($node->machine_name !== '') {
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== null) {
       continue;
     }
 
