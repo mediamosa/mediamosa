@@ -443,8 +443,11 @@ class mediamosa_rest {
         $the_rest_call->{mediamosa_rest_call::URI_PARAMS}[$param] = $value;
       }
     }
+    // Get the var setup.
+    $var_setup = $the_rest_call->get_var_setup();
 
-    // Return the var setup.
-    return $the_rest_call->get_var_setup();
+    drupal_alter('mediamosa_rest_call_var_setup', $the_rest_call, $var_setup);
+
+    return $var_setup;
   }
 }
