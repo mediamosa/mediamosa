@@ -12,3 +12,6 @@ dependencies[] = mediamosa
 ; Used files.
 files[] = profile/mediamosa_transcode_profile.rest.class.inc
 files[] = profile/mediamosa_transcode_profile.inc
+
+; Tests.
+files[] = profile/mediamosa_transcode_profile.test

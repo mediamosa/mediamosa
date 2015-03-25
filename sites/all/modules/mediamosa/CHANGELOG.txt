@@ -204,7 +204,10 @@ MediaMosa 3.6.0-dev (build 2148)
 - Added feature support for MediaMosa transcode profiles.
 - Moved feature support to separate module.
 - Fixed deletion of client application when linked to storage profile.
-
+- Fixed: New job with broken transcode profile leads to hanging jobs (Refs:
+  #14033).
+- Fixed: Empty unit test in test lising and notice on missing 'group' property
+  when clearing cache.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
