@@ -5459,3 +5459,16 @@ function mediamosa_update_7202() {
     db_add_unique_key('mediamosa_transcode_profile', 'uni_machine_name', array('machine_name'));
   }
 }
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7203() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
+
+  registry_rebuild();
+  cache_clear_all();
+}

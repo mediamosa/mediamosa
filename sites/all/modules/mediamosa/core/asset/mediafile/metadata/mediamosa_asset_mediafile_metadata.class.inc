@@ -234,12 +234,12 @@ class mediamosa_asset_mediafile_metadata {
     self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
 
     // Store metadata from analyse.
-    foreach ($metadata as $property => $value) {
-      self::create_mediafile_metadata($mediafile_id, $value['value'], $property, $value['type']);
+    foreach ($metadata as $property_name => $value) {
+      self::create_mediafile_metadata($mediafile_id, $value['value'], $property_name, $value['type']);
     }
 
     // The output of ffmpeg.
-    $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $metadata['ffmpeg-output'])) : '';
+    $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', exvplode('}-{', $metadata['ffmpeg-output'])) : '';
 
     // Update statistics.
     mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
@@ -365,15 +365,16 @@ class mediamosa_asset_mediafile_metadata {
    */
   public static function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
+    assert($prop_id);
 
     // Make sure it exists.
     mediamosa_asset_mediafile::must_exists_cached($mediafile_id);
 
     $fields = array();
-    if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+    if ($type === mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
       $fields[mediamosa_asset_mediafile_metadata_db::VAL_CHAR] = $value;
     }
-    elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
+    elseif ($type === mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
       try {
         $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = mediamosa_type::check($prop_name, mediamosa_sdk::TYPE_INT, $value);
       }
@@ -381,7 +382,7 @@ class mediamosa_asset_mediafile_metadata {
         $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = 0;
       }
     }
-    elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
+    elseif ($type === mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
       try {
         $fields[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME] = mediamosa_type::check($prop_name, mediamosa_sdk::TYPE_DATETIME, $value);
       }
@@ -614,20 +615,18 @@ class mediamosa_asset_mediafile_metadata {
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
 
-    // Hotfix for cache.
-    $reset_cache = TRUE;
+    // Reset the cache.
+    mediamosa_asset_mediafile_metadata_property::get_property(null, TRUE);
     foreach ($result as $row) {
-      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], $reset_cache);
-      $reset_cache = FALSE;
+      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID]);
 
-      // TODO: same prop_name with different types.
-      if ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+      if ($prop['type'] === mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
         $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_CHAR];
       }
-      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
+      elseif ($prop['type'] ===mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
         $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_INT];
       }
-      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
+      elseif ($prop['type'] === mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
         $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME];
       }
       else {
@@ -720,13 +719,16 @@ class mediamosa_asset_mediafile_metadata {
       ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
       ->execute();
 
+    // Reset cache.
+    mediamosa_asset_mediafile_metadata_property::get_property(null, TRUE);
+
     foreach ($result as $row) {
       if (empty($row[mediamosa_asset_mediafile_metadata_db::PROP_ID])) {
         continue;
       }
 
       // Get property.
-      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
+      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID]);
 
       // Store.
       $values[$row[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID]]['metadata'][$prop['prop_name']] = $row[$type2field[$prop['type']]];

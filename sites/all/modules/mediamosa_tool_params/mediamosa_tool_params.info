@@ -1,0 +1,9 @@
+name = MediaMosa Tool Params
+core = 7.x
+package = MediaMosa
+version = 7.x-1.0
+project = mediamosa_tool_params
+dependencies[] = mediamosa
+features[features_api][] = api:2
+features[mediamosa_tool_params][] = ffmpeg
+features[mediamosa_tool_params][] = image

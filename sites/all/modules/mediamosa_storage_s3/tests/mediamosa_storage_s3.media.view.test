@@ -24,7 +24,10 @@ class MediaMosaS3MediaViewTestCaseEga extends MediaMosaS3BaseTestCaseEga {
         'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
       );
     }
-    return array();
+    // Return not existing dependency so we are not listed.
+    return array(
+      'dependencies' => array('a_non_existing_module_to_skip_being_listed_hack'),
+    );
   }
 
   // -------------------------------------------------------------------- Tests.

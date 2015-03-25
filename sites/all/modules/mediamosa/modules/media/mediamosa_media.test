@@ -118,7 +118,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $parameters = array();
 
-    foreach ($response_types as $response_type => $uri_test) {
+    foreach (array_keys($response_types) as $response_type) {
       foreach ($container_types as $container_type) {
 
         // FLV does not have metafile.
@@ -164,7 +164,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
         $ticket_id = $response['ticket_id'];
 
         // Check the asx output.
-        if ($response_type == mediamosa_media::RESPONSE_METAFILE && $container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV) {
+        if ($response_type === mediamosa_media::RESPONSE_METAFILE && $container_type === mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV) {
           $this->var_export($response['output']);
 
           $tofind = "<asx version=\"3.0\">";
@@ -178,12 +178,12 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
         }
 
         // Check if ASX file was created (we also will remove the file again).
-        if ($response_type == mediamosa_media::RESPONSE_OBJECT && $container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV) {
+        if ($response_type === mediamosa_media::RESPONSE_OBJECT && $container_type === mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV) {
           // $filename = mediamosa_storage::get_uri_asx_file($app_id, $ticket);
           // mediamosa_io::unlink($filename);
         }
 
-        if (!($response_type == mediamosa_media::RESPONSE_OBJECT && $container_type == mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV)) {
+        if (!($response_type === mediamosa_media::RESPONSE_OBJECT && $container_type === mediamosa_asset_mediafile_metadata::CONTAINER_TYPE_WMV)) {
           $this->assertTrue(
             isset($response['output']) && strpos($response['output'], $ticket_id) !== FALSE,
             "Check if '" . $response_type . "/" . $container_type . "/_play_proxy_create_response()' contains the ticket: " . $ticket_id);
@@ -350,15 +350,15 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Streaming server.
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
-       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec')", array(
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code, machine_name) VALUES
+       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec', 'mediamosa_server_test1')", array(
          ':base_uri' => '{base_uri}',
        )
     );
 
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
-       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container')", array(
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code, machine_name) VALUES
+       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container', 'mediamosa_server_test2')", array(
          ':base_uri' => '{base_uri}',
        )
     );
@@ -373,9 +373,9 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Specific codec.
     $metadata = array(
-      'File-type' => 'test_container',
-      'Video-codec' => 'h264',
-      'MIME-type' => 'video/x-ms-asf',
+      'container_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'test_container'),
+      'video_codec' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'h264'),
+      'mime_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'video/x-ms-asf'),
     );
 
     // Store metadata.
@@ -392,8 +392,8 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // No codec.
     $metadata = array(
-      'File-type' => 'test_container',
-      'MIME-type' => 'video/x-ms-asf',
+      'container_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'test_container'),
+      'mime_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'video/x-ms-asf'),
     );
 
     // Store metadata.
@@ -406,14 +406,14 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       $mediafile
     );
 
-    $this->assertTrue($response['output'] == 'url://unittest.general/', 'Test container with specific codec that is defined.');
+    $this->assertTrue($response['output'] === 'url://unittest.general/', 'Test container with specific codec that is defined.');
     $this->verbose('Response: ' . print_r($response, TRUE));
 
     // Codec that is not defined (should get default container).
     $metadata = array(
-      'File-type' => 'test_container',
-      'Video-codec' => 'undef',
-      'MIME-type' => 'video/x-ms-asf',
+      'container_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'test_container'),
+      'video_codec' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'undef'),
+      'mime_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'video/x-ms-asf'),
     );
 
     // Store metadata.
@@ -425,7 +425,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       $mediafile
     );
 
-    $this->assertTrue($response['output'] == 'url://unittest.general/', 'Test container with undefined codec (plays general container).');
+    $this->assertTrue($response['output'] === 'url://unittest.general/', 'Test container with undefined codec (plays general container).');
     $this->verbose('Response: ' . print_r($response, TRUE));
   }
 
@@ -459,6 +459,9 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
    * Test complex Ticket Uri objects.
    */
   public function testPlayProxyObjectTicketUris() {
+    // Clear all statics.
+    drupal_static_reset();
+
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
 
     // Create a test file.
@@ -466,9 +469,9 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Make this a specific mediafile, to make the mediafile/play request.
     $metadata = array(
-      'File-type' => 'foo',
-      'Video-codec' => 'bar',
-      'MIME-type' => 'foo/bar',
+      'container_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'foo'),
+      'video_codec' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'bar'),
+      'mime_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'foo/bar'),
     );
     mediamosa_asset_mediafile_metadata::store_metadata($upload['mediafile_id'], $metadata);
     $upload = mediamosa_asset_mediafile::get($upload['mediafile_id']) + mediamosa_asset_mediafile_metadata::get_with_mediafileid($upload['mediafile_id']);
@@ -484,10 +487,10 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     mediamosa_asset_mediafile::update($app_id, $mf_profile5['mediafile_id'], self::SIMPLETEST_USER_ID, array('transcode_profile_id' => 5));
 
     $mf_mime_ogg = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
-    mediamosa_asset_mediafile_metadata::store_metadata($mf_mime_ogg['mediafile_id'], array('MIME-type' => 'application/ogg') + $metadata);
+    mediamosa_asset_mediafile_metadata::store_metadata($mf_mime_ogg['mediafile_id'], array('mime_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'application/ogg')) + $metadata);
 
     $mf_cont_mp4 = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
-    mediamosa_asset_mediafile_metadata::store_metadata($mf_cont_mp4['mediafile_id'], array('Video-codec' => 'h264') + $metadata);
+    mediamosa_asset_mediafile_metadata::store_metadata($mf_cont_mp4['mediafile_id'], array('video_codec' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'h264')) + $metadata);
 
     $mf_tag = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
     mediamosa_asset_mediafile_metadata::store_metadata($mf_tag['mediafile_id'], $metadata);
@@ -502,11 +505,11 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
     mediamosa_asset_mediafile::update($app_id, $mf_filename_ensrt['mediafile_id'], self::SIMPLETEST_USER_ID, array('filename' => 'lyrics.en.srt'));
 
     $mf_still_1 = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
-    mediamosa_asset_mediafile_metadata::store_metadata($mf_still_1['mediafile_id'], array('still_order' => 1) + $metadata);
+    mediamosa_asset_mediafile_metadata::store_metadata($mf_still_1['mediafile_id'], array('still_order' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, 'value' => 1)) + $metadata);
     mediamosa_asset_mediafile::update($app_id, $mf_still_1['mediafile_id'], self::SIMPLETEST_USER_ID, array('is_still' => 'TRUE'));
 
     $mf_still_2 = $this->uploadTestFile(array('asset_id' => $upload['asset_id']));
-    mediamosa_asset_mediafile_metadata::store_metadata($mf_still_2['mediafile_id'], array('still_order' => 1) + $metadata);
+    mediamosa_asset_mediafile_metadata::store_metadata($mf_still_2['mediafile_id'], array('still_order' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, 'value' => 1)) + $metadata);
     mediamosa_asset_mediafile::update($app_id, $mf_still_2['mediafile_id'], self::SIMPLETEST_USER_ID, array('is_still' => 'TRUE'));
 
     // Add mediafile with external URI.
@@ -535,8 +538,8 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       '{TICKET_URI_PROFILE:4}' . "\n";
 
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path, containers, object_code) VALUES
-       (998, 998, 'ON', 'streaming', 0, 'test server TICKET_URIs', 'url://unittest.h264/', :base_uri, :container, :object_code)", array(
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path, containers, object_code, machine_name) VALUES
+       (998, 998, 'ON', 'streaming', 0, 'test server TICKET_URIs', 'url://unittest.h264/', :base_uri, :container, :object_code, 'mediamosa_server_test1')", array(
          ':base_uri' => '{base_uri}',
          ':container' => 'foo',
          ':object_code' => $object_code,
@@ -585,7 +588,7 @@ class MediaMosaMediaTestCaseEga extends MediaMosaTestCaseEgaJob {
       )
     );
     // To avoid static caching in do_response.
-    mediamosa_asset_mediafile_metadata::store_metadata($upload['mediafile_id'], array('File-type' => 'bar'));
+    mediamosa_asset_mediafile_metadata::store_metadata($upload['mediafile_id'], array('container_type' => array('type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, 'value' => 'bar')));
 
     $response = $this->do_response(
       $app_id,

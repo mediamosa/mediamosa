@@ -33,7 +33,10 @@ class MediaMosaS3IOTestCaseEga extends MediaMosaIoTestCaseEga {
         'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_LIBRARY,
       );
     }
-    return array();
+    // Return not existing dependency so we are not listed.
+    return array(
+      'dependencies' => array('a_non_existing_module_to_skip_being_listed_hack'),
+    );
   }
 
   // ------------------------------------------------------------------ Methods.

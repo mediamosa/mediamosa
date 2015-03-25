@@ -265,8 +265,8 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Tests.
   // Test if not original is masterslaved.
   function testAcl_MasterSlave_Non_Original() {
-    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
-    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
 
     // enable change master/slave.
     $this->toEga_1();
@@ -287,7 +287,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     // Create transcode job.
-    $job_id = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
 
     // Parse the queue.
     $this->doQueueCycleAll();
