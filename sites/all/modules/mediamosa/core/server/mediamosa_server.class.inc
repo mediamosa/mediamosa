@@ -644,7 +644,7 @@ class mediamosa_server {
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'mime_type');
     $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type);
 
-    if (!$uri) { // No streaming profile found
+    if (!$uri) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
     }
 

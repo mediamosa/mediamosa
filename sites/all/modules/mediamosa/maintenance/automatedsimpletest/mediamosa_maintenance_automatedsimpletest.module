@@ -299,6 +299,33 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_colle
     '#default_value' => variable_get('mediamosa_automatedsimpletest_run_tests', FALSE),
   );
 
+  $form['settings_automatedsimpletest']['simpletest_clear_results'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Clear results after each complete test suite run'),
+    '#description' => t('By default SimpleTest will clear the results after they have been viewed on the results page, but in some cases it may be useful to leave the results in the database. The results can then be viewed at <em>admin/config/development/testing/[test_id]</em>. The test ID can be found in the database, simpletest table, or kept track of when viewing the results the first time. Additionally, some modules may provide more analysis or features that require this setting to be disabled.'),
+    '#default_value' => variable_get('simpletest_clear_results', TRUE),
+  );
+  $form['settings_automatedsimpletest']['simpletest_verbose'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Provide verbose information when running tests'),
+    '#description' => t('The verbose data will be printed along with the standard assertions and is useful for debugging. The verbose data will be erased between each test suite run. The verbose data output is very detailed and should only be used when debugging.'),
+    '#default_value' => variable_get('simpletest_verbose', TRUE),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_simpletest_foreign_keys'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable foreign keys in simpletest'),
+    '#description' => t('Enable the creation of foreign keys on the MediaMosa tables during simpletest. Reminder: Failed tests can only be removed by the clear test environment function on the MediaMosa test list page.'),
+    '#default_value' => variable_get('mediamosa_simpletest_foreign_keys', FALSE),
+  );
+
+  $form['settings_automatedsimpletest']['mediamosa_simpletest_db_log'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include all DB queries that where executed during the test'),
+    '#description' => t('Shows the database log that was collected during the test. Is very resource heavy, off by default.'),
+    '#default_value' => variable_get('mediamosa_simpletest_db_log', FALSE),
+  );
+
   return $form;
 }
 

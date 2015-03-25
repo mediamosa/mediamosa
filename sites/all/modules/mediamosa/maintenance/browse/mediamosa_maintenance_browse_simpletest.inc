@@ -71,6 +71,8 @@ function mediamosa_maintenance_browse_test_form($form) {
  * Clean up simpletest extended to clean up on servers as well.
  */
 function _mediamosa_maintenance_browse_simpletest_clean_environment() {
+  mediamosa_db::db_foreign_keys_off();
+
   // Cleanup on our servers.
   mediamosa_server::cleanup_simpletest_enabled_servers();
 
@@ -78,7 +80,9 @@ function _mediamosa_maintenance_browse_simpletest_clean_environment() {
   module_invoke_all('mediamosa_simpletest_clean_environment');
 
   // Run the normal clean up.
-  return simpletest_clean_environment();
+  simpletest_clean_environment();
+
+  mediamosa_db::db_foreign_keys_on();
 }
 
 /**

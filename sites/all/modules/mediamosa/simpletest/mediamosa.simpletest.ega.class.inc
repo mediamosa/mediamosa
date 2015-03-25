@@ -139,6 +139,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Dump mediafiles.
     $this->dumpMediafiles();
+    $this->dumpMediafilesMetadata();
+    $this->dumpMediafilesMetadataProperties();
 
     // Dump transitions.
     $this->dumpTransitions();
@@ -199,7 +201,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump assets
    */
   protected function dumpAssets() {
-    $assets = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->fields('a')->orderBy(mediamosa_asset_db::CREATED)->execute();
+    $assets = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_db::CREATED)->execute();
     mediamosa_watchdog::log('Dumping asset table contents.');
     foreach ($assets as $asset) {
       mediamosa_watchdog::log_export($asset);
@@ -210,7 +212,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump metadata
    */
   protected function dumpMetadata() {
-    $metadatas = mediamosa_db::db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'amd')->fields('amd')->orderBy(mediamosa_asset_metadata_db::ASSET_ID)->execute();
+    $metadatas = mediamosa_db::db_select(mediamosa_asset_metadata_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_metadata_db::ASSET_ID)->execute();
     mediamosa_watchdog::log('Dumping asset metadata table contents.');
     foreach ($metadatas as $metadata) {
       mediamosa_watchdog::log_export($metadata);
@@ -221,12 +223,34 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump mediafiles with their metadata.
    */
   protected function dumpMediafiles() {
-    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')->fields('mf')->orderBy(mediamosa_asset_mediafile_db::CREATED)->execute();
+    $mediafiles = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_mediafile_db::CREATED)->execute();
     mediamosa_watchdog::log('Dumping mediafile table contents.');
     foreach ($mediafiles as $mediafile) {
       $mediafile_metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile[mediamosa_asset_mediafile_db::ID]);
       mediamosa_watchdog::log_export($mediafile);
       mediamosa_watchdog::log_export($mediafile_metadata);
+    }
+  }
+
+  /**
+   * Dump mediafiles metadata
+   */
+  protected function dumpMediafilesMetadata() {
+    $metadatas = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID)->execute();
+    mediamosa_watchdog::log('Dumping mediafile metadata table contents.');
+    foreach ($metadatas as $metadata) {
+      mediamosa_watchdog::log_export($metadata);
+    }
+  }
+
+  /**
+   * Dump mediafiles metadata
+   */
+  protected function dumpMediafilesMetadataProperties() {
+    $metadatas = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_mediafile_metadata_property_db::ID)->execute();
+    mediamosa_watchdog::log('Dumping mediafile metadata properties table contents.');
+    foreach ($metadatas as $metadata) {
+      mediamosa_watchdog::log_export($metadata);
     }
   }
 

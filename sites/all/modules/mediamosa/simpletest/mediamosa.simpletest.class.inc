@@ -121,13 +121,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       $drupal_hash_salt = drupal_get_hash_salt();
     }
 
-    $vars_to_copy = array('mediamosa_current_mount_point');
-    $values = array();
-
-    // Store certain vars.
-    foreach ($vars_to_copy as $var_to_copy) {
-      $values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
-    }
+    $this->variables = array();
+    $this->variables['mediamosa_current_mount_point'] = variable_get('mediamosa_current_mount_point');
+    $this->variables['mediamosa_simpletest_foreign_keys'] = variable_get('mediamosa_simpletest_foreign_keys', FALSE);
+    $this->variables['mediamosa_simpletest_db_log'] = variable_get('mediamosa_simpletest_db_log', FALSE);
 
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
@@ -141,21 +138,36 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       call_user_func_array('parent::setUp', $args);
     }
 
-    // Now set it, so its in the sandbox.
-    foreach ($values as $name => $value) {
-      if (!is_null($value)) {
-        mediamosa::variable_set($name, $value);
-      }
+    // Must be TRUE;
+    assert(mediamosa::in_simpletest_sandbox());
+
+    $this->pass('Foreign keys schema install ' . (variable_get('mediamosa_simpletest_foreign_keys', FALSE) ? 'enabled' : 'disabled'));
+    $this->pass('Extended database dump  ' . (variable_get('mediamosa_simpletest_db_log', FALSE) ? 'enabled' : 'disabled'));
+
+    if (variable_get('mediamosa_simpletest_db_log', FALSE)) {
+      Database::startLog('testing');
     }
 
     // Store the salt, so we can reuse it in children page calls.
     mediamosa::variable_set('mediamosa_drupal_hash_salt', $drupal_hash_salt);
+  }
+
+  /**
+   * Preload the registry from the testing site.
+   *
+   * This method is called by DrupalWebTestCase::setUp(), and preloads the
+   * registry from the testing site to cut down on the time it takes to
+   * set up a clean environment for the current test run.
+   */
+  protected function preloadRegistry() {
+    parent::preloadRegistry();
+
+    foreach ($this->variables as $name => $value) {
+      variable_set($name, $value);
+    }
 
     // Lets put debug on high.
-    mediamosa::variable_set('mediamosa_debug_level', 10);
-
-    // Must be TRUE;
-    assert(mediamosa::in_simpletest_sandbox());
+    variable_set('mediamosa_debug_level', 10);
   }
 
   /**
@@ -211,8 +223,20 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Dump the log.
     $this->dump_watchdog();
 
+    mediamosa_db::db_foreign_keys_off();
+
     // Call parent.
     parent::tearDown();
+
+    mediamosa_db::db_foreign_keys_on();
+
+    if (variable_get('mediamosa_simpletest_db_log', FALSE)) {
+      foreach (Database::getLog('testing', 'default') as $log) {
+        if (!preg_match('/^INSERT INTO simpletest([0-9]*)watchdog/', $log['query'])) {
+          $this->pass(check_plain(strtr($log['query'], $log['args'])), 'DB Query', $log['caller']);
+        }
+      }
+    }
   }
 
   /**
@@ -1139,22 +1163,17 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Check mediafile metadata property in DB.
-   *
-   * @param allowed_properties
-   *  An associative array (property name => property type).
-   * @return
-   *  TRUE if the check was successful.
-   */
-  /**
    * Check if the creation of mediafile metadata property was correct.
    *
    * @param int $prop_id
-   *  Property ID to check.
-   * @param string $name
-   *  Name of the property.
-   * @param string $type
-   *  Type of the property.
+   *   Property ID to check.
+   * @param string $prop_name
+   *   Name of the property.
+   * @param string $prop_type
+   *   Type of the property.
+   *
+   * @return array
+   *   The matching property of FALSE.
    */
   protected function checkMediafileMetadataPropertyDb($prop_id, $prop_name, $prop_type) {
     $property = mediamosa_asset_mediafile_metadata_property::get_property($prop_id, TRUE);

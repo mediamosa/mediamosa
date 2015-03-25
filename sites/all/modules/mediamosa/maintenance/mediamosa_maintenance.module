@@ -215,3 +215,30 @@ function mediamosa_maintenance_enable() {
   // Rebuild.
   menu_rebuild();
 }
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function mediamosa_maintenance_form_simpletest_settings_form_alter(&$form, &$form_state, $form_id) {
+  $form['general']['mediamosa_simpletest_foreign_keys'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable foreign keys in simpletest'),
+    '#description' => t('Enable the creation of foreign keys on the MediaMosa tables during simpletest. Reminder: Failed tests can only be removed by the clear test environment function on the MediaMosa test list page.'),
+    '#default_value' => variable_get('mediamosa_simpletest_foreign_keys', FALSE),
+  );
+
+  $form['general']['mediamosa_simpletest_db_log'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include all DB queries that where executed during the test'),
+    '#description' => t('Shows the database log that was collected during the test. Is very resource heavy, off by default.'),
+    '#default_value' => variable_get('mediamosa_simpletest_db_log', FALSE),
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function mediamosa_maintenance_form_mediamosa_maintenance_browse_simpletest_settings_form_alter(&$form, &$form_state, $form_id) {
+  mediamosa_maintenance_form_simpletest_settings_form_alter($form, $form_state, $form_id);
+}

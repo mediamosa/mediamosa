@@ -567,6 +567,24 @@ class mediamosa_db {
   }
 
   /**
+   * Turn foreign keys off.
+   */
+  public static function db_foreign_keys_on() {
+    if (db_driver() === 'mysql') {
+      db_query('SET FOREIGN_KEY_CHECKS=1');
+    }
+  }
+
+  /**
+   * Turn foreign keys on.
+   */
+  public static function db_foreign_keys_off() {
+    if (db_driver() === 'mysql') {
+      db_query('SET FOREIGN_KEY_CHECKS=0');
+    }
+  }
+
+  /**
    * Change varchars of IDs into varbinary, so these will be case-sensitive.
    *
    * @param $module_name
@@ -593,7 +611,8 @@ class mediamosa_db {
    * in their schema layer. For now we will add foreign keys ourselfs after
    * creation of the table.
    *
-   * @param array $schema
+   * @param string $module_name
+   *   The module to which the table belongs.
    */
   public static function db_install_schema_foreign_keys($module_name) {
     $schema = drupal_get_schema_unprocessed($module_name);
@@ -603,16 +622,29 @@ class mediamosa_db {
       return;
     }
 
-    if (mediamosa::in_simpletest_sandbox()) {
-      // @FIXME not working in simpletest setup.
+    // Disable foreign keys in simpletest if not enabled.
+    if (mediamosa::in_simpletest_sandbox() && !variable_get('mediamosa_simpletest_foreign_keys', FALSE)) {
       return;
     }
+    $simpletest_id = mediamosa::in_simpletest_sandbox() ? '_' . substr($GLOBALS['drupal_test_info']['test_run_id'], 10) : '';
 
     foreach ($schema[$module_name]['foreign keys'] AS $column => $foreign_key) {
       foreach ($foreign_key as $foreign_table_name => $foreign_column) {
-        $query = strtr("ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)",
+        $foreign_key_name = strtr('fk#simpletest_id_#table_name_#column', array(
+          '#simpletest_id' => $simpletest_id,
+          '#table_name' => $module_name,
+          '#column' => $column,
+        ));
+
+        // Foreign key max length.
+        if (strlen($foreign_key_name) > 64) {
+          $foreign_key_name = substr($foreign_key_name, 0, 64);
+        }
+
+        $query = strtr("ALTER TABLE {#table_name} ADD CONSTRAINT `#foreign_key_name` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)",
           array(
             '#table_name' => $module_name,
+            '#foreign_key_name' => $foreign_key_name,
             '#column' => $column,
             '#foreign_table_name' => $foreign_table_name,
             '#foreign_column' => $foreign_column,
