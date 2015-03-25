@@ -431,14 +431,22 @@ class mediamosa_job {
     // Must have user_quota.
     mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
 
-    // Create mediadownload job.
-    self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
+    $transaction = db_transaction();
+    try {
+      // Create mediadownload job.
+      self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
 
-    // Create job.
-    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest, $filename);
+      // Create job.
+      $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, $hint, $mediafile_dest, $filename);
 
-    // Create sub transcode job.
-    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id, $mediafile_dest);
+      // Create sub transcode job.
+      mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id, $mediafile_dest);
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      mediamosa_watchdog::log_exception($e);
+      throw $e;
+    }
 
     return $job_id;
   }

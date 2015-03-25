@@ -1,0 +1,86 @@
+<?php
+/**
+ * @file
+ * Job tests for transcode jobs.
+ */
+
+class MediaMosaTranscodeProfileTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implement getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'JOB - transcode profile test',
+      'description' => 'Testing the transcoding profile jobs.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+
+  /**
+   * Make sure no empty ghost job is created when transcode is broken.
+   */
+  public function testJobTranscodeBroken() {
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $default_profiles = array(
+      array(
+        'Test profile',
+        'TRUE',
+        'ffmpeg',
+        'ogv',
+        array(
+          'audiocodec' => 'libvorbis',
+          'audiobitrate' => '128000',
+          'audiosamplingrate' => '44100',
+          'audiochannels' => '2',
+          'videocodec' => 'libtheora',
+          'videobitrate' => '1000000',
+          'fps' => 'ff',
+          'size' => '640x360',
+          'aspect' => '16:9',
+        ),
+      ),
+    );
+
+    // Create new transcode profiles.
+    foreach ($default_profiles as $default_profile) {
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+      $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+      $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+      $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+      $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+      $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+      $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+      $node->{mediamosa_transcode_profile_db::COMMAND} = mediamosa_transcode_profile::arrayToCommand($default_profile[4]);
+
+      if ($node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} == mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE) {
+        // Clear others, so mine will become default.
+        _mediamosa_transcode_profile_update_isdefault($node);
+      }
+
+      node_save($node);
+    }
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array(), array(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+  }
+}
