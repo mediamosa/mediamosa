@@ -137,6 +137,27 @@ function mediamosa_browse_asset_filter_form() {
     '#value' => t('Apply CQL filter'),
   );
 
+  // CQL filter.
+  $form['actions']['actions'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Actions'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $result = mediamosa_asset::garbage_cleanup(NULL, TRUE);
+
+  $text = t('Total garbage assets: @result', array('@result' => $result['cleaned']));
+
+  $form['actions']['actions']['summary'] = array(
+    '#markup' => $text . '<br/>',
+  );
+
+  $form['actions']['actions']['cleanup'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clean up assets'),
+  );
+
   // Form action, but do not repeat below.
   $form['actions']['#type'] = 'actions';
   $form['actions']['#mediamosa_no_clone'] = TRUE;
@@ -156,7 +177,12 @@ function mediamosa_browse_asset_filter_form() {
  * @see mediamosa_browse_asset_filter_form()
  */
 function mediamosa_browse_asset_filter_form_submit($form, $form_state) {
-  _mediamosa_browse_asset_session($form_state);
+  $the_session = _mediamosa_browse_asset_session($form_state);
+
+  if ($the_session['op'] === t('Clean up assets')) {
+    $result = mediamosa_asset::garbage_cleanup();
+    drupal_set_message(t('Cleanup @cleaned assets, failed to remove @failed assets.', array('@cleaned' => $result['cleaned'], '@failed' => $result['cleaned'])));
+  }
 }
 
 /**
@@ -386,6 +412,7 @@ function _mediamosa_browse_asset_execute() {
  * Get and set the session.
  */
 function _mediamosa_browse_asset_session($filter_form_state = array()) {
+
   // Get session.
   $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET] : array();
 

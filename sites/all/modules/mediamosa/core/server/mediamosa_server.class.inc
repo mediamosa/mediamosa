@@ -262,8 +262,11 @@ class mediamosa_server {
       $query->condition(mediamosa_server_db::SERVER_TYPE, $server_types, 'IN');
     }
 
+    if (!empty($enabled_status)) {
+      $query->condition(mediamosa_server_db::SERVER_STATUS, $enabled_status, 'IN');
+    }
+
     return $query
-      ->condition(mediamosa_server_db::SERVER_STATUS, $enabled_status, 'IN')
       ->orderBy(mediamosa_server_db::SERVER_TYPE)
       ->execute();
   }
@@ -573,6 +576,23 @@ class mediamosa_server {
   }
 
   /**
+   * Get the server using its machine name.
+   *
+   * @param string $machine_name
+   *   The machine name.
+   *
+   * @return array
+   *   The MediaMosa server or FALSE.
+   */
+  public static function get_server_by_machinename($machine_name) {
+    return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+      ->fields('ms')
+      ->condition(mediamosa_server_db::MACHINE_NAME, $machine_name)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
    * Get the uri of the correct media server.
    *
    * @param $response_type
@@ -624,7 +644,7 @@ class mediamosa_server {
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, 'mime_type');
     $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type);
 
-    if (!$uri) { // No streaming profile found
+    if (!$uri) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
     }
 

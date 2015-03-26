@@ -23,7 +23,7 @@
   $method = $variables['rest_call']->method;
 
   $classname = $variables['rest_call']->{mediamosa_rest_call::CLASS_NAME};
-  $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/config/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) . ', REST class: ' . $classname : '';
+  $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/tools/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) . ', REST class: ' . $classname : '';
 
 
   $request_authorization = $variables['rest_call']->request_authorization;

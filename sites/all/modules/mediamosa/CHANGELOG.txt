@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2141)
+MediaMosa 3.6.0-dev (build 2149)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -190,6 +190,26 @@ MediaMosa 3.6.0-dev (build 2141)
   published metadata, these are now removed before copying the metadata from
   another asset.
 - Fixed issue when unit test facet search was run other mediamosa setup.
+- Fixed problem with REST urls containing + chars in their data being converted
+  into spaces.
+- Added Drupal module feature 7.x-2.3 to contrib.
+- Added feature support for MediaMosa servers.
+- Fixing unittests to support usage of machinename for mediamosa servers.
+- Fixing unittests to support usage of machinename for mediamosa viewers.
+- Fixed double occurrence of class name tests, while both are separate tests.
+- File transfers f.e. stills that uses PHP no longer saves Drupal session or
+  tries to, preventing headers already sent warnings.
+- Fixed access check for viewers; allowed page links on servers that are not
+  of type streaming.
+- Added feature support for MediaMosa transcode profiles.
+- Moved feature support to separate module.
+- Fixed deletion of client application when linked to storage profile.
+- Fixed: New job with broken transcode profile leads to hanging jobs (Refs:
+  #14033).
+- Fixed: Empty unit test in test lising and notice on missing 'group' property
+  when clearing cache.
+- Fixed: unit test media common was not listed or run.
+- Fixed: Unit tests now support foreign keys installation, disabled by default.
 
 
 MediaMosa 3.5.x (build 2072)

@@ -45,7 +45,7 @@ class mediamosa_node {
    *   The node type.
    * @param string $title
    *   The title.
-   * @param string $description.
+   * @param string $description
    *   (optional) The node description.
    *
    * @return object

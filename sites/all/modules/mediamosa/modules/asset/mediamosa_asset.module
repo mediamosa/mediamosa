@@ -8,33 +8,28 @@
  * Implements hook_cron().
  */
 function mediamosa_asset_cron() {
-  // We don't need garbage cleanup in simpletest.
+  // We don't run garbage cleanup in simpletest.
   if (mediamosa::in_simpletest_sandbox()) {
     return;
   }
 
-  try {
-    $start = time();
-    mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
-
-    $run_last = variable_get('mediamosa_asset_cron_last', NULL);
-
-    // Cleanup of assets may only run once a day during nightly hours.
-    if ((round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) and
-      (date("Hi") > '0200' and date("Hi") < '0600')) {
-      // For the next time...
-      variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
-
-      // Do garbage cleanup.
-      mediamosa_asset::do_garbage_cleanup();
-    }
-
-    // Log it.
-    mediamosa_debug::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
+  // Make sure update 7204 has run, as is_empty flag must be correct now.
+  if (!db_select('system')->condition('schema_version', 7204, '>=')->countQuery()->execute()->fetchField()) {
+    return;
   }
-  catch (Exception $e) {
-    mediamosa_watchdog::log('Catch exception during cron: mediamosa_asset_cron(): @msg', array('@msg' => $e->getMessage()));
+
+  $start = time();
+  mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
+
+  $run_last = variable_get('mediamosa_asset_cron_last', NULL);
+
+  // Cleanup of assets may only run once a day during nightly hours.
+  if ((round(REQUEST_TIME - $run_last) >= (variable_get('mediamosa_asset_garbage_interval', mediamosa_settings::ASSET_GARBAGE_INTERVAL) * 60))) {
+    mediamosa_asset::garbage_cleanup();
+    variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
   }
+
+  mediamosa_debug::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
 }
 
 /**
@@ -681,6 +676,14 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  $rest_calls['asset/cleanup'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_cleanup',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
   return $rest_calls;
@@ -2149,6 +2152,27 @@ user_id=admin',
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
+  $rest_calls['asset/cleanup'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Remove unused empty assets.',
+    mediamosa_rest_call::DESCRIPTION => 'Assets that where created for upload, but where unused, are kept until the automated script removes them. This REST call will also cleanup empty assets, like the automated script. However, if the automated script is running, this REST call will return a error.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[POST] asset/unpublish',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item/cleaned' => 'The number of empty assets removed',
+      'item/failed' => 'The number of empty assets that failed to be removed',
+      'item/failed_ids/failed_id' => 'A list of asset IDs of which failed to be removed.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => "<items>
+  <item>
+    <cleaned>0</cleaned>
+    <failed>0</failed>
+    <failed_ids>
+      <failed_id>rS7DFDUOBoPhL6SDNjPlxVCu</failed_id>
+      <failed_id>X2dRWrTSiTUp6jPWOhg7rz1E</failed_id>
+    </failed_ids>
+  </item>
+</items>",
+  );
+
   return $rest_calls;
 }
 
@@ -2156,37 +2180,71 @@ user_id=admin',
  * Implements hook_mediamosa_configuration_collect().
  */
 function mediamosa_asset_mediamosa_configuration_collect() {
-  $form['settings_supplement'] = array(
+  $form['settings_asset'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Asset supplement settings'),
-    '#description' => t('You can set maximum supplement size for assets here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
+    '#title' => t('Asset and mediafiles'),
+    '#description' => t('The asset and mediafiles tab contains the settings related to assets and mediafiles.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['settings_supplement']['mediamosa_asset_supplement_max_size_kb'] = array(
+  $form['settings_asset']['mediamosa_asset_supplement_max_size_kb'] = array(
     '#type' => 'textfield',
-    '#title' => t('Maximum size of a supplement object, KB'),
-    '#description' => t('Enter the maximum size of the asset supplement to store in kilobytes.'),
+    '#title' => t('Maximum size of a asset supplement object, in KB (1024 bytes)'),
+    '#description' => t('Enter the maximum size of the asset supplement to store in kilobytes (1024 bytes).'),
     '#required' => TRUE,
     '#default_value' => variable_get('mediamosa_asset_supplement_max_size_kb', mediamosa_asset_supplement::DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE),
-    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_collect_validate'),
+    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_validate'),
+  );
+
+  $options_interval = array(
+    60 => t('Every hour'),
+    120 => t('Every 2 hours'),
+    240 => t('Every 4 hours'),
+    480 => t('Every 8 hours'),
+    960 => t('Every 16 hours'),
+    1440 => t('Once a day'),
+  );
+
+  $form['settings_asset']['mediamosa_asset_garbage_interval'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic garbage control empty assets'),
+    '#description' => t('Select how often empty assets are automaticly removed'),
+    '#default_value' => variable_get('mediamosa_asset_garbage_interval', mediamosa_settings::ASSET_GARBAGE_INTERVAL),
+    '#options' => $options_interval,
+    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_validate'),
+  );
+
+  $form['settings_asset']['mediamosa_asset_garbage_lifetime'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Lifetime empty assets are kept (hours)'),
+    '#description' => t('Select the time how long the assets that are marked empty are kept. Empty assets are created assets that hold no data or files, and mostly generated for preperation of an upload.'),
+    '#default_value' => variable_get('mediamosa_asset_garbage_lifetime', mediamosa_settings::ASSET_GARBAGE_LIFETIME),
+    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_validate'),
   );
 
   return $form;
 }
 
 /**
- * Simple validator/corrector for an asset supplement size field.
+ * Implements hook_mediamosa_configuration_validate().
  */
-function _mediamosa_asset_mediamosa_configuration_collect_validate(&$element, &$form_state) {
-  $value = (int)$element['#value'];
-  if ($value < 1) {
-    $form_state['values'][$element['#name']] = 64;
-    drupal_set_message(t("You had specified invalid value for '%element_title'. It was corrected to default value.", array('%element_title' => $element['#title'])), 'warning');
+function _mediamosa_asset_mediamosa_configuration_validate($element, &$form_state) {
+
+  $mediamosa_asset_supplement_max_size_kb = (int) $form_state['values']['mediamosa_asset_supplement_max_size_kb'];
+  if ($mediamosa_asset_supplement_max_size_kb < 1) {
+    form_set_error('mediamosa_asset_supplement_max_size_kb', t('Asset supplement value is too low'));
   }
-  else {
-    // Just in case: strip things like 64*1024 or 2M to numbers only.
-    $form_state['values'][$element['#name']] = $value;
+
+  $form_state['values']['mediamosa_asset_supplement_max_size_kb'] = $mediamosa_asset_supplement_max_size_kb;
+
+  $mediamosa_asset_garbage_interval = (int) $form_state['values']['mediamosa_asset_garbage_interval'];
+  if ($mediamosa_asset_garbage_interval < 60) {
+    form_set_error('mediamosa_asset_garbage_interval', t('The garbage cleanup must be run at least once every hour.'));
+  }
+
+  $mediamosa_asset_garbage_lifetime = (int) $form_state['values']['mediamosa_asset_garbage_lifetime'];
+  if ($mediamosa_asset_garbage_lifetime < mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN) {
+    form_set_error('mediamosa_asset_garbage_lifetime', t('For safety, you should at least keep the empty asset for @hours hours.', array('@hours' => mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN)));
   }
 }

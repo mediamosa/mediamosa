@@ -238,6 +238,22 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#maxlength' => mediamosa_transcode_profile_db::PROFILE_LENGTH,
   );
 
+  $form['required'][mediamosa_transcode_profile_db::MACHINE_NAME] = array(
+    '#type' => 'machine_name',
+    '#title' => t('Machine name'),
+    '#size' => 32,
+    '#description' => t('A unique machine-readable name containing letters, numbers, and underscores.'),
+    '#maxlength' => 255,
+    '#machine_name' => array(
+      'exists' => '_mediamosa_transcode_profile_machine_name_exists',
+      'source' => array('title'),
+      'replace_pattern' => '[^0-9a-z_\-]',
+      'error' => t('Please only use lowercase alphanumeric characters, underscores (_), and hyphens (-) for style names.'),
+    ),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value('machine_name', $node),
+  );
+
   $form['required'][mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE] = array(
     '#title' => t('Is this the default profile?'),
     '#type' => 'select',
@@ -396,4 +412,17 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   }
 
   return $form;
+}
+
+/**
+ * Render API callback: Checks if a field machine name is taken.
+ *
+ * @param $value
+ *   The machine name, not prefixed with 'field_'.
+ *
+ * @return
+ *   Whether or not the field machine name is taken.
+ */
+function _mediamosa_transcode_profile_machine_name_exists($value) {
+  return mediamosa_db::exists_machine_name(mediamosa_transcode_profile_db::MACHINE_NAME, $value, mediamosa_transcode_profile_db::TABLE_NAME);
 }

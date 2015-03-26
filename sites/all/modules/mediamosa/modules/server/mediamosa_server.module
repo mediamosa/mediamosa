@@ -142,7 +142,8 @@ function mediamosa_server_theme() {
  *   Returns TRUE for access, FALSE otherwise.
  */
 function _mediamosa_user_access_server_viewer($perm, $node) {
-  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER && $node->{mediamosa_server_db::SERVER_TYPE} != mediamosa_server_db::SERVER_TYPE_STREAMING) {
+  // Access to viewers is only available on streaming servers.
+  if ($node->type !== mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER || ($node->type === mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER && $node->{mediamosa_server_db::SERVER_TYPE} !== mediamosa_server_db::SERVER_TYPE_STREAMING)) {
     return FALSE;
   }
 

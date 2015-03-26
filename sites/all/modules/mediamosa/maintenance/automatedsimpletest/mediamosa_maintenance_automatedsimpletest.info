@@ -1,5 +1,3 @@
-
-
 name = "Simpletest result page"
 description = "Enable to view automated simpletests of the MediaMosa, which runs a selection of unittests every 10 minutes and shows the results."
 package = "MediaMosa - Maintenance"

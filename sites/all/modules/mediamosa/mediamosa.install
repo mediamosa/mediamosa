@@ -5342,3 +5342,188 @@ function mediamosa_update_7198() {
     }
   }
 }
+
+/**
+ * Give MediaMosa server unique machine names.
+ */
+function mediamosa_update_7199() {
+
+  if (!db_field_exists('mediamosa_server', 'machine_name')) {
+    db_add_field(
+      'mediamosa_server',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa server machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_server}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+
+    if ($node->machine_name !== '' && $node->machine_name !== NULL) {
+      continue;
+    }
+
+    $machine_name = empty($node->server_name) ? 'mediamosa_server_' . $node->server_type : $node->server_name;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_server');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_server', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_server', 'uni_machine_name', array('machine_name'));
+  }
+}
+
+/**
+ * Give MediaMosa viewers unique machine names.
+ */
+function mediamosa_update_7200() {
+
+  if (!db_field_exists('mediamosa_viewer', 'machine_name')) {
+    db_add_field(
+      'mediamosa_viewer',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa viewer machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_viewer}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== null) {
+      continue;
+    }
+
+    $machine_name = empty($node->title) ? 'mediamosa_viewer' : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_viewer');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_viewer', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_viewer', 'uni_machine_name', array('machine_name'));
+  }
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7201() {
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * Give MediaMosa transcode profiles unique machine names.
+ */
+function mediamosa_update_7202() {
+
+  if (!db_field_exists('mediamosa_transcode_profile', 'machine_name')) {
+    db_add_field(
+      'mediamosa_transcode_profile',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa transcode profile machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_transcode_profile}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== null) {
+      continue;
+    }
+
+    $machine_name = empty($node->title) ? (empty($node->profile) ? 'mediamosa_transcode_profile' : $node->profile) : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_transcode_profile');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_transcode_profile', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_transcode_profile', 'uni_machine_name', array('machine_name'));
+  }
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7203() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
+
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * Re-evaluate all assets 'is empty' values.
+ *
+ * This might take some time depending on the size of your database. If this
+ * update times out or stops because of OOM errors, just run update again. The
+ * update will continue where it was interrupted.
+ */
+function mediamosa_update_7204() {
+
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  while (TRUE) {
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+
+    // Now re-evalute the asset is_empty_flag.
+    foreach ($asset_ids as $asset_id) {
+      mediamosa_asset::update_asset_info_is_empty_asset($asset_id, FALSE);
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+
+    // Next position.
+    $start += count($asset_ids);
+  }
+
+  // Now start a reindex in solr (if enabled).
+  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
+    _mediamosa_solr_batch_reindex_start(FALSE);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}

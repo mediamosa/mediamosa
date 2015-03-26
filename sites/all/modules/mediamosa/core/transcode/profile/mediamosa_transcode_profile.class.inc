@@ -108,13 +108,34 @@ class mediamosa_transcode_profile {
    *
    * @param int $app_id
    *   Application ID.
+   * @param string $profile_name
+   *   The name of the profile to get.
+   *
+   * @return array|FALSE
+   *   Either the transcode profiel array or FALSE.
    */
   public static function get_by_name($app_id, $profile_name) {
-
     return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
       ->fields('tp')
       ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
       ->condition(mediamosa_transcode_profile_db::PROFILE, $profile_name)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Get transcode profile for app by machine_name.
+   *
+   * @param string $machine_name
+   *   The unique machine name.
+   *
+   * @return array|FALSE
+   *   Either the transcode profiel array or FALSE.
+   */
+  public static function get_by_machine_name($machine_name) {
+    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::MACHINE_NAME, $machine_name)
       ->execute()
       ->fetchAssoc();
   }

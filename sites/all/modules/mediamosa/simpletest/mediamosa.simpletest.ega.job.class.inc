@@ -347,11 +347,14 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
       )
     );
 
-    // Get the job_id.
-    $job_id = $response['xml']->items->item[0]->job_id;
+    $job_id = empty($response['xml']->items->item[0]->job_id) ? 0 : $response['xml']->items->item[0]->job_id;
+    if (in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      // Get the job_id.
+      $job_id = $response['xml']->items->item[0]->job_id;
 
-    // Must have job id.
-    $this->assertTrue($job_id, strtr('Got valid job ID @job_id.', array('@job_id' => $job_id)));
+      // Must have job id.
+      $this->assertTrue($job_id, strtr('Got valid job ID @job_id.', array('@job_id' => $job_id)));
+    }
 
     // Return the job_id.
     return array('job_id' => $job_id);

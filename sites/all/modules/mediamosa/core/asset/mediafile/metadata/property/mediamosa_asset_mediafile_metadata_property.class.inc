@@ -6,10 +6,12 @@
 class mediamosa_asset_mediafile_metadata_property {
   /**
    * Get the property id.
+   *
    * @return int
+   *   The prop_id or null.
    */
   public static function get_property_id_cache($prop_name, $type, $reset = FALSE) {
-    static $prop_ids = NULL;
+    $prop_ids = &drupal_static('mediamosa_asset_mediafile_metadata_property::get_property_id_cache');
 
     if (is_null($prop_ids) || $reset) {
       $prop_ids = array();
@@ -28,7 +30,7 @@ class mediamosa_asset_mediafile_metadata_property {
           [$row[mediamosa_asset_mediafile_metadata_property_db::TYPE]] =
           $row[mediamosa_asset_mediafile_metadata_property_db::ID];
       }
-    }
+   }
 
     return (!empty($prop_ids[$prop_name][$type]) ? $prop_ids[$prop_name][$type] : NULL);
   }
@@ -105,21 +107,17 @@ class mediamosa_asset_mediafile_metadata_property {
   /**
    * Get the property.
    *
-   * FIXME: caching here is not used (see usage of get_property()).
-   *
    * @param string $prop_id
-   *   The ID of the property to get.
-   * @param bool $reset
-   *   Reload static data.
+   *   The ID of the property to get. Provided null to reset the cache.
    *
    * @return array
    *   Returns single array(prop_name, type)
    */
   public static function get_property($prop_id, $reset = FALSE) {
-    static $props = NULL;
+    $mediamosa_asset_mediafile_metadata_properties = &drupal_static('mediamosa_asset_mediafile_metadata_property::get_property');
 
-    if (is_null($props) || $reset) {
-      $props = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'p')
+    if (is_null($mediamosa_asset_mediafile_metadata_properties) || $reset) {
+      $mediamosa_asset_mediafile_metadata_properties = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'p')
         ->fields('p', array(
           mediamosa_asset_mediafile_metadata_property_db::ID,
           mediamosa_asset_mediafile_metadata_property_db::NAME,
@@ -129,6 +127,6 @@ class mediamosa_asset_mediafile_metadata_property {
         ->fetchAllAssoc(mediamosa_asset_mediafile_metadata_property_db::ID);
     }
 
-    return (!empty($props[$prop_id]) ? $props[$prop_id] : NULL);
+    return (!empty($mediamosa_asset_mediafile_metadata_properties[$prop_id]) ? $mediamosa_asset_mediafile_metadata_properties[$prop_id] : NULL);
   }
 }

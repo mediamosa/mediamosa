@@ -17,6 +17,8 @@ class mediamosa_server_db {
   const SERVER_STATUS_OFF = 'OFF';
   const SERVER_STATUS_CLOSE = 'CLOSE';
   const SERVER_TYPE = 'server_type';
+  const MACHINE_NAME = 'machine_name';
+  const MACHINE_NAME_LENGTH = 255;
   const DESCRIPTION = 'description';
   const DESCRIPTION_LENGTH = 255;
   const SERVER_URI = 'server_uri';
@@ -57,7 +59,7 @@ class mediamosa_server_db {
     require_once 'mediamosa_server.install.inc';
 
     // Get the schema.
-    $a_schema = mediamosa_server_schema();
-    return array_keys($a_schema[mediamosa_server_db::TABLE_NAME]['fields']);
+    $schema = mediamosa_server_schema();
+    return array_keys($schema[mediamosa_server_db::TABLE_NAME]['fields']);
   }
 }

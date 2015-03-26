@@ -271,6 +271,8 @@ s1.write('mediaspace');
   foreach ($default_servers as $default_server) {
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[9]);
 
+    $machine_name = empty($default_server[9]) ? 'mediamosa_server_' . $node->{mediamosa_server_db::SERVER_TYPE} : $default_server[9];
+    $node->{mediamosa_server_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($machine_name, mediamosa_server_db::TABLE_NAME);
     $node->{mediamosa_server_db::VERSION} = $default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
     $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
@@ -349,6 +351,13 @@ function mediamosa_server_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
+      ),
+      mediamosa_server_db::MACHINE_NAME => array(
+        'type' => 'varchar',
+        'length' => mediamosa_server_db::MACHINE_NAME_LENGTH,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa server machine name.',
       ),
       mediamosa_server_db::VERSION => array(
         'description' => 'The version number.',
@@ -443,7 +452,10 @@ function mediamosa_server_schema() {
     'indexes' => array(
       'idx_nid_vid' => array(mediamosa_server_db::NID, mediamosa_server_db::VID),
       'idx_servertype_serverstatus' => array(mediamosa_server_db::NID, mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_STATUS),
-    )
+    ),
+    'unique keys' => array(
+      'uni_machine_name' => array(mediamosa_server_db::MACHINE_NAME),
+    ),
   );
 
   return $schema;

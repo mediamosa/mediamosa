@@ -3,6 +3,7 @@
  * @file
  * Unittests for ACL play restriction.
  */
+
 class MediaMosaAclPlayRestrictionTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.

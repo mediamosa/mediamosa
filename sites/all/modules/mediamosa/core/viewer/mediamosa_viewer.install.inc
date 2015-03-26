@@ -40,6 +40,13 @@ function mediamosa_viewer_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      mediamosa_viewer_db::MACHINE_NAME => array(
+        'type' => 'varchar',
+        'length' => mediamosa_viewer_db::MACHINE_NAME_LENGTH,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa viewer machine name.',
+      ),
       mediamosa_viewer_db::NAME => array(
         'description' => 'The unique name of the viewer.',
         'type' => 'varchar',
@@ -66,6 +73,7 @@ function mediamosa_viewer_schema() {
     ),
     'unique keys' => array(
       'uni_name' => array(mediamosa_viewer_db::NAME),
+      'uni_machine_name' => array(mediamosa_viewer_db::MACHINE_NAME),
     ),
   );
 

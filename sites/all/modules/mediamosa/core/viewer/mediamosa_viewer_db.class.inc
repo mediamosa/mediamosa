@@ -12,6 +12,8 @@ class mediamosa_viewer_db {
   // Database fields;
   const NID = 'nid';
   const VID = 'vid';
+  const MACHINE_NAME = 'machine_name';
+  const MACHINE_NAME_LENGTH = 255;
   const NAME = 'name';
   const NAME_LENGTH = 80;
   const DESCRIPTION = 'description';

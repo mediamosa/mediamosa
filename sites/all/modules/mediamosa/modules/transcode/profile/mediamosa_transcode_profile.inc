@@ -1,33 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * MediaMosa transcode profile function.
  */
-
- /**
-  * @file
-  * MediaMosa transcode profile function.
-  */
 
 /**
  * Show the listing of the current transcode profiles.
@@ -47,10 +22,7 @@ function _mediamosa_transcode_profile_list() {
   $apps = array_merge($apps, mediamosa_app::collect_allowed_apps());
 
   // Only allow either all apps (admin) or limited to global and owned.
-  $app_ids = array();
-  foreach ($apps as $app_id => $app) {
-    $app_ids[] = $app_id;
-  }
+  $app_ids = array_keys($apps);
 
   $header = array(
     array('data' => t('Transcode profile id'), 'field' => 'tp.' . mediamosa_transcode_profile_db::ID),
