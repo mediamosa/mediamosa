@@ -135,7 +135,7 @@ class mediamosa_job_server {
       if (lock_acquire('mediamosa_job_server_parse_' . $server_id, 120)) {
         try {
           // Parse queue.
-          self::parse_queue();
+          static::parse_queue();
         }
         catch (mediamosa_exception $e) {
           // ignore, its logged
@@ -767,13 +767,10 @@ class mediamosa_job_server {
         $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
     }
-    elseif ($hint == 'TRUE') {
+    elseif ($hint === 'TRUE') {
       // We want to hint.
       $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
       $options[] = mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
-    }
-    else {
-      // Do nothing. We don't want hinting.
     }
 
     assert(mediamosa_io::file_exists(mediamosa_settings::lua_analyse_script()));

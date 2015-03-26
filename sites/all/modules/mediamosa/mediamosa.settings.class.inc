@@ -134,9 +134,12 @@ class mediamosa_settings {
   const UPLOAD_PUT_CHUNK_SIZE = 4096;
   const UPLOAD_PROGRESS_INTERVAL = 5;
 
-  // Asset garbage collector.
-  const ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL = 86400;
-  const ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT = 1209600;
+  // Asset garbage interval in minutes.
+  const ASSET_GARBAGE_INTERVAL = 120;
+
+  // Asset garbage interval in hours.
+  const ASSET_GARBAGE_LIFETIME = 72;
+  const ASSET_GARBAGE_LIFETIME_MIN = 8;
 
   // Cron timeout for ticket cleanup.
   const TICKET_CRON_INTERVAL = 600;

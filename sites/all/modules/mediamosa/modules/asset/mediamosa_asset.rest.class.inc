@@ -2314,3 +2314,54 @@ class mediamosa_rest_call_asset_unpublish_multi extends mediamosa_rest_call {
     $mediamosa->set_result_okay();
   }
 }
+
+/**
+ * URI: /asset/cleanup
+ *
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_cleanup extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+  const LIFETIME_HOURS = 'lifetime_hours';
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::LIFETIME_HOURS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'The number of hours ago when an empty asset as been created to be deleted.',
+          self::VAR_DEFAULT_VALUE => variable_get('mediamosa_asset_garbage_lifetime', mediamosa_settings::ASSET_GARBAGE_LIFETIME),
+          self::VAR_RANGE_START => mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN,
+        ),
+      ),
+    );
+
+    return self::get_var_setup_default($var_setup, FALSE);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+    $lifetime_hours = $this->get_param_value(self::LIFETIME_HOURS);
+
+    $result = mediamosa_asset::garbage_cleanup($lifetime_hours);
+    $result['failed_ids'] = array('failed_id' => $result['failed_ids']);
+
+    $mediamosa->item_count = $result['cleaned'];
+    $mediamosa->item_count_total = $result['cleaned'] + $result['failed'];
+    $mediamosa->add_item($result);
+  }
+}

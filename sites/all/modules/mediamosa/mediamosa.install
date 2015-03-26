@@ -5472,3 +5472,58 @@ function mediamosa_update_7203() {
   registry_rebuild();
   cache_clear_all();
 }
+
+/**
+ * Re-evaluate all assets 'is empty' values.
+ *
+ * This might take some time depending on the size of your database. If this
+ * update times out or stops because of OOM errors, just run update again. The
+ * update will continue where it was interrupted.
+ */
+function mediamosa_update_7204() {
+
+  // 10 minutes extra for script timeout.
+  drupal_set_time_limit(600);
+
+  // If case the update was not successful.
+  $start = variable_get(__FUNCTION__, 0);
+
+  // Number of assets to update per loop run.
+  $length = 500;
+
+  while (TRUE) {
+    $asset_ids = db_select('mediamosa_asset', 'a')
+      ->fields('a', array('asset_id'))
+      ->orderBy('asset_id')
+      ->range($start, $length)
+      ->execute()
+      ->fetchCol();
+
+    // Done?
+    if (empty($asset_ids)) {
+      break;
+    }
+
+    // Now re-evalute the asset is_empty_flag.
+    foreach ($asset_ids as $asset_id) {
+      mediamosa_asset::update_asset_info_is_empty_asset($asset_id, FALSE);
+    }
+
+    // Store the position so if we run out of memory, the update can be
+    // restarted at the last successful position.
+    variable_set(__FUNCTION__, $start);
+
+    // Next position.
+    $start += count($asset_ids);
+  }
+
+  // Now start a reindex in solr (if enabled).
+  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
+    _mediamosa_solr_batch_reindex_start(FALSE);
+  }
+
+  // No need to keep this.
+  variable_del(__FUNCTION__);
+
+  return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}

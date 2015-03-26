@@ -111,7 +111,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Create uploadticket.
     $ticket = $this->createMediafileUploadTicket($mediafile_id_empty);
 
-    // Get the asset/
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is TRUE.
@@ -143,7 +143,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
    */
   public function testAssetIsEmptyAsset4() {
 
-    // Create an asset with upload/
+    // Create an asset with upload.
     $upload = $this->uploadTestFile();
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
@@ -323,5 +323,78 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->assertTrue($response['xml']->items->item[0]->played == 0, 'No play count.');
     $this->assertTrue($response['xml']->items->item[0]->viewed == 3, 'View count == 3.');
+  }
+
+  /**
+   * Testing is empty flag when asset has provider_id or reference_id set.
+   */
+  public function testAssetIsEmptyAsset5() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id_empty = $this->createMediafile($asset_id);
+
+    // Create uploadticket.
+    $this->createMediafileUploadTicket($mediafile_id_empty);
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
+    );
+
+    $this->updateAsset($asset_id, array('provider_id' => 'foo'));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
+    );
+
+    $this->updateAsset($asset_id, array('provider_id' => ''));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
+    );
+
+    $this->updateAsset($asset_id, array('reference_id' => 'foo'));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
+    );
+
+    $this->updateAsset($asset_id, array('reference_id' => ''));
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE.
+    $is_empty_asset = (string) $asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
+    );
   }
 }
