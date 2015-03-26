@@ -5517,13 +5517,18 @@ function mediamosa_update_7204() {
     $start += count($asset_ids);
   }
 
-  // Now start a reindex in solr (if enabled).
-  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
-    _mediamosa_solr_batch_reindex_start(FALSE);
-  }
-
   // No need to keep this.
   variable_del(__FUNCTION__);
 
   return strtr('Successfully updated the asset empty status of @updated asset(s).', array('@updated' => $start));
+}
+
+/**
+ * Reindex Solr database if needed.
+ */
+function mediamosa_update_7205() {
+  // Now start a reindex in solr (if enabled).
+  if (function_exists('_mediamosa_solr_batch_reindex_start')) {
+    _mediamosa_solr_batch_reindex_start(FALSE);
+  }
 }
