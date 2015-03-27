@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2152)
+MediaMosa 3.6.0-dev (build 2153)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -213,7 +213,7 @@ MediaMosa 3.6.0-dev (build 2152)
 - Re-wrote asset garbage collection and cleanup (Refs: #14063).
 - Added feature support for MediaMosa viewers.
 - Added feature support for MediaMosa tool parameters.
-
+- Added schema detection and check on status page for Solr 4.2 and higher.
 
 
 MediaMosa 3.5.x (build 2072)
