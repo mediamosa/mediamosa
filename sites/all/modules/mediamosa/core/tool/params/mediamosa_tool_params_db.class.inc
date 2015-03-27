@@ -1,9 +1,9 @@
 <?php
-
 /**
  * @file
  * The tool params DB class.
  */
+
 class mediamosa_tool_params_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
@@ -13,6 +13,8 @@ class mediamosa_tool_params_db {
   const NID = 'nid';
   const VID = 'vid';
   const ID = 'tool_params_id';
+  const MACHINE_NAME = 'machine_name';
+  const MACHINE_NAME_LENGTH = 255;
   const TOOL = 'tool';
   const TOOL_LENGTH = 50;
   const NICE_PARAMETER = 'nice_parameter';

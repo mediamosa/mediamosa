@@ -26,6 +26,9 @@ class mediamosa_tool_params {
    *   The name of the tool.
    * @param string $nice_parameter
    *   The parameter name but more readable (nice).
+   *
+   * @return array
+   *   The tool or FALSE.
    */
   public static function get_by_tool($tool, $nice_parameter = '') {
 
@@ -112,5 +115,22 @@ class mediamosa_tool_params {
         );
       }
     }
+  }
+
+  /**
+   * Get the tool param using its machine name.
+   *
+   * @param string $machine_name
+   *   The machine name.
+   *
+   * @return array
+   *   The MediaMosa tool param or FALSE.
+   */
+  public static function get_by_machinename($machine_name) {
+    return mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 't')
+      ->fields('t')
+      ->condition(mediamosa_tool_params_db::MACHINE_NAME, $machine_name)
+      ->execute()
+      ->fetchAssoc();
   }
 }

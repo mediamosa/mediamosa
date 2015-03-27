@@ -63,6 +63,13 @@ function mediamosa_tool_params_schema() {
         'not null' => TRUE,
         'description' => 'Primary Key: Unique ID.',
       ),
+      mediamosa_tool_params_db::MACHINE_NAME => array(
+        'type' => 'varchar',
+        'length' => mediamosa_tool_params_db::MACHINE_NAME_LENGTH,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa tool params machine name.',
+      ),
       mediamosa_tool_params_db::TOOL => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::TOOL_LENGTH,
@@ -136,6 +143,7 @@ function mediamosa_tool_params_schema() {
     'primary key' => array(mediamosa_tool_params_db::ID),
     'unique keys' => array(
       'uni_niceparam_tool' => array(mediamosa_tool_params_db::NICE_PARAMETER, mediamosa_tool_params_db::TOOL),
+      'uni_machine_name' => array(mediamosa_server_db::MACHINE_NAME),
     ),
     'indexes' => array(
       'idx_tool' => array(mediamosa_tool_params_db::TOOL),

@@ -309,4 +309,24 @@ class mediamosa_lib {
 
     return (int) $val;
   }
+
+  /**
+   * Check if the string contains serialized data.
+   *
+   * @param string $candidate
+   *   The string containing the possible serialized data.
+   *
+   * @return bool
+   *   Returns TRUE when serialized, FALSE otherwise.
+   */
+  public static function is_serialized($candidate) {
+    if (!is_string($candidate)) {
+      return FALSE;
+    }
+
+    $candidate = trim($candidate);
+    $unserialized = @unserialize($candidate);
+
+    return ($candidate === 'b:0;' || $unserialized !== FALSE);
+  }
 }

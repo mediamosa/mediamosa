@@ -1,37 +1,8 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * hook_load / -update / -delete / -insert hooks for node type mediamosa_tool_params.
  */
-
- /**
-  * @file
-  * hook_load / -update / -delete / -insert hooks for node type mediamosa_tool_params.
-  *
-  *
-  */
-
-// Constants.
 
 /**
  * Internal prefix.
@@ -58,12 +29,13 @@ function mediamosa_tool_params_load(&$nodes) {
  */
 function _mediamosa_tool_params_do_command(&$node) {
   if ($node->{mediamosa_tool_params_db::ALLOWED_VALUE}) {
-    // Array version is allowed.
-    if (is_array($node->{mediamosa_tool_params_db::ALLOWED_VALUE})) {
-      $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize($node->{mediamosa_tool_params_db::ALLOWED_VALUE});
-    }
-    else { // assume unserialized string with ; sep.
-      $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize(explode(';', $node->{mediamosa_tool_params_db::ALLOWED_VALUE}));
+    if (!mediamosa_lib::is_serialized($node->{mediamosa_tool_params_db::ALLOWED_VALUE})) {
+      if (is_array($node->{mediamosa_tool_params_db::ALLOWED_VALUE})) {
+        $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize($node->{mediamosa_tool_params_db::ALLOWED_VALUE});
+      }
+      else {
+        $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize(explode(';', $node->{mediamosa_tool_params_db::ALLOWED_VALUE}));
+      }
     }
   }
   else {
@@ -297,7 +269,6 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#description' => t('Description of this parameter.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DESCRIPTION, $node),
   );
-
 
   return $form;
 }
