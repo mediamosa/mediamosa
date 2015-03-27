@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2150)
+MediaMosa 3.6.0-dev (build 2151)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -211,6 +211,9 @@ MediaMosa 3.6.0-dev (build 2150)
 - Fixed: unit test media common was not listed or run.
 - Fixed: Unit tests now support foreign keys installation, disabled by default.
 - Re-wrote asset garbage collection and cleanup (Refs: #14063).
+- Added feature support for MediaMosa viewers.
+- Added feature support for MediaMosa tool parameters.
+
 
 
 MediaMosa 3.5.x (build 2072)
