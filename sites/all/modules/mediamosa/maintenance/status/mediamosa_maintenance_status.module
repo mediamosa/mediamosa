@@ -725,7 +725,7 @@ function _mediamosa_maintenance_status_waiting_job($type = NULL) {
  * Give back result ok or warning.
  *
  * @param $test boolean
- *   'FALSE' means OK
+ *   'FALSE' means OK.
  */
 function _mediamosa_maintenance_status_okwarning($test) {
   // Make sure we provide 0 or 1.
@@ -737,12 +737,12 @@ function _mediamosa_maintenance_status_okwarning($test) {
  * Give back result ok or error.
  *
  * @param $test boolean
- *   'FALSE' means OK
+ *   'TRUE' means OK.
  */
 function _mediamosa_maintenance_status_okerror($test) {
   // Make sure we provide 0 or 1.
   assert(is_int($test) || is_bool($test));
-  return $test ?  MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR;
+  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR;
 }
 
 /**

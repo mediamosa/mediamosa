@@ -48,11 +48,38 @@ function _mediamosa_solr_status_generate() {
   $ping_success = mediamosa_solr_apache_solr_service::solrServicePing();
 
   $results = array();
+  $results_config = array();
   if ($ping_success) {
     $results['solr_ping'] = array(
       'title' => t('Apache Solr servlet'),
       'value' => t('Found'),
       'severity' => _mediamosa_maintenance_status_okerror($ping_success),
+    );
+
+    // Check the schema (only 4.2. or higher).
+    $schema_info = mediamosa_solr_apache_solr_service::solrServiceGetSchemaInfo();
+    if ($schema_info === FALSE) {
+      // Old version, can retrieve it.
+      $ok = TRUE;
+      $schema_info['name'] = 'No schema found, retrieving schema data is only supported by Solr 4.2 or higher.';
+    }
+    else {
+      $ok = $schema_info['success'];
+      $description = '';
+      if ($ok) {
+        $version = mediamosa_solr::schema_version($schema_info['name']);
+        if (empty($version['build']) || $version['build'] < mediamosa_solr::MIN_BUILD) {
+           $ok = FALSE;
+           $description = t('Invalid Solr schema detected (build @build), please replace with the Solr files located under the MediaMosa Solr directory (schema.xml and solrconfig.xml)', array('@build' => $version['build']));
+        }
+      }
+    }
+
+    $results_config['solr_schema_info'] = array(
+      'title' => t('Apache Solr schema'),
+      'value' => $schema_info['name'],
+      'severity' => _mediamosa_maintenance_status_okerror($ok),
+      'description' => $description,
     );
   }
   else {
@@ -73,6 +100,10 @@ function _mediamosa_solr_status_generate() {
     'components' => array(
       'title' => t('Components'),
       'results' => $results,
+    ),
+    'configuration' => array(
+      'title' => t('Components'),
+      'results' => $results_config,
     ),
   );
 }

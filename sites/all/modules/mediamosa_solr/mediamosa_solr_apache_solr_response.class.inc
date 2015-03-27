@@ -63,6 +63,18 @@ class mediamosa_solr_apache_solr_response {
   }
 
   /**
+   * Retrieve the schema name.
+   *
+   * Is only available for Solr 4.2 and higher and using the /schema/name url.
+   *
+   * @return string
+   *   The schema name.
+   */
+  public function getSchemaName() {
+    return empty($this->_response->name) ? 'No schema found' : $this->_response->name;
+  }
+
+  /**
    * Convert the metadata field name from solr to MM field.
    *
    * @param string $solrfield

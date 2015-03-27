@@ -7,6 +7,9 @@
 class mediamosa_solr {
 
   // ------------------------------------------------------------------- Consts.
+  // Minimum build of MediaMosa. Number is included in schema name.
+  const MIN_BUILD = 2141;
+
   // In seconds, how long to process the queue before we stop for next run.
   const TIME_TO_PROCESS_QUEUE = 54;
   // When having x number assets, then commit. Be careful with memory when
@@ -1451,5 +1454,29 @@ class mediamosa_solr {
    */
   public static function isEnabled() {
     return variable_get('mediamosa_search_engine', 'mediamosa_search') === 'mediamosa_solr';
+  }
+
+  /**
+   * Parse the name of the schema.
+   *
+   * @param string $name
+   *   The name of the schema.
+   *
+   * @return array
+   *   - 'name': Platform, mostly 'mediamosa'.
+   *   - 'major': major version.
+   *   - 'minor': minor version.
+   *   - 'release': release version.
+   *   - 'build': build number.
+   */
+  public static function schema_version($name) {
+    list($name, $major, $minor, $release, , $build) = preg_split('/[.:-]+/', $name) + array(0 => 'mediamosa', 1 => 3, 2 => 5, 3 => 0, 4 => 0);
+    return array(
+      'name' => $name,
+      'major' => (int) $major,
+      'minor' => (int) $minor,
+      'release' => (int) $release,
+      'build' => $build,
+    );
   }
 }

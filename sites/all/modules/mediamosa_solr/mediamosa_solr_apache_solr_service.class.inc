@@ -44,6 +44,13 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    */
   protected $_scheme;
 
+  /**
+   * Constructed servlet full path URLs
+   *
+   * @var string
+   */
+  protected $_schemaNameUrl;
+
   // -------------------------------------------------------------- Constructor.
   /**
    * Constructor.
@@ -61,6 +68,15 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     $path = self::mediamosaGetPath($url);
 
     parent::__construct($host, $port, $path);
+  }
+
+  /**
+   * Construct the Full URLs for the three servlets we reference
+   */
+  protected function _initUrls() {
+    parent::_initUrls();
+
+    $this->_schemaNameUrl = $this->_constructUrl('schema/name');
   }
 
   // ---------------------------------------------------------------- Functions.
@@ -241,7 +257,8 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   /**
    * Get the Solr object.
    *
-   * Will ping the first time if it is created the first time.
+   * Will ping the first time if it is created the first time (when $ping is
+   * TRUE).
    *
    * @param string $url
    *   (optional) The Solr server URL.
@@ -259,7 +276,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     $mediamosa_apache_solr_service = &drupal_static(__FUNCTION__);
 
     // Not provided? Get it.
-    $url = !empty($url) ? $url : self::mediamosaGetUrl();
+    $url = !empty($url) ? $url : static::mediamosaGetUrl();
 
     // Put in static for reuse.
     if (empty($mediamosa_apache_solr_service[$url]) || $reset) {
@@ -312,6 +329,19 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Retrieve the schema info.
+   *
+   * @return array|FALSE
+   *   The schema info;
+   *   'success': TRUE or FALSE indicating schema info was found.
+   *   'name': The name of the schema, not available when success was FALSE.
+   */
+  public static function solrServiceGetSchemaInfo() {
+    // Get the solr schema info.
+    return self::mediamosaGetSolrObject()->getSchemaInfo();
   }
 
   // ------------------------------ Overruled on base class Apache_Solr_Service.
@@ -380,4 +410,71 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     $this->_searchUrl = $searchUrl;
     return $result;
   }
-}
+
+  /**
+   * Retrieve the schema info.
+   *
+   * @return array|FALSE
+   *   The schema info;
+   *   'success': TRUE or FALSE indicating schema info was found.
+   *   'name': The name of the schema, not available when success was FALSE.
+   */
+  public function getSchemaInfo() {
+    $schema_info = array(
+      'success' => FALSE,
+      'name' => 'Unable to retrieve schema information',
+    );
+
+    // Get the solr connection and ping it.
+    try {
+      $httpTransport = $this->getHttpTransport();
+      $solrResponse = new Apache_Solr_Response($httpTransport->performGetRequest($this->_schemaNameUrl));
+      if ($solrResponse->getHttpStatus() == 404) {
+        throw new Apache_Solr_HttpTransportException($solrResponse);
+      }
+      $response = new mediamosa_solr_apache_solr_response($solrResponse);
+      $schema_info['name'] = $response->getSchemaName();
+
+      $schema_info['success'] = TRUE;
+    }
+    catch (Apache_Solr_HttpTransportException $e) {
+      if ($e->getCode() == 404) {
+        return FALSE;
+      }
+
+      $schema_info['name'] = $e->getMessage() . ' code ' . $e->getCode();
+    }
+    catch (Exception $e) {
+    }
+
+    return $schema_info;
+  }
+
+
+    /**
+   * Call the /admin/ping servlet, can be used to quickly tell if a connection to the
+   * server is able to be made.
+   *
+   * @param float $timeout maximum time to wait for ping in seconds, -1 for unlimited (default is 2)
+   * @return float Actual time taken to ping the server, FALSE if timeout or HTTP error status occurs
+   */
+  public function ping($timeout = 2)
+  {
+    $start = microtime(true);
+
+    $httpTransport = $this->getHttpTransport();
+
+    $httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timeout);
+    $solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
+
+    if ($solrResponse->getHttpStatus() == 200)
+    {
+      return microtime(true) - $start;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+    }
