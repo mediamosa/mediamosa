@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2151)
+MediaMosa 3.6.0-dev (build 2152)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
