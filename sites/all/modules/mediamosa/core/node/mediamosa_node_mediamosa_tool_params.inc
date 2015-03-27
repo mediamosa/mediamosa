@@ -87,8 +87,29 @@ function mediamosa_tool_params_insert($node) {
   // Exception is title.
   $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $node->title;
 
+  // Machine name must be set.
+  $node->{mediamosa_tool_params_db::MACHINE_NAME} = _mediamosa_tool_params_machine_name($node);
+
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_tool_params_db::TABLE_NAME, $names);
+}
+
+/**
+ * Either generate or get the machine name.
+ *
+ * @param object $node
+ *   The tool params node.
+ *
+ * @return string
+ *   The machinename.
+ */
+function _mediamosa_tool_params_machine_name($node) {
+  if (!isset($node->{mediamosa_tool_params_db::MACHINE_NAME}) || $node->{mediamosa_tool_params_db::MACHINE_NAME} === '') {
+    $machine_name = $node->tool . '_' . $node->nice_parameter;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_tool_params');
+  }
+
+  return $node->{mediamosa_tool_params_db::MACHINE_NAME};
 }
 
 /**
