@@ -35,7 +35,7 @@ function mediamosa_server_features_export($data, &$export, $module_name = '') {
  */
 function mediamosa_server_features_export_render($module, $data) {
   $code = array();
-  $code[] = '  $mediamosa_servers = array();';
+  $code[] = '  $' . FEATURE_MEDIAMOSA_SERVER . 's = array();';
   $code[] = '';
 
   foreach ($data as $machine_name) {
@@ -49,14 +49,14 @@ function mediamosa_server_features_export_render($module, $data) {
       unset($row['nid'], $row['vid']);
       $export = features_var_export($row, '  ');
       $code[] = "  // Exported mediamosa server: {$row['server_name']}.";
-      $code[] = "  \$mediamosa_servers['{$machine_name}'] = {$export};";
+      $code[] = "  \$" . FEATURE_MEDIAMOSA_SERVER . "s['{$machine_name}'] = {$export};";
     }
   }
 
   $code[] = '';
-  $code[] = '  return $mediamosa_servers;';
+  $code[] = '  return $' . FEATURE_MEDIAMOSA_SERVER . 's;';
   $code = implode("\n", $code);
-  return array('mediamosa_servers' => $code);
+  return array(FEATURE_MEDIAMOSA_SERVER . 's' => $code);
 }
 
 /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Core - Features export and import hooks for MediaMosa server objects.
+ * Core - Features export and import hooks for MediaMosa tool params objects.
  */
 
 /**

@@ -1,16 +1,17 @@
 <?php
 /**
  * @file
- * The MediaMosa Server module.
+ * The MediaMosa Server class.
  */
 
 class mediamosa_server {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   /**
    * Mime type separator.
    */
   const MIME_TYPE_SEPARATOR = '|';
 
+  // ---------------------------------------------------------------- Functions.
   /**
    * Log for the type 'server'.
    *

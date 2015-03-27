@@ -17,6 +17,7 @@ require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 define('FEATURE_MEDIAMOSA_SERVER', 'mediamosa_server');
 define('FEATURE_MEDIAMOSA_TRANSCODE_PROFILE', 'mediamosa_transcode_profile');
 define('FEATURE_MEDIAMOSA_TOOL_PARAMS', 'mediamosa_tool_params');
+define('FEATURE_MEDIAMOSA_VIEWER', 'mediamosa_viewer');
 
 /**
  * Implements hook_features_api().
@@ -43,6 +44,13 @@ function mediamosa_features_api() {
       'default_hook' => FEATURE_MEDIAMOSA_TOOL_PARAMS,
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
       'file' => drupal_get_path('module', 'mediamosa') . '/core/tool/params/mediamosa_tool_params.features.inc'
+    ),
+    FEATURE_MEDIAMOSA_VIEWER => array(
+      'name' => t('MediaMosa viewers'),
+      'feature_source' => TRUE,
+      'default_hook' => FEATURE_MEDIAMOSA_VIEWER . 's',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'file' => drupal_get_path('module', 'mediamosa') . '/core/viewer/mediamosa_viewer.features.inc'
     ),
   );
 }
