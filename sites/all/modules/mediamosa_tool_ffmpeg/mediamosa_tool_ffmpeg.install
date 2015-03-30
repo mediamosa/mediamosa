@@ -67,7 +67,7 @@ function mediamosa_tool_ffmpeg_install() {
       'ffmpeg', 'padding', '', NULL, NULL, array('yes', 'no'), 'yes', 'FALSE', $t('Force padding, if aspect ratio is maintained@default')),
     array(
       'ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array(
-        'libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libfdk_acc', 'libvorbis', 'vorbis',
+        'libmp3lame', 'mp3', 'pcm_s16le', 'aac', 'libfaac', 'libvo_aacenc', 'libfdk_aac', 'libvorbis', 'vorbis',
       ), NULL, 'FALSE', $t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
     array(
       'ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array(
