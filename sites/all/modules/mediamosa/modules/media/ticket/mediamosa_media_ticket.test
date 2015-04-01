@@ -1,11 +1,14 @@
 <?php
 /**
-  * @file
-  * Unittests for media play ticket mechanisme.
-  */
+ * @file
+ * Unittests for media play ticket mechanisme.
+ */
 
 class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Media - Ticket tests',
@@ -16,7 +19,10 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
   }
 
   // -------------------------------------------------------------------- Tests.
-  function testBugReportMediaMosaOrgTicket422() {
+  /**
+   * Test acl inherits acl.
+   */
+  public function testBugReportMediaMosaOrgTicket422() {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -114,13 +120,15 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->assertTrue(!count($mediafile_ids), 'All mediafiles got tickets');
   }
 
-  // Testing mediafile media play ticket, see: ticket 72.
-  function testPlayProxyTicketMechanisme() {
+  /**
+   * Testing mediafile media play ticket, see: ticket 72.
+   */
+  public function testPlayProxyTicketMechanisme() {
 
     // Preparation.
 
     // Create upload file.
-    $upload = $this->uploadTestFile(array('filename' => self::getTestVideo_wmv()));
+    $upload = $this->uploadTestFile(array('filename' => self::getTestVideo()));
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
     $filename = $upload['filename'];
@@ -142,7 +150,7 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Play proxy create ticket.
 
-    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
+    foreach (array('plain', 'object', 'download', 'still') as $subject) {
       // Ask mediafile download url.
       $parameters = array(
         mediamosa_rest_call_media_view::RESPONSE => $subject,
@@ -156,18 +164,9 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
           // Play proxy function tests if we get ok.
           break;
 
-        case 'metafile':
-          $test_string = '<asx version="3.0">';
-          // Check the output.
-          $this->assertTrue(
-            strpos($output, $test_string) !== FALSE,
-            t("Mediafile output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
-          );
-          break;
-
         case 'object':
-          $test_string = '<object id=';
           // Check the output.
+          $test_string = '<script src=';
           $this->assertTrue(
             strpos($output, $test_string) !== FALSE,
             t("Object output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
@@ -184,7 +183,11 @@ class MediaMosaMediaTicketTestCaseEga extends MediaMosaTestCaseEgaJob {
           // Check response.
           $this->assertTrue(
             $result->code == 200,
-            t("File exists (@subject): '@url' (code = @code)", array('@subject' => $subject, '@url' => $output, '@code' => $result->code))
+            t("File exists (@subject): '@url' (code = @code)", array(
+              '@subject' => $subject,
+              '@url' => $output,
+              '@code' => $result->code)
+            )
           );
           break;
       }
