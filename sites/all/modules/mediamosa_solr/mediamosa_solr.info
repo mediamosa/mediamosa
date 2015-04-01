@@ -25,6 +25,7 @@ files[] = tests/mediamosa_solr.stemming.test
 files[] = tests/mediamosa_solr.asset.cql.ext.test
 files[] = tests/mediamosa_solr.asset.cql.test
 files[] = tests/mediamosa_solr.asset.search.empty.test
+files[] = tests/mediamosa_solr.asset.common.test
 files[] = tests/mediamosa_solr.asset.cql.mediafile.duration.test
 files[] = tests/mediamosa_solr.asset.cql.isprivate.test
 files[] = tests/mediamosa_solr.asset.cql.app.coll.test

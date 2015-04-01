@@ -1489,17 +1489,14 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_sdk::TYPE_ASSET_ID));
       }
 
-      $cql[] = 'asset_id=="^' . mediamosa_sdk::escape_cql($asset_id) . '^"';
+      $cql[] = '^' . mediamosa_sdk::escape_cql($asset_id) . '^';
     }
 
     // Create the CQL.
-    $cql = implode(' OR ', $cql);
+    $cql = 'asset_id any/keeporder "' . implode(' ', $cql) . '"';
 
     // View hidden metadata.
     $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
-
-    $tag = $this->get_param_value(self::TAG);
-    $is_oai = $this->get_param_value(self::IS_OAI);
 
     $acl_user_id = $this->get_param_value(self::ACL_USER_ID);
     $acl_group_id = $this->get_param_value(self::ACL_GROUP_ID);
