@@ -233,7 +233,7 @@ class mediamosa_profile {
     exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_lpeg_test', $exec_output);
     $lua_lpeg_found = !empty($exec_output) && reset($exec_output) == 'lpeg works';
     if (!$lua_lpeg_found) {
-      $text = array(st('Install LHA 5.1 Lpeg extension.'));
+      $text = array(st('Install LUA 5.1 Lpeg extension.'));
       if ($lua_installed) {
         $text[] = st("LUA was detected, but was not able to execute our test script. Please check if execute flags are our test scripts located at location '!scripts'", array('!scripts' => DRUPAL_ROOT . '/profiles/mediamosa_profile/lua/'));
       }
