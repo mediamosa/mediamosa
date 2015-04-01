@@ -33,7 +33,13 @@
 }
 
 #views-ui-edit-form .tabs {
-  position: static;
+  float: left;
+  background-color: transparent;
+}
+
+#views-ui-edit-form .tabs li {
+  display: block;
+  float: left;
 }
 
 #views-ui-edit-form .pager {

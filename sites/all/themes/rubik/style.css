@@ -186,7 +186,7 @@ table th {
  * Tabs ===============================================================
  */
 .tabs {
-  position:absolute;
+  float:right;
   right:0px;
   }
 
@@ -309,6 +309,21 @@ ul.secondary-tabs li a {
     -webkit-border-radius:3px 3px 0px 0px;
     }
 
+ul.secondary.tabs {
+    position: static;
+    float: right;
+    font-size: 0.923em;
+    padding: 0 3px 5px;
+    line-height: 1.385em;
+    overflow: hidden;
+    background-color: #fff;
+    }
+
+  ul.secondary.tabs li {
+    margin: 0 5px;
+    float: none;
+    display: inline;
+    }
 /**
  * Content ============================================================
  */
@@ -404,4 +419,59 @@ div.node .column-side .column-wrapper {
 .rules-elements-table ul.rules-operations a {
   text-shadow: none;
   color: #666;
+}
+/* Fix the position of Rules table drag toggle. It uses "position: absolute", so
+it is necessary to set "position: relative" to the parent, so that the button
+stays in the same frame. */
+#rules-form-wrapper {
+  position: relative;
+}
+/* Fix the padding of Rules table drag toggle. Out of the box it is optimized
+for display in table headers, while in Rules it is displayed outside of the
+tables, in the same line as table heading. */
+#rules-form-wrapper .rules-elements-table .tabledrag-toggle-weight-wrapper {
+  padding-top: 0;
+  padding-right: 0;
+}
+/* Views exposed filters forms. */
+div.views-exposed-form {
+  margin-bottom: 20px;
+}
+div.views-exposed-form div.form-item {
+  border: 0;
+  padding: 0;
+}
+div.views-exposed-form div.views-submit-button {
+  margin-right: 1em;
+}
+div.views-exposed-form input.form-text,
+div.views-exposed-form select.form-select,
+div.views-exposed-form input.form-autocomplete {
+  height: 28px;
+}
+/* Module filter "clear" link. */
+.module-filter-clear a {
+  margin: 3px 0 0 -35px;
+}
+
+/* Fix Workbench Moderation links. */
+.view-workbench-moderation tbody .views-field-moderation-actions li {
+  float: none;
+  margin-bottom: 5px;
+  margin-right: 3px;
+  overflow: auto;
+}
+.view-workbench-moderation tbody .views-field-moderation-actions li a {
+  background-color: #7bc;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  color: #fff;
+  display: block;
+  padding: 0 7px;
+  text-shadow: #38a 0px 1px 0px;
+}
+.view-workbench-moderation tbody .views-field-moderation-actions li a:hover {
+  background-color: #52a8be;
+  color: #fff;
 }

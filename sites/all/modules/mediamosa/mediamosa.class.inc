@@ -714,4 +714,18 @@ class mediamosa {
   public static function deny_anonymous() {
     return variable_get('mediamosa_deny_anonymous', TRUE);
   }
+
+  /**
+   * Implements rules_invoke_event().
+   */
+  public static function rules_invoke_event() {
+    if (module_exists('rules')) {
+
+      // See https://www.drupal.org/node/2324587.
+      rules_event_invocation_enabled(TRUE);
+
+      $args = func_get_args();
+      call_user_func_array('rules_invoke_event', $args);
+    }
+  }
 }

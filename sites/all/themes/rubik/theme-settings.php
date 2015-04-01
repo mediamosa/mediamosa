@@ -17,11 +17,23 @@ function rubik_form_system_theme_settings_alter(&$form, $form_state, $form_id = 
     '#type' => 'fieldset',
     '#title' => t('Rubik'),
   );
+  $form['rubik']['rubik_show_branding'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show branding'),
+    '#description' => t('Display the "branding" line at the top of the page with breadcrumbs and secondary menu.'),
+    '#default_value' => theme_get_setting('rubik_show_branding', 'rubik'),
+  );
   $form['rubik']['rubik_inline_field_descriptions'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display form field descriptions inline.'),
     '#description' => t("By default, each field's description is displayed in a pop-up, which is only visible when hovering over that field. Select this option to make all field descriptions visible at all times."),
     '#default_value' => theme_get_setting('rubik_inline_field_descriptions', 'rubik'),
+  );
+  $form['rubik']['rubik_disable_sticky_sidebar'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable sticky sidebar'),
+    '#description' => t("By default, the sidebar will fix itself when scrolling down a form. If you have a lot of fields in the sidebar, consider disabling the sticky sidebar to view them all."),
+    '#default_value' => theme_get_setting('rubik_disable_sticky_sidebar', 'rubik'),
   );
   $form['rubik']['rubik_disable_sidebar_in_form'] = array(
     '#type' => 'checkbox',

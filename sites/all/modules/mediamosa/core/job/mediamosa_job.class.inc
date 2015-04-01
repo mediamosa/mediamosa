@@ -1145,15 +1145,11 @@ class mediamosa_job {
       // Generate event upload failed.
       switch ($status) {
         default:
-          if (module_exists('rules')) {
-            rules_invoke_event('mediamosa_event_upload_failed', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
-          }
+          mediamosa::rules_invoke_event('mediamosa_event_upload_failed', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
           break;
 
         case mediamosa_job_db::JOB_STATUS_FINISHED:
-          if (module_exists('rules')) {
-            rules_invoke_event('mediamosa_event_upload_finished', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
-          }
+          mediamosa::rules_invoke_event('mediamosa_event_upload_finished', $job_ext[mediamosa_job_db::MEDIAFILE_ID]);
 
           // Start harvesting metadata by tools.
           self::start_harvesting_metadata_by_tool($job_ext);
