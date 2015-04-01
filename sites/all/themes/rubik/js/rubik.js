@@ -3,18 +3,18 @@
  */
 (function($) {
 Drupal.behaviors.rubik = {};
-Drupal.behaviors.rubik.attach = function(context) {
+Drupal.behaviors.rubik.attach = function(context, settings) {
   // If there are both main column and side column buttons, only show the main
   // column buttons if the user scrolls past the ones to the side.
-  $('div.form:has(div.column-main div.form-actions):not(.rubik-processed)').each(function() {
+  $('div.form:has(div.column-main div.form-actions):not(.rubik-processed)', context).each(function() {
     var form = $(this);
     var offset = $('div.column-side div.form-actions', form).height() + $('div.column-side div.form-actions', form).offset().top;
     $(window).scroll(function () {
       if ($(this).scrollTop() > offset) {
-        $('div.column-main div.form-actions', form).show();
+        $('div.column-main .column-wrapper > div.form-actions#edit-actions', form).show();
       }
       else {
-        $('div.column-main div.form-actions', form).hide();
+        $('div.column-main .column-wrapper > div.form-actions#edit-actions', form).hide();
       }
     });
     form.addClass('rubik-processed');
@@ -51,7 +51,9 @@ Drupal.behaviors.rubik.attach = function(context) {
   });
 
   // Sticky sidebar
-  if ($('#content .column-side .column-wrapper').length !== 0) {
+  // Disable this functionality if the user chooses.
+  var disableSticky = settings.rubik.disable_sticky;
+  if ($('#content .column-side .column-wrapper').length !== 0 && !disableSticky) {
     var rubikColumn = $('#content .column-side .column-wrapper', context);
     if(rubikColumn && rubikColumn.offset()){
         var rubikStickySidebar = rubikColumn.offset().top;
@@ -71,7 +73,7 @@ Drupal.behaviors.rubik.attach = function(context) {
     }
 
     // Move fields to sidebar.
-    $(".rubik_sidebar_field").each(function() {
+    $('.rubik_sidebar_field', context).once('rubik', function() {
       $('.column-side .column-wrapper').append($(this));
     });
   }

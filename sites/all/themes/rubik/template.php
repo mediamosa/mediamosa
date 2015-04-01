@@ -6,6 +6,17 @@ function rubik_preprocess_html(&$vars) {
   if (theme_get_setting('rubik_inline_field_descriptions')) {
     $vars['classes_array'][] = 'rubik-inline-field-descriptions';
   }
+
+   // add in a specific stylesheet for overrides in IE7. (BLAH)
+  drupal_add_css(drupal_get_path('theme', 'rubik') . '/ie.css', array(
+    'browsers' => array(
+      '!IE' => FALSE,
+    ),
+    'weight' => 500,
+    'group' => 5000,
+    'every_page' => TRUE,
+  ));
+
 }
 
 /**
@@ -129,6 +140,11 @@ function rubik_preprocess_page(&$vars) {
 
   // Overlay is enabled.
   $vars['overlay'] = (module_exists('overlay') && overlay_get_mode() === 'child');
+
+  // Disable sticky in the sidebar. Set option in JS
+  $disable_sticky = theme_get_setting('rubik_disable_sticky_sidebar');
+  drupal_add_js(array('rubik' => array('disable_sticky' => $disable_sticky)), array('type' => 'setting'));
+
 }
 
 /**
@@ -358,7 +374,7 @@ function rubik_breadcrumb($vars) {
     $item = menu_get_item();
     $end = end($vars['breadcrumb']);
     if ($end && strip_tags($end) !== $item['title']) {
-      $vars['breadcrumb'][] = check_plain($item['title']);
+      $vars['breadcrumb'][] = (isset($item['localized_options']['html']) && $item['localized_options']['html']) ? $item['title'] : check_plain($item['title']);
     }
   }
 
@@ -542,7 +558,7 @@ function rubik_render_clone($elements) {
   return drupal_render($elements);
 }
 
-function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) { 
+function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   $rubik_sidebar_field_ui = theme_get_setting('rubik_sidebar_field_ui', 'rubik');
   $rubik_disable_sidebar_in_form = theme_get_setting('rubik_disable_sidebar_in_form', 'rubik');
     if ($rubik_sidebar_field_ui == 1 && $rubik_disable_sidebar_in_form == 0) {

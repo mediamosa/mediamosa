@@ -412,9 +412,7 @@ class mediamosa_job_server {
       $fields = mediamosa_db::db_update_enrich($fields);
 
       // Generate event analyse finished.
-      if (module_exists('rules')) {
-        rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id_src);
-      }
+      mediamosa::rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id_src);
 
       // And update row.
       mediamosa_db::db_update(mediamosa_job_server_analyse_db::TABLE_NAME)
@@ -472,9 +470,7 @@ class mediamosa_job_server {
     );
 
     // Generate event analyse finished.
-    if (module_exists('rules')) {
-      rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id);
-    }
+    mediamosa::rules_invoke_event('mediamosa_event_analyse_finished', $mediafile_id);
 
     return $analyse_result;
   }
@@ -537,9 +533,7 @@ class mediamosa_job_server {
           self::set_job_status($job_id, $status, $job_status['Progress']);
 
           // Generate event transcode finished.
-          if (module_exists('rules')) {
-            rules_invoke_event('mediamosa_event_transcode_finished', $mediafile_id_src);
-          }
+          mediamosa::rules_invoke_event('mediamosa_event_transcode_finished', $mediafile_id_src);
         }
         elseif ($job_status['Status'] == 'error' && (empty($job_status['Errors']) || $job_status['Errors'] != 'none')) {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
@@ -552,9 +546,7 @@ class mediamosa_job_server {
           self::set_job_status($job_id, $status, $job_status['Progress'],  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
 
           // Generate event transcode failed.
-          if (module_exists('rules')) {
-            rules_invoke_event('mediamosa_event_transcode_failed', $mediafile_id_src);
-          }
+          mediamosa::rules_invoke_event('mediamosa_event_transcode_failed', $mediafile_id_src);
         }
         else {
           // Set job status.

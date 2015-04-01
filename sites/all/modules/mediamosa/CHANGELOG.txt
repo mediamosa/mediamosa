@@ -213,7 +213,8 @@ MediaMosa 3.6.0-dev (build 2152)
 - Re-wrote asset garbage collection and cleanup (Refs: #14063).
 - Added feature support for MediaMosa viewers.
 - Added feature support for MediaMosa tool parameters.
-
+- Updated Drupal to 7.35, and contrib modules: rules, Rubik, module_filter, 
+  entity, adv_help.
 
 
 MediaMosa 3.5.x (build 2072)
