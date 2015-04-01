@@ -279,3 +279,10 @@ th.mediamosa-app-storage-location {
 #mediamosa-viewer-node-form #edit-object-code {
   height: 300px;
 }
+
+/*
+ * Client apps have a slider for quota.
+*/
+.page-admin-mediamosa-config-app .ui-progressbar-value {
+  height: 115%;
+}

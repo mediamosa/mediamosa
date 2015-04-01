@@ -160,10 +160,12 @@ class mediamosa_webservice_app {
    */
   public static function diskspace_used_get_all_status($app_ids = array()) {
 
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm');
-    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'm', 'm.mediafile_id = mm.mediafile_id');
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'm');
+    $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm', 'm.mediafile_id = mm.mediafile_id');
+    $query->join(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'mmp', 'mm.prop_id = mmp.prop_id');
     $query->fields('mm', array('val_int'));
     $query->fields('m', array('app_id'));
+    $query->condition('mmp.prop_name', 'filesize');
     $query->groupBy('app_id');
     $query->addExpression('sum(val_int)', 'total');
 
@@ -180,7 +182,6 @@ class mediamosa_webservice_app {
     }
     return $a_quotas;
   }
-
 
   /**
    * Remove all handles from this app_id. Provide 0 for all globals.
