@@ -82,6 +82,11 @@ class MediaMosaAssetPublishTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id_2);
     $this->assert($asset['asset']['published'] === 'FALSE', 'Is not published');
 
+    // Perform /assets [GET] tests.
+    $assets = $this->getAssets(array($asset_id_1, $asset_id_2, $asset_id_3));
+    $this->assert($assets['header']['item_count_total'] == '3', '/assets must return assets with and without published status.');
+
+    // Perform cql tests.
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE));
     $this->cql_do_search_test_assets_1('', array($asset_id_2 => TRUE, $asset_id_3 => TRUE), array('published' => 'FALSE'));
 

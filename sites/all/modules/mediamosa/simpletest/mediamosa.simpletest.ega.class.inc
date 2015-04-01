@@ -1387,6 +1387,44 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Get assets.
+   *
+   * Based on the GET rest call /assets (GET).
+   */
+  protected function getAssets($asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+      'asset_id' => (array) $asset_ids,
+    );
+
+    // Do Post call.
+    $response = $this->restCallGet('assets', $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Get assets, got result @result (@result_description)",
+        array(
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      return FALSE;
+    }
+
+    $assets = mediamosa_lib::responsexml2array($response['xml']);
+    return $assets;
+  }
+
+
+  /**
    * OpenAPI search.
    * Based on the GET call /openapi/search (GET)
    */

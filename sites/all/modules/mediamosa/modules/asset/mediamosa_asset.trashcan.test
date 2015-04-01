@@ -79,6 +79,10 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
 
+    // Perform /assets [GET] tests.
+    $assets = $this->getAssets(array($asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5));
+    $this->assert($assets['header']['item_count_total'] == '5', '/assets must return assets without deleted items.');
+
     // Delete number 3.
     try {
       mediamosa_asset::must_exists($asset_id_3);
@@ -112,6 +116,10 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
 
+    // Perform /assets [GET] test.
+    $assets = $this->getAssets(array($asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5));
+    $this->assert($assets['header']['item_count_total'] == '4', '/assets must return assets without deleted items.');
+
     // Now delete with trashcan on.
     // Trashcan number 2.
     $this->deleteAsset($asset_id_4, array('delete' => 'cascade', 'trashcan' => 'TRUE'));
@@ -136,6 +144,20 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
 
+    // Perform /assets [GET] test.
+    $assets = $this->getAssets(
+      array(
+        $asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5,
+      )
+    );
+    $this->assert($assets['header']['item_count_total'] == '3', '/assets must return assets without deleted items.');
+    $assets = $this->getAssets(
+      array(
+        $asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5,
+      ),
+      array('trashcan' => 'ALL')
+    );
+    $this->assert($assets['header']['item_count_total'] == '4', '/assets with trashcan parameter.');
 
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
     db_update(mediamosa_app_db::TABLE_NAME)
