@@ -1114,11 +1114,11 @@ class mediamosa_asset {
         'acl_user_id' => $acl_user_id,
         'is_app_admin' => $is_app_admin,
       );
-      drupal_alter('mediamosa_asset_enrich_response', $items_pre_sort[$asset[mediamosa_asset_db::ID]], $options);
     }
 
     $items = array();
     foreach ($asset_ids as $asset_id) {
+      drupal_alter('mediamosa_asset_enrich_response', $items_pre_sort[$asset_id], $options);
       $items[] = $items_pre_sort[$asset_id];
     }
 
