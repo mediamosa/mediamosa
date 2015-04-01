@@ -546,6 +546,9 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
+  if (!empty($elements['#mediamosa_no_clone'])) {
+    return;
+  }
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
@@ -555,7 +558,7 @@ function rubik_render_clone($elements) {
   return drupal_render($elements);
 }
 
-function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) { 
+function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   $rubik_sidebar_field_ui = theme_get_setting('rubik_sidebar_field_ui', 'rubik');
   $rubik_disable_sidebar_in_form = theme_get_setting('rubik_disable_sidebar_in_form', 'rubik');
     if ($rubik_sidebar_field_ui == 1 && $rubik_disable_sidebar_in_form == 0) {
@@ -631,4 +634,3 @@ function _rubik_local_tasks(&$vars) {
     }
   }
 }
-
