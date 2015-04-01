@@ -6,6 +6,17 @@ function rubik_preprocess_html(&$vars) {
   if (theme_get_setting('rubik_inline_field_descriptions')) {
     $vars['classes_array'][] = 'rubik-inline-field-descriptions';
   }
+
+   // add in a specific stylesheet for overrides in IE7. (BLAH)
+  drupal_add_css(drupal_get_path('theme', 'rubik') . '/ie.css', array(
+    'browsers' => array(
+      '!IE' => FALSE,
+    ),
+    'weight' => 500,
+    'group' => 5000,
+    'every_page' => TRUE,
+  ));
+
 }
 
 /**
@@ -129,6 +140,11 @@ function rubik_preprocess_page(&$vars) {
 
   // Overlay is enabled.
   $vars['overlay'] = (module_exists('overlay') && overlay_get_mode() === 'child');
+
+  // Disable sticky in the sidebar. Set option in JS
+  $disable_sticky = theme_get_setting('rubik_disable_sticky_sidebar');
+  drupal_add_js(array('rubik' => array('disable_sticky' => $disable_sticky)), array('type' => 'setting'));
+
 }
 
 /**
@@ -358,7 +374,7 @@ function rubik_breadcrumb($vars) {
     $item = menu_get_item();
     $end = end($vars['breadcrumb']);
     if ($end && strip_tags($end) !== $item['title']) {
-      $vars['breadcrumb'][] = check_plain($item['title']);
+      $vars['breadcrumb'][] = (isset($item['localized_options']['html']) && $item['localized_options']['html']) ? $item['title'] : check_plain($item['title']);
     }
   }
 
@@ -530,9 +546,6 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
-  if (!empty($elements['#mediamosa_no_clone'])) {
-    return;
-  }
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
@@ -618,3 +631,4 @@ function _rubik_local_tasks(&$vars) {
     }
   }
 }
+

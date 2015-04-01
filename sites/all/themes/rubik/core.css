@@ -410,7 +410,7 @@ input.teaser-button,
 input.form-submit, a.button,
 .form-actions #edit-cancel {
   cursor:pointer;
-  padding:2px 10px;
+  padding:3px 10px;
   color:#333;
   font-size:13px;
   text-align:center;
@@ -484,6 +484,10 @@ input.form-submit, a.button,
   .media-widget .preview {
     min-height:35px;
   }
+
+select.form-select {
+  height: 28px;
+}
 
 input.form-autocomplete,
 input.form-text,
@@ -634,16 +638,23 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
   margin-top:-10px;
   border-top:none;
   }
-.text-format-wrapper .filter-wrapper{
+.text-format-wrapper .filter-wrapper {
   border-top:1px solid #CCC;
   margin-top: 0;
-  }
+}
+.text-format-wrapper .filter-wrapper .form-type-select .filter-list {
+  max-height: 22px;
+}
+.text-format-wrapper .filter-wrapper .form-type-select,
+.text-format-wrapper .filter-wrapper .filter-guidelines {
+  margin: 0;
+  overflow: auto;
+}
 
 .filter-wrapper .fieldset-content,
 .fieldset .fieldset.filter-wrapper .fieldset-content  {
   background:#f8f8f8;
   border-top:0px;
-  height:20px;
   padding:5px 9px 4px;
   }
 
@@ -661,7 +672,8 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 .filter-wrapper .filter-help {
   float:right;
   font-size:11px;
-  padding:0px;
+  margin:0;
+  padding:0;
   }
 
 .form-type-date-popup label {
@@ -712,7 +724,7 @@ body.page-admin div.vertical-tabs .vertical-tabs-panes .vertical-tabs-pane field
 
   .form-wrapper.form-actions input.form-submit, .form-wrapper.form-actions a.button { margin-right:5px; }
 
-  .form-layout-default .column-main .form-actions { display:none; }
+  .form-layout-default .column-main .column-wrapper > .form-actions { display:none; }
   .form-layout-default .column-side .form-actions { margin:0px 0px 10px; }
   .form-layout-default .column-side .form-actions input.form-submit,
   .form-layout-deafult .column-side .form-actions a.button {
@@ -952,6 +964,7 @@ body.tao #admin-toolbar a.menu-hover span.menu-description span.icon {
   border: 1px solid #CCCCCC;
   margin: 1em 0;
   position: relative;
+  padding-top: 0;
 }
 
 /**
@@ -1123,6 +1136,50 @@ div.ctools-modal-content .color-form .form-item input {
  * Adminimal Administration Menu ===============================================
  */
 body.adminimal-menu { margin-top: 29px!important; }
+
+/**
+ * Breakpoints ===============================================
+ */
+
+#breakpoints-admin-breakpoints #edit-buttons input,
+#breakpoints-admin-breakpoints  #edit-buttons a {
+  margin-bottom: 1em;
+  margin-right: 1em;
+}
+
+.breakpoints-group-operations-link {
+  display: inline-block;
+  cursor:pointer;
+  padding:3px 10px;
+  color:#333;
+  font-size:13px;
+  text-align:center;
+  font-weight:normal;
+  border-width:1px;
+  border-style:solid;
+  border-color:#ddd #ddd #ccc;
+  background:#fff url(images/buttons.png) -1px 50% no-repeat;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: #ddd 0 1px 1px;
+  -moz-box-shadow: #ddd 0 1px 1px;
+  box-shadow: #ddd 0 1px 1px;
+}
+
+.breakpoints-group-operations-link:hover {
+  border-color:#ace;
+  -webkit-box-shadow:#ace 0 0 5px;
+  -moz-box-shadow:#ace 0 0 5px;
+  box-shadow:#ace 0 0 5px;
+}
+
+.breakpoints-group-operations-link:active {
+  border-color:#666 #666 #555;
+  background:#666 url(images/buttons.png) -401px 50% no-repeat;
+  color:#222;
+  text-shadow:#999 0 1px 0;
+}
 
 /**
  * Media ====================================================
