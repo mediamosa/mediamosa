@@ -1349,6 +1349,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
   const COUNT_VIEW = 'count_view';
+  const TRASHCAN = 'trashcan';
 
   // Search engine specific.
   const RELATED = 'related';
@@ -1466,6 +1467,23 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       ),
     );
 
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    $trashcan_default = mediamosa_asset::METADATA_TRASHCAN_FALSE;
+    if ($app_id) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        $trashcan_default = $app[mediamosa_app_db::TRASHCAN_ASSET_SEARCH_DEFAULT];
+      }
+    }
+    $var_setup[self::VARS][self::TRASHCAN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+      self::VAR_DESCRIPTION => "Include or skip assets in the trashcan. Assets that where put in the trashcan will not show up by default in the asset search. The value 'FALSE' will hide all assets that where stored in the trashcan. Supply 'TRUE' to search the trashcan, or supply 'ALL' to search on all assets, regardless of its in the trashcan. If you u want to use CQL, make sure you supply 'ALL' as value for 'trashcan' on the REST call besides CQL. Once you supply 'ALL', use in CQL asset.trashcan == \"^TRUE^\", asset.trashcan == \"^FALSE^\" or for both asset.trashcan = \"^TRUE^ ^FALSE^\".",
+      self::VAR_DEFAULT_VALUE => $trashcan_default,
+      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
+    );
+
     // Include default.
     return self::get_var_setup_default($var_setup);
   }
@@ -1516,6 +1534,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     // supply the granted flag.
     $granted = TRUE;
 
+    // Don't use hierarchy search, just return the asset id's as requested.
+    $GLOBALS['mediamosa_params']['asset_hierarchy_include_combined'] = 'IGNORE';
+
     // Now search.
     $asset_search = mediamosa_search::asset(array(
       'app_ids' => $app_ids,
@@ -1530,6 +1551,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       'coll_id' => array(),
 
       'fav_user_id' => NULL,
+
+      'published' => 'ALL',
+      'trashcan' => $this->get_param_value(self::TRASHCAN),
 
       'granted' => $granted,
       'is_public_list' => FALSE,
