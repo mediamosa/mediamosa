@@ -31,7 +31,7 @@ function mediamosa_viewer_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implements hook_features_export_render()
+ * Implements hook_features_export_render().
  */
 function mediamosa_viewer_features_export_render($module, $data) {
   $code = array();
@@ -40,7 +40,7 @@ function mediamosa_viewer_features_export_render($module, $data) {
   foreach ($data as $machine_name) {
     $row = mediamosa_viewer::get_by_machinename($machine_name);
     if ($row) {
-      unset($row['nid'], $row['vid']);
+      unset($row['nid'], $row['vid'], $row['changed'], $row['created']);
       $export = features_var_export($row, '  ');
       $code[] = "  // Exported mediamosa viewer: {$row['server_name']}.";
       $code[] = "  \$" . FEATURE_MEDIAMOSA_VIEWER . "s['{$machine_name}'] = {$export};";
@@ -56,9 +56,6 @@ function mediamosa_viewer_features_export_render($module, $data) {
 
 /**
  * Implements hook_features_revert().
- *
- * @param string $module_name
- *   The name of the feature module whose components should be reverted.
  */
 function mediamosa_viewer_features_revert($module_name) {
   $mediamosa_viewers = features_get_default(FEATURE_MEDIAMOSA_VIEWER, $module_name);
@@ -69,7 +66,7 @@ function mediamosa_viewer_features_revert($module_name) {
     if (empty($mediamosa_viewer_loaded)) {
       // Create new server.
       $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_VIEWER, $mediamosa_viewer_loaded[mediamosa_viewer_db::TOOL]);
-   }
+    }
     else {
       $node = node_load($mediamosa_viewer_loaded['nid']);
     }

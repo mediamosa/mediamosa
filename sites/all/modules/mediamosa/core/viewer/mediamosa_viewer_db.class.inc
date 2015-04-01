@@ -19,6 +19,7 @@ class mediamosa_viewer_db {
   const DESCRIPTION = 'description';
   const DESCRIPTION_LENGTH = 255;
   const OBJECT_CODE = 'object_code';
+  const TOOL = 'tool';
 
   /**
    * Returns all fields.

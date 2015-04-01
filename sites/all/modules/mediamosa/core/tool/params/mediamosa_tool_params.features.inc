@@ -31,7 +31,7 @@ function mediamosa_tool_params_features_export($data, &$export, $module_name = '
 }
 
 /**
- * Implements hook_features_export_render()
+ * Implements hook_features_export_render().
  */
 function mediamosa_tool_params_features_export_render($module, $data) {
   $code = array();
@@ -41,7 +41,7 @@ function mediamosa_tool_params_features_export_render($module, $data) {
     $params = mediamosa_tool_params::get_by_tool($tool);
     foreach ($params as $row) {
       if ($row) {
-        unset($row['nid'], $row['vid'], $row['tool_params_id'], $row['changed']);
+        unset($row['nid'], $row['vid'], $row['tool_params_id'], $row['changed'], $row['created']);
         $export = features_var_export($row, '  ');
         $code[] = "  // Exported mediamosa tool {$row[mediamosa_tool_params_db::TOOL]} params: {$row[mediamosa_tool_params_db::NICE_PARAMETER]}.";
         $code[] = '  $'  . FEATURE_MEDIAMOSA_TOOL_PARAMS .  "['{$row[mediamosa_tool_params_db::MACHINE_NAME]}'] = {$export};";
@@ -58,9 +58,6 @@ function mediamosa_tool_params_features_export_render($module, $data) {
 
 /**
  * Implements hook_features_revert().
- *
- * @param string $module_name
- *   The name of the feature module whose components should be reverted.
  */
 function mediamosa_tool_params_features_revert($module_name) {
   $mediamosa_tool_paramss = features_get_default(FEATURE_MEDIAMOSA_TOOL_PARAMS, $module_name);
@@ -71,7 +68,7 @@ function mediamosa_tool_params_features_revert($module_name) {
     if (empty($mediamosa_tool_params_loaded)) {
       // Create new server.
       $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $mediamosa_tool_params_loaded[mediamosa_tool_params_db::TOOL]);
-   }
+    }
     else {
       $node = node_load($mediamosa_tool_params_loaded['nid']);
     }
