@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2154)
+MediaMosa 3.6.0-dev (build 2155)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -216,6 +216,15 @@ MediaMosa 3.6.0-dev (build 2154)
 - Added schema detection and check on status page for Solr 4.2 and higher.
 - Updated Drupal to 7.35, and contrib modules: rules, Rubik, module_filter,
   entity, adv_help.
+- Added playrestriction data in admin view asset.
+- Fixed quota on client app page.
+- Fixed correct invocation of hook_enrich_response().
+- Modified /assets to maintain asset ordering.
+- Fixed 'rest call developer': show alter params.
+- Removed asf test in media ticket unittest.
+- Small fixes in features tool_params and viewers.
+- Fixed Rubik again (asset browser).
+- Fix for Drupal rules bootstrap issue.
 
 
 MediaMosa 3.5.x (build 2072)
