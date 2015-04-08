@@ -66,12 +66,13 @@ local ln_duration = space * "Duration" * COLON *
 -- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
 -- Stream #0.1: Audio: pcm_u8, 11024 Hz, 1 channels, u8, 88 kb/s
 -- Stream #0.1: Audio: pcm_u8 ([1][0][0][0] / 0x0001), 11024 Hz, 1 channels, u8, 88 kb/s
+-- Stream #0:2(und): Audio: ac3 (ac-3 / 0x332D6361), 48000 Hz, 5.1(side), fltp, 320 kb/s (default)
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
 local ln_audio = space * "Stream #" * steam_number * language^-1 * COLON *
   "Audio" * COLON *
   codec * COMMA *
   (number * "Hz" * COMMA)^-1 *
-  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1 * ffjunk)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
   (COMMA * number * "kb/s")^-1
 
