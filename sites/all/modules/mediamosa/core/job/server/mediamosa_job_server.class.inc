@@ -920,6 +920,7 @@ class mediamosa_job_server {
   public static function get_status_contents($job_id, $orig = FALSE) {
     // Get the statusfile filename.
     $statusfile = mediamosa_storage::get_realpath_status_file($job_id);
+    mediamosa_io::clearstatcache($statusfile);
     if (!mediamosa_io::file_exists($statusfile)) {
       self::log('Unable to load status contents; file @file does not exists.', array('@file' => $statusfile), WATCHDOG_CRITICAL);
       return array();
@@ -934,11 +935,16 @@ class mediamosa_job_server {
     );
 
     // FIXME: move to mediamosa_io
-    $handle = fopen($statusfile, 'r');
-    while (!feof($handle)) {
-      $lines[] = fgets($handle);
+    $handle = @fopen($statusfile, 'r');
+    if (is_resource($handle)) {
+      while (($line = fgets($handle)) !== false) {
+        $lines[] = $line;
+      }
+      fclose($handle);
     }
-    fclose($handle);
+    else {
+      self::log_debug('Unable to open status file using fopen; @file', array('@file' => $statusfile));
+    }
 
     // Return the original?
     if ($orig) {
