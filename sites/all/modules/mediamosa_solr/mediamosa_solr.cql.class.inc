@@ -570,7 +570,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       // Special cases.
       case 'IS NULL':
-        $sub_parts = array(strtr('-{column}:*', array('{column}' => $str_table_column)));
+        $sub_parts = array(strtr('(+*:* -{column}:*)', array('{column}' => $str_table_column)));
         break;
 
       case 'IS NOT NULL':
@@ -587,7 +587,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     // Into one.
     $parts[] = (count($sub_parts) > 1 ? '(' : '') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) > 1 ? ')' : '');
 
-    return ($has_not ? '-' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean);
+    return ($has_not ? '(+*:* -' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean) . ($has_not ? ')' : '');
   }
 
   /**
