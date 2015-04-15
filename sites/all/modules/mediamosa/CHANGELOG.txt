@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2155)
+MediaMosa 3.6.0-dev (build 2156)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -225,6 +225,10 @@ MediaMosa 3.6.0-dev (build 2155)
 - Small fixes in features tool_params and viewers.
 - Fixed Rubik again (asset browser).
 - Fix for Drupal rules bootstrap issue.
+- Added Solr v5.x schema and solrconfig files, experimental bugged version.
+- Fixed NOT and negative searches in Solr when combining with OR and AND caused
+  wrong results in some combinations.
+- Fixed failure to open LUA status file caused by stat cache.
 
 
 MediaMosa 3.5.x (build 2072)
