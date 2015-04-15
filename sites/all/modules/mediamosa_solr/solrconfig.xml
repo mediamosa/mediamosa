@@ -19,6 +19,8 @@
 <!--
      For more details about configurations options that may appear in
      this file, see http://wiki.apache.org/solr/SolrConfigXml.
+
+     This solr config is for Solr version 4.x series.
 -->
 <config>
   <!-- In all configuration below, a prefix of "solr." for class names

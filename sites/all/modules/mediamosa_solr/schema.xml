@@ -3,16 +3,18 @@
 <!-- $Id: $ -->
 
 <!--
- This is the MediaMosa Solr schema file. This file should be named "schema.xml"
- and should be in the conf directory under the solr home
- (i.e. ./solr/conf/schema.xml by default)
- or located where the classloader for the Solr webapp can find it.
+  This is the MediaMosa Solr schema file. This file should be named "schema.xml"
+  and should be in the conf directory under the solr home
+  (i.e. ./solr/conf/schema.xml by default)
+  or located where the classloader for the Solr webapp can find it.
 
- For more information, on how to customize this file, please see
- http://wiki.apache.org/solr/SchemaXml
+  This schema is for Solr version 4.x series.
+
+  For more information, on how to customize this file, please see
+  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-3.6.0-build-2141" version="1.5">
+<schema name="mediamosa-3.6.0-build-2141-solr4" version="1.5">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
