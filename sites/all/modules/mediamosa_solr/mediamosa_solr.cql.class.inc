@@ -205,7 +205,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       case mediamosa_sdk::TYPE_DATETIME:
         $is_case_sensitive = TRUE;
 
-        if ($str_relation !== 'within') {
+        if ($str_relation !== 'within' && mediamosa_unicode::strtolower($str_search_term) !== 'null') {
           // Convert to DB Date.
           $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
         }
