@@ -209,7 +209,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           // Convert to DB Date.
           $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
         }
-        break;
+        // No break here, let datetime use IS NULL and IS NOT NULL as well.
 
       case mediamosa_sdk::TYPE_DOMAIN:
       case mediamosa_sdk::TYPE_REALM:
