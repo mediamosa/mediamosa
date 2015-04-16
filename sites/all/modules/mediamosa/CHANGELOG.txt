@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2156)
+MediaMosa 3.6.0-dev (build 2157)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -229,6 +229,9 @@ MediaMosa 3.6.0-dev (build 2156)
 - Fixed NOT and negative searches in Solr when combining with OR and AND caused
   wrong results in some combinations.
 - Fixed failure to open LUA status file caused by stat cache.
+- Fixed IS NULL CQL search on metadata dates.
+- Fixed typo in ffmpeg tool installer, causing libfdk_aac not being handled
+  correctly.
 
 
 MediaMosa 3.5.x (build 2072)
