@@ -242,7 +242,6 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
 
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $delete = $this->get_param_value(self::DELETE);
     $user_id = $this->get_param_value(self::USER_ID);
     $new_original = $this->get_param_value(self::NEW_ORIGINAL);
@@ -350,6 +349,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const FILENAME = 'filename';
   const TAG = 'tag';
+  const IS_STILL = 'is_still';
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
@@ -412,6 +412,11 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'User specified tag.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
+        self::IS_STILL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'The mediafile is used as a still image.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
       )
     );
 
@@ -443,11 +448,6 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       $this->unset_param(self::SANNAS_MOUNT_POINT);
     }
 
-    // Set mediafile ID to something if not present.
-    if ($this->empty_param(self::MEDIAFILE_ID)) {
-      $this->set_param_value(self::MEDIAFILE_ID, mediamosa_db::uuid($app_id));
-    }
-
     // Must exists.
     $asset = mediamosa_asset::must_exists($asset_id);
 
@@ -464,12 +464,10 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       self::URI => mediamosa_asset_mediafile_db::URI,
       self::MEDIAFILE_ID_SOURCE => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
       self::TAG => mediamosa_asset_mediafile_db::TAG,
+      self::IS_STILL => mediamosa_asset_mediafile_db::IS_STILL,
     );
 
-    // Fields to insert.
     $fields = array();
-
-    // Now create the data to insert.
     foreach ($params as $param => $field_name) {
       if ($this->isset_param($param)) {
         $value = $this->get_param_value($param, TRUE);
@@ -478,16 +476,10 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       }
     }
 
-    // Get mediafile ID.
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
-
-    // Insert the mediafile.
+    $mediafile_id = $this->empty_param(self::MEDIAFILE_ID) ? mediamosa_db::uuid($app_id) : $this->get_param_value(self::MEDIAFILE_ID);
     $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
 
-    // Ok add to output.
     $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
-
-    // Done.
   }
 }
 

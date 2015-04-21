@@ -1,0 +1,68 @@
+<?php
+/**
+ * @file
+ * MediaMosa still uri unittest.
+ */
+
+class MediaMosaAssetMediafileStillCreateUriTestCase extends MediaMosaTestCaseEgaJob {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Still - URI external hosted tests',
+      'description' => 'Test using stills on external hosts.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+    );
+  }
+
+  /**
+   * The still upload test.
+   */
+  function testStillCreateUri() {
+    $upload = $this->uploadTestFile(array('downloadable' => TRUE));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create transcode job.
+    $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get all stills, expecting none.
+    $stills = $this->getAssetStill($asset_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 1a');
+
+    // Get all stills, expecting none.
+    $stills = $this->getMediafileStill($mediafile_id, array(), array(mediamosa_error::ERRORCODE_STILL_NOT_FOUND));
+    $this->var_export($stills, 'stills 1b');
+
+    $uri = file_create_url($this->getTestImage_NotBlackJpg());
+    $this->var_export($uri);
+
+    // Create an external still.
+    $mediafile_id = $this->createAssetMediafile($asset_id, array(mediamosa_rest_call_create_mediafile::IS_STILL => 'TRUE', 'uri' => $uri));
+
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    $this->var_export($mediafile);
+
+    // View still.
+    $parameters = array(
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $response_uri = $this->do_media_view_uri($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->var_export($response_uri);
+    $response = mediamosa_lib::simplexml2array($response_uri->items->item[0]);
+    $this->assert($response['output'] === $uri, 'Still URL on asset found and checked.');
+
+    // View still .
+    $response_still = $this->do_media_view_still($asset_id);
+    $this->var_export($response_still);
+    $response_still = mediamosa_lib::simplexml2array($response_still->items->item[0]);
+    $this->assert($response_still['output'] === $uri, 'Still URL on asset found and checked.');
+
+    $asset = $this->getAsset($asset_id, array('show_stills' => 'TRUE'));
+    $this->var_export($asset);
+    $this->assert($asset['vpx_still_url'] === $uri, 'Still URL on asset found and checked.');
+  }
+}

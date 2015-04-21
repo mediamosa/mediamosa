@@ -529,7 +529,8 @@ class mediamosa_asset {
     )->fetchAssoc();
 
     if ($mediafile) {
-      $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
+      $uri = trim($mediafile[mediamosa_asset_mediafile_db::URI]);
+      $is_external = $uri !== NULL && $uri !== '';
 
       // Set is_external.
       mediamosa_db::db_query(
@@ -537,7 +538,7 @@ class mediamosa_asset {
         array(
           '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
           '#is_external' => mediamosa_asset_db::IS_EXTERNAL,
-          ':is_external' => trim($uri) != '' ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE,
+          ':is_external' => $is_external ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE,
           '#asset_id' => mediamosa_asset_db::ID,
           ':asset_id' => $asset_id,
         )

@@ -260,7 +260,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
     }
 
     // All other response have mediafile_id as required.
-    if ($response_type != mediamosa_media::RESPONSE_STILL) {
+    if ($response_type !== mediamosa_media::RESPONSE_STILL) {
       if ($this->isset_given_param(self::PROFILE_ID)) {
         $mediafile_id = mediamosa_asset_mediafile::get_mediafile_id_by_profile($asset_id, $profile_id, $original_mediafile_id);
         if (!$mediafile_id) {
@@ -290,8 +290,10 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
       }
 
-      // Check if able to play.
-      mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
+      if (!mediamosa_asset_mediafile::is_external($mediafile)) {
+        // Check if able to play.
+        mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
+      }
 
       // Check access.
       mediamosa_acl::access_check_on_object(
@@ -343,30 +345,30 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
         // and $height.
         $filtered_stills = mediamosa_media::collect_stills($app_id, $asset_id, $mediafile_id, $still_id, $size, $width, $height, $range, $format, $tag);
 
-        // Did any still pass our filters? For output we should at least find one.
-        if (empty($filtered_stills)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
-        }
-
         // Set default still for still response. This still can also be in $filter_stills.
         if ($still_id) {
           $still = mediamosa_asset_mediafile::get($still_id);
         }
         else {
           $still = mediamosa_asset_mediafile_still::find_default($asset_id);
-
-          // No default?
-          if (empty($still)) {
-            // Has stills, grab the first.
-            $still = reset($filtered_stills);
-          }
-
-          // Change the still ID to the default.
-          $still_id = $still[mediamosa_asset_mediafile_db::ID];
         }
 
+        if (empty($still) && empty($filtered_stills)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+        }
+
+        if (empty($still)) {
+          $still = reset($filtered_stills);
+        }
+
+        if (!mediamosa_asset_mediafile::is_external($still) && empty($filtered_stills)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+        }
+
+        $still_id = $still[mediamosa_asset_mediafile_db::ID];
+
         // Make sure asset_id matches.
-        if ($still[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
+        if ($still[mediamosa_asset_mediafile_db::ASSET_ID] !== $asset_id) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
         }
 

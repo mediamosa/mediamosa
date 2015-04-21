@@ -784,7 +784,7 @@ class mediamosa_asset_mediafile {
   }
 
   /**
-   * Returns TRUE/FALSE if the mediafile is an original.
+   * Returns TRUE/FALSE if the mediafile is a original.
    *
    * @param array $mediafile
    *   The mediafile to check.
@@ -793,16 +793,33 @@ class mediamosa_asset_mediafile {
    *   Returns TRUE when original, FALSE otherwise.
    */
   public static function is_original(array $mediafile) {
-    return ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+    return ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] === mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
   }
 
   /**
-   * Returns TRUE/FALSE if the mediafile is an still.
+   * Returns TRUE/FALSE if the mediafile is a still.
    *
    * @param array $mediafile
+   *   The mediafile to check.
+   *
+   * @return bool
+   *   Returns TRUE when still, FALSE otherwise.
    */
   public static function is_still(array $mediafile) {
-    return ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+    return ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] === mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+  }
+
+  /**
+   * Returns TRUE/FALSE if the mediafile is external.
+   *
+   * @param array $mediafile
+   *   The mediafile to check.
+   *
+   * @return bool
+   *   Returns TRUE when external, FALSE otherwise.
+   */
+  public static function is_external(array $mediafile) {
+    return ($mediafile[mediamosa_asset_mediafile_db::URI] !== NULL && $mediafile[mediamosa_asset_mediafile_db::URI] !== '');
   }
 
   /**
@@ -929,18 +946,30 @@ class mediamosa_asset_mediafile {
    *   Optional fields. See mediamosa_asset_mediafile_db.
    */
   public static function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
+
+    $fields += array(
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
+    );
+
     // Is original with mediafile_id_source combo.
     assert(
       (
-        isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) && $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != ''
+        isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) && $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] !== ''
         &&
         $fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE
       )
       ||
       (
-        (!isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] == '')
+        (!isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] === '')
         &&
         $fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE
+      )
+      ||
+      (
+        (!isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] === '')
+        &&
+        $fields[mediamosa_asset_mediafile_db::URI] !== ''
       )
     );
 
@@ -968,6 +997,27 @@ class mediamosa_asset_mediafile {
     // Set the empty asset.
     mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
 
+    if (self::is_still($fields)) {
+      $metadatas = array(
+        array(
+          'value' => 0,
+          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_ORDER,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+        ),
+        array(
+          'value' => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_TYPE,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+        ),
+        array(
+          'value' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT_FALSE,
+          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+        ),
+      );
+      mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
+    }
+
     // Return the mediafile ID.
     return $mediafile_id;
   }
@@ -977,14 +1027,14 @@ class mediamosa_asset_mediafile {
    *
    * Triggers hook(s) for reindexing external databases.
    *
-   * @param string $asset_id
-   *  Asset ID.
+   * @param array $mediafile_ids
+   *   Array of mediafile ids for assets to reindex.
    * @param string $search_index_type
-   *  @see mediamosa_settings::search_index_type_*
+   *   @see mediamosa_settings::search_index_type_*
    */
   public static function mediamosa_asset_reindex(array $mediafile_ids, $search_index_type) {
-    $asset_ids = array();
 
+    $asset_ids = array();
     foreach ($mediafile_ids as $mediafile_id) {
       $asset_id = self::get_asset_id($mediafile_id);
       if (!empty($asset_id)) {

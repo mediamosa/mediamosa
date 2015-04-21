@@ -2167,6 +2167,44 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Create a mediafile under asset.
+   *
+   * Based on REST call /asset/$asset_id/mediafile/create (POST)
+   */
+  protected function createAssetMediafile($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_create_mediafile::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+      mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
+    );
+
+    // Set uri.
+    $uri = 'asset/' . rawurlencode($asset_id) . '/mediafile/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Get the new mediafile ID.
+    $mediafile_id = empty($response['xml']->items->item[0]->mediafile_id) ? NULL : (string) $response['xml']->items->item[0]->mediafile_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Created mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $mediafile_id;
+  }
+
+  /**
    * Create an asset.
    *
    * Based on REST call /asset/$asset_id/still/create (POST)
