@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2158)
+MediaMosa 3.6.0-dev (build 2159)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -232,6 +232,10 @@ MediaMosa 3.6.0-dev (build 2158)
 - Fixed IS NULL CQL search on metadata dates.
 - Fixed typo in ffmpeg tool installer, causing libfdk_aac not being handled
   correctly.
+- Enabled external uri's on stills. External stills are now possible, although
+  they can not be resized, cropped or processed like normal generated or
+  uploaded stills.
+- Added unit test for external stills.
 
 
 MediaMosa 3.5.x (build 2072)
