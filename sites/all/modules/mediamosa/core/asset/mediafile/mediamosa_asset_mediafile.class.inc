@@ -806,7 +806,7 @@ class mediamosa_asset_mediafile {
    *   Returns TRUE when still, FALSE otherwise.
    */
   public static function is_still(array $mediafile) {
-    return ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] === mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+    return (isset($mediafile[mediamosa_asset_mediafile_db::IS_STILL]) && $mediafile[mediamosa_asset_mediafile_db::IS_STILL] === mediamosa_asset_mediafile_db::IS_STILL_TRUE);
   }
 
   /**
