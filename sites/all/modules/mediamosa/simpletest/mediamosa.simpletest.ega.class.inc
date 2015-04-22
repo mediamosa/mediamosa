@@ -799,7 +799,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $headers = array();
 
     // POST or PUT.
-    if (!$options['use_put']) { // POST.
+    if (!$options['use_put']) {
+      // POST.
       if (class_exists('CURLFile')) {
         $postfields = array('file' => new CURLFile($filename));
       }
@@ -817,7 +818,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
                     '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
                     '<hr />' . $out);
     }
-    else { // PUT.
+    else {
+      // PUT.
       // Open the file to transfer.
       $handle = fopen($filename, 'rb');
 
@@ -2499,7 +2501,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $asset_supplement_id;
   }
 
-
   /**
    * Create a collection.
    * Based on REST call /collection/create (POST)
@@ -2979,7 +2980,18 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $parameters += array(
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_asset_supplement_db::SUPPLEMENT => $supplement,
+      'curl_file_upload' => FALSE,
     );
+
+    $curl_file_upload = $parameters['curl_file_upload'];
+    unset($parameters['curl_file_upload']);
+
+    // When true, the $supplement is a filename.
+    if ($curl_file_upload) {
+      //unset($parameters[mediamosa_asset_supplement_db::SUPPLEMENT]);
+      $parameters['curl_file_upload'] = $supplement;
+      $parameters['curl_file_upload_param'] = 'supplement';
+    }
 
     // The uri.
     $uri = strtr('asset/@asset_id/supplement/@supplement_id/update', array('@asset_id' => $asset_id, '@supplement_id' => $supplement_id));

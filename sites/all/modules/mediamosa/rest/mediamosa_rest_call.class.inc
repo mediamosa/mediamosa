@@ -1029,7 +1029,8 @@ abstract class mediamosa_rest_call {
 
     foreach ($this->rest_args as $name => $param) {
       if (empty($param[self::PARAM_TYPE])) {
-        unset($this->rest_args[$name]); // set but not in var_set_up, unset.
+        // Set but not in var_set_up, unset.
+        unset($this->rest_args[$name]);
         continue;
       }
 
@@ -1052,7 +1053,7 @@ abstract class mediamosa_rest_call {
         assert(in_array($this->rest_args[$name][self::PARAM_VALUE], $this->rest_args[$name][self::PARAM_ALLOWED_VALUES]));
       }
 
-      // check() will throw when requirements are not met.
+      // The function check() will throw when requirements are not met.
       $this->rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->rest_args[$name][self::PARAM_VALUE], $this->rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->rest_args[$name][self::PARAM_RANGE_START], $this->rest_args[$name][self::PARAM_RANGE_END], !empty($this->rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
       $this->rest_args[$name][self::PARAM_VALIDATED] = TRUE;
 

@@ -1,0 +1,56 @@
+<?php
+/**
+ * @file
+ * Unittests for upload supplement.
+ */
+class MediaMosaAssetSupplementUploadTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset supplement - upload tests',
+      'description' => 'Testing asset supplement using upload instead of POST vars.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  function testSuplementUpload() {
+
+    $file_supplement = DRUPAL_ROOT . '/' . $this->getTestTextFile();
+
+    // We got something?
+    $this->assertTrue(mediamosa_io::file_exists($file_supplement), 'Got text file for supplement.');
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create supplement.
+    $supplement_id = $this->createAssetSupplement($asset_id);
+
+    // Get the supplement.
+    $supplements = $this->getAssetSupplement($asset_id);
+
+    // Check the supplement.
+    $this->assertTrue(
+      count($supplements['items']['item']) == 1,
+      t("Get one supplement.")
+    );
+    $this->assertTrue(
+      $supplements['items']['item'][0]['supplement_id'] === $supplement_id,
+      t("Post and get supplement id is the same.")
+    );
+    $this->assertTrue(
+      $supplements['items']['item'][0]['supplement_base64'] === '',
+      t('Supplement base64 is empty.')
+    );
+
+    $this->updateAssetSupplement($asset_id, $supplement_id, $file_supplement, array('curl_file_upload' => TRUE));
+
+    $supplements = $this->getAssetSupplement($asset_id);
+
+    $this->assert($supplements['items']['item'][0]['supplement_base64'] === base64_encode(file_get_contents($file_supplement)), 'Uploaded supplement');
+  }
+}

@@ -66,6 +66,9 @@ class mediamosa_asset_mediafile_upload {
       $file['size'] = $_SERVER['CONTENT_LENGTH'];
       $file['error'] = 0;
     }
+    else {
+      return FALSE;
+    }
 
     // Default filename?
     if (!empty($filename)) {
@@ -73,7 +76,7 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Fix PHP file upload 32bit limit.
-    if (!$file['error'] && $file['size'] < 0 && mediamosa_io::is_readable($file['tmp_name'])) {
+    if (isset($file['tmp_name']) && !$file['error'] && $file['size'] < 0 && mediamosa_io::is_readable($file['tmp_name'])) {
       $file['size'] = mediamosa_io::filesize($file['tmp_name']);
     }
 
@@ -291,6 +294,7 @@ class mediamosa_asset_mediafile_upload {
   }
 
   /**
+   * Handle upload of stills.
    *
    * @param string $source
    *   The name of upload variable used during the POST form. Default is 'file'.

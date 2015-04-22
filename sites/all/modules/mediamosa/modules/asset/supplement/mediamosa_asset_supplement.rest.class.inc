@@ -160,8 +160,8 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
         ),
         self::SUPPLEMENT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The supplement.',
-          self::VAR_RANGE_END => variable_get('mediamosa_asset_supplement_max_size_kb', mediamosa_asset_supplement::DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE) * 1024, // 64k default max length.
+          self::VAR_DESCRIPTION => "The supplement to store. When this variable is too large to use as POST, then upload the variable as file instead. Use 'supplement' as name for the file. e.g. &lt;input type=\"file\" name=\"supplement\"&gt;",
+          self::VAR_RANGE_END => variable_get('mediamosa_asset_supplement_max_size_kb', mediamosa_asset_supplement::DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE) * 1024,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
@@ -227,6 +227,36 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     return parent::process_rest_args($var_setup);
   }
 
+  /**
+   * Validate the supplied parameters and type validation.
+   *
+   * @param array $var_setup
+   */
+  protected function validate_rest_args(array $var_setup) {
+    // Check for upload.
+    $supplement = mediamosa_asset_mediafile_upload::get_upload_file_info(self::SUPPLEMENT);
+    if ($supplement !== FALSE) {
+      // Is possible file upload.
+      if (is_array($supplement) && isset($supplement['tmp_name'])) {
+        $this->set_param_value(self::SUPPLEMENT, 'file upload');
+
+        // File does not exists, throw required.
+        if (!mediamosa_io::file_exists($supplement['tmp_name'])) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::SUPPLEMENT, '@type' => mediamosa_sdk::TYPE_STRING));
+        }
+
+        if (mediamosa_io::filesize($supplement['tmp_name']) > $this->rest_args[self::SUPPLEMENT][self::PARAM_RANGE_END]) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_LONG, array('@param' => self::SUPPLEMENT, '@max_length' => $this->rest_args[self::SUPPLEMENT][self::PARAM_RANGE_END]));
+        }
+      }
+      else {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => 'supplement', '@type' => 'string'));
+      }
+    }
+
+    parent::validate_rest_args($var_setup);
+  }
+
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
@@ -244,7 +274,12 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     $oai_prefix = $this->get_param_value(self::OAI_PREFIX);
     $oai_namespaceuri = $this->get_param_value(self::OAI_NAMESPACEURI);
     $oai_schemalocation = $this->get_param_value(self::OAI_SCHEMALOCATION);
-    $supplement = $this->get_param_value(self::SUPPLEMENT);
+
+    // Check for upload.
+    $supplement = mediamosa_asset_mediafile_upload::get_upload_file_info(self::SUPPLEMENT);
+    if ($supplement === FALSE) {
+      $supplement = $this->get_param_value(self::SUPPLEMENT);
+    }
 
     // Must exists.
     mediamosa_asset::must_exists($asset_id);

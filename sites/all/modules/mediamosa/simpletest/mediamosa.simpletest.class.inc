@@ -530,6 +530,17 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       }
     }
 
+    $parameters += array(
+      'curl_file_upload' => FALSE,
+      'curl_file_upload_param' => 'file',
+    );
+
+    $curl_file_upload = $parameters['curl_file_upload'];
+    unset($parameters['curl_file_upload']);
+    $curl_file_upload_param = $parameters['curl_file_upload_param'];
+    unset($parameters['curl_file_upload_param']);
+
+
     // Prepare the CURL options.
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
@@ -538,6 +549,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     if (strcasecmp($request_method, 'GET') == 0) {
+      assert($curl_file_upload === FALSE);
+
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
         CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $parameters)),
@@ -551,10 +564,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         unset($parameters['app_id']);
       }
 
+      if ($curl_file_upload !== FALSE) {
+        $parameters_get = $parameters;
+        $parameters = array();
+        if (function_exists('curl_file_create')) {
+          $parameters[$curl_file_upload_param] = new CURLFile($curl_file_upload);
+        }
+        else {
+          $parameters[$curl_file_upload_param] = '@' . $curl_file_upload;
+        }
+      }
+      else {
+        $parameters = http_build_query($parameters);
+      }
+
       $curl_opts += array(
         CURLOPT_POST => TRUE,
         CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $parameters_get)),
-        CURLOPT_POSTFIELDS => http_build_query($parameters),
+        CURLOPT_POSTFIELDS => $parameters,
       );
     }
 
@@ -931,6 +958,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function getTestVideo() {
     return $this->getTestVideo_ogg();
+  }
+
+  /**
+   * Return the path+filename to the test file containing random text.
+   */
+  protected function getTestTextFile() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/random_text.txt';
+    $this->pass(t('Got test file @file.', array('@file' => $filename)));
+    return $filename;
   }
 
   /**

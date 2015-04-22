@@ -525,7 +525,7 @@ class mediamosa_type {
   }
 
   /**
-   * Make sure that the string is nog to long or to short.
+   * Make sure that the string is not to long or to short.
    *
    * @param string $param
    *  The Param name.

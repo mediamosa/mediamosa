@@ -119,6 +119,15 @@ class mediamosa_asset_supplement {
       $fields[mediamosa_asset_supplement_db::OAI_SCHEMALOCATION] = $oai_schemalocation;
     }
     if (!is_null($supplement)) {
+      // Is file upload.
+      if (is_array($supplement_value) && isset($supplement_value['tmp_name'])) {
+        $supplement_value = file_get_contents($supplement_value['tmp_name']);
+      }
+
+      if (!is_string($supplement_value)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => 'supplement', '@type' => mediamosa_sdk::TYPE_STRING));
+      }
+
       $fields[mediamosa_asset_supplement_db::SUPPLEMENT] = $supplement_value;
     }
 
