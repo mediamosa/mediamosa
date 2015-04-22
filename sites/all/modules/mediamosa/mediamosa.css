@@ -286,3 +286,10 @@ th.mediamosa-app-storage-location {
 .page-admin-mediamosa-config-app .ui-progressbar-value {
   height: 115%;
 }
+
+/*
+Fixes drop down boxes that have multiple selections.
+*/
+select.form-select {
+  height: auto;
+}
