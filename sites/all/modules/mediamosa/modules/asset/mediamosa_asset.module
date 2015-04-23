@@ -686,6 +686,13 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
+  $rest_calls['asset/duplicates'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_duplicates',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
   return $rest_calls;
 }
 
@@ -2171,6 +2178,26 @@ user_id=admin',
     </failed_ids>
   </item>
 </items>",
+  );
+
+  $rest_calls['asset/duplicates'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search for assets that have the same (original) mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Based on the MD5 of each mediafile, a list of duplicate mediafiles will be returned. If the result is empty, then all assets have unique mediafile contents.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '[GET] asset/duplicates',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item/md5' => 'Attribute: The unique MD5 of the detected duplicate.',
+      'item/md5/asset_id' => 'The ID of the asset that has an duplicate.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item md5="8807a6853f59296ab46e9c4fb9041dca">
+    <asset_id>B1ZQwZlbWUOYoQsnTa29Q9GX</asset_id>
+    <asset_id>FPTVKDcJjkpeRLTTSUJ44RDX</asset_id>
+  </item>
+  <item md5="713fa44acad156667e4c3e64a6051212">
+    <asset_id>G2PvteRXcOUYa5haOV9LgcYX</asset_id>
+    <asset_d>c2MHLVVBYUTUi59PcN3rrNyX</asset_id>
+  </item>
+</items>',
   );
 
   return $rest_calls;

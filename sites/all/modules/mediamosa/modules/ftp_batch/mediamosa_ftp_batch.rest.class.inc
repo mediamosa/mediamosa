@@ -1,35 +1,10 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ * @file
+ * The ftp batch module.
  *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @TODO: move the code to core, lets not leave them into rest calls.
  */
-
- /**
-  * @file
-  * The ftp batch module.
-  *
-  * @TODO: move the code to core, lets not leave them into rest calls.
-  */
 
 /**
  * URI: /ftp_batch
@@ -73,7 +48,7 @@ class mediamosa_rest_call_ftp_batch_list extends mediamosa_rest_call {
       $o_mediamosa->add_item($row);
     }
 
-    $o_rest_reponse->item_count_total = $result->found_rows;
+    $o_mediamosa->item_count_total = $result->found_rows;
   }
 }
 

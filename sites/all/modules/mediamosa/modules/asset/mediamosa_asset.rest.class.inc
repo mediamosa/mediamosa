@@ -2362,3 +2362,45 @@ class mediamosa_rest_call_asset_cleanup extends mediamosa_rest_call {
     $mediamosa->add_item($result);
   }
 }
+
+/**
+ * URI: /asset/duplicates
+ *
+ * Method: POST
+ */
+class mediamosa_rest_call_asset_duplicates extends mediamosa_rest_call {
+  // ------------------------------------------------------------------- Consts.
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * The var setup contains the properties description of the rest call.
+   *
+   * @return array
+   *   The var setup array.
+   */
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = static::get_var_setup_range($var_setup);
+    return static::get_var_setup_default($var_setup, FALSE);
+  }
+
+  /**
+   * Execute the rest call.
+   *
+   * @throws mediamosa_exception_error
+   */
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $limit = $this->get_param_value_limit();
+    $offset = $this->get_param_value_offset();
+
+    $result = mediamosa_asset::find_duplicate_mediafiles($offset, $limit);
+    foreach ($result['duplicates'] as $md5 => $asset_ids) {
+      $mediamosa->add_item(array('asset_id' => $asset_ids), array('md5' => $md5));
+    }
+
+    $mediamosa->item_count_total = $result['item_count_total'];
+  }
+}

@@ -415,4 +415,56 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     //$user = $this->getUser($owner_id);
     //$this->var_export($user);
   }
+
+
+  /**
+   * Test the duplicate detection.
+   */
+  public function testDuplicates() {
+
+    $upload = $this->uploadTestFile();
+    $asset_id_1 = $upload['asset_id'];
+
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
+    $asset_id_2 = $upload['asset_id'];
+
+    $upload = $this->uploadTestFile();
+    $asset_id_3 = $upload['asset_id'];
+
+    $assets = $this->duplicatedAssets();
+    $asset_ids_1 = $assets['items']['item'][0]['asset_id'];
+    $this->assert(in_array($asset_id_1, $asset_ids_1), 'Found as duplicate');
+    $this->assert(in_array($asset_id_3, $asset_ids_1), 'Found as duplicate');
+    $this->assert(count($asset_ids_1) == 2, 'Correct amount of assets');
+
+    $this->var_export($assets);
+
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_wmv()));
+    $asset_id_4 = $upload['asset_id'];
+
+    $upload = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+
+    $assets = $this->duplicatedAssets();
+    $asset_ids_1 = $assets['items']['item'][0]['asset_id'];
+    $asset_ids_2 = $assets['items']['item'][1]['asset_id'];
+    $this->assert(count($asset_ids_1) == 2, 'Correct amount of assets');
+    $this->assert(count($asset_ids_2) == 2, 'Correct amount of assets');
+
+    if (in_array($asset_id_1, $asset_ids_1)) {
+      $this->assert(in_array($asset_id_1, $asset_ids_1), 'Found as duplicate');
+      $this->assert(in_array($asset_id_3, $asset_ids_1), 'Found as duplicate');
+
+      $this->assert(in_array($asset_id_2, $asset_ids_2), 'Found as duplicate');
+      $this->assert(in_array($asset_id_4, $asset_ids_2), 'Found as duplicate');
+    }
+    else {
+      $this->assert(in_array($asset_id_1, $asset_ids_2), 'Found as duplicate');
+      $this->assert(in_array($asset_id_3, $asset_ids_2), 'Found as duplicate');
+
+      $this->assert(in_array($asset_id_2, $asset_ids_1), 'Found as duplicate');
+      $this->assert(in_array($asset_id_4, $asset_ids_1), 'Found as duplicate');
+    }
+
+    $this->var_export($assets);
+  }
 }

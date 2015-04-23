@@ -516,6 +516,11 @@ class mediamosa_response extends mediamosa {
     else {
       $this->response['items'][++$this->item_count]['#' . serialize($attributes)] = $item;
     }
+    // @todo: remove from release.
+    mediamosa_watchdog::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
+    mediamosa_watchdog::log_export($this->response['items']);
+// @todo: remove from release.
+
   }
 
   /**
@@ -876,7 +881,7 @@ class mediamosa_response extends mediamosa {
 
       // Category.
       $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
-      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
       $query
         ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
         ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
@@ -1183,11 +1188,11 @@ class mediamosa_response extends mediamosa {
       return NULL;
     }
 
-    if ($first_key[0] == '#') {
+    if ($first_key[0] === '#') {
       foreach ($mixed_value as $mixed_key => $value) {
         $dom_element = $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
 
-        if ($mixed_key != '#0') {
+        if ($mixed_key !== '#0') {
           $attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
           if (is_array($attributes)) {
             foreach ($attributes as $attr_name => $attr_value) {
