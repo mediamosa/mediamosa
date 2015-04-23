@@ -170,10 +170,10 @@ function mediamosa_maintenance_status_component_generate() {
  */
 function _mediamosa_maintenance_status_component_directory($directory, &$checks) {
   if (!mediamosa_io::is_dir($directory)) {
-    $checks['not_structured'][] = $directory;
+    $checks['not_structured'][] = mediamosa_io::realpath_safe($directory);
   }
   if (!is_writable($directory)) {
-    $checks['not_writeable'][] = $directory;
+    $checks['not_writeable'][] = mediamosa_io::realpath_safe($directory);
   }
 }
 
