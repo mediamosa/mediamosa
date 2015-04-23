@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2160)
+MediaMosa 3.6.0-dev (build 2161)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -236,6 +236,13 @@ MediaMosa 3.6.0-dev (build 2160)
   they can not be resized, cropped or processed like normal generated or
   uploaded stills.
 - Added unit test for external stills.
+- Added REST call /asset/duplicates for finding duplicate mediafiles based on
+  their MD5.
+- Fixed to show correct paths on status page when write access or directory
+  exists fails on mount point.
+- Asset supplements can now also be uploaded as file instead of a POST var, see
+  /asset/$asset_id/supplement/$supplement_id/update.
+- Fixed css on rubik theme, removed fixed height on SELECT items.
 
 
 MediaMosa 3.5.x (build 2072)
