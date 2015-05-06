@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2162)
+MediaMosa 3.6.0-dev (build 2163)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -243,7 +243,7 @@ MediaMosa 3.6.0-dev (build 2162)
 - Asset supplements can now also be uploaded as file instead of a POST var, see
   /asset/$asset_id/supplement/$supplement_id/update.
 - Fixed css on rubik theme, removed fixed height on SELECT items.
-
+- Fixed bug when using file upload on asset supplement REST call.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
