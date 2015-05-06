@@ -235,6 +235,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
   protected function validate_rest_args(array $var_setup) {
     // Check for upload.
     $supplement = mediamosa_asset_mediafile_upload::get_upload_file_info(self::SUPPLEMENT);
+
     if ($supplement !== FALSE) {
       // Is possible file upload.
       if (is_array($supplement) && isset($supplement['tmp_name'])) {
@@ -245,8 +246,8 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::SUPPLEMENT, '@type' => mediamosa_sdk::TYPE_STRING));
         }
 
-        if (mediamosa_io::filesize($supplement['tmp_name']) > $this->rest_args[self::SUPPLEMENT][self::PARAM_RANGE_END]) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_LONG, array('@param' => self::SUPPLEMENT, '@max_length' => $this->rest_args[self::SUPPLEMENT][self::PARAM_RANGE_END]));
+        if (mediamosa_io::filesize($supplement['tmp_name']) > $var_setup[self::VARS][self::SUPPLEMENT][self::PARAM_RANGE_END]) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_LONG, array('@param' => self::SUPPLEMENT, '@max_length' => $var_setup[self::VARS][self::SUPPLEMENT][self::PARAM_RANGE_END]));
         }
       }
       else {

@@ -516,11 +516,6 @@ class mediamosa_response extends mediamosa {
     else {
       $this->response['items'][++$this->item_count]['#' . serialize($attributes)] = $item;
     }
-    // @todo: remove from release.
-    mediamosa_watchdog::log_export('debug in ' . __FUNCTION__ . '() on line ' . __LINE__ . ' in ' . __FILE__);
-    mediamosa_watchdog::log_export($this->response['items']);
-// @todo: remove from release.
-
   }
 
   /**

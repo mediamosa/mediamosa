@@ -47,9 +47,15 @@ class MediaMosaAssetSupplementUploadTestCaseEga extends MediaMosaTestCaseEga {
       t('Supplement base64 is empty.')
     );
 
+    $this->pass('Current max size is: ' . format_size(variable_get('mediamosa_asset_supplement_max_size_kb', mediamosa_asset_supplement::DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE) * 1024));
+
+    // Set maximum size enough for current test.
+    variable_set('mediamosa_asset_supplement_max_size_kb', mediamosa_io::filesize($file_supplement) + 100);
     $this->updateAssetSupplement($asset_id, $supplement_id, $file_supplement, array('curl_file_upload' => TRUE));
 
     $supplements = $this->getAssetSupplement($asset_id);
+
+    $this->var_export($supplements);
 
     $this->assert($supplements['items']['item'][0]['supplement_base64'] === base64_encode(file_get_contents($file_supplement)), 'Uploaded supplement');
   }

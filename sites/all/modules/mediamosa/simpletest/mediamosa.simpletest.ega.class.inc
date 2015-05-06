@@ -3025,7 +3025,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // When true, the $supplement is a filename.
     if ($curl_file_upload) {
-      //unset($parameters[mediamosa_asset_supplement_db::SUPPLEMENT]);
+      unset($parameters[mediamosa_asset_supplement_db::SUPPLEMENT]);
       $parameters['curl_file_upload'] = $supplement;
       $parameters['curl_file_upload_param'] = 'supplement';
     }
