@@ -735,14 +735,19 @@ abstract class mediamosa_rest_call {
    * Return from $_GET / $_POST the value, if found.
    *
    * Use this function if you need to go before the REST call process_rest_args.
+   * Remember that this value is not checked and therefor not processed by the
+   * REST layer type checking. No default value set either, that might be
+   * defined in the REST call var setup.
    *
    * @param string $param
    *   The name of the parameter.
+   * @param string $default
+   *   The default value when not present.
    *
    * @return mixed
    *   The value of the parameter.
    */
-  public static function get_param_value_global($param) {
+  public static function get_param_value_global($param, $default = NULL) {
     // Is mediamosa_params is set, we take priority on those.
     if (isset($GLOBALS['mediamosa_params'])) {
       // If for any reason mediamosa_params is in _REQUEST, then it was supplied
@@ -751,10 +756,10 @@ abstract class mediamosa_rest_call {
         throw new mediamosa_exception_error_403();
       }
 
-      return isset($GLOBALS['mediamosa_params'][$param]) ? $GLOBALS['mediamosa_params'][$param] : NULL;
+      return isset($GLOBALS['mediamosa_params'][$param]) ? $GLOBALS['mediamosa_params'][$param] : $default;
     }
 
-    return isset($_GET[$param]) ? $_GET[$param] : (isset($_POST[$param]) ? $_POST[$param] : NULL);
+    return isset($_GET[$param]) ? $_GET[$param] : (isset($_POST[$param]) ? $_POST[$param] : $default);
   }
 
   /**
