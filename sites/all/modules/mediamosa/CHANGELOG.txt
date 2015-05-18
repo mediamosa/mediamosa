@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2164)
+MediaMosa 3.6.0-dev (build 2165)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -246,6 +246,7 @@ MediaMosa 3.6.0-dev (build 2164)
 - Fixed bug when using file upload on asset supplement REST call.
 - Added default value to function get_param_value_global for retrieving RAW
   values from POST and GET.
+- Fixed keeporder modifier on CQL Solr, now also works on MySQL.
 
 
 MediaMosa 3.5.x (build 2072)
