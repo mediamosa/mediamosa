@@ -125,6 +125,11 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
    */
   public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $cql_part, mediamosa_cql_part_relation $cql_part_relation, array &$result, $str_index, $do_having) {
 
+    // Solr does not support having or needs it here.
+    if ($do_having) {
+      return '';
+    }
+
     $cql_part_search_term = $cql_part->mediamosa_cql_part_search_term_get();
     $cql_part_boolean = $cql_part->mediamosa_cql_part_boolean_get();
 
@@ -279,18 +284,22 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           $str_search_term = mediamosa_unicode::strtolower($str_search_term);
         }
 
-        $keeporder = isset($relation_modifiers[mediamosa_cql::KEEPORDER]);
-
         // Split whitespace up into words.
         $words = preg_split('/\s+/', $str_search_term);
-        $keeporder_count = count($words);
+        if (isset($relation_modifiers[mediamosa_cql::KEEPORDER])) {
+          $keep_order_ids = array();
+          foreach ($words as $word) {
+            if (trim($word) === '') {
+              continue;
+            }
+            $keep_order_ids[] = $this->mediamosa_cql_trim_anchor($word);
+          }
+          $this->mediamosa_core_set_keep_order($str_table_column, $keep_order_ids);
+        }
 
         foreach ($words as $word) {
           if (trim($word) === '') {
             continue;
-          }
-          if ($keeporder) {
-            $boost = '^' . $keeporder_count--;
           }
 
           switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
@@ -675,7 +684,6 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
    * @param array $app_ids
    */
   public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
-
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_solr_asset_cql_context($app_ids);
     return $mediamosa_cql->mediamosa_core_parse_cql($str_cql, $cql_store_stats);

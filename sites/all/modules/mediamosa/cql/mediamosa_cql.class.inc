@@ -1,27 +1,7 @@
 <?php
-// $Id$
-
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * @file
+ * Main CQL class
  */
 
 /**
@@ -72,11 +52,6 @@
  */
 
 /**
- * @file
- * Main CQL class
- */
-
-/**
  * Key defines for the context array
  */
 define('MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES', 'indexes');// CQL index
@@ -103,6 +78,7 @@ define('MEDIAMOSA_CQL_KEY_SETTING_VERIFY', 'cql_key_setting_verify');
  */
 abstract class mediamosa_cql {
 
+  // ------------------------------------------------------------------- Consts.
   const RESPECTCASE = 'respectcase';
   const IGNORECASE = 'ignorecase';
 
@@ -116,33 +92,86 @@ abstract class mediamosa_cql {
   const BOOST = 'boost';
   const KEEPORDER = 'keeporder';
 
+  // --------------------------------------------------------------------- Vars.
   private $m_str_cql = FALSE;
   private $m_o_cql_part_group = FALSE;
   private $m_o_cql_sortby = FALSE;
 
   /**
-   * Parse the CQL string
-   * Will throw exceptions when errors are found in syntax
+   * The forced order set by CQL modifier keeporder.
+   *
+   * Only works on primary IDs, e.g. asset_id.
+   *
+   * Example: asset_ids any/keeporder "^1234^ ^1235^".
+   *
+   * @var array
+   */
+  private $keep_order_ids = array();
+
+  // ------------------------------------------------------------------ Methods.
+  /**
+   * Set the keep order IDs for later sorting.
+   *
+   * Only works on primary IDs, e.g. asset_id.
+   *
+   * Example: asset_ids any/keeporder "^1234^ ^1235^".
+   *
+   * @param array $ids
+   *   The IDs to set.
+   */
+  protected function mediamosa_core_set_keep_order($column_name, $ids) {
+    $this->mediamosa_core_allowed_keep_order($column_name);
+    $this->keep_order_ids = array_merge($this->keep_order_ids, $ids);
+  }
+
+  /**
+   * Return the keep order IDs for later sorting.
+   *
+   * @return array
+   *   The forced order.
+   */
+  public function mediamosa_core_get_keep_order() {
+    return $this->keep_order_ids;
+  }
+
+  /**
+   * Check if keeporder modifier is allowed.
+   *
+   * By default this will end in exception; Overrule in parent class.
+   *
+   * @param string $column_name
+   *   The name to check.
+   */
+  protected function mediamosa_core_allowed_keep_order($column_name) {
+    throw new mediamosa_cql_exception(mediamosa::t("The '@column_name' is not allowed to use modifier 'keeporder'.", array('@column_name' => $column_name)));
+  }
+
+  /**
+   * Parse the CQL string.
+   *
+   * Will throw exceptions when errors are found in syntax.
    *
    * @param string $str_cql
-   * @param bool $b_verify
+   *   The CQL string to parse.
+   * @param array $settings
+   *   The settings for parse phase.
    */
-  protected function mediamosa_cql_parse($str_cql, $a_settings = array()) {
+  protected function mediamosa_cql_parse($str_cql, $settings = array()) {
     assert(is_string($str_cql));
-    assert(is_array($a_settings));
+    assert(is_array($settings));
 
     // Copy it for later usage
-    $this->m_str_cql = $str_cql;
+    $this->m_str_cql = (string )$str_cql;
 
     // Clear our collection of possible previous parse
     $this->m_o_cql_part_group = new mediamosa_cql_part_group();
 
     // Make sure these settings are set
-    if (!isset($a_settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY])) {
-      $a_settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY] = FALSE;
+    if (!isset($settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY])) {
+      $settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY] = FALSE;
     }
 
-    if ($str_cql == '') {
+    if ($str_cql === '' || $str_cql === FALSE || $str_cql === NULL) {
       throw new mediamosa_cql_exception_string_is_empty();
     }
 
@@ -150,7 +179,7 @@ abstract class mediamosa_cql {
 
     try {
       while (1) {
-        $this->mediamosa_cql_next_part($str_cql, $i_pos, $this->m_o_cql_part_group);
+        $this->mediamosa_cql_next_part((string) $str_cql, $i_pos, $this->m_o_cql_part_group);
       }
     }
     catch (mediamosa_cql_exception_eos $e) {
@@ -860,6 +889,25 @@ abstract class mediamosa_cql {
     }
 
     return $str_ql;
+  }
+
+  /**
+   * Remove the ^ from the string.
+   *
+   * @param string $string
+   */
+  protected function mediamosa_cql_trim_anchor($string) {
+    if (mediamosa_unicode::substr($string, 0, 1) === '^' && mediamosa_unicode::substr($string, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $string), -2) !== '\^') {
+      return mediamosa_unicode::substr($string, 1, -1);
+    }
+    elseif (mediamosa_unicode::substr($string, 0, 1) === '^') {
+      return mediamosa_unicode::substr($string, 1);
+    }
+    elseif (mediamosa_unicode::substr($string, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $string), -2) !== '\^') {
+      return mediamosa_unicode::substr($string, 0, -1);
+    }
+
+    return $string;
   }
 }
 

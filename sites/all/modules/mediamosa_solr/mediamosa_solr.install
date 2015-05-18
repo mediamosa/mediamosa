@@ -166,13 +166,6 @@ function mediamosa_solr_schema() {
  * Files renamed, rebuild Drupal registry.
  */
 function mediamosa_solr_update_7000() {
-  // Rebuild the registry.
-  //
-  // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry}');
-  // Clear it too.
-  db_query('DELETE FROM {registry_file}');
-  drupal_flush_all_caches();
 }
 
 /**
@@ -186,4 +179,13 @@ function mediamosa_solr_update_7001() {
   // Clear it too.
   db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_solr_update_7002() {
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
 }

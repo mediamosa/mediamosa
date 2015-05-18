@@ -152,8 +152,10 @@ class mediamosa_solr {
     }
 
     $query_cql = '*:*';
+    $keep_order_ids = array();
     if (!empty($parameters['cql'])) {
       $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['cql_store_stats'], $parameters['app_ids']);
+      $keep_order_ids = $result['keep_order_ids'];
 
       // When searching with ACL search rule set, we need special case.
       if (!empty($result['is_acl_search'])) {
@@ -333,6 +335,7 @@ class mediamosa_solr {
       'total_count' => $mediamosa_solr_apache_solr_response->getNumFound(),
       'related' => $related,
       'solr_facet' => $mediamosa_solr_apache_solr_response->getFacets(),
+      'keep_order_ids' => $keep_order_ids,
     );
   }
 

@@ -23,6 +23,7 @@ files[] = tests/mediamosa_solr.facet_search.test
 files[] = tests/mediamosa_solr.media.play_restriction.test
 files[] = tests/mediamosa_solr.stemming.test
 files[] = tests/mediamosa_solr.asset.cql.ext.test
+files[] = tests/mediamosa_solr.asset.cql.keeporder.test
 files[] = tests/mediamosa_solr.asset.cql.test
 files[] = tests/mediamosa_solr.asset.search.empty.test
 files[] = tests/mediamosa_solr.asset.common.test

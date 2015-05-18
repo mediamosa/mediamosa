@@ -93,6 +93,8 @@ class mediamosa_asset_search {
     // Do master slave depends on granted.
     $do_master_slave = $granted;
 
+    $keep_order_ids = array();
+
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'a.asset_id';
     $a_query[mediamosa_db_query::A_FROM][] = strtr('{#mediamosa_asset} AS a', array('#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME));
@@ -169,6 +171,8 @@ class mediamosa_asset_search {
     if ($cql !== '' && $cql !== NULL) {
       // Create the search CQL.
       $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $cql_store_stats, $a_app_ids);
+
+      $keep_order_ids = $a_result_cql2sql['keep_order_ids'];
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != '') {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] = '(' . $a_result_cql2sql['str_where'] . ')';
@@ -678,6 +682,6 @@ class mediamosa_asset_search {
     /**
      * We return the asset_ids.
      */
-    return array('asset_ids' => $asset_ids, 'total_count' => $calculate_total_count ? $i_found_rows : count($asset_ids));
+    return array('asset_ids' => $asset_ids, 'total_count' => $calculate_total_count ? $i_found_rows : count($asset_ids), 'keep_order_ids' => $keep_order_ids);
   }
 }

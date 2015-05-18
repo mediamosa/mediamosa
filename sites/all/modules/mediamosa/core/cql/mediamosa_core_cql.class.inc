@@ -484,12 +484,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     // Store the keywords for statistics.
     $this->mediamosa_save_search($keywords);
 
-    if (drupal_strlen($str_sql_where) > 1) {
+    if ($str_sql_where !== '') {
       // The where
       $a_result_cql2sql['str_where'] = $str_sql_where;
     }
 
-    if (drupal_strlen($str_sql_having) > 1) {
+    if ($str_sql_having !== '') {
       // The having
       $a_result_cql2sql['str_having'] = $str_sql_having;
     }
@@ -513,6 +513,8 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     if ($o_sortby) {
       $a_result_cql2sql['a_order_by'] = $o_sortby->mediamosa_cql_sub_sortby_parse($this, 'mediamosa_core_cql_hook_cql2sql_orderby');
     }
+
+    $a_result_cql2sql['keep_order_ids'] = $this->mediamosa_core_get_keep_order();
 
     return $a_result_cql2sql;
   }
@@ -587,11 +589,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
       }
 
-      return ''; // if its FALSE, its an empty container
+      // if its FALSE, its an empty container.
+      return '';
     }
 
     if (!$is_append) {
-      return ''; // only when appending...
+      return '';
     }
 
     // Add keyword for search stats.
@@ -766,13 +769,25 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_sub_parts_glue = ' AND ';
       case '=':
       case 'any':
-        $a_words = preg_split('/\s+/', $str_search_term);
+        $words = preg_split('/\s+/', $str_search_term);
+
+        if (isset($relation_modifiers[mediamosa_cql::KEEPORDER])) {
+          $keep_order_ids = array();
+          foreach ($words as $word) {
+            if (trim($word) === '') {
+              continue;
+            }
+            $keep_order_ids[] = $this->mediamosa_cql_trim_anchor($word);
+          }
+          $this->mediamosa_core_set_keep_order($str_table_column, $keep_order_ids);
+        }
+
         switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_sdk::TYPE_INT:
           case mediamosa_sdk::TYPE_UINT:
             // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
             $tmp = array();
-            foreach ($a_words as $str_word) {
+            foreach ($words as $str_word) {
               $tmp[] = sprintf('%d', (int) $str_word);
             }
 
@@ -785,7 +800,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             break;
 
           default:
-            foreach ($a_words as $str_word) {
+            foreach ($words as $str_word) {
               if (trim($str_word) == '') {
                 continue;
               }
@@ -1071,6 +1086,20 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
  * Asset CQL Context class.
  */
 class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
+
+  /**
+   * Check if keeporder modifier is allowed.
+   *
+   * By default this will end in exception.
+   *
+   * @param string $column_name
+   *   The name to check.
+   */
+  protected function mediamosa_core_allowed_keep_order($column_name) {
+    if (mediamosa_unicode::substr($column_name, -9) !== '.asset_id' && $column_name !== 'asset_id') {
+      parent::mediamosa_core_allowed_keep_order($column_name);
+    }
+  }
 
   /**
    * returns the array containing mapping voor cql2sql
@@ -1433,6 +1462,20 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
  *
  */
 class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
+
+  /**
+   * Check if keeporder modifier is allowed.
+   *
+   * By default this will end in exception.
+   *
+   * @param string $column_name
+   *   The name to check.
+   */
+  protected function mediamosa_core_allowed_keep_order($column_name) {
+    if (mediamosa_unicode::substr($column_name, -9) !== '.collection_id' && $column_name !== 'collection_id') {
+      parent::mediamosa_core_allowed_keep_order($column_name);
+    }
+  }
 
   // The CQL_CONTEXT_KEY_* keys are default and must be used,
   // however all other keys are open for own class specification.

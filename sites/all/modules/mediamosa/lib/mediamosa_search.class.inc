@@ -130,7 +130,17 @@ class mediamosa_search {
       $asset_search = call_user_func($name . '::asset_search', $parameters);
       $asset_search += array(
         'related' => array(),
+        'keep_order_ids' => array(),
       );
+
+      if (!empty($asset_search['keep_order_ids'])) {
+        $asset_ids = $asset_search['asset_ids'];
+        $asset_search['asset_ids'] = array_intersect($asset_search['keep_order_ids'], $asset_ids);
+        // Merge the missing IDs at the end.
+        if (count($asset_ids) != count($asset_search['asset_ids'])) {
+          $asset_search['asset_ids'] = array_merge($asset_search['asset_ids'], array_diff($asset_search['asset_ids'], $asset_search['keep_order_ids']));
+        }
+      }
 
       return $asset_search;
 

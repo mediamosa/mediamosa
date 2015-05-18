@@ -1,0 +1,14 @@
+<?php
+/**
+ * @file
+ * Install, update, and uninstall functions for the MediaMosa module.
+ */
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_asset_update_7000() {
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}

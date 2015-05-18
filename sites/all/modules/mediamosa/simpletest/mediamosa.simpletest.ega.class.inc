@@ -1426,6 +1426,43 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Get assets.
+   *
+   * Based on the GET rest call /assets (GET).
+   */
+  protected function getAssets($asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+      'asset_id' => (array) $asset_ids,
+    );
+
+    // Do Post call.
+    $response = $this->restCallGet('assets', $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Get assets, got result @result (@result_description)",
+        array(
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      return FALSE;
+    }
+
+    $assets = mediamosa_lib::responsexml2array($response['xml']);
+    return $assets;
+  }
+
+  /**
    * OpenAPI search.
    * Based on the GET call /openapi/search (GET)
    */
@@ -4428,6 +4465,34 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->switch_to_app = $old_switch_to_app;
 
     return $found_ids;
+  }
+
+  public function cql_do_search_test_assets_keeporder($asset_ids) {
+    $expected_asset_ids = array();
+    $cql = array();
+    foreach ($asset_ids as $asset_id) {
+      $expected_asset_ids[$asset_id] = TRUE;
+      $cql[] = '^' . mediamosa_sdk::escape_cql($asset_id) . '^';
+    }
+
+    $cql = 'asset_id any/keeporder "' . implode(' ', $cql) . '"';
+    $returned_asset_ids = $this->cql_do_search_test_assets_1($cql, $expected_asset_ids);
+
+    // Resort on keys.
+    $asset_ids = array_values($asset_ids);
+    $this->pass('Expected order: ' . implode(', ', $asset_ids));
+
+    $returned_asset_ids = array_values($returned_asset_ids);
+    $this->pass('Got order: ' . implode(', ', $returned_asset_ids));
+
+    foreach ($asset_ids as $key => $asset_id) {
+      if (isset($returned_asset_ids[$key])) {
+        $this->assertTrue($asset_id === $returned_asset_ids[$key], strtr('Order for {key} key (ID: {asset_id}) found on correct spot.', array('{key}' => $key, '{asset_id}' => $asset_id)));
+      }
+      else {
+        $this->assertTrue(isset($returned_asset_ids[$key]), strtr('Order for {key} key (ID: {asset_id}) not found on correct spot.', array('{key}' => $key, '{asset_id}' => $asset_id)));
+      }
+    }
   }
 
   public function cql_do_search_test_collections_1($cql = '', array $expected_collection_ids = array(), array $parameters = array()) {
