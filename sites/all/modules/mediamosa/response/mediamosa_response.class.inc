@@ -66,9 +66,16 @@ class mediamosa_response extends mediamosa {
   /**
    * The matched REST call object.
    *
-   * @var mediamosa_rest_call
+   * @var array
    */
   protected $rest_call = NULL;
+
+  /**
+   * Current REST call.
+   *
+   * @var mediamosa_rest_call
+   */
+  public $mediamosa_rest_call;
 
   // Public counters.
   public $item_count = 0;

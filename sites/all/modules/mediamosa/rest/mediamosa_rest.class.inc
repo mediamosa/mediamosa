@@ -397,19 +397,19 @@ class mediamosa_rest {
     }
 
     // Create class from it.
-    $the_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
+    $mediamosa->mediamosa_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
 
     // Check if override for class selection is here.
-    if (method_exists($the_rest_call, 'get_object_rest_call')) {
-      $the_rest_call = $the_rest_call->get_object_rest_call($rest_call);
+    if (method_exists($mediamosa->mediamosa_rest_call, 'get_object_rest_call')) {
+      $mediamosa->mediamosa_rest_call = $mediamosa->mediamosa_rest_call->get_object_rest_call($rest_call);
     }
 
     // Process the REST call.
-    $response_type = $the_rest_call->process_call();
+    $response_type = $mediamosa->mediamosa_rest_call->process_call();
 
     // If offset was specified, then include it in the header.
-    if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
-      $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
+    if ($mediamosa->mediamosa_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
+      $mediamosa->item_offset = $mediamosa->mediamosa_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
 
     return $response_type;
