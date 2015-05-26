@@ -337,8 +337,8 @@ class mediamosa_profile {
     // Inside the storage location, create a MediaMosa storage structure.
     mediamosa_profile::mountpoint_mkdir('data');
 
-    // We store each file in separate directories based on the first letter of the
-    // file. We need to create these directories.
+    // We store each file in separate directories based on the first letter of
+    // the file. We need to create these directories.
     $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     for ($x = 0; $x < strlen($prefixes); $x++) {
       mediamosa_profile::mountpoint_mkdir('data/' . $prefixes{$x});
@@ -346,6 +346,10 @@ class mediamosa_profile {
 
     // Other.
     mediamosa_profile::mountpoint_mkdir('data/transcode');
+    $prefixes = '0123456789';
+    for ($x = 0; $x < strlen($prefixes); $x++) {
+      mediamosa_profile::mountpoint_mkdir('data/transcode/' . $prefixes{$x});
+    }
     mediamosa_profile::mountpoint_mkdir('data/transition');
     mediamosa_profile::mountpoint_mkdir('ftp');
 
