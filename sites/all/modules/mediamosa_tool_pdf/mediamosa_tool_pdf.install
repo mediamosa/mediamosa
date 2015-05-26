@@ -12,11 +12,13 @@ function mediamosa_tool_pdf_install() {
   $t = get_t();
   $default_params = array(
     array(
-      'pdf', 'def_viewer', '-b', NULL, NULL, NULL, '', 'FALSE', $t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine'), 'CHECKBOX'),
+      'pdf', 'mediafiles', 'mediafiles', NULL, NULL, NULL, '', 'FALSE', $t('Array of mediafiles ids to add to the pdf.'), 'SELECT'),
     array(
-      'pdf', 'fonts', '-f', NULL, NULL, NULL, '', 'FALSE', $t("Store full fonts in SWF. (Don't reduce to used characters)."), 'CHECKBOX'),
+      'pdf', 'pdffilename', 'pdffilename', NULL, NULL, NULL, '', 'FALSE', $t('Name of the pdffile.'), 'SELECT'),
     array(
-      'pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', $t('Set Flash Version in the SWF header to num.'), 'SELECT'),
+      'pdf', 'replace', 'replace', NULL, NULL, NULL, '', 'FALSE', $t('Remove any other existing generated pdf files by this tool in the asset.'), 'SELECT'),
+    array(
+      'pdf', 'max_width', 'max_width', NULL, NULL, NULL, '', 'FALSE', $t('Max width of PDF.'), 'SELECT'),
   );
 
   // Insert default mappings as nodes.
@@ -41,15 +43,11 @@ function mediamosa_tool_pdf_install() {
 
   $default_profiles = array(
     array(
-      'pdf to swf',
+      'PDF',
       'FALSE',
       'pdf',
-      'swf',
-      array(
-        'def_viewer' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
-        'fonts' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
-        'flash_version' => '9',
-      ),
+      'pdf',
+      array(),
     ),
   );
 
@@ -63,6 +61,7 @@ function mediamosa_tool_pdf_install() {
     $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
     $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
     $node->{mediamosa_transcode_profile_db::COMMAND} = mediamosa_transcode_profile::arrayToCommand($default_profile[4]);
+    $node->{mediamosa_transcode_profile_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($default_profile[0], 'mediamosa_transcode_profile');
 
     $node = node_save($node);
   }
@@ -122,5 +121,78 @@ function mediamosa_tool_pdf_install() {
         $node = node_save($node);
       }
     }
+  }
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_pdf_uninstall() {
+
+  $query = new EntityFieldQuery();
+  $entities = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('type',
+      array(
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+      ), 'IN')
+    ->execute();
+  $nodes = node_load_multiple(array_keys($entities['node']));
+
+  // Can't add tool=... to FieldQuery, so do it here.
+  $nodes_to_delete = array();
+  foreach ($nodes as $node) {
+    if ($node->tool == 'pdf') {
+      $nodes_to_delete[] = $node->nid;
+    }
+  }
+  node_delete_multiple($nodes_to_delete);
+}
+
+/**
+ * Added replace parameter to pdf tool.
+ */
+function mediamosa_tool_pdf_update_7000() {
+
+  $params = array(
+    array(
+      'pdf', 'replace', 'replace', NULL, NULL, NULL, '', 'FALSE', t('Remove any other existing generated pdf files by this tool in the asset.'), 'SELECT'),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($params as $param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $param[8];
+    $node->{mediamosa_tool_params_db::TYPE_PARAMETER} = $param[9];
+
+    $node = node_save($node);
+  }
+}
+
+/**
+ * Added machine_name to pdf tool.
+ */
+function mediamosa_tool_pdf_update_7001() {
+
+  $result = mediamosa_db::db_query('SELECT nid FROM {mediamosa_transcode_profile} where tool=:tool', array(':tool' => mediamosa_tool_pdf::NAME));
+  foreach ($result as $record) {
+    $node = node_load($record['nid']);
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== NULL) {
+      continue;
+    }
+    $machine_name = empty($node->title) ? (empty($node->profile) ? 'mediamosa_transcode_profile' : $node->profile) : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_transcode_profile');
+    node_save($node);
   }
 }

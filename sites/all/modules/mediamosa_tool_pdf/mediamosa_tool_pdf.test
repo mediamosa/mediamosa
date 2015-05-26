@@ -1,0 +1,140 @@
+<?php
+/**
+ * @file
+ * Job tests for zip tool related functions.
+ */
+
+class MediaMosaToolPdfTestCaseEga extends MediaMosaTestCaseEgaJob {
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - PDF',
+      'description' => 'Test the pdf tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    parent::setUp('mediamosa_tool_pdf');
+  }
+
+  /**
+   * PDF REST call helper.
+   *
+   * @param string $asset_id
+   *   The asset to store the pdfs.
+   * @param array $asset_ids
+   *   The assets to add to pdfs.
+   * @param array $parameters
+   *   The REST call parameters.
+   * @param array $expected_result_ids
+   *   Expected result IDS.
+   *
+   * @return array
+   *   The rest response.
+   */
+  protected function AssetCreatePDF($asset_id, array $asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_asset_pdf_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_pdf_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_pdf_create::FILENAME  => 'test.pdf',
+      mediamosa_rest_call_asset_pdf_create::ASSET_IDS  => $asset_ids,
+    );
+
+    // Required.
+    $uri = 'asset/' . $asset_id . '/pdf/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Create Pdf: @asset_ids, got result @result (@result_description)",
+        array(
+          '@asset_ids' => implode(', ', $asset_ids),
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      return FALSE;
+    }
+
+    $response = mediamosa_lib::simplexml2array($response['xml']->items->item);
+
+    $this->var_export_verbose($response);
+    $this->assert(isset($response['job_id']) && $response['job_id'] > 0);
+    $this->assert(isset($response['asset_id']) && $response['asset_id'] !== '');
+
+    // Return data.
+    return $response;
+  }
+
+  /**
+   * Test download of 2 assets.
+   */
+  public function testPdfCreation() {
+
+    // Create asset to hold pdf.
+    $pdf_asset_id = $this->createAsset();
+
+    // Create 4 assets with an image.
+    $asset_ids = array();
+    for ($i = 1; $i < 5; $i++) {
+      $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/notblack-001.jpeg';
+      $upload = $this->uploadTestFile(array('filename' => $filename));
+      $asset_ids[$i] = $upload['asset_id'];
+      $mediafile_id = $upload['mediafile_id'];
+      $parameters = array('still_type' => 'NONE');
+      $this->createMediafileStill($mediafile_id, $parameters);
+    }
+    $this->doQueueCycleAll();
+
+    $this->AssetCreatePDF($pdf_asset_id, $asset_ids);
+
+    $this->doQueueCycleAll();
+
+    $asset = $this->getAsset($pdf_asset_id);
+    $this->var_export($asset);
+
+    $this->assert($asset['mediafiles']['mediafile']['metadata']['mime_type'] === 'application/pdf', 'Correct mime-type.');
+    $this->assert($asset['mediafiles']['mediafile']['metadata']['filesize'] > 0, 'PDF has a filesize.');
+    $this->assert($asset['mediafiles']['mediafile']['filename'] == 'test.pdf', 'PDF has correct filename.');
+    $filesize_4images = $asset['mediafiles']['mediafile']['metadata']['filesize'];
+
+    // Add extra image.
+    $upload = $this->uploadTestFile(array('filename' => $filename));
+    $asset_ids[5] = $upload['asset_id'];
+
+    // Test replace parameter TRUE.
+    $parameters = array(
+      mediamosa_rest_call_asset_pdf_create::REPLACE => 'TRUE',
+    );
+    $this->AssetCreatePDF($pdf_asset_id, $asset_ids, $parameters);
+    $this->doQueueCycleAll();
+    $asset = $this->getAsset($pdf_asset_id);
+    $this->var_export($asset['mediafiles']);
+    $this->assert($asset['mediafiles']['mediafile']['metadata']['filesize'] > $filesize_4images, 'PDF has increased in size.');
+
+    // Test replace parameter FALSE.
+    $parameters = array(
+      mediamosa_rest_call_asset_pdf_create::REPLACE => 'FALSE',
+    );
+    $this->AssetCreatePDF($pdf_asset_id, $asset_ids, $parameters);
+    $this->doQueueCycleAll();
+    $asset = $this->getAsset($pdf_asset_id);
+    $this->assert(count($asset['mediafiles']['mediafile']) == 2, 'The assets has 2 mediafiles.');
+  }
+}
