@@ -5568,3 +5568,15 @@ function mediamosa_update_7206() {
     db_add_unique_key('mediamosa_tool_params', 'uni_machine_name', array('machine_name'));
   }
 }
+
+/**
+ * Make sure dir \/data\/transcode\/[0-9] exists.
+ */
+function mediamosa_update_7207() {
+
+  // The data/transcode needs subdirs.
+  $prefixes = '0123456789';
+  for ($x = 0; $x < strlen($prefixes); $x++) {
+    mediamosa_profile::mountpoint_mkdir('data/transcode/' . $prefixes{$x});
+  }
+}

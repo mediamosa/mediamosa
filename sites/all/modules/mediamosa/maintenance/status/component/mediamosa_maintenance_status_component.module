@@ -82,6 +82,12 @@ function mediamosa_maintenance_status_component_generate() {
     _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
   }
 
+  // The data/transcode needs subdirs.
+  $prefixes = '0123456789';
+  for ($x = 0; $x < strlen($prefixes); $x++) {
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/transcode/' . $prefixes[$x], $checks);
+  }
+
   // We store each file in separate directories based on the first letter of the
   // file. We need to create these directories.
   $prefixes = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -90,7 +96,7 @@ function mediamosa_maintenance_status_component_generate() {
   }
 
   $results['mount_structure'] = array(
-    'title' => t('SANNAS stucture'),
+    'title' => t('SANNAS structure'),
     'value' => empty($checks['not_structured']) ? t('Good') : t('Failures'),
     'severity' => _mediamosa_maintenance_status_okerror(empty($checks['not_structured'])),
   );
