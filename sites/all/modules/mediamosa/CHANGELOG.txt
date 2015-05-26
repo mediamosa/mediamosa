@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-dev (build 2166)
+MediaMosa 3.6.0-dev (build 2167)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -248,6 +248,24 @@ MediaMosa 3.6.0-dev (build 2166)
   values from POST and GET.
 - Fixed keeporder modifier on CQL Solr, now also works on MySQL.
 - REST call object now available through core response object.
+- Updated advanced_help contrib module.
+- Rewritten PDF module.
+- Fixed false positive warnings on statuspage.
+- Add support for CDATA in output.
+- Made /assets [GET] aware of trashcan and published
+- Added extra test for /data/transcode/{0..9}.
+- Added more search alters for external modules.
+- Allow other modules to modify solr search.
+- Added mediamosa_asset_metadata::property_update().
+- Added mediamosa_asset_metadata::metadata_prop_value_get().
+- Removed unwanted image style restriction.
+- Added option tool to get_by_asset_id().
+- Change 2pass to support newer version of FFmpeg (patch by sajkec).
+- Change to support newer version of FFmpeg in vpx-transcode (patch by sajkec).
+- Change to support newer version of FFmpeg in vpx-analyse (patch by sajkec).
+- Fix for detecting audio stream in vpx-transcode (patch by sajkec).
+- Fix for detecting audio stream in vpx-analyse (patch by sajkec).
+- Minor spelling error in installer (patch by sajkec).
 
 
 MediaMosa 3.5.x (build 2072)
