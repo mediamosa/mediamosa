@@ -32,9 +32,9 @@ attributions[gutmans][title] = 'Andi Gutmans'
 attributions[gutmans][license] = 'Creative Commons BY 2.0'
 attributions[gutmans][license_url] = 'http://creativecommons.org/licenses/by/2.0/deed.en'
 
-; Information added by Drupal.org packaging script on 2015-03-27
-version = "7.x-1.2"
+; Information added by Drupal.org packaging script on 2015-05-25
+version = "7.x-1.3"
 core = "7.x"
 project = "advanced_help"
-datestamp = "1427460482"
+datestamp = "1432557782"
 

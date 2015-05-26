@@ -1,8 +1,8 @@
 <p>The <strong>Advanced help</strong> module provides a framework that
 allows module and theme developers integrate help texts in a Drupal
-site.  Although the advanced help does not provide general help by
-itself, it provides a powerful and easy framework that modules and
-themes may use to provide their own help.</p>
+site.  Although the <strong>Advanced help</strong> does not provide
+general help by itself, it provides a powerful and easy framework that
+modules and themes may use to provide their own help.</p>
 
 <p>Modules and themes utilizing <strong>Advanced help</strong> should
 create a subdirectory named <code>help</code> inside their own main
@@ -33,7 +33,7 @@ title = PHP syntax
 parent = usage
 </pre>
 
-<p>This file defines five help topics (inside the square brackets, and
+<p>This file defines five help topics (inside the square brackets), and
 some settings for them.
 See: <a href="&topic:advanced_help/ini-file&">Advanced help .ini file format</a> for
 a list of defined settings.</p>
@@ -86,14 +86,14 @@ $output .= '&nbsp;' . t('Click the help icon!');
 <p>This format will ensure the popup status remains consistent when
 switching between links.</p>
 
-<p>To reference items within the help directory, such as images you
-wish to embed  within the help text, use:</p>
+<p>To reference items within the help directory, such as images you wish to embed  within the help text, use:</p>
+
 <pre>
 &lt;img src="&amp;path&amp;example.png"/&gt;
 &lt;img src="&amp;trans_path&amp;example.png"/&gt;
 </pre>
 
-<p>The latter is to refer to a translated version of the image if it differs from the original.</p>
+<p>The <code>trans_path</code> keyword refers to a translated version of the image in the translation directory and may be used it differs from the original.</p>
 
 <p>To reference any normal path in the site, use:</p>
 <pre>
@@ -102,8 +102,8 @@ wish to embed  within the help text, use:</p>
 
 <p><strong>NOTE: </strong> In previous versions <strong>Advanced
 help</strong> did not require the &amp;'s to be wrapped around
-<code>topic:</code>, <code>path</code>, and <code>base_url</code>.
-This is currently still supported, but may be removed in a future
+<code>topic</code>, <code>path</code>, and <code>base_url</code>.
+This is currently still supported, but will be removed in a future
 version.  By adding the &amp;'s these tokens are now not limited
 to <code>href=""</code> and <code>src=""</code> parameters.</p>
 
@@ -130,17 +130,23 @@ Deny from all
 &lt;/Files&gt;
 </pre>
 
-<p>It as the responsibility of the project author to make sure this
-type of protection is in place if the project's author has help files
-that merits protection from direct access.</p>
+<p>It as the responsibility of the site manager to make sure this type
+of protection is in place if the site has help files that merits
+protection from direct access.</p>
 
 <p>See also this tracker in the project's issue queue:  
 <a href="https://www.drupal.org/node/1980936">#1980936 Typing complete path to .html help files in module bypasses user permissions</a>.</p>
 
 <h2 id="search">Search</h2>
 
+<p>To enable advanced help search, navigate to
+<em>Administration → Configuration → Search and metadata → Search settings</em>.
+Scroll down to <em>Active search modules</em> and tick the box to the
+left of “Advanced help”.  The search form will appear on the top of
+the advanced help index pages.</p>
+
 <p>If the core <strong>Search</strong> module is enabled, the contents
 of the advanced help framework will be indexed on cron. If you enable
 new modules or themes and wish to immediately index their help text,
-navigate to <em>Administration → Reports → Status report</em> and click the link
-“run cron manually”.</p>
+navigate to <em>Administration → Reports → Status report</em> and
+click the link “run cron manually”.</p>
