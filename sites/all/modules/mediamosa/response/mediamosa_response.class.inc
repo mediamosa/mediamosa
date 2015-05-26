@@ -1164,7 +1164,8 @@ class mediamosa_response extends mediamosa {
   /**
    * Add child item to XML node.
    *
-   * @param array $item
+   * @param array $dom_document
+   * @param array $dom_node
    * @param string $key
    * @param array/string $mixed_value
    * @param int $max_depth
@@ -1177,7 +1178,29 @@ class mediamosa_response extends mediamosa {
 
     // Check if value is an array.
     if (!is_array($mixed_value)) {
-      return $dom_node->appendChild(new DOMElement($key, mediamosa_unicode::xmlentities($mixed_value)));
+      $key_values = explode(' ', $key);
+      $key = array_shift($key_values);
+
+      if (substr($mixed_value, 0, 9) == '<![CDATA[') {
+        $element = $dom_document->createElement($key);
+        // Remove CDATA tags.
+        $mixed_value = substr($mixed_value, 9, -3);
+        // Add CDATA to dom.
+        $cdata = $dom_document->createCDATASection($mixed_value);
+        $element->appendChild($cdata);
+      }
+      else {
+        $element = $dom_document->createElement($key, mediamosa_unicode::xmlentities($mixed_value));
+      }
+
+      // Add properties.
+      foreach ($key_values as $key_value) {
+        list($element_key, $element_value) = explode("=", $key_value);
+        $attr = $element->setAttribute($element_key, $element_value);
+        $element->appendChild($attr);
+      }
+
+      return $dom_node->appendChild($element);
     }
 
     // Is an array.
@@ -1208,7 +1231,18 @@ class mediamosa_response extends mediamosa {
       return NULL;
     }
 
-    $dom_element_child = $dom_node->appendChild(new DOMElement($key));
+    $key_values = explode(' ', $key);
+    $key = array_shift($key_values);
+    $element = $dom_document->createElement($key);
+
+    // Add properties.
+    foreach ($key_values as $key_value) {
+      list($element_key, $element_value) = explode("=", $key_value);
+      $attr = $element->setAttribute($element_key, $element_value);
+      $element->appendChild($attr);
+    }
+
+    $dom_element_child = $dom_node->appendChild($element);
     foreach ($mixed_value as $mixed_key => $value) {
       $this->generate_xml_add_child($dom_document, $dom_element_child, $mixed_key, $value, $max_depth);
     }
