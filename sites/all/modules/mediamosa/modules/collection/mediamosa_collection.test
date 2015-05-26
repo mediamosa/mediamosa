@@ -1,10 +1,14 @@
 <?php
- /**
-  * @file
-  * Unittests for collection modules.
-  */
+/**
+ * @file
+ * Unittests for collection modules.
+ */
+
 class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Collection - common tests',
@@ -16,16 +20,16 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
   /**
    * Implements setUp().
    */
-  function setUp() {
+  protected function setUp() {
     parent::setUp();
   }
 
   /**
-   * Testing collection basic working (#205).
+   * Testing collection basic working.
    */
-  function testCollectionMediaManagement() {
+  public function testCollectionMediaManagement() {
 
-    // test 1: [POST] collection/create - make empty collection.
+    // Test 1: [POST] collection/create - make empty collection.
 
     // Parameters collection.
     $parameters = array(
@@ -38,7 +42,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
     $coll_id = $response['xml']->items->item[0]->coll_id;
 
-    // test header request result
+    // Test header request result.
     $request_result = (string) $response['xml']->header->request_result;
     $this->assertTrue(
       $request_result == (string) mediamosa_response::SUCCESS,
@@ -78,7 +82,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Database lookup collection group_id: @group_id", array('@group_id' => print_r($a_collection['group_id'], TRUE)))
     );
 
-    // test: [GET] collection?limit=1 - list of collections
+    // Test: [GET] collection?limit=1 - list of collections.
 
     $parameters = array(
       mediamosa_rest_call_collection_search::USER_ID => self::SIMPLETEST_USER_ID,
@@ -102,7 +106,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Call /collection?limit=1 Coll_id should match [GET]")
     );
 
-    // Test: [GET] collection/{coll_id} - details of a collection
+    // Test: [GET] collection/{coll_id} - details of a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -122,8 +126,8 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Numofvideos (@numofvideos) == 0", array('@numofvideos' => $numofvideos))
     );
 
-
-    // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
+    // Test: [GET] collection/{coll_id}/asset/count
+    // - count the assets in a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -142,7 +146,6 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       $numofvideos == 0,
       t("Numofvideos (@numofvideos) == 0", array('@numofvideos' => $numofvideos))
     );
-
 
     // Test: [post] collection/$coll_id/asset_relation?asset=$asset_id
 
@@ -166,8 +169,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Call /collection/coll_id/asset_relation [POST]")
     );
 
-
-    // Test: [GET] collection/{coll_id} - details of a collection
+    // Test: [GET] collection/{coll_id} - details of a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -187,8 +189,8 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Numofvideos (@numofvideos) == 1", array('@numofvideos' => $numofvideos))
     );
 
-
-    // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
+    // Test: [GET] collection/{coll_id}/asset/count
+    // - count the assets in a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -207,7 +209,6 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       $numofvideos == 1,
       t("Numofvideos (@numofvideos) == 1", array('@numofvideos' => $numofvideos))
     );
-
 
     // Database lookup.
     mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
@@ -249,14 +250,14 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Call /collection/[id]/asset [GET]")
     );
 
-    // test: [POST] collection/$coll_id - update collection
+    // Test: [POST] collection/$coll_id - update collection.
     $parameters = array(
       mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_update::TITLE => 'new title',
       mediamosa_rest_call_collection_update::DESCRIPTION => 'new desc',
     );
 
-    $response = $this->restCallPOST('collection/' . $coll_id , $parameters);
+    $response = $this->restCallPOST('collection/' . $coll_id, $parameters);
     $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -287,7 +288,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // test: [POST] collection/$coll_id/asset_relation/delete?asset=$asset_id
-    // delete collectie/asset relation
+    // Delete collectie/asset relation.
     $parameters = array(
       mediamosa_rest_call_collection_delete_relation::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_delete_relation::ASSET_ID => $asset_id,
@@ -317,8 +318,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Database lookup asset_collection coll_id: @coll_id", array('@coll_id' => print_r($a_asset_collection['coll_id'], TRUE)))
     );
 
-
-    // Test: [GET] collection/{coll_id} - details of a collection
+    // Test: [GET] collection/{coll_id} - details of a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -338,8 +338,8 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       t("Numofvideos (@numofvideos) == 0", array('@numofvideos' => $numofvideos))
     );
 
-
-    // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
+    // Test: [GET] collection/{coll_id}/asset/count
+    // - count the assets in a collection.
     $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -358,12 +358,44 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       $numofvideos == 0,
       t("Numofvideos (@numofvideos) == 0", array('@numofvideos' => $numofvideos))
     );
+
+    // Test: collection::search().
+    $result = mediamosa_collection::search(array(), array('coll_id' => $coll_id));
+    $this->assertTrue(
+      count($result) == 1,
+      t("test collection::search")
+    );
+    $result = mediamosa_collection::search(array(), array('title' => 'new title'));
+    $this->assertTrue(
+      count($result) == 1,
+      t("test collection::search")
+    );
+
+    $parameters = array(
+      mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Do GET /collection/{coll_id}/asset/count call.
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
+    $request_result_id = (int) $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/coll_id/asset/count [GET]")
+    );
+
+    // Test the numofvideos number.
+    $numofvideos = $response['xml']->items->item->numofvideos;
+    $this->assertTrue(
+      $numofvideos == 0,
+      t("Numofvideos (@numofvideos) == 0", array('@numofvideos' => $numofvideos))
+    );
+
   }
 
   /**
    * Testing hide empty assets flag.
    */
-  function testCollectionHideEmptyAssets() {
+  public function testCollectionHideEmptyAssets() {
 
     // Create collection.
     $coll_id = $this->createCollection();
@@ -377,7 +409,11 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     $upload = $this->uploadTestFile();
 
     // Put them into the collection.
-    $this->createCollectionAssetRelation($coll_id, array($asset_id_1, $asset_id_2, $upload['asset_id']));
+    $this->createCollectionAssetRelation($coll_id, array(
+      $asset_id_1,
+      $asset_id_2,
+      $upload['asset_id'],
+    ));
 
     // Now search collection, numofvideos should be 2.
     $result = $this->searchCollections();
