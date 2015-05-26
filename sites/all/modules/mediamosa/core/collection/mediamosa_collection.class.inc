@@ -1,41 +1,19 @@
 <?php
-// $Id$
-
-/**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice
- * Oriented Media Management and Distribution platform (http://mediamosa.org)
- *
- * Copyright (C) 2012 SURFnet BV (http://www.surfnet.nl) and Kennisnet
- * (http://www.kennisnet.nl)
- *
- * MediaMosa is based on the open source Drupal platform and
- * was originally developed by Madcap BV (http://www.madcap.nl)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, you can find it at:
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- */
-
 /**
  * @file
  * The helper functions of collection module.
  */
 
 class mediamosa_collection {
-  // ------------------------------------------------------------------ Static Functions.
+  // Static Functions.
   /**
    * Remove collection.
    *
    * @param string $coll_id
+   *   Collection id.
+   *
    * @return bool
+   *   True/false.
    */
   public static function delete($coll_id) {
     $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);
@@ -49,6 +27,7 @@ class mediamosa_collection {
    * returns found collection.
    *
    * @param string $coll_id
+   *   Collection id.
    */
   public static function must_exists($coll_id) {
     return mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
@@ -60,6 +39,7 @@ class mediamosa_collection {
    * returns number of found assetes in the collection.
    *
    * @param string $coll_id
+   *   Collection id.
    */
   public static function count_assets_in_collection($app_ids, $coll_id, $hide_empty_assets = FALSE) {
 
@@ -84,10 +64,12 @@ class mediamosa_collection {
   }
 
   /**
-   * Get multiple collections within an array, with key
-   * as coll_id.
+   * Get multiple collections within an array.
    *
-   * @param array $a_coll_ids
+   * Key of the array is the coll_id.
+   *
+   * @param array $coll_ids
+   *   array of collection id's.
    */
   public static function getAllAssoc(array $coll_ids) {
 
@@ -106,6 +88,7 @@ class mediamosa_collection {
    * Get the collection.
    *
    * @param string $coll_id
+   *   Collection id.
    */
   public static function get($coll_id, $app_id = NULL) {
 
@@ -121,9 +104,59 @@ class mediamosa_collection {
   }
 
   /**
+   * Search collections.
+   *
+   * @param array $fields
+   *   Selection of fields to get, keep empty to get all fields.
+   * @param array $options
+   *   Options for query.
+   *
+   * @return array
+   *   An associative array where key is the mediafile ID.
+   */
+  public static function search($fields = array(), $options = array()) {
+    $options += array(
+      'limit' => FALSE,
+      'offset' => 0,
+      'orderby' => FALSE,
+      'return_resource' => FALSE,
+      'app_id' => FALSE,
+      'coll_id' => FALSE,
+      'title' => FALSE,
+      'description' => FALSE,
+    );
+
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
+      ->fields('c', $fields);
+
+    if ($options['title']) {
+      $query->condition('c.title', $options['title']);
+    }
+    if ($options['app_id']) {
+      $query->condition('c.' . mediamosa_collection_db::APP_ID, $options['app_id']);
+    }
+    if ($options['coll_id']) {
+      $query->condition('c.' . mediamosa_collection_db::ID, $options['coll_id']);
+    }
+    if (($options['limit'] && is_numeric($options['limit'])) || ($options['offset'] && is_numeric($options['offset']))) {
+      $query->range($options['offset'], $options['limit']);
+    }
+    if ($options['orderby']) {
+      $query->orderBy('c.' . $options['orderby'], 'ASC');
+    }
+
+    // Return resource.
+    if ($options['return_resource']) {
+      return $query->execute();
+    }
+    return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID);
+  }
+
+  /**
    * Get all collections.
    *
-   * @param $fields
+   * @param array $fields
+   *   Selection of fields to get, keep empty to get all fields.
    */
   public static function getAll($fields = array(), $order_by = mediamosa_collection_db::TITLE, $order_direction = mediamosa_db::ORDER_DIRECTION_ASC) {
     return mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
@@ -135,7 +168,7 @@ class mediamosa_collection {
   /**
    * Create a collection.
    */
-  public static function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
+  public static function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // New ID.
     $coll_id = mediamosa_db::uuid($app_id);
@@ -190,18 +223,29 @@ class mediamosa_collection {
    * Update a collection.
    *
    * @param string $coll_id
+   *   Collection id.
    * @param string $owner_id
+   *   Owner id of the collection.
    * @param string $title
+   *   Title of collection.
    * @param string $description
+   *   Description of collection.
    * @param string $group_id
+   *   Group (ownership) of collection.
    * @param bool $private
+   *   Boolean to set this collection private (only visible to owner).
    * @param bool $public
+   *   Makes this collection specifically public.
    * @param bool $category
+   *   Optional category.
    * @param bool $isprivate
+   *   needs explanation.
    * @param bool $public_assign
+   *   needs explanation.
    * @param bool $is_unappropriate
+   *   setting this, makes the collection disabled.
    */
-  public static function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
+  public static function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // Required.
     $fields = array();
