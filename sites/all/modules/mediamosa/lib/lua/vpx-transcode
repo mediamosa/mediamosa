@@ -630,7 +630,7 @@ if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end 
   local fd
 
   -- 2 pass h264 encoding.
-
+  -- "-vpre" option is absolete for x264 and was changed to "-preset". Also "slower_firstpass" is now changed to "slower"
   -- Prepare the transcoding parameters.
   local params_start = string.sub(params, 1, pass_start - 1)
   local params_end = string.sub(params, pass_end + 1, string.len(params))
@@ -638,15 +638,15 @@ if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end 
   local params_pass1 = params_start .. "-an -pass 1 -passlogfile " .. hash .. params_end .. " -threads 0 "
   local params_pass2 = params_start .. "-pass 2 -passlogfile " .. hash .. params_end .. " -threads 0 "
 
-  vpre_start, vpre_end = string.find(params_pass1, "-vpre ")
+  vpre_start, vpre_end = string.find(params_pass1, "-preset ")
   if vpre_start ~= nil and vpre_end ~= nil then
     vpre_start, vpre_end = string.find(params_pass1, " ", vpre_end + 1)
     params_start = string.sub(params_pass1, 1, vpre_end - 1)
     params_end = string.sub(params_pass1, vpre_end, string.len(params_pass1))
-    params_pass1 = params_start .. "_firstpass" .. params_end
+    params_pass1 = params_start .. params_end
   else
-    params_pass1 = params_pass1 .. " -vpre slower_firstpass"
-    params_pass2 = params_pass2 .. " -vpre slower"
+    params_pass1 = params_pass1 .. " -preset slower"
+    params_pass2 = params_pass2 .. " -preset slower"
   end
 
   -- Temporary directory for dealing with the temporary files.
