@@ -124,6 +124,7 @@ class mediamosa_search {
       'related_count' => 10,
       'related_boost' => false,
     );
+    drupal_alter('mediamosa_asset_search_parameters', $parameters);
 
     // Call function.
     try {

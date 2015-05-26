@@ -459,6 +459,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
+   * Allows other classes to alter the where.
+   */
+  public function search_where_alter(&$a_where) {
+  }
+
+  /**
    * converts the cql array into sql
    */
   protected function mediamosa_core_cql_context_cql2sql() {
@@ -471,6 +477,10 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $a_result_parse = $a_result_cql2sql = array();
 
     $a_where = $o_part_group->mediamosa_cql_part_parse($this, 'mediamosa_core_cql_hook_cql2sql_where', $a_result_parse);
+
+    // Allow other modules to alter the solr where query parts.
+    $this->search_where_alter($a_where);
+
     $str_sql_where = $this->mediamosa_cql_parseresult_to_string($a_where);
     $a_having = $o_part_group->mediamosa_cql_part_parse($this, 'mediamosa_core_cql_hook_cql2sql_having', $a_result_parse);
     $str_sql_having = $this->mediamosa_cql_parseresult_to_string($a_having);

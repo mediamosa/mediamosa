@@ -673,6 +673,14 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
   protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC', $format = 'Y-m-d\TH:i:s\Z') {
     return parent::mediamosa_cql_str_date_2_db_date($date, $timezone, $format);
   }
+
+  /**
+   * Allows other classes to alter the SOLR where.
+   */
+  public function search_where_alter(&$a_where) {
+    drupal_alter('mediamosa_solr_search_where', $a_where);
+  }
+
 }
 
 class mediamosa_solr_cql extends mediamosa_core_cql {
