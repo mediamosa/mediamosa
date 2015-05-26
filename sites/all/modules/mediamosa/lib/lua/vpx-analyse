@@ -35,7 +35,8 @@ local RHOOK = lpeg.P("]") * space
 local digits = lpeg.R("09")^1
 local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
 
-local word = lpeg.C(symbol) * space
+local ffjunk = (space * (LPAREN * (1 - RPAREN)^0 * RPAREN))^0
+local word = lpeg.C(symbol) * space * ffjunk
 local number = lpeg.C(digits) * space
 local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
@@ -50,7 +51,6 @@ local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
 local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
-local ffjunk = (space * (LPAREN * (1 - RPAREN)^0 * RPAREN))^0
 -- local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space * ffjunk
 local codec = (lpeg.C(symbol)) * space * ffjunk
 local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
@@ -116,6 +116,7 @@ end
 -- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
 -- Stream #0.0: Video: mjpeg, yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- Stream #0.0: Video: mjpeg (MJPG / 0x47504A4D), yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
+-- Stream #0:0(eng): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080, 9282 kb/s, 24 fps, 24 tbr, 2400 tbn, 4800 tbc
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
 local ln_video = space * "Stream #" * steam_number * language * COLON *
@@ -127,7 +128,7 @@ local ln_video = space * "Stream #" * steam_number * language * COLON *
   (aspectratio + lpeg.Cc("unknown")) *
   (
     (COMMA * number * "kb/s")^-1 *
-    (COMMA * (lpeg.S("PDSF") * "AR" * space * any_number * ":" * any_number)^1)^-1 *
+    (COMMA * (lpeg.S("PDSF") * "AR" * space * any_number * ":" * any_number * space)^1)^-1 *
     ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
