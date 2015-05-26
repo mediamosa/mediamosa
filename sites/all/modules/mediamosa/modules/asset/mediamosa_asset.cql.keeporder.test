@@ -91,5 +91,22 @@ class MediaMosaAssetCQLKeepOrderTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_keeporder(array($asset_id_5, $asset_id_4, $asset_id_3, $asset_id_2, $asset_id_1));
 
     $this->cql_do_search_test_assets_keeporder(array($asset_id_3, $asset_id_4, $asset_id_2, $asset_id_5, $asset_id_1));
+
+    // Do /assets check.
+    $assets = $this->getAssets(array($asset_id_1, $asset_id_2, $asset_id_3, $asset_id_4, $asset_id_5));
+    $this->assert($assets['header']['item_count_total'] == 5, '/assets must return all assets requested.');
+    $this->assert($assets['items']['item'][0]['asset_id'] == $asset_id_1, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][1]['asset_id'] == $asset_id_2, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][2]['asset_id'] == $asset_id_3, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][3]['asset_id'] == $asset_id_4, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][4]['asset_id'] == $asset_id_5, '/assets must maintain ordering.');
+
+    $assets = $this->getAssets(array($asset_id_5, $asset_id_4, $asset_id_3, $asset_id_2, $asset_id_1));
+    $this->assert($assets['header']['item_count_total'] == 5, '/assets must return all assets requested.');
+    $this->assert($assets['items']['item'][0]['asset_id'] == $asset_id_5, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][1]['asset_id'] == $asset_id_4, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][2]['asset_id'] == $asset_id_3, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][3]['asset_id'] == $asset_id_2, '/assets must maintain ordering.');
+    $this->assert($assets['items']['item'][4]['asset_id'] == $asset_id_1, '/assets must maintain ordering.');
   }
 }
