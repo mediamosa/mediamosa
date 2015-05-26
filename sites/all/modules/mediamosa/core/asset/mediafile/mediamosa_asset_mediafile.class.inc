@@ -213,6 +213,11 @@ class mediamosa_asset_mediafile {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $options['transcode_profile_id']);
     }
 
+    // Transcode tool.
+    if (isset($options['tool'])) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::TOOL, $options['tool']);
+    }
+
     // Tag query.
     if (isset($options['tag'])) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::TAG, $options['tag']);
