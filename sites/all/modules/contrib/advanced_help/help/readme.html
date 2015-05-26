@@ -12,27 +12,34 @@ the help texts can be easiely kept in sync with the project they
 provide help texts for, but also that read access to these files
 are not managed by any content access restrictions imposed by Drupal.</p>
   
-<p>The help texts can be marked up with standard HTML, but are
-rendered within your site's Drupal theming structure.</p>
+<p>The help texts can be marked up with standard HTML. They will be
+rendered using your site's theme.</p>
 
-<p>If the module or theme author does not make use of the full
-<em>Advanced help</em> framework, but if there is a
+<p>If the module or theme author does not make use of the
+<em>Advanced help</em> HTML-framework, but if there is a
 <code>README.md</code> or <code>README.txt</code> in the package,
 the content of that file will be shown instead.</p>
   
-<p>The help texts may appear in a popup or not as the module prefers.
+<p>The help texts may appear in a popup or not as the project prefers.
 By taking away access to view the popups, a site can hide popups from
 users.</p>
 
 <p>The help texts can be placed in a hierarchy, allowing for top down
 navigation of help.</p>
 
-<p>The hierarchy is tied into Drupal's search system. If this is
+<p>The help texts may be made searchable. If advanced help search is
 enabled, all help texts are fully indexed. This means that the entire
 contents of the advanced help set of pages can be searched for
 keywords.</p>
 
 <h2 id="use">Using the module</h2>
+
+<p>When you enable the module, a new tab with the legend “Advanced
+help” will show up under “Help”:
+
+<div class="ta-center">
+<img class="help-img-center" alt="ahelp_tab.png" src="&path&ahelp_tab.png" width="661" height="225" border="1" />
+</div>
 
 <p>By itself, this module doesn't do much.  The <strong>Advanced
 help</strong> assists other modules and themes in showing help texts.
@@ -44,19 +51,19 @@ comes with a small companion demo module named
 For more extensive example of use of the advanced help features, see
 the <strong>Views</strong> project.</p>
 
+<!--
 <h2 id="project-recommended">Recommended modules</h2>
 
 <ul>
-<!--
 <li><a href="https://www.drupal.org/project/markdown">Markdown filter</a>:<br>
 When this module is enabled, display of any <code>README.md</code> the
 module shows will be rendered with markdown.</li>
--->
 <li><a href="https://www.drupal.org/project/attributions">Attributions</a>:<br>
 When this module is enabled, attributions of third party content used
 by the project (i.e. some text from Wikipedia) will be available in an
 attribution block and on an atribution page.</li>
 </ul>
+-->
 
 <h2 id="support-status">Support status</h2>
 
@@ -95,5 +102,6 @@ answering &amp; closing support requests.</p>
 <li><a href="https://www.drupal.org/u/redndahead">redndahead</a> (8 commits)</li>
 <li><a href="https://www.drupal.org/u/dmitrig01">dmitrig01</a> (3 commits)</li>
 <li><a href="https://www.drupal.org/u/amitgoyal">amitgoyal </a> (5 commits)</li>
-<li><a href="https://www.drupal.org/u/gisle">gisle</a> (current maintainer)</li>
+<li><a href="https://www.drupal.org/u/gisle">gisle</a> (current maintainer, D7)</li>
+<li><a href="https://www.drupal.org/u/gnuget">gnuget</a> (current maintainer, D8)</li>
 </ul>

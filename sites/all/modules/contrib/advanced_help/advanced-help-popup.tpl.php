@@ -34,7 +34,10 @@
       </div> <!-- /content-content -->
     </div> <!-- /content -->
 
-    <?php print $closure; ?>
+    <!--
+    See comment about $closure in main module.
+    print $closure;
+    -->
 
   </div> <!-- /page -->
 </body>

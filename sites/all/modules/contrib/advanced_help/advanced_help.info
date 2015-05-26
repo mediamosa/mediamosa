@@ -10,9 +10,9 @@ attributions[click_icon][title] = 'click_icon.png'
 attributions[click_icon][license] = 'Creative Commons 0'
 attributions[click_icon][license_url] = 'https://creativecommons.org/publicdomain/zero/1.0/'
 
-; Information added by Drupal.org packaging script on 2015-03-27
-version = "7.x-1.2"
+; Information added by Drupal.org packaging script on 2015-05-25
+version = "7.x-1.3"
 core = "7.x"
 project = "advanced_help"
-datestamp = "1427460482"
+datestamp = "1432557782"
 
