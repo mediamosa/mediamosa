@@ -313,6 +313,54 @@ class mediamosa_asset_metadata {
   }
 
   /**
+   * Get metadata of the asset of a single property with a specific value.
+   *
+   * @param string $asset_id
+   *   The asset id.
+   * @param int $prop_id
+   *   The property id.
+   * @param int $value
+   *   value.
+   *
+   * @return array
+   *   The metadata property values.
+   */
+  public static function metadata_prop_value_get($asset_id, $prop_id, $value) {
+    $result = mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_asset_metadata} AS am
+       JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id
+       WHERE am.#asset_id = :asset_id AND am.prop_id = :prop_id and am.val_char = :value',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
+        '#prop_id' => mediamosa_asset_metadata_property_db::ID,
+        ':asset_id' => $asset_id,
+        ':prop_id' => $prop_id,
+        ':value' => $value,
+      )
+    );
+
+    $value = array();
+    foreach ($result as $metadata) {
+      switch ($metadata[mediamosa_asset_metadata_property_db::TYPE]) {
+        case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_CHAR];
+          break;
+
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
+          break;
+
+        case mediamosa_asset_metadata_property_db::TYPE_INT:
+          $value[] = $metadata[mediamosa_asset_metadata_db::VAL_INT];
+          break;
+      }
+    }
+    return $value;
+  }
+
+
+  /**
    * Deletes all metadata from a asset.
    *
    * @param string $asset_id
