@@ -35,6 +35,23 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', 'SVN-r19
  */
 function _mediamosa_maintenance_status_configuration_generate() {
 
+  /**
+   * Helper function.
+   */
+  function ini_size_str2int($size_str) {
+    switch (strtolower(substr($size_str, -1))) {
+      case 'm':
+        return (int) $size_str * 1048576;
+
+      case 'k':
+        return (int) $size_str * 1024;
+
+      case 'g':
+        return (int) $size_str * 1073741824;
+    }
+    return $size_str;
+  }
+
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
     'lua' => l(t('here'), 'http://mediamosa.org/forum/viewtopic.php',
@@ -90,7 +107,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   // ------------------------------------------------------------------ PHP ini.
   $php_upload_max_filesize = ini_get('upload_max_filesize');
-  $php_upload_max_filesize_ok = (!$php_upload_max_filesize && is_numeric($php_upload_max_filesize)) || drupal_substr($php_upload_max_filesize, 0, -1) >= 100 && in_array(drupal_substr($php_upload_max_filesize, -1), array('M', 'G'));
+  $php_upload_max_filesize_ok = (!$php_upload_max_filesize && is_numeric($php_upload_max_filesize)) || ini_size_str2int($php_upload_max_filesize) >= ini_size_str2int('100M');
   $php_upload_max_filesize = !$php_upload_max_filesize && is_numeric($php_upload_max_filesize) ? t('unlimited') : $php_upload_max_filesize;
 
   $results['php_max_filesize'] = array(
@@ -100,7 +117,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   );
 
   $php_post_max_size = ini_get('post_max_size');
-  $php_post_max_size_ok = (!$php_post_max_size && is_numeric($php_post_max_size)) || drupal_substr($php_post_max_size, 0, -1) >= 100 && in_array(drupal_substr($php_post_max_size, -1), array('M', 'G'));
+  $php_post_max_size_ok = (!$php_post_max_size && is_numeric($php_post_max_size)) || ini_size_str2int($php_post_max_size) >= ini_size_str2int('100M');
   $php_post_max_size = !$php_post_max_size && is_numeric($php_post_max_size) ? t('unlimited') : $php_post_max_size;
 
   $results['php_post_max'] = array(
@@ -110,7 +127,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   );
 
   $php_memory_limit = ini_get('memory_limit');
-  $php_memory_limit_ok = drupal_substr($php_memory_limit, 0, -1) >= 128 && in_array(drupal_substr($php_memory_limit, -1), array('M', 'G'));
+  $php_memory_limit_ok = (!$php_memory_limit && is_numeric($php_memory_limit)) || ini_size_str2int($php_memory_limit) >= ini_size_str2int('128M');
 
   $results['php_memory_limit'] = array(
     'title' => t('PHP memory limit'),
