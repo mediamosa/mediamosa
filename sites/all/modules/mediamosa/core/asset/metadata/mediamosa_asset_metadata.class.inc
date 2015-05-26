@@ -434,6 +434,34 @@ class mediamosa_asset_metadata {
   }
 
   /**
+   * Delete properties triplet: prop_name and val_char value of a single asset.
+   */
+  public static function metadata_asset_delete_asset_prop_value($asset_id, $propgroup_name, $prop_name, $value) {
+    $prop_id = mediamosa_db::db_query(
+      'SELECT prop_id FROM {#mediamosa_asset_metadata_property} AS amp
+       JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.propgroup_id = amp.propgroup_id
+       WHERE ampg.propgroup_name = :propgroup_name AND amp.prop_name = :prop_name',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
+        '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+        ':propgroup_name' => $propgroup_name,
+        ':prop_name' => $prop_name,
+      )
+    )->fetchField();
+
+    mediamosa_db::db_query(
+      'DELETE FROM {#mediamosa_asset_metadata} WHERE asset_id = :asset_id and prop_id = :prop_id and val_char = :value',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        ':prop_id' => $prop_id,
+        ':value' => $value,
+        ':asset_id' => $asset_id,
+      )
+    );
+  }
+
+  /**
    * Copy the metadata of the asset to another asset.
    *
    * @param string $from_asset_id
