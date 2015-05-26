@@ -13,3 +13,5 @@ dependencies[] = mediamosa_app
 
 ; Used files.
 files[] = mediamosa_tool_pdf.class.inc
+files[] = mediamosa_tool_pdf.rest.class.inc
+files[] = mediamosa_tool_pdf.test

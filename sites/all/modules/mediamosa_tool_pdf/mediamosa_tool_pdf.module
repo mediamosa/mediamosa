@@ -34,8 +34,12 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($mediafile_id) {
     }
   }
   $analyse = array();
-  $analyse['pages'] = array('type' => 'INT', 'value' => trim($pages));
-  $analyse['PDF version'] = array('type' => 'CHAR', 'value' => trim($version));
+  if (isset($analyse['pages'])) {
+    $analyse['pages'] = array('type' => 'INT', 'value' => trim($pages));
+  }
+  if (isset($analyse['PDF version'])) {
+    $analyse['PDF version'] = array('type' => 'CHAR', 'value' => trim($version));
+  }
 
   return $analyse;
 }
@@ -55,6 +59,21 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse_metadata($job_ext) {
 }
 
 /**
+ * Implements hook_mediamosa_tool_can_generate_still().
+ */
+function mediamosa_tool_pdf_mediamosa_tool_can_generate_still($mime_type) {
+  return mediamosa_tool_pdf::is_supported($mime_type);
+}
+
+/**
+ * Implements hook_mediamosa_tool_get_generate_still_exec().
+ */
+function mediamosa_tool_pdf_mediamosa_tool_get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
+  return mediamosa_tool_pdf::get_generate_still_exec($jobserver_job_id, $mediafile_id_source);
+}
+
+
+/**
  * Implements hook_mediamosa_tool_info().
  */
 function mediamosa_tool_pdf_mediamosa_tool_info() {
@@ -72,28 +91,10 @@ function mediamosa_tool_pdf_mediamosa_tool_info() {
 function _mediamosa_tool_pdf_status_generate() {
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'pdf2swf' => l(t('here'), 'http://mediamosa.org/trac/wiki/pdf2swf'),
     'pdfinfo' => l(t('here'), 'http://mediamosa.org/trac/wiki/pdfinfo'),
   );
 
   $results = array();
-
-  $exec_output = array();
-  $found = mediamosa_io::command_installed('pdf2swf -V', $exec_output);
-  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('part of', $exec_output) : t('pdf2swf not found');
-  $version = $found ? drupal_substr($status_line, drupal_strlen('pdf2swf - part of swftools ')) : '';
-  $pos = strpos($version, '.');
-  if ($pos !== FALSE) {
-    $version = drupal_substr($version, 0, $pos);
-  }
-
-  $results['app_pdf2swf'] = array(
-    'title' => t('PDF tool: pdf2swf'),
-    'value' => $status_line,
-    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_pdf::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING),
-    'description' => $found ? '' : t('Install pdf2swf. You can find more information how to install pdf2swf !here', array('!here' => $helper_links['pdf2swf'])),
-  );
-
   $exec_output = array();
   $found = mediamosa_io::command_installed('pdfinfo -v', $exec_output, array(0, 99));
   $status_line = $found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('pdfinfo not found');
@@ -113,7 +114,7 @@ function _mediamosa_tool_pdf_status_generate() {
   // Making the report.
   return array(
     'configuration' => array(
-      'title' => t('Image tool'),
+      'title' => t('PDF tool'),
       'results' => $results,
     ),
   );
@@ -134,4 +135,44 @@ function mediamosa_tool_pdf_mediamosa_status_collect($reset = FALSE) {
   }
 
   return $mediamosa_status_collect['statuses'];
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_tool_pdf_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Rest call to create a pdf job.
+  $rest_calls['asset/$asset_id/pdf/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_pdf_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_tool_pdf',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_tool_pdf_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  $rest_calls['asset/$asset_id/pdf/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create PDF.',
+    mediamosa_rest_call::DESCRIPTION => 'Start a create PDF-job from the asset_ids given and store this in asset_id. Only one mediafile per asset is taken, use the profile_id to determine which one (by default the original is taken). The PDF is created from a series of images and plain text files.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/M9FyEFTVy0zFzpbOv7DaEH4U/pdf/create [POST]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'Job id of the pdf job created.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+    <item>
+      <job_id>20621</job_id>
+      <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+    </item>
+  </items>',
+  );
+  return $rest_calls;
 }
