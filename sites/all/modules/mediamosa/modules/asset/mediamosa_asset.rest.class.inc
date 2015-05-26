@@ -546,6 +546,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     );
     unset($var_setup[self::VARS][self::TRASHCAN . '_match']);
 
+    // Allow modules to alter the search params.
+    drupal_alter('mediamosa_asset_rest_call_vars', $var_setup);
+
     return $var_setup;
   }
 

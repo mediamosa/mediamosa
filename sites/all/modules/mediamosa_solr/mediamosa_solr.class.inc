@@ -290,11 +290,14 @@ class mediamosa_solr {
       $query_params['facet.date.include'] = $parameters['solr_facet_date_include'];
     }
 
+    // Allow other modules to alter the solr query.
+    drupal_alter('mediamosa_solr_acl_search', $query, $parameters, $solr_query['AND']['cql']);
+
     // Do the acl and solr query in the fq parameter.
     $query_params['fq'] = $query;
 
-    mediamosa_debug::log('CQL ACL: ' . $query);
-    mediamosa_debug::log('CQL: ' . $query_cql);
+    // Allow other modules to alter the solr query.
+    drupal_alter('mediamosa_solr_search', $query_cql, $parameters, $solr_query['AND']['cql']);
 
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query_cql, $parameters['offset'], $parameters['limit'], $query_params);
