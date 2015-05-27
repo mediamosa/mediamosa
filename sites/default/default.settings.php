@@ -572,7 +572,7 @@ $conf['404_fast_html'] = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
  * for this URL / Location, disabling all REST calls; except upload
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = FALSE;
+$conf['mediamosa_app'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the

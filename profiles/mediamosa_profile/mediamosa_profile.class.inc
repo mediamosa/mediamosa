@@ -7,6 +7,9 @@
 if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.class.inc')) {
   include_once DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.class.inc';
 }
+if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mediamosa/lib/mediamosa_lib.class.inc')) {
+  include_once DRUPAL_ROOT . '/sites/all/modules/mediamosa/lib/mediamosa_lib.class.inc';
+}
 
 /**
  * Contains helper functions.
@@ -271,7 +274,6 @@ class mediamosa_profile {
    *     Array of requirements used for display.
    */
   public static function requirements_php_settings() {
-
     $requirements = array();
 
     $php_upload_max_filesize = ini_get('upload_max_filesize');
@@ -293,7 +295,7 @@ class mediamosa_profile {
     );
 
     $php_post_max_size = ini_get('post_max_size');
-    $too_low = (substr($php_post_max_size, 0, -1) < 100) && (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G');
+    $too_low = ((!$php_post_max_size && is_numeric($php_post_max_size)) || mediamosa_lib::php_config_value_to_bytes($php_post_max_size) < mediamosa_lib::php_config_value_to_bytes('100M'));
     $requirements['php_post_max'] = array(
       'title' => '<b>' . st('post_max_size:') . '</b>',
       'value' => $php_post_max_size,
