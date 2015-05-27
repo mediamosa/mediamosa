@@ -416,11 +416,12 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     //$this->var_export($user);
   }
 
-
   /**
    * Test the duplicate detection.
    */
   public function testDuplicates() {
+
+    $this->doEgaLogin_2();
 
     $upload = $this->uploadTestFile();
     $asset_id_1 = $upload['asset_id'];
@@ -430,6 +431,11 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     $upload = $this->uploadTestFile();
     $asset_id_3 = $upload['asset_id'];
+
+    $this->toEga_2();
+    $upload = $this->uploadTestFile();
+    $asset_id_4 = $upload['asset_id'];
+    $this->toEga_1();
 
     $assets = $this->duplicatedAssets();
     $asset_ids_1 = $assets['items']['item'][0]['asset_id'];

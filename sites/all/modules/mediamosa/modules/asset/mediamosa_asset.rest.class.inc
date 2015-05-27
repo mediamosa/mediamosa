@@ -2416,11 +2416,13 @@ class mediamosa_rest_call_asset_duplicates extends mediamosa_rest_call {
    */
   public function do_call() {
     $mediamosa = mediamosa::get();
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $limit = $this->get_param_value_limit();
     $offset = $this->get_param_value_offset();
 
-    $result = mediamosa_asset::find_duplicate_mediafiles($offset, $limit);
+    $result = mediamosa_asset::find_duplicate_mediafiles($app_id, $offset, $limit);
     foreach ($result['duplicates'] as $md5 => $asset_ids) {
       $mediamosa->add_item(array('asset_id' => $asset_ids), array('md5' => $md5));
     }

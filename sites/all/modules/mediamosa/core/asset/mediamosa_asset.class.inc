@@ -1804,6 +1804,8 @@ class mediamosa_asset {
   /**
    * Count duplicates per asset original mediafile.
    *
+   * @param int $app_id
+   *   The client application.
    * @param int $offset
    *   The offset of the query.
    * @param int $limit
@@ -1817,7 +1819,7 @@ class mediamosa_asset {
    *   - 'item_count_total':
    *     (int) The total amount of duplicate assets.
    */
-  public static function find_duplicate_mediafiles($offset = 0, $limit = 200, array $options = array()) {
+  public static function find_duplicate_mediafiles($app_id, $offset = 0, $limit = 200, array $options = array()) {
     $options += array(
     );
 
@@ -1827,17 +1829,18 @@ class mediamosa_asset {
     }
 
     $md5s = mediamosa_db::db_query(
-      'SELECT amm.val_char AS md5 FROM {#mediamosa_asset} AS a '
-      . 'JOIN {#mediamosa_asset_mediafile} AS am ON am.asset_id = a.asset_id '
+      'SELECT amm.val_char AS md5 FROM {#mediamosa_asset_mediafile} AS am '
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
-      . 'WHERE am.#is_original_file = :is_original_file '
+      . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
       . 'GROUP BY amm.val_char '
       . 'HAVING COUNT(*) > 1 '
-      . 'ORDER BY a.asset_id '
+      . 'ORDER BY am.asset_id '
       . 'LIMIT #offset, #limit',
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+        ':app_id' => $app_id,
         '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
         ':is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
@@ -1850,12 +1853,14 @@ class mediamosa_asset {
     $item_count_total = mediamosa_db::db_query(
       'SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am '
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
-      . 'WHERE am.#is_original_file = :is_original_file '
+      . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
       . 'GROUP BY amm.val_char '
       . 'HAVING COUNT(*) > 1',
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+        ':app_id' => $app_id,
         '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
         ':is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
@@ -1871,11 +1876,13 @@ class mediamosa_asset {
         'SELECT amm.val_char AS md5, a.asset_id AS asset_id FROM {#mediamosa_asset} AS a '
         . 'JOIN {#mediamosa_asset_mediafile} AS am ON am.asset_id = a.asset_id '
         . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
-        . 'WHERE amm.prop_id = :prop_id AND amm.val_char IN (:md5s)',
+        . 'WHERE a.app_id = :app_id AND amm.prop_id = :prop_id AND amm.val_char IN (:md5s)',
         array(
           '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
           '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+          '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+          ':app_id' => $app_id,
           ':prop_id' => $prop_id,
           ':md5s' => $md5s,
         )
