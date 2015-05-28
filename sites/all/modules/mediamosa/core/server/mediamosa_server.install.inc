@@ -32,13 +32,13 @@ function _mediamosa_server_install() {
 
   // Get URL of the current server, stripped from scheme.
   $server_url = url('', array('absolute' => TRUE));
-  $server_url = $scheme . rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/') . '/';
+  $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/') . '/';
 
   $videojs_object = <<<VIDEOJS_OBJECT
-<link href="@SERVER_URL/mmplayer/video-js/video-js.css" rel="stylesheet">
-<script src="@SERVER_URL/mmplayer/video-js/video.js"></script>
+<link href="@SERVER_URLmmplayer/video-js/video-js.css" rel="stylesheet">
+<script src="@SERVER_URLmmplayer/video-js/video.js"></script>
 <script>
-  videojs.options.flash.swf = "@SERVER_URL/mmplayer/video-js/video-js.swf";
+  videojs.options.flash.swf = "@SERVER_URLmmplayer/video-js/video-js.swf";
 </script>
 
 <video id="MediaMosa_video_1" class="video-js vjs-default-skin" width="{WIDTH}" height="{HEIGHT}" controls preload="auto" poster="{STILL_URI}" data-setup="{}">
@@ -80,49 +80,49 @@ videojs("MediaMosa_video_1").ready(function() {
 {/IF_START}
 STARTSTOP_CODE;
 
-  $pdf_object = '<iframe width="640" height="480" src="@SERVER_URL/pdf.js/web/viewer.html?file={TICKET_URI}" frameborder="0" allowfullscreen></iframe><a href=@SERVER_URL/pdf.js/web/viewer.html?file={TICKET_URI}>Open PDF in full screen</a>';
+  $pdf_object = '<iframe width="640" height="480" src="@SERVER_URLpdf.js/web/viewer.html?file={TICKET_URI}" frameborder="0" allowfullscreen></iframe><a href=@SERVER_URLpdf.js/web/viewer.html?file={TICKET_URI}>Open PDF in full screen</a>';
 
   $default_servers = array(
 
     // OGG.
-    array(0, 0, 'ON', 'STREAMING', $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+    array(0, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           'ogg', '',
-          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $server_url, '@VIDEO_TYPE' => 'video/ogg')),
+          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $scheme . $server_url, '@VIDEO_TYPE' => 'video/ogg')),
           'VideoJS player; ogg videos', 0, '', '', 'APC', ''),
 
     // Webm.
-    array(1, 0, 'ON', 'STREAMING', $server_url,
+    array(1, 0, 'ON', 'STREAMING', $scheme . $server_url,
           mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           'matroska;webm', '',
-          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $server_url, '@VIDEO_TYPE' => 'video/webm')),
+          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $scheme . $server_url, '@VIDEO_TYPE' => 'video/webm')),
           'VideoJS player; WebM Videos', 0, '', '', 'APC', ''),
 
     // Mp4.
-    array(2, 0, 'ON', 'STREAMING', $server_url,
+    array(2, 0, 'ON', 'STREAMING', $scheme . $server_url,
           mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           'mov;mp4;m4a;3gp;3g2;mj2:h264', '',
-          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $server_url, '@VIDEO_TYPE' => 'video/mp4')),
+          strtr($videojs_object . $startstop_code, array('@SERVER_URL' => $scheme . $server_url, '@VIDEO_TYPE' => 'video/mp4')),
           'VideoJS player; mp4/h264 videos', 0, '', '', 'APC', ''),
 
     // Flv.
-    array(3, 0, 'ON', 'STREAMING', $server_url,
+    array(3, 0, 'ON', 'STREAMING', $scheme . $server_url,
           mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           'flv', '',
-          strtr($videojs_object, array('@SERVER_URL' => $server_url, '@VIDEO_TYPE' => 'video/flv')),
+          strtr($videojs_object, array('@SERVER_URL' => $scheme . $server_url, '@VIDEO_TYPE' => 'video/flv')),
           'VideoJS player; flv videos', 0, '', '', 'APC', ''),
 
     // Most simple image viewer.
-    array(4, 0, 'ON', 'STREAMING', $server_url,
+    array(4, 0, 'ON', 'STREAMING', $scheme . $server_url,
           mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           '', 'image/*',
           '<img id="mm_image_view_01" style="max-width:640px" src="{TICKET_URI}" alt="" />',
           'Image viewer', 0, '', '', 'APC', ''),
 
     // PDF viewer.
-    array(5, 0, 'ON', 'STREAMING', $server_url,
+    array(5, 0, 'ON', 'STREAMING', $scheme . $server_url,
           mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
           '', 'application/pdf',
-          strtr($pdf_object, array('@SERVER_URL' => $server_url)),
+          strtr($pdf_object, array('@SERVER_URL' => $scheme . $server_url)),
           'PDF viewer with pdf.js', 0, '', '', 'APC', ''),
 
     array(6, 2, 'ON', 'DOWNLOAD', $scheme . 'download.' . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', '', 'Default download server', 0, '', '', 'APC', ''),
