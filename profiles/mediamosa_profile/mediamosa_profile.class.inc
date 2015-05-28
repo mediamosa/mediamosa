@@ -276,34 +276,32 @@ class mediamosa_profile {
   public static function requirements_php_settings() {
     $requirements = array();
 
-    $php_upload_max_filesize = ini_get('upload_max_filesize');
-    $too_low = ($php_upload_max_filesize > 0) && (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
-    $requirements['upload_max_filesize'] = array(
-      'title' => '<b>' . st('upload_max_filesize:') . '</b>',
-      'value' => $php_upload_max_filesize ? $php_upload_max_filesize : st('unlimited'),
-      'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-      'description' => !$too_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
+    $items = array(
+      'upload_max_filesize' => array(
+        'minimum' => '100M',
+      ),
+      'memory_limit' => array(
+        'minimum' => '128M',
+      ),
+      'post_max_size' => array(
+        'minimum' => '100M',
+      ),
     );
 
-    $php_memory_limit = ini_get('memory_limit');
-    $too_low = (substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G');
-    $requirements['memory_limit'] = array(
-      'title' => '<b>' . st('memory_limit:') . '</b>',
-      'value' => $php_memory_limit,
-      'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-      'description' => !$too_low ? '' : st('Warning: memory_limit should be at least 128M.'),
-    );
+    foreach ($items as $var => $item) {
+      $ini_value = ini_get($var);
+      $value = mediamosa_lib::php_config_value_to_bytes($ini_value);
+      $minimum = mediamosa_lib::php_config_value_to_bytes($item['minimum']);
+      $too_low = $value > 0 && $value < $minimum;
 
-    $php_post_max_size = ini_get('post_max_size');
-    $too_low = ((!$php_post_max_size && is_numeric($php_post_max_size)) || mediamosa_lib::php_config_value_to_bytes($php_post_max_size) < mediamosa_lib::php_config_value_to_bytes('100M'));
-    $requirements['php_post_max'] = array(
-      'title' => '<b>' . st('post_max_size:') . '</b>',
-      'value' => $php_post_max_size,
-      'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-      'description' => !$too_low ? '' : st('Warning: post_max_size should be at least 100M.'),
-    );
+      $requirements[$var] = array(
+        'title' => isset($item['title']) ? $item['title'] : '<b>' . $var . ':</b>',
+        'value' => $value > 0 ? $ini_value : st('unlimited'),
+        'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+        'description' => !$too_low ? '' : st('Warning: @var should be at least @size.', array('@var' => $var, '@size' => $item['minimum'])),
+      );
+    }
 
-    // Done.
     return array('errors' => 0, 'requirements' => $requirements);
   }
 
