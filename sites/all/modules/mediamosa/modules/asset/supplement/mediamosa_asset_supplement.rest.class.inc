@@ -278,6 +278,18 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
 
     // Check for upload.
     $supplement = mediamosa_asset_mediafile_upload::get_upload_file_info(self::SUPPLEMENT);
+
+    if (mediamosa_debug::is_debug_normal()) {
+      mediamosa_debug::log_export(!empty($supplement) ? $supplement : 'No supplement found.');
+      mediamosa_debug::log_export(isset($_FILES) ? $_FILES : array());
+      if (isset($_FILES) && isset($_FILES['supplement']) && isset($_FILES['supplement']['tmp_name'])) {
+        mediamosa_debug::log_export('file.exists:' . (mediamosa_io::file_exists($_FILES['supplement']['tmp_name']) ? 'yes' : 'no'));
+        if (mediamosa_io::file_exists($_FILES['supplement']['tmp_name'])) {
+          mediamosa_debug::log_export('file.size:' . mediamosa_io::filesize($_FILES['supplement']['tmp_name']));
+        }
+      }
+    }
+
     if ($supplement === FALSE) {
       $supplement = $this->get_param_value(self::SUPPLEMENT);
     }
