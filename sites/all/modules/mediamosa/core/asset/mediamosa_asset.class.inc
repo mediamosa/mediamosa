@@ -1851,11 +1851,11 @@ class mediamosa_asset {
     )->fetchCol();
 
     $item_count_total = mediamosa_db::db_query(
-      'SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am '
+      'SELECT COUNT(*) AS total FROM (SELECT amm.val_char FROM {#mediamosa_asset_mediafile} AS am '
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
       . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
       . 'GROUP BY amm.val_char '
-      . 'HAVING COUNT(*) > 1',
+      . 'HAVING COUNT(*) > 1) AS t',
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
