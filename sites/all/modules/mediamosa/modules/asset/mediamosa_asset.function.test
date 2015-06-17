@@ -17,404 +17,404 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
   }
 
-//  /**
-//   * Tests basic asset functions.
-//   */
-//  public function testAssetFunction() {
-//
-//    // Test asset creation /asset [POST].
-//    $asset_id = $this->createAsset();
-//    $this->assertTrue(
-//      isset($asset_id) && $asset_id,
-//      t("Create a new asset: @asset_id", array('@asset_id' => $asset_id))
-//    );
-//
-//    // Get the asset /asset/id [GET].
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::ID => $asset_id,
-//      mediamosa_asset_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
-//      mediamosa_asset_db::OWNER_ID => self::SIMPLETEST_USER_ID,
-//      mediamosa_asset_db::GROUP_ID => self::SIMPLETEST_GROUP_ID,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get", array(
-//            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Search asset - /asset [GET].
-//    $limit = 1;
-//    $a_assets = $this->searchAsset($limit);
-//    $this->assertTrue(
-//      count($a_assets['items']['item']),
-//      t("Get a list of assets. Count = 1.")
-//    );
-//    $this->assertTrue(
-//      $a_assets['items']['item'][0][mediamosa_asset_db::ID] == $asset_id,
-//      t("Get a list of assets. Asset id has the good value.")
-//    );
-//
-//    // Update asset (isprivate), asset/$asset_id [POST]
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
-//    );
-//    $this->updateAsset($asset_id, $a_parameters);
-//
-//    // Check the result.
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get",
-//          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Update asset (provider_id, reference_id, asset_type).
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::PROVIDER_ID => 'foo.',
-//      mediamosa_rest_call_asset_update::REFERENCE_ID => 'bar.',
-//      mediamosa_rest_call_asset_update::ASSET_TYPE => 'baz.',
-//    );
-//    $this->updateAsset($asset_id, $a_parameters);
-//
-//    // Check the result.
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::PROVIDER_ID => 'foo.',
-//      mediamosa_asset_db::REFERENCE_ID => 'bar.',
-//      mediamosa_asset_db::ASSET_TYPE => 'baz.',
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get",
-//          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Update the asset, if we are not an ega admin, /asset/$asset_id [POST].
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
-//    );
-//    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
-//
-//    // Update the asset, with ega admin permissions, /asset/$asset_id [POST].
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
-//      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
-//    );
-//    $this->updateAsset($asset_id, $a_parameters);
-//
-//    // Check the result.
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::IS_INAPPROPRIATE => mediamosa_asset_db::IS_INAPPROPRIATE_TRUE,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get", array(
-//            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Get the asset, as different users, while is_unappropriate is true.
-//    // Get the asset as app_admin.
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_get::USER_ID => 'johndoe',
-//      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters);
-//
-//    // Get the asset as owner.
-//    $a_parameters = array(
-//      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters);
-//
-//    // Get the asset as johndoe.
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_get::USER_ID => 'johndoe',
-//      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
-//
-//    // Update the asset (play_restriction_start, play_restriction_end,
-//    // isprivate), asset/$asset_id [POST].
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
-//      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
-//      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
-//    );
-//    $this->updateAsset($asset_id, $a_parameters);
-//
-//    // Check the result.
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
-//      mediamosa_asset_db::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
-//      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_FALSE,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get", array(
-//            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Test for unsetting the play_restriction_* dates.
-//    $parameters = array(
-//      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
-//      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
-//      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
-//    );
-//    $this->updateAsset($asset_id, $parameters);
-//
-//    // Check the result.
-//    $asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::PLAY_RESTRICTION_START => '',
-//      mediamosa_asset_db::PLAY_RESTRICTION_END => '',
-//      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get", array(
-//            '@key' => $key, '@sent' => $value, '@get' => $asset[$key]))
-//      );
-//    }
-//
-//    // Change the ownership as not an ega admin.
-//    $owner_id = 'johndoe';
-//    $group_id = 'johndoe group';
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
-//      mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
-//      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
-//    );
-//    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NO_CHANGES));
-//
-//    // Check the result.
-//    $a_asset = $this->getAsset($asset_id);
-//    $test = array(
-//      mediamosa_asset_db::OWNER_ID => $owner_id,
-//      mediamosa_asset_db::GROUP_ID => $group_id,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] != $value,
-//        t('Got the original value from property: @key, sent: @sent, get: @get', array(
-//            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    // Change the ownership as an ega admin.
-//    $owner_id = 'johndoe';
-//    $group_id = 'johndoe group';
-//    $a_parameters = array(
-//      mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
-//      mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
-//      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
-//    );
-//    $this->updateAsset($asset_id, $a_parameters);
-//
-//    // Get the asset.
-//    $a_parameters = array(
-//      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters);
-//
-//    // Check the result.
-//    $test = array(
-//      mediamosa_asset_db::OWNER_ID => $owner_id,
-//      mediamosa_asset_db::GROUP_ID => $group_id,
-//    );
-//    foreach ($test as $key => $value) {
-//      $this->assertTrue(
-//        $a_asset[$key] == $value,
-//        t("Got correct value from property: @key, sent: @sent, get: @get", array(
-//            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
-//      );
-//    }
-//
-//    //
-//    // show_stills
-//    //
-//
-//    // Create upload file.
-//    $a_upload = $this->uploadTestFile();
-//    $asset_id = $a_upload['asset_id'];
-//    $mediafile_id = $a_upload['mediafile_id'];
-//
-//    // Create still job.
-//    $this->createMediafileStill($mediafile_id);
-//
-//    // Parse the queue.
-//    $this->doQueueCycleAll();
-//
-//    // Get the stills.
-//    $a_stills = $this->getMediafileStill($mediafile_id);
-//    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
-//
-//    // Part 1. asset/{asset_id} GET.
-//
-//    // Get still.
-//    // show_stills = NULL.
-//    $a_asset = $this->getAsset($asset_id);
-//
-//    // Check the response.
-//    $this->assertTrue(
-//      isset($a_asset['mediafiles']['mediafile']['still']),
-//      t("Is still exists?")
-//    );
-//
-//    // Get still.
-//    $a_parameters = array(
-//      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters);
-//
-//    // Check the response.
-//    $this->assertTrue(
-//      isset($a_asset['mediafiles']['mediafile']['still']),
-//      t("Is still exists?")
-//    );
-//
-//    // Get still.
-//    $a_parameters = array(
-//      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
-//    );
-//    $a_asset = $this->getAsset($asset_id, $a_parameters);
-//
-//    // Check the response.
-//    $this->assertFalse(
-//      isset($a_asset['mediafiles']['mediafile']['still']),
-//      t("Is still not exists?")
-//    );
-//
-//    // Part 2. asset GET.
-//
-//    // Limit.
-//    $limit = 10;
-//
-//    // Get still.
-//    // show_stills = NULL.
-//    $a_assets = $this->searchAsset($limit);
-//
-//    // Check the response.
-//    $this->assertFalse(
-//      isset($a_assets['items']['item'][0]['mediafiles']),
-//      t("Is mediafile not exists?")
-//    );
-//    $this->assertTrue(
-//      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
-//      t("Asset id has the good value")
-//    );
-//    $this->assertTrue(
-//      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
-//      t('The vpx_still_url has value')
-//    );
-//
-//    // Get still.
-//    // show_stills = TRUE.
-//    $a_parameters = array(
-//      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
-//    );
-//    $a_assets = $this->searchAsset($limit, $a_parameters);
-//
-//    // Check the response.
-//    $this->assertFalse(
-//      isset($a_assets['items']['item'][0]['mediafiles']),
-//      t("Is mediafile not exists?")
-//    );
-//    $this->assertTrue(
-//      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
-//      t("Asset id has the good value")
-//    );
-//    $this->assertTrue(
-//      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
-//      t('The vpx_still_url has value')
-//    );
-//
-//    // Get still.
-//    // show_stills = FALSE.
-//    $a_parameters = array(
-//      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
-//    );
-//    $a_assets = $this->searchAsset($limit, $a_parameters);
-//
-//    // Check the response.
-//    $this->assertFalse(
-//      isset($a_assets['items']['item'][0]['mediafiles']),
-//      t("Is mediafile not exists?")
-//    );
-//    $this->assertTrue(
-//      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
-//      t("Asset id has the good value")
-//    );
-//    $this->assertTrue(
-//      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] == '',
-//      t('The vpx_still_url has not value')
-//    );
-//  }
-//
-//  /**
-//   * Test if owner can have + sign in owner name.
-//   */
-//  public function testAssetOwner() {
-//
-//    $owner_id = 'foo+ba r@fooplus+ba r.com';
-//    $asset_id = $this->createAsset(
-//      array(mediamosa_rest_call_asset_create::USER_ID => $owner_id)
-//    );
-//
-//    $asset = $this->getAsset($asset_id);
-//    $this->var_export($asset);
-//    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
-//
-//    // Update the asset with the owner.
-//    $provider_id = 'Its me';
-//    $this->updateAsset($asset_id,
-//      array(
-//        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
-//        mediamosa_rest_call_asset_update::PROVIDER_ID => $provider_id,
-//      )
-//    );
-//
-//    $asset = $this->getAsset($asset_id);
-//    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
-//    $this->assert($asset['provider_id'] === $provider_id, 'Provider ID matches');
-//
-//    $mediafile_id = $this->createMediafile($asset_id,
-//      array(
-//        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
-//      )
-//    );
-//
-//    $mediafile = $this->getMediafile($mediafile_id);
-//    $this->var_export($mediafile);
-//    $this->assert($mediafile['owner_id'] === $owner_id, 'Owner ID matches');
-//
-//    $uploadticket = $this->createMediafileUploadTicket($mediafile_id, array(mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => $owner_id));
-//    $this->var_export($uploadticket);
-//    $result = db_select(mediamosa_media_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
-//    foreach ($result as $row) {
-//      $this->var_export($row, 'Dump Ticket');
-//    }
-//
-//    // Requires Apache 2.2.24 or higher.
-//    //$user = $this->getUser($owner_id);
-//    //$this->var_export($user);
-//  }
+  /**
+   * Tests basic asset functions.
+   */
+  public function testAssetFunction() {
+
+    // Test asset creation /asset [POST].
+    $asset_id = $this->createAsset();
+    $this->assertTrue(
+      isset($asset_id) && $asset_id,
+      t("Create a new asset: @asset_id", array('@asset_id' => $asset_id))
+    );
+
+    // Get the asset /asset/id [GET].
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::ID => $asset_id,
+      mediamosa_asset_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
+      mediamosa_asset_db::OWNER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_asset_db::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Search asset - /asset [GET].
+    $limit = 1;
+    $a_assets = $this->searchAsset($limit);
+    $this->assertTrue(
+      count($a_assets['items']['item']),
+      t("Get a list of assets. Count = 1.")
+    );
+    $this->assertTrue(
+      $a_assets['items']['item'][0][mediamosa_asset_db::ID] == $asset_id,
+      t("Get a list of assets. Asset id has the good value.")
+    );
+
+    // Update asset (isprivate), asset/$asset_id [POST]
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get",
+          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Update asset (provider_id, reference_id, asset_type).
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PROVIDER_ID => 'foo.',
+      mediamosa_rest_call_asset_update::REFERENCE_ID => 'bar.',
+      mediamosa_rest_call_asset_update::ASSET_TYPE => 'baz.',
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::PROVIDER_ID => 'foo.',
+      mediamosa_asset_db::REFERENCE_ID => 'bar.',
+      mediamosa_asset_db::ASSET_TYPE => 'baz.',
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get",
+          array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Update the asset, if we are not an ega admin, /asset/$asset_id [POST].
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Update the asset, with ega admin permissions, /asset/$asset_id [POST].
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::IS_INAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::IS_INAPPROPRIATE => mediamosa_asset_db::IS_INAPPROPRIATE_TRUE,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Get the asset, as different users, while is_unappropriate is true.
+    // Get the asset as app_admin.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::USER_ID => 'johndoe',
+      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Get the asset as owner.
+    $a_parameters = array(
+      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Get the asset as johndoe.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_get::USER_ID => 'johndoe',
+      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+
+    // Update the asset (play_restriction_start, play_restriction_end,
+    // isprivate), asset/$asset_id [POST].
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_FALSE,
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::PLAY_RESTRICTION_START => '2008-01-01 01:01:01',
+      mediamosa_asset_db::PLAY_RESTRICTION_END => '2008-02-02 02:02:02',
+      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_FALSE,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Test for unsetting the play_restriction_* dates.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_START => '',
+      mediamosa_rest_call_asset_update::PLAY_RESTRICTION_END => '',
+      mediamosa_rest_call_asset_update::ISPRIVATE => mediamosa_rest_call_asset_update::ISPRIVATE_TRUE,
+    );
+    $this->updateAsset($asset_id, $parameters);
+
+    // Check the result.
+    $asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::PLAY_RESTRICTION_START => '',
+      mediamosa_asset_db::PLAY_RESTRICTION_END => '',
+      mediamosa_asset_db::ISPRIVATE => mediamosa_asset_db::ISPRIVATE_TRUE,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $asset[$key]))
+      );
+    }
+
+    // Change the ownership as not an ega admin.
+    $owner_id = 'johndoe';
+    $group_id = 'johndoe group';
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
+      mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
+      mediamosa_rest_call::IS_APP_ADMIN => 'FALSE',
+    );
+    $this->updateAsset($asset_id, $a_parameters, 'Update on asset ID', array(mediamosa_error::ERRORCODE_NO_CHANGES));
+
+    // Check the result.
+    $a_asset = $this->getAsset($asset_id);
+    $test = array(
+      mediamosa_asset_db::OWNER_ID => $owner_id,
+      mediamosa_asset_db::GROUP_ID => $group_id,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] != $value,
+        t('Got the original value from property: @key, sent: @sent, get: @get', array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    // Change the ownership as an ega admin.
+    $owner_id = 'johndoe';
+    $group_id = 'johndoe group';
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::OWNER_ID => $owner_id,
+      mediamosa_rest_call_asset_update::GROUP_ID => $group_id,
+      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Get the asset.
+    $a_parameters = array(
+      mediamosa_rest_call::IS_APP_ADMIN => 'TRUE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the result.
+    $test = array(
+      mediamosa_asset_db::OWNER_ID => $owner_id,
+      mediamosa_asset_db::GROUP_ID => $group_id,
+    );
+    foreach ($test as $key => $value) {
+      $this->assertTrue(
+        $a_asset[$key] == $value,
+        t("Got correct value from property: @key, sent: @sent, get: @get", array(
+            '@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+      );
+    }
+
+    //
+    // show_stills
+    //
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Part 1. asset/{asset_id} GET.
+
+    // Get still.
+    // show_stills = NULL.
+    $a_asset = $this->getAsset($asset_id);
+
+    // Check the response.
+    $this->assertTrue(
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still exists?")
+    );
+
+    // Get still.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the response.
+    $this->assertTrue(
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still exists?")
+    );
+
+    // Get still.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
+    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still not exists?")
+    );
+
+    // Part 2. asset GET.
+
+    // Limit.
+    $limit = 10;
+
+    // Get still.
+    // show_stills = NULL.
+    $a_assets = $this->searchAsset($limit);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
+    );
+    $this->assertTrue(
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
+    );
+    $this->assertTrue(
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
+      t('The vpx_still_url has value')
+    );
+
+    // Get still.
+    // show_stills = TRUE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
+    );
+    $this->assertTrue(
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
+    );
+    $this->assertTrue(
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
+      t('The vpx_still_url has value')
+    );
+
+    // Get still.
+    // show_stills = FALSE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
+    );
+    $this->assertTrue(
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
+    );
+    $this->assertTrue(
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] == '',
+      t('The vpx_still_url has not value')
+    );
+  }
+
+  /**
+   * Test if owner can have + sign in owner name.
+   */
+  public function testAssetOwner() {
+
+    $owner_id = 'foo+ba r@fooplus+ba r.com';
+    $asset_id = $this->createAsset(
+      array(mediamosa_rest_call_asset_create::USER_ID => $owner_id)
+    );
+
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
+
+    // Update the asset with the owner.
+    $provider_id = 'Its me';
+    $this->updateAsset($asset_id,
+      array(
+        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
+        mediamosa_rest_call_asset_update::PROVIDER_ID => $provider_id,
+      )
+    );
+
+    $asset = $this->getAsset($asset_id);
+    $this->assert($asset['owner_id'] === $owner_id, 'Owner ID matches');
+    $this->assert($asset['provider_id'] === $provider_id, 'Provider ID matches');
+
+    $mediafile_id = $this->createMediafile($asset_id,
+      array(
+        mediamosa_rest_call_asset_update::USER_ID => $owner_id,
+      )
+    );
+
+    $mediafile = $this->getMediafile($mediafile_id);
+    $this->var_export($mediafile);
+    $this->assert($mediafile['owner_id'] === $owner_id, 'Owner ID matches');
+
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id, array(mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => $owner_id));
+    $this->var_export($uploadticket);
+    $result = db_select(mediamosa_media_ticket_db::TABLE_NAME, 't')->fields('t')->execute();
+    foreach ($result as $row) {
+      $this->var_export($row, 'Dump Ticket');
+    }
+
+    // Requires Apache 2.2.24 or higher.
+    //$user = $this->getUser($owner_id);
+    //$this->var_export($user);
+  }
 
   /**
    * Test the duplicate detection.
