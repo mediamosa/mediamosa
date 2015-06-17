@@ -1,4 +1,4 @@
-MediaMosa 3.6.0-RC1 (build 2170)
+MediaMosa 3.6.0-RC1 (build 2171)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -268,7 +268,7 @@ MediaMosa 3.6.0-RC1 (build 2170)
 - Minor spelling error in installer (patch by sajkec).
 - Updated Drupal to 7.37.
 - Refs: #14276; extended the REST call /asset/supplements.
-
+- Fixed/extended duplicated asset search to include/exclude assets in trashcan.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
