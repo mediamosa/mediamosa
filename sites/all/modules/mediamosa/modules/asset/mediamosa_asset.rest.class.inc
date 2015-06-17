@@ -540,7 +540,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
     $var_setup[self::VARS][self::TRASHCAN] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-      self::VAR_DESCRIPTION => "Include or skip assets in the trashcan. Assets that where put in the trashcan will not show up by default in the asset search. The value 'FALSE' will hide all assets that where stored in the trashcan. Supply 'TRUE' to search the trashcan, or supply 'ALL' to search on all assets, regardless of its in the trashcan. If you u want to use CQL, make sure you supply 'ALL' as value for 'trashcan' on the REST call besides CQL. Once you supply 'ALL', use in CQL asset.trashcan == \"^TRUE^\", asset.trashcan == \"^FALSE^\" or for both asset.trashcan = \"^TRUE^ ^FALSE^\".",
+      self::VAR_DESCRIPTION => "Include or skip assets in the trashcan. Assets that where put in the trashcan will not show up by default in the asset search. The value 'FALSE' will hide all assets that where stored in the trashcan. Supply 'TRUE' to search the trashcan, or supply 'ALL' to search on all assets, regardless if its in the trashcan. If you u want to use CQL, make sure you supply 'ALL' as value for 'trashcan' on the REST call besides CQL. Once you supply 'ALL', use in CQL asset.trashcan == \"^TRUE^\", asset.trashcan == \"^FALSE^\" or for both asset.trashcan = \"^TRUE^ ^FALSE^\".",
       self::VAR_DEFAULT_VALUE => $trashcan_default,
       self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
     );
@@ -2394,6 +2394,7 @@ class mediamosa_rest_call_asset_cleanup extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_asset_duplicates extends mediamosa_rest_call {
   // ------------------------------------------------------------------- Consts.
+  const TRASHCAN = 'trashcan';
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -2404,6 +2405,13 @@ class mediamosa_rest_call_asset_duplicates extends mediamosa_rest_call {
    */
   public function get_var_setup() {
     $var_setup = array();
+
+    $var_setup[self::VARS][self::TRASHCAN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+      self::VAR_DESCRIPTION => 'Include searching assets that are in or outside the trashcan. Use "TRUE" to search in the trashcan only, "FALSE" to search only on assets outside the trashcan and "ALL" when searching on all assets regardless of their trashcan state.',
+      self::VAR_DEFAULT_VALUE => 'FALSE',
+      self::VAR_ALLOWED_VALUES => array('TRUE', 'FALSE', 'ALL'),
+    );
 
     $var_setup = static::get_var_setup_range($var_setup);
     return static::get_var_setup_default($var_setup, FALSE);
@@ -2422,7 +2430,22 @@ class mediamosa_rest_call_asset_duplicates extends mediamosa_rest_call {
     $limit = $this->get_param_value_limit();
     $offset = $this->get_param_value_offset();
 
-    $result = mediamosa_asset::find_duplicate_mediafiles($app_id, $offset, $limit);
+    switch ($this->get_param_value(self::TRASHCAN)) {
+      default:
+      case 'FALSE':
+        $trashcan = 0;
+        break;
+
+      case 'TRUE':
+        $trashcan = 1;
+        break;
+
+      case 'ALL':
+        $trashcan = 2;
+        break;
+    }
+
+    $result = mediamosa_asset::find_duplicate_mediafiles($app_id, $trashcan, $offset, $limit);
     foreach ($result['duplicates'] as $md5 => $asset_ids) {
       $mediamosa->add_item(array('asset_id' => $asset_ids), array('md5' => $md5));
     }

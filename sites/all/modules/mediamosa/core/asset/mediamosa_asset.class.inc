@@ -1806,6 +1806,11 @@ class mediamosa_asset {
    *
    * @param int $app_id
    *   The client application.
+   * @param int $trashcan
+   *   Search in, outside or both states of the transcan.
+   *   0: Only assets outside the trashcan (default).
+   *   1: Only assets inside the trashcan.
+   *   2: All assets, regardless the trashcan state.
    * @param int $offset
    *   The offset of the query.
    * @param int $limit
@@ -1819,7 +1824,7 @@ class mediamosa_asset {
    *   - 'item_count_total':
    *     (int) The total amount of duplicate assets.
    */
-  public static function find_duplicate_mediafiles($app_id, $offset = 0, $limit = 200, array $options = array()) {
+  public static function find_duplicate_mediafiles($app_id, $trashcan = 0, $offset = 0, $limit = 200, array $options = array()) {
     $options += array(
     );
 
@@ -1828,8 +1833,23 @@ class mediamosa_asset {
       return FALSE;
     }
 
+    $join_trashcan = '';
+    if ($trashcan != 2) {
+      $propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('asset');
+      $propgroup_id = $propgroup[mediamosa_asset_metadata_property_group_db::ID];
+      assert($propgroup_id);
+
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name(mediamosa_metadata_asset::TRASHCAN, $propgroup_id);
+      $trashcan_prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+      assert($trashcan_prop_id);
+
+      $trashcan = $trashcan == 0 ? 'FALSE' : 'TRUE';
+      $join_trashcan = 'JOIN {mediamosa_asset_metadata} AS at ON at.asset_id = am.asset_id AND at.prop_id = ' . $trashcan_prop_id . " AND at.val_char_lft = '" . $trashcan . "'";
+    }
+
     $md5s = mediamosa_db::db_query(
       'SELECT amm.val_char AS md5 FROM {#mediamosa_asset_mediafile} AS am '
+      . $join_trashcan
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
       . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
       . 'GROUP BY amm.val_char '
@@ -1852,6 +1872,7 @@ class mediamosa_asset {
 
     $item_count_total = mediamosa_db::db_query(
       'SELECT COUNT(*) AS total FROM (SELECT amm.val_char FROM {#mediamosa_asset_mediafile} AS am '
+      . $join_trashcan
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
       . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
       . 'GROUP BY amm.val_char '
@@ -1875,6 +1896,7 @@ class mediamosa_asset {
       foreach (mediamosa_db::db_query(
         'SELECT amm.val_char AS md5, a.asset_id AS asset_id FROM {#mediamosa_asset} AS a '
         . 'JOIN {#mediamosa_asset_mediafile} AS am ON am.asset_id = a.asset_id '
+        . $join_trashcan
         . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
         . 'WHERE a.app_id = :app_id AND amm.prop_id = :prop_id AND amm.val_char IN (:md5s)',
         array(
