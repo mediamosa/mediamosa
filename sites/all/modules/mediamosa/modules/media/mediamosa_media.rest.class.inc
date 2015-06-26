@@ -398,8 +398,9 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
     }
 
     // If play count is allowed, increase the play counter with one.
-    if ($this->get_param_value(self::COUNT_PLAY)) {
-      // All ok, now set played + 1
+    if ($this->get_param_value(self::COUNT_PLAY) &&
+        (!$is_app_admin) &&
+        ($user_id != $asset['owner_id'])) {
       mediamosa_asset::asset_played($asset_id);
     }
 
