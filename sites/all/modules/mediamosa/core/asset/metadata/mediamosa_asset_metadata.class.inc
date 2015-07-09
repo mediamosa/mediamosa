@@ -426,6 +426,20 @@ class mediamosa_asset_metadata {
       )
     )->fetchField();
 
+    // Get all asset_ids to be touched.
+    $result = mediamosa_db::db_query(
+      'SELECT asset_id FROM {#mediamosa_asset_metadata} AS am
+       WHERE am.prop_id = :prop_id AND am.val_char = :value',
+      array(
+        '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
+        '#prop_id' => mediamosa_asset_metadata_property_db::ID,
+        ':prop_id' => $prop_id,
+        ':value' => $value,
+      )
+    )->fetchAssoc();
+
+    // Delete the requested prop-value records.
     mediamosa_db::db_query(
       'DELETE FROM {#mediamosa_asset_metadata} WHERE prop_id = :prop_id and val_char = :value',
       array(
@@ -434,6 +448,8 @@ class mediamosa_asset_metadata {
         ':value' => $value,
       )
     );
+
+    return $result;
   }
 
   /**
