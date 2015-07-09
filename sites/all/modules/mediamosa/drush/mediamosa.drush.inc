@@ -85,6 +85,8 @@ function mediamosa_drush_command() {
       'show_empty' => '',
       'cql' => 'sortby asset_created/sort.descending',
       'facet_field' => '',
+      'show_drafts' => '',
+      'asset_hierarchy_include_combined' => '',
     ),
     'examples' => array(
       "drush mm-asset-list 1 --cql='title=foo sortby asset_created/sort.descending'" => '',
@@ -105,6 +107,9 @@ function mediamosa_drush_command() {
     'description' => 'Delete a mediafile.',
     'arguments' => array(
       'mediafile_id' => 'Mediafile id',
+    ),
+    'options' => array(
+      'trashcan' => 'Delete to trashcan, default off.',
     ),
     'aliases' => array('mmamdel'),
   );
@@ -229,6 +234,7 @@ function mediamosa_drush_command() {
       'priority' => 'Priority of the job, 0 = normal, -100 is maximum priority, 100 is lowest',
       'still_type' => 'Still generation option (NONE, NORMAL)',
       'still_per_mediafile' => 'Number of stills per mf (1 is default)',
+      'frametime' => 'time to get the still (default: 10)',
     ),
     'examples' => array(
       'drush mm-still C1IVjPsFefqRNoOSV7jIbZtI ' => 'Request to generate a still from mediafile id C1IVjPsFefqRNoOSV7jIbZtI.',
@@ -477,7 +483,12 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
     'show_deleted' => FALSE,
     'limit' => $limit,
     'offset' => $offset,
+    'published' => 'ALL',
+    'acl_group_ids' => array(),
   );
+
+  $search_options['show_drafts'] = drush_get_option('show_drafts', FALSE);
+  $search_options['asset_hierarchy_include_combined'] = drush_get_option('asset_hierarchy_include_combined', 'IGNORE');
 
   // Facetted search?
   $facet_field = drush_get_option('facet_field', '');
@@ -487,16 +498,34 @@ function drush_mediamosa_mm_asset_list($app_id = 1) {
   }
 
   $assets = mediamosa_search::asset($search_options);
-  $items = mediamosa_asset::asset_collect($assets['asset_ids'], array(1), NULL, TRUE, '', '', '', TRUE, FALSE, FALSE, FALSE, TRUE);
+  $items = mediamosa_asset::asset_collect($assets['asset_ids'], array(1), NULL, TRUE, NULL, '', '', TRUE, FALSE, FALSE, FALSE, TRUE);
 
-  $rows[] = array('nr', 'Asset_id', 'Title', 'Created', 'Protected', 'Empty');
+  $rows = array();
+  $rows[] = array(
+    'nr', 'Asset_id', 'Title', 'Created', 'Publ.', 'Protected', 'Empty', 'Draft',
+  );
   foreach ($items as $nr => $asset) {
     $title = '';
     if (isset($asset['dublin_core']['title'])) {
       $title = implode(', ', $asset['dublin_core']['title']);
     }
+    $draft = '';
+    if (isset($asset['asset']['original_asset_id'][0])) {
+      $draft = 'is draft : ' . $asset['asset']['original_asset_id'][0];
+    }
+    if (isset($asset['asset']['draft_asset_id'][0])) {
+      $draft = 'has draft : ' . $asset['asset']['draft_asset_id'][0];
+    }
+    $empty_asset = $asset['is_empty_asset'];
+    if (isset($asset['trashcan']) && ($asset['trashcan'][0] == TRUE)) {
+      $empty_asset = 'TRASHCAN';
+    }
+    $published = 'TRUE';
+    if (isset($asset['published']) && ($asset['published'][0] == FALSE)) {
+      $published = 'FALSE';
+    }
     $rows[] = array(
-      $nr, $asset['asset_id'], $title, $asset['videotimestamp'], $asset['is_protected'], $asset['is_empty_asset'],
+      $nr, $asset['asset_id'], $title, $asset['videotimestamp'], $published, $asset['is_protected'], $empty_asset, $draft,
     );
   }
   drush_print_table($rows, TRUE);
@@ -585,7 +614,7 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   if (!$asset) {
     return drush_set_error('', dt('Invalid asset_id.'));
   }
-
+  $rows = array();
   foreach ($asset as $name => $value) {
     $rows[] = array($name, $value);
   }
@@ -594,14 +623,42 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
   $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
   foreach ($metadata as $metadata_name => $metadata_entry) {
     foreach ($metadata_entry as $name => $value) {
-      foreach ($value['values'] as $val => $val_entry) {
+      foreach (array_values($value['values']) as $val_entry) {
         $rows[] = array($metadata_name . ':' . $name, $val_entry);
       }
     }
   }
   drush_print_table($rows, TRUE);
 
-  // @todo: collections.
+  $collections = mediamosa_asset_collection::get_collections($asset_id);
+  if (!empty($collections)) {
+    $rows = array();
+    $rows[] = array('Collections');
+    $rows[] = array(
+      'ID', 'Title',
+    );
+    foreach ($collections as $col) {
+      $rows[] = array(
+        $col['collection_id'], $col['title'],
+      );
+    }
+    drush_print_table($rows);
+  }
+
+  // Jobs.
+  $rows = array();
+  $rows[] = array('Jobs');
+  $rows[] = array(
+    'ID', 'MF id', 'Type', 'Status', 'Progress', 'Priority', 'error',
+  );
+  $jobs = mediamosa_job::get_job_list(NULL, NULL, TRUE, 0, $asset_id);
+  foreach ($jobs as $job) {
+    $rows[] = array(
+      $job['job_id'], $job['mediafile_id'], $job['job_type'], $job['status'], $job['progress'], $job['priority'], $job['error_description'],
+    );
+  }
+  drush_print_table($rows);
+
   // Show table of mediafiles.
   $rows = array();
   $rows[] = array('Mediafiles');
@@ -612,6 +669,9 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     mediamosa_asset_mediafile_db::ID,
     mediamosa_asset_mediafile_db::CREATED,
     mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
+    mediamosa_asset_mediafile_db::IS_STILL,
+    mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
+    mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
     mediamosa_asset_mediafile_db::FILENAME,
   );
 
@@ -621,17 +681,27 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
     $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
     // Get ACL, if any.
     $acl = '';
-    $acl_rights = mediamosa_acl::rights_get($app_id, $asset['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, TRUE);
+    $acl_rights = mediamosa_acl::rights_get($mediafile['app_id'], $mediafile['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, TRUE);
     foreach ($acl_rights as $acl_group) {
       foreach ($acl_group as $acl_value) {
         $acl .= $acl_value['name'] . ' ';
       }
     }
+    $mf_type = '';
+    if ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == 'TRUE') {
+      $mf_type = 'Original';
+    }
+    if (isset($mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID])) {
+      $mf_type = $mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID];
+    }
+    elseif ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == 'TRUE') {
+      $mf_type = 'STILL';
+    }
     // Rows for drush.
     $rows[] = array(
       $mediafile_id,
       $mediafile[mediamosa_asset_mediafile_db::CREATED],
-      $mediafile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID],
+      $mf_type,
       mediamosa_asset_mediafile::get_mime_type($mediafile_id),
       format_size($filesize),
       mediamosa_asset_mediafile::get_size($mediafile_id),
@@ -639,8 +709,24 @@ function drush_mediamosa_mm_asset($asset_id = NULL) {
       $acl,
     );
   }
+  if (count($rows) > 2) {
+    drush_print_table($rows, TRUE);
+  }
 
-  drush_print_table($rows, TRUE);
+  // Jobs.
+  $rows = array();
+  $rows[] = array('Jobs');
+  $jobs = mediamosa_job::get_by_asset_id($asset_id, array(
+    'job_id', 'created', 'job_type', 'mediafile_id', 'status', 'error_description',
+  ));
+  foreach ($jobs as $job) {
+    $rows[] = array(
+      $job['job_id'], $job['job_type'], $job['created'], $job['mediafile_id'], $job['status'], $job['error_description'],
+    );
+  }
+  if (count($rows) > 1) {
+    drush_print_table($rows, TRUE);
+  }
 }
 
 /**
@@ -669,7 +755,19 @@ function drush_mediamosa_mm_asset_delete($asset_id = NULL) {
   if ($asset_id == NULL) {
     return drush_set_error('', dt('Invalid asset_id.'));
   }
-  mediamosa_asset::delete($asset_id, TRUE, TRUE);
+  // Default: delete without trascan.
+  $trashcan = drush_get_option('trashcan', FALSE);
+
+  // Get asset details.
+  $fields = array(
+    mediamosa_asset_db::ID,
+    mediamosa_asset_db::APP_ID,
+  );
+  $asset = mediamosa_asset::get($asset_id, NULL, $fields);
+  if (!$asset) {
+    return drush_set_error('', dt('Invalid asset_id.'));
+  }
+  mediamosa_asset::delete($asset_id, TRUE, $trashcan);
 }
 
 /**
@@ -731,7 +829,9 @@ function drush_mediamosa_mm_acl_set($mediafile_id = NULL, $acls = NULL) {
   $result_rights_set = mediamosa_acl::rights_set(
     $mediafile['app_id'], $mediafile['owner_id'], mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, $app_ids, array(), array(), $a_acl_domains, $a_acl_realms, 'replace');
 
-  drush_print('Mediafile id has new acl: ' . print_r($result_rights_set, TRUE));
+  if (!drush_get_option('quiet', NULL)) {
+    drush_print('Mediafile id has new acl: ' . print_r($result_rights_set, TRUE));
+  }
 }
 
 /**
@@ -753,8 +853,8 @@ function drush_mediamosa_mm_app_purge($app_id = NULL) {
     return drush_user_abort();
   }
 
-  $assets = mediamosa_search::asset_search(array('app_ids' => array(1), 'limit' => 10000), '');
-  foreach ($assets['asset_ids'] as $nr => $asset_id) {
+  $assets = mediamosa_search::asset_search(array('app_ids' => array($app_id), 'limit' => 10000), '');
+  foreach (array_values($assets['asset_ids']) as $asset_id) {
     mediamosa_asset::delete($asset_id);
     print '.';
   }
@@ -783,7 +883,7 @@ function drush_mediamosa_mm_app_mf_list($app_id = NULL) {
     ->condition(mediamosa_asset_mediafile_db::APP_ID, $app_id);
   $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
 
-  foreach ($mediafiles as $mediafile_id => $mediafile) {
+  foreach (array_values($mediafiles) as $mediafile) {
     echo mediamosa_io::realpath(mediamosa_storage::get_uri_mediafile($mediafile));
     echo "\n";
   }
@@ -806,7 +906,7 @@ function drush_mediamosa_mm_analyse($mediafile_id, $priority = 0) {
   );
   $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
 
-  $job = mediamosa_job::create_job_analyse(
+  mediamosa_job::create_job_analyse(
     $mediafile['app_id'],
     $mediafile['owner_id'],
     TRUE,
@@ -834,8 +934,6 @@ function drush_mediamosa_mm_analyse_app($app_id) {
   if (!(is_numeric($priority))) {
     return drush_set_error('', dt('Priority must be an integer.'));
   }
-
-  $quiet = drush_get_option('quiet', NULL);
 
   $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
   $query->fields('mf', array(mediamosa_asset_mediafile_db::ID));
@@ -925,6 +1023,7 @@ function drush_mediamosa_mm_generate_asset($number_assets = 1, $number_mediafile
  */
 function drush_mediamosa_mm_transcode_profiles() {
   // Get the listing.
+  $rows = array();
   $transcode_profiles = mediamosa_transcode_profile::search('');
   foreach ($transcode_profiles as $transcode_profile) {
     $default = $transcode_profile['is_default_profile'] == 'TRUE' ? ' (default)' : '';
@@ -1025,6 +1124,7 @@ function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
   $query->fields('mf', $mm_fields);
   $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
   $query->condition('mf.' . mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $transcode_profile_id);
+  $query->orderBy('mediafile_id');
   $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
   $count = 0;
   foreach ($mediafiles as $mediafile_id => $mediafile) {
@@ -1033,7 +1133,7 @@ function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
     $mediafile['owner_id'],
     $mediafile['group_id'],
     TRUE,
-    $mediafile['mediafile_id'],
+    $mediafile_id,
     FALSE, '', '', '', '', '', '',
     $priority);
     if (!$quiet) {
@@ -1051,14 +1151,11 @@ function drush_mediamosa_mm_retranscode_app($app_id, $transcode_profile_id) {
  */
 function drush_mediamosa_mm_still($mediafile_id = NULL, $size = NULL) {
   if ($mediafile_id == NULL) {
-    return drush_set_error('', dt('Invalid mediafile_id.'));
-  }
-
-  if ($size == NULL) {
-    $size = mediamosa_app::get_still_default_size($mediafile['app_id']);
+    return drush_set_error('', dt('Invalid id.'));
   }
 
   $priority = drush_get_option('priority', '0');
+  $frametime = drush_get_option('frametime', 10);
 
   $fields = array(
     mediamosa_asset_mediafile_db::ID,
@@ -1069,10 +1166,46 @@ function drush_mediamosa_mm_still($mediafile_id = NULL, $size = NULL) {
   );
   $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, $fields);
 
+  if (!$mediafile) {
+    // special: is this an asset_id?
+    $asset_id = $mediafile_id;
+    $fields = array(
+      mediamosa_asset_db::ID,
+    );
+    $asset = mediamosa_asset::get($asset_id, NULL, $fields);
+    if (!$asset) {
+      return drush_set_error('', dt('Invalid id.'));
+    }
+
+    $fields = array(
+      mediamosa_asset_mediafile_db::ID,
+      mediamosa_asset_mediafile_db::ASSET_ID,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::OWNER_ID,
+      mediamosa_asset_mediafile_db::GROUP_ID,
+    );
+    $options = array(
+      'get_originals_only' => TRUE,
+      'exclude_stills' => TRUE,
+      'limit' => 1,
+    );
+    $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields, $options);
+    if (isset($mediafiles) && is_array($mediafiles) && count($mediafiles) == 1) {
+      $mediafile = reset($mediafiles);
+    }
+    else {
+      return drush_set_error('', dt('Invalid id.'));
+    }
+  }
+
+  if ($size == NULL) {
+    $size = mediamosa_app::get_still_default_size($mediafile['app_id']);
+  }
+
   $still_parameters = array(
     'still_type' => drush_get_option('still_type', 'NORMAL'),
     'still_per_mediafile' => drush_get_option('still_per_mediafile', 1),
-    'frametime' => 10,
+    'frametime' => $frametime,
     'size' => $size,
     'tag' => NULL,
     'watermark_id' => NULL,
@@ -1090,7 +1223,10 @@ function drush_mediamosa_mm_still($mediafile_id = NULL, $size = NULL) {
     $mediafile['mediafile_id'],
     $still_parameters,
     $priority);
-  drush_print('Still job for mf: ' . $mediafile['mediafile_id'] . ' requested. Job id: ' . $job_id . '.');
+
+  if (!drush_get_option('quiet', NULL)) {
+    drush_print('Still job for mf: ' . $mediafile['mediafile_id'] . ' requested. Job id: ' . $job_id . '.');
+  }
 }
 
 /**
@@ -1156,6 +1292,7 @@ function drush_mediamosa_mm_job($job_id = NULL) {
   }
   $jobs = mediamosa_job::get_job_list(NULL, NULL, TRUE, 0, '', '', $cql, 1, 0);
 
+  $rows = array();
   foreach ($jobs as $job) {
     foreach ($job as $field_name => $field) {
       $rows[] = array(
