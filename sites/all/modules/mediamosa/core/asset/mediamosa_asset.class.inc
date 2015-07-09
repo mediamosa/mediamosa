@@ -324,9 +324,11 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    *   The ID of the asset to put into trashcan.
+   * @param bool $reindex
+   *   Reindex the asset metadata.
    */
-  protected static function trashcan($asset_id) {
-    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)));
+  protected static function trashcan($asset_id, $reindex = TRUE) {
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)), $reindex);
   }
 
   /**
@@ -337,9 +339,11 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    *   The ID of the asset to restore.
+   * @param bool $reindex
+   *   Reindex the asset metadata.
    */
-  public static function restore($asset_id) {
-    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_FALSE)));
+  public static function restore($asset_id, $reindex = TRUE) {
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_FALSE)), $reindex);
   }
 
   /**
@@ -1340,10 +1344,10 @@ class mediamosa_asset {
       }
 
       if ($trashcan) {
-        mediamosa_asset::trashcan($asset_id);
+        mediamosa_asset::trashcan($asset_id, FALSE);
       }
       else {
-        mediamosa_asset::restore($asset_id);
+        mediamosa_asset::restore($asset_id, FALSE);
       }
 
       // Reindex the asset.
@@ -1778,11 +1782,7 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   public static function publish($asset_id, $reindex = TRUE) {
-    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_TRUE)));
-
-    if ($reindex) {
-      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
-    }
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_TRUE)), $reindex);
   }
 
   /**
@@ -1794,11 +1794,7 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   public static function unpublish($asset_id, $reindex = TRUE) {
-    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_FALSE)));
-
-    if ($reindex) {
-      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
-    }
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_PUBLISHED => array(self::METADATA_PUBLISHED_FALSE)), $reindex);
   }
 
   /**

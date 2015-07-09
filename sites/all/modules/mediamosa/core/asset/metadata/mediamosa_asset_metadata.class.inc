@@ -67,8 +67,10 @@ class mediamosa_asset_metadata {
    *     - 'replace': Remove all metadata (of given definitions) and replace
    *                  with new.
    *     - 'update': Remove all metadata from single property and insert new.
+   * @param bool $reindex
+   *   Reindex the asset metadata.
    */
-  public static function metadata_create($asset_id, array $metadata_definitions_full, array $params, $action) {
+  public static function metadata_create($asset_id, array $metadata_definitions_full, array $params, $action, $reindex = TRUE) {
     $values_set = array();
 
     // Transaction in.
@@ -189,8 +191,9 @@ class mediamosa_asset_metadata {
     // Set the empty asset.
     mediamosa_asset::update_asset_info_is_empty_asset($asset_id, FALSE);
 
-    // Reindex the asset.
-    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
+    if ($reindex) {
+      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
+    }
 
     // Return whats been changed.
     return $values_set;
@@ -526,16 +529,19 @@ class mediamosa_asset_metadata {
    *   The ID of the asset.
    * @param array $params
    *   The name => key value pairs.
+   * @param bool $reindex
+   *   Reindex the asset metadata.
    *
    * @return array
    *   The set values.
    */
-  public static function metadata_asset_create($asset_id, $params) {
+  public static function metadata_asset_create($asset_id, $params, $reindex = TRUE) {
     return static::metadata_create(
       $asset_id,
       mediamosa_asset_metadata_property::get_metadata_properties_full(FALSE, array('asset')),
       $params,
-      'update'
+      'update',
+      $reindex
     );
   }
 }
