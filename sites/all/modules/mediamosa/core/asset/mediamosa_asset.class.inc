@@ -1716,12 +1716,17 @@ class mediamosa_asset {
   }
 
   /**
-   * Remove asset from external databases.
+   * Remove other references to asset.
    *
    * @param array $asset_ids
    *   The assets to remove.
    */
   public static function mediamosa_asset_delete(array $asset_ids) {
+
+    // Trigger the asset_delete hook.
+    module_invoke_all('mediamosa_asset_delete', $asset_ids);
+
+    // Remove asset(s) from external databases.
     mediamosa_search::asset_delete($asset_ids);
   }
 
