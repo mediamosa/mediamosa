@@ -1324,7 +1324,10 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       $mediamosa->add_item($item);
     }
 
-    if ($this->get_param_value(self::COUNT_VIEW)) {
+    // Increase view count if not the owner (or admin).
+    if ($this->get_param_value(self::COUNT_VIEW) &&
+      (!$is_app_admin) &&
+      ($acl_user_id != $asset['owner_id'])) {
       // Increase viewed.
       mediamosa_asset::asset_viewed($asset_id);
     }
@@ -1616,10 +1619,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
         // Add streamable setting on asset.
-        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']) ? 'TRUE' : 'FALSE';
+        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ? $item['mediafiles'] : $item['mediafiles']) ? 'TRUE' : 'FALSE';
 
-        if ($this->get_param_value(self::COUNT_VIEW)) {
-          // Increase viewed.
+        // Increase view count if not the owner (or admin).
+        if (($this->get_param_value(self::COUNT_VIEW) &&
+             (!$is_app_admin) &&
+             ($acl_user_id != $item['owner_id']))) {
           mediamosa_asset::asset_viewed($asset_id);
         }
 
