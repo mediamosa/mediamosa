@@ -1,3 +1,8 @@
+Mediamosa 3.6.1 (build 2172)
+----------------------------
+- Reduced number of calls for re-index from 3 to 1 when creating asset.
+
+
 MediaMosa 3.6.0-RC1 (build 2171)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
