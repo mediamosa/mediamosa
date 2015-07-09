@@ -63,6 +63,24 @@ class mediamosa_solr_apache_solr_response {
   }
 
   /**
+   * Get the asset docs.
+   *
+   * @return array
+   *   Array of found assets.
+   */
+  public function getAssetDocs() {
+    $assets = array();
+
+    if (!empty($this->_response->response->docs)) {
+      foreach ($this->_response->response->docs as $doc) {
+        $assets[] = $doc;
+      }
+    }
+
+    return $assets;
+  }
+
+  /**
    * Retrieve the schema name.
    *
    * Is only available for Solr 4.2 and higher and using the /schema/name url.
