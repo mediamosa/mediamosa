@@ -204,24 +204,32 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
   /**
    * Ending the test.
+   *
+   * Uncaught exceptions might cause the database to be empty (All tables
+   * dropped).
    */
   protected function tearDown() {
-    // Dump our PHP error log 1st (if any).
-    $this->mediamosa_dump_error_log();
+    try {
+      // Dump our PHP error log 1st (if any).
+      $this->mediamosa_dump_error_log();
 
-    // Unlink files.
-    foreach ($this->unlinks as $filename) {
-      mediamosa_io::unlink($filename);
+      // Unlink files.
+      foreach ($this->unlinks as $filename) {
+        mediamosa_io::unlink($filename);
 
-      // Show deletion.
-      $this->pass(t('File @filename deleted.', array('@filename' => $filename)));
+        // Show deletion.
+        $this->pass(t('File @filename deleted.', array('@filename' => $filename)));
+      }
+
+      // Clean up...
+      $this->unlinks = array();
+
+      // Dump the log.
+      $this->dump_watchdog();
     }
-
-    // Clean up...
-    $this->unlinks = array();
-
-    // Dump the log.
-    $this->dump_watchdog();
+    catch (Exception $e) {
+      $this->fail('Caught exception during tear down (1); ' . $e->getMessage());
+    }
 
     mediamosa_db::db_foreign_keys_off();
 
@@ -230,12 +238,19 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     mediamosa_db::db_foreign_keys_on();
 
-    if (variable_get('mediamosa_simpletest_db_log', FALSE)) {
-      foreach (Database::getLog('testing', 'default') as $log) {
-        if (!preg_match('/^INSERT INTO simpletest([0-9]*)watchdog/', $log['query'])) {
-          $this->pass(check_plain(strtr($log['query'], $log['args'])), 'DB Query', $log['caller']);
+    try {
+      if (variable_get('mediamosa_simpletest_db_log', FALSE)) {
+        foreach (Database::getLog('testing', 'default') as $log) {
+          if (!preg_match('/^INSERT INTO simpletest([0-9]*)watchdog/', $log['query'])) {
+            // Only store max. 32k char long queries.
+            $line = mediamosa_unicode::substr(check_plain(strtr($log['query'], $log['args'])), 0, 32768);
+            $this->pass($line, 'DB Query', $log['caller']);
+          }
         }
       }
+    }
+    catch (Exception $e) {
+      $this->fail('Caught exception during tear down (2); ' . $e->getMessage());
     }
   }
 

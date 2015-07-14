@@ -58,6 +58,7 @@ function _mediamosa_solr_status_generate() {
 
     // Check the schema (only 4.2. or higher).
     $schema_info = mediamosa_solr_apache_solr_service::solrServiceGetSchemaInfo();
+    $description = '';
     if ($schema_info === FALSE) {
       // Old version, can retrieve it.
       $ok = TRUE;
@@ -65,7 +66,6 @@ function _mediamosa_solr_status_generate() {
     }
     else {
       $ok = $schema_info['success'];
-      $description = '';
       if ($ok) {
         $version = mediamosa_solr::schema_version($schema_info['name']);
         if (empty($version['build']) || $version['build'] < mediamosa_solr::MIN_BUILD) {
