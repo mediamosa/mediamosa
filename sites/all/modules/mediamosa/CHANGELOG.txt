@@ -1,9 +1,9 @@
-Mediamosa 3.6.1 (build 2172)
+Mediamosa 3.6.1 (build 2173)
 ----------------------------
 - Reduced number of calls for re-index from 3 to 1 when creating asset.
 
 
-MediaMosa 3.6.0-RC1 (build 2171)
+MediaMosa 3.6.0-RC2 (build 2173)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -274,6 +274,9 @@ MediaMosa 3.6.0-RC1 (build 2171)
 - Updated Drupal to 7.37.
 - Refs: #14276; extended the REST call /asset/supplements.
 - Fixed/extended duplicated asset search to include/exclude assets in trashcan.
+- Fixed: Exceptions during simpletest teardown() will drop all tables outside
+  the simpletest sandbox.
+
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
