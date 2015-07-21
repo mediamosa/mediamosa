@@ -445,10 +445,16 @@ class mediamosa_asset_mediafile_metadata {
   /**
    * Create multiple metadata for a mediafile.
    *
-   * @param mediafile_id
-   * @param metadatas An array (array(value => value, prop_name => prop_name, type => type))
+   * @param string mediafile_id
+   *   The Id of the mediafile.
+   * @param array $metadatas
+   *   Data to store in technical metadata. Not all is allowed.
+   *   Format: (consists of array of arrays)
+   *   - 'value': the value to store.
+   *   - 'prop_name:' the name of the property.
+   *   - 'type': the type to store.
    */
-  public static function create_mediafile_multiple_metadata($mediafile_id, $metadatas) {
+  public static function create_mediafile_multiple_metadata($mediafile_id, array $metadatas) {
     if (is_array($metadatas) && !empty($metadatas)) {
       foreach ($metadatas as $metadata) {
         self::create_mediafile_metadata($mediafile_id, $metadata['value'], $metadata['prop_name'], $metadata['type']);

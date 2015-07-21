@@ -338,7 +338,7 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_FLOAT:
-        if (!is_numeric($mixed_param_value) || (!is_int($mixed_param_value) && !is_float($mixed_param_value))) {
+        if (!is_numeric($mixed_param_value)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
@@ -473,7 +473,7 @@ class mediamosa_type {
       return $checked_param_value;
     }
 
-    if (!isset($checked_param_value) || (!is_string($checked_param_value) && !is_int($checked_param_value))) {
+    if (!isset($checked_param_value) || (!is_string($checked_param_value) && !is_int($checked_param_value) && !is_float($checked_param_value))) {
       throw new mediamosa_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
     }
 
@@ -505,7 +505,7 @@ class mediamosa_type {
    */
   private static function int_range($param, $int_val, $min_value, $max_value) {
     // Must be int type.
-    assert(is_int($int_val));
+    assert(is_int($int_val) || is_float($int_val));
 
     if (is_null($min_value) && is_null($max_value)) {
       return $int_val;

@@ -601,7 +601,7 @@ class mediamosa_asset_mediafile {
           $mediafile_id = $still[mediamosa_asset_mediafile_db::ID];
           $still = array_merge($still, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
 
-          // Unset sannas mount point.
+          // Unset duration.
           unset($still[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
 
           $items[$still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still'][$i++] = $still;
@@ -838,8 +838,14 @@ class mediamosa_asset_mediafile {
    *   The owner of the mediafile.
    * @param array $fields
    *   The mediafile fields to save.
+   * @param array $metadatas
+   *   Data to store in technical metadata. Not all is allowed.
+   *   Format: (consists of array of arrays)
+   *   - 'value': the value to store.
+   *   - 'prop_name:' the name of the property.
+   *   - 'type': the type to store.
    */
-  public static function update($app_id, $mediafile_id, $user_id, array $fields) {
+  public static function update($app_id, $mediafile_id, $user_id, array $fields, array $metadatas = array()) {
     // Cant mix input of uri/filename/is_downloadable.
     if (isset($fields[mediamosa_asset_mediafile_db::URI]) && (isset($fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
@@ -877,6 +883,8 @@ class mediamosa_asset_mediafile {
       ->fields($fields)
       ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
       ->execute();
+
+    mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
 
     // Set the external.
     mediamosa_asset::update_asset_info_is_external($mediafile[mediamosa_asset_mediafile_db::ASSET_ID], FALSE);
@@ -949,8 +957,14 @@ class mediamosa_asset_mediafile {
    *   The new owner.
    * @param array $fields
    *   Optional fields. See mediamosa_asset_mediafile_db.
+   * @param array $metadatas
+   *   Data to store in technical metadata. Not all is allowed.
+   *   Format: (consists of array of arrays)
+   *   - 'value': the value to store.
+   *   - 'prop_name:' the name of the property.
+   *   - 'type': the type to store.
    */
-  public static function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
+  public static function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array(), array $metadatas = array()) {
 
     $fields += array(
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
@@ -1003,25 +1017,24 @@ class mediamosa_asset_mediafile {
     mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
 
     if (self::is_still($fields)) {
-      $metadatas = array(
-        array(
-          'value' => 0,
-          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_ORDER,
-          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
-        ),
-        array(
-          'value' => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
-          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_TYPE,
-          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
-        ),
-        array(
-          'value' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT_FALSE,
-          'prop_name' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT,
-          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
-        ),
+      $metadatas[] = array(
+        'value' => 0,
+        'prop_name' => mediamosa_asset_mediafile_metadata::STILL_ORDER,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
       );
-      mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
+      $metadatas[] = array(
+        'value' => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+        'prop_name' => mediamosa_asset_mediafile_metadata::STILL_TYPE,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      );
+      $metadatas[] = array(
+        'value' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT_FALSE,
+        'prop_name' => mediamosa_asset_mediafile_metadata::STILL_DEFAULT,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      );
     }
+
+    mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
 
     // Return the mediafile ID.
     return $mediafile_id;

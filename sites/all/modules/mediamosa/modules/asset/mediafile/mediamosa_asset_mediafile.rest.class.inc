@@ -351,6 +351,8 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   const TAG = 'tag';
   const IS_STILL = 'is_still';
 
+  const METADATA_DURATION = 'metadata_duration';
+
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
     $var_setup = array();
@@ -417,6 +419,11 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The mediafile is used as a still image.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+
+        self::METADATA_DURATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FLOAT,
+          self::VAR_DESCRIPTION => 'Prefined values for technical metadata, value is ignored when URI is not set. This value is number of seconds of the media. You can provide value as float in seconds, with decimal precision of 2; micro seconds as 12.11, as length of 12 seconds and 0.11 of a second.',
+        ),
       )
     );
 
@@ -476,8 +483,30 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       }
     }
 
+    $metadatas = array();
+    if (!$this->empty_param(self::URI)) {
+      if ($this->isset_param(self::METADATA_DURATION)) {
+        $duration = $this->get_param_value(self::METADATA_DURATION);
+        mediamosa_exception::assert(is_float($duration));
+        $duration_micro = substr(number_format($duration, 2, '.', ''), -3);
+        $duration = floor($duration);
+
+        // Seconds.
+        $seconds = $duration % 60;
+        $duration /= 60;
+        $minutes = $duration % 60;
+        $duration /= 60;
+        $hours = min($duration, 99);
+        $metadatas[] = array(
+          'value' => sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds) . $duration_micro,
+          'prop_name' => mediamosa_asset_mediafile_metadata::FILE_DURATION,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+        );
+      }
+    }
+
     $mediafile_id = $this->empty_param(self::MEDIAFILE_ID) ? mediamosa_db::uuid($app_id) : $this->get_param_value(self::MEDIAFILE_ID);
-    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
+    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields, $metadatas);
 
     $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
   }
@@ -499,6 +528,8 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
   const TRANSCODE_INHERITS_ACL = 'transcode_inherits_acl';
   const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const TAG = 'tag';
+
+  const METADATA_DURATION = 'metadata_duration';
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
@@ -541,6 +572,11 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The location path of the file.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
+        ),
+
+        self::METADATA_DURATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FLOAT,
+          self::VAR_DESCRIPTION => 'Prefined values for technical metadata, value is ignored when URI is not set. This value is number of seconds of the media. You can provide value as float in seconds, with decimal precision of 2; micro seconds as 12.11, as length of 12 seconds and 0.11 of a second.',
         ),
       )
     );
@@ -589,8 +625,28 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
       $fields[$param] = $value;
     }
 
+    $metadatas = array();
+    if ($this->isset_param(self::METADATA_DURATION)) {
+      $duration = $this->get_param_value(self::METADATA_DURATION);
+      mediamosa_exception::assert(is_float($duration));
+      $duration_micro = substr(number_format($duration, 2, '.', ''), -3);
+      $duration = floor($duration);
+
+      // Seconds.
+      $seconds = $duration % 60;
+      $duration /= 60;
+      $minutes = $duration % 60;
+      $duration /= 60;
+      $hours = min($duration, 99);
+      $metadatas[] = array(
+        'value' => sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds) . $duration_micro,
+        'prop_name' => mediamosa_asset_mediafile_metadata::FILE_DURATION,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      );
+    }
+
     // Update the mediafile.
-    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $fields);
+    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $fields, $metadatas);
 
     // Set all OK.
     $mediamosa->set_result_okay();

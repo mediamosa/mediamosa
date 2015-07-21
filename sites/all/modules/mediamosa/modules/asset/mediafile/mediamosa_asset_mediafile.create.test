@@ -213,5 +213,49 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
       $counted == $expected,
       t("Get the original mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => $counted, '@expected' => $expected))
     );
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    $parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
+      mediamosa_rest_call_create_mediafile::URI => 'http://something.com/on/the/internet.mp4',
+      mediamosa_rest_call_create_mediafile::METADATA_DURATION => '23.12',
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the mediafiles belonging to an asset.
+    $asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    $this->var_export($asset_mediafile);
+    $this->assert(count($asset_mediafile['items']['item']) == 1, 'Found 1 mediafile');
+    $this->assert($asset_mediafile['items']['item'][0]['metadata']['file_duration'] === '00:00:23.12', 'match time: 00:00:23.12');
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    $parameters = array(
+      mediamosa_rest_call_create_mediafile::APP_ID => $this->a_app[mediamosa_app_db::APP_ID],
+      mediamosa_rest_call_create_mediafile::URI => 'http://something.com/on/the/internet.mp4',
+      mediamosa_rest_call_create_mediafile::METADATA_DURATION => '3683.12',
+    );
+    $mediafile_id = $this->createMediafile($asset_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the mediafiles belonging to an asset.
+    $asset_mediafile = $this->getAssetMediafile($asset_id);
+
+    $this->var_export($asset_mediafile);
+    $this->assert(count($asset_mediafile['items']['item']) == 1, 'Found 1 mediafile');
+    $this->assert($asset_mediafile['items']['item'][0]['metadata']['file_duration'] === '01:01:23.12', 'match time: 01:01:23.12');
+
+    $parameters = array(
+      mediamosa_rest_call_create_mediafile::METADATA_DURATION => '23.12',
+    );
+    $this->updateMediafile($mediafile_id, $parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Get the mediafiles belonging to an asset.
+    $asset_mediafile = $this->getAssetMediafile($asset_id);
+    $this->var_export($asset_mediafile);
+    $this->assert($asset_mediafile['items']['item'][0]['metadata']['file_duration'] === '00:00:23.12', 'match time: 00:00:23.12');
   }
 }
