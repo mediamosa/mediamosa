@@ -1,6 +1,8 @@
-Mediamosa 3.6.1 (build 2173)
+Mediamosa 3.6.1 (build 2174)
 ----------------------------
 - Reduced number of calls for re-index from 3 to 1 when creating asset.
+- Extended mediafile create/update call for mediafiles to include technical
+  metadata duration.
 
 
 MediaMosa 3.6.0-RC2 (build 2173)
