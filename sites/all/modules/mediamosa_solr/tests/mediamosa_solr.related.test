@@ -7,7 +7,10 @@
 class MediaMosaSolrRelatedTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Members.
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'SOLR - related tests',
@@ -86,7 +89,7 @@ class MediaMosaSolrRelatedTestCaseEga extends MediaMosaTestCaseEgaJob {
   /**
    * Related does not search within the ACL and APP range, needs fixing.
    */
-  function testCustomTagWithRelated() {
+  public function testCustomTagWithRelated() {
     // ------------------------------------------------------ Create custom tag.
     // Property.
     $definition = 'custom_tag';
@@ -130,35 +133,36 @@ class MediaMosaSolrRelatedTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->enableMasterSlave($app_id_1);
     $this->enableMasterSlave($app_id_2);
 
+    // Login in on EGAs.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // ------------------------------------- Create asset and metadata property.
+
     // Switch Ega.
     $this->toEga_1();
 
-    // ------------------------------------- Create asset and metadata property.
-    // Login in on other EGA.
-    $this->doEgaLogin_2();
-    $this->doEgaLogin_3(); // no assets.
-
-    // Setup simple search stuff
+    // Upload 3 files to appid 3.
     $upload_1 = $this->uploadTestFile();
     $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
     $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
-    $upload_4 = $this->uploadTestFile();
 
     // Create transcode for all.
-
-    // Create transcode job.
     $this->createMediafileTranscode($upload_1['mediafile_id']);
     $this->createMediafileTranscode($upload_2['mediafile_id']);
     $this->createMediafileTranscode($upload_3['mediafile_id']);
 
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
     // Switch Ega.
     $this->toEga_2();
 
-    // Setup simple search stuff
+    // Upload 2 files in appid 2.
     $upload_5 = $this->uploadTestFile();
     $upload_6 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
 
-    // Create transcode job.
+    // Create transcode jobs.
     $this->createMediafileTranscode($upload_5['mediafile_id']);
     $this->createMediafileTranscode($upload_6['mediafile_id']);
 
