@@ -152,7 +152,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
       ),
     );
 
-    return self::get_var_setup_default($var_setup);;
+    return self::get_var_setup_app_admin($var_setup);
   }
 
   public function do_call() {
@@ -166,6 +166,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
+    $asset = mediamosa_asset::must_exists($asset_id);
     $still_id = $this->get_param_value(self::STILL_ID);
 
     $mediafile_id = NULL;
@@ -177,7 +178,12 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
       $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
     }
 
+    // Must be owner / app_admin to change still.
     $user_id = $this->get_param_value(self::USER_ID);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
     // Set default.
     mediamosa_asset_mediafile_still::set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id);
 
