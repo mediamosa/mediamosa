@@ -602,6 +602,16 @@ class mediamosa_solr {
   }
 
   /**
+   * Number of seconds to optimize. 0 is off.
+   *
+   * @return int
+   *   Number of seconds before optimize is triggert.
+   */
+  public static function settingsOptimize() {
+    return intval(variable_get('mediamosa_solr_optimize', 3600));
+  }
+
+  /**
    * Common log function.
    *
    * @param string $message
@@ -764,6 +774,7 @@ class mediamosa_solr {
       // At when.
       $end_at = REQUEST_TIME + $set_time_limit;
 
+      $optimize = true;
       $indexed = 0;
 
       // Get the now time, as long as we under end_at then continue.
@@ -781,6 +792,7 @@ class mediamosa_solr {
           break;
         }
 
+        $optimize = false;
         $documents = array();
         foreach ($asset_ids as $asset_id) {
           $document = self::createDocumentAsset($asset_id);
@@ -804,12 +816,11 @@ class mediamosa_solr {
         self::commitDocuments($documents);
       }
 
-      if ($indexed) {
-        // Optimize.
+      if ($optimize) {
         self::optimizeSolr();
-
-        mediamosa_debug::log('Solr index run done, indexed @count assets', array('@count' => $indexed));
       }
+
+      mediamosa_debug::log('Solr index run done, indexed @count assets', array('@count' => $indexed ? $indexed : 0));
     }
     catch (Exception $e) {
       // Exception, unlock.
@@ -1389,14 +1400,24 @@ class mediamosa_solr {
   }
 
   /**
-   * Do a Solr optimize call.
+   * Do an Solr optimize call.
    */
   public static function optimizeSolr() {
+
+    $optimize_last = variable_get('mediamosa_solr_optimize_last', NULL);
+    $optimize = self::settingsOptimize();
+
+    if (empty($optimize) || ($optimize_last + $optimize) < REQUEST_TIME) {
+      return;
+    }
+
     // Get the service object.
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
     // Optimize.
     $mediamosa_apache_solr_service->optimize();
+
+    variable_set('mediamosa_solr_optimize_last', REQUEST_TIME);
   }
 
   /**
