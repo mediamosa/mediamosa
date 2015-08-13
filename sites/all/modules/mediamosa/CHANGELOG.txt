@@ -1,11 +1,8 @@
-Mediamosa 3.6.1 (build 2174)
+Mediamosa 3.6.1 (build xxxx)
 ----------------------------
-- Reduced number of calls for re-index from 3 to 1 when creating asset.
-- Extended mediafile create/update call for mediafiles to include technical
-  metadata duration.
 
 
-MediaMosa 3.6.0-RC2 (build 2173)
+MediaMosa 3.6.0-RC2 (build 2175)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -278,6 +275,12 @@ MediaMosa 3.6.0-RC2 (build 2173)
 - Fixed/extended duplicated asset search to include/exclude assets in trashcan.
 - Fixed: Exceptions during simpletest teardown() will drop all tables outside
   the simpletest sandbox.
+- Reduced number of calls for re-index from 3 to 1 when creating asset.
+- Extended mediafile create/update call for mediafiles to include technical
+  metadata duration.
+- Increased 128 maximum length on CQL string search in asset browser to 2048.
+- Improved solr optimize calls, added new setting in MediaMosa configuration
+  settings.
 
 
 MediaMosa 3.5.x (build 2072)
