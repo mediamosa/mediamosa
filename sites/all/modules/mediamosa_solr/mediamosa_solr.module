@@ -454,5 +454,12 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#default_value' => mediamosa_solr::settingInstantlyACL(),
   );
 
+  $form['mediamosa_solr']['mediamosa_solr_optimize'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Optimize timeout'),
+    '#description' => t('The number of seconds before a optimize is run on Solr. Set to 0 for off, 3600 (hour) is default.'),
+    '#default_value' => mediamosa_solr::settingsOptimize(),
+  );
+
   return $form;
 }
