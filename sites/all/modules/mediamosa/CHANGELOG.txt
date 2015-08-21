@@ -285,6 +285,7 @@ MediaMosa 3.6.0-RC2 (build 2176)
 - Performance update for Solr searching. Solr searching is now more conform to
   Solr searching than MySQL 'LIKE' searching. Operator '=' will now properly
   search on words instead of complete lines of text.
+- Fixed bug in CQL to Solr generation when using the '==' operator.
 
 
 MediaMosa 3.5.x (build 2072)

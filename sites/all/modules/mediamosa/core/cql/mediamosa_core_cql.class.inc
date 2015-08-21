@@ -856,7 +856,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1);
 
           if ($is_like) {
-            $a_sub_parts[] = sprintf("%s%s %s %s%s%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
+            $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
           }
           else {
             $a_sub_parts[] = sprintf("%s%s %s %s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape($str_search_term), $str_quotes);
@@ -866,7 +866,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 0, -1);
 
           if ($is_like) {
-            $a_sub_parts[] = sprintf("%s%s %s %s%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
+            $a_sub_parts[] = sprintf("%s%s %s %s%%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
           }
           else {
             $a_sub_parts[] = sprintf("%s%s %s %s%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape($str_search_term), $str_quotes);
