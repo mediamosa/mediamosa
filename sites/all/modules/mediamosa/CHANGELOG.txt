@@ -281,6 +281,7 @@ MediaMosa 3.6.0-RC2 (build 2175)
 - Increased 128 maximum length on CQL string search in asset browser to 2048.
 - Improved solr optimize calls, added new setting in MediaMosa configuration
   settings.
+- Added operator 'exact' to CQL, is alias for '==' operator.
 
 
 MediaMosa 3.5.x (build 2072)

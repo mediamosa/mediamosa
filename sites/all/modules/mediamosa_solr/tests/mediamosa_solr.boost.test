@@ -82,6 +82,25 @@ class MediaMosaSolrBoostTestCaseEga extends MediaMosaTestCaseEgaJob {
     }
   }
 
+  /**
+   * Can find "" around word(s).
+   *
+   * Solr does not index ".
+   */
+  public function engine_fulltext_can_find_with_quotes() {
+    return FALSE;
+  }
+
+  /**
+   * Indexes per word or per line?
+   *
+   * Text; master : m*r will match?
+   *       maste foor : m*r will match?
+   */
+  public function engine_fulltext_wildcard_indexes_lines() {
+    return FALSE;
+  }
+
   // ------------------------------------------------------------------ Tests.
   public function testSolrBoost() {
 
@@ -136,7 +155,7 @@ class MediaMosaSolrBoostTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->cql_do_search_test_assets_1('dc.description="description"', array($upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
 
     $asset_ids = $this->cql_do_search_test_assets_1('dc.title="description" OR dc.description="description"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
-    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id']));
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_3['asset_id'], $upload_1['asset_id']));
     $this->var_export($asset_ids);
 
     $asset_ids = $this->cql_do_search_test_assets_1('dc.title=/boost=200"description" OR dc.description="description"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);

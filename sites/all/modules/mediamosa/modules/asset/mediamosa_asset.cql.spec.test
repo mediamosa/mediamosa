@@ -1,0 +1,216 @@
+<?php
+/**
+ * @file
+ * CQL test file.
+ */
+
+class MediaMosaAssetCQLSpecTestCaseEga extends MediaMosaTestCaseEga {
+  // ---------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Specification 1.2 test',
+      'description' => 'Test the current implementation of CQL to the specification 1.2.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
+    );
+  }
+
+  /**
+   * Our setUp.
+   */
+  protected function setUp() {
+    // Use our own set called 'test'.
+    $this->use_test_metadata_set = true;
+
+    $args = func_get_args();
+
+    // PHP 5.3 does not allow to use $this as we do here.
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  public function testSpec() {
+    // Searching per word is now introduced in 3.6.0, instead of searching per
+    // text (lines). MySQL however does not support this with LIKE.
+
+
+    $text1 = "By an outlived insisted procured improved am. Paid hill fine ten now love even leaf. Supplied feelings mr of dissuade recurred no it offering honoured. Am of of in collecting devonshire favourable excellence. Her sixteen end ashamed cottage yet reached get hearing invited. Resources ourselves sweetness ye do no perfectly. Warmly warmth six one any wisdom. Family giving is pulled beauty chatty highly no. Blessing appetite domestic did mrs judgment rendered entirely. Highly indeed had garden not.";
+    $text2 = "Do to be agreeable conveying oh assurance. Wicket longer admire do barton vanity itself do in it. Preferred to sportsmen it engrossed listening. Park gate sell they west hard for the. Abode stuff noisy manor blush yet the far. Up colonel so between removed so do. Years use place decay sex worth drift age. Men lasting out end article express fortune demands own charmed. About are are money ask how seven.";
+    $text3 = "Of be talent me answer do relied. Wicket admire. Mistress long in on so laughing throwing endeavor occasion welcomed. Gravity sir brandon calling can. No years do widow house delay stand. Prospect six kindness use steepest new ask. High gone kind calm call as ever is. Introduced melancholy estimating motionless on up as do. Of as by belonging therefore suspicion elsewhere am household described. Domestic suitable bachelor for landlord fat.";
+
+    $asset_id_1 = $this->createAsset();
+    $this->createMediafile($asset_id_1);
+    $this->createAssetMetadata($asset_id_1, array('testtitle' => 'the foo bar', 'testdescription' => $text1, 'testdate' => '2015-01-01T15:00:00Z', 'testnumber' => 1));
+
+    $asset_id_2 = $this->createAsset();
+    $this->createMediafile($asset_id_2);
+    $this->createAssetMetadata($asset_id_2, array('testtitle' => 'the foobar', 'testdescription' => $text2, 'testdate' => '2014-01-01T15:00:00Z', 'testnumber' => 2));
+
+    $asset_id_3 = $this->createAsset();
+    $this->createMediafile($asset_id_3);
+    $this->createAssetMetadata($asset_id_3, array('testtitle' => 'barfoobar ending', 'testdescription' => $text3, 'testdate' => '2016-01-01T15:00:00Z', 'testnumber' => 3));
+
+    // Empty.
+    $asset_id_4 = $this->createAsset();
+    $this->createMediafile($asset_id_4);
+    $this->createAssetMetadata($asset_id_4, array('testtitle' => 'empty'));
+
+    // CQL spec 1.2.
+
+    // Operator: =
+    // alias: scr
+    // This is the default relation, and the server can choose any appropriate
+    // relation or means of comparing the query term with the terms from the
+    // data being searched. If the term is numeric, the most commonly chosen
+    // relation is '=='. For a string term, either 'adj' or '==' as appropriate
+    // for the index and term.
+
+    $this->cql_do_search_test_assets_1('simpletest.testnumber = 1', array($asset_id_1 => TRUE));
+    $this->cql_do_search_test_assets_1('testnumber = 1', array($asset_id_1 => TRUE));
+
+    $this->cql_do_search_test_assets_1('testdescription = "Wicket longer admire"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // Fixme: this is not conform CQL. Should work as within.
+    //$this->cql_do_search_test_assets_1('date = "2015 2016"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Operator: ==
+    // alias: exact
+    // This relation is used for exact equality matching. The term in the data
+    // is exactly equal to the term in the search.
+
+    $this->cql_do_search_test_assets_1('simpletest.testnumber == 2', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('testnumber == 2', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('simpletest.testnumber exact 2', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('testnumber exact 2', array($asset_id_2 => TRUE));
+
+    $this->cql_do_search_test_assets_1('testdate == "2014-01-01 15:00:00"', array($asset_id_2 => TRUE));
+
+    $this->cql_do_search_test_assets_1('testdescription == "Wicket longer admire"', array($asset_id_2 => TRUE));
+
+    // Operator: <>
+    // This relation means 'not equal to' and matches anything which is not
+    // exactly equal to the search term.
+
+    // Not sure.
+    //$this->cql_do_search_test_assets_1('date <> "2014-01-01"', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+
+    // Needs fix. 'description <> ""', got result 1033 (CQL returned an error; Syntax error at position 17, "" is not valid char string)
+    //$this->cql_do_search_test_assets_1('description <> ""', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // Operator: <, >, <=,>=
+    // These relations retain their regular meanings as pertaining to ordered
+    // terms (less than, greater than, less than or equal to, greater than or
+    // equal to).
+    $this->cql_do_search_test_assets_1('testdate > "2015-01-01"', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+
+    $this->cql_do_search_test_assets_1('testnumber < 3', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+
+    // Operator: adj
+    // This relation is used for phrase searches. All of the words in the search
+    // term must appear, and must be adjacent to each other in the record in the
+    // order of the search term. The query could also be expressed using the
+    // PROX boolean operator.
+    $this->cql_do_search_test_assets_1('testdescription adj "Wicket longer admire"', array($asset_id_2 => TRUE));
+
+    // Operator: all, any
+    // These relations may be used when the term contains multiple items to
+    // indicate "all of these items" or "any of these items". These queries
+    // could be expressed using boolean AND and OR respectively. These relations
+    // have an implicit relation modifier of 'cql.word', which may be changed by
+    // use of alternative relation modifiers.
+    $this->cql_do_search_test_assets_1('testdescription all "Wicket longer admire"', array($asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('testdescription any "Wicket longer admire"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    $this->cql_do_search_test_assets_1('testdate within "2015 2016"', array($asset_id_1 => TRUE));
+    $this->cql_do_search_test_assets_1('testnumber within "2 3"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // Not supported (yet);
+    // Examples:
+    // foo.dateRange encloses 2002
+    // Search for ranges of dates that include the year 2002.
+    // geo.area encloses "45.3, 19.0"
+    // Search for any area that encloses the point 45.3, 19.0
+
+
+    // dc.title = "foo"
+    // Returns all assets with titles containing the word 'foo'. This behavior
+    // is changed (MM3.6.0+); this was searching for words containing 'foo',
+    // would have given hit on 'barfoobar'.
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "foo"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "foo"', array($asset_id_1 => TRUE));
+    }
+
+    // dc.title = "foo*"
+    // Returns all assets with titles that have words starting with 'foo', like
+    // 'foobar' or just 'foo'. This behavior is changed (MM3.6.0+); this was
+    // searching for words containing 'foo'. To be able to this in previous
+    // version you need to do dc.title = "^foo*".
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "foo*"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "foo*"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+    }
+
+    // dc.title = "*foo"
+    // Returns all assets with titles that have words ending with 'foo', like
+    // 'barfoo' or just 'foo'. This behavior is changed (MM3.6.0+); this was
+    // searching for words containing 'foo'. To be able to this in previous
+    // version you need to do dc.title = "*foo^".
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "*foo"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "*foo"', array($asset_id_1 => TRUE));
+    }
+
+    // dc.title = "*foo*"
+    // Returns all assets with titles that have words containing 'foo', like
+    // 'barfoobar' or just 'foo'. This behavior is not changed (MM3.6.0+); the
+    // wildcards where ignored.
+    $this->cql_do_search_test_assets_1('testtitle = "*foo*"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE));
+
+    // dc.title = "foo^"
+    // dc.title = "*foo^"
+    // Returns all assets with titles that have words ending with foo. This
+    // behavior is not changed.
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "foo^"', array());
+      $this->cql_do_search_test_assets_1('testtitle = "*foo^"', array());
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "foo^"', array($asset_id_1 => TRUE));
+      $this->cql_do_search_test_assets_1('testtitle = "*foo^"', array($asset_id_1 => TRUE));
+    }
+
+    // dc.title = "^foo"
+    // dc.title = "^foo*"
+    // Returns all assets with titles that have words starting with foo. This
+    // behavior is not changed.
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "^foo"', array());
+      $this->cql_do_search_test_assets_1('testtitle = "^foo*"', array());
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "^foo"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+      $this->cql_do_search_test_assets_1('testtitle = "^foo*"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
+    }
+
+    // dc.title = "^foo^"
+    // Returns all assets with titles containing the word 'foo'. This behavior
+    // is not changed and is the same as 'dc.title = "foo"'.
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('testtitle = "^foo^"', array());
+    }
+    else {
+      $this->cql_do_search_test_assets_1('testtitle = "^foo^"', array($asset_id_1 => TRUE));
+    }
+  }
+}

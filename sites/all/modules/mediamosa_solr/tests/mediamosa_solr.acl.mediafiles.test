@@ -82,4 +82,23 @@ class MediaMosaSolrAclMediafileVisibleTestCaseEga extends MediaMosaAclMediafileV
       mediamosa_solr::delete_simpletest_documents($app_ids);
     }
   }
+
+  /**
+   * Can find "" around word(s).
+   *
+   * Solr does not index ".
+   */
+  public function engine_fulltext_can_find_with_quotes() {
+    return FALSE;
+  }
+
+  /**
+   * Indexes per word or per line?
+   *
+   * Text; master : m*r will match?
+   *       maste foor : m*r will match?
+   */
+  public function engine_fulltext_wildcard_indexes_lines() {
+    return FALSE;
+  }
 }

@@ -4,7 +4,7 @@
  * Solr version of MediaMosaAssetCQLTestCaseEga
  */
 
-class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLExtendedTestCaseEga {
+class MediaMosaSolrAssetCQLExtendedTestCaseEga extends MediaMosaAssetCQLExtendedTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ---------------------------------------------------------------- Functions.
@@ -100,6 +100,6 @@ class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLExtendedTestCase
    *       maste foor : m*r will match?
    */
   public function engine_fulltext_wildcard_indexes_lines() {
-    return TRUE;
+    return FALSE;
   }
 }

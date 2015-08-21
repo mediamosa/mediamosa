@@ -4,7 +4,7 @@
  * Solr version of MediaMosaAssetCQLTestCaseEga
  */
 
-class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLTestCaseEga {
+class MediaMosaSolrAssetCQLSpecTestCaseEga extends MediaMosaAssetCQLSpecTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ---------------------------------------------------------------- Functions.
@@ -55,6 +55,9 @@ class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLTestCaseEga {
 
     // Turn on Solr as search engine.
     variable_set('mediamosa_search_engine', 'mediamosa_solr');
+
+    // Reset the search engine.
+    drupal_static_reset('get_search_engine');
   }
 
   /**

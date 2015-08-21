@@ -28,6 +28,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // current server settings to be copied into our test environment.
   protected $default_servers = FALSE; // FALSE: use the current server setup.
 
+  // Use custom test metadata set.
+  protected $use_test_metadata_set = false;
+
   // -------------------------------------------------------------- Constructor.
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
@@ -39,6 +42,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Implements setUp().
    */
   protected function setUp() {
+    $GLOBALS['drupal_test_info']['use_test_metadata_set'] = $this->use_test_metadata_set;
+
     // Reset.
     $this->switch_to_app = NULL;
 
@@ -52,8 +57,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
 
-    // Create and setup the CORE module.
-    $args = array_unique(array_merge(array(
+    $modules = array(
       'mediamosa_user',
       'mediamosa_app_dbus',
       'mediamosa_app_oauth',
@@ -65,10 +69,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_ftp_user',
       'mediamosa_tool_ffmpeg',
       'mediamosa_media',
-      'mediamosa_metadata_dc',
-      'mediamosa_metadata_qdc',
-      'mediamosa_metadata_czp',
-    ), $args));
+    );
+
+    if (!$this->use_test_metadata_set) {
+      $modules = array_merge($modules,
+        array(
+          'mediamosa_metadata_dc',
+          'mediamosa_metadata_qdc',
+          'mediamosa_metadata_czp',
+        )
+      );
+    }
+
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge($modules, $args));
 
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
@@ -116,6 +130,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
           ->fields($server_tool)
           ->execute();
       }
+    }
+
+    // Setup metadata groups, when needed.
+    if ($this->use_test_metadata_set) {
+      $this->setupMetadataGroup();
     }
 
     // Create and login user
@@ -195,6 +214,28 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Call parent.
     parent::tearDown();
+  }
+
+  /**
+   * Setting up metadata set for testing.
+   */
+  public function setupMetadataGroup() {
+    // Create the property group.
+    $property_group_id = mediamosa_asset_metadata_property_group::property_group_create('simpletest');
+    mediamosa_exception::assert($property_group_id);
+
+    // The properties to create.
+    $properties = array(
+      array('testtitle', 'CHAR'),
+      array('testdescription', 'CHAR'),
+      array('testdate', 'DATETIME'),
+      array('testnumber', 'INT'),
+    );
+
+    // Create the properties.
+    foreach ($properties as $property) {
+      mediamosa_asset_metadata_property_group::property_create($property_group_id, $property[0], $property[1]);
+    }
   }
 
   /**
@@ -4467,7 +4508,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $found_ids;
   }
 
-  public function cql_do_search_test_assets_keeporder($asset_ids) {
+  public function cql_do_search_test_assets_keeporder($asset_ids, $offset = 0, $limit = 10) {
     $expected_asset_ids = array();
     $cql = array();
     foreach ($asset_ids as $asset_id) {
@@ -4475,8 +4516,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $cql[] = '^' . mediamosa_sdk::escape_cql($asset_id) . '^';
     }
 
+    $parameters = array('offset' => $offset, 'limit' => $limit);
+    $to_compare = array();
+    foreach ($asset_ids as $key => $asset_id) {
+      if ($offset) {
+        $offset--;
+        continue;
+      }
+
+      if ($limit) {
+        $limit--;
+        $to_compare[] = $asset_id;
+      }
+    }
+
     $cql = 'asset_id any/keeporder "' . implode(' ', $cql) . '"';
-    $returned_asset_ids = $this->cql_do_search_test_assets_1($cql, $expected_asset_ids);
+    $returned_asset_ids = $this->cql_do_search_test_assets_1($cql, $expected_asset_ids, $parameters);
 
     // Resort on keys.
     $asset_ids = array_values($asset_ids);
@@ -4485,7 +4540,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $returned_asset_ids = array_values($returned_asset_ids);
     $this->pass('Got order: ' . implode(', ', $returned_asset_ids));
 
-    foreach ($asset_ids as $key => $asset_id) {
+    foreach ($to_compare as $key => $asset_id) {
       if (isset($returned_asset_ids[$key])) {
         $this->assertTrue($asset_id === $returned_asset_ids[$key], strtr('Order for {key} key (ID: {asset_id}) found on correct spot.', array('{key}' => $key, '{asset_id}' => $asset_id)));
       }

@@ -143,8 +143,15 @@ class MediaMosaAssetMetadataTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id_2);
     $this->var_export($asset);
 
-    $this->cql_do_search_test_assets_1('asset_type = "document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
-    $this->cql_do_search_test_assets_1('asset_type = "Document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
-    $this->cql_do_search_test_assets_1('asset_type = "ocument"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset_type == "document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    $this->cql_do_search_test_assets_1('asset_type == "Document"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_1('asset_type = "ocument"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+      $this->cql_do_search_test_assets_1('asset_type = "*ocument"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_1('asset_type = "ocument"', array());
+      $this->cql_do_search_test_assets_1('asset_type = "*ocument"', array($asset_id => TRUE, $asset_id_2 => TRUE));
+    }
   }
 }

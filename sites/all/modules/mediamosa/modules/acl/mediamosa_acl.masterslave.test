@@ -10,7 +10,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
   public static function getInfo() {
     return array(
       'name' => 'ACL - Master-Slave',
-      'description' => 'Testing the AUT module, master slave, previously known as ACL.',
+      'description' => 'Testing the ACL module, master slave.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );

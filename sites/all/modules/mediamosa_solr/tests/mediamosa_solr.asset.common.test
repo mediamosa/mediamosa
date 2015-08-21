@@ -100,7 +100,7 @@ class MediaMosaSolrAssetTrashcanTestCaseEga extends MediaMosaAssetTestCaseEga {
    *       maste foor : m*r will match?
    */
   public function engine_fulltext_wildcard_indexes_lines() {
-    return TRUE;
+    return FALSE;
   }
 
   /**

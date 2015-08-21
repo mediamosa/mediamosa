@@ -877,6 +877,7 @@ class mediamosa_solr {
    *   Returns the Solr Response object.
    */
   public static function search($query, $offset = 0, $limit = 10, array $params = array(), $method = 'POST') {
+    mediamosa_debug::log($query, array(), 'debug-solr');
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query, $offset, $limit, $params, $method));
   }

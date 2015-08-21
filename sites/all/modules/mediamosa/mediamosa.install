@@ -5580,3 +5580,16 @@ function mediamosa_update_7207() {
     mediamosa_profile::mountpoint_mkdir('data/transcode/' . $prefixes{$x});
   }
 }
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7208() {
+  // Rebuild the registry.
+  //
+  // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry}');
+  // Clear it too.
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
+}

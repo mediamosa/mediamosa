@@ -193,8 +193,13 @@ class mediamosa_search {
       return call_user_func($name . '::access_check_assets', $parameters);
     }
     catch (Exception $e) {
+      // Do not fall back on mysql in sandbox.
+      if (mediamosa::in_simpletest_sandbox()) {
+        throw $e;
+      }
+
       // If other database fails, then do MySQL default (unless it was MySQL).
-      if ($name != 'mediamosa_search') {
+      if ($name !== 'mediamosa_search') {
         return self::access_check_assets($parameters);
       }
       else {

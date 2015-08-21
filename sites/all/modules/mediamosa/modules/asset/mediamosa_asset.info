@@ -12,6 +12,7 @@ dependencies[] = image
 files[] = mediamosa_asset.rest.class.inc
 files[] = mediamosa_asset.test
 files[] = mediamosa_asset.cql.keeporder.test
+files[] = mediamosa_asset.cql.spec.test
 files[] = mediamosa_asset.cql.ext.test
 files[] = mediamosa_asset.cql.test
 files[] = mediamosa_asset.cql_appcoll.test

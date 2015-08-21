@@ -359,7 +359,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    *
    */
   protected function mediamosa_cql_context_is_named_comparitor($str) {
-    $a_comparitors = array('adj', 'all', 'any', 'within');
+    $a_comparitors = array('adj', 'all', 'any', 'within', 'exact');
     return (in_array($str, $a_comparitors) ? TRUE : FALSE);
   }
 
@@ -843,6 +843,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $do_null = TRUE;
 
       case '==':
+      case 'exact':
       case 'adj':
         // Check if we can use escape_like().
         $is_like = $this->mediamosa_cql_is_like($str_like);
@@ -1194,6 +1195,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
       'qdc' => 'mediamosa:qdc',
       'czp' => 'mediamosa:czp',
       'asset' => 'mediamosa:asset',
+      'simpletest' => 'mediamosa:simpletest',
        // References (1.x).
       'acl' => 'mediamosa:acl',
       'aut' => 'mediamosa:acl',

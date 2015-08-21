@@ -437,6 +437,8 @@ class mediamosa_asset_search {
       // Do the query
       $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
 
+      mediamosa_debug::log_high($query);
+
       // If we specify data2, then we do our read queries on the slave.
       global $databases;
       $olddb = NULL;
