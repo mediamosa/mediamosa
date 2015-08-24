@@ -1405,10 +1405,10 @@ class mediamosa_solr {
    */
   public static function optimizeSolr() {
 
-    $optimize_last = variable_get('mediamosa_solr_optimize_last', NULL);
+    $optimize_last = variable_get('mediamosa_solr_optimize_last', 0);
     $optimize = self::settingsOptimize();
 
-    if (empty($optimize) || ($optimize_last + $optimize) < REQUEST_TIME) {
+    if (empty($optimize) || ($optimize_last + $optimize) > REQUEST_TIME) {
       return;
     }
 
