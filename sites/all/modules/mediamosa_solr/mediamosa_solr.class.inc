@@ -559,6 +559,20 @@ class mediamosa_solr {
   }
 
   /**
+   * Instant update on asset update?
+   */
+  public static function settingInstantlyAssetUpdatePlayCount() {
+    return variable_get('mediamosa_solr_asset_update_playcount_instantly', FALSE);
+  }
+
+  /**
+   * Instant update on asset update?
+   */
+  public static function settingInstantlyAssetUpdateViewCount() {
+    return variable_get('mediamosa_solr_asset_update_viewcount_instantly', FALSE);
+  }
+
+  /**
    * Instant update on mediafile update?
    */
   public static function settingInstantlyMediafileUpdate() {

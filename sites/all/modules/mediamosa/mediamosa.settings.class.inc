@@ -16,6 +16,8 @@ class mediamosa_settings {
   const SEARCH_INDEX_TYPE_FAV_USER = 'fav_user';
   const SEARCH_INDEX_TYPE_MASTER_SLAVE = 'master_slave';
   const SEARCH_INDEX_TYPE_ACL = 'acl';
+  const SEARCH_INDEX_TYPE_ASSET_VIEW_COUNT = 'view_count';
+  const SEARCH_INDEX_TYPE_ASSET_PLAY_COUNT = 'play_count';
 
   const MINIMUM_PHP_VERSION = '5.2.4';
 
