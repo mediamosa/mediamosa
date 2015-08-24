@@ -622,7 +622,7 @@ class mediamosa_solr {
    *   Number of seconds before optimize is triggert.
    */
   public static function settingsOptimize() {
-    return intval(variable_get('mediamosa_solr_optimize', 3600));
+    return intval(variable_get('mediamosa_solr_optimize', 0));
   }
 
   /**
@@ -1403,7 +1403,7 @@ class mediamosa_solr {
     }
 
     // Optimize when indicated.
-    if ($optimize || mediamosa::in_simpletest_sandbox()) {
+    if ($optimize || !mediamosa::in_simpletest_sandbox()) {
       // Optimize.
       $mediamosa_apache_solr_service->optimize();
     }
@@ -1419,10 +1419,10 @@ class mediamosa_solr {
    */
   public static function optimizeSolr() {
 
-    $optimize_last = variable_get('mediamosa_solr_optimize_last', NULL);
+    $optimize_last = variable_get('mediamosa_solr_optimize_last', 0);
     $optimize = self::settingsOptimize();
 
-    if (empty($optimize) || ($optimize_last + $optimize) < REQUEST_TIME) {
+    if (empty($optimize) || ($optimize_last + $optimize) > REQUEST_TIME) {
       return;
     }
 
