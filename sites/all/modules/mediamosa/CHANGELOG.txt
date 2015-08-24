@@ -2,7 +2,7 @@ Mediamosa 3.6.1 (build xxxx)
 ----------------------------
 
 
-MediaMosa 3.6.0-RC2 (build 2178)
+MediaMosa 3.6.0-RC2 (build 2179)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -286,6 +286,8 @@ MediaMosa 3.6.0-RC2 (build 2178)
   Solr searching than MySQL 'LIKE' searching. Operator '=' will now properly
   search on words instead of complete lines of text.
 - Fixed bug in CQL to Solr generation when using the '==' operator.
+- Fixed: Optimize was run on Solr every commit during unit test.
+- Default for Solr optimize is now off.
 
 
 MediaMosa 3.5.x (build 2072)
