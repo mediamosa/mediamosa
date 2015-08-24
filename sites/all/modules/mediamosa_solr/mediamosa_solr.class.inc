@@ -1386,10 +1386,8 @@ class mediamosa_solr {
    *     Array containing all documents to commit.
    *   - 'asset_ids'
    *     Array containing all asset_ids of the documents.
-   * @param boolean $optimize
-   *   Run optimize after commit.
    */
-  public static function commitDocuments(array $documents, $optimize = FALSE) {
+  public static function commitDocuments(array $documents) {
     // Any documents?
     if (!empty($documents['documents'])) {
       // Get the service object.
@@ -1400,12 +1398,6 @@ class mediamosa_solr {
 
       // Commit the documents.
       $mediamosa_apache_solr_service->commit();
-    }
-
-    // Optimize when indicated.
-    if ($optimize || !mediamosa::in_simpletest_sandbox()) {
-      // Optimize.
-      $mediamosa_apache_solr_service->optimize();
     }
 
     // Remove from queue.
