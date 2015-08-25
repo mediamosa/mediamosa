@@ -2,7 +2,7 @@ Mediamosa 3.6.1 (build xxxx)
 ----------------------------
 
 
-MediaMosa 3.6.0-RC2 (build 2180)
+MediaMosa 3.6.0-RC2 (build 2181)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -291,6 +291,7 @@ MediaMosa 3.6.0-RC2 (build 2180)
 - Removed the optimize option when commiting documents to Solr.
 - Added options for instant or queued solr indexing for view and played updates
   on assets.
+- Fixing commitDocuments not being called with any documents.
 
 
 MediaMosa 3.5.x (build 2072)
