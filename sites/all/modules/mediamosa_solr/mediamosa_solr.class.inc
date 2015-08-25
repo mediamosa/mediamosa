@@ -1199,6 +1199,8 @@ class mediamosa_solr {
           default:
             throw new mediamosa_solr_exception('Unsupported metadata type detected!');
         }
+
+        drupal_alter('mediamosa_solr_document_metadata', $document, $name, $asset_for_index['asset_metadata']);
       }
     }
 
