@@ -1398,12 +1398,12 @@ class mediamosa_solr {
 
       // Commit the documents.
       $mediamosa_apache_solr_service->commit();
-    }
 
-    // Remove from queue.
-    mediamosa_db::db_delete(mediamosa_solr_queue_db::TABLE_NAME)
-      ->condition(mediamosa_solr_queue_db::ID, $documents['asset_ids'], 'IN')
-      ->execute();
+      // Remove from queue.
+      mediamosa_db::db_delete(mediamosa_solr_queue_db::TABLE_NAME)
+        ->condition(mediamosa_solr_queue_db::ID, $documents['asset_ids'], 'IN')
+        ->execute();
+    }
   }
 
   /**
