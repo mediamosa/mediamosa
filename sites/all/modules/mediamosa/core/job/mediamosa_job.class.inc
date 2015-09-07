@@ -526,25 +526,6 @@ class mediamosa_job {
   }
 
   /**
-   * Decide wheter the still is creatable from the mediafile or not.
-   *
-   * @param string $mediafile_id
-   *
-   * @return bool
-   *   TRUE in case of still is creatable.
-   */
-  public static function is_still_creatable($mediafile_id) {
-    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
-
-    $pos = strpos($mime_type, '/');
-    if ($pos !== FALSE) {
-      $mime_type = drupal_substr($mime_type, 0, $pos);
-    }
-
-    return ($mime_type != mediamosa_lib::MIME_TYPE_AUDIO);
-  }
-
-  /**
    * Create still job.
    *
    * @param int $app_id
@@ -555,21 +536,16 @@ class mediamosa_job {
    * @param int $priority
    */
   public static function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $still_parameters = array(), $priority = NULL) {
-    if (self::is_still_creatable($mediafile_id)) {
-      // Create mediadownload job.
-      self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
+    // Create mediadownload job.
+    self::create_job_media_download($app_id, $user_id, $is_app_admin, $mediafile_id);
 
-      // Create job.
-      $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
+    // Create job.
+    $job_id = self::create_job(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $still_parameters, $priority);
 
-      // Create sub still job.
-      mediamosa_job_still::create($job_id, $still_parameters);
+    // Create sub still job.
+    mediamosa_job_still::create($job_id, $still_parameters);
 
-      return $job_id;
-    }
-
-    // Throw exception.
-    throw new mediamosa_exception_error_still_is_not_creatable(array('@mediafile_id' => $mediafile_id));
+    return $job_id;
   }
 
   /**
