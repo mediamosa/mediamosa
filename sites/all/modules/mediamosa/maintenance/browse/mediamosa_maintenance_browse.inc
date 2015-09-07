@@ -130,9 +130,13 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
     foreach ($variables['metadata'] as $name => $value) {
       if (is_array($value)) {
         foreach ($value as $value_2) {
+          $value_2 = check_plain($value_2);
+          if (preg_match('#^[0-9a-zA-Z]{24}$#', $value_2)) {
+            $value_2 = l($value_2, '/admin/mediamosa/content/asset/' . $value_2);
+          }
           $rows[] = array(
             check_plain($name),
-            check_plain($value_2),
+            $value_2,
           );
         }
       }
