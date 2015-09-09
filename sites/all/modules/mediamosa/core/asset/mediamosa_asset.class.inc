@@ -1528,6 +1528,9 @@ class mediamosa_asset {
     // Copy mediafiles.
     mediamosa_asset_mediafile::copy($asset_id, $new_asset_id, $symlink);
 
+    // Update the normalized fields.
+    self::update_asset_info($new_asset_id);
+
     // Do more stuff: collections, hooks.
 
     return $new_asset_id;
