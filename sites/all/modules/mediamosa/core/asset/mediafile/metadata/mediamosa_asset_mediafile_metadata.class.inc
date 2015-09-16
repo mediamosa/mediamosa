@@ -221,17 +221,22 @@ class mediamosa_asset_mediafile_metadata {
     // Store basic information.
     $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile_id);
 
+    // Clear the stat cache.
+    mediamosa_io::clearstatcache(mediamosa_io::realpath($mediafile_uri));
+
     // Get the filesize.
     $filesize = mediamosa_io::filesize($mediafile_uri);
-
-    // Get the md5.
-    $md5 = mediamosa_io::md5_file($mediafile_uri);
 
     // Create filesize metadata.
     self::create_mediafile_metadata_int($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
 
+    // Get the md5.
+    $md5 = mediamosa_io::md5_file($mediafile_uri);
+
     // Create md5 metadata.
-    self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
+    if ($md5 !== '' && $md5 !== FALSE) {
+      self::create_mediafile_metadata_char($mediafile_id, $md5, mediamosa_asset_mediafile_metadata::MD5);
+    }
 
     // Store metadata from analyse.
     foreach ($metadata as $property_name => $value) {
@@ -239,7 +244,7 @@ class mediamosa_asset_mediafile_metadata {
     }
 
     // The output of ffmpeg.
-    $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', exvplode('}-{', $metadata['ffmpeg-output'])) : '';
+    $ffmpeg_output = isset($metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $metadata['ffmpeg-output'])) : '';
 
     // Update statistics.
     mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);

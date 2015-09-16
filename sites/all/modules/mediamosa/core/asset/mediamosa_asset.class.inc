@@ -1852,7 +1852,7 @@ class mediamosa_asset {
       'SELECT amm.val_char AS md5 FROM {#mediamosa_asset_mediafile} AS am '
       . $join_trashcan
       . 'JOIN {#mediamosa_asset_mediafile_metadata} AS amm ON amm.mediafile_id = am.mediafile_id AND amm.prop_id = :prop_id '
-      . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file '
+      . 'WHERE am.app_id = :app_id AND am.#is_original_file = :is_original_file AND amm.val_char != \'\' '
       . 'GROUP BY amm.val_char '
       . 'HAVING COUNT(*) > 1 '
       . 'ORDER BY am.asset_id '
