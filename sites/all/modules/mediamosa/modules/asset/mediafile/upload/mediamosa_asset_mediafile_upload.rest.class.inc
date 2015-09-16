@@ -359,6 +359,10 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       if (empty($ticket)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
       }
+
+      // All verified, add allow origin header.
+      $this->add_header_access_control_allow_origin();
+
       // Get the mediafile using the ticket mediafile_id.
       $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_media_ticket_db::MEDIAFILE_ID]);
       $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
@@ -443,9 +447,6 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       // Lets create error output then.
       throw $e;
     }
-
-    // Success, add allow origin header.
-    $this->add_header_access_control_allow_origin();
 
     // Redirect when needed.
     if ($this->isset_param(self::REDIRECT_URI)) {

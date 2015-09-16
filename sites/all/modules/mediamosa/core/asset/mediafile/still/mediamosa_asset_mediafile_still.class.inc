@@ -951,14 +951,6 @@ class mediamosa_asset_mediafile_still {
       array('@asset_id' => $asset_id)
     );
 
-    // Does the user has access?
-    mediamosa_acl::owner_check(
-      $app_id,
-      $user_id,
-      $asset[mediamosa_asset_db::APP_ID],
-      $asset[mediamosa_asset_db::OWNER_ID]
-    );
-
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
