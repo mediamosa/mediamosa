@@ -2,7 +2,7 @@ Mediamosa 3.6.1 (build xxxx)
 ----------------------------
 
 
-MediaMosa 3.6.0-RC2 (build 2182)
+MediaMosa 3.6.0-RC2 (build 2183)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -294,6 +294,7 @@ MediaMosa 3.6.0-RC2 (build 2182)
 - Fixing commitDocuments not being called with any documents.
 - Added new hook mediamosa_solr_document_metadata for extending metadata when
   indexing Solr.
+- Fixed empty mediafile md5 values and duplicates when mediafile md5 was empty.
 
 
 MediaMosa 3.5.x (build 2072)
