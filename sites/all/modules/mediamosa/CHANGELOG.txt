@@ -295,6 +295,19 @@ MediaMosa 3.6.0-RC2 (build 2183)
 - Added new hook mediamosa_solr_document_metadata for extending metadata when
   indexing Solr.
 - Fixed empty mediafile md5 values and duplicates when mediafile md5 was empty.
+- Updated Drupal to 7.38.
+- Fixed not setting of allow-origin header.
+- Added is_app_admin to /asset/id/still/default.
+- Made MediaMosaSolrRelatedTestCaseEga more stable.
+- Removed unwanted restriction image for audio.
+- Added link in view asset in admin interface.
+- Added return metadata_asset_delete_prop_value().
+- Added mediamosa_asset_delete hook.
+- Added solr reindex on trashcan().
+- Added getAssetDocs() to solr_response class.
+- Fixed increment of view counts.
+- Added small fixes and features to drush.
+- Fixed multiserver setup.
 
 
 MediaMosa 3.5.x (build 2072)
