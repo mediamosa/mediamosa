@@ -25,7 +25,7 @@ local digits = lpeg.R("09")^1
 local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
 
 local word = lpeg.C(symbol) * space
-local number = lpeg.C(digits) * space
+local number = (1 - lpeg.R("09"))^0 * lpeg.C(digits) * space
 local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
 local steam_number = lpeg.C(digits * POINT^0 * COLON^0 * digits) * space
@@ -105,6 +105,7 @@ end
 -- Stream #0.0(und): Video: h264 (High), yuv420p, 1280x720 [PAR 1:1 DAR 16:9], 744 kb/s, 29.94 fps, 29.92 tbr, 1k tbn, 59.83 tbc
 -- Stream #0.0: Video: mjpeg, yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- Stream #0.0: Video: mjpeg (MJPG / 0x47504A4D), yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
+-- Stream #0:0[0x1000]: Video: mpeg2video (Main) ([2][0][0][0] / 0x0002), yuv420p(tv), 1920x1080 [SAR 1:1 DAR 16:9], max. 16000 kb/s, 25 fps, 25 tbr, 90k tbn, 50 tbc
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
 local ln_video = space * "Stream #" * steam_number * language * COLON *
