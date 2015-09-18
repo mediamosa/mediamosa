@@ -5,14 +5,14 @@
  */
 
 /**
-  * @file
-  * Unittests for job deleting asset with running jobs.
-  */
+ * @file
+ * Unittests for job deleting asset with running jobs.
+ */
 class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
 
-  // ------------------------------------------------------------------ Members.
-
-  // ------------------------------------------------------------------ Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'JOB - Delete mediafile test',
@@ -21,10 +21,10 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
-
-  // (see ticket 220)
-  function testJobDelete() {
+  /**
+   * Test delete job. (see ticket 220).
+   */
+  public function testJobDelete() {
 
     // Delete a mediafile with a running job.
 
@@ -34,11 +34,11 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
-    $job_id = $this->createMediafileStill($mediafile_id);
+    $this->createMediafileStill($mediafile_id);
 
     // Delete the mediafile.
     // A running job exists.
-    $response = $this->deleteMediafile($mediafile_id);
+    $this->deleteMediafile($mediafile_id);
 
     // Delete the mediafile_id from the clean up.
     $this->deleteFromCleanUp($mediafile_id);
@@ -51,14 +51,14 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
-    $job_id = $this->createMediafileStill($mediafile_id);
+    $this->createMediafileStill($mediafile_id);
 
     // Delete the asset.
     // A running job exists.
     $a_parameters = array(
       mediamosa_rest_call_asset_delete::DELETE => 'cascade',
     );
-    $response = $this->deleteAsset($asset_id, $a_parameters);
+    $this->deleteAsset($asset_id, $a_parameters);
 
     // Delete the mediafile_id from the clean up.
     $this->deleteFromCleanUp($mediafile_id);
