@@ -884,7 +884,9 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const JOB_ID = 'job_id';
 
-  // ------------------------------------------------------------ Get Var Setup.
+  /**
+   * Implements get_var_setup().
+   */
   public function get_var_setup() {
     $var_setup = array();
 
@@ -900,20 +902,25 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The job ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
-      )
+      ),
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($var_setup);
+    $var_setup = self::get_var_setup_default($var_setup);
+
+    // Add is_app_admin.
+    return self::get_var_setup_app_admin($var_setup);
   }
 
-  // ------------------------------------------------------------------ Do Call.
+  /**
+   * Implements do_call().
+   */
   public function do_call() {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
-    $is_app_admin = FALSE; //$this->get_param_value(self::IS_APP_ADMIN); (not supplied).
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $job_id = $this->get_param_value(self::JOB_ID);
