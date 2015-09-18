@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Unittests for job.
@@ -7,7 +6,9 @@
 
 class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
 
-  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'JOB - common tests',
@@ -19,8 +20,8 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
   // -------------------------------------------------------------------- Tests.
 
   /**
-   * (see ticket 112)
    * Testing upload and transcoding INPROGRESS jobs to be clean up.
+   *
    * - Creating a asset
    * - Creating a mediafile
    * - Creating an upload job (expired, INPROGRESS)
@@ -28,7 +29,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
    * - Call the clean up function
    * - Test the jobs are FAILED
    */
-  function testJobCleanUpInprogress() {
+  public function testJobCleanUpInprogress() {
 
     // Create an asset.
     $asset_id = $this->createAsset();
@@ -76,7 +77,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
     $update_job = mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME);
     $update_job->expression(mediamosa_job_db::CHANGED, 'DATE_SUB(UTC_TIMESTAMP(), INTERVAL ' . (mediamosa_settings::JOB_JOB_TIMEOUT + 10) . ' SECOND)');
     $update_job->execute();
-    
+
     // Clean up old tickets.
     mediamosa_job_scheduler::check_upload_timeout();
 
@@ -95,5 +96,45 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEgaJob {
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_FAILED,
       t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
+  }
+
+  /**
+   * Test for /job/$id/status.
+   */
+  public function testJobStatus() {
+    // Create file through upload.
+    $upload = $this->uploadTestFile();
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Perform jobs (if any).
+    $this->doQueueCycleAll();
+
+    // Get the mediafile.
+    $mediafile = $this->getMediafile($mediafile_id);
+
+    // Show the mediafile.
+    $this->var_export($mediafile);
+
+    // Create transcode job for the same asset.
+    $job = $this->createMediafileTranscode($mediafile_id, array('profile_id' => $this->getDefaultTranscodeProfile()));
+    $this->var_export($job);
+    $job_result = $this->getJob($job['job_id']);
+    foreach ($job_result->get()->xpath('items/item') as $job_item) {
+      $this->assert((string) $job_item->status === mediamosa_job_db::JOB_STATUS_WAITING, 'Job is waiting');
+      break;
+    }
+
+    // Test status call with unauthorised user.
+    $job_result = $this->getJob($job['job_id'], array(
+      mediamosa_rest_call_job_create_still_for_mediafile::USER_ID => 'foo',
+    ), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->var_export($job_result);
+
+    // Test status call with is_app_admin=TRUE.
+    $job_result = $this->getJob($job['job_id'], array(
+      mediamosa_rest_call_job_create_still_for_mediafile::USER_ID => 'foo',
+      'is_app_admin' => 'TRUE',
+    ), array(mediamosa_error::ERRORCODE_OKAY));
+    $this->var_export($job_result);
   }
 }
