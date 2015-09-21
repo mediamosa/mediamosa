@@ -328,6 +328,10 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   protected static function trashcan($asset_id, $reindex = TRUE) {
+
+    // Trigger asset_trashcan hook.
+    module_invoke_all('mediamosa_asset_trashcan', $asset_id);
+
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)), $reindex);
   }
 
@@ -729,7 +733,7 @@ class mediamosa_asset {
     $query = array();
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'm.mediafile_id';
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'm.filename AS mediafile_filename';
-    $query[mediamosa_db_query::A_SELECT_EXPR][] = 'IFNULL(a.parent_id, a.asset_id) AS asset_id';
+    $query[mediamosa_db_query::A_SELECT_EXPR][] = 'a.asset_id';
     $query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset_mediafile} AS m';
     $query[mediamosa_db_query::A_JOIN]['asset'] = 'JOIN {mediamosa_asset} AS a USING(asset_id)';
     if (isset($items['app_info'])) {
@@ -743,7 +747,6 @@ class mediamosa_asset {
 
     $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("a.app_id IN(%s)", implode(",", $app_ids));
     $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.asset_id IN('%s')", $s_ids);
-    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.parent_id IN('%s')", $s_ids);
 
     $query_str = mediamosa_db_query::query_select($query);
     $result = mediamosa_db::db_query($query_str);
@@ -1540,6 +1543,9 @@ class mediamosa_asset {
 
     // Copy mediafiles.
     mediamosa_asset_mediafile::copy($asset_id, $new_asset_id, $symlink);
+
+    // Update the normalized fields.
+    self::update_asset_info($new_asset_id);
 
     // Do more stuff: collections, hooks.
 

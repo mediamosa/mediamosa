@@ -1158,6 +1158,9 @@ class mediamosa_media {
   public static function remove_public_link($app_id, $mediafile_id) {
     $media_location = mediamosa_storage::get_realpath_media_permanent_file($app_id, $mediafile_id);
 
+    // Clear cache for this file.
+    mediamosa_io::clearstatcache($media_location);
+
     if (mediamosa_io::file_exists($media_location)) {
       // Remove permanent links of mediafile.
       mediamosa_io::exec(
@@ -1168,7 +1171,15 @@ class mediamosa_media {
           )
         )
       );
-      rmdir($media_location);
+
+      // Clear cache for this file.
+      mediamosa_io::clearstatcache($media_location);
+
+      if (mediamosa_io::file_exists($media_location)) {
+        if (is_dir($media_location)) {
+          drupal_rmdir($media_location);
+        }
+      }
       mediamosa_io::clearstatcache();
     }
   }

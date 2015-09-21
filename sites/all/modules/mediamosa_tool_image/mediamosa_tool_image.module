@@ -99,8 +99,8 @@ function mediamosa_tool_image_mediamosa_tool_can_generate_still($mime_type) {
  *              v3.5 called 'hook_mediamosa_tool_generate_still' which will
  *              generate still without returning a exec string.
  */
-function mediamosa_tool_image_mediamosa_tool_get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
-  return mediamosa_tool_image::get_generate_still_exec($jobserver_job_id, $mediafile_id_source);
+function mediamosa_tool_image_mediamosa_tool_get_generate_still_exec($job_info, $mediafile_id_source) {
+  return mediamosa_tool_image::get_generate_still_exec($job_info, $mediafile_id_source);
 }
 
 /**

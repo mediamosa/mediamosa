@@ -455,6 +455,11 @@ class mediamosa_job_scheduler {
     // Relocate mediafile if final storage location is not local.
     mediamosa_storage::relocate_mediafile($job_info['app_id'], $mediafile_id_dest, TRUE);
 
+    // Perform a post convert, if supported.
+    if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_convert')) {
+      call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_convert'), $job_id, $mediafile_id_dest);
+    }
+
     // Perform a post transcode, if supported.
     if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_transcode')) {
       call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_transcode'), $job_info['asset_id'], $job_info['mediafile_id'], $mediafile_id_dest, $job_info['file_extension']);
@@ -775,7 +780,6 @@ class mediamosa_job_scheduler {
       'mediafile_src' => $mediafile_id,
       'tool' => $job_parameters['tool'],
       'file_extension' => $job_parameters['file_extension'],
-      'command' => $job_parameters['command'],
     );
     $rest_url = 'server/jobstart?' . http_build_query($query_data);
 
@@ -783,7 +787,14 @@ class mediamosa_job_scheduler {
     self::log_mediafile($mediafile_id, 'Start job:' . $rest_url);
 
     // Do request.
-    $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
+    $response = mediamosa_http::do_internal_call($uri, $rest_url,
+                http_build_query(array('command' => $job_parameters['command'])),
+                mediamosa_http::METHOD_POST,
+                array(
+                  'headers' => array(
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                  ),
+                ));
 
     if ($response->code == '201' || $response->code == '200') {
       try {

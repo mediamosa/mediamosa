@@ -68,8 +68,8 @@ function mediamosa_tool_pdf_mediamosa_tool_can_generate_still($mime_type) {
 /**
  * Implements hook_mediamosa_tool_get_generate_still_exec().
  */
-function mediamosa_tool_pdf_mediamosa_tool_get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
-  return mediamosa_tool_pdf::get_generate_still_exec($jobserver_job_id, $mediafile_id_source);
+function mediamosa_tool_pdf_mediamosa_tool_get_generate_still_exec($job_info, $mediafile_id_source) {
+  return mediamosa_tool_pdf::get_generate_still_exec($job_info, $mediafile_id_source);
 }
 
 

@@ -1,0 +1,77 @@
+<?php
+/**
+ * @file
+ * Job tests for audio related functions.
+ */
+
+class MediaMosaToolAudioTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - audio',
+      'description' => 'Testing the audio tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    parent::setUp('mediamosa_tool_audio');
+  }
+
+  /**
+   * Test create still from an audio.
+   */
+  public function testAudioStillGeneration() {
+
+    // Upload image file.
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/testing.mp3';
+    $upload = $this->uploadTestFile(array('filename' => $filename));
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    $parameters = array('still_type' => 'NORMAL');
+    $this->createMediafileStill($mediafile_id, $parameters);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Dump the asset.
+    $this->dump_jobs();
+
+    $asset = $this->getAssetMediafile($asset_id);
+
+    $this->var_export($asset);
+
+    $this->assertTrue($asset['items']['item'][0]['still']['is_still'] == 'TRUE', 'Still generated.');
+
+    // Do get asset/$asset_id/still call with still.
+    $response = $this->getAssetStill($asset_id);
+    $this->var_export($response);
+    $this->assertTrue(!empty($response[0]['output']), 'Got still');
+
+    // Do play call with still (supply with mediafile ID).
+    $response = $this->do_media_view_still($asset_id, array(mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id));
+    $this->var_export($response);
+    $item = $response->xpath('items/item');
+    $item = reset($item);
+    $this->var_export($item);
+    $this->assertTrue(!empty($item->output), 'Got still');
+
+    // Do play call with still (without mediafile ID).
+    $response = $this->do_media_view_still($asset_id);
+    $this->var_export($response);
+    $item = $response->xpath('items/item');
+    $item = reset($item);
+    $this->var_export($item);
+    $this->assertTrue(!empty($item->output), 'Got still');
+  }
+}

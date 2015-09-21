@@ -52,22 +52,18 @@ class mediamosa_tool_image {
   /**
    * Generate still.
    *
-   * @param string $jobserver_job_id
+   * @param string $job_info
    *   id of jobserver.
    * @param string $mediafile_id_source
    *   mediafile_id of source.
    */
-  public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
-
-    $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
-    $job_server = mediamosa_job_server::get($jobserver_job_id);
-    $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
+  public static function get_generate_still_exec($job_info, $mediafile_id_source) {
 
     $parameter_string = array();
-    if ($job_server_still) {
+    if ($job_info['job_id']) {
 
       // WxH.
-      $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
+      $size = $job_info[mediamosa_job_server_still_db::SIZE];
 
       // Resize.
       if ($size != '') {
@@ -78,19 +74,20 @@ class mediamosa_tool_image {
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
       // Dest.
-      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_id . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
+      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_info['job_id'] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
       $execute_string_options = array(
         '@mediafile_dest' => $mediafile_dest,
         '@mediafile_source' => $mediafile_source,
         '@parameter_string' => implode(' ', $parameter_string),
-        '@status_file' => mediamosa_storage::get_realpath_status_file($job_id),
+        '@status_file' => mediamosa_storage::get_realpath_status_file($job_info['job_id']),
+        '@working_dir' => dirname($mediafile_dest),
       );
 
       // Execution string:
       return strtr(
-        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
-        'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+        '{ echo "Errors: none"; echo "Status: converting"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+        'export MAGICK_TMPDIR=@working_dir;nice convert -limit memory 512MiB -limit map 512MiB @mediafile_source @parameter_string @mediafile_dest; ' .
         '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
         $execute_string_options);
     }
@@ -110,12 +107,13 @@ class mediamosa_tool_image {
       '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
       '@parameter_string' => $options['parameter_string'],
       '@status_file' => $options['status_file'],
+      '@working_dir' => dirname($options['location_dest_file']),
     );
 
     // Execution string.
     return strtr(
-      '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
-      'export MAGICK_TMPDIR=.;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+      '{ echo "Errors: none"; echo "Status: converting"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+      'export MAGICK_TMPDIR=@working_dir;nice convert -limit memory 512MiB -limit map 512MiB @mediafile_source @parameter_string @mediafile_dest; ' .
       '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
       $execution_string_options);
   }
