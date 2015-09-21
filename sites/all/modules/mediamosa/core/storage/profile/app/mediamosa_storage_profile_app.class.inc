@@ -31,7 +31,7 @@ class mediamosa_storage_profile_app {
   /**
    * Get storage profile app by building it.
    *
-   * @param int $profile_app_id
+   * @param int $app_id
    *   Storage profile app ID.
    *
    * @return array
@@ -40,6 +40,11 @@ class mediamosa_storage_profile_app {
   protected static function get_default($app_id) {
     // Get default storage profile.
     $storage_profile = mediamosa_storage_profile::get_default($app_id);
+    if ($storage_profile === NULL) {
+      $storage_profile = array(
+        mediamosa_storage_profile_db::ID => 0,
+      );
+    }
 
     // Create dummy.
     return array(

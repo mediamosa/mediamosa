@@ -36,7 +36,7 @@ class mediamosa_storage_profile {
   public static function get_default() {
     static $default_storage_profile = null;
 
-    if (!isset($default_storage_profile)) {
+    if (!isset($default_storage_profile) && db_table_exists(mediamosa_storage_profile_db::TABLE_NAME)) {
       $default_storage_profile = mediamosa_db::db_select(mediamosa_storage_profile_db::TABLE_NAME, 'sp')
         ->fields('sp')
         ->condition(mediamosa_storage_profile_db::APP_ID, 0)

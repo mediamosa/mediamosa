@@ -3398,6 +3398,38 @@ function mediamosa_update_7133() {
  */
 function mediamosa_update_7134() {
 
+  // Copied from later updates.
+  if (!db_field_exists('mediamosa_server', 'machine_name')) {
+    db_add_field(
+      'mediamosa_server',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa server machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_server}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+
+    if ($node->machine_name !== '' && $node->machine_name !== NULL) {
+      continue;
+    }
+
+    $machine_name = empty($node->server_name) ? 'mediamosa_server_' . $node->server_type : $node->server_name;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_server');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_server', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_server', 'uni_machine_name', array('machine_name'));
+  }
+
   // Server definitions are always uppercase.
   $result = db_query('SELECT nid FROM {mediamosa_server}');
   foreach ($result as $record) {
@@ -4392,6 +4424,37 @@ function _mediamosa_update_helper_convert_command($table_name, $id_name) {
  * restart the update when needed, it will continue where it was.
  */
 function mediamosa_update_7168() {
+  // Copied from later updates.
+  if (!db_field_exists('mediamosa_transcode_profile', 'machine_name')) {
+    db_add_field(
+      'mediamosa_transcode_profile',
+      'machine_name',
+      array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The MediaMosa transcode profile machine name.',
+      )
+    );
+  }
+
+  $result = db_query('SELECT nid FROM {mediamosa_transcode_profile}');
+  foreach ($result as $record) {
+    $node = node_load($record->nid);
+    if (isset($node->machine_name) && $node->machine_name !== '' && $node->machine_name !== null) {
+      continue;
+    }
+
+    $machine_name = empty($node->title) ? (empty($node->profile) ? 'mediamosa_transcode_profile' : $node->profile) : $node->title;
+    $node->machine_name = mediamosa_db::generate_machine_name($machine_name, 'mediamosa_transcode_profile');
+    node_save($node);
+  }
+
+  if (!db_index_exists('mediamosa_transcode_profile', 'uni_machine_name')) {
+    db_add_unique_key('mediamosa_transcode_profile', 'uni_machine_name', array('machine_name'));
+  }
+
   // Get all commands to convert.
   $nids = db_select('mediamosa_transcode_profile', 'tp')
     ->fields('tp', array('nid'))
