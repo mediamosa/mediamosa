@@ -14,7 +14,7 @@ function mediamosa_asset_cron() {
   }
 
   // Make sure update 7204 has run, as is_empty flag must be correct now.
-  if (!db_select('system')->condition('schema_version', 7204, '>=')->countQuery()->execute()->fetchField()) {
+  if (!db_select('system')->condition('schema_version', 7204, '>=')->condition('name', 'mediamosa')->countQuery()->execute()->fetchField()) {
     return;
   }
 
