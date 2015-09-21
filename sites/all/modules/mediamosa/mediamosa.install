@@ -3491,6 +3491,11 @@ function mediamosa_update_7135() {
  * Some 2.x or 3.x installations may be missing the Y directory.
  */
 function mediamosa_update_7136() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
+
   // Get uri to storage.
   $storage = _mediamosa_update_helper_get_mountpoint() . '/';
 
