@@ -25,7 +25,14 @@ class mediamosa_db {
   // UTC_TIMESTAMP instead.
   const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
 
-  // ------------------------------------------------------------------ Static Function.
+  // --------------------------------------------------------------------- Vars.
+  static private $is_db_logging = FALSE;
+
+  static private $num_of_queries = array();
+  static private $num_of_slow_queries = array();
+  static private $total_query_time = array();
+
+  // ---------------------------------------------------------- Static Function.
   /**
    * Returns a new DeleteQuery object for the active database.
    *
@@ -40,10 +47,10 @@ class mediamosa_db {
   public static function db_delete(/* $table, $options = NULL*/) {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
-    if (mediamosa::is_db_logging()) {
+    if (self::is_db_logging()) {
       $start_time = microtime(TRUE);
       $result = call_user_func_array('db_delete', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
+      self::db_log(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
       return $result;
     }
 
@@ -159,7 +166,7 @@ class mediamosa_db {
     }
 
     // Loggin on.
-    if (mediamosa::is_db_logging()) {
+    if (self::is_db_logging()) {
       $start_time = microtime(TRUE);
     }
 
@@ -167,8 +174,8 @@ class mediamosa_db {
     $result = call_user_func_array($func, $args);
 
     // Loggin on.
-    if (mediamosa::is_db_logging()) {
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
+    if (self::is_db_logging()) {
+      self::db_log(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
     }
 
     return $result;
@@ -323,10 +330,10 @@ class mediamosa_db {
       ),
     );
 
-    if (mediamosa::is_db_logging()) {
+    if (self::is_db_logging()) {
       $start_time = microtime(TRUE);
       $result = call_user_func_array('db_select', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      self::db_log(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -351,10 +358,10 @@ class mediamosa_db {
 
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
-    if (mediamosa::is_db_logging()) {
+    if (self::is_db_logging()) {
       $start_time = microtime(TRUE);
       $result = call_user_func_array('db_insert', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      self::db_log(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -394,10 +401,10 @@ class mediamosa_db {
 
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
-    if (mediamosa::is_db_logging()) {
+    if (self::is_db_logging()) {
       $start_time = microtime(TRUE);
       $result = call_user_func_array('db_update', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      self::db_log(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -1103,5 +1110,65 @@ class mediamosa_db {
       ->countQuery()
       ->execute()
       ->fetchField() > 0;
+  }
+
+  /**
+   * Enable db logging for timed queries.
+   */
+  public static function enable_db_logging($name) {
+    $previous_db_logging = self::$is_db_logging;
+    mediamosa_watchdog::log('DB logging starting.', array(), WATCHDOG_DEBUG, $name);
+    self::$is_db_logging = $name;
+    self::$num_of_slow_queries[$name] = self::$num_of_queries[$name] = 0;
+    self::$total_query_time[$name] = microtime(TRUE);
+
+    return $previous_db_logging;
+  }
+
+  /**
+   * Enable db logging for timed queries.
+   */
+  public static function disable_db_logging($name) {
+    if (self::$is_db_logging === $name) {
+      mediamosa_watchdog::log('DB logging ending, time; #time, total queries; #num_of_queries, slow queries; #num_of_slow_queries.', array('#time' => round(microtime(TRUE) - self::$total_query_time[self::$is_db_logging], 4), '#num_of_queries' => self::$num_of_queries[self::$is_db_logging], '#num_of_slow_queries' => self::$num_of_slow_queries[self::$is_db_logging]), WATCHDOG_DEBUG, self::$is_db_logging);
+
+      unset(self::$num_of_queries[self::$is_db_logging]);
+      unset(self::$num_of_slow_queries[self::$is_db_logging]);
+      unset(self::$total_query_time[self::$is_db_logging]);
+
+      self::$is_db_logging = FALSE;
+    }
+  }
+
+  /**
+   * Enable db logging for timed queries.
+   */
+  public static function is_db_logging() {
+    return self::$is_db_logging;
+  }
+
+  /**
+   * Log an DB Query timing.
+   *
+   * @param time $f_time
+   *   The total time the query took in 0.000 format.
+   * @param string $query
+   *   Your message, Best to keep as the query.
+   */
+  public static function db_log($f_time, $query) {
+    $name = self::is_db_logging();
+    if ($name === FALSE) {
+      return;
+    }
+
+    // Only log stuff that takes longer than 1 second.
+   if ($f_time > mediamosa::variable_get('mediamosa_db_log_slow_time', 1)) {
+      self::$num_of_slow_queries[$name]++;
+      self::$is_db_logging = FALSE;
+      mediamosa_watchdog::log('Query timing, #time, "#query".', array('#time' => $f_time, '#query' => $query));
+      self::$is_db_logging = $name;
+    }
+
+    self::$num_of_queries[$name]++;
   }
 }

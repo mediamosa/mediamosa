@@ -215,28 +215,6 @@ class mediamosa_watchdog {
   }
 
   /**
-   * Log an DB Query timing.
-   *
-   * @param time $f_time
-   *   The total time the query took in 0.000 format.
-   * @param string $query
-   *   Your message, Best to keep as the query.
-   */
-  public static function log_db($f_time, $query) {
-    $name = self::is_db_logging();
-    if (!$name) {
-      return;
-    }
-    // Only log stuff that takes longer than 1 second.
-    if ($f_time > 1) {
-      self::$num_of_slow_queries[$name]++;
-      self::log_debug('Query timing, #time, "#query".', array('#time' => $f_time, '#query' => $query), $name);
-    }
-
-    self::$num_of_queries[$name]++;
-  }
-
-  /**
    * Log the query string for a db_query result object.
    *
    * @param DatabaseStatementInterface $statement

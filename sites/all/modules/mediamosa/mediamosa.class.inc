@@ -13,12 +13,6 @@ class mediamosa {
   const ENV_MEDIAMOSA_VERSION = 'active_version';
 
   // --------------------------------------------------------------------- Vars.
-  static private $is_db_logging = FALSE;
-
-  static private $num_of_queries = array();
-  static private $num_of_slow_queries = array();
-  static private $total_query_time = array();
-
   // Stores last error that went through error_handler.
   static private $last_php_error = NULL;
 
@@ -635,41 +629,6 @@ class mediamosa {
    */
   public static function drupal_uninstall_schema($module) {
     return drupal_uninstall_schema($module);
-  }
-
-  /**
-   * Enable db logging for timed queries.
-   */
-  public static function enable_db_logging($name) {
-    $previous_db_logging = self::$is_db_logging;
-    self::log('DB logging starting.', array(), WATCHDOG_DEBUG, $name);
-    self::$is_db_logging = $name;
-    self::$num_of_slow_queries[$name] = self::$num_of_queries[$name] = 0;
-    self::$total_query_time[$name] = microtime(TRUE);
-
-    return $previous_db_logging;
-  }
-
-  /**
-   * Enable db logging for timed queries.
-   */
-  public static function disable_db_logging($name) {
-    if (self::$is_db_logging !== FALSE) {
-      self::log('DB logging ending, time; #time, total queries; #num_of_queries, slow queries; #num_of_slow_queries.', array('#time' => round(microtime(TRUE) - self::$total_query_time[self::$is_db_logging], 4), '#num_of_queries' => self::$num_of_queries[self::$is_db_logging], '#num_of_slow_queries' => self::$num_of_slow_queries[self::$is_db_logging]), WATCHDOG_DEBUG, self::$is_db_logging);
-
-      unset(self::$num_of_queries[self::$is_db_logging]);
-      unset(self::$num_of_slow_queries[self::$is_db_logging]);
-      unset(self::$total_query_time[self::$is_db_logging]);
-    }
-
-    self::$is_db_logging = $name;
-  }
-
-  /**
-   * Enable db logging for timed queries.
-   */
-  public static function is_db_logging() {
-    return self::$is_db_logging;
   }
 
   /**
