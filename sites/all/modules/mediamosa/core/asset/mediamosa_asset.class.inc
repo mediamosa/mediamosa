@@ -328,6 +328,10 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   protected static function trashcan($asset_id, $reindex = TRUE) {
+
+    // Trigger asset_trashcan hook.
+    module_invoke_all('mediamosa_asset_trashcan', $asset_id);
+
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)), $reindex);
   }
 
