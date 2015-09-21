@@ -455,6 +455,11 @@ class mediamosa_job_scheduler {
     // Relocate mediafile if final storage location is not local.
     mediamosa_storage::relocate_mediafile($job_info['app_id'], $mediafile_id_dest, TRUE);
 
+    // Perform a post convert, if supported.
+    if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_convert')) {
+      call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_convert'), $job_id, $mediafile_id_dest);
+    }
+
     // Perform a post transcode, if supported.
     if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_transcode')) {
       call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_transcode'), $job_info['asset_id'], $job_info['mediafile_id'], $mediafile_id_dest, $job_info['file_extension']);
