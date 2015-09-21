@@ -898,16 +898,19 @@ class mediamosa_job_server {
     // Get the mime-type.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id_source, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
+    $job_info = mediamosa_job_server_still::get($jobserver_job_id);
+    $job_info += mediamosa_job_server::get($jobserver_job_id);
+
     // Call the mediamosa_tool_can_generate_still hook.
     foreach (module_implements('mediamosa_tool_can_generate_still') as $module) {
       if (module_invoke($module, 'mediamosa_tool_can_generate_still', $mime_type)) {
         // Get generate still exec.
-        return module_invoke($module, 'mediamosa_tool_get_generate_still_exec', $jobserver_job_id, $mediafile_id_source);
+        return module_invoke($module, 'mediamosa_tool_get_generate_still_exec', $job_info, $mediafile_id_source);
       }
     }
 
     // FIXME: Fall back on ffmpeg for now.
-    return mediamosa_tool_ffmpeg::get_generate_still_exec($jobserver_job_id, $mediafile_id_source);
+    return mediamosa_tool_ffmpeg::get_generate_still_exec($job_info, $mediafile_id_source);
   }
 
   /**

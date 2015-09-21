@@ -153,15 +153,17 @@ class mediamosa_rest_call_asset_pdf_create extends mediamosa_rest_call {
     // Collect the mediafile_id's to archive.
     $mediafiles = array();
     $options = array();
+    if (((int) $mf_profile_id > 0) && ($mf_profile_id != 'original')) {
+      $options['transcode_profile_id'] = $mf_profile_id;
+    }
+    else {
+      $options['get_originals_only'] = TRUE;
+    }
+    $options['exclude_stills'] = TRUE;
+
     foreach ($asset_ids as $asset_id) {
-      if (((int) $mf_profile_id > 0) && ($mf_profile_id != 'original')) {
-        $options['transcode_profile_id'] = $mf_profile_id;
-      }
-      else {
-        $options['get_originals_only'] = TRUE;
-      }
-      $options['exclude_stills'] = TRUE;
       $mediafile = mediamosa_asset_mediafile::get_by_asset_id($asset_id, array('mediafile_id', 'filename'), $options);
+
       // We only use the first one.
       $mediafile = reset($mediafile);
 

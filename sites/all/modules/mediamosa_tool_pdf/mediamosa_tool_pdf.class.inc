@@ -44,43 +44,39 @@ class mediamosa_tool_pdf {
    * @param string $mediafile_id_source
    *   mediafile_id of source.
    */
-  public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
-
-    $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
-    $job_server = mediamosa_job_server::get($jobserver_job_id);
-    $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
+  public static function get_generate_still_exec($job_info, $mediafile_id_source) {
 
     $parameter_string = array();
-    if ($job_server_still) {
+    if ($job_info['job_id']) {
 
       // WxH.
-      $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
+      $size = $job_info[mediamosa_job_server_still_db::SIZE];
 
       // Resize. The resize is done separately as combining them in 1
       // convert call produces black images.
       if ($size != '') {
-        $resize_option = 'nice convert -resize ' . $size . ' @mediafile_dest @mediafile_dest;';
+        $resize_option = 'nice convert -limit memory 512MiB -limit map 512MiB -resize ' . $size . ' @mediafile_dest @mediafile_dest;';
       }
 
       // Source.
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
       // Dest.
-      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_id . '-001.jpeg');
+      $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_info['job_id'] . '-001.jpeg');
 
       $execute_string_options = array(
         '@mediafile_dest' => $mediafile_dest,
         // Add [0] for first page.
         '@mediafile_source' => $mediafile_source . '[0]',
         '@parameter_string' => implode(' ', $parameter_string),
-        '@status_file' => mediamosa_storage::get_realpath_status_file($job_id),
+        '@status_file' => mediamosa_storage::get_realpath_status_file($job_info['job_id']),
         '@working_dir' => dirname($mediafile_dest),
       );
 
       // Execution string:
       return strtr(
-        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
-        'export MAGICK_TMPDIR=@working_dir;nice convert @mediafile_source @parameter_string @mediafile_dest; ' .
+        '{ echo "Errors: none"; echo "Status: converting"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
+        'export MAGICK_TMPDIR=@working_dir;nice convert -limit memory 512MiB -limit map 512MiB @mediafile_source @parameter_string @mediafile_dest; ' .
         $resize_option .
         '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
         $execute_string_options);
@@ -102,7 +98,7 @@ class mediamosa_tool_pdf {
     if ($options['file_extension'] == 'swf') {
       // Build the values.
       $execution_string_options = array(
-        '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['jobserver_job_id'] . DIRECTORY_SEPARATOR,
+        '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['job_id'] . DIRECTORY_SEPARATOR,
         '@mediafile_location' => $options['location_source_file'],
         '@mediafile_id' => $options['mediafile_id'],
         '@params' => $options['parameter_string'],
@@ -114,6 +110,8 @@ class mediamosa_tool_pdf {
     }
     else {
 
+      // PDF generation from a list of images.
+
       $params = explode(' ', $options['parameter_string']);
       $mf_ids = unserialize(urldecode($params[1]));
       $files_to_pdf = array();
@@ -123,23 +121,71 @@ class mediamosa_tool_pdf {
 
       $mfs = implode(' ', $files_to_pdf);
 
+      if (empty($files_to_pdf)) {
+        return strtr('{ echo "Errors: error"; echo "Status: error"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;', array(
+            '@status_file' => $options['status_file'],
+          ));
+      }
+
       // Build the values.
       $execution_string_options = array(
         '@source_files' => $mfs,
         '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
         '@status_file' => $options['status_file'],
+        '@working_dir' => dirname($options['location_dest_file']),
+        // A4: -resize 1240x1753\> -units PixelsPerInch -density 150x150',
+        '@parameter_string' => '-quality 80 -compress jpeg -resize 2000x2000\> -units PixelsPerInch -density 150x150',
+        '@file_location' => dirname($options['location_dest_file']) . DIRECTORY_SEPARATOR . $options['job_id'] . DIRECTORY_SEPARATOR,
       );
 
-      // Execution string.
-      // MAGICK_TEMPORY_PATH: use current dir for temp files instead
-      // of /tmp.
-      // -resize: only resize if image is > 8000pts.
-      $cmd = strtr(
-        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
-        'export MAGICK_TEMPORARY_PATH=.; nice convert -quality 95 @source_files -resize 8000x8000\> pdfa:@mediafile_dest; '
-        . '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
-        $execution_string_options);
+      // First step: generate all jpg's.
+      $step1 = '';
+      foreach ($files_to_pdf as $i => $image) {
+        $i = sprintf('%05d', $i);
+        /*
+         * // Make a copy of the original image in case they are remote.
+         * if (preg_match('/^[A-Za-z]+:\/\//', $image)) {
+         *  $step1 .= "curl -o t{$i}.tif \"$image\";";
+         *  $image = "t{$i}.tif";
+         *  // @todo: check file and mime_type.
+         * }
+        */
+        $step1 .= "nice convert -limit memory 512MiB -limit map 512MiB $image @parameter_string j{$i}.jpg;" . "\n";
+      }
 
+      /*
+       * // Next step: get additional data to include in the pdf.
+       * // @todo: not supported by ImageMagick.
+       * $title = 'Untitled';
+       * $metadata = mediamosa_asset_metadata::metadata_get($asset_id);
+       * if (isset($metadata['dublin_core']['title']['values'][0])) {
+       *   $title = addcslashes(str_replace(array("\n", "\r"), '',
+       *     $metadata['dublin_core']['title']['values'][0]), "'");
+       * }
+      */
+
+      // Next step: generate .pdf with pdfcreator.
+      $step2 = "nice convert ./*.jpg pdfa:@mediafile_dest >> @status_file 2>&1;\n";
+
+      // Execution string:
+      $cmd = strtr(
+        'mkdir @file_location; ' . "\n" .
+        // Go to the subdirectory.
+        'cd @file_location; ' . "\n" .
+        '{ echo "[' . date("c") . '] Start pdf generation. ";} > @status_file;' . "\n" .
+        '{ echo "Status: converting"; echo "Progress: 0.010"; } >> @status_file;' . "\n" .
+        'export MAGICK_TEMPORARY_PATH=.; export MAGICK_TMPDIR=.; ' . "\n" .
+        $step1 . 'ls -l >> @status_file;' .
+        '{ echo "Progress: 0.600";} >> @status_file;' .
+        $step2 .
+        // Cleanup.
+        'rm *.jpg; ' . "\n" .
+        'cd ..; rmdir @file_location;' . "\n" .
+        'pdfinfo @mediafile_id.pdf >> @status_file;' .
+        // Update status file.
+        '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } >> @status_file;' .
+        'cat @status_file >> pdfcreator.log;',
+        $execution_string_options);
       return $cmd;
     }
 

@@ -1,0 +1,16 @@
+name = "Mediamosa Tool Audio"
+description = "Mediamosa Tools module for Audio"
+package = "MediaMosa - Tool"
+version = 7.x-3.5
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_tool_ffmpeg
+
+; Used files.
+files[] = mediamosa_tool_audio.class.inc
+files[] = mediamosa_tool_audio.test
