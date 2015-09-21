@@ -46,7 +46,6 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
 
 ; Mediafile Still.
-files[] = mediafile/still/mediamosa_asset_mediafile_still.audio_file.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.create.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.create.uri.test
