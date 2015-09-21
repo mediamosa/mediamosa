@@ -18,6 +18,12 @@ function mediamosa_asset_cron() {
     return;
   }
 
+  $interval = variable_get('mediamosa_asset_garbage_interval', mediamosa_settings::ASSET_GARBAGE_INTERVAL);
+  if (empty($interval)) {
+    // No garbage control.
+    return;
+  }
+
   $start = time();
   mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
 
@@ -2224,7 +2230,10 @@ function mediamosa_asset_mediamosa_configuration_collect() {
     '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_validate'),
   );
 
+  $empty_assets = mediamosa_asset::garbage_cleanup(null, TRUE);
+  $total_asset = mediamosa_asset::get_asset_count();
   $options_interval = array(
+    0 => t('Do not do garbage control'),
     60 => t('Every hour'),
     120 => t('Every 2 hours'),
     240 => t('Every 4 hours'),
@@ -2233,10 +2242,16 @@ function mediamosa_asset_mediamosa_configuration_collect() {
     1440 => t('Once a day'),
   );
 
+  $description = array();
+  $description[] = t('Select how often empty assets are automaticly removed.');
+  if ($empty_assets['cleaned']) {
+    $description[] = t('There are @empty empty asset(s) in the database of @total assets.', array('@empty' => $empty_assets['cleaned'], '@total' => $total_asset));
+  }
+
   $form['settings_asset']['mediamosa_asset_garbage_interval'] = array(
     '#type' => 'select',
     '#title' => t('Automatic garbage control empty assets'),
-    '#description' => t('Select how often empty assets are automaticly removed'),
+    '#description' => implode(' ', $description),
     '#default_value' => variable_get('mediamosa_asset_garbage_interval', mediamosa_settings::ASSET_GARBAGE_INTERVAL),
     '#options' => $options_interval,
     '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_validate'),
@@ -2266,12 +2281,14 @@ function _mediamosa_asset_mediamosa_configuration_validate($element, &$form_stat
   $form_state['values']['mediamosa_asset_supplement_max_size_kb'] = $mediamosa_asset_supplement_max_size_kb;
 
   $mediamosa_asset_garbage_interval = (int) $form_state['values']['mediamosa_asset_garbage_interval'];
-  if ($mediamosa_asset_garbage_interval < 60) {
-    form_set_error('mediamosa_asset_garbage_interval', t('The garbage cleanup must be run at least once every hour.'));
-  }
+  if ($mediamosa_asset_garbage_interval > 0) {
+    if ($mediamosa_asset_garbage_interval < 60) {
+      form_set_error('mediamosa_asset_garbage_interval', t('The garbage cleanup must be run at least once every hour.'));
+    }
 
-  $mediamosa_asset_garbage_lifetime = (int) $form_state['values']['mediamosa_asset_garbage_lifetime'];
-  if ($mediamosa_asset_garbage_lifetime < mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN) {
-    form_set_error('mediamosa_asset_garbage_lifetime', t('For safety, you should at least keep the empty asset for @hours hours.', array('@hours' => mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN)));
+    $mediamosa_asset_garbage_lifetime = (int) $form_state['values']['mediamosa_asset_garbage_lifetime'];
+    if ($mediamosa_asset_garbage_lifetime < mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN) {
+      form_set_error('mediamosa_asset_garbage_lifetime', t('For safety, you should at least keep the empty asset for @hours hours.', array('@hours' => mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN)));
+    }
   }
 }

@@ -423,8 +423,17 @@ class mediamosa_asset {
    * @param bool $do_reindex
    *   Trigger re-index on external databases. This will only be triggered if
    *   the empty_asset flag is changed.
+   *
+   * @return bool
+   *   Returns TRUE when asset was empty, FALSE otherwise.
    */
   public static function update_asset_info_is_empty_asset($asset_id, $do_reindex = TRUE) {
+
+    $mediamosa_asset = mediamosa_asset::get($asset_id);
+    if (empty($mediamosa_asset)) {
+      return FALSE;
+    }
+
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
     $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
@@ -451,60 +460,64 @@ class mediamosa_asset {
       )
     )->fetchAssoc();
 
-    $query = db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'am');
-    $query->addJoin('INNER', mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp', 'amp.prop_id = am.prop_id');
-    $query->addJoin('INNER', mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg', 'ampg.propgroup_id = amp.propgroup_id');
-    $query->condition('am.' . mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
-    $query->condition('ampg.' . mediamosa_asset_metadata_property_group_db::NAME, 'asset', '!=');
-    $has_metadata = $query->countQuery()->execute()->fetchField() > 0;
+    // A asset is empty if it has no files with content.
+    $is_empty_asset = empty($mediafile);
 
-    // A asset is empty if it has no files with content and no metadata.
-    $is_empty_asset = (!$has_metadata && !$mediafile);
-
-    // Is empty, then see if provider_id or reference_id is set.
     if ($is_empty_asset) {
-      $asset = db_select(mediamosa_asset_db::TABLE_NAME, 'a')
-        ->fields('a', array(mediamosa_asset_db::PROVIDER_ID, mediamosa_asset_db::REFERENCE_ID))
-        ->condition('a.' . mediamosa_asset_db::ID, $asset_id)
-        ->execute()
-        ->fetchAssoc();
+      $query = db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'am');
+      $query->addJoin('INNER', mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp', 'amp.prop_id = am.prop_id');
+      $query->addJoin('INNER', mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg', 'ampg.propgroup_id = amp.propgroup_id');
+      $query->condition('am.' . mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
+      $query->condition('ampg.' . mediamosa_asset_metadata_property_group_db::NAME, 'asset', '!=');
+      $metadata_count = $query->countQuery()->execute()->fetchField() > 0;
 
+        // A asset is empty when it has no metadata.
+      $is_empty_asset = empty($metadata_count);
+    }
+
+    // Still empty, then see if provider_id or reference_id is set.
+    if ($is_empty_asset) {
       // Can only be empty now if provider ID and reference ID are both empty.
       $is_empty_asset =
-        ($asset[mediamosa_asset_db::PROVIDER_ID] === '' || $asset[mediamosa_asset_db::PROVIDER_ID] === NULL)
+        ($mediamosa_asset[mediamosa_asset_db::PROVIDER_ID] === '' || $mediamosa_asset[mediamosa_asset_db::PROVIDER_ID] === NULL)
         &&
-        ($asset[mediamosa_asset_db::REFERENCE_ID] === '' || $asset[mediamosa_asset_db::REFERENCE_ID] === NULL);
+        ($mediamosa_asset[mediamosa_asset_db::REFERENCE_ID] === '' || $mediamosa_asset[mediamosa_asset_db::REFERENCE_ID] === NULL);
     }
 
+    // Only update if the flag was changed.
+    $is_empty_old = $mediamosa_asset[mediamosa_asset_db::IS_EMPTY_ASSET] === mediamosa_asset_db::IS_EMPTY_ASSET_TRUE;
+    if ($do_reindex && $is_empty_asset != $is_empty_old) {
+      // Set is_empty_asset.
+      mediamosa_db::db_query(
+        'UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
+        array(
+          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+          '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
+          ':is_empty_asset' => $is_empty_asset ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE,
+          '#asset_id' => mediamosa_asset_db::ID,
+          ':asset_id' => $asset_id,
+        )
+      );
 
-    // Set is_empty_asset.
-    mediamosa_db::db_query(
-      'UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
-      array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
-        ':is_empty_asset' => $is_empty_asset ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id,
-      )
-    );
+      // Set is_empty_asset in asset_relation.
+      mediamosa_db::db_query(
+        'UPDATE {#mediamosa_asset_collection} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
+        array(
+          '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
+          '#is_empty_asset' => mediamosa_asset_collection_db::IS_EMPTY_ASSET,
+          ':is_empty_asset' => $is_empty_asset ? mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE,
+          '#asset_id' => mediamosa_asset_db::ID,
+          ':asset_id' => $asset_id,
+        )
+      );
 
-    // Set is_empty_asset in asset_relation.
-    mediamosa_db::db_query(
-      'UPDATE {#mediamosa_asset_collection} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
-      array(
-        '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
-        '#is_empty_asset' => mediamosa_asset_collection_db::IS_EMPTY_ASSET,
-        ':is_empty_asset' => $is_empty_asset ? mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id,
-      )
-    );
-
-    if ($do_reindex) {
-      // Reindex the asset.
-      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
+      if ($do_reindex) {
+        // Reindex the asset.
+        mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
+      }
     }
+
+    return $is_empty_asset;
   }
 
   /**
@@ -1601,24 +1614,23 @@ class mediamosa_asset {
     // Lock for an hour.
     if (lock_acquire($lock_name, 3600 - 1)) {
       $lifetime_hours = is_null($lifetime_hours) ? variable_get('mediamosa_asset_garbage_lifetime', mediamosa_settings::ASSET_GARBAGE_LIFETIME) : $lifetime_hours;
+      if (empty($lifetime_hours) && !$return_status) {
+        $lifetime_hours = mediamosa_settings::ASSET_GARBAGE_LIFETIME_MIN;
+      }
 
       $assets = mediamosa_db::db_query(
         "SELECT t.#asset_id FROM {#mediamosa_asset} AS t WHERE
-          t.#is_empty_asset = '#is_empty_asset_true' AND
+          t.#is_empty_asset = :is_empty_asset_true AND
           UTC_TIMESTAMP() > DATE_ADD(t.#created, INTERVAL #lifetime_hours HOUR)
-          ORDER BY t.created ASC",
+          ORDER BY t.#created ASC",
         array(
           '#lifetime_hours' => $lifetime_hours,
           '#asset_id' => mediamosa_asset_db::ID,
           '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
-          '#is_empty_asset_true' => mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+          ':is_empty_asset_true' => mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
           '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
           '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
-          '#id' => mediamosa_asset_metadata_property_db::ID,
-          '#is_hidden' => mediamosa_asset_metadata_property_db::IS_HIDDEN,
-          '#is_hidden_false' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
-          '#prop_id' => mediamosa_asset_metadata_db::PROP_ID,
           '#created' => mediamosa_asset_db::CREATED,
         )
       );
@@ -1626,21 +1638,29 @@ class mediamosa_asset {
       if (!$return_status) {
         foreach ($assets as $asset) {
           try {
-            mediamosa_asset::delete($asset["asset_id"], TRUE, FALSE);
-            $result['cleaned']++;
+            // Re-evaluate the empty flag.
+            $is_empty = mediamosa_asset::update_asset_info_is_empty_asset($asset['asset_id']);
+
+            if ($is_empty) {
+              mediamosa_asset::delete($asset['asset_id'], TRUE, FALSE);
+              $result['cleaned']++;
+            }
+            else {
+              mediamosa_watchdog::log('Garbage cleanup: false positive for asset with ID @asset_id. This ID was not empty and has not been removed.', array('@asset_id' => $result['cleaned']), WATCHDOG_EMERGENCY, 'Asset garbage control');
+            }
           }
           catch (Exception $e) {
-            $result['failed_ids'][] = $assets['asset_id'];
+            $result['failed_ids'][] = $asset['asset_id'];
           }
         }
         if ($result['cleaned']) {
-          mediamosa_watchdog::log('Garbage cleanup: @cleaned assets deleted.', array('@cleaned' => $result['cleaned']), WATCHDOG_INFO, 'mediamosa_asset');
+          mediamosa_watchdog::log('Garbage cleanup: @cleaned assets deleted.', array('@cleaned' => $result['cleaned']), WATCHDOG_INFO, 'Asset garbage control');
         }
         else {
-          mediamosa_watchdog::log('Garbage cleanup: no assets to clean.', array(), WATCHDOG_INFO, 'mediamosa_asset');
+          mediamosa_watchdog::log('Garbage cleanup: no assets to clean.', array(), WATCHDOG_INFO, 'Asset garbage control');
         }
         if (count($result['failed_ids']) > 0) {
-          mediamosa_watchdog::log("Garbage cleanup failed for assets with IDs: '@assets'.", array('@assets' => implode("', '", $result['failed_ids'])), WATCHDOG_WARNING, 'mediamosa_asset');
+          mediamosa_watchdog::log("Garbage cleanup failed for assets with IDs: '@assets'.", array('@assets' => implode("', '", $result['failed_ids'])), WATCHDOG_WARNING, 'Asset garbage control');
         }
       }
       else {
@@ -1915,5 +1935,15 @@ class mediamosa_asset {
     }
 
     return array('duplicates' => $result, 'item_count_total' => $item_count_total);
+  }
+
+  /**
+   * Return the number of assets in the database.
+   *
+   * @return int
+   *   The amount of assets in the database.
+   */
+  public function get_asset_count() {
+    return db_select(mediamosa_asset_db::TABLE_NAME)->countQuery()->execute()->fetchField();
   }
 }

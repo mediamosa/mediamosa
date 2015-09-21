@@ -5656,3 +5656,10 @@ function mediamosa_update_7208() {
   db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
 }
+
+/**
+ * Turn off garbage control (clean up of empty assets) by default.
+ */
+function mediamosa_update_7209() {
+  variable_del('mediamosa_asset_garbage_interval');
+}

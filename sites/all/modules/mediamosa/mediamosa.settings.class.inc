@@ -136,8 +136,8 @@ class mediamosa_settings {
   const UPLOAD_PUT_CHUNK_SIZE = 4096;
   const UPLOAD_PROGRESS_INTERVAL = 5;
 
-  // Asset garbage interval in minutes.
-  const ASSET_GARBAGE_INTERVAL = 120;
+  // Asset garbage interval in minutes. Off by default.
+  const ASSET_GARBAGE_INTERVAL = 0;
 
   // Asset garbage interval in hours.
   const ASSET_GARBAGE_LIFETIME = 72;
