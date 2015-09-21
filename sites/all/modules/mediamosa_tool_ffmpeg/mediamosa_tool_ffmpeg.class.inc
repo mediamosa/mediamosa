@@ -28,7 +28,7 @@ class mediamosa_tool_ffmpeg {
    *   mimetype request.
    */
   public static function is_supported($mime_type) {
-    return preg_match('#^(video|audio)\/.+#', $mime_type);
+    return preg_match('#^video\/.+#', $mime_type);
   }
 
   // ---------------------------------------------------------------- Functions.
@@ -89,21 +89,17 @@ class mediamosa_tool_ffmpeg {
    * @param string $mediafile_id_source
    *   id of mediafile.
    */
-  public static function get_generate_still_exec($jobserver_job_id, $mediafile_id_source) {
-
-    $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
-    $job_server = mediamosa_job_server::get($jobserver_job_id);
-    $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
+  public static function get_generate_still_exec($job_info, $mediafile_id_source) {
 
     $execution_string = '';
 
-    if ($job_server_still) {
-      $frametime = (int) $job_server_still[mediamosa_job_server_still_db::FRAMETIME];
-      $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
-      $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
-      $v_padding = $job_server_still[mediamosa_job_server_still_db::V_PADDING];
+    if ($job_info['job_id']) {
+      $frametime = (int) $job_info[mediamosa_job_server_still_db::FRAMETIME];
+      $size = $job_info[mediamosa_job_server_still_db::SIZE];
+      $h_padding = $job_info[mediamosa_job_server_still_db::H_PADDING];
+      $v_padding = $job_info[mediamosa_job_server_still_db::V_PADDING];
 
-      $still_parameters = unserialize($job_server_still[mediamosa_job_server_still_db::STILL_PARAMETERS]);
+      $still_parameters = unserialize($job_info[mediamosa_job_server_still_db::STILL_PARAMETERS]);
       $fps = (int) $still_parameters['fps'];
       $video_duration = (int) $still_parameters['video_duration'];
 
@@ -179,12 +175,14 @@ class mediamosa_tool_ffmpeg {
       // Store error_description.
       if (!empty($error_description)) {
         mediamosa_job_server::log_mediafile($mediafile_id_source, $error_description);
-        mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
-          ->fields(array(
-            mediamosa_job_server_db::ERROR_DESCRIPTION => $error_description,
-          ))
-          ->condition(mediamosa_job_server_db::ID, $jobserver_job_id)
-          ->execute();
+        if (isset($job_info['jobserver_job_id'])) {
+          mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
+            ->fields(array(
+              mediamosa_job_server_db::ERROR_DESCRIPTION => $error_description,
+            ))
+            ->condition(mediamosa_job_server_db::ID, $job_info['jobserver_job_id'])
+            ->execute();
+        }
       }
 
       // Frametime but be between start and end frame. Put it roughly 1 / 3 in
@@ -198,7 +196,7 @@ class mediamosa_tool_ffmpeg {
       switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
 
         case 'NONE':
-          if ($job_server_still[mediamosa_job_server_still_db::BLACKSTILL_CHECK] == mediamosa_job_server_still_db::BLACKSTILL_CHECK_FALSE || $video_duration <= 1) {
+          if ($job_info[mediamosa_job_server_still_db::BLACKSTILL_CHECK] == mediamosa_job_server_still_db::BLACKSTILL_CHECK_FALSE || $video_duration <= 1) {
             break;
           }
 
@@ -338,7 +336,7 @@ class mediamosa_tool_ffmpeg {
 
           // Save the sec data (see: vpx_jobhandler.module)
           if (is_array($scenes) && $scenes != array()) {
-            $my_file = $destination_path . $job_id . '_ffmpeg_scene.txt';
+            $my_file = $destination_path . $job_info['job_id'] . '_ffmpeg_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
               foreach ($scenes as $scene) {
@@ -364,7 +362,7 @@ class mediamosa_tool_ffmpeg {
             mediamosa_io::unlink($destination_path . $mediafile_id_source . '_scene.avi');
 
             // It has to be the last, because it triggers the further processes.
-            $my_file = $destination_path . $job_id . '_scene.txt';
+            $my_file = $destination_path . $job_info['job_id'] . '_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
               foreach ($scenes as $scene) {
@@ -391,7 +389,7 @@ class mediamosa_tool_ffmpeg {
 
     }
     else {
-      mediamosa_job_server::log_mediafile($mediafile_id_source, 'Still job not found, jobserver_job_id: @jobserver_job_id', array('@jobserver_job_id' => $jobserver_job_id));
+      mediamosa_job_server::log_mediafile($mediafile_id_source, 'Still job not found, jobserver_job_id: @jobserver_job_id', array('@jobserver_job_id' => $job_info['jobserver_job_id']));
       return $execution_string;
     }
 
@@ -407,7 +405,7 @@ class mediamosa_tool_ffmpeg {
     $fields = mediamosa_db::db_update_enrich($fields);
     mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
       ->fields($fields)
-      ->condition(mediamosa_job_db::ID, $job_id)
+      ->condition(mediamosa_job_db::ID, $job_info['job_id'])
       ->execute();
 
     // Prepare with and heigt variations.
@@ -426,7 +424,7 @@ class mediamosa_tool_ffmpeg {
                         mediamosa_storage::get_local_mediafile_path($mediafile_id_source),
                         mediamosa_storage::get_realpath_temporary(),
                         $mediafile_id_source,
-                        $job_id,
+                        $job_info['job_id'],
                         $size,
                         $size_semicolon,
                         $size_width,
