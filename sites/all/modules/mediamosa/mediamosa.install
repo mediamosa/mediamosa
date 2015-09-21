@@ -5668,3 +5668,16 @@ function mediamosa_update_7208() {
 function mediamosa_update_7209() {
   variable_del('mediamosa_asset_garbage_interval');
 }
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7210() {
+  // Rebuild the registry.
+  //
+  // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry}');
+  // Clear it too.
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
+}
