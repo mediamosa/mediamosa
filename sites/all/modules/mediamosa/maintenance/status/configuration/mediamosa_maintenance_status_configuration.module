@@ -404,12 +404,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
   $result = mediamosa_db::db_query("SHOW VARIABLES");
   $rows = $result->fetchAllKeyed();
 
-  $results['database_innodb'] = array(
-    'title' => t('Database innodb'),
-    'value' => t('Enabled'),
-    'severity' => _mediamosa_maintenance_status_okerror($rows['have_innodb'] == 'YES'),
-  );
-
   $results['database_innodb_buffer_pool_size'] = array(
     'title' => t('Database innodb optimize'),
     'value' => t('innodb_buffer_pool_size = @size. Should be bigger than @expected.', array('@size' => format_size($rows['innodb_buffer_pool_size']), '@expected' => format_size(32 * 1024 * 1024))),
