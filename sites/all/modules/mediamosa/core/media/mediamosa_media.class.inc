@@ -1168,7 +1168,15 @@ class mediamosa_media {
           )
         )
       );
-      rmdir($media_location);
+
+      // Clear cache for this file.
+      mediamosa_io::clearstatcache($media_location);
+
+      if (mediamosa_io::file_exists($media_location)) {
+        if (is_dir($media_location)) {
+          drupal_rmdir($media_location);
+        }
+      }
       mediamosa_io::clearstatcache();
     }
   }
