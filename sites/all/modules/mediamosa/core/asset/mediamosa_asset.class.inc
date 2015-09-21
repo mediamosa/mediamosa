@@ -490,7 +490,7 @@ class mediamosa_asset {
 
     // Only update if the flag was changed.
     $is_empty_old = $mediamosa_asset[mediamosa_asset_db::IS_EMPTY_ASSET] === mediamosa_asset_db::IS_EMPTY_ASSET_TRUE;
-    if ($do_reindex && $is_empty_asset != $is_empty_old) {
+    if ($is_empty_asset != $is_empty_old) {
       // Set is_empty_asset.
       mediamosa_db::db_query(
         'UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id',
