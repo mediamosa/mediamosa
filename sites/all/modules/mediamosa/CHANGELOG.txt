@@ -2,7 +2,7 @@ Mediamosa 3.6.1 (build xxxx)
 ----------------------------
 
 
-MediaMosa 3.6.0-RC2 (build 2186)
+MediaMosa 3.6.1-dev (build 2187)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -331,6 +331,8 @@ MediaMosa 3.6.0-RC2 (build 2186)
 - Fixed upgrade path from 3.2 to 3.6.
 - Updated Videojs to 4.12.11.
 - Removed unwanted test audio stills.
+- Updated mediamosa SDK to latest.
+- Fixed transcode with -vf 'scale=...' and no '-s'.
 
 
 MediaMosa 3.5.x (build 2072)
