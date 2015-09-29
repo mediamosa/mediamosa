@@ -312,6 +312,10 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
         found_size = true
       end
     end
+    -- -vf 'scale=...' is another way of providing destination size.
+    if string.find(params, 'scale=') then
+      found_size = true
+    end
     if not found_size then
       params = params .. " -s " .. video_size
     end
