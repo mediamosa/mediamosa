@@ -2,7 +2,7 @@ Mediamosa 3.6.1 (build xxxx)
 ----------------------------
 
 
-MediaMosa 3.6.1-dev (build 2187)
+MediaMosa 3.6.1-dev (build 2188)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -335,7 +335,7 @@ MediaMosa 3.6.1-dev (build 2187)
 - Fixed transcode with -vf 'scale=...' and no '-s'.
 - Changed parameter to hook 'mediamosa_solr_document_metadata' to cover more
   and added missing metadata group name.
-
+- Added several hooks and fixes to MediaMosa Solr and Solr CQL.
 
 MediaMosa 3.5.x (build 2072)
 ----------------------------
