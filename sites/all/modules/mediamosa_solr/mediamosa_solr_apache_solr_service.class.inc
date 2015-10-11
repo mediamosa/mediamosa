@@ -108,9 +108,25 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    */
   public static function escapeForSpace($value) {
     $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\\)/';
-    $replace = '\\\$1';
+    return preg_replace($pattern, '\\\$1', $value);
+  }
 
-    return preg_replace($pattern, $replace, $value);
+  /**
+   * Escape a string value and escape for single quoted queries.
+   *
+   * Used for query inside single qoute used inside local params, e.g.
+   * q={!type=dismax qf=myfield v='solr rocks'} where 'solr rocks' is the value
+   * you want to escape. Y
+   *
+   * @param string $value
+   *   The value to escape.
+   *
+   * @return string
+   *   The escaped string.
+   */
+  public static function escapeForLocalParamsValue($value) {
+    $pattern = '/(\'|\\\)/';
+    return "'" . preg_replace($pattern, '\\\$1', $value) . "'";
   }
 
   /**
@@ -127,11 +143,10 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    */
   public static function escapeForWildcards($value) {
     $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|:|\\\)/';
-    $replace = '\\\$1';
 
     // The preg_replace() will need to be converted for wildcards that are
     // allowed.
-    return str_replace(array('\\*', '\\?'), array('*', '?'), preg_replace($pattern, $replace, $value));
+    return str_replace(array('\\*', '\\?'), array('*', '?'), preg_replace($pattern, '\\\$1', $value));
   }
 
   /**
