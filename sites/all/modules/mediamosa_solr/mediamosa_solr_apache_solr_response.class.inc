@@ -132,7 +132,10 @@ class mediamosa_solr_apache_solr_response {
     if (!empty($this->_response->facet_counts)) {
       if (!empty($this->_response->facet_counts->facet_fields)) {
         foreach ($this->_response->facet_counts->facet_fields as $field => $data) {
-          if (mediamosa_unicode::substr($field, -3) == '_md') {
+          if (mediamosa_unicode::substr($field, -8) == '_com__md') {
+            $field = mediamosa_unicode::substr($field, 0, -8);
+          }
+          elseif (mediamosa_unicode::substr($field, -3) == '_md') {
             $field = mediamosa_unicode::substr($field, 0, -3);
           }
           $facets['solr_facet_fields'][$field] = array();
@@ -154,6 +157,9 @@ class mediamosa_solr_apache_solr_response {
       }
     }
 
+    // Allow other modules to change the facets.
+    drupal_alter('mediamosa_solr_apache_facet', $this, $this->_response, $facets);
+
     return $facets;
   }
 
@@ -172,7 +178,8 @@ class mediamosa_solr_apache_solr_response {
       foreach ($this->_response->response->docs as $doc) {
         $assets[$doc->asset_id] = array('score' => $doc->score, 'asset_id' => $doc->asset_id);
         foreach ($doc as $name => $value) {
-          if (mediamosa_unicode::substr($name, -3) == '_md') {
+          // _md is fine, _com__md not.
+          if (mediamosa_unicode::substr($name, -3) === '_md' && mediamosa_unicode::substr($name, -8) !== '_com__md') {
             $name = mediamosa_unicode::substr($name, 0, -3);
 
             if (substr($name, 0, 4) !== mediamosa_asset_metadata_property_group::APP_PREFIX) {
@@ -197,6 +204,10 @@ class mediamosa_solr_apache_solr_response {
         'assets' => $assets,
       );
     }
+
+    // Allow other modules to change the related.
+    drupal_alter('mediamosa_solr_apache_related', $this, $this->_response, $related);
+
 
     return $related;
   }

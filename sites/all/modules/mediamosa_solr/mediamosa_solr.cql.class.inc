@@ -5,6 +5,15 @@
  */
 
 class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
+  // --------------------------------------------------------------------- Vars.
+  /**
+   * The search parameters, set for CQL parsing. Read only.
+   *
+   * @var array
+   */
+  public $parameters;
+
+  // ------------------------------------------------------------------ Methods.
   /**
    * returns the array containing mapping voor cql2sql
    *
@@ -69,15 +78,15 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
         switch ($metadata_property['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
-            $column = $group_name_short . '_' . $name . '_vi';
-            $sort_column = $group_name_short . '_' . $name . '_svi';
+            $column = $group_name_short . '_' . $name . '|vi';
+            $sort_column = $group_name_short . '_' . $name . '|svi';
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $column = $group_name_short . '_' . $name . '_vd';
-            $sort_column = $group_name_short . '_' . $name . '_svd';
+            $column = $group_name_short . '_' . $name . '|vd';
+            $sort_column = $group_name_short . '_' . $name . '|svd';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -86,8 +95,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             assert(0);
 
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            $column = $group_name_short . '_' . $name . '_vc';
-            $sort_column = $group_name_short . '_' . $name . '_svc';
+            $column = $group_name_short . '_' . $name . '|vc';
+            $sort_column = $group_name_short . '_' . $name . '|svc';
             $type = mediamosa_sdk::TYPE_STRING;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -175,7 +184,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     $str_table_column = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
     // Wildcard search.
-    $str_table_column_wc = $str_table_column . '_wc';
     if (!isset($relation_modifiers[mediamosa_cql::STEM])) {
       $str_table_column_exact = $is_metadata ? $str_table_column . '_exact' : $str_table_column;
       $str_table_column_exact_cs = $is_metadata ? $str_table_column . '_exact_cs' : $str_table_column;
@@ -183,7 +191,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     else {
       $str_table_column_exact = $str_table_column;
       $str_table_column_exact_cs = $str_table_column;
-      $str_table_column_wc = $str_table_column;
       // Stemming does not use wildcard chars.
       $wildcard = '';
     }
@@ -199,7 +206,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 //    $has_null = isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
 
     $parts =  array();
-    $sub_parts = array();
 
     // Default is OR.
     $str_sub_parts_glue = ' OR ';
@@ -290,7 +296,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     switch ($str_relation) {
       case 'bool':
-        $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
+        $parts[$str_table_column_exact] = '{column}:' . mediamosa_solr_apache_solr_service::escape($str_search_term);
         break;
 
       case 'all':
@@ -336,6 +342,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           }
         }
 
+        $sub_parts = array();
         foreach ($words as $word) {
           if (trim($word) === '') {
             continue;
@@ -348,7 +355,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               $sub_parts[] = strtr(
                 '{column}:{value}{boost}',
                 array(
-                  '{column}' => $str_table_column,
                   '{value}' => (int) trim($word),
                   '{boost}' => $boost,
                 )
@@ -361,7 +367,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
                 $sub_parts[] = strtr(
                   '{column}:{value}{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 1, -1)),
                     '{boost}' => $boost,
                   )
@@ -372,7 +377,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
                 $sub_parts[] = strtr(
                   '{column}:{value}{wildcard}{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($word, 1)),
                     '{wildcard}' => $wildcard,
                     '{boost}' => $boost,
@@ -385,7 +389,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
                 $sub_parts[] = strtr(
                   '{column}:{wildcard}{value}{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards($word),
                     '{wildcard}' => $wildcard,
                     '{boost}' => $boost,
@@ -397,7 +400,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
                 $sub_parts[] = strtr(
                   '{column}:{wildcard}{value}{wildcard}{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards($word),
                     '{wildcard}' => '',
                     '{boost}' => $boost,
@@ -406,6 +408,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               }
           }
         }
+
+        $parts[$str_table_column] = (count($sub_parts) > 1 ? '(' : '') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) > 1 ? ')' : '');
         break;
 
       case '==':
@@ -415,10 +419,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           case mediamosa_sdk::TYPE_INT:
           case mediamosa_sdk::TYPE_UINT:
             // Cast to integer, as spaces will break solr.
-            $sub_parts[] = strtr(
+            $parts[$str_table_column] = strtr(
               '{column}:{value}{boost}',
               array(
-                '{column}' => $str_table_column,
                 '{value}' => (int) $str_search_term,
                 '{boost}' => $boost,
               )
@@ -439,10 +442,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             // Remove trailing ^.
             if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
               // Add our search.
-              $sub_parts[] = strtr(
+              $parts[$str_table_column_exact] = strtr(
                 '{column}:{value}{boost}',
                 array(
-                  '{column}' => $str_table_column_exact,
                   '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1, -1)),
                   '{boost}' => $boost,
                 )
@@ -450,10 +452,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             }
             elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
               // Left ancor.
-              $sub_parts[] = strtr(
+              $parts[$str_table_column_exact] = strtr(
                 '{column}:{value}{wildcard}{boost}',
                 array(
-                  '{column}' => $str_table_column_exact,
                   '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 1)),
                   '{wildcard}' => $wildcard,
                   '{boost}' => $boost,
@@ -462,10 +463,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             }
             elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
               // Right ancor.
-              $sub_parts[] = strtr(
+              $parts[$str_table_column_exact] = strtr(
                 '{column}:{wildcard}{value}{boost}',
                 array(
-                  '{column}' => $str_table_column_exact,
                   '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards(mediamosa_unicode::substr($str_search_term, 0, -1)),
                   '{wildcard}' => $wildcard,
                   '{boost}' => $boost,
@@ -474,20 +474,18 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             }
             else {
               if ($phrase_search) {
-                $sub_parts[] = strtr(
+                $parts[$str_table_column] = strtr(
                   '{column}:"{value}"{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escapePhrase($str_search_term),
                     '{boost}' => $boost,
                   )
                 );
               }
               else {
-                $sub_parts[] = strtr(
+                $parts[$str_table_column] = strtr(
                   '{column}:{wildcard}{value}{wildcard}{boost}',
                   array(
-                    '{column}' => $str_table_column,
                     '{value}' => mediamosa_solr_apache_solr_service::escape($str_search_term),
                     '{wildcard}' => $wildcard,
                     '{boost}' => $boost,
@@ -500,10 +498,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       case '<>':
         $has_not = !$has_not;
-        $sub_parts = strtr(
+        $parts[$str_table_column] = strtr(
           '{column}:{value}{boost}',
           array(
-            '{column}' => $str_table_column,
             '{value}' => mediamosa_solr_apache_solr_service::escapeForWildcards($str_search_term),
             '{boost}' => $boost,
           )
@@ -511,47 +508,43 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         break;
 
       case '>':
-        $sub_parts = array(strtr(
+        $parts[$str_table_column] = strtr(
           '{column}:{{value} TO *}{boost}',
           array(
-            '{column}' => $str_table_column,
             '{value}' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
             '{boost}' => $boost,
           )
-        ));
+        );
         break;
 
       case '>=':
-        $sub_parts = array(strtr(
+        $parts[$str_table_column] = strtr(
           '{column}:[{value} TO *]{boost}',
           array(
-            '{column}' => $str_table_column,
             '{value}' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
             '{boost}' => $boost,
           )
-        ));
+        );
         break;
 
       case '<':
-        $sub_parts = array(strtr(
+        $parts[$str_table_column] = strtr(
           '{column}:{* TO {value}}{boost}',
           array(
-            '{column}' => $str_table_column,
             '{value}' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
             '{boost}' => $boost,
           )
-        ));
+        );
         break;
 
       case '<=':
-        $sub_parts = array(strtr(
+        $parts[$str_table_column] = strtr(
           '{column}:[* TO {value}]{boost}',
           array(
-            '{column}' => $str_table_column,
             '{value}' => mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term),
             '{boost}' => $boost,
           )
-        ));
+        );
         break;
 
       case 'within':
@@ -568,27 +561,23 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
         }
 
-        $sub_parts = array(
-          strtr('{column}:[{value1} TO {value2}]{boost}',
-            array(
-              '{column}' => $str_table_column,
-              '{value1}' => mediamosa_solr_apache_solr_service::escape($values[0]),
-              '{value2}' => mediamosa_solr_apache_solr_service::escape($values[1]),
-              '{boost}' => $boost,
-            )
+        $parts[$str_table_column] = strtr('{column}:[{value1} TO {value2}]{boost}',
+          array(
+            '{value1}' => mediamosa_solr_apache_solr_service::escape($values[0]),
+            '{value2}' => mediamosa_solr_apache_solr_service::escape($values[1]),
+            '{boost}' => $boost,
           )
         );
         break;
 
       // Special cases.
       case 'IS NULL':
-        $sub_parts = array(strtr('(+*:* -{column}:*)', array('{column}' => $str_table_column)));
+        $parts[$str_table_column] = '(+*:* -{column}:*)';
         break;
 
       case 'IS NOT NULL':
-        $sub_parts = array(strtr('{column}:*', array('{column}' => $str_table_column)));
+        $parts[$str_table_column] = '{column}:*';
         break;
-
     }
 
     if ($cql_part_boolean) {
@@ -596,8 +585,13 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $str_boolean = ($str_boolean === 'NOT' ? ' AND ' : ' ' . $str_boolean . ' ');
     }
 
-    // Into one.
-    $parts[] = (count($sub_parts) > 1 ? '(' : '') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) > 1 ? ')' : '');
+    // Allow other modules to change the syntax. This can add new parts to the
+    // array.
+    drupal_alter('mediamosa_solr_cql_parts', $parts, $this->parameters);
+
+    foreach ($parts as $column => $part) {
+      $parts[$column] = strtr($part, array('{column}' => str_replace('|', '_', $column)));
+    }
 
     return ($has_not ? '(+*:* -' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean) . ($has_not ? ')' : '');
   }
@@ -676,27 +670,36 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
   protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC', $format = 'Y-m-d\TH:i:s\Z') {
     return parent::mediamosa_cql_str_date_2_db_date($date, $timezone, $format);
   }
-
-  /**
-   * Allows other classes to alter the SOLR where.
-   */
-  public function search_where_alter(&$a_where) {
-    drupal_alter('mediamosa_solr_search_where', $a_where);
-  }
-
 }
 
 class mediamosa_solr_cql extends mediamosa_core_cql {
 
   /**
-   * Start parsing the CQL for asset search.
+   * Needed for the search parameters.
    *
-   * @param string $str_cql
+   * @param array $parameters
+   *   The search parameters.
+   * @param type $cql_store_stats
    * @param array $app_ids
+   * @return type
    */
-  public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
+  public static function parse_asset_solr($parameters, $cql_store_stats, array $app_ids) {
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_solr_asset_cql_context($app_ids);
-    return $mediamosa_cql->mediamosa_core_parse_cql($str_cql, $cql_store_stats);
+    $mediamosa_cql->parameters = $parameters;
+    return $mediamosa_cql->mediamosa_core_parse_cql($parameters['cql'], $cql_store_stats);
+  }
+
+  /**
+   * Overruled for Solr.
+   *
+   * @param string $str_cql
+   *   The CQL string to process.
+   * @param type $cql_store_stats
+   * @param array $app_ids
+   * @return type
+   */
+  public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
+    throw new mediamosa_solr_exception('Use parse_asset_solr() instead.');
   }
 }

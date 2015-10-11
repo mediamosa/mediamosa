@@ -154,7 +154,7 @@ class mediamosa_solr {
     $query_cql = '*:*';
     $keep_order_ids = array();
     if (!empty($parameters['cql'])) {
-      $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['cql_store_stats'], $parameters['app_ids']);
+      $result = mediamosa_solr_cql::parse_asset_solr($parameters, $parameters['cql_store_stats'], $parameters['app_ids']);
       $keep_order_ids = $result['keep_order_ids'];
 
       // When searching with ACL search rule set, we need special case.
@@ -259,6 +259,15 @@ class mediamosa_solr {
       $query_params['sort'] = $order_by . ($is_metadata ? ($order_direction == 'ASC' ? '_lo' : '_hi') : '') . ' ' . $order_direction;
     }
 
+    // Allow other modules to alter the solr query.
+    drupal_alter('mediamosa_solr_acl_search', $query, $parameters);
+
+    // Do the acl and solr query in the fq parameter.
+    $query_params['fq'] = $query;
+
+    // Allow other modules to alter the solr query.
+    drupal_alter('mediamosa_solr_search', $query_cql, $parameters);
+
     // Check for facets.
     if (!empty($parameters['solr_facet'])) {
       $solr_facet_field = array();
@@ -288,16 +297,10 @@ class mediamosa_solr {
       $query_params['facet.date.hardend'] = $parameters['solr_facet_date_hardend'] ? 'true' : 'false';
       $query_params['facet.date.other'] = $parameters['solr_facet_date_other'];
       $query_params['facet.date.include'] = $parameters['solr_facet_date_include'];
+      if (isset($parameters['solr_facet_query'])) {
+        $query_params['facet.query'] = $parameters['solr_facet_query'];
+      }
     }
-
-    // Allow other modules to alter the solr query.
-    drupal_alter('mediamosa_solr_acl_search', $query, $parameters, $solr_query['AND']['cql']);
-
-    // Do the acl and solr query in the fq parameter.
-    $query_params['fq'] = $query;
-
-    // Allow other modules to alter the solr query.
-    drupal_alter('mediamosa_solr_search', $query_cql, $parameters, $solr_query['AND']['cql']);
 
     // Do query.
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query_cql, $parameters['offset'], $parameters['limit'], $query_params);
@@ -434,7 +437,7 @@ class mediamosa_solr {
 
       // Possible slaves.
       foreach (array_keys($slaves) as $app_id_slave) {
-        assert($app_id_slave);// should not happen
+        assert($app_id_slave);
 
         // Must be same app_id for slaves.
         $solr_query[self::WHERE_AND][self::ACL][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][] = 'app_id:' . (int) $app_id_slave;
@@ -788,49 +791,19 @@ class mediamosa_solr {
       // At when.
       $end_at = REQUEST_TIME + $set_time_limit;
 
-      $optimize = true;
       $indexed = 0;
 
       // Get the now time, as long as we under end_at then continue.
       while (floor(microtime(TRUE)) < $end_at) {
-        // Do our stuff until we are done or till we run out of time.
-        $asset_ids = mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
-          ->fields('sq', array(mediamosa_solr_queue_db::ID))
-          ->range(0, self::COMMIT_BULK_PER)
-          ->orderBy(mediamosa_solr_queue_db::CREATED, 'ASC')
-          ->execute()
-          ->fetchCol();
-
-        // Found any assets?
-        if (empty($asset_ids)) {
+        $processed = static::processQueueRun();
+        if (!$processed) {
           break;
         }
 
-        $optimize = false;
-        $documents = array();
-        foreach ($asset_ids as $asset_id) {
-          $document = self::createDocumentAsset($asset_id);
-          if (empty($document)) {
-            // Delete from Solr index.
-            self::deleteAssets(array($asset_id));
-
-            // So its removed from queue.
-            $documents['asset_ids'][] = $asset_id;
-            continue;
-          }
-
-          // Create the document.
-          $documents['documents'][] = $document;
-          $documents['asset_ids'][] = $asset_id;
-
-          $indexed++;
-        }
-
-        // Commit will also remove the asset_ids from the queue.
-        self::commitDocuments($documents);
+        $indexed += $processed;
       }
 
-      if ($optimize) {
+      if (!$indexed) {
         self::optimizeSolr();
       }
 
@@ -869,6 +842,53 @@ class mediamosa_solr {
 
     // Commit.
     self::commit();
+  }
+
+  /**
+   * Does one queue run.
+   *
+   * @return int
+   *   The number of processed queued assets.
+   */
+  public static function processQueueRun() {
+    $processed = 0;
+
+    // Do our stuff until we are done or till we run out of time.
+    $asset_ids = mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
+      ->fields('sq', array(mediamosa_solr_queue_db::ID))
+      ->range(0, self::COMMIT_BULK_PER)
+      ->orderBy(mediamosa_solr_queue_db::CREATED, 'ASC')
+      ->execute()
+      ->fetchCol();
+
+    // Found any assets?
+    if (empty($asset_ids)) {
+      return $processed;
+    }
+
+    $documents = array();
+    foreach ($asset_ids as $asset_id) {
+      $document = self::createDocumentAsset($asset_id);
+      if (empty($document)) {
+        // Delete from Solr index.
+        self::deleteAssets(array($asset_id));
+
+        // So its removed from queue.
+        $documents['asset_ids'][] = $asset_id;
+        continue;
+      }
+
+      // Create the document.
+      $documents['documents'][] = $document;
+      $documents['asset_ids'][] = $asset_id;
+
+      $processed++;
+    }
+
+    // Commit will also remove the asset_ids from the queue.
+    self::commitDocuments($documents);
+
+    return $processed;
   }
 
   /**
@@ -1022,6 +1042,9 @@ class mediamosa_solr {
     // Create empty document object asset;
     $document = new Apache_Solr_Document();
 
+    // Allow other modules to add stuff to the document to the asset array.
+    drupal_alter('mediamosa_solr_asset', $asset_for_index);
+
     // Asset data.
     $document->app_id = $asset_for_index['asset'][mediamosa_asset_db::APP_ID];
     $document->asset_id = $asset_for_index['asset'][mediamosa_asset_db::ID];
@@ -1141,6 +1164,10 @@ class mediamosa_solr {
 
         switch ($metadata['type']) {
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+            foreach ($metadata['values'] as &$value) {
+              $value = trim($value);
+            }
+
             // Sort from low to high.
             sort($metadata['values'], SORT_STRING);
 
@@ -1200,7 +1227,8 @@ class mediamosa_solr {
             throw new mediamosa_solr_exception('Unsupported metadata type detected!');
         }
 
-        drupal_alter('mediamosa_solr_document_metadata', $document, $name, $asset_for_index['asset_metadata']);
+        $names = array('group_name' => $group_name, 'group_name_short' => $group_name_short, 'name' => $name);
+        drupal_alter('mediamosa_solr_document_metadata', $document, $names, $asset_for_index);
       }
     }
 
@@ -1374,6 +1402,9 @@ class mediamosa_solr {
     if (!empty($is_protected)) {
       $document->mf_is_protected = array_unique($is_protected);
     }
+
+    // Allow other modules to add stuff to the document.
+    drupal_alter('mediamosa_solr_document_asset', $document, $asset_for_index);
 
     // Done.
     return $document;

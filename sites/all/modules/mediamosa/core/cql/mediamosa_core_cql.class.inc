@@ -459,12 +459,6 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
-   * Allows other classes to alter the where.
-   */
-  public function search_where_alter(&$a_where) {
-  }
-
-  /**
    * converts the cql array into sql
    */
   protected function mediamosa_core_cql_context_cql2sql() {
@@ -477,9 +471,6 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $a_result_parse = $a_result_cql2sql = array();
 
     $a_where = $o_part_group->mediamosa_cql_part_parse($this, 'mediamosa_core_cql_hook_cql2sql_where', $a_result_parse);
-
-    // Allow other modules to alter the solr where query parts.
-    $this->search_where_alter($a_where);
 
     $str_sql_where = $this->mediamosa_cql_parseresult_to_string($a_where);
     $a_having = $o_part_group->mediamosa_cql_part_parse($this, 'mediamosa_core_cql_hook_cql2sql_having', $a_result_parse);
@@ -973,7 +964,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    */
   final protected function mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context, $context_set, $str_index) {
 
-    // Check of een index reference bestaat (alleen in root toegestaan)
+    // Check if reference index exits, only allowed in root.
     if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set])) {
       $context_set_reference = $a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set];
       assert(!isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set_reference]));
@@ -984,7 +975,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       return $this->mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context, $context_set_reference, $str_index);
     }
 
-    // Vanwege alleen in root mag voorkomen van CQL_CONTEXT_KEY_INDEX_REFERENCES....
+    // Can only exist in root.
     return $this->mediamosa_core_cql_context_index2column_wrapper_2($a_mediamosa_core_cql_context, $context_set, $str_index);
   }
 
@@ -1076,7 +1067,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $order_by = $o_cql_sub_sortby->mediamosa_cql_sort_by_get();
 
     // Translate to cql column.
-    $a_index = $this->mediamosa_core_cql_context_index2column($order_by);
+    $a_index = str_replace('|', '_', $this->mediamosa_core_cql_context_index2column($order_by));
 
     // Test we can sort on this column.
     if (!isset($a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT])) {

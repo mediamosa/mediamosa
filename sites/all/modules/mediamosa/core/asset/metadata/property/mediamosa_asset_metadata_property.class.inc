@@ -305,11 +305,12 @@ class mediamosa_asset_metadata_property {
    * Get definitions from the asset_property_definitions array
    *
    * @param array $metadata_property_groups
-   * @param bool $get_all_apps
-   *
+   *   List of metadata group names, 'dublin_core';
+   *   array(mediamosa_metadata_qdc::METADATA_PROPERTY_GROUP_NAME, ...)
+   * 
    * @return array
    */
-  public static function get_metadata_properties(array $metadata_property_groups = array(), $get_all_apps = FALSE) {
+  public static function get_metadata_properties(array $metadata_property_groups = array()) {
 
     // Caching.
     static $metadata_properties = array();

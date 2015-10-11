@@ -253,9 +253,18 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Dump metadata
    */
   protected function dumpMetadata() {
+    $metadatas = mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_metadata_property_db::ID)->execute();
+    mediamosa_watchdog::log('Dumping asset metadata property table contents.');
+    $properties = array();
+    foreach ($metadatas as $metadata) {
+      $properties[$metadata[mediamosa_asset_metadata_property_db::ID]] = $metadata[mediamosa_asset_metadata_property_db::NAME];
+      mediamosa_watchdog::log_export($metadata);
+    }
+
     $metadatas = mediamosa_db::db_select(mediamosa_asset_metadata_db::TABLE_NAME, 't')->fields('t')->orderBy(mediamosa_asset_metadata_db::ASSET_ID)->execute();
     mediamosa_watchdog::log('Dumping asset metadata table contents.');
     foreach ($metadatas as $metadata) {
+      $metadata['property name'] = $properties[$metadata[mediamosa_asset_metadata_db::PROP_ID]];
       mediamosa_watchdog::log_export($metadata);
     }
   }
@@ -1447,7 +1456,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
       strtr(
-        "Search asset, got result @result (@result_description)",
+        'Search asset, got result @result (@result_description)',
         array(
           '@result' => (string) $response['xml']->header->request_result_id,
           '@result_description' => (string) $response['xml']->header->request_result_description
@@ -1460,10 +1469,19 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       return FALSE;
     }
 
-    $a_assets = mediamosa_lib::responsexml2array($response['xml']);
+    $assets = mediamosa_lib::responsexml2array($response['xml']);
+
+    if (isset($parameters[mediamosa_rest_call_asset_search::SOLR_FACET]) && $parameters[mediamosa_rest_call_asset_search::SOLR_FACET] === 'true') {
+      // Fix single facet results.
+      if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
+        $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
+        unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
+        $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
+      }
+    }
 
     // Return data.
-    return $a_assets;
+    return $assets;
   }
 
   /**

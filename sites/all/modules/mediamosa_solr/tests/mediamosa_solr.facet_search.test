@@ -184,13 +184,6 @@ class MediaMosaSolrFacetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
     $assets = $this->searchAsset(10, $parameters);
 
-    // Fix single results.
-    if (!empty($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']['name'])) {
-      $tmp = $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'];
-      unset($assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field']);
-      $assets['header']['solr_facet']['solr_facet_fields']['asset_type']['fields']['field'] = array($tmp);
-    }
-
     // Must find 6 assets.
     $this->assertTrue($assets['header']['item_count'] == 6, 'Must find 6 assets.');
 

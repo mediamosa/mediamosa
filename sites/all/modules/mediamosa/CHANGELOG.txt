@@ -333,6 +333,8 @@ MediaMosa 3.6.1-dev (build 2187)
 - Removed unwanted test audio stills.
 - Updated mediamosa SDK to latest.
 - Fixed transcode with -vf 'scale=...' and no '-s'.
+- Changed parameter to hook 'mediamosa_solr_document_metadata' to cover more
+  and added missing metadata group name.
 
 
 MediaMosa 3.5.x (build 2072)

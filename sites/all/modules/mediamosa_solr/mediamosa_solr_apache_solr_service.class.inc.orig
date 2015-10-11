@@ -451,14 +451,15 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   }
 
 
-  /**
+    /**
    * Call the /admin/ping servlet, can be used to quickly tell if a connection to the
    * server is able to be made.
    *
    * @param float $timeout maximum time to wait for ping in seconds, -1 for unlimited (default is 2)
    * @return float Actual time taken to ping the server, FALSE if timeout or HTTP error status occurs
    */
-  public function ping($timeout = 2) {
+  public function ping($timeout = 2)
+  {
     $start = microtime(true);
 
     $httpTransport = $this->getHttpTransport();
@@ -466,10 +467,14 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
     $httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timeout);
     $solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
-    if ($solrResponse->getHttpStatus() == 200) {
+    if ($solrResponse->getHttpStatus() == 200)
+    {
       return microtime(true) - $start;
     }
-
-    return false;
+    else
+    {
+      return false;
+    }
   }
-}
+
+    }
