@@ -640,7 +640,8 @@ class mediamosa {
   public static function get_internal_password() {
     $passwrd = self::variable_get('mediamosa_internal_password', NULL);
 
-    if (isset($passwrd)) {
+    $passwrd = trim($passwrd);
+    if (isset($passwrd) && $passwrd !== '') {
       return $passwrd;
     }
 
