@@ -89,7 +89,7 @@ function hook_mediamosa_solr_document_asset_alter($document, &$asset_for_index) 
  * @param array $parameters
  *   The solr parameters.
  */
-function hook_mediamosa_solr_cql_parts(&$parts, $parameters = array()) {
+function hook_mediamosa_solr_cql_parts_alter(&$parts, $parameters = array()) {
 
 }
 
@@ -103,7 +103,7 @@ function hook_mediamosa_solr_cql_parts(&$parts, $parameters = array()) {
  * @param array $facets
  *   Array with facet result data.
  */
-function mediamosa_asset_hierarchy_mediamosa_solr_apache_facet($mediamosa_solr_apache_solr_response, $apache_solr_http_transport_response, $facets) {
+function hook_mediamosa_solr_apache_facet_alter($mediamosa_solr_apache_solr_response, $apache_solr_http_transport_response, $facets) {
 
 }
 
@@ -117,7 +117,7 @@ function mediamosa_asset_hierarchy_mediamosa_solr_apache_facet($mediamosa_solr_a
  * @param array $related
  *   Array with related result data.
  */
-function mediamosa_asset_hierarchy_mediamosa_solr_apache_related($mediamosa_solr_apache_solr_response, $apache_solr_http_transport_response, $related) {
+function hook_mediamosa_solr_apache_related_alter($mediamosa_solr_apache_solr_response, $apache_solr_http_transport_response, $related) {
 
 }
 

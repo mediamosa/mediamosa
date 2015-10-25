@@ -271,10 +271,11 @@ class mediamosa_solr {
     // Check for facets.
     if (!empty($parameters['solr_facet'])) {
       $solr_facet_field = array();
+      $asset_fields = static::facet_asset_fields();
       foreach ($parameters['solr_facet_field'] as $field) {
-        $asset_fields = array('asset.asset_type', 'asset_type', 'asset.provider_id', 'provider_id');
-        if (in_array($field, $asset_fields)) {
-          $solr_facet_field[] = str_replace('.', '_', $field);
+        $field = mediamosa_unicode::strtolower($field);
+        if (isset($asset_fields[$field])) {
+          $solr_facet_field[] = $asset_fields[$field];
         }
         else {
           $solr_facet_field[] = str_replace('.', '_', $field) . '_md';
@@ -343,6 +344,24 @@ class mediamosa_solr {
       'solr_facet' => $mediamosa_solr_apache_solr_response->getFacets(),
       'keep_order_ids' => $keep_order_ids,
     );
+  }
+
+  /**
+   * The facet input asset fields that are mapped directly to solr index.
+   *
+   * Can only contain fields that are stored in asset table.
+   *
+   * @return array
+   *   The array containing the mapping from input to solr index.
+   */
+  public static function facet_asset_fields() {
+    $facet_asset_fields = array();
+    foreach (static::getAssetOptiontionals() as $asset_optional) {
+      $facet_asset_fields['asset.' . $asset_optional] = $asset_optional;
+      $facet_asset_fields[$asset_optional] = $asset_optional;
+    }
+
+    return $facet_asset_fields;
   }
 
   /**
@@ -646,28 +665,30 @@ class mediamosa_solr {
    * @param array $asset_ids
    *   The assets that will be queued Solr index.
    */
-  public static function queueAssets(array $asset_ids) {
+  public static function queueAssets(array $asset_ids, &$errors = array()) {
 
     foreach ($asset_ids as $asset_id) {
       try {
         if (mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
           ->condition(mediamosa_solr_queue_db::ID, $asset_id)
           ->countQuery()->execute()->fetchField() == 0) {
-
+          try {
             // If it fails because of existing primary key, then ignore.
             mediamosa_db::db_insert(mediamosa_solr_queue_db::TABLE_NAME)
               ->fields(array(
                   mediamosa_solr_queue_db::ID => $asset_id,
                   mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
               ))
-          ->execute();
+            ->execute();
+          }
+          catch (PDOException $e) {
+            // Ignore.
+          }
         }
-      }
-      catch (PDOException $e) {
-        // Ignore.
       }
       catch (Exception $e) {
         mediamosa_watchdog::log($e->getMessage());
+        $errors[] = $e->getMessage();
       }
     }
   }
@@ -699,7 +720,7 @@ class mediamosa_solr {
    * @param array $asset_ids
    *   Array of asset IDs.
    */
-  public static function insertAssets(array $asset_ids) {
+  public static function insertAssets(array $asset_ids, &$errors = array()) {
 
     $documents = array();
     foreach ($asset_ids as $asset_id) {
@@ -734,7 +755,8 @@ class mediamosa_solr {
       }
       catch (Exception $e) {
         // If one fails, then we can't fail the rest too.
-       self::log($e->getMessage());
+        self::log($e->getMessage());
+        $errors[] = $e->getMessage();
       }
     }
 
@@ -745,6 +767,7 @@ class mediamosa_solr {
     catch (Exception $e) {
       // Ignore.
       self::log($e->getMessage());
+      $errors[] = $e->getMessage();
     }
   }
 
@@ -1016,6 +1039,22 @@ class mediamosa_solr {
   }
 
   /**
+   * Information about additonal metadata to index.
+   *
+   * @return array
+   */
+  public static function getAssetOptiontionals() {
+    return array(
+      mediamosa_asset_db::PROVIDER_ID,
+      mediamosa_asset_db::REFERENCE_ID,
+      mediamosa_asset_db::MEDIAFILE_DURATION,
+      mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
+      mediamosa_asset_db::MEDIAFILE_MIME_TYPE,
+      mediamosa_asset_db::ASSET_TYPE,
+    );
+  }
+
+  /**
    * Insert one asset with data into Solr.
    *
    * @param string $asset_id
@@ -1025,6 +1064,8 @@ class mediamosa_solr {
    *   The created solr document.
    */
   public static function createDocumentAsset($asset_id) {
+
+    mediamosa_exception::assert(is_string($asset_id));
 
     // Get all the data needed for indexing.
     $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id);
@@ -1055,16 +1096,7 @@ class mediamosa_solr {
     $document->viewed = $asset_for_index['asset'][mediamosa_asset_db::VIEWED];
     $document->played = $asset_for_index['asset'][mediamosa_asset_db::PLAYED];
 
-    $asset_optionals = array(
-      mediamosa_asset_db::PROVIDER_ID,
-      mediamosa_asset_db::REFERENCE_ID,
-      mediamosa_asset_db::MEDIAFILE_DURATION,
-      mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
-      mediamosa_asset_db::MEDIAFILE_MIME_TYPE,
-      mediamosa_asset_db::ASSET_TYPE,
-    );
-
-    foreach ($asset_optionals as $optional) {
+    foreach (static::getAssetOptiontionals() as $optional) {
       if (!empty($asset_for_index['asset'][$optional])) {
         $document->{$optional} = $asset_for_index['asset'][$optional];
       }

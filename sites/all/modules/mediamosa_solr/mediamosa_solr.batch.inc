@@ -5,11 +5,9 @@
  */
 
 /**
- * Start repopulate queue batch.
- *
- * Will fill reindex table to use cron to index the metadata.
+ * Create the batch array.
  */
-function _mediamosa_solr_batch_reindex_start($purge_solr) {
+function _mediamosa_solr_batch_get($purge_solr) {
 
   // Create the batch.
   $batch = array(
@@ -33,10 +31,20 @@ function _mediamosa_solr_batch_reindex_start($purge_solr) {
   // Enable sync (when it was on).
   $batch['operations'][] = array('_mediamosa_solr_batch_enable_queue', array());
 
+  return $batch;
+}
+
+/**
+ * Start repopulate queue batch.
+ *
+ * Will fill reindex table to use cron to index the metadata.
+ */
+function _mediamosa_solr_batch_reindex_start($purge_solr) {
+  // Create the batch.
+  $batch = _mediamosa_solr_batch_get($purge_solr);
+
   // Create batch and run.
   batch_set($batch);
-
-  // Done.
 }
 
 /**
