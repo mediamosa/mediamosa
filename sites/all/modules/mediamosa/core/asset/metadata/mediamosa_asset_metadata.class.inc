@@ -211,43 +211,74 @@ class mediamosa_asset_metadata {
    *   'type' => type,
    * ).
    *
-   * @param string $asset_id
-   *   The asset to get metadata from.
+   * If $asset_ids is supplied as array, the return will be indexed by asset_id.
+   * In array ->
+   * [asset_id][groupname][propertyname] = array(
+   *   'values' => array(
+   *     value,
+   *     value,
+   *   ),
+   *   'type' => type,
+   * ).
+   *
+   * Fields collected from the asset are indexed with asset_field. Do not hard
+   * code these fields, these might be moved to asset metadata set later.
+   *
+   * @param string|array $asset_ids
+   *   The asset(s) to get metadata from.
    * @param string $propgroup_name
    *   The name of the property group.
    * @param string $prop_name
    *   The property name.
+   * @param array $asset_fields
+   *   Fields from asset table to include.
    *
    * @return array
    *   The metadata of the asset.
    */
-  public static function metadata_get($asset_id, $propgroup_name = NULL, $prop_name = NULL) {
-    $sql = 'SELECT * FROM {#mediamosa_asset_metadata} AS am
-       JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id
-       JOIN {#mediamosa_asset_metadata_property_group} AS ampg ON ampg.#propgroup_id = amp.#propgroup_id
-       WHERE am.#asset_id = :asset_id';
-    $params = array(
-      '#mediamosa_asset_metadata' => mediamosa_asset_metadata_db::TABLE_NAME,
-      '#mediamosa_asset_metadata_property' => mediamosa_asset_metadata_property_db::TABLE_NAME,
-      '#prop_id' => mediamosa_asset_metadata_property_db::ID,
-      '#mediamosa_asset_metadata_property_group' => mediamosa_asset_metadata_property_group_db::TABLE_NAME,
-      '#propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
-      '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
-      ':asset_id' => $asset_id,
+  public static function metadata_get($asset_ids, $propgroup_name = NULL, $prop_name = NULL, array $asset_fields = array()) {
+    $query = mediamosa_db::db_select(mediamosa_asset_metadata_db::TABLE_NAME, 'am');
+    $query->fields('am', array(
+      mediamosa_asset_metadata_db::ASSET_ID,
+      mediamosa_asset_metadata_db::VAL_CHAR,
+      mediamosa_asset_metadata_db::VAL_DATETIME,
+      mediamosa_asset_metadata_db::VAL_INT,
+    ));
+    $query->join(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp',
+      strtr('amp.{amp.prop_id} = am.{am.prop_id}',
+        array(
+          '{amp.prop_id}' => mediamosa_asset_metadata_property_db::ID,
+          '{am.prop_id}' => mediamosa_asset_metadata_db::PROP_ID,
+        )
+      )
     );
+    $query->fields('amp', array(
+      mediamosa_asset_metadata_property_db::TYPE,
+      mediamosa_asset_metadata_property_db::NAME,
+    ));
+    $query->join(mediamosa_asset_metadata_property_group_db::TABLE_NAME,
+      'ampg',
+      strtr(
+        'ampg.{ampg.propgroup_id} = amp.{amp.propgroup_id}',
+        array(
+          '{ampg.propgroup_id}' => mediamosa_asset_metadata_property_group_db::ID,
+          '{amp.propgroup_id}' => mediamosa_asset_metadata_property_db::PROPGROUP_ID,
+        )
+      )
+    );
+    $query->fields('ampg', array(
+      mediamosa_asset_metadata_property_group_db::NAME,
+    ));
+    $query->condition('am.' . mediamosa_asset_metadata_db::ASSET_ID, $asset_ids);
     if ($propgroup_name) {
-      $sql .= ' AND ampg.propgroup_name = :propgroup_name';
-      $params[':propgroup_name'] = $propgroup_name;
+      $query->condition('ampg.' . mediamosa_asset_metadata_property_group_db::NAME , $propgroup_name);
     }
     if ($prop_name) {
-      $sql .= ' AND amp.prop_name = :prop_name';
-      $params[':prop_name'] = $prop_name;
+      $query->condition('amp.' . mediamosa_asset_metadata_property_db::NAME , $prop_name);
     }
-    $result = mediamosa_db::db_query($sql, $params);
 
     $result_metadata = array();
-    foreach ($result as $metadata) {
-      // Choose the value.
+    foreach ($query->execute() as $metadata) {
       $value = NULL;
       switch ($metadata[mediamosa_asset_metadata_property_db::TYPE]) {
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
@@ -263,9 +294,36 @@ class mediamosa_asset_metadata {
           break;
       }
 
-      // Collect the value.
-      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] = $metadata[mediamosa_asset_metadata_property_db::TYPE];
-      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['values'][] = $value;
+      if (is_array($asset_ids)) {
+        $result_metadata[$metadata[mediamosa_asset_metadata_db::ASSET_ID]][$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] = $metadata[mediamosa_asset_metadata_property_db::TYPE];
+        $result_metadata[$metadata[mediamosa_asset_metadata_db::ASSET_ID]][$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['values'][] = $value;
+      }
+      else {
+        $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] = $metadata[mediamosa_asset_metadata_property_db::TYPE];
+        $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['values'][] = $value;
+      }
+    }
+
+    // Include the asset fields when provided.
+    if (!empty($asset_fields)) {
+      $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
+        ->condition('a.' . mediamosa_asset_metadata_db::ASSET_ID, $asset_ids)
+        ->fields('a', array_merge(array('asset_id'), $asset_fields));
+
+      foreach ($query->execute() as $asset) {
+        foreach ($asset_fields as $asset_field) {
+          if (isset($asset[$asset_field]) && $asset[$asset_field] !== '') {
+            if (is_array($asset_ids)) {
+              $result_metadata[$metadata[mediamosa_asset_metadata_db::ASSET_ID]][mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME][$asset_field]['type'] = mediamosa_asset_metadata_property_db::TYPE_CHAR;
+              $result_metadata[$metadata[mediamosa_asset_metadata_db::ASSET_ID]][mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME][$asset_field]['values'][] = $asset[$asset_field];
+            }
+            else {
+              $result_metadata[mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME][$asset_field]['type'] = mediamosa_asset_metadata_property_db::TYPE_CHAR;
+              $result_metadata[mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME][$asset_field]['values'][] = $asset[$asset_field];
+            }
+          }
+        }
+      }
     }
 
     return $result_metadata;
