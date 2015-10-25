@@ -129,6 +129,7 @@ class mediamosa_asset {
    *   NULL value will retrieve the app trashcan setting and use it.
    */
   public static function delete($asset_id, $cascade = TRUE, $trashcan = FALSE) {
+    mediamosa_exception::assert(is_string($asset_id));
 
     // Null value will retrieve the setting from app.
     if (is_null($trashcan)) {
