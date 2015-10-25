@@ -469,6 +469,16 @@ class mediamosa_asset_metadata {
 
   /**
    * Deletes all properties with given prop_name and val_char value.
+   *
+   * @param string $propgroup_name
+   *   Metadata group name.
+   * @param string $prop_name
+   *   Metadata property name.
+   * @param string $value
+   *   Metadata value to remove.
+   *
+   * @return array
+   *   The IDs of the asset that is affected by the delete.
    */
   public static function metadata_asset_delete_prop_value($propgroup_name, $prop_name, $value) {
     $prop_id = mediamosa_db::db_query(
@@ -495,7 +505,7 @@ class mediamosa_asset_metadata {
         ':prop_id' => $prop_id,
         ':value' => $value,
       )
-    )->fetchAssoc();
+    )->fetchCol();
 
     // Delete the requested prop-value records.
     mediamosa_db::db_query(
