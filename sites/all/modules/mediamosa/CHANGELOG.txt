@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2189)
+MediaMosa 3.6.1-dev (build 2190)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -333,6 +333,11 @@ MediaMosa 3.6.1-dev (build 2189)
   and added missing metadata group name.
 - Added several hooks and fixes to MediaMosa Solr and Solr CQL.
 - Fixed issue when internal password was cleared.
+- Extended and fixed support for Solr facets.
+- Extended asset metadata get function to retrieve multiple assets and fields
+  from the assets.
+- Added assert check to force single IDs whebn calling asset delete.
+- Added drush commands for MediaMosa Solr module.
 
 
 MediaMosa 3.5.x (build 2072)
