@@ -459,5 +459,4 @@ class mediamosa_tool_ffmpeg {
 
     return $result;
   }
-
 }

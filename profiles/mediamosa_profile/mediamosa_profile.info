@@ -52,6 +52,7 @@ dependencies[] = mediamosa_tool_ffmpeg
 dependencies[] = mediamosa_tool_image
 dependencies[] = mediamosa_tool_pdf
 dependencies[] = mediamosa_storage
+dependencies[] = mediamosa_tool_audio
 
 ; Contrib modules.
 dependencies[] = advanced_help

@@ -370,8 +370,15 @@ function mediamosa_profile_apache_settings_form() {
     <Directory !mount_point/media>
       Options FollowSymLinks
       AllowOverride All
-      Order deny,allow
-      Allow from All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
+        Order allow,deny
+        Allow from All
+      </IfModule>
     </Directory>
 
     <IfModule mod_php5.c>
@@ -400,10 +407,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/!server_name_clean_error.log
@@ -423,8 +437,15 @@ function mediamosa_profile_apache_settings_form() {
     <Directory !mount_point/media>
       Options FollowSymLinks
       AllowOverride All
-      Order deny,allow
-      Allow from All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
+        Order allow,deny
+        Allow from All
+      </IfModule>
     </Directory>
 </VirtualHost>
 
@@ -433,10 +454,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/app1.!server_name_clean_error.log
@@ -449,10 +477,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/app2.!server_name_clean_error.log
@@ -465,10 +500,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     <IfModule mod_php5.c>
@@ -487,10 +529,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     # Media
@@ -498,8 +547,15 @@ function mediamosa_profile_apache_settings_form() {
     <Directory !mount_point/media>
       Options FollowSymLinks
       AllowOverride All
-      Order deny,allow
-      Allow from All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
+        Order allow,deny
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/download.!server_name_clean_error.log
@@ -512,10 +568,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/job1.!server_name_clean_error.log
@@ -528,10 +591,17 @@ function mediamosa_profile_apache_settings_form() {
     ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
-        Options FollowSymLinks MultiViews
-        AllowOverride All
+      Options FollowSymLinks
+      AllowOverride All
+      <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+      </IfModule>
+      <IfModule !mod_authz_core.c>
+        # Apache 2.2
         Order allow,deny
-        allow from all
+        Allow from All
+      </IfModule>
     </Directory>
 
     ErrorLog /var/log/apache2/job2.!server_name_clean_error.log

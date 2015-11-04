@@ -1,5 +1,84 @@
 <?php
 /**
  * @file
- * Audio tool installer.
+ * Install, update, and uninstall functions for the mediamosa audio module.
  */
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_tool_audio_install() {
+  // Check for https.
+  $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  $scheme = $is_https ? 'https://' : 'http://';
+
+  // Get URL of the current server, stripped from scheme.
+  $server_url = url('', array('absolute' => TRUE));
+  $server_url = rtrim(drupal_substr($server_url, strpos($server_url, '://') + 3), '/') . '/';
+
+  $html_object = <<<HTML_OBJECT
+<link href="@SERVER_URLmmplayer/video-js/video-js.css" rel="stylesheet">
+<script src="@SERVER_URLmmplayer/video-js/video.js"></script>
+<script>
+  videojs.options.flash.swf = "@SERVER_URLmmplayer/video-js/video-js.swf";
+</script>
+
+<style type="text/css">
+  .video-js {padding-top: {ASPECT_RATIO_PERC}%;}
+  .vjs-fullscreen {padding-top:0;}
+  .vjs-poster {position: absolute; bottom: 0;}
+</style>
+
+<div class="video_wrapper" style="width:100%; max-width:{WIDTH}px;">
+  <audio id="MediaSalsa_audio_1" class="video-js vjs-default-skin"  controls preload="none" width="auto" height="auto" poster="{STILL_URI}" data-setup="">
+   <source src="{TICKET_URI}" type='audio/mp3' />
+  </audio>
+</div>
+HTML_OBJECT;
+
+
+  $default_servers = array(
+    array(0, 0, 'ON', 'STREAMING', $scheme . $server_url, mediamosa_server_db::SERVER_PATH_BASE_URI . 'media/{TICKET}',
+          '', 'audio/*',
+          strtr($html_object, array('@SERVER_URL' => $scheme . $server_url)),
+          'VideoJS player; audio player', 0, '', '', 'APC', ''),
+  );
+
+  // Create our node type.
+  $server_node_type = array(
+    'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
+    'name' => st('MediaMosa server'),
+    'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
+    'description' => st('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
+    'custom' => 1,
+    'modified' => 1,
+    'locked' => 0,
+    'has_body' => 0,
+  );
+
+  $server_node_type = node_type_set_defaults($server_node_type);
+  node_type_save($server_node_type);
+
+  foreach ($default_servers as $default_server) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[9]);
+
+    $machine_name = empty($default_server[9]) ? 'mediamosa_server_' . $node->{mediamosa_server_db::SERVER_TYPE} : $default_server[9];
+    $node->{mediamosa_server_db::MACHINE_NAME} = mediamosa_db::generate_machine_name($machine_name, mediamosa_server_db::TABLE_NAME);
+    $node->{mediamosa_server_db::VERSION} = $default_server[1];
+    $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
+    $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
+    $node->{mediamosa_server_db::SERVER_URI} = $default_server[4];
+    $node->{mediamosa_server_db::SERVER_PATH} = $default_server[5];
+    $node->{mediamosa_server_db::CONTAINERS} = $default_server[6];
+    $node->{mediamosa_server_db::MIME_TYPE} = $default_server[7];
+    $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[8];
+    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[9];
+    $node->{mediamosa_server_db::SLOTS} = (int)$default_server[10];
+    $node->{mediamosa_server_db::TOOLS} = $default_server[11];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[12];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[13];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[14];
+
+    $node = node_save($node);
+  }
+}
