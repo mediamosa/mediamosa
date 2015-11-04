@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2191)
+MediaMosa 3.6.1-dev (build 2192)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -339,6 +339,8 @@ MediaMosa 3.6.1-dev (build 2191)
 - Added assert check to force single IDs whebn calling asset delete.
 - Added drush commands for MediaMosa Solr module.
 - Fixed asset_ids return in asset delete function and function doc.
+- Enabled audio tool module by default and added install code for audio server
+  profile.
 
 
 MediaMosa 3.5.x (build 2072)
