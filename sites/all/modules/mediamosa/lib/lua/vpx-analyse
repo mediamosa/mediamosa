@@ -37,7 +37,7 @@ local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
 
 local ffjunk = (space * (LPAREN * (1 - RPAREN)^0 * RPAREN))^0
 local word = lpeg.C(symbol) * space * ffjunk
-local number = lpeg.C(digits) * space
+local number = symbol^0 * POINT^0 * lpeg.C(digits) * space
 local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
 local steam_number = lpeg.C(digits * POINT^0 * COLON^0 * digits) * space
@@ -117,6 +117,7 @@ end
 -- Stream #0.0: Video: mjpeg, yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- Stream #0.0: Video: mjpeg (MJPG / 0x47504A4D), yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- Stream #0:0(eng): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080, 9282 kb/s, 24 fps, 24 tbr, 2400 tbn, 4800 tbc
+-- Stream #0:0[0x1000]: Video: mpeg2video (Main) ([2][0][0][0] / 0x0002), yuv420p(tv), 1920x1080 [SAR 1:1 DAR 16:9], max. 16000 kb/s, 25 fps, 25 tbr, 90k tbn, 50 tbc
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
 local ln_video = space * "Stream #" * steam_number * language * COLON *
@@ -137,7 +138,7 @@ local ln_video = space * "Stream #" * steam_number * language * COLON *
 -- hinted detection
 -- captures: is_hinted must be rtp
 local ln_hinted = space * "Stream #" * float * language * COLON *
-  "Data" * COLON * space * (is_hinted + lpeg.Cc("unknown")) * 
+  "Data" * COLON * space * (is_hinted + lpeg.Cc("unknown")) *
    space * SLASH * space * hex
 
 function die(msg)
