@@ -41,36 +41,6 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => _mediamosa_maintenance_status_okerror(mediamosa_io::is_dir($mount_point)),
   );
 
-  // --------------------------------------------------- SANNAS media/.htaccess.
-  $path = mediamosa_storage::trim_uri(mediamosa_storage::get_realpath_media());
-  $found = mediamosa_io::file_exists($path . '.htaccess');
-
-  // Create when missing.
-  if (!$found && is_writable($mount_point)) {
-    // Make the [mount_point]/media directory.
-    mediamosa_io::mkdir($path . 'ticket/');
-    $found = mediamosa_storage::file_create_htaccess($path, mediamosa_storage::file_get_media_htaccess_contents());
-  }
-
-  $htaccess = explode("\n", trim(file_get_contents($path . '.htaccess')));
-  foreach ($htaccess as $key => $line) {
-    $htaccess[$key] = trim($line, "\n\r\t ");
-  }
-  $htaccess_org = explode("\n", trim(mediamosa_storage::file_get_media_htaccess_contents()));
-  foreach ($htaccess_org as $key => $line) {
-    $htaccess_org[$key] = trim($line, "\n\r\t ");
-  }
-  $contents = $found ? implode('', $htaccess) == implode('', $htaccess_org) : FALSE;
-  $results['mount_media_htaccess'] = array(
-    'title' => t('SANNAS .htaccess media'),
-    'value' => $found && $contents ? t('Found & contents ok') : ($found && !$contents ? t('Found, but incorrect contents') : t('Not found, unable to create')),
-    'severity' => !$contents && $found ? _mediamosa_maintenance_status_okwarning(FALSE) : _mediamosa_maintenance_status_okerror($found && $contents),
-  );
-  if (!$found || !$contents) {
-    $variables = array('%directory' => $path, '@path' => $path . '/.htaccess', '!htaccess' => nl2br(check_plain(mediamosa_storage::file_get_media_htaccess_contents())));
-    $results['mount_media_htaccess']['description'] = t("Warning: Couldn't find .htaccess file in location @path (or with correct contents).<br />Please create a .htaccess file in your %directory directory which contains the following lines: <br /><code>!htaccess</code>", $variables);
-  }
-
   // --------------------------------------------------- SANNAS Structure check.
   $checks = array(
     'not_structured' => array(),
