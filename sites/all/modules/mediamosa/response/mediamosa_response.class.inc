@@ -193,6 +193,9 @@ class mediamosa_response extends mediamosa {
       // return to drupal.
       header(mediamosa_settings::X_MEDIAMOSA_VERSION . ': ' . mediamosa_version::get_current_version_str(TRUE));
 
+      // Add class name so we know what matched.
+      header(mediamosa_settings::X_MEDIAMOSA_REST_CLASS . ': ' . $this->rest_call['class_name']);
+
       // Allow execution to continue even if the request gets canceled.
       // This might happen if the client is waiting for response and cancels.
       // Is enabled by default for POST rest calls.

@@ -126,6 +126,8 @@ class mediamosa_settings {
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-MediaMosa-Internal-Pass';
   const X_MEDIAMOSA_VERSION = 'x-MediaMosa-Version';
+  // Info about the REST class used.
+  const X_MEDIAMOSA_REST_CLASS = 'x-MediaMosa-Rest-Class';
 
   // Header item during rest call and simpletest. When running in simpletest we
   // can force to disable App on any interface. If not added to header, all

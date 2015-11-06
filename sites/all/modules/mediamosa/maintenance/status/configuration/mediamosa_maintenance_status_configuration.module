@@ -295,6 +295,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   // Check the /media alias.
   $servers = mediamosa_server::get_enabled(array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+    mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_STREAMING,
   ));
 
@@ -322,7 +323,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     $type = drupal_strtolower($server[mediamosa_server_db::SERVER_TYPE]);
 
     $text = $got_200 && $is_webserver ?
-      t('Alias present and working for @type server @name, uri: @uri',
+      t('Alias present and working for @type server \'@name\', uri: @uri',
         array(
           '@type' => $type,
           '@name' => $server[mediamosa_server_db::SERVER_NAME],
@@ -330,7 +331,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
         )
       )
       :
-      t('Alias not working for @type server @name, uri: @uri',
+      t('Alias not working for @type server \'@name\', uri: @uri',
         array(
           '@type' => $type,
           '@name' => $server[mediamosa_server_db::SERVER_NAME],
@@ -353,6 +354,39 @@ function _mediamosa_maintenance_status_configuration_generate() {
           '@server_uri' => $server[mediamosa_server_db::SERVER_URI],
           '@subdir' => $subdir == '' ? '' : '/' . $subdir,
         )
+      );
+    }
+
+    if ($server[mediamosa_server_db::SERVER_TYPE] === mediamosa_server_db::SERVER_TYPE_DOWNLOAD || $server[mediamosa_server_db::SERVER_TYPE] === mediamosa_server_db::SERVER_TYPE_STILL) {
+      $url_404 = strtr($server[mediamosa_server_db::SERVER_PATH], array('{base_uri}' => $server[mediamosa_server_db::SERVER_URI], '{TICKET}' => '0/t/' . mediamosa_db::uuid(0) . '/test-404.txt'));
+
+      // Needs {TICKET}.
+      $results['server_media_' . $key . '_ticket'] = array(
+        'title' => t('Webserver path'),
+        'value' => t('Server path contains {TICKET} for @type server \'@name\'',
+          array(
+            '@type' => $type,
+            '@name' => $server[mediamosa_server_db::SERVER_NAME],
+          )
+        ),
+        'severity' => _mediamosa_maintenance_status_okwarning(strpos($server[mediamosa_server_db::SERVER_PATH], '{TICKET}')),
+      );
+
+
+      // Should be 404, and handled by REST call.
+      $result = mediamosa_http::drupal_http_request($url_404);
+      $handled_by_media_class = !empty($result->headers['x-mediamosa-rest-class']) && in_array($result->headers['x-mediamosa-rest-class'], array('mediamosa_rest_call_media_download', 'mediamosa_rest_call_media'));
+
+      $subdir = trim(url(), '/');
+      $results['server_media_' . $key] = array(
+        'title' => t('Webserver media alias'),
+        'value' => t('Media REST call was called correctly for @type server \'@name\'',
+          array(
+            '@type' => $type,
+            '@name' => $server[mediamosa_server_db::SERVER_NAME],
+          )
+        ),
+        'severity' => _mediamosa_maintenance_status_okwarning($handled_by_media_class)
       );
     }
   }
