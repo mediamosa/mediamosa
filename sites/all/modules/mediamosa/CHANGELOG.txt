@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2192)
+MediaMosa 3.6.1-dev (build 2193)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -341,6 +341,9 @@ MediaMosa 3.6.1-dev (build 2192)
 - Fixed asset_ids return in asset delete function and function doc.
 - Enabled audio tool module by default and added install code for audio server
   profile.
+- Removed .htaccess file check and creation from status page for /media alias.
+- Added /media download check if 404s results into the download REST call on
+  status page for download servers.
 
 
 MediaMosa 3.5.x (build 2072)
