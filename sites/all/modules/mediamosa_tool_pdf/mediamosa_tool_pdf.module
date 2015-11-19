@@ -26,6 +26,7 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($mediafile_id) {
   // Output of pdfinfo is in the form of "property : value"
   // for example "Pages:          3"
   foreach ($output_array as $value) {
+
     if (strpos($value, 'Pages:') !== FALSE) {
       list(, $pages) = explode(':', $value);
     }
@@ -33,12 +34,13 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($mediafile_id) {
       list(, $version) = explode(':', $value);
     }
   }
+
   $analyse = array();
-  if (isset($analyse['pages'])) {
-    $analyse['pages'] = array('type' => 'INT', 'value' => trim($pages));
+  if (isset($pages)) {
+    $analyse['pdf_pages'] = array('type' => 'INT', 'value' => trim($pages));
   }
-  if (isset($analyse['PDF version'])) {
-    $analyse['PDF version'] = array('type' => 'CHAR', 'value' => trim($version));
+  if (isset($version)) {
+    $analyse['pdf_version'] = array('type' => 'CHAR', 'value' => trim($version));
   }
 
   return $analyse;
@@ -135,6 +137,25 @@ function mediamosa_tool_pdf_mediamosa_status_collect($reset = FALSE) {
   }
 
   return $mediamosa_status_collect['statuses'];
+}
+
+/**
+ * Implements hook mediafile_metadata_properties().
+ */
+function mediamosa_tool_pdf_mediafile_metadata_properties() {
+  $properties = array(
+    'pdf_pages' => array('title' => 'Number of pages'),
+    'pdf_version' => array('title' => 'PDF version'),
+  );
+  return $properties;
+}
+
+/**
+ * Implements hook mediafile_metadata_properties_alter().
+ */
+function mediamosa_tool_pdf_mediafile_metadata_properties_alter(&$properties) {
+  $image_properties = mediamosa_tool_pdf_mediafile_metadata_properties();
+  $properties = array_merge($properties, array_keys($image_properties));
 }
 
 /**

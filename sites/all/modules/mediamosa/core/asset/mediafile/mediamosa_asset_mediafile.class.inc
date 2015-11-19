@@ -539,7 +539,7 @@ class mediamosa_asset_mediafile {
       // Get metadata.
       $metadata = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id);
 
-      // @todo: move these into the tool hooks.
+      // @todo: move these into the tool hook.
       $mediafile_metadata_properties = array(
         mediamosa_asset_mediafile_metadata::VIDEO_CODEC,
         mediamosa_asset_mediafile_metadata::COLORSPACE,
@@ -559,6 +559,9 @@ class mediamosa_asset_mediafile {
         mediamosa_asset_mediafile_metadata::IS_HINTED,
         mediamosa_asset_mediafile_metadata::IS_INSERTED_MD,
       );
+
+      // Allow tool modules to add extra properties.
+      drupal_alter('mediafile_metadata_properties', $mediafile_metadata_properties);
 
       // Add them.
       foreach ($mediafile_metadata_properties as $mediafile_metadata_property) {
