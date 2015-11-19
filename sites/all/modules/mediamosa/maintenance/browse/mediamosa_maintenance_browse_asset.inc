@@ -765,19 +765,29 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('Group id'), $item['group_id']);
     $rows[] = array(t('MD5'), $item['metadata']['md5']);
     $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
+    $rows[] = array(t('Filesize'), ($item['metadata']['filesize']) ? format_size($item['metadata']['filesize']) : '');
+    $rows[] = array(t('Original'), $item['is_original_file']);
+    $rows[] = array(t('Downloadable'), $item['is_downloadable']);
+    $rows[] = array(t('Protected'), $item['is_protected']);
+    $rows[] = array(t('Created / Changed'), $item['created'] . ' / ' . $item['changed']);
+
     $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
     $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');
-    $rows[] = array(t('Created / Changed'), $item['created'] . ' / ' . $item['changed']);
     $rows[] = array(t('Duration'), $item['metadata']['file_duration']);
-    $rows[] = array(t('Filesize'), ($item['metadata']['filesize']) ? format_size($item['metadata']['filesize']) : '');
     $rows[] = array(t('Video information'), ($item['metadata']['video_codec']) ? $item['metadata']['video_codec'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps (' . $item['metadata']['colorspace'] . ')' : '');
     $rows[] = array(t('MP4 hinted'), $item['metadata']['is_hinted']);
     $rows[] = array(t('FLV metadated'), $item['metadata']['is_inserted_md']);
-    $rows[] = array(t('Original'), $item['is_original_file']);
-    $rows[] = array(t('Downloadable'), $item['is_downloadable']);
     $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')' : '');
-    $rows[] = array(t('Protected'), $item['is_protected']);
 
+    // Add possible technical metadata defined by tools.
+    $result = module_invoke_all('mediafile_metadata_properties');
+    foreach ($result as $key => $value) {
+      if (isset($item['metadata'][$key]) && ($item['metadata'][$key] != '')) {
+        $rows[] = array($value['title'], $item['metadata'][$key]);
+      }
+    }
+
+    // Add Transcode profile.
     if (!empty($item['transcode_profile_id'])) {
       $transcode_profile_data = _mediamosa_get_transcode_profile_data($item['transcode_profile_id']);
       if ($transcode_profile_data) {

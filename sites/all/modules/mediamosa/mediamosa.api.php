@@ -161,5 +161,30 @@ function hook_mediamosa_version_alter(&$version) {
 }
 
 /**
+ * Define extra mediafile properties for use in tool modules.
+ *
+ * @return array
+ *   An associative array, where main key is the property.
+ *   - 'title'
+ *     The descriptive title of the property.
+ */
+function hook_mediafile_metadata_properties() {
+  // Example property.
+  return array('example' => array('title' => 'Example property'));
+}
+
+/**
+ * Add or alter the list of mediafile properties in tool modules.
+ *
+ * @return array
+ *   An associative array, where main key is the property name.
+ *
+ * @see hook_mediafile_metadata_properties()
+ */
+function hook_mediafile_metadata_properties_alter(&$properties) {
+  $properties = array_merge($properties, array('example'));
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
