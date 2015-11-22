@@ -38,10 +38,23 @@ function mediamosa_solr_drush_command() {
     'aliases' => array('mm-solr-ping'),
   );
 
-  $items['mediamosa-solr-queue-all'] = array(
-    'description' => '.',
+  $items['mediamosa-solr-cql'] = array(
+    'description' => dt('Run the CQL and return the results.'),
+    'aliases' => array('mm-solr-cql'),
     'arguments' => array(
-      'asset_id' => dt('Re-queue all assets'),
+      'cql' => dt('The CQL string for searching. Supply as \'\' to search all.'),
+    ),
+    'options' => array(
+      'limit' => dt('Maximum of items to return (default 10).'),
+      'offset' => dt('Offset in result (default 0).'),
+      'app_id' => dt('The client application ID. Will search on all client applications when not supplied.'),
+    ),
+  );
+
+  $items['mediamosa-solr-queue-all'] = array(
+    'description' => dt('Requeue all assets in the Solr queue for indexing.'),
+    'arguments' => array(
+      'asset_id' => dt('Requeue all assets'),
     ),
     'options' => array(
       'purge' => dt('Purge the Solr index before re-queuing Solr. This is only required when Solr contains assets that no longer are in MediaMosa database or when schema has been changed.'),
@@ -50,7 +63,7 @@ function mediamosa_solr_drush_command() {
   );
 
   $items['mediamosa-solr-queue-asset'] = array(
-    'description' => '.',
+    'description' => 'Requeue specific asset in the Solr queue for indexing.',
     'arguments' => array(
       'asset_id' => dt('The ID of the asset to queue (queue needs to be processed before the asset will be in Solr).'),
     ),
@@ -58,9 +71,9 @@ function mediamosa_solr_drush_command() {
   );
 
   $items['mediamosa-solr-index-asset'] = array(
-    'description' => '.',
+    'description' => 'Index specific asset, will not be put into Solr queue but will update Solr immediately.',
     'arguments' => array(
-      'asset_id' => dt('The ID of the asset to insert (no queue, will insert asset immediately into Solr).'),
+      'asset_id' => dt('The ID of the asset to insert (no queue, will insert asset immediately into Solr index).'),
     ),
     'aliases' => array('mm-solr-index-asset'),
   );
@@ -194,7 +207,7 @@ function drush_mediamosa_solr_queue_asset($asset_id) {
       drush_print(dt('Asset queued.'));
     }
     else {
-      drush_print(dt('Asset failed to queue, error log below.'));
+      drush_print(dt('Asset failed to queue, see error log below.'));
       foreach ($errors as $error) {
         drush_print($error);
       }
@@ -212,10 +225,10 @@ function drush_mediamosa_solr_index_asset($asset_id) {
     mediamosa_solr::insertAssets(array($asset_id), $errors);
 
     if (empty($errors)) {
-      drush_print(dt('Asset inserted.'));
+      drush_print(dt('Asset indexed.'));
     }
     else {
-      drush_print(dt('Asset failed to insert, error log below.'));
+      drush_print(dt('Asset failed to index, see error log below.'));
       foreach ($errors as $error) {
         drush_print($error);
       }
@@ -273,4 +286,63 @@ function _drush_mediamosa_solr_asset_exists($asset_id) {
   }
 
   return TRUE;
+}
+
+/**
+ * Callback function for mediamosa-solr-queue-enable command.
+ */
+function drush_mediamosa_solr_cql($cql) {
+  $limit = drush_get_option('limit', 10);
+  $offset = drush_get_option('offset', 0);
+  $app_id = drush_get_option('app_id', FALSE);
+
+  if (!empty($app_id)) {
+    $app_ids = explode(',', $app_id);
+  }
+  else {
+    $app_ids = mediamosa_app::get_all_apps();
+  }
+
+  $parameters = array(
+    'app_ids' => empty($app_id) ? array_merge(array(0), mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol()) : $app_ids,
+    'cql' => $cql,
+    'offset' => $offset,
+    'limit' => $limit,
+  );
+
+
+  $asset_search = mediamosa_solr::asset_search($parameters);
+  $asset_ids = array();
+  foreach ($asset_search['asset_ids'] as $asset_id) {
+    $asset_ids[] = array($asset_id);
+  }
+
+  if (empty($asset_ids)) {
+    drush_print(
+      dt(
+        'Searching assets using CQL \'@{cql}\', offset @{offset}, limit @{limit}, did not find any assets.',
+        array(
+          '@{cql}' => $cql,
+          '@{offset}' => $offset,
+          '@{limit}' => $limit,
+        )
+      )
+    );
+
+  }
+  else {
+    drush_print(
+      dt(
+        'Searching assets using CQL \'@{cql}\', offset @{offset}, limit @{limit}, found @{count} asset(s) (showing asset ids);',
+        array(
+          '@{cql}' => $cql,
+          '@{offset}' => $offset,
+          '@{limit}' => $limit,
+          '@{count}' => count($asset_ids),
+        )
+      )
+    );
+
+    drush_print_table($asset_ids, TRUE);
+  }
 }
