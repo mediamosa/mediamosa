@@ -465,6 +465,11 @@ class mediamosa_job_scheduler {
       call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_transcode'), $job_info['asset_id'], $job_info['mediafile_id'], $mediafile_id_dest, $job_info['file_extension']);
     }
 
+    // Perform a post convert, if supported.
+    if (method_exists('mediamosa_tool_' . $job_info['tool'], 'post_convert')) {
+      call_user_func(array('mediamosa_tool_' . $job_info['tool'], 'post_convert'), $job_id, $mediafile_id_dest);
+    }
+
     // Get mediafile.
     $mediafile = mediamosa_asset_mediafile::get($job_info['mediafile_id']);
 
