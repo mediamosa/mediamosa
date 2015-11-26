@@ -389,6 +389,15 @@ function mediamosa_drush_command() {
     ),
   );
 
+  $items['mm-rebuild-registery'] = array(
+    'description' => 'Do a complete rebuild of the registery.',
+    'examples' => array(
+      'drush mm-rebuild-registry' => 'Rebuild the registery.',
+    ),
+    'aliases' => array('mm-rr'),
+  );
+
+
   return $items;
 }
 
@@ -1906,4 +1915,27 @@ function drush_mediamosa_mm_reset_counts($app_id) {
       ));
   $affected_rows = $query->execute();
   drush_print('Affected: ' . $affected_rows . ' assets.');
+}
+
+/**
+ * Drush function mm-rebuild-registery.
+ */
+function drush_mediamosa_mm_rebuild_registery() {
+
+  if (!drush_confirm(dt('Are you sure?'))) {
+    return drush_user_abort();
+  }
+
+  $transaction = mediamosa_db::db_transaction();
+  try {
+    db_query('DELETE FROM {registry}');
+    db_query('DELETE FROM {registry_file}');
+    drupal_flush_all_caches();
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    drush_print(dt('Failed to rebuild registery, error \'@{error}\'', array('@{error}' => $e->getMessage())));
+  }
+
+  drush_print(dt('Registery successfully rebuild.'));
 }
