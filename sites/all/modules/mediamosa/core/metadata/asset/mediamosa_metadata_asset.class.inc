@@ -15,4 +15,5 @@ class mediamosa_metadata_asset extends mediamosa_asset_metadata_property_group {
   const TAG = 'tag';
   const PUBLISHED = 'published';
   const TRASHCAN = 'trashcan';
+  const TRASHCAN_DATE = 'trashcan_date';
 }

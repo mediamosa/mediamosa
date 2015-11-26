@@ -7,6 +7,9 @@
 class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Asset - Deleting assets with the trashcan',
@@ -16,7 +19,10 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   // -------------------------------------------------------------------- Tests.
-  function testDeleteAndUndelete() {
+  /**
+   * Test Delete and Un-delete.
+   */
+  public function testDeleteAndUndelete() {
 
     // Create asset.
     $asset_id_1 = $this->createAsset();
@@ -136,6 +142,7 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
       $asset = $this->getAsset($asset_id, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));
       $this->var_export($asset['asset']);
       $this->assert($asset['asset']['trashcan'] === 'TRUE', 'Is in trashcan (' . $key . ')');
+      $this->assert(substr($asset['asset']['trashcan_date'], 0, 10) == date('Y-m-d'), 'Trashcan_date set to today.');
       mediamosa_asset::must_exists($asset_id, NULL, TRUE);
     }
 
@@ -143,6 +150,10 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE), array('trashcan' => 'ALL'));
+
+    // Test cql with the trashcan_date.
+    $this->cql_do_search_test_assets_1('trashcan_date<2015-01-01', array(), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('trashcan_date>2015-01-01', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
 
     // Perform /assets [GET] test.
     $assets = $this->getAssets(
@@ -253,11 +264,16 @@ class MediaMosaAssetTrashcanTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id_6);
     $this->var_export($asset['asset']);
     $this->assert($asset['asset']['trashcan'] === 'FALSE', 'Is not in trashcan (' . $key . ')');
+    $this->assert($asset['asset']['trashcan_date'] == '', 'Trashcan_date is empty.');
 
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
     $this->cql_do_search_test_assets_1('', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'FALSE'));
     $this->cql_do_search_test_assets_1('', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array('trashcan' => 'ALL'));
+
+    // Test cql with the trashcan_date.
+    $this->cql_do_search_test_assets_1('trashcan_date<2015-01-01', array(), array('trashcan' => 'TRUE'));
+    $this->cql_do_search_test_assets_1('trashcan_date>2015-01-01', array($asset_id_4 => TRUE), array('trashcan' => 'TRUE'));
 
     $this->deleteAsset($asset_id_6, array('delete' => 'cascade'));
     $asset = $this->getAsset($asset_id_6, array(mediamosa_rest_call_asset_get::TRASHCAN => 'TRUE'));

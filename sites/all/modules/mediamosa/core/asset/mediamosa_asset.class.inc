@@ -12,6 +12,7 @@ class mediamosa_asset {
   const METADATA_TRASHCAN = 'trashcan';
   const METADATA_TRASHCAN_TRUE = 'TRUE';
   const METADATA_TRASHCAN_FALSE = 'FALSE';
+  const METADATA_TRASHCAN_DATE = 'trashcan_date';
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -333,6 +334,8 @@ class mediamosa_asset {
     // Trigger asset_trashcan hook.
     module_invoke_all('mediamosa_asset_trashcan', $asset_id);
 
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN_DATE => array(mediamosa_datetime::utc_current_timestamp_now())), FALSE);
+
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_TRUE)), $reindex);
   }
 
@@ -348,6 +351,8 @@ class mediamosa_asset {
    *   Reindex the asset metadata.
    */
   public static function restore($asset_id, $reindex = TRUE) {
+    mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN_DATE => array('')), FALSE);
+
     mediamosa_asset_metadata::metadata_asset_create($asset_id, array(self::METADATA_TRASHCAN => array(self::METADATA_TRASHCAN_FALSE)), $reindex);
   }
 
@@ -1418,7 +1423,7 @@ class mediamosa_asset {
     // Must be owner.
     mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
-    // If not null, then check if this is the ega admin...
+    // If not null, then check if this is the ega admin.
     if (!is_null($is_unappropriate)) {
       mediamosa_acl::app_admin_check($app_id, $asset[mediamosa_asset_db::APP_ID], $is_app_admin);
     }

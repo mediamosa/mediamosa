@@ -38,6 +38,14 @@ function _mediamosa_metadata_asset_install() {
       mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => 1,
       mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => 1,
     ),
+    array(
+      mediamosa_asset_metadata_property_db::NAME => mediamosa_metadata_asset::TRASHCAN_DATE,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_asset_metadata_property_db::TYPE_DATETIME,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => FALSE,
+      mediamosa_asset_metadata_property_db::IS_PROTECTED => TRUE,
+      mediamosa_asset_metadata_property_db::MIN_OCCURRENCES => 0,
+      mediamosa_asset_metadata_property_db::MAX_OCCURRENCES => 1,
+    ),
   );
 
   // Create the properties.
