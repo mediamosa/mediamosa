@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2193)
+MediaMosa 3.6.1-dev (build 2194)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -344,6 +344,8 @@ MediaMosa 3.6.1-dev (build 2193)
 - Removed .htaccess file check and creation from status page for /media alias.
 - Added /media download check if 404s results into the download REST call on
   status page for download servers.
+- Fixed several CQL parsing when using complex ORs and ANDs, with or without
+  combinations with NOT operator.
 
 
 MediaMosa 3.5.x (build 2072)
