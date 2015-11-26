@@ -1006,9 +1006,9 @@ class mediamosa_job_server {
     $filename = mediamosa_storage::get_uri_temporary_file($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
     if (!mediamosa_io::file_exists($filename) || !mediamosa_io::filesize($filename)) {
-      // Something failed, very likely the frametime was too high. Remove the
-      // files and fail the job.
-      $still_error = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_FRAMETIME_GREATER_THEN_DURATION);
+      // Something failed. Remove the files and fail the job.
+
+      $still_error = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE, array('@mediafile_id' => $mediafile_id_src));
 
       // Update status.
       self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $still_error);
