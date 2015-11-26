@@ -187,10 +187,16 @@ function mediamosa_solr_update_7003() {
 }
 
 /**
- * Rebuild the registry.
+ * This update has been removed.
  */
 function mediamosa_solr_update_7004() {
-  // Rebuild the registry.
-  registry_rebuild();
-  cache_clear_all();
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_solr_update_7005() {
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
 }

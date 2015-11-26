@@ -66,11 +66,6 @@ define('MEDIAMOSA_CQL_BOOLEAN_NOT', 'NOT');
 define('MEDIAMOSA_CQL_BOOLEAN_PROX', 'PROX');
 
 /**
- * Settings and defines
- */
-define('MEDIAMOSA_CQL_KEY_SETTING_VERIFY', 'cql_key_setting_verify');
-
-/**
  * CQL Class
  *
  * Contains the basic function for parsing the CQL string
@@ -153,23 +148,14 @@ abstract class mediamosa_cql {
    *
    * @param string $str_cql
    *   The CQL string to parse.
-   * @param array $settings
-   *   The settings for parse phase.
    */
-  protected function mediamosa_cql_parse($str_cql, $settings = array()) {
+  protected function mediamosa_cql_parse($str_cql) {
     assert(is_string($str_cql));
-    assert(is_array($settings));
 
-    // Copy it for later usage
-    $this->m_str_cql = (string )$str_cql;
+    $this->m_str_cql = $str_cql = trim((string) $str_cql);
 
     // Clear our collection of possible previous parse
     $this->m_o_cql_part_group = new mediamosa_cql_part_group();
-
-    // Make sure these settings are set
-    if (!isset($settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY])) {
-      $settings[MEDIAMOSA_CQL_KEY_SETTING_VERIFY] = FALSE;
-    }
 
     if ($str_cql === '' || $str_cql === FALSE || $str_cql === NULL) {
       throw new mediamosa_cql_exception_string_is_empty();
@@ -237,27 +223,34 @@ abstract class mediamosa_cql {
    * @return bool
    */
   protected function mediamosa_cql_verify($str_cql) {
-    mediamosa_cql::mediamosa_cql_parse($str_cql, array(MEDIAMOSA_CQL_KEY_SETTING_VERIFY => TRUE));
+    $this->mediamosa_cql_parse($str_cql);
   }
 
   /**
-   * Next position in the string..
-   * throws cql_exception_eos when it reached the end
+   * Next position in the string.
+   *
    *
    * @param string $str_cql
+   *   The CQL string.
    * @param int $i_pos
-   * @return bool true; char is escaped
+   *   The character position within the string.
+   *
+   * @return bool
+   *   Returns TRUE when character is escaped, FALSE otherwise.
+   *
+   * @throws cql_exception_eos
+   *   When it reached the end.
    */
   private function mediamosa_cql_next_pos($str_cql, &$i_pos, $is_quoted) {
 
     $i_pos++;
 
     if (mediamosa_unicode::strlen($str_cql) <= $i_pos) {
-      throw new mediamosa_cql_exception_eos(); // end of string
+      throw new mediamosa_cql_exception_eos();
     }
 
-    // If next char is escape '\', then skip it and test if the next char is allowed to escaped
-    if (mediamosa_unicode::substr($str_cql, $i_pos, 1) == '\\') {
+    // If next char is escape '\', then skip it.
+    if (mediamosa_unicode::substr($str_cql, $i_pos, 1) === '\\') {
 
       if (!$is_quoted) {
         throw new mediamosa_cql_exception_syntax_error('character \ can only be used inside "quoted" strings', $i_pos);
@@ -266,10 +259,8 @@ abstract class mediamosa_cql {
       $i_pos++;
 
       if (mediamosa_unicode::strlen($str_cql) <= $i_pos) {
-        throw new mediamosa_cql_exception_unexpected_eos(); // end of string
+        throw new mediamosa_cql_exception_unexpected_eos();
       }
-
-      // Removed code to prevent escape all chars, its now allowed on all chars.
 
       return TRUE;
     }
@@ -278,36 +269,35 @@ abstract class mediamosa_cql {
   }
 
   /**
-   * Skip Whitespaces
+   * Skip Whitespaces and tabs.
    *
    * @param string $str_cql
+   *   The string to parse.
    * @param int $i_pos
-   * @return integer
+   *   The character position within the string.
    */
   private function mediamosa_cql_skip_ws($str_cql, &$i_pos) {
     if (mediamosa_unicode::strlen($str_cql) <= $i_pos) {
-      throw new mediamosa_cql_exception_eos(); // end of string
+      throw new mediamosa_cql_exception_eos();
     }
 
-    $is_quoted = FALSE;
-    while (mediamosa_unicode::substr($str_cql, $i_pos, 1) == ' ') {
-      $is_quoted = $this->mediamosa_cql_next_pos($str_cql, $i_pos, $is_quoted);
+    $is_escaped = FALSE;
+    while (mediamosa_unicode::substr($str_cql, $i_pos, 1) === ' ' || mediamosa_unicode::substr($str_cql, $i_pos, 1) === "\t") {
+      $is_escaped = $this->mediamosa_cql_next_pos($str_cql, $i_pos, $is_escaped);
     }
-
-    return $is_quoted;
   }
 
   /**
-   * Check if anything is left in the string
-   * will throw if end is reached, so only call
-   * if you really need something to process or
-   * expect it.
+   * Check if anything is left in the string.
+   *
+   * Will throw if end is reached, so only call if you really need something to
+   * process or expect it.
    *
    * @param string $str_cql
    * @param int $i_pos
    */
   private function mediamosa_cql_has_next($str_cql, $i_pos) {
-    return $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
+    $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
   }
 
   /**
@@ -338,12 +328,12 @@ abstract class mediamosa_cql {
       // Get 1st char
       $str_result = ($is_escaped ? '\\' : '') . mediamosa_unicode::substr($str_cql, $i_pos, 1);
 
-      if ($str_result == ')') {
+      if ($str_result === ')') {
         return $str_result;
       }
 
       // If it starts with '"', then we must end with one
-      if ($str_result == '"') {
+      if ($str_result === '"') {
         if ($is_quoted) {
           return '';
         }
@@ -353,7 +343,7 @@ abstract class mediamosa_cql {
 
       // If it starts with '(', then we are opening a scope.
       // If it starts with ')', then we are closing a scope.
-      if (!$is_quoted && $str_result == '(') {
+      if (!$is_quoted && $str_result === '(') {
         $i_pos++;
         return $str_result;
       }
@@ -362,7 +352,7 @@ abstract class mediamosa_cql {
       $is_escaped = $this->mediamosa_cql_next_pos($str_cql, $i_pos, $is_quoted);
 
       // If a '/', we can expect whitespaces, so skip them
-      if (!$is_quoted && $str_result == '/') {
+      if (!$is_quoted && $str_result === '/') {
         $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
       }
 
@@ -494,7 +484,7 @@ abstract class mediamosa_cql {
           // Get the next part.
           $str_3 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-          if ($str_3 != '=') {
+          if ($str_3 !== '=') {
             throw new mediamosa_cql_exception_expecting_char('=', $i_pos);
           }
 
@@ -531,11 +521,11 @@ abstract class mediamosa_cql {
           // Expecting now boolean, sortby or eos
         }
       }
-      elseif ($str_1 == ')') {
+      elseif ($str_1 === ')') {
         $i_pos++;
         throw new mediamosa_cql_exception_eo_scope();
       }
-      elseif (mediamosa_unicode::strtolower($str_1) != 'sortby')  {
+      elseif (mediamosa_unicode::strtolower($str_1) !== 'sortby')  {
         // str_1 possible index or searchTerm. We know when next is an relation or not
 
         // Check if this char_string_1 or _2 (both cases must be charString valid)
@@ -598,7 +588,7 @@ abstract class mediamosa_cql {
         $o_cql_part->mediamosa_cql_part_search_term_set(new mediamosa_cql_part_search_term($str_1));
       }
 
-      if (mediamosa_unicode::strtolower($str_1) != 'sortby') {
+      if (mediamosa_unicode::strtolower($str_1) !== 'sortby') {
         $i_pos_old = $i_pos;
         try {
           $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
@@ -610,7 +600,7 @@ abstract class mediamosa_cql {
         }
       }
 
-      if (mediamosa_unicode::strtolower($str_1) == 'sortby') { // Sortby
+      if (mediamosa_unicode::strtolower($str_1) === 'sortby') { // Sortby
         $this->m_o_cql_sortby = new mediamosa_cql_sortby();
 
         // Get the next part
@@ -659,7 +649,7 @@ abstract class mediamosa_cql {
         // Set the boolean
         $o_cql_part->mediamosa_cql_part_boolean_set($o_cql_part_boolean);
 
-        // If we end with a boolean, we must 'something' after it.
+        // If we end with a boolean, we have must 'something' after it.
         $this->mediamosa_cql_has_next($str_cql, $i_pos);
       }
       elseif ($str_1 == ')') {
@@ -864,27 +854,26 @@ abstract class mediamosa_cql {
       }
     }
 
-    $str_ql = implode(' ', $parse_result);
-
-    // Fix conjunction bug.
-    if ($str_ql === 'OR' || $str_ql === 'AND') {
-      $str_ql = '';
-    }
+    $str_ql = trim(implode(' ', $parse_result));
 
     // The end can not end with a conjuction.
     while (true) {
       if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
-        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR'));
+        $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR')));
       }
       elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
-        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND'));
+        $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND')));
+      }
+      elseif ($str_ql === 'OR' || $str_ql === 'AND') {
+        $str_ql = '';
+        break;
       }
       else {
         break;
       }
     }
 
-    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside)) {
+    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
       $str_ql = '(' . $str_ql . ')';
     }
 
@@ -995,7 +984,7 @@ class mediamosa_cql_sortby {
  */
 class mediamosa_cql_sub_sortby extends mediamosa_cql_modifiers {
 
-  private $m_str_sort_by = "";
+  private $m_str_sort_by = '';
 
   final public function __construct($str_sort_by) {
     $this->m_str_sort_by = $str_sort_by;

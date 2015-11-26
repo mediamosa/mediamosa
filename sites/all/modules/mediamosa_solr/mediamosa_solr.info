@@ -22,11 +22,11 @@ files[] = tests/mediamosa_solr.boost.test
 files[] = tests/mediamosa_solr.facet_search.test
 files[] = tests/mediamosa_solr.media.play_restriction.test
 files[] = tests/mediamosa_solr.stemming.test
-; Needs fixing.
-;files[] = tests/mediamosa_solr.asset.cql.ext.test
+files[] = tests/mediamosa_solr.asset.cql.ext.test
 files[] = tests/mediamosa_solr.asset.cql.keeporder.test
 files[] = tests/mediamosa_solr.asset.cql.test
 files[] = tests/mediamosa_solr.asset.search.empty.test
+files[] = tests/mediamosa_solr.asset.search.test
 files[] = tests/mediamosa_solr.asset.common.test
 files[] = tests/mediamosa_solr.asset.cql.mediafile.duration.test
 files[] = tests/mediamosa_solr.asset.cql.spec.test

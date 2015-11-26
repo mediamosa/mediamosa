@@ -5,10 +5,16 @@
  */
 
 /**
- * Rebuild the registry.
+ * This update has been removed and does nothing.
  */
 function mediamosa_asset_update_7000() {
-  // Rebuild the registry.
-  registry_rebuild();
-  cache_clear_all();
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_asset_update_7001() {
+  db_query('DELETE FROM {registry}');
+  db_query('DELETE FROM {registry_file}');
+  drupal_flush_all_caches();
 }

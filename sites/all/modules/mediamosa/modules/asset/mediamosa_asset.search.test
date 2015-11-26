@@ -4,7 +4,11 @@
  * Unittests for asset search empty assets.
  */
 
-class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEgaJob {
+// Class 'MediaMosaAssetSearchEmptyTestCaseEga' has been moved in 3.6 RC3. Need
+// this till 3.7. Running update.php will correct the problem too.
+require_once 'mediamosa_asset.search.empty.test';
+
+class MediaMosaAssetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -12,138 +16,163 @@ class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Asset - Search empty assets tests',
-      'description' => 'Testing asset search empty asset flags.',
+      'name' => 'Asset - Searching basic',
+      'description' => 'Basic search tests with CQL and metadata custom tags.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 
   // -------------------------------------------------------------------- Tests.
   /**
-   * Testing asset mediafile delete, see: ticket 831.
+   * Testing 'having' issue with CQL in 3.6.
    */
-  public function testAssetSearchEmpty() {
+  public function testAssetSearchCQL() {
 
-    // Create 3 assets.
-    $asset_ids = array(
-      'asset_id_1' => $this->createAsset(),
-      'asset_id_2' => $this->createAsset(),
-      'asset_id_3' => $this->createAsset(),
-    );
-
-    // Create mediafile for the second.
-    $parameters = array(
-      // The state of the downloadable flag must not effect the is empty state.
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'true',
-    );
-    $mediafile_id_2 = $this->createMediafile($asset_ids['asset_id_2'], $parameters);
-
-    // Start checking hide empty assets.
-    //
-    // Search assets with hide_empty_asset = FALSE.
-    //
-    $parameters = array(
-      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'false',
-    );
-    $assets = $this->searchAsset(10, $parameters);
-
-    // Check the result: we should give back all.
+    $definition = 'simpletest_access_policy';
+    $type = 'char';
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $this->var_export($response);
     $this->assertTrue(
-      count($assets['items']['item']) == count($asset_ids),
-      t('Response has the good amount of assets (@count).', array('@count' => count($asset_ids)))
+      (string) $response->items->item[0]->prop_name == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => (string) $response->items->item[0]->prop_name))
     );
-    foreach ($assets['items']['item'] as $asset) {
-      $this->assertTrue(
-        in_array($asset['asset_id'], $asset_ids),
-        t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
-      );
-    }
-
-    // Search assets with hide_empty_asset = TRUE.
-    //
-    $parameters = array(
-      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'true',
-    );
-    $assets = $this->searchAsset(10, $parameters, array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-
-    // Check the result: we should give back all.
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
     $this->assertTrue(
-      count($assets['items']['item']) == 0,
-      t('Response has the good amount of assets (0).')
+      (string) $response->items->item[0]->type == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => (string) $response->items->item[0]->type))
     );
 
-    // Create mediafile for the first.
-    $parameters = array(
-      // The state of the downloadable flag must not effect the is empty state.
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'false',
-    );
-    $mediafile_id_1 = $this->createMediafile($asset_ids['asset_id_1'], $parameters);
+    $definition = 'simpletest_status';
+    $type = 'char';
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $this->var_export($response);
 
-    $parameters = array(
-      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'true',
-    );
-    $assets = $this->searchAsset(10, $parameters, array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-
-    // Check the result: we should give back all.
     $this->assertTrue(
-      count($assets['items']['item']) == 0,
-      t('Response has the good amount of assets (@count).', array('@count' => count($asset_ids)))
+      (string) $response->items->item[0]->prop_name == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => (string) $response->items->item[0]->prop_name))
     );
-
-    // Now check the search parameters.
-    $search_params = mediamosa_rest_call_asset_search::get_search_params();
-
-    // Do search on every item.
-    foreach ($search_params as $field => $type) {
-      $parameters = array();
-      switch ($type) {
-        case mediamosa_sdk::TYPE_SEARCH_DATETIME:
-          $parameters[$field] = '2010-01-01 00:00:00';
-          break;
-
-        case mediamosa_sdk::TYPE_SEARCH_INT:
-          $parameters[$field] = '1234';
-          break;
-
-        default:
-        case mediamosa_sdk::TYPE_SEARCH_STRING:
-          $parameters[$field] = 'foo';
-          break;
-      }
-      $assets = $this->searchAsset(10, $parameters, array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
-    }
-
-    // Now further check on empty asset.
-
-    // Create upload file.
-    $upload = $this->uploadTestFile();
-    $asset_id = $upload['asset_id'];
-    $mediafile_id = $upload['mediafile_id'];
-
-    // Create transcode job.
-    $job_id = $this->createMediafileTranscode($mediafile_id);
-
-    // Parse the queue.
-    $this->doQueueCycleAll();
-
-    // Search must find 1 asset.
-    $parameters = array(
-      mediamosa_rest_call_asset_search::HIDE_EMPTY_ASSETS => 'true',
-    );
-    $assets = $this->searchAsset(10, $parameters);
-
-    // Check the result: we should give back all.
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
     $this->assertTrue(
-      count($assets['items']['item']) == 1,
-      t('Response has the good amount of assets (@count).', array('@count' => count($asset_ids)))
+      (string) $response->items->item[0]->type == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => (string) $response->items->item[0]->type))
     );
 
-    // Sure that is this asset?
-    foreach ($assets['items']['item'] as $asset) {
-      $this->assertTrue(
-        $asset['asset_id'] == $asset_id,
-        t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
-      );
-    }
+    // Properties as int must not be allowed when searching with text.
+    $definition = 'simpletest_access_policy_int';
+
+    $type = 'int';
+    $response = $this->createAssetMetadataDefinition($definition, $type);
+    $this->var_export($response);
+    $this->assertTrue(
+      (string) $response->items->item[0]->prop_name == $definition,
+      t('Sent and get property name is the same (@sent = @get).', array('@sent' => $definition, '@get' => (string) $response->items->item[0]->prop_name))
+    );
+    // Type.
+    $type = mediamosa_unicode::strtoupper($type);
+    $this->assertTrue(
+      (string) $response->items->item[0]->type == $type,
+      t('Sent and get property type is the same (@sent = @get).', array('@sent' => $type, '@get' => (string) $response->items->item[0]->type))
+    );
+
+    // ------------------------------------- Create asset and metadata property.
+    $asset_id_2 = $this->createAsset();
+    sleep(2);
+    $asset_id_4 = $this->createAsset();
+    sleep(2);
+    $asset_id_3 = $this->createAsset();
+    sleep(2);
+    $asset_id_1 = $this->createAsset();
+
+    // Create properties.
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'simpletest_access_policy' => '1',
+        'status' => 'streamable',
+      )
+    );
+    // Create properties.
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'simpletest_access_policy' => '2',
+        'status' => 'streamable',
+      )
+    );
+    // Create properties.
+    $this->createAssetMetadata($asset_id_3,
+      array(
+        'simpletest_access_policy_int' => '1',
+        'simpletest_access_policy' => 'w',
+        'status' => 'vox',
+      )
+    );
+
+    // Breaks on solr, but for other reason.
+ //   $this->cql_do_search_test_assets_1('((simpletest_access_policy == "w" OR (owner_id == "something" AND simpletest_access_policy == "2")) OR ((acl_user == "^something^" OR acl_group == "^something^" OR acl_group == "^something^") AND simpletest_access_policy == "1")) AND (simpletest_status == "^streamable^" OR simpletest_status == "^vox^") sortBy videotimestamp/descending', array($asset_id_3 => TRUE));
+
+
+
+// (
+//   (
+//     simpletest_access_policy == "w"
+//     OR
+//     (
+//       owner_id == "something" AND simpletest_access_policy == "2"
+//     )
+//   )
+//   OR
+//   (
+//     (
+//       acl_user == "^something^" OR acl_group == "^something^" OR acl_group == "^something^"
+//     )
+//     AND
+//     simpletest_access_policy == "1"
+//   )
+// )
+// AND
+// (
+//   simpletest_status == "^streamable^" OR simpletest_status == "^vox^"
+// )
+
+// (
+//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%w%%'
+//   OR
+//   (
+//     a.owner_id LIKE '%%something%%' AND mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%2%%'
+//   )
+// )
+// OR
+// (
+//   acl_u.acl_name = 'something' OR acl_ug.acl_name = 'something' OR acl_ug.acl_name = 'something'
+// )
+// AND
+//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%1%%'
+// AND
+// (
+//   mediamosa_asset_metadata_simpletest_status.val_char = 'streamable' OR mediamosa_asset_metadata_simpletest_status.val_char = 'vox'
+// )
+//
+// (
+//   (mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%w%%' OR (a.owner_id LIKE '%%something%%' AND mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%2%%'))
+//   OR
+//   (acl_u.acl_name = 'something' OR acl_ug.acl_name = 'something' OR acl_ug.acl_name = 'something')
+//   AND
+//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%1%%'
+//   AND
+//   (mediamosa_asset_metadata_simpletest_status.val_char = 'streamable' OR mediamosa_asset_metadata_simpletest_status.val_char = 'vox')
+// )
+
+//
+//   //
+// (
+//   (app_10436_simpletest_access_policy_vc:"w" OR (*:* AND owner_id:"something" AND app_10436_simpletest_access_policy_vc:"2"))
+//   OR
+//   (mf_acl_user:something OR mf_acl_user_group:something OR mf_acl_user_group:something)
+//   AND
+//   app_10436_simpletest_access_policy_vc:"1"
+//   AND
+//   (app_10436_simpletest_status_vc_exact:streamable OR app_10436_simpletest_status_vc_exact:vox)
+// )
   }
 }

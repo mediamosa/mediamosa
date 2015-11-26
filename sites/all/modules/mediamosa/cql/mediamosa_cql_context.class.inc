@@ -6,33 +6,53 @@
 
 abstract class mediamosa_cql_context extends mediamosa_cql {
 
-  // You must define these when extending with this class
+  // ------------------------------------------------------- Abstract functions.
   abstract protected function mediamosa_cql_context_prefix_assignment_get();
   abstract protected function mediamosa_cql_context_is_named_comparitor($str);
   abstract public function mediamosa_cql_context_index2column(mediamosa_cql_part $o_cql_part);
 
-  // Store the last exception here.
-  private $m_last_exception = FALSE;
 
+  // --------------------------------------------------------------------- Vars.
+  /**
+   * Is CQL successfully parsed and no syntax or parser errors.
+   *
+   * null: Has not been parsed.
+   * true: Parsed and valid.
+   * false: Parsed and failed.
+   *
+   * @var bool
+   */
+  public $parsed = null;
+
+  /**
+   * The last exception caught.
+   *
+   * @var mediamosa_cql_exception
+   */
+  private $last_catched_exception = FALSE;
+
+  // ------------------------------------------------------------------ Methods.
   /**
    * Parse the given CQL string
    *
    * @param string $str_cql
-   * @param array $a_settings
-   * @return array/boolean
+   *   The string to parse.
+   *
+   * @return bool
+   *   Was succesfully parsed.
    */
-  final protected function mediamosa_cql_parse($str_cql, $a_settings = array()) {
+  final protected function mediamosa_cql_parse($str_cql) {
 
     try {
-      parent::mediamosa_cql_parse($str_cql, $a_settings);
+      $this->parsed = TRUE;
+      parent::mediamosa_cql_parse($str_cql);
     }
     catch (mediamosa_cql_exception $e) {
-      $this->m_last_exception = $e;
-      return FALSE;
+      $this->parsed = FALSE;
+      $this->last_catched_exception = $e;
     }
 
-    // If we get here to this point, there were no errors.
-    return TRUE;
+    return $this->parsed;
   }
 
   /**
@@ -43,24 +63,25 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
    */
   final public function mediamosa_cql_verify($str_cql) {
     try {
+      $this->parsed = TRUE;
       parent::mediamosa_cql_verify($str_cql);
     }
     catch (mediamosa_cql_exception $e) {
-      $this->m_last_exception = $e;
-      return FALSE;
+      $this->parsed = FALSE;
+      $this->last_catched_exception = $e;
     }
 
-    // If we get here to this point, there were no errors.
-    return TRUE;
+    return $this->parsed;
   }
 
   /**
-   * Return the last fatal exception that cause cql to stop
+   * Return the last fatal exception that cause cql to stop.
    *
-   * @return object
+   * @return mediamosa_cql_exception
+   *   The last CQL exception caught.
    */
   final public function mediamosa_cql_last_exception_get() {
-    return $this->m_last_exception;
+    return $this->last_catched_exception;
   }
 
   /**

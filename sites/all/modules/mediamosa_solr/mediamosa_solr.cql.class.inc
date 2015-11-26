@@ -593,7 +593,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $parts[$column] = strtr($part, array('{column}' => str_replace('|', '_', $column)));
     }
 
-    return ($has_not ? '(+*:* -' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean) . ($has_not ? ')' : '');
+    return ($has_not ? '(+*:* -' : '') . (count($parts) > 1 ? '(' : '') . implode (' OR ', $parts) . (count($parts) > 1 ? ')' : '') . ($has_not ? ')' : '') . (empty($str_boolean) ? '' : $str_boolean);
   }
 
   /**
@@ -608,7 +608,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
    *
    * @return string
    */
-  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = null, $first = true) {
+  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = null, $first = false) {
     $inside = array();
     foreach ($parse_result as &$item) {
       if (!is_string($item)) {
@@ -633,22 +633,26 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       }
     }
 
-    $str_ql = implode(' ', $parse_result);
+    $str_ql = trim(implode(' ', $parse_result));
 
-    // The end can not end with a conjuction.
+    // The end of the string can not end with a conjuction.
     while (true) {
       if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
-        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR'));
+        $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR')));
       }
       elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
-        $str_ql = mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND'));
+        $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND')));
+      }
+      elseif ($str_ql === 'OR' || $str_ql === 'AND') {
+        $str_ql = '';
+        break;
       }
       else {
         break;
       }
     }
 
-    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside)) {
+    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
       $str_ql = '(' . ($outside === ' OR' ? '*:* AND ' : '') .  $str_ql . ')';
     }
 
@@ -679,9 +683,13 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
    *
    * @param array $parameters
    *   The search parameters.
-   * @param type $cql_store_stats
+   * @param bool $cql_store_stats
+   *   Store stats about the search query.
    * @param array $app_ids
-   * @return type
+   *   The app IDs used.
+   *
+   * @return string
+   *   The solr query.
    */
   public static function parse_asset_solr($parameters, $cql_store_stats, array $app_ids) {
     // Create the CQL object.
@@ -695,9 +703,13 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
    *
    * @param string $str_cql
    *   The CQL string to process.
-   * @param type $cql_store_stats
+   * @param bool $cql_store_stats
+   *   Store stats about the search query.
    * @param array $app_ids
-   * @return type
+   *   The app IDs used.
+   *
+   * @return string
+   *   The query string translated from CQL.
    */
   public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
     throw new mediamosa_solr_exception('Use parse_asset_solr() instead.');
