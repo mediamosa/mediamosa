@@ -11,9 +11,45 @@ function mediamosa_asset_update_7000() {
 }
 
 /**
- * Rebuild the registry.
+ * Create trashcan_date field.
  */
 function mediamosa_asset_update_7001() {
+
+  $property_group = db_select('mediamosa_asset_metadata_property_group', 'ampg')
+                  ->fields('ampg')
+                  ->condition('propgroup_name', 'asset')
+                  ->execute()
+                  ->fetchAssoc();
+
+  // The property name to create.
+  $prop_name = 'trashcan_date';
+
+  if (db_select('mediamosa_asset_metadata_property', 'ampg')
+    ->fields('ampg')
+    ->condition('propgroup_id', $property_group['propgroup_id'])
+    ->condition('prop_name', $prop_name)
+    ->execute()
+    ->fetchAssoc() === FALSE) {
+    db_insert('mediamosa_asset_metadata_property')
+      ->fields(array(
+          'app_id' => 0,
+          'propgroup_id' => $property_group['propgroup_id'],
+          'prop_name' => $prop_name,
+          'type' => mediamosa_asset_metadata_property_db::TYPE_DATETIME,
+          'is_hidden' => 'FALSE',
+          'min_occurrences' => 0,
+          'max_occurrences' => 1,
+          'created' => mediamosa_datetime::utc_current_timestamp_now(),
+          'changed' => mediamosa_datetime::utc_current_timestamp_now(),
+        ))
+      ->execute();
+  }
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_asset_update_7002() {
   db_query('DELETE FROM {registry}');
   db_query('DELETE FROM {registry_file}');
   drupal_flush_all_caches();
