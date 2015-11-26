@@ -69,7 +69,8 @@ class mediamosa_mimetype {
    *   The mime type or FALSE if file does not exists or isn't a file.
    */
   public static function get_mime_type($uri) {
-    if (!mediamosa_io::file_exists($uri) || !mediamosa_io::is_file($uri)) {
+
+    if (!(mediamosa_io::file_exists($uri) && (mediamosa_io::is_file($uri) || mediamosa_io::is_dir($uri)))) {
       return FALSE;
     }
 
@@ -102,7 +103,6 @@ class mediamosa_mimetype {
         }
       }
     }
-
     return $file_mime;
   }
 
