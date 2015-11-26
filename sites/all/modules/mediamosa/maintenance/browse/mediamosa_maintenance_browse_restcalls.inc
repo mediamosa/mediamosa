@@ -441,6 +441,8 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   // Get the var setup for this call.
   $var_setup = $mediamosa_rest_call->get_var_setup();
 
+  drupal_alter('mediamosa_rest_call_var_setup', $mediamosa_rest_call, $var_setup);
+
   // Setup the title with the REST call URI.
   drupal_set_title(
     t('Viewing details rest call URI @uri, method [@method]',

@@ -266,6 +266,7 @@ abstract class mediamosa_rest_call {
 
     // Get the var setup.
     $var_setup = $this->get_var_setup();
+    drupal_alter('mediamosa_rest_call_var_setup', $this, $var_setup);
 
     // Assert when failed.
     assert($var_setup);
@@ -885,7 +886,7 @@ abstract class mediamosa_rest_call {
         if (!isset($var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
         }
-
+        
         if (isset($this->rest_args[$key_get])) {
           if ($this->rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => print_r($this->rest_args[$key_get][self::PARAM_VALUE], TRUE), '@value2' => print_r($value_get, TRUE)));

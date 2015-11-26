@@ -22,6 +22,7 @@
  * hook_mediamosa_status_collect_realtime
  * hook_mediamosa_response_get
  * hook_mediamosa_pass_call_drupal (needs rename).
+ * hook_mediamosa_rest_call_var_setup
  */
 
 /**
