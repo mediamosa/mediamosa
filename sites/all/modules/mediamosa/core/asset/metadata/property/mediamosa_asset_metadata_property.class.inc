@@ -374,6 +374,15 @@ class mediamosa_asset_metadata_property {
    */
   public static function get_metadata_properties_full($mixed_app_id = FALSE, array $metadata_property_groups = array()) {
 
+    // Caching.
+    static $metadata_properties_full = array();
+
+    // Check if its in our cache.
+    $key = serialize(array($metadata_property_groups, $mixed_app_id));
+    if (isset($metadata_properties_full[$key])) {
+      return $metadata_properties_full[$key];
+    }
+
     // Get all metadata property groups.
     if (empty($metadata_property_groups)) {
       foreach (module_implements('mediamosa_metadata_info') as $module) {
@@ -389,7 +398,10 @@ class mediamosa_asset_metadata_property {
       }
     }
 
-    return mediamosa_asset_metadata_property::get_metadata_properties($metadata_property_groups);
+    $res = mediamosa_asset_metadata_property::get_metadata_properties($metadata_property_groups);
+    // Store in cache.
+    $metadata_properties_full[$key] = $res;
+    return $res;
   }
 
   /**
