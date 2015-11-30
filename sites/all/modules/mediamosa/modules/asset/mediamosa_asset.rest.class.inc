@@ -19,6 +19,9 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   const NEW_APP_ID = 'new_app_id';
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Variables setup.
+   */
   public function get_var_setup() {
     $var_setup = array();
 
@@ -48,11 +51,13 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
-        self::OLD_APP_ID => array( // Unused.
+        // Unused.
+        self::OLD_APP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
           self::VAR_DESCRIPTION => 'The current app to replace.',
         ),
-        self::NEW_APP_ID => array( // Unused.
+        // Unused.
+        self::NEW_APP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
           self::VAR_DESCRIPTION => 'The new app to replace with.',
         ),
@@ -63,14 +68,15 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     return self::get_var_setup_default($var_setup);
   }
 
+  /**
+   * Perform restcall.
+   */
   public function do_call() {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
 
-    /*
-     * Because its to dangerous, new_app_id/old_app_id has been turned off (#774).
-     */
+    // Because its to dangerous, new_app_id/old_app_id is turned off (#774).
     $old_owner_id = $this->get_param_value(self::OLD_OWNER_ID);
     $new_owner_id = $this->get_param_value(self::NEW_OWNER_ID);
     $old_group_id = $this->get_param_value(self::OLD_GROUP_ID);
@@ -151,7 +157,6 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
  * Method: GET
  *
  * 1.x: media_management_asset_count
- *
  */
 class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -160,6 +165,9 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
   const OWNER_ID = 'owner_id';
 
   // ------------------------------------------------------------------ Var Setup.
+  /**
+   * Variables setup.
+   */
   public function get_var_setup() {
     $var_setup = array();
 
@@ -177,7 +185,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
-      )
+      ),
     );
 
     // Enrich with required REST vars.
@@ -262,6 +270,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const ALIAS_AUT_REALM = 'aut_realm';
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * Get search parameters().
+   */
   public static function get_search_params() {
     return array(
       'asset_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
@@ -489,8 +500,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_OPERATOR,
           self::VAR_DESCRIPTION => 'For non-CQL search only; provide either OR or AND for search parameters..',
           self::VAR_DEFAULT_VALUE => 'and',
-        )
-      )
+        ),
+      ),
     );
 
     // Include limit, offset vars.
@@ -777,7 +788,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
-  const FAV_TYPE= 'fav_type';
+  const FAV_TYPE = 'fav_type';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -825,7 +836,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
   const DELETE = 'delete';
   const TRASHCAN = 'trashcan';
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -889,7 +900,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
 
     // Asset must exist to be deleted.
     // Get asset.
-    $asset = mediamosa_asset::must_exists($asset_id, null, TRUE);
+    $asset = mediamosa_asset::must_exists($asset_id, NULL, TRUE);
 
     // Must be owner / app_admin to delete.
     mediamosa_acl::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
@@ -913,7 +924,7 @@ class mediamosa_rest_call_asset_restore extends mediamosa_rest_call {
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   public function get_var_setup() {
     $var_setup = array(
       self::VARS => array(
@@ -984,7 +995,7 @@ class mediamosa_rest_call_asset_restore_all extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'User ID, must be owner of the trashcanned asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
-      )
+      ),
     );
 
     // Include default.
@@ -1021,7 +1032,7 @@ class mediamosa_rest_call_asset_restore_all extends mediamosa_rest_call {
             'asset_id' => $asset_id,
             'result' => mediamosa_response::SUCCESS,
             'result_id' => mediamosa_error::ERRORCODE_OKAY,
-            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY)
+            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
           )
         );
       }
@@ -1031,7 +1042,7 @@ class mediamosa_rest_call_asset_restore_all extends mediamosa_rest_call {
             'asset_id' => $asset_id,
             'result' => mediamosa_response::ERROR,
             'result_id' => $e->getCode(),
-            'result_description' => $e->getMessage()
+            'result_description' => $e->getMessage(),
           )
         );
       }
@@ -1052,7 +1063,8 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
-  const ACL_USER_ID = 'acl_user_id'; // Alias for user_id.
+  // Alias for user_id.
+  const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
   const ACL_DOMAIN = 'acl_domain';
   const ACL_REALM = 'acl_realm';
@@ -1689,7 +1701,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_DEFAULT_VALUE => $trashcan_default,
         ),
-      )
+      ),
     );
 
     // Include default.
@@ -1734,7 +1746,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
             'asset_id' => $asset_id,
             'result' => mediamosa_response::SUCCESS,
             'result_id' => mediamosa_error::ERRORCODE_OKAY,
-            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY)
+            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
           )
         );
       }
@@ -1744,7 +1756,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
             'asset_id' => $asset_id,
             'result' => mediamosa_response::ERROR,
             'result_id' => $e->getCode(),
-            'result_description' => $e->getMessage()
+            'result_description' => $e->getMessage(),
           )
         );
       }
@@ -1811,7 +1823,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => "The default published value of the asset. This default is overridden by the client application default, which is by default 'TRUE'.",
           self::VAR_DEFAULT_VALUE => $publish_default,
         ),
-      )
+      ),
     );
 
     // The default value is depended on the value set on the client application.
@@ -1962,7 +1974,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
       $this->set_param_value(self::IS_INAPPROPRIATE, $this->get_param_value(self::IS_INAPPROPRIATE));
     }
 
-    $is_unappropriate =  $this->get_param_value(self::IS_INAPPROPRIATE);
+    $is_unappropriate = $this->get_param_value(self::IS_INAPPROPRIATE);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
@@ -2042,7 +2054,6 @@ class mediamosa_rest_call_asset_publish extends mediamosa_rest_call {
    * The var setup contains the properties description of the rest call.
    *
    * @return array
-   *
    */
   public function get_var_setup() {
     $var_setup = array();
@@ -2107,7 +2118,6 @@ class mediamosa_rest_call_asset_publish_multi extends mediamosa_rest_call {
    * The var setup contains the properties description of the rest call.
    *
    * @return array
-   *
    */
   public function get_var_setup() {
     $var_setup = array();
@@ -2146,7 +2156,7 @@ class mediamosa_rest_call_asset_publish_multi extends mediamosa_rest_call {
     $asset_ids = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
-    $result[] = array();
+    $result = array();
     $failed = 0;
     foreach ($asset_ids as $asset_id) {
       try {
@@ -2179,7 +2189,6 @@ class mediamosa_rest_call_asset_publish_multi extends mediamosa_rest_call {
       mediamosa_sdk::ERRORCODE_OKAY
     );
 
-
     // Default OK.
     $mediamosa->set_result_okay();
   }
@@ -2199,7 +2208,6 @@ class mediamosa_rest_call_asset_unpublish extends mediamosa_rest_call {
    * The var setup contains the properties description of the rest call.
    *
    * @return array
-   *
    */
   public function get_var_setup() {
     $var_setup = array();
@@ -2303,7 +2311,7 @@ class mediamosa_rest_call_asset_unpublish_multi extends mediamosa_rest_call {
     $asset_ids = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
-    $result[] = array();
+    $result = array();
     $failed = 0;
     foreach ($asset_ids as $asset_id) {
       try {
