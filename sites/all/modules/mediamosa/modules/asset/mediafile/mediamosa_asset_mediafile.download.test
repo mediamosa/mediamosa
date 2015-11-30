@@ -70,7 +70,10 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     $result = mediamosa_http::drupal_http_request($download);
 
     $this->var_export($result->headers);
-    $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    $this->var_export($_SERVER);
+    if (isset($_SERVER['REDIRECT_STATUS'])) {
+      $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    }
     $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got download.');
 
     // Set acl.
@@ -98,7 +101,10 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     $result = mediamosa_http::drupal_http_request($download);
 
     $this->var_export($result->headers);
-    $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    $this->var_export($_SERVER);
+    if (isset($_SERVER['REDIRECT_STATUS'])) {
+      $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    }
     $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got response download.');
 
     $this->deleteMediafileAcl($mediafile_id);
