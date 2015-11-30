@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2195)
+MediaMosa 3.6.1-dev (build 2196)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -346,6 +346,30 @@ MediaMosa 3.6.1-dev (build 2195)
   status page for download servers.
 - Fixed several CQL parsing when using complex ORs and ANDs, with or without
   combinations with NOT operator.
+- Client application quota is no longer requird and can be set 0 for unlimited
+  quota.
+- Made possible for REST calls to allow -1 value for limit parameter.
+- Minor code style fix.
+- Added metadata namespaces to xml output.
+- Fixed admin interface: edit of trashcan assets.
+- Code style fixes.
+- Extended unit test to support param 'use_existing_mediafile' to
+  /upload/ticket/create.
+- Added extra validation to download test.
+- Introduced temp dir for tools.
+- Added debug info with server /media alias check.
+- Fixed lower to upper of trashcan value.
+- Added new rest call /upload/ticket/create.
+- Small fixes for drush.
+- Made remove_public_link() more cache save.
+- Added get_empty_mf_by_asset_id() to allow finding empty mediafiles on asset.
+- Fixed error messages for failed still jobs.
+- Allow determination mimetype of directories.
+- Added hook_mediamosa_rest_call_var_setup(), allowing modules to change the
+  REST call variable/parameter setup info.
+- Added support for post_convert function on tool class.
+- Added static caching for metadata propery information.
+- Added support for trashcan_date, date when asset was put into trashcan.
 
 
 MediaMosa 3.5.x (build 2072)
