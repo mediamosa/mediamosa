@@ -1315,4 +1315,40 @@ class mediamosa_asset_mediafile {
       );
     }
   }
+
+  /**
+   * Get an empty mediafile when given an asset id.
+   */
+  public static function get_empty_mf_by_asset_id($asset_id) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+           ->fields('mf', array('mediafile_id'))
+           ->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+
+    // Only originals.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+
+    // Skip stills.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+
+    // No Metadata.
+    $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
+    $query->condition('mfm.val_char', NULL);
+
+    // Transcode profile query.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, NULL);
+
+    // Transcode tool.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::TOOL, NULL);
+
+    // Tag query.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::TAG, NULL);
+
+    // Filename.
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::FILENAME, NULL);
+
+    $query->range(0, 1);
+
+    return $query->execute()->fetchField();
+  }
 }
