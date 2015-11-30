@@ -949,7 +949,7 @@ function drush_mediamosa_mm_analyse_app($app_id) {
   $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
   $mediafiles = $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
 
-  foreach ($mediafiles as $mediafile_id => $mediafile) {
+  foreach (array_keys($mediafiles) as $mediafile_id) {
     drush_mediamosa_mm_analyse($mediafile_id, $priority);
   }
 }
@@ -1331,16 +1331,14 @@ function drush_mediamosa_mm_job_cancel($job_id) {
     return drush_set_error('', dt('Invalid job id.'));
   }
 
-  $fields = array(
-    mediamosa_job_db::APP_ID,
-    mediamosa_job_db::OWNER_ID,
-  );
+  // Get the statusfile filename.
+  $statusfile = mediamosa_storage::get_realpath_status_file($job_id);
 
-  $job = mediamosa_job::get($job_id, $fields);
+  // Append failure text to status file.
+  $error_status = "\nErrors: error\nStatus: error\nProgress: 1.000\nWarnings: cancelled by admin.\n";
 
-  mediamosa_job::cancel_job($job[mediamosa_job_db::APP_ID], $job_id, $job[mediamosa_job_db::OWNER_ID]);
-
-  drush_print('Job cancel request done: ' . print_r($job, TRUE) . '.');
+  file_put_contents($statusfile, $error_status, FILE_APPEND | LOCK_EX);
+  drush_print('Job cancel request done: ' . print_r($job_id, TRUE) . '.');
 }
 
 /**
