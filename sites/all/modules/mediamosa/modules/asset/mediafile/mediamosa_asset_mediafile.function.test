@@ -72,6 +72,13 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
       t("The value transcode_inherits_acl is true.")
     );
 
+    // Test get_empty_mf_by_asset_id().
+    $result = mediamosa_asset_mediafile::get_empty_mf_by_asset_id($asset_id);
+    $this->assertTrue(
+      $result == $mediafile_id,
+      t("Test working of get_empty_mf_by_asset_id().")
+    );
+
     //
     // Update a mediafile (transcode_inherits_acl)
     // [post] mediafile/update
@@ -131,6 +138,13 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJo
     $this->assertTrue(
       $a_mediafile[mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL] == 'TRUE',
       t("The value transcode_inherits_acl is true.")
+    );
+
+    // Test get_empty_mf_by_asset_id().
+    $result = mediamosa_asset_mediafile::get_empty_mf_by_asset_id($asset_id);
+    $this->assertTrue(
+      $result === FALSE,
+      t("Test working of get_empty_mf_by_asset_id(), mf is not empty anymore.")
     );
 
     //
