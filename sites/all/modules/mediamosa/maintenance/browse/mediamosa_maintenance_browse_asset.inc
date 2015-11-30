@@ -1007,7 +1007,7 @@ function _mediamosa_browse_asset_page_view_supplements_list($asset) {
     $approx_size = $length_encoded > 16 * 1024 ? round($length_encoded * 3 / 4) : drupal_strlen(base64_decode($item['supplement_base64']));
 
     $approx_size = format_size($approx_size);
-    $rows[$item['created']] = array(
+    $rows[] = array(
       $item['supplement_id'],
       $item['created'],
       $item['changed'],
@@ -1039,7 +1039,7 @@ function _mediamosa_browse_asset_page_view_supplements_list($asset) {
 function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
 
   // Do REST call.
-  $result_asset = mediamosa_response_connector::static_do_restcall_drupal('asset/' . $asset_id, 'GET', array());
+  $result_asset = mediamosa_response_connector::static_do_restcall_drupal('asset/' . $asset_id, 'GET', array('trashcan' => TRUE));
 
   if (!mediamosa_response_connector::static_result_okay($result_asset)) {
     drupal_set_message(t('Asset with ID @asset_id does not exists.', array('@asset_id' => $asset_id)), 'warning');
@@ -1252,6 +1252,8 @@ function mediamosa_browse_asset_form_submit($form, &$form_state) {
     // Needed.
     $params['app_id'] = $asset['app_id'];
     $params['user_id'] = $asset['owner_id'];
+
+    $params['is_app_admin'] = 'TRUE';
 
     $uri = strtr('asset/@asset_id/metadata', array('@asset_id' => $asset_id));
 
