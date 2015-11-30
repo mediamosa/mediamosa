@@ -308,6 +308,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     }
   }
   catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception: test.txt not created: @msg', array('@msg' => $e->getMessage()));
   }
 
   foreach ($servers as $key => $server) {
@@ -327,15 +328,16 @@ function _mediamosa_maintenance_status_configuration_generate() {
         array(
           '@type' => $type,
           '@name' => $server[mediamosa_server_db::SERVER_NAME],
-          '@uri' => $server[mediamosa_server_db::SERVER_URI]
+          '@uri' => $server[mediamosa_server_db::SERVER_URI],
         )
+
       )
       :
       t('Alias not working for @type server \'@name\', uri: @uri',
         array(
           '@type' => $type,
           '@name' => $server[mediamosa_server_db::SERVER_NAME],
-          '@uri' => $server[mediamosa_server_db::SERVER_URI]
+          '@uri' => $server[mediamosa_server_db::SERVER_URI],
         )
       );
 
