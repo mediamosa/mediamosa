@@ -389,12 +389,21 @@ abstract class mediamosa_rest_call {
   }
 
   /**
-   * Enrich the VAR setup with the default LIMIT and OFFSET
+   * Enrich the VAR setup with the default LIMIT and OFFSET.
    *
    * @param array $var_setup
-   *   Provide current array to merge.
+   *   The var setup to append.
+   * @param int $limit_max
+   *   Maximm limit size.
+   * @param int $limit_default
+   *   Default limit size when not provided by REST call.
+   * @param int $limit_start
+   *   The start value of limit, defaults to 0.
+   *
+   * @return array
+   *   The var setup with limit range.
    */
-  protected function get_var_setup_range(array $var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
+  protected function get_var_setup_range(array $var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT, $limit_start = 0) {
 
     $var_setup[self::VARS][self::LIMIT] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_LIMIT,
@@ -404,7 +413,7 @@ abstract class mediamosa_rest_call {
        // Once set, dont change.
       self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES,
       self::VAR_DESCRIPTION => mediamosa::t('Limit of the items of the result set.'),
-      self::VAR_RANGE_START => 0,
+      self::VAR_RANGE_START => $limit_start,
       self::VAR_RANGE_END => $limit_max,
     );
 
@@ -886,7 +895,7 @@ abstract class mediamosa_rest_call {
         if (!isset($var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
         }
-        
+
         if (isset($this->rest_args[$key_get])) {
           if ($this->rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => print_r($this->rest_args[$key_get][self::PARAM_VALUE], TRUE), '@value2' => print_r($value_get, TRUE)));

@@ -186,10 +186,16 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_LIMIT:
-        $range_start = 0;
+        $range_end = is_null($range_end) ? 0 : $range_end;
         if ($range_end < 1) {
           $range_end = mediamosa_settings::LIMIT_MAX;
         }
+
+        if (!is_numeric($mixed_param_value) && $mixed_param_value != '') {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+        $checked_param_value = (int) $mixed_param_value;
+        break;
 
       case mediamosa_sdk::TYPE_JOB_ID:
       case mediamosa_sdk::TYPE_UINT:
@@ -198,7 +204,8 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
         $checked_param_value = (int) $mixed_param_value;
-        if ($checked_param_value < 0) { // unsigned only
+        // Unsigned only.
+        if ($checked_param_value < 0) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
         break;
