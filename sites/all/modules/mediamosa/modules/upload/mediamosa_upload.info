@@ -1,0 +1,12 @@
+name = Upload
+description = MediaMosa Upload module
+package = MediaMosa - Modules
+version = 7.x-3.5
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_upload.rest.class.inc
+files[] = mediamosa_upload_ticket.test

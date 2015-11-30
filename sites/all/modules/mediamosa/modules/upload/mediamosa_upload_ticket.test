@@ -1,0 +1,198 @@
+<?php
+/**
+ * @file
+ * Upload test of Upload tickets.
+ */
+
+class MediaMosaUploadTicketTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Upload - Create ticket(s)',
+      'description' => 'Tests for the rest call /upload/ticket/create.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    parent::setUp('mediamosa_upload');
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Test for basic working of /upload/ticket/create.
+   */
+  public function testUploadTicket() {
+
+    // Parameters.
+    $parameters = array(
+      mediamosa_rest_call_upload_ticket_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_upload_ticket_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_upload_ticket_create::GROUP_ID => '',
+      mediamosa_rest_call_upload_ticket_create::COUNT => 3,
+    );
+
+    // Set the URI.
+    $uri = strtr('upload/ticket/create', $parameters);
+
+    $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY);
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids);
+
+    $this->var_export($response);
+
+    // Get values.
+    $action = empty($response['xml']->items->item[1]->action) ? NULL : (string) $response['xml']->items->item[1]->action;
+    $uploadprogress_url = empty($response['xml']->items->item[1]->uploadprogress_url) ? NULL : (string) $response['xml']->items->item[1]->uploadprogress_url;
+    $mediafile_id = empty($response['xml']->items->item[1]->mediafile_id) ? NULL : (string) $response['xml']->items->item[1]->mediafile_id;
+    $asset_id = empty($response['xml']->items->item[1]->mediafile_id) ? NULL : (string) $response['xml']->items->item[1]->asset_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Created upload ticket with action '@action', uploadprogress_url '@uploadprogress_url', got result @result (@result_description)",
+        array(
+          '@action' => $action,
+          '@uploadprogress_url' => $uploadprogress_url,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description,
+        )
+      )
+    );
+
+    // Now upload something to ticket no. 2.
+
+    // Get link to upload file.
+    $filename = empty($filename) ? $this->getTestVideo() : $filename;
+
+    // Get the filesize of the original.
+    $filesize_original = mediamosa_io::filesize($filename);
+
+    // Rebuild url.
+    $parse_url = mediamosa_http::parse_url($action);
+
+    // Split up query_string.
+    $parse_url['query'] = mediamosa_http::parse_query(empty($parse_url['query']) ? '' : $parse_url['query']);
+    $parse_url['query']['transcode_inherits_acl'] = 'TRUE';
+    $parse_url['query']['create_still'] = 'FALSE';
+    // Rebuild.
+    $parse_url['query'] = mediamosa_http::http_build_query($parse_url['query']);
+
+    // Rebuild the $action.
+    $action = mediamosa_http::build_url($parse_url);
+
+    // No headers.
+    $headers = array();
+
+    if (class_exists('CURLFile')) {
+      $postfields = array('file' => new CURLFile($filename));
+    }
+    else {
+      // File.
+      $postfields = array('file' => '@' . $filename);
+    }
+
+    // Upload the test file.
+    $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
+
+    // Our upload.
+    $this->verbose('POST request to: ' . $action .
+                   '<hr />Ending URL: ' . $this->getUrl() .
+                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
+                   '<hr />' . $out);
+
+    // Add for deletion.
+    $this->mediafiles_cleanup[] = $mediafile_id;
+
+    // Replace original page output with new output from redirected page(s).
+    $new = $this->checkForMetaRefresh();
+    if ($new) {
+      $out = $new;
+    }
+
+    list($response, ) = explode("\r\n\r\n", $out, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    // Parse the response status line.
+    list(, $code, ) = explode(' ', trim(array_shift($response)), 3);
+
+    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+
+    // Get the upload job.
+    $job = mediamosa_job::get_by_mediafileid($mediafile_id);
+    $this->var_export($job, 'Dump Job');
+
+    // Get upload job.
+    $job_upload = mediamosa_job_upload::get($job[mediamosa_job_db::ID]);
+    $this->var_export($job_upload, 'Dump Job Upload');
+
+    // Check sizes.
+    $this->assertTrue($job_upload['file_size'] == $filesize_original, '$job_upload->file_size [' . $job_upload['file_size'] .  '] must be [' . $filesize_original . ']');
+    $this->assertTrue($job_upload['uploaded_file_size'] == $filesize_original, '$job_upload->uploaded_file_size [' . $job_upload['uploaded_file_size'] .  '] must be  [' . $filesize_original . ']');
+
+    // Get the mediafile.
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile_uri = mediamosa_storage::get_uri_mediafile($mediafile);
+
+    // So we know what the path is.
+    $this->var_export($mediafile);
+    $this->pass($mediafile_uri);
+    $this->pass(mediamosa_storage::get_realpath_mediafile($mediafile));
+
+    // Check if the file has been uploaded.
+    $this->assertTrue(mediamosa_io::file_exists($mediafile_uri), 'File has been uploaded.');
+    // Check the size.
+    $filesize_uploaded = mediamosa_io::filesize($mediafile_uri);
+    $this->assertTrue($filesize_uploaded, 'Uploaded filesize [' . $filesize_uploaded . '] the same as original  [' . $filesize_original . ']');
+
+    /*
+     * Second test:parameter asset_id instead of count.
+     */
+    $asset_ids = array();
+    $asset_ids[] = $this->createAsset();
+    $asset_ids[] = $this->createAsset();
+    $asset_ids[] = $this->createAsset();
+    $asset_ids[] = 'foo';
+
+    // Parameters.
+    $parameters = array(
+      mediamosa_rest_call_upload_ticket_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_upload_ticket_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_upload_ticket_create::GROUP_ID => '',
+      mediamosa_rest_call_upload_ticket_create::ASSET_ID => $asset_ids,
+    );
+
+    // Do Post call.
+    $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY);
+    $response = $this->restCallPost('upload/ticket/create', $parameters, array());
+
+    $this->var_export($response);
+
+    $this->assertTrue(
+      $response['xml']->items->item[0]->asset_id == $asset_ids[0],
+      'test uploadticket for asset id 1'
+    );
+    $this->assertTrue(
+      $response['xml']->items->item[1]->asset_id == $asset_ids[1],
+      'test uploadticket for asset id 2'
+    );
+    $this->assertTrue(
+      $response['xml']->items->item[2]->asset_id == $asset_ids[2],
+      'test uploadticket for asset id 3'
+    );
+    $this->assertTrue(
+      $response['xml']->header->item_count_total == 3,
+      'Total amount of items: 3'
+    );
+  }
+}

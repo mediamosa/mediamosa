@@ -1,0 +1,55 @@
+<?php
+/**
+ * @file
+ * mediamosa_upload.module.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_upload_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Create ticket for upload.
+  $rest_calls['upload/ticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_upload_ticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_upload_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+  $rest_calls['upload/ticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create one or more upload tickets.',
+    mediamosa_rest_call::DESCRIPTION => 'Create one or more tickets for upload, together with the asset and mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/upload/ticket/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD</action>
+    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=987654</uploadprogress_url>
+    <asset_id>Z1ZmZMMNhLHIfGj9cgSvAd2R</asset_id>
+    <mediafile_id>p1HmZQsMeG8ciqVVRXkVoAhM</mediafile_id>
+    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+    <progress_id>987654</progress_id>
+  </item>
+  <item id="2">
+    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=duMJf9XkeYulhRiMRV6katFI</action>
+    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
+    <asset_id>i16VddXNObxSfcTJnPa1DhO0</asset_id>
+    <mediafile_id>H28NaCf9lgFWPVlUQPx7Wr6a</mediafile_id>
+    <ticket_id>V2R8eh8LUdMLn8QfoIgbrw4K</ticket_id>
+    <progress_id>123456</progress_id>
+    <server_id>131</server_id>
+  </item>
+</items>',
+  );
+  return $rest_calls;
+}
