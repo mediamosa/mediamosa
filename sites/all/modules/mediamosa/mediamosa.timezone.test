@@ -322,6 +322,9 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'asset/$asset_id/supplement/create',
       'asset/$asset_id/supplement/$supplement_id/update',
       'asset/duplicates',
+      'app/quota',
+      'group/$group_id',
+      'user/$user_id',
     );
 
     $uri_fixed_params = array(
