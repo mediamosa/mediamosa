@@ -24,9 +24,11 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
     $user_id = $this->randomName();
     $group_id = $this->randomName();
 
-    // Maximum for 32 bits computer:
-    // 2^32 / 2 (signed int) / 1024 (Kb) / 1024 (Mb) - 2 (test uses $quotum + 1) =  2046.
-    $quotum = rand(100, PHP_INT_SIZE > 4 ? 9999 : 2046);
+    $app_quota_mb = 1024;
+
+    // User quota can not pass app for this test.
+    $quotum = $app_quota_mb;
+
     $parameters = array(
       mediamosa_rest_call_group_create::QUOTUM => $quotum,
     );
@@ -101,7 +103,7 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
 
       // Check response.
       $this->assertTrue($group['group_diskspace_used_mb'] == $filesize_mb, t('Group. Filesize is @get. Must be @filesize mb.', array('@get' => $group['group_diskspace_used_mb'], '@filesize' => $filesize_mb)));
-      $this->assertTrue($group['group_quota_mb'] == $quotum, t('Quotum has the good value (@get = @quotum).', array('@get' => $group['group_quota_mb'], '@quotum' => $quotum)));
+      $this->assertTrue($group['group_quota_mb'] == $quotum, t('Quotum has the right value (@get = @quotum).', array('@get' => $group['group_quota_mb'], '@quotum' => $quotum)));
       $this->assertTrue($group['quota_available_mb'] == $quotum - $filesize_mb, t('Available quotum has the good value (@get = @quotum - @filesize).', array('@get' => $group['quota_available_mb'], '@quotum' => $quotum, '@filesize' => $filesize_mb)));
       $this->assertTrue($group['group_over_quota'] == ($quotum - $filesize_mb < 0 ? 'true' : 'false'), t('Group over quota boolean has the good value.'));
 

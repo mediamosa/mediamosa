@@ -1090,7 +1090,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::APP_NAME} = $name;
     $node->{mediamosa_app_db::ACTIVE} = 'TRUE';
     $node->{mediamosa_app_db::TRANSCODING_POSITION_TO} = 0;
-    $node->{mediamosa_app_db::QUOTA} = 0;
+    // By default, 1gb quota.
+    $node->{mediamosa_app_db::QUOTA} = 1;
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
     $node->{mediamosa_app_db::TIMEZONE} = $fields[mediamosa_app_db::TIMEZONE];

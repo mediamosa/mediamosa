@@ -348,7 +348,9 @@ class mediamosa_user {
    *  The group ID.
    */
   public static function must_have_user_quota($app_id, $user_id = '', $group_id = '') {
-    if (!self::check_user_quota($app_id, $user_id, $group_id)) {
+    // If quota is off on app, then we always have enough quota.
+    $app = mediamosa_app::get_by_appid($app_id);
+    if (!empty($app[mediamosa_app_db::QUOTA]) && !self::check_user_quota($app_id, $user_id, $group_id)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NOT_ENOUGH_FREE_QUOTA);
     }
   }

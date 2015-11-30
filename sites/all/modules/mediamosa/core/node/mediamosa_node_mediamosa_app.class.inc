@@ -433,7 +433,6 @@ function mediamosa_app_form($node, &$form_state) {
   $form['client_application'][mediamosa_app_db::QUOTA] = array(
     '#type' => 'textfield',
     '#title' => t('Quota'),
-    '#required' => TRUE,
     '#description' => t('Quota for disk space usage in GB.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::QUOTA, $node),
   );
