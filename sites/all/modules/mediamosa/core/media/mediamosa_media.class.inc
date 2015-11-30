@@ -1162,15 +1162,13 @@ class mediamosa_media {
     mediamosa_io::clearstatcache($media_location);
 
     if (mediamosa_io::file_exists($media_location)) {
-      // Remove permanent links of mediafile.
-      mediamosa_io::exec(
-        strtr(
-          'find @media_location -maxdepth 1 -mindepth 1 -type l -delete',
-          array(
-            '@media_location' => $media_location,
-          )
-        )
-      );
+      // Remove all symlinks in this directory, no recursion.
+      $files = glob($media_location . '*');
+      foreach ($files as $file) {
+        if (is_link($file)) {
+          unlink($file);
+        }
+      }
 
       // Clear cache for this file.
       mediamosa_io::clearstatcache($media_location);
