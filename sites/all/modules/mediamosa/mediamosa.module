@@ -862,6 +862,21 @@ function mediamosa_mediamosa_configuration_collect() {
     '#default_value' => mediamosa::variable_get('mediamosa_storage_transition_max_lifetime_days', '14'),
   );
 
+  $form['settings_storage']['tools'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Temporary tools path'),
+    '#description' => t('The Tools may use a different mount point for creating temporary files. This may only be accessible locally on the job server that performs the conversion.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['settings_storage']['tools']['mediamosa_current_mount_point_temp_tools'] = array(
+    '#type' => 'textfield',
+    '#title' => t('MediaMosa temporary tools path'),
+    '#description' => t('The linux path for temporary files directory for tools. This may only be accessible locally on the job server that performs the conversion.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa::variable_get('mediamosa_current_mount_point_temp_tools', '/srv/mediamosa/data/transcode'),
+  );
+
   $form['settings_mediamosa'] = array(
     '#type' => 'fieldset',
     '#title' => t('Miscellaneous'),
