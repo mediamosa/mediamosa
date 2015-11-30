@@ -236,6 +236,7 @@ class mediamosa_rest {
     $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
     $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
+
     // Sort on URI.
     ksort($rest_calls);
 
