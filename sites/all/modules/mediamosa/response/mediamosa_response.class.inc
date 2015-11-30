@@ -1111,6 +1111,14 @@ class mediamosa_response extends mediamosa {
 
     // Response element.
     $dom_element_response = $dom_document->createElement('response');
+
+    $metadata_property_groups = module_invoke_all('mediamosa_metadata_info');
+    foreach ($metadata_property_groups as $group) {
+      if (isset($group['namespace']) && ($group['namespace'] != '')) {
+        $dom_element_response->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:' . $group['context'], $group['namespace']);
+      }
+    }
+
     $dom_document->appendChild($dom_element_response);
 
     // Header.
