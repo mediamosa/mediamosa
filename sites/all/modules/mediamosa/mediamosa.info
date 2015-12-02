@@ -12,7 +12,6 @@ dependencies[] = comment
 dependencies[] = color
 dependencies[] = help
 dependencies[] = menu
-dependencies[] = dblog
 dependencies[] = image
 dependencies[] = simpletest
 dependencies[] = mediamosa_sdk (>=3.6)
