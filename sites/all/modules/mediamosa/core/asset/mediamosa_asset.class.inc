@@ -304,13 +304,19 @@ class mediamosa_asset {
       // Remove the asset from each collection.
       mediamosa_asset_collection::delete($asset_id);
 
+      // Remove supplements.
+      mediamosa_asset_supplement::delete_from_asset($asset_id);
+
+      // Calling all modules implementing 'mediamosa_asset_delete'.
+      module_invoke_all('mediamosa_asset_delete', array($asset_id));
+
+      // Remove asset(s) from external databases.
+      mediamosa_search::asset_delete($asset_ids);
+
       // Now delete the asset.
       $query = mediamosa_db::db_delete(mediamosa_asset_db::TABLE_NAME);
       $query->condition(mediamosa_asset_db::ID, $asset_id);
       $query->execute();
-
-      // Call delete index on external database.
-      mediamosa_asset::mediamosa_asset_delete(array($asset_id));
     }
     catch (Exception $e) {
       $transaction->rollback();
@@ -1745,21 +1751,6 @@ class mediamosa_asset {
    */
   public static function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
     mediamosa_search::asset_reindex($asset_ids, $search_index_type);
-  }
-
-  /**
-   * Remove other references to asset.
-   *
-   * @param array $asset_ids
-   *   The assets to remove.
-   */
-  public static function mediamosa_asset_delete(array $asset_ids) {
-
-    // Trigger the asset_delete hook.
-    module_invoke_all('mediamosa_asset_delete', $asset_ids);
-
-    // Remove asset(s) from external databases.
-    mediamosa_search::asset_delete($asset_ids);
   }
 
   /**

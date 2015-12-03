@@ -187,5 +187,20 @@ function hook_mediafile_metadata_properties_alter(&$properties) {
 }
 
 /**
+ * Respond to asset deletion.
+ *
+ * This hook is invoked from mediamosa::delete() after the asset-related info is
+ * deleted, but before the asset is removed from the asset table in the database.
+ *
+ * @param $asset_id
+ *   The asset that is being deleted.
+ */
+function hook_mediamosa_asset_delete($asset_id) {
+  db_delete('mytable')
+    ->condition('asset_id', $asset_id)
+    ->execute();
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
