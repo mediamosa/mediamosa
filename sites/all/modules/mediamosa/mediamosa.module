@@ -496,7 +496,7 @@ function mediamosa_theme() {
 function mediamosa_mediamosa_metadata_info() {
   $metadata_info[mediamosa_metadata_asset::METADATA_PROPERTY_GROUP_NAME] = array(
     'title' => t('Asset'),
-    'description' => t('Internal used metadata for asset.'),
+    'description' => t('The asset metadata.'),
     'context' => 'asset',
     'context_full' => 'asset',
   );
@@ -1164,4 +1164,128 @@ function mediamosa_storage_local_mediamosa_storage_profile_view($node, $view_mod
     array(t('Windows Mount Point'), check_plain($wrapper->get_storage_path_windows())),
   );
   return $rows;
+}
+
+/**
+ * Implements hook_mediafile_metadata_properties().
+ */
+function mediamosa_mediafile_metadata_properties() {
+  return array(
+    'custom-width-height-fps' => array(
+      'title' => 'Width * Height @ fps',
+    ),
+    mediamosa_asset_mediafile_metadata::FILE_DURATION => array(
+      'title' => 'Duration',
+    ),
+    mediamosa_asset_mediafile_metadata::MIME_TYPE => array(
+      'title' => 'Mime Type',
+      'index' => TRUE,
+    ),
+    'custom-video-information' => array(
+      'title' => 'Video information',
+    ),
+    'custom-audio-information' => array(
+      'title' => 'Audio information',
+    ),
+    mediamosa_asset_mediafile_metadata::MD5 => array(
+      'title' => 'MD5',
+      'index' => TRUE,
+    ),
+    'custom-container' => array(
+      'title' => 'Container',
+    ),
+    mediamosa_asset_mediafile_metadata::FILESIZE => array(
+      'title' => 'Filesize',
+      'index' => TRUE,
+      'type' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
+    ),
+    mediamosa_asset_mediafile_metadata::IS_HINTED => array(
+      'title' => 'MP4 hinted',
+    ),
+    mediamosa_asset_mediafile_metadata::IS_INSERTED_MD => array(
+      'title' => 'FLV metadated',
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediafile_metadata_property_show_NAME().
+ */
+function mediamosa_mediafile_metadata_property_show_custom_container($metadata) {
+  if (!isset($metadata[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE]) || $metadata[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] === '') {
+    return '';
+  }
+  if (!isset($metadata[mediamosa_asset_mediafile_metadata::BITRATE]) || $metadata[mediamosa_asset_mediafile_metadata::BITRATE] === '') {
+    return $metadata[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE];
+  }
+
+  return strtr(
+    '!{container_type} @ !{bitrate}kbps',
+    array(
+      '!{container_type}' => $metadata[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE],
+      '!{bitrate}' => $metadata[mediamosa_asset_mediafile_metadata::BITRATE],
+    )
+  );
+}
+
+/**
+ * Implements hook_mediafile_metadata_property_show_NAME().
+ */
+function mediamosa_mediafile_metadata_property_show_custom_width_height_fps($metadata) {
+
+  if (empty($metadata[mediamosa_asset_mediafile_metadata::WIDTH])) {
+    return '';
+  }
+
+  return strtr(
+    '!{width}x!{height}px @ !{fps}fps',
+    array(
+      '!{width}' => $metadata[mediamosa_asset_mediafile_metadata::WIDTH],
+      '!{height}' => $metadata[mediamosa_asset_mediafile_metadata::HEIGHT],
+      '!{fps}' => empty($metadata[mediamosa_asset_mediafile_metadata::FPS]) ? 0 : $metadata[mediamosa_asset_mediafile_metadata::FPS],
+    )
+  );
+}
+
+/**
+ * Implements hook_mediafile_metadata_property_show_NAME().
+ */
+function mediamosa_mediafile_metadata_property_show_custom_video_information($metadata) {
+  if (!isset($metadata[mediamosa_asset_mediafile_metadata::VIDEO_CODEC]) || $metadata[mediamosa_asset_mediafile_metadata::VIDEO_CODEC] === '') {
+    return '';
+  }
+
+  return strtr(
+    '!{video_codec} @ !{bitrate}kbps @ !{colorspace}',
+    array(
+      '!{video_codec}' => $metadata[mediamosa_asset_mediafile_metadata::VIDEO_CODEC],
+      '!{bitrate}' => $metadata[mediamosa_asset_mediafile_metadata::BITRATE],
+      '!{colorspace}' => $metadata[mediamosa_asset_mediafile_metadata::COLORSPACE],
+    )
+  );
+}
+
+/**
+ * Implements hook_mediafile_metadata_property_show_NAME().
+ */
+function mediamosa_mediafile_metadata_property_show_custom_audio_information($metadata) {
+  if (!isset($metadata[mediamosa_asset_mediafile_metadata::AUDIO_CODEC]) || $metadata[mediamosa_asset_mediafile_metadata::AUDIO_CODEC] === '') {
+    return;
+  }
+
+  return strtr(
+    '!{audio_codec} @ !{sample_rate}Hz (!{channels})',
+    array(
+      '!{audio_codec}' => $metadata[mediamosa_asset_mediafile_metadata::AUDIO_CODEC],
+      '!{sample_rate}' => $metadata[mediamosa_asset_mediafile_metadata::SAMPLE_RATE],
+      '!{channels}' => empty($metadata[mediamosa_asset_mediafile_metadata::CHANNELS]) ? 0 : $metadata[mediamosa_asset_mediafile_metadata::CHANNELS],
+    )
+  );
+}
+
+/**
+ * Implements hook_mediafile_metadata_property_show_NAME().
+ */
+function mediamosa_mediafile_metadata_property_show_filesize($metadata) {
+  return empty($metadata[mediamosa_asset_mediafile_metadata::FILESIZE]) ? '' : format_size($metadata[mediamosa_asset_mediafile_metadata::FILESIZE]);
 }

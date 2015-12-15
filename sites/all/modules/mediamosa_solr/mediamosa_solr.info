@@ -21,6 +21,7 @@ files[] = tests/mediamosa_solr.related.test
 files[] = tests/mediamosa_solr.boost.test
 files[] = tests/mediamosa_solr.facet_search.test
 files[] = tests/mediamosa_solr.media.play_restriction.test
+files[] = tests/mediamosa_solr.mediafile.metadata.test
 files[] = tests/mediamosa_solr.stemming.test
 files[] = tests/mediamosa_solr.asset.cql.ext.test
 files[] = tests/mediamosa_solr.asset.cql.keeporder.test

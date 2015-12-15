@@ -635,7 +635,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
 
       // Make sure CQL is valid before we attach order by.
-      if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+      if (!empty($cql) && !mediamosa_search::asset_verify($cql, $app_ids, $error_text)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
       }
 
@@ -644,12 +644,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $has_sortby = mediamosa_unicode::stripos($cql, 'sortby ');
       $cql .= (!empty($cql) ? ' ' : '') . 'sortby ' . $order_by;
       $cql .= (empty($order_direction) ? '' : '/' . (mediamosa_unicode::strtolower($order_direction) == mediamosa_type::ORDER_DIRECTION_ASC ? 'ascending' : 'descending'));
-      if ($has_sortby && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+      if ($has_sortby && !mediamosa_search::asset_verify($cql, $app_ids, $error_text)) {
         throw new mediamosa_exception_error_cql_exclusive();
       }
     }
     else {
-      if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+      if (!empty($cql) && !mediamosa_search::asset_verify($cql, $app_ids, $error_text)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
       }
     }

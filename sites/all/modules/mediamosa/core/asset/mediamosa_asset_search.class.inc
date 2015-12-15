@@ -17,6 +17,23 @@ class mediamosa_asset_search {
 
   // ---------------------------------------------------------------- Functions.
   /**
+   * Verify the CQL syntax, used for CQL asset context set.
+   *
+   * @param string $cql
+   *   The CQL string.
+   * @param array $app_ids
+   *   The application IDs.
+   * @param string $error_text
+   *   The error text, in case of error.
+   *
+   * @return bool
+   *   Returns TRUE when no errors where found, FALSE otherwise.
+   */
+  public static function asset_verify($cql, $app_ids, &$error_text) {
+    return mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text);
+  }
+
+  /**
    * Search for assets with given parameters.
    *
    * @param array $a_app_ids

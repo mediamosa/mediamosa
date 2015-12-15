@@ -196,7 +196,18 @@ function mediamosa_solr_update_7004() {
  * Rebuild the registry.
  */
 function mediamosa_solr_update_7005() {
-  db_query('DELETE FROM {registry}');
-  db_query('DELETE FROM {registry_file}');
-  drupal_flush_all_caches();
+  $transaction = db_transaction();
+
+  try {
+    // Rebuild the registry from scratch.
+    db_query('DELETE FROM {registry}');
+    db_query('DELETE FROM {registry_file}');
+    drupal_flush_all_caches();
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
+  }
+
+  unset($transaction);
 }

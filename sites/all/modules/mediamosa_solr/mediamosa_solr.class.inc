@@ -50,11 +50,28 @@ class mediamosa_solr {
 
   // ---------------------------------------------------------------- Functions.
   /**
+   * Verify the CQL syntax, used for CQL asset context set.
+   *
+   * @param string $cql
+   *   The CQL string.
+   * @param array $app_ids
+   *   The application IDs.
+   * @param string $error_text
+   *   The error text, in case of error.
+   *
+   * @return bool
+   *   Returns TRUE when no errors where found, FALSE otherwise.
+   */
+  public static function asset_verify($cql, $app_ids, &$error_text) {
+    return mediamosa_solr_cql::verify_asset($cql, $app_ids, $error_text);
+  }
+
+  /**
    * Search for assets with given parameters.
    *
    * @param array $parameters
    *   An associative array.
-   *   - 'a_app_ids': Application IDs.
+   *   - 'app_ids': Application IDs.
    *   - 'cql': The CQL search string.
    *   - 'cql_store_stats': Process the CQL into keywords and store it for
    *     statistics. Should be TRUE only when CQL has been provided by user
@@ -86,9 +103,6 @@ class mediamosa_solr {
    *   - 'solr_facet': The facet data (solr specific).
    */
   public static function asset_search(array $parameters) {
-    // Make sure its unique.
-    $parameters['app_ids'] = array_unique($parameters['app_ids']);
-
     $solr_query = array();
 
     // Get the slaves based on the app ids for mediafiles.
@@ -98,6 +112,7 @@ class mediamosa_solr {
     $slave_assets = array(); // Off, not stable, mediamosa_acl_app_master_slave::slave_get($a_app_ids, mediamosa_acl::ACL_TYPE_ASSET);
 
     // Merge the slave app ids with my app ids.
+    $parameters['app_ids'] = array_unique($parameters['app_ids']);
     $app_ids_all = array_unique(array_merge($parameters['app_ids'], array_keys($slave_mediafiles), array_keys($slave_assets)));
     sort($app_ids_all);
 
@@ -1067,8 +1082,17 @@ class mediamosa_solr {
 
     mediamosa_exception::assert(is_string($asset_id));
 
+    $properties = array();
+    $mediafile_metadata_properties = module_invoke_all('mediafile_metadata_properties');
+    foreach ($mediafile_metadata_properties as $name => &$info) {
+      if (!empty($info['index'])) {
+        $properties[] = $name;
+        $info += array('type' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR);
+      }
+    }
+
     // Get all the data needed for indexing.
-    $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id);
+    $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id, $properties);
     if (empty($asset_for_index)) {
       return FALSE;
     }
@@ -1196,69 +1220,44 @@ class mediamosa_solr {
 
         switch ($metadata['type']) {
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            foreach ($metadata['values'] as &$value) {
-              $value = trim($value);
-            }
-
-            // Sort from low to high.
-            sort($metadata['values'], SORT_STRING);
-
-            $document->{$group_name_short. '_' . $name . '_vc'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
-            $document->{$group_name_short. '_' . $name . '_svc_hi'} = drupal_substr(end($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
-
-            foreach ($metadata['values'] as &$value) {
-              $value = drupal_truncate_bytes($value, variable_get('mediamosa_solr_max_term_length', 32760));
-            }
-
-            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vc_exact'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vc_exact_cs'} = $metadata['values'];
+            static::indexMetadataString($document, $group_name_short. '_' . $name, $metadata['values']);
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            // Dates from mediamosa are not completely comp. with Solr.
-            foreach ($metadata['values'] as $key => $date) {
-              if ($date == '0000-00-00 00:00:00' || empty($date)) {
-                continue;
-              }
-
-              $metadata['values'][$key] = drupal_substr($metadata['values'][$key], 0, 10) . 'T' . drupal_substr($metadata['values'][$key], 11, 8) . 'Z';
-
-              // Do not index invalid dates(!).
-              if (!preg_match('/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/', $metadata['values'][$key])) {
-                unset($metadata['values'][$key]);
-              }
-            }
-
-            // Values left?
-            if (empty($metadata['values'][$key])) {
-              continue;
-            }
-
-            // Sort from low to high.
-            sort($metadata['values'], SORT_STRING);
-
-            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vd'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_svd_lo'} = reset($metadata['values']);
-            $document->{$group_name_short. '_' . $name . '_svd_hi'} = array_pop($metadata['values']);
+            static::indexMetadataDatetime($document, $group_name_short. '_' . $name, $metadata['values']);
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_INT:
-            // Sort from low to high.
-            sort($metadata['values'], SORT_NUMERIC);
-
-            $document->{$group_name_short. '_' . $name . '_md'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_vi'} = $metadata['values'];
-            $document->{$group_name_short. '_' . $name . '_svi_lo'} = reset($metadata['values']);
-            $document->{$group_name_short. '_' . $name . '_svi_hi'} = array_pop($metadata['values']);
+            static::indexMetadataInteger($document, $group_name_short. '_' . $name, $metadata['values']);
             break;
 
           default:
             throw new mediamosa_solr_exception('Unsupported metadata type detected!');
         }
 
+        $names = array('group_name' => $group_name, 'group_name_short' => $group_name_short, 'name' => $name);
+        drupal_alter('mediamosa_solr_document_metadata', $document, $names, $asset_for_index);
+      }
+    }
+
+    // Add specific mediafile metadata into asset metadata.
+    $group_name = 'mediafile';
+    $group_name_short = 'mf';
+    foreach ($asset_for_index['mediamosa_asset_mediafile_metadata'] as $mediafile_id => $mediamosa_asset_mediafile_metadata) {
+      foreach ($mediamosa_asset_mediafile_metadata['metadata'] as $name => $mediafile_metadata) {
+        switch ($mediafile_metadata_properties[$name]['type']) {
+          case mediamosa_asset_mediafile_metadata_db::VAL_CHAR:
+            static::indexMetadataString($document, $group_name_short. '_' . $name, $mediafile_metadata);
+            break;
+
+          case mediamosa_asset_mediafile_metadata_db::VAL_DATETIME:
+            static::indexMetadataDatetime($document, $group_name_short. '_' . $name, $mediafile_metadata);
+            break;
+
+          case mediamosa_asset_mediafile_metadata_db::VAL_INT:
+            static::indexMetadataInteger($document, $group_name_short. '_' . $name, $mediafile_metadata);
+            break;
+        }
         $names = array('group_name' => $group_name, 'group_name_short' => $group_name_short, 'name' => $name);
         drupal_alter('mediamosa_solr_document_metadata', $document, $names, $asset_for_index);
       }
@@ -1440,6 +1439,110 @@ class mediamosa_solr {
 
     // Done.
     return $document;
+  }
+
+  /**
+   * Index into metadata string type.
+   *
+   * @param Apache_Solr_Document $document
+   *   The apache solr document.
+   * @param string $name
+   *   The name of the property.
+   * @param array $values
+   *   The values array.
+   */
+  public static function indexMetadataString(Apache_Solr_Document $document, $name, $values) {
+    if (!is_array($values)) {
+      $values = array($values);
+    }
+    foreach ($values as $key => $value) {
+      $value = trim($value);
+      if ($value !== null && $value !== '') {
+        $values[$key] = trim($value);
+      }
+      else {
+        unset($values[$key]);
+      }
+    }
+
+    if (!count($values)) {
+      return;
+    }
+
+    sort($values, SORT_STRING);
+
+    $document->{$name . '_vc'} = $values;
+    $document->{$name . '_svc_lo'} = drupal_substr(reset($values), 0, self::VAR_CHAR_SORT_LENGTH);
+    $document->{$name . '_svc_hi'} = drupal_substr(end($values), 0, self::VAR_CHAR_SORT_LENGTH);
+
+    foreach ($values as &$value) {
+      $value = drupal_truncate_bytes($value, variable_get('mediamosa_solr_max_term_length', 32760));
+    }
+
+    $document->{$name . '_md'} = $values;
+    $document->{$name . '_vc_exact'} = $values;
+    $document->{$name . '_vc_exact_cs'} = $values;
+  }
+
+  /**
+   * Index into metadata datatime type.
+   *
+   * @param Apache_Solr_Document $document
+   *   The apache solr document.
+   * @param string $name
+   *   The name of the property.
+   * @param array $values
+   *   The values array.
+   */
+  public static function indexMetadataDatetime(Apache_Solr_Document $document, $name, $values) {
+    if (!is_array($values)) {
+      $values = array($values);
+    }
+    $dates = array();
+    foreach ($values as $value) {
+      if ($value === '0000-00-00 00:00:00' || $value === '' || $value === null) {
+        continue;
+      }
+
+      $value = drupal_substr($value, 0, 10) . 'T' . drupal_substr($value, 11, 8) . 'Z';
+      if (preg_match('/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/', $value) && $value !== '0000-00-00T00:00:00Z') {
+        $dates[] = $value;
+      }
+    }
+
+    if (count($dates)) {
+      sort($values, SORT_STRING);
+
+      $document->{$name . '_md'} = $dates;
+      $document->{$name . '_vd'} = $dates;
+      $document->{$name . '_svd_lo'} = reset($dates);
+      $document->{$name . '_svd_hi'} = array_pop($dates);
+    }
+  }
+
+  /**
+   * Index into metadata datatime type.
+   *
+   * @param Apache_Solr_Document $document
+   *   The apache solr document.
+   * @param string $name
+   *   The name of the property.
+   * @param array $values
+   *   The values array.
+   */
+  public static function indexMetadataInteger(Apache_Solr_Document $document, $name, $values) {
+    if (!is_array($values)) {
+      $values = array($values);
+    }
+    if (!count($values)) {
+      return;
+    }
+    sort($values, SORT_NUMERIC);
+
+    $document->{$name . '_md'} = $values;
+    $document->{$name . '_vi'} = $values;
+    $document->{$name . '_svi_lo'} = reset($values);
+    $document->{$name . '_svi_hi'} = array_pop($values);
   }
 
   /**

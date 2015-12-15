@@ -109,6 +109,8 @@ class mediamosa_asset_mediafile_metadata_property {
    *
    * @param string $prop_id
    *   The ID of the property to get. Provided null to reset the cache.
+   * @param bool $reset
+   *   Indicate to reset the cache and reload.
    *
    * @return array
    *   Returns single array(prop_name, type)

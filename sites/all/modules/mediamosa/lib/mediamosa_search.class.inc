@@ -77,6 +77,31 @@ class mediamosa_search {
   }
 
   /**
+   * Verify the CQL syntax, used for CQL asset context set.
+   *
+   * @param string $cql
+   *   The CQL string.
+   * @param array $app_ids
+   *   The application IDs.
+   * @param string $error_text
+   *   The error text, in case of error.
+   *
+   * @return bool
+   *   Returns TRUE when no errors where found, FALSE otherwise.
+   */
+  public static function asset_verify($cql, $app_ids, &$error_text) {
+    // Get the search engine.
+    $mediamosa_search_engine = self::get_search_engine();
+
+    // Get name.
+    $name = $mediamosa_search_engine['name'];
+
+    mediamosa_exception::assert(method_exists($name, 'asset_verify'));
+
+    return call_user_func($name . '::asset_verify', $cql, $app_ids, $error_text);
+  }
+
+  /**
    * Wrapper for asset_search function.
    */
   public static function asset($parameters) {
