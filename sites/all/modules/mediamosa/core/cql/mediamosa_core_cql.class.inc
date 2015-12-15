@@ -127,13 +127,13 @@ class mediamosa_core_cql {
    * @return bool
    *   TRUE when CQL was parsed successfull, FALSE otherwise.
    */
-  public static function verify_asset($str_cql, array $app_ids, &$error_text, &$mediamosa_cql = NULL) {
+  public static function verify_asset($cql, array $app_ids, &$error_text, &$mediamosa_cql = NULL) {
 
     if (!isset($mediamosa_cql)) {
       $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
     }
 
-    $result = $mediamosa_cql->mediamosa_cql_verify($str_cql);
+    $result = $mediamosa_cql->mediamosa_cql_verify($cql);
     if (!$result) {
       $error_text = $mediamosa_cql->mediamosa_cql_last_exception_get()->getMessage();
     }
@@ -608,13 +608,13 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $parts = array();
 
     if (!$cql_part_relation) {
-      $a_mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
-      assert(isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION]));
-      assert(isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS]));
+      $mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
+      assert(isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION]));
+      assert(isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS]));
 
-      $o_part_relation = new mediamosa_cql_part_relation($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION]);
+      $o_part_relation = new mediamosa_cql_part_relation($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION]);
 
-      foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS] as $str_index) {
+      foreach ($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS] as $str_index) {
         $str_part = $this->mediamosa_core_cql_context_index2column_finalize($cql_part, $o_part_relation, $a_result, $str_index, $do_having);
 
         // Make sure if we use NOT and is translated to 'AND ', that we don't start with AND.
@@ -963,63 +963,60 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    */
   final public function mediamosa_core_cql_context_index2column($str_index) {
     assert($str_index != '');
-    $a_mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
-
+    $mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
     if (strpos($str_index, '.') === FALSE) {
       $str_index = 'mediamosa.' . $str_index; // default context set id
     }
 
     list($context_set, $str_index) = explode('.', $str_index, 2);
-    return $this->mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context, $context_set, $str_index);
+    return $this->mediamosa_core_cql_context_index2column_wrapper($mediamosa_core_cql_context, $context_set, $str_index);
   }
 
   /**
    * Simple wrapper for recursive search in the context array
    *
-   * @param array $a_mediamosa_core_cql_context
+   * @param array $mediamosa_core_cql_context
    * @param string $context_set
    * @param string $str_index
    * @return array
    */
-  final protected function mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context, $context_set, $str_index) {
-
+  final protected function mediamosa_core_cql_context_index2column_wrapper($mediamosa_core_cql_context, $context_set, $str_index) {
     // Check if reference index exits, only allowed in root.
-    if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set])) {
-      $context_set_reference = $a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set];
-      assert(!isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set_reference]));
-      if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set_reference])) {
-        throw new mediamosa_cql_exception('program error; index reference loop!', MEDIAMOSA_CQL_EXCEPTION_SEVERITY_HIGH);
+    if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set])) {
+      $context_set_reference = $mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set];
+      assert(!isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set_reference]));
+      if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES][$context_set_reference])) {
+        throw new mediamosa_cql_exception('program error; index reference loop!', CQL_EXCEPTION_SEVERITY_HIGH);
       }
 
-      return $this->mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context, $context_set_reference, $str_index);
+      return $this->mediamosa_core_cql_context_index2column_wrapper($mediamosa_core_cql_context, $context_set_reference, $str_index);
     }
 
     // Can only exist in root.
-    return $this->mediamosa_core_cql_context_index2column_wrapper_2($a_mediamosa_core_cql_context, $context_set, $str_index);
+    return $this->mediamosa_core_cql_context_index2column_wrapper_2($mediamosa_core_cql_context, $context_set, $str_index);
   }
 
   /**
    * Minor helper for mediamosa_core_cql_context_index2column_wrapper
    *
-   * @param array $a_mediamosa_core_cql_context
+   * @param array $mediamosa_core_cql_context
    * @param string $context_set
    * @param string $str_index
    * @return array
    */
-  final private function mediamosa_core_cql_context_index2column_wrapper_2($a_mediamosa_core_cql_context, $context_set, $str_index) {
+  final private function mediamosa_core_cql_context_index2column_wrapper_2($mediamosa_core_cql_context, $context_set, $str_index) {
 
     // Check voor context set
-    if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set])) {
+    if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set])) {
       // Context set gevonden.
 
-      // Nu in deze boom moet de index -> column array gevonden worden, anders FALSE
-      return $this->mediamosa_core_cql_context_index2column_find_column($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set], $str_index);
+      // Index -> column must be found or else FALSE.
+      return $this->mediamosa_core_cql_context_index2column_find_column($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set], $str_index);
     }
 
-    if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES])) {
-
-      foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $a_mediamosa_core_cql_context_2) {
-        return $this->mediamosa_core_cql_context_index2column_wrapper($a_mediamosa_core_cql_context_2, $context_set, $str_index);
+    if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES])) {
+      foreach ($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $mediamosa_core_cql_context_2) {
+        return $this->mediamosa_core_cql_context_index2column_wrapper($mediamosa_core_cql_context_2, $context_set, $str_index);
       }
     }
 
@@ -1029,21 +1026,21 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   /**
    * Walks through the final array to find the index
    *
-   * @param array $a_mediamosa_core_cql_context
+   * @param array $mediamosa_core_cql_context
    * @param string $str_index
    *
    * @return array
    */
-  final protected function mediamosa_core_cql_context_index2column_find_column($a_mediamosa_core_cql_context, $str_index) {
+  final protected function mediamosa_core_cql_context_index2column_find_column($mediamosa_core_cql_context, $str_index) {
 
     // Find column def.
-    if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS]) && isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$str_index])) {
-      return $a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$str_index];
+    if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS]) && isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$str_index])) {
+      return $mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$str_index];
     }
 
-    if (isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES])) {
-      foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $a_mediamosa_core_cql_context_2) {
-        $mixed_result = $this->mediamosa_core_cql_context_index2column_find_column($a_mediamosa_core_cql_context_2, $str_index);
+    if (isset($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES])) {
+      foreach ($mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $mediamosa_core_cql_context_2) {
+        $mixed_result = $this->mediamosa_core_cql_context_index2column_find_column($mediamosa_core_cql_context_2, $str_index);
         if ($mixed_result !== FALSE) {
           return $mixed_result;
         }
@@ -1124,7 +1121,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
   }
 
   /**
-   * returns the array containing mapping voor cql2sql
+   * Returns the array containing mapping voor cql2sql.
    *
    * @return array
    */

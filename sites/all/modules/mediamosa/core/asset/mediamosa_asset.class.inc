@@ -1695,11 +1695,14 @@ class mediamosa_asset {
    *
    * @param $asset_id
    *   The asset ID of the asset.
+   * @param array $mediafile_metadata_properties
+   *   The list of the property names to retrieve from mediafile technical
+   *   metadata (when available), e.g. 'mime-type'. Empty will retrieve all.
    *
    * @return
    *  Returns FALSE if asset does not exists.
    */
-  public static function get_asset_for_index($asset_id) {
+  public static function get_asset_for_index($asset_id, array $mediafile_metadata_properties = array()) {
 
     // Get asset.
     $result['asset'] = self::get($asset_id);
@@ -1716,7 +1719,7 @@ class mediamosa_asset {
     $result['batch_ids'] = mediamosa_ftp_batch_asset::get_batch_relation($asset_id);
 
     // Get mediafiles and metadata.
-    $result['mediamosa_asset_mediafile_metadata'] = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata_for_asset($asset_id);
+    $result['mediamosa_asset_mediafile_metadata'] = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata_for_asset($asset_id, $mediafile_metadata_properties);
 
     // Get possible collection links.
     $result['collections'] = mediamosa_asset_collection::get_collections($asset_id);

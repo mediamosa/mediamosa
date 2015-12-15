@@ -5653,13 +5653,20 @@ function mediamosa_update_7207() {
  * Rebuild the registry.
  */
 function mediamosa_update_7208() {
-  // Rebuild the registry.
-  //
-  // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry}');
-  // Clear it too.
-  db_query('DELETE FROM {registry_file}');
-  drupal_flush_all_caches();
+  $transaction = db_transaction();
+
+  try {
+    // Rebuild the registry from scratch.
+    db_query('DELETE FROM {registry}');
+    db_query('DELETE FROM {registry_file}');
+    drupal_flush_all_caches();
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
+  }
+
+  unset($transaction);
 }
 
 /**
@@ -5670,14 +5677,27 @@ function mediamosa_update_7209() {
 }
 
 /**
- * Rebuild the registry.
+ * Update has been removed.
  */
 function mediamosa_update_7210() {
-  // Rebuild the registry.
-  //
-  // Don't worry, I know what I'm doing.
-  db_query('DELETE FROM {registry}');
-  // Clear it too.
-  db_query('DELETE FROM {registry_file}');
-  drupal_flush_all_caches();
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7211() {
+  $transaction = db_transaction();
+
+  try {
+    // Rebuild the registry from scratch.
+    db_query('DELETE FROM {registry}');
+    db_query('DELETE FROM {registry_file}');
+    drupal_flush_all_caches();
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
+  }
+
+  unset($transaction);
 }

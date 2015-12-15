@@ -12,6 +12,9 @@
  * hook_mediamosa_tool_can_analyse
  * hook_mediamosa_tool_can_generate_still
  * hook_mediamosa_tool_info
+ * hook_mediamosa_tool_mapping
+ * hook_mediamosa_tool_param_checking
+ * hook_mediamosa_tool_analyse
  * hook_mediamosa_asset_reindex
  * hook_mediamosa_asset_index_delete
  * hook_mediamosa_asset_queue
@@ -166,24 +169,60 @@ function hook_mediamosa_version_alter(&$version) {
  *
  * @return array
  *   An associative array, where main key is the property.
- *   - 'title'
- *     The descriptive title of the property.
+ *   - 'title': (required)
+ *     The descriptive title of the property. Title will go through t()
+ *     function, do not use t() here.
+ *   - 'index': (optional, default: FALSE)
+ *     Indicate that field can be searched. Field will be prefixed with 'mfmd_'
+ *     for use. In CQL f.e. 'mfmd_example == "^foo^"' or
+ *     'mfmd.mfmd_example == "^foo^"' will return all assets that have
+ *     mediafiles containing 'foo' in 'example' mediafile metadata field.
+ *     MySQL does not support this feature, only external search engines f.e.
+ *     Apache Solr.
+ *   - 'show': (optional, default: TRUE)
+ *     Indicate that this value can be displayed. You can use the hook
+ *     hook_mediafile_metadata_propertie_value for displaying the data.
+ *   - 'type': (optional, default
+ *     mediamosa_asset_mediafile_metadata_db::VAL_CHAR).
+ *     Type of value, always defaults to string (val_char).
+ *     @see mediamosa_asset_mediafile_metadata_db::VAL_*
+ *
+ * @see hook_mediafile_metadata_propertie_value()
  */
 function hook_mediafile_metadata_properties() {
   // Example property.
-  return array('example' => array('title' => 'Example property'));
+  return array(
+    // Display metadata value for 'example', will not be indexed for search.
+    'example' => array(
+      'title' => 'Example property',
+      'index' => TRUE,
+      'type' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
+    ),
+  );
 }
 
 /**
- * Add or alter the list of mediafile properties in tool modules.
+ * Hook for returning the mediafile metadata value for display.
  *
- * @return array
- *   An associative array, where main key is the property name.
+ * This value is used for indexing and display. Do not HTML encode. Metadata
+ * values are optional and can be null or ''. Returning a '' value will display
+ * the value. On hook_mediafile_metadata_properties() the property must have
+ * 'show' as TRUE (default), else hook will be not be called. The value returned
+ *  will not pass through t().
  *
- * @see hook_mediafile_metadata_properties()
+ * For retrieving 'example' field value:
+ * hook_mediafile_metadata_property_show_example()
+ *
+ * @param array $mediafile_metadata
+ *   The array with metadata values, $name => $value.
+ *
+ * @return string
+ *   The value of the field.
  */
-function hook_mediafile_metadata_properties_alter(&$properties) {
-  $properties = array_merge($properties, array('example'));
+function hook_mediafile_metadata_property_show_NAME($mediafile_metadata) {
+  if (isset($mediafile_metadata['example']) && $mediafile_metadata['example'] !== '') {
+    return $mediafile_metadata['example'];
+  }
 }
 
 /**

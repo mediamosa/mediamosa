@@ -736,6 +736,8 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   );
 
   $build = array();
+  $mediafile_metadata_properties = module_invoke_all('mediafile_metadata_properties');
+
   foreach ($result['items'] as $item) {
     if (isset($item['#value'])) {
       $item = $item['#value'];
@@ -759,31 +761,24 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
 
     // Mediafile properties.
     $rows = array();
-    $rows[] = array(t('Mediafile id'), $item['mediafile_id']);
-    $rows[] = array(t('Mount pount uri'), $item['sannas_mount_point']);
-    $rows[] = array(t('Owner id'), $item['owner_id']);
-    $rows[] = array(t('Group id'), $item['group_id']);
-    $rows[] = array(t('MD5'), $item['metadata']['md5']);
-    $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
-    $rows[] = array(t('Filesize'), ($item['metadata']['filesize']) ? format_size($item['metadata']['filesize']) : '');
+    $rows[] = array(t('Mediafile id'), check_plain($item['mediafile_id']));
+    $rows[] = array(t('Mount pount uri'), check_plain($item['sannas_mount_point']));
+    $rows[] = array(t('Owner id'), check_plain($item['owner_id']));
+    $rows[] = array(t('Group id'), check_plain($item['group_id']));
     $rows[] = array(t('Original'), $item['is_original_file']);
     $rows[] = array(t('Downloadable'), $item['is_downloadable']);
     $rows[] = array(t('Protected'), $item['is_protected']);
     $rows[] = array(t('Created / Changed'), $item['created'] . ' / ' . $item['changed']);
 
-    $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
-    $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');
-    $rows[] = array(t('Duration'), $item['metadata']['file_duration']);
-    $rows[] = array(t('Video information'), ($item['metadata']['video_codec']) ? $item['metadata']['video_codec'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps (' . $item['metadata']['colorspace'] . ')' : '');
-    $rows[] = array(t('MP4 hinted'), $item['metadata']['is_hinted']);
-    $rows[] = array(t('FLV metadated'), $item['metadata']['is_inserted_md']);
-    $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')' : '');
-
     // Add possible technical metadata defined by tools.
-    $result = module_invoke_all('mediafile_metadata_properties');
-    foreach ($result as $key => $value) {
-      if (isset($item['metadata'][$key]) && ($item['metadata'][$key] != '')) {
-        $rows[] = array($value['title'], $item['metadata'][$key]);
+    foreach ($mediafile_metadata_properties as $name => $info) {
+      if (!isset($info['show']) || (isset($info['show']) && $info['show'])) {
+        $value = module_invoke_all('mediafile_metadata_property_show_' . str_replace('-', '_', $name), $item['metadata']);
+        $value = !count($value) ? NULL : implode(', ', $value);
+        $value = isset($value) ? $value : (isset($item['metadata'][$name]) ? $item['metadata'][$name] : NULL);
+        if (isset($value)) {
+          $rows[] = array(t($info['title']), check_plain($value));
+        }
       }
     }
 
@@ -804,10 +799,10 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     // Uri REST call.
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $item['mediafile_id']));
 
-    $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('user_id' => $item['owner_id'], 'app_id' => $item['app_id']));
-    if (mediamosa_response_connector::static_result_okay($result)) {
+    $result_acl = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('user_id' => $item['owner_id'], 'app_id' => $item['app_id']));
+    if (mediamosa_response_connector::static_result_okay($result_acl)) {
       $rows_aut = array();
-      foreach ($result['items'] as $item_values) {
+      foreach ($result_acl['items'] as $item_values) {
         foreach ($item_values as $name => $value) {
           $rows_aut[$name][] = $value;
         }
@@ -816,7 +811,8 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
       $rows_aut2 = array();
       foreach ($rows_aut as $name => $values) {
         $rows_aut2[] = array(
-          _mediamosa_browse_fix_metadata_name($name), implode(', ', $values),
+          _mediamosa_browse_fix_metadata_name($name),
+          implode(', ', $values),
         );
       }
 
@@ -868,11 +864,13 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
       }
     }
 
-    $build[] = theme('table', array(
-                 'caption' => $caption,
-                 'rows' => $rows,
-                 'header' => $header,
-               )
+    $build[] = theme(
+      'table',
+      array(
+        'caption' => $caption,
+        'rows' => $rows,
+        'header' => $header,
+      )
     );
   }
 

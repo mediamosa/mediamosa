@@ -15,15 +15,17 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
   // ------------------------------------------------------------------ Methods.
   /**
-   * returns the array containing mapping voor cql2sql
+   * Returns the array containing mapping voor cql2solr.
    *
    * @return array
    */
   protected function mediamosa_core_cql_context_array_get() {
     static $mediamosa_context = NULL;
+      mediamosa_watchdog::log_export(__FUNCTION__);
 
     if (!isset($mediamosa_context)) {
       $mediamosa_context = $this->m_a_mediamosa_context;
+      $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES]['mediafile'] = 'mediamosa:mediafile';
 
       $replace = array(
         'mime_type' => 'mime_type',
@@ -111,6 +113,52 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
           MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $metadata_property['propdef_id'],
         );
       }
+
+      // Add search for mediafile technical metadata.
+      // Get all the data needed for indexing.
+      $mediafile_metadata_properties = module_invoke_all('mediafile_metadata_properties');
+      $context_set = 'mediamosa:mediafile';
+      foreach ($mediafile_metadata_properties as $name => &$info) {
+        if (!empty($info['index'])) {
+          $info += array('type' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR);
+          $group_name_short = 'mf';
+          $index = $group_name_short . '_' . $name;
+
+          switch ($info['type']) {
+            default:
+            case mediamosa_asset_mediafile_metadata_db::VAL_INT:
+              $column = $index . '|vi';
+              $sort_column = $index . '|svi';
+              $type = mediamosa_sdk::TYPE_INT;
+              $table = mediamosa_asset_metadata_db::TABLE_NAME;
+              break;
+
+            case mediamosa_asset_mediafile_metadata_db::VAL_DATETIME:
+              $column = $index . '|vd';
+              $sort_column = $index . '|svd';
+              $type = mediamosa_sdk::TYPE_DATETIME;
+              $table = mediamosa_asset_metadata_db::TABLE_NAME;
+              break;
+
+            case mediamosa_asset_mediafile_metadata_db::VAL_CHAR:
+              $column = $index . '|md';
+              $sort_column = $index . '|svc';
+              $type = mediamosa_sdk::TYPE_STRING;
+              $table = mediamosa_asset_metadata_db::TABLE_NAME;
+              break;
+          }
+
+          $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$index] = array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
+            MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $sort_column,
+            MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'unused',
+            MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
+  //          // Indication its an asset metadata field.
+  //          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $metadata_property['propdef_id'],
+          );
+        }
+      }
+      mediamosa_watchdog::log_export($mediafile_metadata_properties);
     }
 
     return $mediamosa_context;
@@ -713,5 +761,30 @@ class mediamosa_solr_cql extends mediamosa_core_cql {
    */
   public static function parse_asset($str_cql, $cql_store_stats, array $app_ids) {
     throw new mediamosa_solr_exception('Use parse_asset_solr() instead.');
+  }
+
+  /**
+   * Verify the CQL syntax.
+   *
+   * @param string $cql
+   *   The CQL string.
+   * @param array $app_ids
+   *   The application IDs.
+   * @param string $error_text
+   *   The error text, in case of error.
+   *
+   * @return bool
+   *   Returns TRUE when no errors where found, FALSE otherwise.
+   */
+  public static function verify_asset($cql, array $app_ids, &$error_text, &$mediamosa_cql = NULL) {
+    if (!isset($mediamosa_cql)) {
+      $mediamosa_cql = new mediamosa_solr_asset_cql_context($app_ids);
+    }
+
+    $result = $mediamosa_cql->mediamosa_cql_verify($cql);
+    if (!$result) {
+      $error_text = $mediamosa_cql->mediamosa_cql_last_exception_get()->getMessage();
+    }
+    return $result;
   }
 }

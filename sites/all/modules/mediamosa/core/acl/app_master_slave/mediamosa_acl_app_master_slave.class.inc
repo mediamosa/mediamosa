@@ -145,6 +145,9 @@ class mediamosa_acl_app_master_slave {
    */
   public static function slave_get($mixed_app_id, $acl_object_type, $object_id = NULL) {
     $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
+    if (!count($app_ids)) {
+      return array();
+    }
 
     if (isset($object_id)) {
       $result = mediamosa_db::db_query(
