@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2197)
+MediaMosa 3.6.1-dev (build 2198)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -370,6 +370,8 @@ MediaMosa 3.6.1-dev (build 2197)
 - Added support for post_convert function on tool class.
 - Added static caching for metadata propery information.
 - Added support for trashcan_date, date when asset was put into trashcan.
+- Added support search on technical metadata mediafiles using Solr and CQL. Is
+  not supported when using MySQL.
 
 
 MediaMosa 3.5.x (build 2072)
