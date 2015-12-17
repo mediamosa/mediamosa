@@ -175,4 +175,19 @@ class mediamosa_asset_supplement {
       ->condition(mediamosa_asset_supplement_db::ID, $supplement_id)
       ->execute();
   }
+
+  /**
+   * Deletes all supplements from asset.
+   *
+   * @param string $asset_id
+   *   Asset id.
+   */
+  public static function delete_from_asset($asset_id) {
+
+    // Delete it.
+    mediamosa_db::db_delete(mediamosa_asset_supplement_db::TABLE_NAME)
+      ->condition(mediamosa_asset_supplement_db::ASSET_ID, $asset_id)
+      ->execute();
+
+  }
 }

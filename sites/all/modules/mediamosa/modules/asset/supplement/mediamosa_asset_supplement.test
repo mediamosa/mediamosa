@@ -58,5 +58,20 @@ class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
       count($a_xml['items']['item']) === 2,
       t('Get an asset/{asset_id}/supplement list (count = @count).', array('@count' => count($a_xml['items']['item'])))
     );
+
+    $this->deleteAsset($asset_id);
+
+    // No more supplements after asset delete.
+    $supps = mediamosa_db::db_query(
+      'SELECT #supplement_id FROM {#mediamosa_asset_supplement} WHERE #asset_id = :asset_id',
+      array(
+        '#supplement_id' => mediamosa_asset_supplement_db::ID,
+        '#mediamosa_asset_supplement' => mediamosa_asset_supplement_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_supplement_db::ASSET_ID,
+        ':asset_id' => $asset_id,
+      )
+    )->fetchAll();
+
+    $this->assertTrue(count($supps) == 0, "Database lookup of supplements after asset delete.");
   }
 }
