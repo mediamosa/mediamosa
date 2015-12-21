@@ -85,6 +85,7 @@ function mediamosa_app_update($node) {
   else {
     // Get the field names of the table.
     $names = mediamosa_app_db::get_fields();
+    drupal_alter('insert_fields', $names);
 
     // Exception is title.
     $node->app_name = $node->title;
@@ -117,6 +118,7 @@ function mediamosa_app_update($node) {
 function mediamosa_app_insert($node) {
   // Get the field names of the table.
   $names = mediamosa_app_db::get_fields();
+  drupal_alter('insert_fields', $names);
 
   // Exception is title.
   $node->app_name = $node->title;
