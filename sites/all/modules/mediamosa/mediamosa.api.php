@@ -241,7 +241,7 @@ function hook_mediamosa_asset_delete($asset_id) {
 }
 
 /**
- * Change the version shown.
+ * Change the fields currently used in revision and node for app type.
  *
  * @param array $fields
  *   The array of fields to save during update and save of the revision and
