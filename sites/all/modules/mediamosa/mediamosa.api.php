@@ -241,5 +241,16 @@ function hook_mediamosa_asset_delete($asset_id) {
 }
 
 /**
+ * Change the version shown.
+ *
+ * @param array $fields
+ *   The array of fields to save during update and save of the revision and
+ *   node.
+ */
+function hook_mediamosa_app_fields_alter(&$fields) {
+  $fields[] = 'new_field';
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
