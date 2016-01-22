@@ -136,6 +136,8 @@ abstract class mediamosa_cql {
    *
    * @param string $column_name
    *   The name to check.
+   *
+   * @throws mediamosa_cql_exception()
    */
   protected function mediamosa_core_allowed_keep_order($column_name) {
     throw new mediamosa_cql_exception(mediamosa::t("The '@column_name' is not allowed to use modifier 'keeporder'.", array('@column_name' => $column_name)));
@@ -148,13 +150,16 @@ abstract class mediamosa_cql {
    *
    * @param string $str_cql
    *   The CQL string to parse.
+   *
+   * @throws mediamosa_cql_exception_string_is_empty()
+   * @throws mediamosa_cql_exception_eo_scope_unmatched()
    */
   protected function mediamosa_cql_parse($str_cql) {
-    assert(is_string($str_cql));
+    mediamosa_exception::assert(is_string($str_cql));
 
     $this->m_str_cql = $str_cql = trim((string) $str_cql);
 
-    // Clear our collection of possible previous parse
+    // Clear our collection of possible previous parse.
     $this->m_o_cql_part_group = new mediamosa_cql_part_group();
 
     if ($str_cql === '' || $str_cql === FALSE || $str_cql === NULL) {
@@ -165,11 +170,11 @@ abstract class mediamosa_cql {
 
     try {
       while (1) {
-        $this->mediamosa_cql_next_part((string) $str_cql, $i_pos, $this->m_o_cql_part_group);
+        $this->mediamosa_cql_next_part($str_cql, $i_pos, $this->m_o_cql_part_group);
       }
     }
     catch (mediamosa_cql_exception_eos $e) {
-      // no error when we catch this here
+      // no error when we catch this here.
     }
     catch (mediamosa_cql_exception_eo_scope $e) {
       assert($e);
@@ -229,7 +234,6 @@ abstract class mediamosa_cql {
   /**
    * Next position in the string.
    *
-   *
    * @param string $str_cql
    *   The CQL string.
    * @param int $i_pos
@@ -238,7 +242,7 @@ abstract class mediamosa_cql {
    * @return bool
    *   Returns TRUE when character is escaped, FALSE otherwise.
    *
-   * @throws cql_exception_eos
+   * @throws mediamosa_cql_exception_unexpected_eos()
    *   When it reached the end.
    */
   private function mediamosa_cql_next_pos($str_cql, &$i_pos, $is_quoted) {
@@ -275,6 +279,8 @@ abstract class mediamosa_cql {
    *   The string to parse.
    * @param int $i_pos
    *   The character position within the string.
+   *
+   * @throws mediamosa_cql_exception_eos()
    */
   private function mediamosa_cql_skip_ws($str_cql, &$i_pos) {
     if (mediamosa_unicode::strlen($str_cql) <= $i_pos) {
@@ -320,7 +326,7 @@ abstract class mediamosa_cql {
     $a_symbol_end_keys = array('<', '>', '=');
 
     try {
-      // 1st skip any whitechars before we capture
+      // 1st skip any white chars before we capture.
       if (!$is_quoted) {
         $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
       }
@@ -420,11 +426,17 @@ abstract class mediamosa_cql {
   }
 
   /**
-   * Same as mediamosa_cql_next, except we are inside quoted string
+   * Same as mediamosa_cql_next, except we are inside quoted string.
    *
    * @param string $str_cql
-   * @param int $i_pos
+   *   The cql string.
+   * @param int $pos
+   *   The position in the string.
+   *
    * @return string
+   *   The found string.
+   *
+   * @throws mediamosa_cql_exception_eo_quote_unmatched()
    */
   private function mediamosa_cql_next_quoted($str_cql, &$pos) {
     $is_escaped = $this->mediamosa_cql_next_pos($str_cql, $pos, TRUE);
@@ -462,7 +474,16 @@ abstract class mediamosa_cql {
    * Get the next complete part
    *
    * @param string $str_cql
+   *   The string to parse.
    * @param int $i_pos
+   *   The current (char) position in string.
+   * @param mediamosa_cql_part_group $o_cql_part_group
+   *   The CQL part group object.
+   *
+   * @throws mediamosa_cql_exception_expecting_char()
+   * @throws mediamosa_cql_exception_syntax_error()
+   * @throws mediamosa_cql_exception_unexpected_eos()
+   * @throws mediamosa_cql_exception_eo_scope()
    */
   private function mediamosa_cql_next_part($str_cql, &$i_pos, &$o_cql_part_group) {
 
@@ -600,19 +621,19 @@ abstract class mediamosa_cql {
         }
       }
 
-      if (mediamosa_unicode::strtolower($str_1) === 'sortby') { // Sortby
+      if (mediamosa_unicode::strtolower($str_1) === 'sortby') {
         $this->m_o_cql_sortby = new mediamosa_cql_sortby();
 
         // Get the next part
         $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-        // Check if this char_string_1 or _2
+        // Check if this char_string_1 or _2.
         $this->mediamosa_cql_must_be_charstring($str_1, $i_pos);
 
-        // Add index for sortby object
+        // Add index for sortby object.
         $o_cql_sub_sortby = new mediamosa_cql_sub_sortby($str_1);
 
-        // do modifiers (if any)
+        // do modifiers (if any).
         $this->mediamosa_cql_modifiers_do($str_cql, $i_pos, $o_cql_sub_sortby);
 
         // Ok add it
@@ -623,7 +644,7 @@ abstract class mediamosa_cql {
           while (1) {
             $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-            // Make sure its valid
+            // Make sure its valid.
             $this->mediamosa_cql_must_be_charstring($str_1, $i_pos);
 
             $o_cql_sub_sortby = new mediamosa_cql_sub_sortby($str_1);

@@ -7,7 +7,7 @@
 class MediaMosaSolrBasicTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Members.
 
-  // ------------------------------------------------------------------ Functions.
+  // ------------------------------------------------- -------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'SOLR - basic tests',
@@ -263,5 +263,84 @@ class MediaMosaSolrBasicTestCaseEga extends MediaMosaTestCaseEgaJob {
     $assets = $this->searchAsset(10, $parameters);
 
     $this->var_export($assets);
+  }
+
+  /**
+   * Test multple sort by.
+   */
+  public function testSortBy() {
+    $this->var_export(mediamosa_search::get_search_engine());
+
+    // Make sure the instanty settings are all on by default.
+    $this->assertTrue(mediamosa_solr::settingInstantlyMetadata(), 'Metadata setting instant');
+    $this->assertTrue(mediamosa_solr::settingInstantlyAssetUpdate(), 'Asset update setting instant');
+
+    // Setup simple search stuff
+    $upload_1 = $this->uploadTestFile();
+    $upload_2 = $this->uploadTestFile(array('filename' => $this->getTestVideo_ogg()));
+    $upload_3 = $this->uploadTestFile(array('filename' => $this->getTestVideo_BlackStill()));
+    $upload_4 = $this->uploadTestFile();
+
+    // Create transcode for all.
+
+    // Create transcode job.
+    $this->createMediafileTranscode($upload_1['mediafile_id']);
+    $this->createMediafileTranscode($upload_2['mediafile_id']);
+    $this->createMediafileTranscode($upload_3['mediafile_id']);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Create asset metadata.
+    $this->createAssetMetadata($upload_1['asset_id'],
+      array(
+        'title' => 'title 3',
+        'description' => 'asset 2',
+        'issued' => '2010-01-01 00:00:00',
+        'titel' => 'double 1',
+      )
+    );
+    $this->createAssetMetadata($upload_2['asset_id'],
+      array(
+        'title' => 'title 2a',
+        'description' => 'asset 1',
+        'issued' => '2009-01-01 00:00:00',
+        'titel' => 'double 2',
+      )
+    );
+    $this->createAssetMetadata($upload_3['asset_id'],
+      array(
+        'title' => 'title 2b',
+        'description' => 'asset 3',
+        'issued' => '2010-08-01 00:00:00',
+        'titel' => 'double 2',
+      )
+    );
+
+    $search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_3['asset_id'], $upload_1['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/descending', array($upload_3['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_1['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_1['asset_id'], $upload_3['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby description/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby description/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby issued/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby issued/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/ascending title/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_1['asset_id'], $upload_2['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/ascending title/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+    $this->correct_sorting($asset_ids, array($upload_1['asset_id'], $upload_3['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
   }
 }

@@ -8,7 +8,7 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
 
   // ------------------------------------------------------- Abstract functions.
   abstract protected function mediamosa_cql_context_prefix_assignment_get();
-  abstract protected function mediamosa_cql_context_is_named_comparitor($str);
+  abstract protected function mediamosa_cql_context_is_named_comparator($str);
   abstract public function mediamosa_cql_context_index2column(mediamosa_cql_part $o_cql_part);
 
 
@@ -91,12 +91,12 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
    * @return bool
    */
   final public function mediamosa_cql_context_is_relation($str) {
-    return ($this->mediamosa_cql_context_is_comparitor_symbol($str) || $this->mediamosa_cql_context_is_named_comparitor($str));
+    return ($this->mediamosa_cal_context_is_comparator_symbol($str) || $this->mediamosa_cql_context_is_named_comparator($str));
   }
 
-  final public function mediamosa_cql_context_is_comparitor_symbol($str) {
-    $a_comparitor_symbol = array('=', '>', '<', '>=', '<=', '<>', '==');
-    return (array_search($str, $a_comparitor_symbol) === FALSE ? FALSE : TRUE);
+  final public function mediamosa_cal_context_is_comparator_symbol($str) {
+    $comparator_symbol = array('=', '>', '<', '>=', '<=', '<>', '==');
+    return (array_search($str, $comparator_symbol) === FALSE ? FALSE : TRUE);
   }
 
   public function mediamosa_cql_context_is_boolean($str) {

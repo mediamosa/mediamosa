@@ -168,6 +168,7 @@ class mediamosa_solr {
 
     $query_cql = '*:*';
     $keep_order_ids = array();
+    $sort_bys = array();
     if (!empty($parameters['cql'])) {
       $result = mediamosa_solr_cql::parse_asset_solr($parameters, $parameters['cql_store_stats'], $parameters['app_ids']);
       $keep_order_ids = $result['keep_order_ids'];
@@ -198,11 +199,13 @@ class mediamosa_solr {
         $query_cql = self::where($result['str_where']);
       }
 
-      $order_bys = reset($result['a_order_by']);
-
-      $order_by = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
-      $order_direction = drupal_strtolower($order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION]);
-      $is_metadata = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] > 0;
+      foreach ($result['a_order_by'] as $order_by) {
+        $sort_bys[] = array(
+          'index' => $order_by[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT],
+          'direction' => $order_by[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION],
+          'is_metadata' => $order_by[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] > 0,
+        );
+      }
     }
 
     // If coll_id is given, then search within the given collection(s)
@@ -270,8 +273,12 @@ class mediamosa_solr {
 
     // Setup sorting.
     $query_params = array();
-    if (!empty($order_by)) {
-      $query_params['sort'] = $order_by . ($is_metadata ? ($order_direction == 'ASC' ? '_lo' : '_hi') : '') . ' ' . $order_direction;
+    if (!empty($sort_bys)) {
+      $sort = array();
+      foreach ($sort_bys as $sort_by) {
+        $sort[] = $sort_by['index'] . ($sort_by['is_metadata'] ? ($sort_by['direction'] == 'ASC' ? '_lo' : '_hi') : '') . ' ' . $sort_by['direction'];
+      }
+      $query_params['sort'] = implode(', ', $sort);
     }
 
     // Allow other modules to alter the solr query.

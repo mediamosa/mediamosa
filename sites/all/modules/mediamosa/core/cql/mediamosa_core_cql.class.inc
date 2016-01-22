@@ -29,10 +29,13 @@ class mediamosa_core_cql {
    *  Match type.
    * @param array $values
    *  Value to compare.
-   * @param unknown_type $type
+   * @param string $type
    *  Type of param.
    * @param array $translate_to
    *  Extra array to translate name.
+   *
+   * @return string
+   *   The CQL from searchparam.
    */
 
   public static function convert_searchparam_to_cql($name, $match, array $values, $type, array $translate_to = array()) {
@@ -121,8 +124,14 @@ class mediamosa_core_cql {
    *
    * Will throw exception when verify has failed.
    *
-   * @param string $str_cql
+   * @param string $cql
    *   The CQL string.
+   * @param array $app_ids
+   *   The APP ids used in current session.
+   * @param $error_text
+   *   Stored error text during verify.
+   * @param mediamosa_asset_cql_context $mediamosa_cql
+   *   (optional) The mediamosa CQL context, or generated when NULL.
    *
    * @return bool
    *   TRUE when CQL was parsed successfull, FALSE otherwise.
@@ -144,7 +153,12 @@ class mediamosa_core_cql {
    * Start parsing the CQL for collection search.
    *
    * @param string $str_cql
+   *   The CQL string.
    * @param array $app_ids
+   *   The APP ids used in current session.
+   *
+   * @return array
+   *   The generated info from CQL.
    */
   public static function parse_collection($str_cql, array $app_ids) {
 
@@ -206,9 +220,14 @@ class mediamosa_core_cql {
 
   /**
    * Add search parameters to var setup based on old param conf.
-
+   *
    * @param array $var_setup
+   *   The var setup.
    * @param array $search
+   *   The search params to insert.
+   *
+   * @return array
+   *   The included search parameters.
    */
   public static function get_var_setup_search(array $var_setup, array $search) {
 
@@ -233,7 +252,7 @@ class mediamosa_core_cql {
   /**
    * Fill the var_setup with allowed parameters for search.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
   public static function get_var_setup_search_asset(array $app_ids, array $var_setup, array $search) {
 
@@ -357,12 +376,16 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
-   * Check if given parameter is one of our named comparitor (a relation like 'adj', 'all' etc)
+   * Check if given parameter is one of our named comparator.
    *
+   * @param string $str
+   *   The string to check.
+   *
+   * @return bool
+   *   Returns TRUE when named comparator, FALSE otherwise.
    */
-  protected function mediamosa_cql_context_is_named_comparitor($str) {
-    $a_comparitors = array('adj', 'all', 'any', 'within', 'exact');
-    return (in_array($str, $a_comparitors) ? TRUE : FALSE);
+  protected function mediamosa_cql_context_is_named_comparator($str) {
+    return (in_array($str, array('adj', 'all', 'any', 'within', 'exact')) ? TRUE : FALSE);
   }
 
   /**

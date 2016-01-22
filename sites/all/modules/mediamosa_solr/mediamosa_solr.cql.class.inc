@@ -433,7 +433,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               }
               elseif (mediamosa_unicode::substr($word, -1) === '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) !== '\^') {
                 $word = ltrim(mediamosa_unicode::substr($word, 0, -1), '*');
-                // Right ancor.
+                // Right anchor.
                 $sub_parts[] = strtr(
                   '{column}:{wildcard}{value}{boost}',
                   array(
@@ -499,7 +499,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
               );
             }
             elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
-              // Left ancor.
+              // Left anchor.
               $parts[$str_table_column_exact] = strtr(
                 '{column}:{value}{wildcard}{boost}',
                 array(
