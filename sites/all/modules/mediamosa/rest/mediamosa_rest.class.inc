@@ -49,7 +49,7 @@ class mediamosa_rest {
    *
    * @param string $request_uri
    *   The request URL.
-   * @param string $request_method
+   * @param string|bool $request_method
    *   The method.
    *
    * @return array|FALSE
@@ -221,6 +221,9 @@ class mediamosa_rest {
    *  - restrict_interface (TRUE)
    *    Test if the interface matches the interface of the REST call. E.g. test
    *    if an upload REST call is called from the upload interface, else skip.
+   *
+   * @return array
+   *   The REST calls array.
    */
   public static function get_rest_calls($limit = 0, $offset = 0, array $options = array()) {
 
@@ -333,6 +336,16 @@ class mediamosa_rest {
 
   /**
    * Match the incoming URL with a REST call and return match REST object.
+   *
+   * @param string $uri
+   *   The URI to match.
+   * @param string $method
+   *   The method to match.
+   *
+   * @return array|bool|FALSE
+   *   The matched REST call object.
+   *
+   * @throws \mediamosa_exception_error
    */
   final public function match_call($uri = NULL, $method = NULL) {
     // Get the mediamosa object.
@@ -386,6 +399,11 @@ class mediamosa_rest {
    *
    * @param array $rest_call
    *   Array containing the data needed to run the REST call.
+   *
+   * @return string
+   *   Returns optional override on the response type (XML/JSON etc).
+   *
+   * @throws mediamosa_exception_program_error()
    */
   final public function process_call(array $rest_call) {
     // Get the mediamosa object.
@@ -394,7 +412,7 @@ class mediamosa_rest {
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
       mediamosa_watchdog::log_export($rest_call);
       mediamosa_watchdog::log_export(arg());
-      throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
+      throw new mediamosa_exception_program_error('Class @{class} was not found!', array('@{class}' => $rest_call[mediamosa_rest_call::CLASS_NAME]));
     }
 
     // Create class from it.
@@ -421,6 +439,8 @@ class mediamosa_rest {
    *
    * @param array $rest_call
    *  The found REST call with get_uri_definition().
+   *
+   * @throws mediamosa_exception_program_error()
    */
   public static function get_var_setup(array $rest_call) {
     if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {

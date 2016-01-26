@@ -134,6 +134,9 @@ class mediamosa {
   /**
    * Retrieve the main response object.
    *
+   * @param mediamosa_response $new_mediamosa_response
+   *   The response object to set.
+   *
    * @return mediamosa_response
    *  The core object.
    */
@@ -213,6 +216,9 @@ class mediamosa {
    * Enables global app environment.
    *
    * @param array $app_ids
+   *   The application IDs to set.
+   *
+   * @throws mediamosa_exception_program_error()
    */
   public static function set_environment_app_ids(array $app_ids) {
     $app_id = reset($app_ids);
@@ -360,7 +366,9 @@ class mediamosa {
 
   /**
    * Is the Drupal Interface enabled?
+   *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_admin_enabled() {
     return mediamosa::variable_get('mediamosa_admin', FALSE);
@@ -370,6 +378,7 @@ class mediamosa {
    * Is the APP REST Interface enabled?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_enabled() {
     return (self::is_app_app_enabled() || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
@@ -379,14 +388,16 @@ class mediamosa {
    * Is the APP REST Interface restricted to OpenAPI?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_restricted_openapi() {
     return self::is_app_openapi_enabled() && !self::is_app_app_enabled() && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
   }
 
   /**
-   * Any app interface is always enabled during SimpleTest unless specified by
-   * the X-MediaMosa-Disable-App header item.
+   * Any app interface is always enabled during SimpleTest.
+   *
+   * Unless specified by the X-MediaMosa-Disable-App header item.
    *
    * Returns TRUE when app is allowed.
    * FALSE when disabled by header.
@@ -404,6 +415,7 @@ class mediamosa {
    * Is the APP app REST Interface enabled?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_app_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
@@ -418,6 +430,7 @@ class mediamosa {
    * Is the APP download REST Interface enabled?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_download_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
@@ -432,6 +445,7 @@ class mediamosa {
    * Is the APP upload REST Interface enabled?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_upload_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
@@ -446,6 +460,7 @@ class mediamosa {
    * Is the APP Open API REST Interface enabled?
    *
    * @return bool
+   *   Returns TRUE when enabled, FALSE otherwise.
    */
   public static function is_app_openapi_enabled() {
     if (!mediamosa::in_simpletest_sandbox()) {
@@ -460,7 +475,7 @@ class mediamosa {
    * Exit the page with an 503 error.
    *
    * @param string $message
-   *  Message for the user.
+   *   Message for the user.
    */
   public static function exit_503($message) {
     drupal_maintenance_theme();
@@ -487,17 +502,19 @@ class mediamosa {
   }
 
   /**
-   * Duplicated t() drupal function mapped here as self::t()
-   * For now we don't translate the core text, to save CPU time.
-   * Dont really see the point of translating text that is only
-   * visible to programmers anyway.
+   * Translate function.
+   *
+   * Duplicated t() drupal function mapped here as self::t(), For now we don't
+   * translate the core text, to save CPU time. Don't really see the point of
+   * translating text that is only visible to programmers anyway.
+   *
    * Removed theme function here too.
    *
    * @param string $string
    *   Message.
    * @param array $args
    *   Optional arguments.
-   * @param string $langcode
+   * @param string|bool $langcode
    *   Language (ignored).
    *
    * @return string.
@@ -515,7 +532,6 @@ class mediamosa {
     foreach ($args as $key => $value) {
       switch ($key[0]) {
         case '@':
-        default:
           $args[$key] = check_plain($value);
           break;
 
@@ -638,24 +654,24 @@ class mediamosa {
    * good protection.
    */
   public static function get_internal_password() {
-    $passwrd = self::variable_get('mediamosa_internal_password', NULL);
+    $password = self::variable_get('mediamosa_internal_password', NULL);
 
-    $passwrd = trim($passwrd);
-    if (isset($passwrd) && $passwrd !== '') {
-      return $passwrd;
+    $password = trim($password);
+    if (isset($password) && $password !== '') {
+      return $password;
     }
 
     // Create new one.
-    $passwrd = md5(drupal_random_bytes(64));
+    $password = md5(drupal_random_bytes(64));
 
     // Store it.
-    variable_set('mediamosa_internal_password', $passwrd);
+    variable_set('mediamosa_internal_password', $password);
 
     // Log it, this should only happen when have a clean install.
     mediamosa_watchdog::log('Generated new internal password.');
 
     // Return the new passwrd.
-    return $passwrd;
+    return $password;
   }
 
   /**

@@ -10,7 +10,8 @@ abstract class mediamosa_rest_call {
   protected $rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
-  protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
+  // Keep on FALSE so get_var_setup() will not fail if it calls process_vars(),
+  protected $check_for_unspecified = FALSE;
 
   // Default parameter description.
   protected $mediamosa_parameter_docs = array(
@@ -20,6 +21,14 @@ abstract class mediamosa_rest_call {
     'group_id' => 'Group id',
     'isprivate' => '',
   );
+  /**
+   * Set to true as soon we run do_call() on REST call.
+   *
+   * Basic indicator if we are inside a rest call.
+   *
+   * @var bool
+   */
+  private $doing_call = false;
 
   // ---------------------------------------------------------------- Constants.
   const ID = 'uri_id';
@@ -58,7 +67,8 @@ abstract class mediamosa_rest_call {
   const VERSION = 'version';
   const VERSION_MAX_LEN = 12;
 
-  // Set these so we have default values when we need them for calling get_var_setup();
+  // Set these so we have default values when we need them for calling
+  // get_var_setup();
   const DEFAULT_PARAMS_VALUES = 'default_params_values';
 
   // Access to the REST call.
@@ -87,13 +97,18 @@ abstract class mediamosa_rest_call {
   // Allow access by all access rules.
   const ACCESS_FOR_EXTERNAL = 7;
 
-  const TITLE = 'title';             // Title of the REST call (In English, required).
-  const DESCRIPTION = 'description'; // Description of the REST call (In English, required).
-  const EXAMPLE_REQUEST = 'example_request';   // Example request url.
-  const EXAMPLE_RESPONSE = 'example_response'; // Example response output.
-  const RESPONSE_FIELDS = 'response_fields';   // Response fields in output.
-
-  const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
+  // Title of the REST call (In English, required).
+  const TITLE = 'title';
+  // Description of the REST call (In English, required).
+  const DESCRIPTION = 'description';
+  // Example request url.
+  const EXAMPLE_REQUEST = 'example_request';
+  // Example response output.
+  const EXAMPLE_RESPONSE = 'example_response';
+  // Response fields in output.
+  const RESPONSE_FIELDS = 'response_fields';
+  // Set to true if you want this rest call to behave like external without /external.
+  const BEHAVE_AS_EXTERNAL = 'behave_as_external';
 
   const FOR_INTERFACE = 'for_interface';
   const FOR_INTERFACE_APP = 'for_interface_app';
@@ -123,17 +138,27 @@ abstract class mediamosa_rest_call {
   const VAR_DEFAULT_VALUE = 'default_value';
   const VAR_RANGE_START = 'range_start';
   const VAR_RANGE_END = 'range_end';
-  const VAR_IS_ARRAY = 'is_array';         // default no.
-  const VAR_IS_REQUIRED = 'is_required';   // default no.
-  const VAR_TRIM_VALUE = 'trim_value';     // default no.
-  const VAR_DESCRIPTION = 'description';   // Description of the var (In English).
-  const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
-  const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
-  const VAR_IS_INTERNAL_ONLY = 'internal_only'; // If true, then this variable is only accepted by internals.
-  const VAR_OVERRIDE_VALUE = 'override_value'; // Set this to override any value given from URI/GET/POST.
-  const VAR_ALIAS_FOR = 'alias_for'; // Contains array of alt. variable names that contain the same value.
+  // Default no.
+  const VAR_IS_ARRAY = 'is_array';
+  // Default no.
+  const VAR_IS_REQUIRED = 'is_required';
+  // Default no.
+  const VAR_TRIM_VALUE = 'trim_value';
+  // Description of the var (In English).
+  const VAR_DESCRIPTION = 'description';
+  // Optional array for checking against allowed values.
+  const VAR_ALLOWED_VALUES = 'a_allowed_values';
+  // Default no. Some vars may not be changed.
+  const VAR_IS_READ_ONLY = 'read_only';
+  // If true, then this variable is only accepted by internals.
+  const VAR_IS_INTERNAL_ONLY = 'internal_only';
+  // Set this to override any value given from URI/GET/POST.
+  const VAR_OVERRIDE_VALUE = 'override_value';
+  // Contains array of alt. variable names that contain the same value.
+  const VAR_ALIAS_FOR = 'alias_for';
 
-  const VAR_IS_HIDDEN = 'hidden'; // Hide var for outside world.
+  // Hide var for outside world.
+  const VAR_IS_HIDDEN = 'hidden';
   const VAR_IS_HIDDEN_YES = 'yes';
   const VAR_IS_HIDDEN_NO = 'no';
 
@@ -141,9 +166,9 @@ abstract class mediamosa_rest_call {
   const VAR_IS_REQUIRED_YES = 'YES';
   const VAR_IS_REQUIRED_NO = 'NO';
 
-  // Values VAR_IS_ARRAY
-  const VAR_IS_ARRAY_YES = 'YES';        // Make it an array, if not.
-  const VAR_IS_ARRAY_NO = 'NO';          // May not be array, if not, take 1st element.
+  // Values VAR_IS_ARRAY.
+  const VAR_IS_ARRAY_YES = 'YES';
+  const VAR_IS_ARRAY_NO = 'NO';
 
   // Values TRIM_VALUE
   const VAR_TRIM_VALUE_YES = 'YES';
@@ -161,8 +186,10 @@ abstract class mediamosa_rest_call {
   const PARAM_VALUE = 'value';
   const PARAM_VALUE_ORG = 'value_org';
   const PARAM_TYPE = 'type';
-  const PARAM_ISSET_GIVEN = 'isgiven'; // Value was set by GET/POST/URI
-  const PARAM_ISSET_DEFAULT = 'isset_default'; // Value isset, but was set with default value.
+  // Value was set by GET/POST/URI.
+  const PARAM_ISSET_GIVEN = 'isgiven';
+  // Value isset, but was set with default value.
+  const PARAM_ISSET_DEFAULT = 'isset_default';
   const PARAM_VALIDATED = 'validated';
   const PARAM_RANGE_START = 'range_start';
   const PARAM_RANGE_END = 'range_end';
@@ -191,9 +218,9 @@ abstract class mediamosa_rest_call {
    * Main constructor.
    *
    * @param rest_call $rest_call
+   *   The rest call to execute.
    */
   function __construct($rest_call) {
-    // Copy us.
     $this->{self::URI} = $rest_call[self::URI];
     $this->{self::URI_REQUEST} = explode('/', (isset($rest_call[self::URI_REQUEST]) ? $rest_call[self::URI_REQUEST] : $rest_call[self::URI]));
     $this->{self::RESPONSE_TYPE} = $rest_call[self::RESPONSE_TYPE];
@@ -209,10 +236,8 @@ abstract class mediamosa_rest_call {
     $this->{self::EXAMPLE_RESPONSE} = isset($rest_call[self::EXAMPLE_RESPONSE]) ? $rest_call[self::EXAMPLE_RESPONSE] : '';
     $this->{self::RESPONSE_FIELDS} = isset($rest_call[self::RESPONSE_FIELDS]) ? $rest_call[self::RESPONSE_FIELDS] : '';
 
-    // Access.
     $this->{self::ACCESS} = $rest_call[self::ACCESS];
 
-    // Other.
     $this->{self::URI_PARAMS} = isset($rest_call[self::URI_PARAMS]) ? $rest_call[self::URI_PARAMS] : array();
     $this->{self::DEFAULT_PARAMS_VALUES} = isset($rest_call[self::DEFAULT_PARAMS_VALUES]) ? $rest_call[self::DEFAULT_PARAMS_VALUES] : array();
   }
@@ -285,10 +310,15 @@ abstract class mediamosa_rest_call {
     $this->appdate2utc_rest_args();
 
     // Call the function.
+    $this->doing_call = true;
     $this->do_call();
+    $this->doing_call = false;
 
-    // Make sure no error message queue builds up in the session
+    // Make sure no error message queue builds up in the session.
     drupal_get_messages();
+
+    // Call our hooks that for post actions after we are done.
+    module_invoke_all('mediamosa_rest_process_call_post', $this);
 
     return $this->{self::RESPONSE_TYPE};
   }
@@ -297,8 +327,8 @@ abstract class mediamosa_rest_call {
    * Do authorize app.
    */
   private function do_app_authorized() {
-    // If we are internal or external, return. Remember that we completly ignore
-    // the session application ID as internal or external may not use it.
+    // If we are internal or external, return. Remember that we completely
+    // ignore the session application ID as internal or external may not use it.
     if ($this->is_internal() || $this->is_external()) {
       if ($this->is_external()) {
         // Make sure app_id can not be used with externals.
@@ -462,6 +492,10 @@ abstract class mediamosa_rest_call {
    * @see mediamosa_version()
    *
    * @param int $app_id
+   *   The application ID to check.
+   *
+   * @return array
+   *   The version array.
    */
   protected function app_active_version($app_id) {
     $app_versions = &drupal_static(__FUNCTION__, array());
@@ -483,14 +517,14 @@ abstract class mediamosa_rest_call {
    * @param array $var_setup
    *   Provide current array to merge.
    * @param string $default_order_by
-   *  Default field to order on.
+   *   Default field to order on.
    * @param array $allowed_values_order_by
-   *  array containing allowed values.
+   *   Array containing allowed values.
    * @param string $default_order_direction
-   *  ASC (default) / DESC direction.
+   *   Either ASC (default) / DESC direction.
    *
    * @return array
-   *  Returns the altered $var_setup.
+   *   Returns the altered $var_setup.
    */
   protected function get_var_setup_order_by(array $var_setup = array(), $default_order_by = '', array $allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
@@ -544,7 +578,11 @@ abstract class mediamosa_rest_call {
    * @param array $translate_bools
    *  Array containing mapping to TRUE / FALSE string values.
    *  default: array(FALSE => 'FALSE', TRUE => 'TRUE')
+   *
    * @return mixed
+   *   The value of the supplied parameter.
+   *
+   * @throws mediamosa_exception_program_error()
    */
   public function get_param_value($param, $translate_bool = FALSE, array $translate_bools = array(FALSE => 'FALSE', TRUE => 'TRUE')) {
     if (!isset($this->rest_args[$param])) {
@@ -575,6 +613,8 @@ abstract class mediamosa_rest_call {
    *
    * @return mixed
    *   The original value of the supplied parameter.
+   *
+   * @throws mediamosa_exception_program_error()
    */
   public function get_param_value_org($param) {
     if (!isset($this->rest_args[$param])) {
@@ -593,6 +633,8 @@ abstract class mediamosa_rest_call {
    *   The name of the parameter.
    * @param mixed $value
    *   The value to store.
+   *
+   * @throws mediamosa_exception_program_error()
    */
   public function set_param_value($param, $value) {
     if (isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
@@ -756,6 +798,8 @@ abstract class mediamosa_rest_call {
    *
    * @return mixed
    *   The value of the parameter.
+   *
+   * @throws mediamosa_exception_error_403()
    */
   public static function get_param_value_global($param, $default = NULL) {
     // Is mediamosa_params is set, we take priority on those.
@@ -832,11 +876,27 @@ abstract class mediamosa_rest_call {
     return $this->get_method() == self::METHOD_OPTIONS;
   }
 
+  /**
+   * Are we inside the REST call.
+   *
+   * @return bool
+   *   Return true when REST call is being executed, inside the do_call().
+   */
+  public function is_doing_call() {
+    return $this->doing_call;
+  }
+
   // ---------------------------------------------------- Functions (protected).
   /**
    * Process the supplied parameters.
    *
    * @param array $var_setup
+   *   The var_setup array to process.
+   *
+   * @return array
+   *   The processed var_setup.
+   *
+   * @throws mediamosa_exception_error()
    */
   protected function process_rest_args(array $var_setup) {
 
@@ -1039,6 +1099,7 @@ abstract class mediamosa_rest_call {
    * Validate the supplied parameters and type validation.
    *
    * @param array $var_setup
+   *   The var_setup array to process.
    */
   protected function validate_rest_args(array $var_setup) {
 
@@ -1087,7 +1148,6 @@ abstract class mediamosa_rest_call {
    * UTC.
    */
   protected function appdate2utc_rest_args() {
-
     // Get the timezone.
     $timezone = mediamosa::get_environment_timezone();
 

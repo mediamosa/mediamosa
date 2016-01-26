@@ -306,13 +306,13 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       break;
   }
 
-  // When off, remove from indexed.
+  // When off, queue the index for later.
   if (!mediamosa_solr::isEnabled()) {
     $instant = FALSE;
   }
 
   if ($instant) {
-    mediamosa_solr::insertAssets($reindex_info['asset_ids']);
+    mediamosa_solr::insertDelayedAssets($reindex_info['asset_ids']);
   }
   else {
     mediamosa_solr::queueAssets($reindex_info['asset_ids']);
@@ -482,4 +482,18 @@ function mediamosa_solr_mediamosa_configuration_collect() {
   );
 
   return $form;
+}
+
+/**
+ * Implementation of hook_mediamosa_rest_process_call_post().
+ *
+ * @param mediamosa_rest_call $mediamosa_rest_call
+ *   The mediamosa_rest_call that called to POST hook.
+ */
+function mediamosa_solr_mediamosa_rest_process_call_post($mediamosa_rest_call) {
+  $delayed_assets = &drupal_static('mediamosa_solr_delayed_asset_ids', array());
+
+  if (!empty($delayed_assets)) {
+    mediamosa_solr::insertAssets($delayed_assets);
+  }
 }

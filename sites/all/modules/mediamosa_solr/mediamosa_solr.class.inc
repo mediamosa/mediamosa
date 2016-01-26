@@ -537,12 +537,14 @@ class mediamosa_solr {
   /**
    * Check access on assets using given array asset_ids
    *
-   * @param array $asset_ids
-   * @param integer $app_id
-   * @param string $acl_user_id
-   * @param array $acl_group_ids
-   * @param string $acl_domain
-   * @param string $acl_realm
+   * @param array $parameters
+   *   The parameter for checking;
+   *   'asset_ids': (array) The assets to check,
+   *   'app_ids': (array) The client applications ids to use.
+   *   'acl_user_id': The user ID.
+   *   'acl_group_ids': (array) The group IDs.
+   *   'acl_domain': The domain.
+   *   'acl_realm': The Realm.
    *
    * @return array
    *   Returns the array with asset_id(s) on which we have access on.
@@ -663,7 +665,7 @@ class mediamosa_solr {
    * Number of seconds to optimize. 0 is off.
    *
    * @return int
-   *   Number of seconds before optimize is triggert.
+   *   Number of seconds before optimize is triggered.
    */
   public static function settingsOptimize() {
     return intval(variable_get('mediamosa_solr_optimize', 0));
@@ -673,9 +675,13 @@ class mediamosa_solr {
    * Common log function.
    *
    * @param string $message
+   *   The message to log.
    * @param array $variables
-   * @param string $severity
+   *   The message log variables.
+   * @param int $severity
+   *   The severity of the message.
    * @param string $link
+   *   Possible link to object.
    */
   public static function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
     mediamosa_watchdog::log($message, $variables, $severity, 'Solr', $link);
@@ -689,7 +695,7 @@ class mediamosa_solr {
    */
   public static function queueAssets(array $asset_ids, &$errors = array()) {
 
-    foreach ($asset_ids as $asset_id) {
+    foreach (array_unique($asset_ids) as $asset_id) {
       try {
         if (mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
           ->condition(mediamosa_solr_queue_db::ID, $asset_id)
@@ -737,15 +743,35 @@ class mediamosa_solr {
   }
 
   /**
-   * Insert asset data without delay.
+   * Insert the asset into Solr, put is run after the REST call is done.
    *
    * @param array $asset_ids
    *   Array of asset IDs.
    */
+  public static function insertDelayedAssets(array $asset_ids) {
+    // We need to make sure we are inside the REST call, else our POST hook is
+    // never called.
+    $mediamosa_response = mediamosa::get();
+    if (!($mediamosa_response instanceof mediamosa_response) || ($mediamosa_response instanceof mediamosa_response && !$mediamosa_response->is_doing_call())) {
+      return static::insertAssets($asset_ids);
+    }
+
+    $delayed_assets = &drupal_static('mediamosa_solr_delayed_asset_ids', array());
+    $delayed_assets = array_merge($delayed_assets, $asset_ids);
+  }
+
+  /**
+   * Insert asset data without delay.
+   *
+   * @param array $asset_ids
+   *   Array of asset IDs.
+   * @param array $errors
+   *   Referenced array for storing possible errors.
+   */
   public static function insertAssets(array $asset_ids, &$errors = array()) {
 
     $documents = array();
-    foreach ($asset_ids as $asset_id) {
+    foreach (array_unique($asset_ids) as $asset_id) {
       try {
         $document = self::createDocumentAsset($asset_id);
         if (empty($document)) {

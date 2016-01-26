@@ -46,9 +46,9 @@
  *   - 'description'
  *     The description of the metadata set.
  *   - 'context'
- *     A unigue ID, used as context ID: only alphanum only.
+ *     A unique ID, used as context ID: only alphanum only.
  *   - 'context_full'
- *     A unique long ID, alphum / underscore only.
+ *     A unique long ID, alpha-num / underscore only.
  */
 function hook_mediamosa_metadata_info() {
   return array(
@@ -249,6 +249,18 @@ function hook_mediamosa_asset_delete($asset_id) {
  */
 function hook_mediamosa_app_fields_alter(&$fields) {
   $fields[] = 'new_field';
+}
+
+/**
+ * Call post process hooks after the REST call was run.
+ *
+ * Is called at the end of the REST call (after doCall() function) and before
+ * any output is sent back.
+ *
+ * @param $mediamosa_rest_call
+ *   The REST call that has been executed.
+ */
+function hook_mediamosa_rest_process_call_post($mediamosa_rest_call) {
 }
 
 /**

@@ -7,8 +7,8 @@
   // Add our default response attribute.
 
   $mediamosa_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
-  $mediamosa_response->add_reponse_attribute('version', $mediamosa_version[mediamosa_version::MAJOR] . '.' . $mediamosa_version[mediamosa_version::MINOR]);
-  $mediamosa_response->add_reponse_attribute('xmlns:opensearch', 'http://a9.com/-/spec/opensearch/1.1/');
+  $mediamosa_response->add_response_attribute('version', $mediamosa_version[mediamosa_version::MAJOR] . '.' . $mediamosa_version[mediamosa_version::MINOR]);
+  $mediamosa_response->add_response_attribute('xmlns:opensearch', 'http://a9.com/-/spec/opensearch/1.1/');
 
   // Get the header.
   $header = $mediamosa_response->get_response_header();

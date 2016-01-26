@@ -389,10 +389,10 @@ function mediamosa_drush_command() {
     ),
   );
 
-  $items['mm-rebuild-registery'] = array(
-    'description' => 'Do a complete rebuild of the registery.',
+  $items['mm-rebuild-registry'] = array(
+    'description' => 'Do a complete rebuild of the registry.',
     'examples' => array(
-      'drush mm-rebuild-registry' => 'Rebuild the registery.',
+      'drush mm-rebuild-registry' => 'Rebuild the registry.',
     ),
     'aliases' => array('mm-rr'),
   );
@@ -1916,9 +1916,9 @@ function drush_mediamosa_mm_reset_counts($app_id) {
 }
 
 /**
- * Drush function mm-rebuild-registery.
+ * Drush function mm-rebuild-registry.
  */
-function drush_mediamosa_mm_rebuild_registery() {
+function drush_mediamosa_mm_rebuild_registry() {
 
   if (!drush_confirm(dt('Are you sure?'))) {
     return drush_user_abort();
@@ -1932,8 +1932,8 @@ function drush_mediamosa_mm_rebuild_registery() {
   }
   catch (Exception $e) {
     $transaction->rollback();
-    drush_print(dt('Failed to rebuild registery, error \'@{error}\'', array('@{error}' => $e->getMessage())));
+    drush_print(dt('Failed to rebuild registry, error \'@{error}\'', array('@{error}' => $e->getMessage())));
   }
 
-  drush_print(dt('Registery successfully rebuild.'));
+  drush_print(dt('Registry successfully rebuild.'));
 }

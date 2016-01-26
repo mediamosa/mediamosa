@@ -50,14 +50,18 @@ class mediamosa_response extends mediamosa {
   // Collect the attributes for the response type.
   protected $response_attributes = array();
 
-  // The rest class object.
+  /**
+   * The rest class object.
+   *
+   * @var mediamosa_rest
+   */
   protected $mediamosa_rest = NULL;
 
   // The request uri.
   protected $request_uri;
   protected $request_method;
 
-  // Start in miliseconds when call was made.
+  // Start in milliseconds when call was made.
   protected $start_time = 0;
 
   // Content_type to use for output.
@@ -104,12 +108,21 @@ class mediamosa_response extends mediamosa {
   /**
    * Dispatch the REST request execution.
    *
-   * @return
-   *  Returns optional override on the response type (XML/JSON etc).
+   * @return string
+   *   Returns optional override on the response type (XML/JSON etc).
    */
   protected function process_call() {
-    // Now execute the call.
     return $this->mediamosa_rest->process_call($this->rest_call);
+  }
+
+  /**
+   * Are we inside the REST call.
+   *
+   * @return bool
+   *   Return true when REST call is being executed, inside the do_call().
+   */
+  public function is_doing_call() {
+    return $this->mediamosa_rest_call instanceof mediamosa_rest_call && $this->mediamosa_rest_call->is_doing_call();
   }
 
   /**
@@ -514,10 +527,8 @@ class mediamosa_response extends mediamosa {
    *
    * @param array $item
    *   The item with data to add.
-   * @param string $id
-   *   The ID of the item.
-   * @param string $id_name
-   *   The name of the ID to use as attribute.
+   * @param array $attributes
+   *   The attributes of the item.
    */
   public function add_item($item, array $attributes = array()) {
     if (empty($attributes)) {
@@ -543,10 +554,10 @@ class mediamosa_response extends mediamosa {
   /**
    * Get the list of response attributes.
    *
-   * @return
+   * @return array
    *  Array of attributes for <response> tag.
    */
-  public function get_reponse_attributes() {
+  public function get_response_attributes() {
     return $this->response_attributes;
   }
 
