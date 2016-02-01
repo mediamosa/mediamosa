@@ -53,9 +53,10 @@ local ln_input = lpeg.P("Input #") * number * COMMA *
 -- Duration: 00:02:06.9, start: 0.000000, bitrate: 4143 kb/s
 -- Duration: 00:02:06.9, start: 0.000000, bitrate: N/A
 -- Duration: 00:53:01.20, start: -1.000000, bitrate: 1749 kb/s
+-- Duration: 01:17:02.03, bitrate: 5123 kb/s
 local ln_duration = space * "Duration" * COLON *
   time * COMMA *
-  "start" * COLON * lpeg.C(lpeg.P("-")^0 * digits * "." * lpeg.P("-")^0 * digits) * space * COMMA *
+  ("start" * COLON * lpeg.C(lpeg.P("-")^0 * digits * "." * lpeg.P("-")^0 * digits) * space * COMMA)^-1 *
   "bitrate" * COLON * ((number * "kb/s") + lpeg.C("N/A")) * space
 
 -- Stream #0.1: Audio: mp2, 44100 Hz, stereo, 64 kb/s
