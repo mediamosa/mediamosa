@@ -722,7 +722,9 @@ abstract class mediamosa_storage {
   }
 
   /**
-   * Return the path, usable for URLs. Not for URI usage.
+   * Return the path.
+   *
+   * Use get_uripath_media_permanent_file() when using the path for urls.
    *
    * @param int $app_id
    *   The application ID.
@@ -733,13 +735,28 @@ abstract class mediamosa_storage {
    *
    * @return string
    *   The path.
+   *
+   * @see get_uripath_media_permanent_file()
    */
-  public static function get_path_media_permanent_file($app_id, $mediafile_id = '', $filename = '', $urlencode = false) {
-    if($urlencode) {
-      return $app_id . '/' . (!empty($mediafile_id) ? $mediafile_id[0] . '/' . $mediafile_id . '/' . rawurlencode($filename) : '');
-    } else {
+  public static function get_path_media_permanent_file($app_id, $mediafile_id = '', $filename = '') {
     return $app_id . '/' . (!empty($mediafile_id) ? $mediafile_id[0] . '/' . $mediafile_id . '/' . $filename : '');
-    }
+  }
+
+  /**
+   * Return the path, usable for URLs.
+   *
+   * @param int $app_id
+   *   The application ID.
+   * @param string $mediafile_id
+   *   The mediafile ID.
+   * @param string $filename
+   *   The filename of the file.
+   *
+   * @return string
+   *   The uri.
+   */
+  public static function get_uripath_media_permanent_file($app_id, $mediafile_id, $filename) {
+    return $app_id . '/' . $mediafile_id[0] . '/' . $mediafile_id . '/' . rawurlencode($filename);
   }
 
   /**
@@ -761,7 +778,6 @@ abstract class mediamosa_storage {
    *   The uri.
    */
   public static function get_realpath_media_permanent_file($app_id, $mediafile_id = '', $filename = '') {
-    // Return the realpath.
     return self::get_realpath_media() . '/' . self::get_path_media_permanent_file($app_id, $mediafile_id, $filename);
   }
 
@@ -781,9 +797,8 @@ abstract class mediamosa_storage {
    * @return string
    *   The path.
    */
-  public static function get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
-    // Return the path.
-    return 'ticket/' . (empty($ticket_type) ? '' : (strtolower($ticket_type) . '/')) . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . $filename;
+  public static function get_uripath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
+    return 'ticket/' . (empty($ticket_type) ? '' : (strtolower($ticket_type) . '/')) . $app_id . '/' . $ticket_id[0] . '/' . $ticket_id . '/' . rawurlencode($filename);
   }
 
   /**
@@ -809,8 +824,7 @@ abstract class mediamosa_storage {
    *   The uri.
    */
   public static function get_uri_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type = '') {
-    // Return the uri.
-    return self::get_uri_media() . self::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
+    return self::get_uri_media() . self::get_uripath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
   }
 
   /**
