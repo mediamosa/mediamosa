@@ -337,7 +337,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
 
       // Get the paths needed for the symlink.
       $link = mediamosa_storage::get_realpath_media_permanent_file($app_id, $ticket_id, $filename);
-      $path = mediamosa_storage::get_path_media_permanent_file($app_id, $ticket_id, $filename);
+      $uripath = mediamosa_storage::get_uripath_media_permanent_file($app_id, $ticket_id, $filename);
     }
     else {
       // Convert to ticket type.
@@ -348,7 +348,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
 
       // Get the paths needed for the symlink.
       $link = mediamosa_storage::get_realpath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
-      $path = mediamosa_storage::get_path_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
+      $uripath = mediamosa_storage::get_uripath_media_ticket_file($app_id, $ticket_id, $filename, $ticket_type);
     }
 
     // Create the symlink.
@@ -357,8 +357,7 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     // Get the streaming server URI.
     $server_uri = mediamosa_media::get_server_uri($mediafile_id, $uri, $response_type);
 
-    // Rebuild uri with path.
-    $server_uri_build = strtr($server_uri, array(mediamosa_media::PARAM_URI_TICKET => $path));
+    $server_uri_build = strtr($server_uri, array(mediamosa_media::PARAM_URI_TICKET => $uripath));
 
     // Return the information needed.
     return array(
