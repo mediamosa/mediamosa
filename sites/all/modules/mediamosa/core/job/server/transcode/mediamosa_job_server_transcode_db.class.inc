@@ -36,7 +36,7 @@ class mediamosa_job_server_transcode_db {
   // Database fields;
   const ID = 'jobserver_job_id';
   const TOOL = 'tool';
-  const TOOL_LENGTH = 10;
+  const TOOL_LENGTH = 50;
   const COMMAND = 'command';
   const FILE_EXTENSION = 'file_extension';
   const FILE_EXTENSION_LENGTH = 5;
