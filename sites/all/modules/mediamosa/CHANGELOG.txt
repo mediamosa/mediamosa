@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2200)
+MediaMosa 3.6.1-dev (build 2201)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -379,7 +379,8 @@ MediaMosa 3.6.1-dev (build 2200)
 - Make start optional to match durations for video files that don't have start metadata.
 - Added drupal_alter to mediamosa_app_insert and _update to hook custom fields.
 - Increased allowed length of tool name in database.
-- fix duration for vpx-transcode script in addition to the analyse script (Patch by Flyapen).
+- Fix duration for vpx-transcode script in addition to the analyse script (Patch by Flyapen).
+- Added url encoding on filenames used in urls.
 
 
 MediaMosa 3.5.x (build 2072)
