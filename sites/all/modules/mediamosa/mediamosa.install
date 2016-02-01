@@ -5702,13 +5702,13 @@ function mediamosa_update_7211() {
   unset($transaction);
 }
 
-
 /**
  * Allow tools to have a name longer than 10 chars.
  */
-function mediamosa_update_7211() {
+function mediamosa_update_7212() {
   db_query("ALTER TABLE {mediamosa_transcode_profile} MODIFY `tool` varchar(50) 'Name of tool used.'");
   db_query("ALTER TABLE {mediamosa_job_transcode} MODIFY `tool` varchar(50) 'Name of tool used.'");
   db_query("ALTER TABLE {mediamosa_job_server_transcode} MODIFY `tool` varchar(50) 'Name of tool used.'");
   db_query("ALTER TABLE {mediamosa_asset_mediafile} MODIFY `tool` varchar(50) 'Name of tool used when creating the file.'");
 }
+
