@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Job tests for libreoffice related functions.
+ */
+class MediaMosaToolLibreofficeTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - libreoffice',
+      'description' => 'Testing the libreoffice tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    parent::setUp('mediamosa_tool_libreoffice');
+  }
+
+}
