@@ -23,7 +23,7 @@ class mediamosa_transcode_profile_db {
   const IS_DEFAULT_PROFILE_TRUE = 'TRUE';
   const IS_DEFAULT_PROFILE_FALSE = 'FALSE';
   const TOOL = 'tool';
-  const TOOL_LENGTH = 10;
+  const TOOL_LENGTH = 50;
   const FILE_EXTENSION = 'file_extension';
   const FILE_EXTENSION_LENGTH = 4;
   const COMMAND = 'command';
