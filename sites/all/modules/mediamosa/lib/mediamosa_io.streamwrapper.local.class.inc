@@ -358,6 +358,9 @@ class mediamosa_io_streamwrapper_local extends mediamosa_io_streamwrapper {
     $server_uri = mediamosa_media::get_server_uri($mediafile_id, $uri, $response_type);
 
     // Rebuild uri with path.
+    if($is_public) {
+      $path = mediamosa_storage::get_path_media_permanent_file($app_id, $ticket_id, $filename, true);
+    }
     $server_uri_build = strtr($server_uri, array(mediamosa_media::PARAM_URI_TICKET => $path));
 
     // Return the information needed.
