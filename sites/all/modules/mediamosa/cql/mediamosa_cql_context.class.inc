@@ -59,7 +59,10 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
    * Verify the given CQL string
    *
    * @param string $str_cql
+   *   The CQL to verify.
+   *
    * @return bool
+   *   Returns TRUE when failed, FALSE otherwise.
    */
   final public function mediamosa_cql_verify($str_cql) {
     try {

@@ -177,7 +177,6 @@ abstract class mediamosa_cql {
       // no error when we catch this here.
     }
     catch (mediamosa_cql_exception_eo_scope $e) {
-      assert($e);
       throw new mediamosa_cql_exception_eo_scope_unmatched();
     }
   }

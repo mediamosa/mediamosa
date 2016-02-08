@@ -134,10 +134,9 @@ class mediamosa_core_cql {
    *   (optional) The mediamosa CQL context, or generated when NULL.
    *
    * @return bool
-   *   TRUE when CQL was parsed successfull, FALSE otherwise.
+   *   TRUE when CQL was parsed successful, FALSE otherwise.
    */
   public static function verify_asset($cql, array $app_ids, &$error_text, &$mediamosa_cql = NULL) {
-
     if (!isset($mediamosa_cql)) {
       $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
     }

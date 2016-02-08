@@ -95,10 +95,18 @@ class mediamosa_search {
 
     // Get name.
     $name = $mediamosa_search_engine['name'];
+    if ($name === 'mediamosa_search') {
+      $name = 'mediamosa_asset_search';
+    }
 
     mediamosa_exception::assert(method_exists($name, 'asset_verify'));
 
-    return call_user_func($name . '::asset_verify', $cql, $app_ids, $error_text);
+    $parameters = array(
+      $cql,
+      $app_ids,
+      &$error_text,
+    );
+    return call_user_func_array($name . '::asset_verify', $parameters);
   }
 
   /**
