@@ -89,14 +89,14 @@ class MediaMosaAssetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->createAssetMetadata($asset_id_1,
       array(
         'simpletest_access_policy' => '1',
-        'status' => 'streamable',
+        'simpletest_status' => 'streamable',
       )
     );
     // Create properties.
     $this->createAssetMetadata($asset_id_2,
       array(
         'simpletest_access_policy' => '2',
-        'status' => 'streamable',
+        'simpletest_status' => 'streamable',
       )
     );
     // Create properties.
@@ -104,75 +104,11 @@ class MediaMosaAssetSearchTestCaseEga extends MediaMosaTestCaseEgaJob {
       array(
         'simpletest_access_policy_int' => '1',
         'simpletest_access_policy' => 'w',
-        'status' => 'vox',
+        'simpletest_status' => 'vox',
       )
     );
 
-    // Breaks on solr, but for other reason.
- //   $this->cql_do_search_test_assets_1('((simpletest_access_policy == "w" OR (owner_id == "something" AND simpletest_access_policy == "2")) OR ((acl_user == "^something^" OR acl_group == "^something^" OR acl_group == "^something^") AND simpletest_access_policy == "1")) AND (simpletest_status == "^streamable^" OR simpletest_status == "^vox^") sortBy videotimestamp/descending', array($asset_id_3 => TRUE));
-
-
-
-// (
-//   (
-//     simpletest_access_policy == "w"
-//     OR
-//     (
-//       owner_id == "something" AND simpletest_access_policy == "2"
-//     )
-//   )
-//   OR
-//   (
-//     (
-//       acl_user == "^something^" OR acl_group == "^something^" OR acl_group == "^something^"
-//     )
-//     AND
-//     simpletest_access_policy == "1"
-//   )
-// )
-// AND
-// (
-//   simpletest_status == "^streamable^" OR simpletest_status == "^vox^"
-// )
-
-// (
-//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%w%%'
-//   OR
-//   (
-//     a.owner_id LIKE '%%something%%' AND mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%2%%'
-//   )
-// )
-// OR
-// (
-//   acl_u.acl_name = 'something' OR acl_ug.acl_name = 'something' OR acl_ug.acl_name = 'something'
-// )
-// AND
-//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%1%%'
-// AND
-// (
-//   mediamosa_asset_metadata_simpletest_status.val_char = 'streamable' OR mediamosa_asset_metadata_simpletest_status.val_char = 'vox'
-// )
-//
-// (
-//   (mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%w%%' OR (a.owner_id LIKE '%%something%%' AND mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%2%%'))
-//   OR
-//   (acl_u.acl_name = 'something' OR acl_ug.acl_name = 'something' OR acl_ug.acl_name = 'something')
-//   AND
-//   mediamosa_asset_metadata_simpletest_access_policy.val_char LIKE '%%1%%'
-//   AND
-//   (mediamosa_asset_metadata_simpletest_status.val_char = 'streamable' OR mediamosa_asset_metadata_simpletest_status.val_char = 'vox')
-// )
-
-//
-//   //
-// (
-//   (app_10436_simpletest_access_policy_vc:"w" OR (*:* AND owner_id:"something" AND app_10436_simpletest_access_policy_vc:"2"))
-//   OR
-//   (mf_acl_user:something OR mf_acl_user_group:something OR mf_acl_user_group:something)
-//   AND
-//   app_10436_simpletest_access_policy_vc:"1"
-//   AND
-//   (app_10436_simpletest_status_vc_exact:streamable OR app_10436_simpletest_status_vc_exact:vox)
-// )
+    // Do complex OR and AND combination.
+    $this->cql_do_search_test_assets_1('((simpletest_access_policy == "w" OR (owner_id == "something" AND simpletest_access_policy == "2")) OR ((acl_user == "^' .  self::SIMPLETEST_USER_ID . '^" OR acl_group == "^something^") AND simpletest_access_policy == "1")) AND (simpletest_status == "^streamable^" OR simpletest_status == "^vox^") sortBy videotimestamp/descending', array($asset_id_3 => TRUE));
   }
 }

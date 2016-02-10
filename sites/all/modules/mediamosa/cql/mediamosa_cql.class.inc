@@ -843,7 +843,7 @@ abstract class mediamosa_cql {
    * @param array $parse_result
    *   The parse result to convert to string.
    * @param string $outside
-   *   The last conjuction type of our parent.
+   *   The last conjunction type of our parent.
    * @param bool $first
    *   Is first call, or child call.
    *
@@ -860,44 +860,45 @@ abstract class mediamosa_cql {
 
       foreach (array(' AND', ' OR') as $conjunction) {
         if (mediamosa_unicode::strlen($item) > $conjunction && mediamosa_unicode::substr($item, -mediamosa_unicode::strlen($conjunction)) === $conjunction) {
-          $inside[] = $conjunction;
+          $inside[] = trim($conjunction);
         }
+      }
+      if ($item === 'AND' || $item === 'OR') {
+        $inside[] = $item;
       }
     }
 
     $inside = array_unique($inside);
-    $inside = count($inside) > 1 ? null : reset($inside);
+    $inside = count($inside) > 1 ? NULL : reset($inside);
 
     foreach ($parse_result as &$item) {
       if (!is_string($item)) {
-        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, false);
+        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, FALSE);
       }
     }
 
     $str_ql = trim(implode(' ', $parse_result));
 
-    // The end can not end with a conjuction.
-    while (true) {
+    // The end can not end with a conjunction.
+    while (TRUE) {
       if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
         $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR')));
       }
       elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
         $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND')));
       }
-      elseif ($str_ql === 'OR' || $str_ql === 'AND') {
-        $str_ql = '';
-        break;
-      }
       else {
         break;
       }
     }
 
-    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
-      $str_ql = '(' . $str_ql . ')';
+    if ($str_ql !== 'OR' && $str_ql !== 'AND') {
+      if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
+        $str_ql = '(' . $str_ql . ')';
+      }
     }
 
-    return $str_ql;
+    return ($first && ($str_ql === 'OR' || $str_ql === 'AND')) ? '' : $str_ql;
   }
 
   /**

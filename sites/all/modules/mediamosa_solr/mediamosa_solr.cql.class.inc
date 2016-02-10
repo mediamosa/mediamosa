@@ -21,7 +21,6 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
    */
   protected function mediamosa_core_cql_context_array_get() {
     static $mediamosa_context = NULL;
-      mediamosa_watchdog::log_export(__FUNCTION__);
 
     if (!isset($mediamosa_context)) {
       $mediamosa_context = $this->m_a_mediamosa_context;
@@ -656,7 +655,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
    *
    * @return string
    */
-  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = null, $first = false) {
+  protected function mediamosa_cql_parseresult_to_string(array $parse_result, $outside = NULL, $first = FALSE) {
     $inside = array();
     foreach ($parse_result as &$item) {
       if (!is_string($item)) {
@@ -667,44 +666,45 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       foreach (array(' AND', ' OR') as $conjunction) {
         if (mediamosa_unicode::strlen($item) > $conjunction && mediamosa_unicode::substr($item, -mediamosa_unicode::strlen($conjunction)) === $conjunction) {
-          $inside[] = $conjunction;
+          $inside[] = trim($conjunction);
         }
+      }
+      if ($item === 'AND' || $item === 'OR') {
+        $inside[] = $item;
       }
     }
 
     $inside = array_unique($inside);
-    $inside = count($inside) > 1 ? null : reset($inside);
+    $inside = count($inside) > 1 ? NULL : reset($inside);
 
     foreach ($parse_result as &$item) {
       if (!is_string($item)) {
-        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, false);
+        $item = $this->mediamosa_cql_parseresult_to_string($item, $inside, FALSE);
       }
     }
 
     $str_ql = trim(implode(' ', $parse_result));
 
-    // The end of the string can not end with a conjuction.
-    while (true) {
+    // The end can not end with a conjunction.
+    while (TRUE) {
       if (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' OR')) === ' OR') {
         $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' OR')));
       }
       elseif (mediamosa_unicode::substr($str_ql, -mediamosa_unicode::strlen(' AND')) === ' AND') {
         $str_ql = trim(mediamosa_unicode::substr($str_ql, 0, -mediamosa_unicode::strlen(' AND')));
       }
-      elseif ($str_ql === 'OR' || $str_ql === 'AND') {
-        $str_ql = '';
-        break;
-      }
       else {
         break;
       }
     }
 
-    if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
-      $str_ql = '(' . ($outside === ' OR' ? '*:* AND ' : '') .  $str_ql . ')';
+    if ($str_ql !== 'OR' && $str_ql !== 'AND') {
+      if (!$first && (is_null($outside) || is_null($inside) || $outside !== $inside) && $str_ql !== '') {
+        $str_ql = '(' . ($outside === ' OR' ? '*:* AND ' : '') .  $str_ql . ')';
+      }
     }
 
-    return $str_ql;
+    return ($first && ($str_ql === 'OR' || $str_ql === 'AND')) ? '' : $str_ql;
   }
 
   /**

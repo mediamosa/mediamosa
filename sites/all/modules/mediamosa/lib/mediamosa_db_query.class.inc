@@ -4,8 +4,6 @@
  * A basic class to create DB Queries.
  * Although in future we should use db_ classes of drupal 7 instead (see
  * mediamosa_db).
- *
- * @deprecated: Do not use this library, will be removed in 3.5.
  */
 
 class mediamosa_db_query {
