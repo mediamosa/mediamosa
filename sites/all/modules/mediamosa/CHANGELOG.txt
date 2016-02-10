@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2201)
+MediaMosa 3.6.1-dev (build 2202)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -381,6 +381,9 @@ MediaMosa 3.6.1-dev (build 2201)
 - Increased allowed length of tool name in database.
 - Fix duration for vpx-transcode script in addition to the analyse script (Patch by Flyapen).
 - Added url encoding on filenames used in urls.
+- Fixed CQL optimizer; Rare complex OR and AND queries: No longer removes paired () when OR and AND combinations match.
+  The HAVING clause no longer generates wrong query for MySQL from CQL.
+- Fixing CQL error message being empty during CQL verify stage, and loop to verify function when on MySQL.
 
 
 MediaMosa 3.5.x (build 2072)
