@@ -1,0 +1,63 @@
+<?php
+
+function mediamosa_tool_unoconv_install() {
+
+  $t = get_t();
+  // Tool parameters.
+  $default_params = array(
+    array(
+      'unoconv',
+      'epdf',
+      '-eSelectPdfVersion',
+      NULL,
+      NULL,
+      NULL,
+      '0',
+      'FALSE',
+      $t('If a document is converted to a pdf "1" makes it a ePdf.'),
+    ),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($default_params as $default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
+
+    $node = node_save($node);
+
+  }
+
+}
+
+function mediamosa_tool_unoconv_uninstall() {
+
+  $query = new EntityFieldQuery();
+  $entities = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('type',
+      array(
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
+        mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+      ), 'IN')
+    ->execute();
+  $nodes = node_load_multiple(array_keys($entities['node']));
+
+  // Can't add tool=... to FieldQuery, so do it here.
+  $nodes_to_delete = array();
+  foreach ($nodes as $node) {
+    if ($node->tool == 'unoconv') {
+      $nodes_to_delete[] = $node->nid;
+    }
+  }
+  node_delete_multiple($nodes_to_delete);
+}

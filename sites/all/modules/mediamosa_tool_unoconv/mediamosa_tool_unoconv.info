@@ -1,4 +1,4 @@
-name = "Mediamosa Tool LibreOffice"
+name = "Mediamosa Tool Unoconv"
 description = "Mediamosa Tools module for LibeOffice"
 package = "MediaMosa - Tool"
 version = 7.x-3.5
@@ -11,5 +11,5 @@ dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_server
 
 ; Used files.
-files[] = mediamosa_tool_libreoffice.class.inc
-files[] = mediamosa_tool_libreoffice.test
+files[] = mediamosa_tool_unoconv.class.inc
+files[] = mediamosa_tool_unoconv.test

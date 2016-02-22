@@ -2,17 +2,17 @@
 
 /**
  * @file
- * LibreOffice tool functions.
+ * Unoconv tool functions.
  */
-class mediamosa_tool_libreoffice extends mediamosa_tool_ffmpeg {
+class mediamosa_tool_unoconv {
 
   /**
    * Name / ID of the module.
    */
-  const NAME = 'libreoffice';
+  const NAME = 'unoconv';
 
 
-  const MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_LIBREOFFICE_WARNING = '0';
+  const MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_UNOCONV_WARNING = '0';
 
   /**
    * Returns TRUE when we support this mime-type.
@@ -55,23 +55,27 @@ class mediamosa_tool_libreoffice extends mediamosa_tool_ffmpeg {
    */
   public static function get_transcode_exec($options) {
 
-    // Build the values.
+    $parameterString = $options['parameter_string'];
+
+    $pattern = '/(-eSelectPdfVersion) (\d)/';
+    $replacement = '${1}=${2}';
+    $parameterString = preg_replace($pattern, $replacement, $parameterString);
+
     $execution_string_options = array(
       '@mediafile_source' => $options['location_source_file'],
       '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
-      '@parameter_string' => $options['parameter_string'],
+      '@parameter_string' => $parameterString,
       '@status_file' => $options['status_file'],
       '@working_dir' => dirname($options['location_dest_file']),
       '@basename' => basename($options['location_source_file']),
-      '@copy_from' => dirname($options['location_dest_file']) . '/' . basename($options['location_source_file']) . '.pdf',
+      '@extension' => $options['file_extension'],
     );
 
     // Execution string.
     return strtr(
       '{ echo "Errors: none"; echo "Status: converting"; echo "Progress: 0.000"; echo "Warnings: none"; } > @status_file;' .
       'export MAGICK_TMPDIR=@working_dir;' .
-      'libreoffice --headless --convert-to pdf @mediafile_source --outdir @working_dir;' .
-      'mv @copy_from @mediafile_dest;' .
+      'unoconv @parameter_string -f @extension -o @mediafile_dest @mediafile_source;' .
       '{ echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @status_file;',
       $execution_string_options);
 

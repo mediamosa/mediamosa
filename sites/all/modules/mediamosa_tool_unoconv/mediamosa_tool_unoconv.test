@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Job tests for libreoffice related functions.
+ * Job tests for unoconv related functions.
  */
 class MediaMosaToolLibreofficeTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Members.
@@ -12,8 +12,8 @@ class MediaMosaToolLibreofficeTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Tools - libreoffice',
-      'description' => 'Testing the libreoffice tool.',
+      'name' => 'Tools - unoconv',
+      'description' => 'Testing the unoconv tool.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
     );
@@ -24,7 +24,7 @@ class MediaMosaToolLibreofficeTestCaseEga extends MediaMosaTestCaseEgaJob {
    * Implements setUp().
    */
   protected function setUp() {
-    parent::setUp('mediamosa_tool_libreoffice');
+    parent::setUp('mediamosa_tool_unoconv');
   }
 
 }
