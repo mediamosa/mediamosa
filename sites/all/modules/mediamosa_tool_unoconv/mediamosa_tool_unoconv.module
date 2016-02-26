@@ -1,0 +1,134 @@
+<?php
+/**
+ * @file
+ * Audio tool module.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function mediamosa_tool_unoconv_permission() {
+  return array(
+    'access mediamosa tool audio' => array(
+      'title' => t('Access MediaMosa Tool module for Unoconv toolset'),
+      'description' => t('Enables the user to use the Unoconv toolset.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_tool_info().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_info() {
+  return array(
+    mediamosa_tool_unoconv::NAME => array(
+      'name' => t('Unoconv'),
+      'description' => t('The tool for converting office files.'),
+    )
+  );
+}
+
+/**
+ * Implements hook_mediamosa_tool_can_analyse().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_unoconv::is_supported($mime_type);
+}
+
+/**
+ * Implements hook_mediamosa_tool_analyse().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_analyse($mediafile_id) {
+
+  // Analyse of audio files is done by the ffmpeg toolset.
+  return mediamosa_tool_ffmpeg_mediamosa_tool_analyse($mediafile_id);
+}
+
+/**
+ * Implements hook_mediamosa_tool_can_generate_still().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_can_generate_still($mime_type) {
+  return FALSE;
+}
+
+/**
+ * Implements hook_mediamosa_tool_get_generate_still_exec().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_get_generate_still_exec($job_info, $mediafile_id_source) {
+  return FALSE;
+}
+
+/**
+ * Implements hook_mediamosa_tool_mapping().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_mapping() {
+  return mediamosa_tool_params::get_by_tool(mediamosa_tool_unoconv::NAME);
+}
+
+/**
+ * Implements hook_mediamosa_tool_param_checking().
+ */
+function mediamosa_tool_unoconv_mediamosa_tool_param_checking($nice_parameter, $value) {
+
+  mediamosa_tool_params::check_mapping(mediamosa_tool_unoconv::NAME, $nice_parameter, $value);
+}
+
+/**
+ * Generate information for the status page.
+ */
+function _mediamosa_tool_unoconv_status_generate() {
+
+  // For several topics we provide a link to webpages with configuration hints.
+  $helper_links = array(
+    'unoconv' => l(t('here'), 'http://dag.wiee.rs/home-made/unoconv/'),
+  );
+
+  $results = array();
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('unoconv --version', $exec_output, array(
+    0,
+    255
+  ));
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('unoconv', $exec_output) : t('unoconv not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('unoconv ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_unoconv'] = array(
+    'title' => t('Unoconv tool'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_unoconv::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_UNOCONV_WARNING),
+    'description' => $found ? '' : t('Install unoconv. You can find more information how to install unoconv !here', array('!here' => $helper_links['unoconv'])),
+  );
+
+  // Making the report.
+  return array(
+    'configuration' => array(
+      'title' => t('Unoconv tool'),
+      'results' => $results,
+    ),
+  );
+
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ */
+function mediamosa_tool_unoconv_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_collect = array();
+  if (!$reset) {
+    $mediamosa_status_collect = variable_get('mediamosa_status_unoconv_collect_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_collect)) {
+    $mediamosa_status_collect = array(
+      'time' => REQUEST_TIME,
+      'statuses' => _mediamosa_tool_unoconv_status_generate()
+    );
+    variable_set('mediamosa_status_unoconv_collect_' . mediamosa::get_server_id(), $mediamosa_status_collect);
+  }
+
+  return $mediamosa_status_collect['statuses'];
+}

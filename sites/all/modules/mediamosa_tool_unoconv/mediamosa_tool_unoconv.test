@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Job tests for unoconv related functions.
+ */
+class MediaMosaToolLibreofficeTestCaseEga extends MediaMosaTestCaseEgaJob {
+  // ------------------------------------------------------------------ Members.
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Tools - unoconv',
+      'description' => 'Testing the unoconv tool.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_TOOLS,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  /**
+   * Implements setUp().
+   */
+  protected function setUp() {
+    parent::setUp('mediamosa_tool_unoconv');
+  }
+
+}
