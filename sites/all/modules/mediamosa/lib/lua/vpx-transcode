@@ -109,6 +109,7 @@ end
 -- Stream #0.0: Video: mjpeg (MJPG / 0x47504A4D), yuvj422p, 640x480, 15 tbr, 15 tbn, 15 tbc
 -- Stream #0:0(eng): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080, 9282 kb/s, 24 fps, 24 tbr, 2400 tbn, 4800 tbc (default)
 -- Stream #0:0[0x1000]: Video: mpeg2video (Main) ([2][0][0][0] / 0x0002), yuv420p(tv), 1920x1080 [SAR 1:1 DAR 16:9], max. 16000 kb/s, 25 fps, 25 tbr, 90k tbn, 50 tbc
+-- Stream #0:0: Video: vp8, yuv420p, 480x360, SAR 1:1 DAR 4:3, 1k fps, 29.97 tbr, 1k tbn, 1k tbc (default)
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
 local ln_video = space * "Stream #" * steam_number * language * COLON *
@@ -121,7 +122,7 @@ local ln_video = space * "Stream #" * steam_number * language * COLON *
   (
     (COMMA * number * "kb/s")^-1 *
     (COMMA * (lpeg.S("PDSF") * "AR" * space * any_number * ":" * any_number * space)^1)^-1 *
-    ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
+    ((COMMA * (((float + number) * unit) / convert_units) * "fps")^-1 + lpeg.Cc("unknown"))
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
@@ -225,7 +226,7 @@ function find_best_streams(source_path, hash)
       end
       log_out("audio: detected stream: %s", stream)
       if codecs == nil then
-        add_error("The audio input stream uses an unknown codec")
+        --add_error("The audio input stream uses an unknown codec")
         codecs = {}
       end
       if audio_max_bitrate_stream == nil then
@@ -331,6 +332,12 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     for token in string.gmatch(test_params, "[^-]+") do
       if string.sub(token, 0, 3) == 'ss ' then
         ss_param = "-" .. token
+        params = string.gsub(params, "-" .. token, "")
+      end
+      if string.sub(token, 0, 1) == 'r' then
+        params = string.gsub(params, "-" .. token, "")
+      end
+      if string.sub(token, 0, 1) == 't' then
         params = string.gsub(params, "-" .. token, "")
       end
     end
