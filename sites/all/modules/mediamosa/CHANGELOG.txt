@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2202)
+MediaMosa 3.6.1-dev (build 2203)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -384,6 +384,9 @@ MediaMosa 3.6.1-dev (build 2202)
 - Fixed CQL optimizer; Rare complex OR and AND queries: No longer removes paired () when OR and AND combinations match.
   The HAVING clause no longer generates wrong query for MySQL from CQL.
 - Fixing CQL error message being empty during CQL verify stage, and loop to verify function when on MySQL.
+- Fixing issue setting app_id to 0 when using property_update() directly without supplying app ID.
+- Unoconv tool module added.
+- Fixed detection for some webm video files having fps values with unit indication.
 
 
 MediaMosa 3.5.x (build 2072)
