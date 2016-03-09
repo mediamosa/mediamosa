@@ -327,7 +327,7 @@
   <!--
     MediaMosa metadata types; (unsorted)
     -->
-  <fieldType name="val_int" class="solr.TrieIntField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
+  <fieldType name="val_int" class="solr.TrieLongField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
   <fieldType name="val_date" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
   <!-- A text field that only splits on whitespace for exact matching of words -->
   <!-- A general text field that has reasonable, generic
@@ -374,7 +374,7 @@
   <!--
     MediaMosa metadata types; (for sorting)
   -->
-  <fieldType name="sval_int" class="solr.TrieIntField" sortMissingLast="true" omitNorms="true"/>
+  <fieldType name="sval_int" class="solr.TrieLongField" sortMissingLast="true" omitNorms="true"/>
   <fieldType name="sval_date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="sval_char" class="solr.StrField" sortMissingLast="true" omitNorms="true" />
 
