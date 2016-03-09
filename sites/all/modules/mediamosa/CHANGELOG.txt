@@ -1,4 +1,4 @@
-MediaMosa 3.6.1 (build 2205)
+MediaMosa 3.6.1 (build 2206)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -391,6 +391,7 @@ MediaMosa 3.6.1 (build 2205)
 - Added swagger json file rest call.
 - Updated submodule MediaMosa SDK to latest, use 'git submodule update' to retrieve latest.
 - Updated submodule MediaMosa CK to latest, use 'git submodule update' to retrieve latest.
+- Upgraded Drupal to 7.43.
 
 
 MediaMosa 3.5.x (build 2072)
