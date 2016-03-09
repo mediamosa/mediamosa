@@ -1,0 +1,12 @@
+name = "Swagger"
+description = "The swagger module lets your return a list of REST calls in JSON format"
+package = "MediaMosa - Modules"
+version = 7.x-3.5
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_swagger.class.inc
+files[] = mediamosa_swagger.rest.class.inc

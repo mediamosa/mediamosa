@@ -1,0 +1,49 @@
+<?php
+/**
+ * @file
+ * The Swagger module.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_swagger_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  $rest_calls['doc/swagger.json'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_doc_swagger',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_swagger',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_6_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_JSON,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_swagger_mediamosa_configuration_collect() {
+
+  global $base_url;
+  $form = array();
+
+  $form['settings_swagger'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Swagger'),
+    '#description' => t('These settings are used by Swagger.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['settings_swagger']['mediamosa_swagger_base_url'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Base url for swagger UI.',
+    '#description' => t('Swagger UI has the options "try this", this option sets the base url to which this rest calls works.'),
+    '#default_value' => variable_get('mediamosa_swagger_base_url', $base_url),
+  );
+
+  return $form;
+}
