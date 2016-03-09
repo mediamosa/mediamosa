@@ -1,4 +1,4 @@
-MediaMosa 3.6.1-dev (build 2203)
+MediaMosa 3.6.0-dev (build 2204)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -387,6 +387,8 @@ MediaMosa 3.6.1-dev (build 2203)
 - Fixing issue setting app_id to 0 when using property_update() directly without supplying app ID.
 - Unoconv tool module added.
 - Fixed detection for some webm video files having fps values with unit indication.
+- Increase solr storage of val_int.
+- Added swagger json file rest call.
 
 
 MediaMosa 3.5.x (build 2072)
