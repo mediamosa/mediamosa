@@ -1169,7 +1169,8 @@ class mediamosa_solr {
       }
     }
 
-    // Get a mediafiles.
+    // Collect the mediafile metadata.
+    $mediafile_data = array();
     foreach ($asset_for_index['mediafiles'] as $mediafile_id => $mediafile) {
       // Skip stills.
       if ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
@@ -1183,11 +1184,20 @@ class mediamosa_solr {
         mediamosa_asset_mediafile_db::URI,
         ) as $name) {
         if (!empty($mediafile[$name])) {
-          $document->{$name} = $mediafile[$name];
+          $mediafile_data[$name][] = $mediafile[$name];
         }
       }
     }
 
+    // You have to set the property as one array in apache document, else data
+    // is not set.
+    foreach (array(
+       mediamosa_asset_mediafile_db::FILENAME,
+       mediamosa_asset_mediafile_db::ID,
+       mediamosa_asset_mediafile_db::URI,
+     ) as $name) {
+      $document->{$name} = $mediafile_data[$name];
+    }
     $asset_optionals_dates = array(
       mediamosa_asset_db::VIDEOTIMESTAMP,
       mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED,
