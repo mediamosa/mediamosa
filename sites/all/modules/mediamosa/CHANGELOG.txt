@@ -1,4 +1,4 @@
-MediaMosa 3.6.1 (build 2206)
+MediaMosa 3.6.1 (build 2207)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
   definitions. Each app can now select other streaming viewer objects (when
@@ -392,6 +392,7 @@ MediaMosa 3.6.1 (build 2206)
 - Updated submodule MediaMosa SDK to latest, use 'git submodule update' to retrieve latest.
 - Updated submodule MediaMosa CK to latest, use 'git submodule update' to retrieve latest.
 - Upgraded Drupal to 7.43.
+- Fixed issue where Solr only indexed filename, mediafile ID and URI of last found mediafile.
 
 
 MediaMosa 3.5.x (build 2072)
