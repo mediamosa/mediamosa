@@ -286,8 +286,7 @@ class mediamosa {
     assert(isset($line));
     assert(isset($filename));
 
-    if ($error_level) {
-
+    if ($error_level && mediamosa_debug::is_debug()) {
       // These constants are documented at http://php.net/manual/en/errorfunc.constants.php.
       $types = array(
         E_ERROR => 'Error',
