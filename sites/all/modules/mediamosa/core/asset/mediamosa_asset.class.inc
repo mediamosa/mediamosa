@@ -1949,7 +1949,8 @@ class mediamosa_asset {
    * @return int
    *   The amount of assets in the database.
    */
-  public function get_asset_count() {
+  public static function get_asset_count() {
     return db_select(mediamosa_asset_db::TABLE_NAME)->countQuery()->execute()->fetchField();
   }
+
 }
