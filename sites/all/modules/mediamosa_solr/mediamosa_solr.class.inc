@@ -1196,7 +1196,9 @@ class mediamosa_solr {
        mediamosa_asset_mediafile_db::ID,
        mediamosa_asset_mediafile_db::URI,
      ) as $name) {
-      $document->{$name} = $mediafile_data[$name];
+      if (isset($mediafile_data[$name])) {
+        $document->{$name} = $mediafile_data[$name];
+      }
     }
     $asset_optionals_dates = array(
       mediamosa_asset_db::VIDEOTIMESTAMP,

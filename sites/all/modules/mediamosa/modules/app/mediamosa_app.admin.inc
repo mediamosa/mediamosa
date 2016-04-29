@@ -94,7 +94,10 @@ function mediamosa_app_listing_form() {
     if (!isset($diskspace_used[$app[mediamosa_app_db::APP_ID]])) {
       $diskspace_used[$app[mediamosa_app_db::APP_ID]] = 0;
     }
-    $perc = round($diskspace_used[$app[mediamosa_app_db::APP_ID]] / ($app[mediamosa_app_db::QUOTA] * 1024 * 1024 * 1024) * 100);
+    $perc = 0;
+    if ($app[mediamosa_app_db::QUOTA] > 0) {
+      $perc = round($diskspace_used[$app[mediamosa_app_db::APP_ID]] / ($app[mediamosa_app_db::QUOTA] * 1024 * 1024 * 1024) * 100);
+    }
     $percentagebar = '<div class="progressbar" style="width:100px;height:10px" rel="' . $perc . '"></div>';
     $rows[] = array(
       $app[mediamosa_app_db::APP_ID],
