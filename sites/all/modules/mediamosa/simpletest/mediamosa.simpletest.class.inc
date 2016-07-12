@@ -1058,11 +1058,27 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $this->pass(t('Got test audio @audio.', array('@audio' => $filename)));
     return $filename;
   }
+
+  /**
+   * Return the path+filename to the test audio (mp3).
+   *
+   * @return string
+   *   The filename path.
+   */
+  protected function getTestDoc_Docx() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/testing.docx';
+    $this->pass(t('Got test doc @doc.', array('@doc' => $filename)));
+    return $filename;
+  }
+
   /**
    * Create a random app or specified one.
    *
-   * @param array $a_attributes
+   * @param array $fields
    *  Basic app parameters like the DB version (mediamosa_app_db).
+   *
+   * @return array
+   *   The node as array.
    */
   protected function createApp($fields = array()) {
 

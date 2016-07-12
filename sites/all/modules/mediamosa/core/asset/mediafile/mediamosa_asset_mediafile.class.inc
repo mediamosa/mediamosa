@@ -1180,11 +1180,7 @@ class mediamosa_asset_mediafile {
 
     // No extension yet? Try to get one based on mimetype.
     if (empty($file_ext)) {
-      $mime_type = self::get_mime_type($mediafile[mediamosa_asset_mediafile_db::ID]);
-
-      if (!empty($mime_type)) {
-        $file_ext = self::get_file_extension_by_mimetype($mime_type);
-      }
+      $file_ext = $mediafile[mediamosa_asset_mediafile_db::FILE_EXTENSION];
     }
 
     // Some must return specific extensions.
