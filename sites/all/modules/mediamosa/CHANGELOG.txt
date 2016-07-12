@@ -1,3 +1,11 @@
+MediaMosa 3.6.2 (build 2208)
+--------------------------------
+- File extensions are no longer forced from mime-type on download, extension used from mediafile instead.
+- Updated mediamosa CK submodule to build 102.
+- Fixes some minor php notices and warnings.
+- PHP error messages are no longer shown in REST header when MediaMosa debug is off.
+
+
 MediaMosa 3.6.1 (build 2207)
 --------------------------------
 - Added MediaMosa viewer module, enabled multiple object code streaming
