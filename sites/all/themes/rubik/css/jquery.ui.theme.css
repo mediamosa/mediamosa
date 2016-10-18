@@ -1,22 +1,26 @@
+
 /**
  * @file
- * Seven styles for jQuery UI.
+ * Rubik styles for jQuery UI.
+ *
+ * Cloned from the core Seven theme.
  * Overrides /misc/ui/ui.theme.css.
  */
 
-/**
+/*******************************************************************************
  * Component containers
- */
+ ******************************************************************************/
 .ui-widget {
   background: #fff;
 }
 .ui-widget-content {
   border: solid 1px #ccc;
 }
+/* Component containers end */
 
-/**
+/*******************************************************************************
  * Interaction states
- */
+ ******************************************************************************/
 .ui-state-default,
 .ui-state-hover,
 .ui-state-focus,
@@ -26,10 +30,11 @@
 .ui-state-active {
   font-weight: bold;
 }
+/* Interaction states end */
 
-/**
+/*******************************************************************************
  * Interaction cues
- */
+ ******************************************************************************/
 .ui-state-highlight,
 .ui-widget-content .ui-state-highlight {
   color: #840;
@@ -52,11 +57,12 @@
   opacity: .7;
   filter: Alpha(Opacity=70);
 }
+/* Interaction cues end */
 
-/**
+/*******************************************************************************
  * Icons
- */
-/* states and images */
+ ******************************************************************************/
+/* States and images. */
 .ui-icon {
   display: block;
   text-indent: -99999px;
@@ -64,32 +70,31 @@
   height: 16px;
   overflow: hidden;
   background-repeat: no-repeat;
-  background-image: url(images/ui-icons-222222-256x240.png);
+  background-image: url(../images/ui-icons-222222-256x240.png);
 }
 .ui-widget-content .ui-icon,
 .ui-widget-header .ui-icon {
-  background-image: url(images/ui-icons-222222-256x240.png);
+  background-image: url(../images/ui-icons-222222-256x240.png);
 }
 .ui-state-default .ui-icon {
-  background-image: url(images/ui-icons-888888-256x240.png);
+  background-image: url(../images/ui-icons-888888-256x240.png);
 }
 .ui-state-hover .ui-icon,
 .ui-state-focus .ui-icon,
 .ui-state-active .ui-icon {
-  background-image: url(images/ui-icons-454545-256x240.png);
+  background-image: url(../images/ui-icons-454545-256x240.png);
 }
 .ui-state-highlight .ui-icon {
-  background-image: url(images/ui-icons-800000-256x240.png);
+  background-image: url(../images/ui-icons-800000-256x240.png);
 }
 .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-  background-image: url(images/ui-icons-ffffff-256x240.png);
+  background-image: url(../images/ui-icons-ffffff-256x240.png);
 }
 .ui-widget p .ui-icon {
   margin: 2px 3px 0 0;
 }
-
-/* positioning */
+/* Positioning. */
 .ui-icon-carat-1-ne { background-position: -16px 0; }
 .ui-icon-carat-1-e { background-position: -32px 0; }
 .ui-icon-carat-1-se { background-position: -48px 0; }
@@ -263,10 +268,11 @@
 .ui-icon-gripsmall-diagonal-se { background-position: -64px -224px; }
 .ui-icon-grip-diagonal-se { background-position: -80px -224px; }
 .ui-icon-carat-1-n { background-position: 0 0; }
+/* Icons end */
 
-/**
+/*******************************************************************************
  * Accordion
- */
+ ******************************************************************************/
 .ui-accordion {
   border: none;
 }
@@ -291,10 +297,11 @@
   border: solid 1px #ccc;
   border-top: 0;
 }
+/* Accordion end */
 
-/**
+/*******************************************************************************
  * Tabs
- */
+ ******************************************************************************/
 .ui-tabs {
   padding: 0;
 }
@@ -303,12 +310,12 @@
   margin: 0;
   line-height: 20px;
   border-bottom: solid 1px #ccc;
-  -moz-border-radius-bottomleft: 0;
   -webkit-border-bottom-left-radius: 0;
-  border-bottom-left-radius: 0;
-  -moz-border-radius-bottomright: 0;
+      -moz-border-radius-bottomleft: 0;
+          border-bottom-left-radius: 0;
   -webkit-border-bottom-right-radius: 0;
-  border-bottom-right-radius: 0;
+      -moz-border-radius-bottomright: 0;
+          border-bottom-right-radius: 0;
 }
 .ui-tabs .ui-tabs-nav li {
   padding: 0 1em 0 10px;
@@ -318,37 +325,39 @@
 .ui-tabs .ui-tabs-nav li a {
   float: none;
   padding: 0 10px;
-  -moz-border-radius: 10px;
   -webkit-border-radius: 10px;
-  border-radius: 10px;
+     -moz-border-radius: 10px;
+          border-radius: 10px;
 }
 .ui-tabs .ui-tabs-nav li.ui-tabs-selected a {
   color: #fff;
   background: #666;
   font-weight: normal;
 }
+/* Tabs end */
 
-/**
+/*******************************************************************************
  * Overlays
- */
+ ******************************************************************************/
 .ui-widget-overlay {
   background: #000;
   opacity: .70;
   filter: Alpha(Opacity=70);
 }
+/* Overlays end */
 
-/**
+/*******************************************************************************
  * Dialogs
- */
+ ******************************************************************************/
 .ui-dialog {
   background: white;
   padding: 0 0 10px 0; 
-  border-radius: 6px 6px 5px 5px;
-  box-shadow: #111 0px 0px 10px;
-  -moz-border-radius: 6px 6px 5px 5px;
-  -moz-box-shadow: #111 0px 0px 10px;
   -webkit-border-radius: 6px 6px 5px 5px;
-  -webkit-box-shadow: #111 0px 0px 10px;
+     -moz-border-radius: 6px 6px 5px 5px;
+          border-radius: 6px 6px 5px 5px;
+  -webkit-box-shadow: #111 0 0 10px;
+     -moz-box-shadow: #111 0 0 10px;
+          box-shadow: #111 0 0 10px;
   border: 0;
 }
 .ui-dialog .ui-dialog-titlebar {
@@ -363,23 +372,25 @@
   padding: 4px 17px;
   color: #5a5a5a;
   text-align: center;
-  font-family: "Lucida Grande", Verdana, sans-serif;
+  font-family: "Lucida Grande",
+  Verdana,
+  sans-serif;
   font-weight: normal;
   font-size: 1em;
   border: 1px solid #e4e4e4;
   border-bottom: 1px solid #b4b4b4;
   border-left-color: #D2D2D2;
   border-right-color: #D2D2D2;
-  background: url(images/buttons.png) 0 0 repeat-x;
-  -moz-border-radius: 20px;
+  background: url(../images/buttons.png) 0 0 repeat-x;
   -webkit-border-radius: 20px;
-  border-radius: 20px;
+     -moz-border-radius: 20px;
+          border-radius: 20px;
 }
 .ui-dialog .ui-dialog-buttonpane button:active {
   background: #666;
   color: #fff;
   border-color: #555;
-  text-shadow: #222 0px -1px 0px;
+  text-shadow: #222 0 -1px 0;
 }
 .overlay {
   padding-right: 26px;
@@ -387,10 +398,11 @@
 .overlay .ui-dialog-titlebar {
   background: transparent;
 }
+/* Dialogs end */
 
-/**
+/*******************************************************************************
  * Slider
- */
+ ******************************************************************************/
 .ui-slider {
   border: solid 1px #ccc;
 }
@@ -402,10 +414,10 @@
   border-bottom: 1px solid #b4b4b4;
   border-left-color: #D2D2D2;
   border-right-color: #D2D2D2;
-  background: url(images/buttons.png) 0 0 repeat-x;
-  -moz-border-radius: 4px;
+  background: url(../images/buttons.png) 0 0 repeat-x;
   -webkit-border-radius: 4px;
-  border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
 }
 .ui-slider a.ui-state-active,
 .ui-slider .ui-slider-handle:active {
@@ -413,26 +425,29 @@
   color: #fff;
   border: solid 1px #555;
 }
+/* Slider end */
 
-/**
+/*******************************************************************************
  * Progress Bar
- */
+ ******************************************************************************/
 .ui-progressbar {
   background: #e4e4e4;
   height: 1.4em;
 }
 .ui-progressbar .ui-progressbar-value {
-  background: #0072b9 url(../../misc/progress.gif);
+  background: #0072b9 url(../images/progress.gif);
   height: 1.5em;
 }
+/* Progress Bar end */
 
-/**
+/*******************************************************************************
  * Date Picker
- */
+ ******************************************************************************/
 .ui-datepicker {
   border: none;
 }
-.ui-datepicker td span, .ui-datepicker td a {
+.ui-datepicker td span,
+.ui-datepicker td a {
   text-align: center;
 }
 .ui-datepicker .ui-state-highlight {
@@ -449,3 +464,4 @@
   right: -50%;
   margin-bottom: 0;
 }
+/* Date Picker end */

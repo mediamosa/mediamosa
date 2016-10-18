@@ -1,10 +1,12 @@
+
 /**
- * Add outline to filefield attach and space the button
+ * Styles loaded conditionally to support IE7.
  */
+
+/* Add outline to filefield attach and space the button. */
 .form-type-managed-file input.form-file {
   border: thin solid #DDDDDD !important;
 }
-
 .form-type-managed-file input.submit {
   margin-left: 5px;
 }

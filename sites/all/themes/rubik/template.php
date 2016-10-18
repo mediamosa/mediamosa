@@ -8,7 +8,7 @@ function rubik_preprocess_html(&$vars) {
   }
 
    // add in a specific stylesheet for overrides in IE7. (BLAH)
-  drupal_add_css(drupal_get_path('theme', 'rubik') . '/ie.css', array(
+  drupal_add_css(drupal_get_path('theme', 'rubik') . '/css/ie.css', array(
     'browsers' => array(
       '!IE' => FALSE,
     ),
@@ -17,6 +17,9 @@ function rubik_preprocess_html(&$vars) {
     'every_page' => TRUE,
   ));
 
+  // Disable sticky in the sidebar. Set option in JS
+  $disable_sticky = theme_get_setting('rubik_disable_sticky_sidebar');
+  drupal_add_js(array('rubik' => array('disable_sticky' => $disable_sticky)), array('type' => 'setting'));
 }
 
 /**
@@ -25,10 +28,10 @@ function rubik_preprocess_html(&$vars) {
  */
 function rubik_css_alter(&$css) {
   if (isset($css['modules/overlay/overlay-child.css'])) {
-    $css['modules/overlay/overlay-child.css']['data'] = drupal_get_path('theme', 'rubik') . '/overlay-child.css';
+    $css['modules/overlay/overlay-child.css']['data'] = drupal_get_path('theme', 'rubik') . '/css/overlay-child.css';
   }
   if (isset($css['modules/shortcut/shortcut.css'])) {
-    $css['modules/shortcut/shortcut.css']['data'] = drupal_get_path('theme', 'rubik') . '/shortcut.css';
+    $css['modules/shortcut/shortcut.css']['data'] = drupal_get_path('theme', 'rubik') . '/css/shortcut.css';
   }
 }
 
@@ -140,11 +143,6 @@ function rubik_preprocess_page(&$vars) {
 
   // Overlay is enabled.
   $vars['overlay'] = (module_exists('overlay') && overlay_get_mode() === 'child');
-
-  // Disable sticky in the sidebar. Set option in JS
-  $disable_sticky = theme_get_setting('rubik_disable_sticky_sidebar');
-  drupal_add_js(array('rubik' => array('disable_sticky' => $disable_sticky)), array('type' => 'setting'));
-
 }
 
 /**
@@ -499,7 +497,8 @@ function rubik_admin_drilldown_menu_item_link($link) {
  */
 function rubik_preprocess_textfield(&$vars) {
   if ($vars['element']['#size'] >= 30 && empty($vars['element']['#field_prefix']) && empty($vars['element']['#field_suffix'])) {
-    $vars['element']['#size'] = '';
+    // Set text field to default size.
+    $vars['element']['#size'] = 20;
     if (!isset($vars['element']['#attributes']['class'])
       || !is_array($vars['element']['#attributes']['class'])) {
        $vars['element']['#attributes']['class'] = array();
@@ -546,9 +545,6 @@ function rubik_render_clone($elements) {
   if (!isset($instance)) {
     $instance = 1;
   }
-  if (!empty($elements['#mediamosa_no_clone'])) {
-    return;
-  }
   foreach (element_children($elements) as $key) {
     if (isset($elements[$key]['#id'])) {
       $elements[$key]['#id'] = "{$elements[$key]['#id']}-{$instance}";
@@ -558,7 +554,7 @@ function rubik_render_clone($elements) {
   return drupal_render($elements);
 }
 
-function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+function rubik_form_field_ui_field_edit_form_alter(&$form, &$form_state) { 
   $rubik_sidebar_field_ui = theme_get_setting('rubik_sidebar_field_ui', 'rubik');
   $rubik_disable_sidebar_in_form = theme_get_setting('rubik_disable_sidebar_in_form', 'rubik');
     if ($rubik_sidebar_field_ui == 1 && $rubik_disable_sidebar_in_form == 0) {
@@ -634,3 +630,4 @@ function _rubik_local_tasks(&$vars) {
     }
   }
 }
+

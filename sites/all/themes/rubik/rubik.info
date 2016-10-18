@@ -10,11 +10,11 @@ regions[page_top] = Page top
 regions[page_bottom] = Page bottom
 
 scripts[] = js/rubik.js
-stylesheets[screen][] = core.css
-stylesheets[screen][] = icons.css
-stylesheets[screen][] = style.css
-stylesheets[screen][] = jquery.ui.theme.css
-stylesheets[print][] = print.css
+stylesheets[screen][] = css/core.css
+stylesheets[screen][] = css/icons.css
+stylesheets[screen][] = css/style.css
+stylesheets[screen][] = css/jquery.ui.theme.css
+stylesheets[print][] = css/print.css
 
 ; Support shortcut module links
 settings[shortcut_module_link] = 1
@@ -33,9 +33,9 @@ settings[rubik_show_branding] = 1
 ; is displayed at the top of the page, in #branding section.
 features[] = secondary_menu
 
-; Information added by Drupal.org packaging script on 2015-01-22
-version = "7.x-4.2"
+; Information added by Drupal.org packaging script on 2016-03-05
+version = "7.x-4.4"
 core = "7.x"
 project = "rubik"
-datestamp = "1421901484"
+datestamp = "1457209443"
 
