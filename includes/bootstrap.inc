@@ -8,7 +8,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.51');
+define('VERSION', '7.56');
 
 /**
  * Core API compatibility.
@@ -254,14 +254,14 @@ define('DRUPAL_PHP_FUNCTION_PATTERN', '[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*'
  * http://tools.ietf.org/html/rfc7231#section-7.1.1.1
  *
  * Example: Sun, 06 Nov 1994 08:49:37 GMT
- */
-
-/** This constant was introduced in PHP 7.0.19 and PHP 7.1.5 but needs to be
+ *
+ * This constant was introduced in PHP 7.0.19 and PHP 7.1.5 but needs to be
  * defined by Drupal for earlier PHP versions.
  */
 if (!defined('DATE_RFC7231')) {
   define('DATE_RFC7231', 'D, d M Y H:i:s \G\M\T');
 }
+
 /**
  * Provides a caching wrapper to be used in place of large array structures.
  *
@@ -724,6 +724,16 @@ function drupal_valid_http_host($host) {
 }
 
 /**
+ * Checks whether an HTTPS request is being served.
+ *
+ * @return bool
+ *   TRUE if the request is HTTPS, FALSE otherwise.
+ */
+function drupal_is_https() {
+  return isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+}
+
+/**
  * Sets the base URL, cookie domain, and session name from configuration.
  */
 function drupal_settings_initialize() {
@@ -736,7 +746,7 @@ function drupal_settings_initialize() {
   if (file_exists(DRUPAL_ROOT . '/' . conf_path() . '/settings.php')) {
     include_once DRUPAL_ROOT . '/' . conf_path() . '/settings.php';
   }
-  $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  $is_https = drupal_is_https();
 
   if (isset($base_url)) {
     // Parse fixed base URL from settings.php.
