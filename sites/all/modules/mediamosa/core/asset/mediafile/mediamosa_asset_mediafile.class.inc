@@ -661,7 +661,7 @@ class mediamosa_asset_mediafile {
       }
 
       // Default empty.
-      $items[$mediafile_id]['ega_stream_url'] = '';
+      $items[$mediafile_id]['ega_stream_url'] = [];
 
       // Stream URL, only if streamable.
       if (isset($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE]) && mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE])) {
