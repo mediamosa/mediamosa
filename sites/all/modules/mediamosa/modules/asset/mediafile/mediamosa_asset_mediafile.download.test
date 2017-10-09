@@ -195,6 +195,42 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got download.');
     $this->assertTrue(mediamosa_unicode::strpos($result->headers['content-disposition'], '.docx"') !== FALSE, 'Is correct extension.');
 
+    // Update the mediafile to our filename and see if it downloads.
+    $this->updateMediafile($mediafile_id, array(
+      'filename' => 'toestemming café De Broodwinning BOSG20173183 20171011 - Varkensmarkt 4.msg',
+      'mime_type' => 'CDF V2 Document, No summary info',
+    ));
 
+    // Hard update the file extension.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields(array(mediamosa_asset_mediafile_db::FILE_EXTENSION => 'msg'))
+      ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
+      ->execute();
+
+    // Ask mediafile download url.
+    $parameters = array(
+      mediamosa_rest_call_media_view::RESPONSE => mediamosa_media::RESPONSE_DOWNLOAD,
+      mediamosa_rest_call_media_view::MEDIAFILE_ID => $mediafile_id,
+    );
+    $xml = $this->do_media_view($asset_id, $parameters);
+
+    // Check the download url.
+    $download = (string) $xml->items->item->output;
+    $this->assertTrue(
+      !empty($download),
+      t('Download url is exists: @download', array('@download' => $download))
+    );
+
+    $this->var_export($download);
+
+    // Download the file.
+    $result = mediamosa_http::drupal_http_request($download);
+
+    $this->var_export($result->headers);
+    if (isset($_SERVER['REDIRECT_STATUS'])) {
+      $this->assertTrue($_SERVER['REDIRECT_STATUS'] == 200, 'Got 200 HTTP response download.');
+    }
+    $this->assertTrue($result->headers['content-type'] == 'application/octet-stream', 'Got download.');
+    $this->assertTrue(mediamosa_unicode::strpos($result->headers['content-disposition'], '.msg"') !== FALSE, 'Is correct extension.');
   }
 }

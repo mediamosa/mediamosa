@@ -242,7 +242,7 @@ class mediamosa_rest_call_media_view extends mediamosa_rest_call {
     // Get the asset.
     $asset = mediamosa_asset::must_exists($asset_id);
 
-    // Test if access on unappropriate flag.
+    // Test if access on inappropriate flag.
     mediamosa_asset::is_inappropriate($app_ids, $asset_id, $user_id, $is_app_admin, TRUE);
 
     // Check play restrictions.
@@ -453,8 +453,6 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $var_setup = array();
-
     $var_setup = array(
       self::VARS => array(
         self::APP_ID => array(
@@ -508,7 +506,7 @@ class mediamosa_rest_call_media extends mediamosa_rest_call {
     if ($ticket_id) {
       // Before 3.1 we always served the mediafile here. Now we don't because
       // the REST call should not have been triggered in the first place with
-      // tickets (Your webserver is handeling this). Need to warn admin that his
+      // tickets (Your webserver is handling this). Need to warn admin that his
       // configuration does not include the correct configuration for his
       // webserver.
 
@@ -696,9 +694,8 @@ class mediamosa_rest_call_media_download extends mediamosa_rest_call {
     header('Content-Description: Download');
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . filesize($file));
-
     // Force a save dialog.
-    header('Content-Disposition: attachment; filename="' . mime_header_encode($filename) . '"');
+    header(strtr('Content-Disposition: attachment; filename="{filename}"; filename*=utf-8\'\'{filename}', array('{filename}' => rawurlencode($filename))));
     header('Content-Transfer-Encoding: binary');
 
     $handle = fopen($file, 'rb');
@@ -727,7 +724,7 @@ class mediamosa_rest_call_media_download extends mediamosa_rest_call {
     // Close the file.
     fclose($handle);
 
-    // Set the result, reponse object will know what to do.
+    // Set the result, response object will know what to do.
     $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
   }
 }

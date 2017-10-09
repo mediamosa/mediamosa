@@ -87,7 +87,7 @@ class mediamosa_media {
    *
    * @return array
    *   An associative array containing;
-   *     'basename' (always)
+   *     'filename' (always)
    *     'style_id' (always or 0)
    *     'ext' (no dot).
    */
@@ -103,8 +103,9 @@ class mediamosa_media {
       );
     }
 
-    // If its not in our format, then return it as is.
-    return array($filename, 0, '');
+    // Fallback to default.
+    $path_info = pathinfo($filename);
+    return array($path_info['filename'], 0, $path_info['extension']);
   }
 
   /**
@@ -166,7 +167,6 @@ class mediamosa_media {
   protected static function serve_media($file, $mimetype) {
     // Build up the default headers.
     $headers = mediamosa_io::file_get_content_headers($file, $mimetype);
-
     // Serve file.
     mediamosa_io::file_transfer($file, $headers);
   }
@@ -180,6 +180,8 @@ class mediamosa_media {
    *   The mediafile ID.
    * @param string $filename
    *   The filename. May contain style info when file is still.
+   *
+   * @throws mediamosa_exception_error_404
    */
   public static function handle_media_request_permanent($app_id, $mediafile_id, $filename) {
     // Get the parts.
@@ -204,12 +206,6 @@ class mediamosa_media {
       )
     );
 
-    // The mimetypes must match.
-    if ($mimetype_extension != $mimetype) {
-      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id));
-    }
-
-    // We can trust the extension.
     // At this point the mediafile exists, and we have access.
     //
     // Any style_id?

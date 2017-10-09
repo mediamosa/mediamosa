@@ -1153,8 +1153,8 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    *   The mediafile.
-   * @param string $default
-   *  The default value for extension when not available.
+   * @param string|bool $default
+   *  (default FALSE) The default value for extension when not available.
    *
    * @return string
    *   The file extension (e.g. 'jpeg') without the dot or FALSE ($default).
@@ -1178,7 +1178,7 @@ class mediamosa_asset_mediafile {
     // Try to match against the container type.
     $file_ext = isset($container2ext[$container_type]) ? $container2ext[$container_type] : '';
 
-    // No extension yet? Try to get one based on mimetype.
+    // No extension yet? Try to get one based on mime-type.
     if (empty($file_ext)) {
       $file_ext = $mediafile[mediamosa_asset_mediafile_db::FILE_EXTENSION];
     }

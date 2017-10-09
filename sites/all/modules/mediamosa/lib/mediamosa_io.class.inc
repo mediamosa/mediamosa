@@ -501,6 +501,9 @@ class mediamosa_io {
   /**
    * Return the filename without extension.
    *
+   * FIXME: Name of function is wrong:
+   * FIXME: The basename of a file path is filename with possible extension.
+   *
    * @param string $filename
    *   The filename to process.
    *
@@ -508,9 +511,7 @@ class mediamosa_io {
    *   The filename without extension.
    */
   public static function get_base_filename($filename) {
-    $first_dot = stripos($filename, '.');
-
-    return $first_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $first_dot);
+    return pathinfo($filename, PATHINFO_FILENAME);
   }
 
   /**
@@ -1113,11 +1114,15 @@ class mediamosa_io {
    *
    * @see file_get_content_headers()
    */
-  public static function file_get_content_headers($filename, $mimetype) {
+  public static function file_get_content_headers($filename, $mime_type) {
     $content_length = self::filesize($filename);
     $last_modified = filemtime($filename);
-    $filename = mime_header_encode($filename);
-    $mimetype = mime_header_encode($mimetype);
+    // Hotfix: mime_header_encode() generates multi-line when utf-8 is used.
+    //         But drupal_add_http_header() can not handle multi-line header
+    //         items. We do break max line-length of 76 for HTTP, but seems no
+    //         browser has a issue with this.
+    $filename = rawurlencode(pathinfo($filename, PATHINFO_BASENAME));
+    $mime_type = mime_header_encode($mime_type);
 
     // Serve images, text, and flash content for display rather than download.
     $inline_types = variable_get('file_inline_types', array(
@@ -1128,13 +1133,13 @@ class mediamosa_io {
     $disposition = 'attachment';
     foreach ($inline_types as $inline_type) {
       // Exclamation marks are used as delimiters to avoid escaping slashes.
-      if (preg_match('!' . $inline_type . '!', $mimetype)) {
+      if (preg_match('!' . $inline_type . '!', $mime_type)) {
         $disposition = 'inline';
       }
     }
 
     return array(
-      'Content-Type' => $mimetype . '; name="' . $filename . '"',
+      'Content-Type' => $mime_type . '; name="' . $filename . '"',
       'Content-Length' => $content_length,
       'Content-Disposition' => $disposition . '; filename="' . $filename . '"',
       'Cache-Control' => 'private, max-age=' . mediamosa_settings::MEDIA_CACHE_SECOND . ', must-revalidate',
