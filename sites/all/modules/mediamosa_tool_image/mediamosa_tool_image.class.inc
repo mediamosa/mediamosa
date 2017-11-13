@@ -73,6 +73,10 @@ class mediamosa_tool_image {
       // Source.
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
+      // Select the first image in a multi-image file format such as tiff. (mind the shell escaping for [])
+      // This is a nop for single-image file formats.
+      $mediafile_source .= '"[0]"';
+
       // Dest.
       $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_info['job_id'] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
 
