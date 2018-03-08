@@ -73,9 +73,9 @@ class mediamosa_tool_image {
       // Source.
       $mediafile_source = mediamosa_storage::get_realpath_mediafile($mediafile_id_source);
 
-      // Select the first image in a multi-image file format such as tiff. (mind the shell escaping for [])
-      // This is a nop for single-image file formats.
-      $mediafile_source .= '"[0]"';
+      // Select the first image frame in a multi-image file format such as tiff.
+      // This is a no-op for single-image file formats.
+      $mediafile_source .= escapeshellarg('[0]');
 
       // Dest.
       $mediafile_dest = mediamosa_storage::get_realpath_temporary_file($job_info['job_id'] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg');
@@ -105,11 +105,27 @@ class mediamosa_tool_image {
    */
   public static function get_transcode_exec($options) {
 
+    $parameter_string = $options['parameter_string'];
+
+    // Convert a fictive "-source-frame-range" parameter to an actual frame range selection.
+    $optional_source_frame_range = '';
+
+    $parameters = explode(' ',$options['parameter_string']);
+    $range_index = array_search('-source-frame-range',$parameters);
+
+    if ($range_index !== False) {
+      list(,$range_value) = array_splice($parameters,$range_index,2);
+
+      $optional_source_frame_range = escapeshellarg('[' . $range_value . ']');
+
+      $parameter_string = implode(' ',$parameters);
+    }
+
     // Build the values.
     $execution_string_options = array(
-      '@mediafile_source' => $options['location_source_file'],
+      '@mediafile_source' => $options['location_source_file'] . $optional_source_frame_range,
       '@mediafile_dest' => $options['location_dest_file'] . '.' . $options['file_extension'],
-      '@parameter_string' => $options['parameter_string'],
+      '@parameter_string' => $parameter_string,
       '@status_file' => $options['status_file'],
       '@working_dir' => dirname($options['location_dest_file']),
     );
