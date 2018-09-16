@@ -147,10 +147,17 @@ class mediamosa_profile {
       // Default MySQL.
       $required_extensions[] = 'pgsql';
     }
-    else {
-      // Default MySQL.
-      $required_extensions[] = 'mysql';
-      $required_extensions[] = 'mysqli';
+    elseif (db_driver() == 'mysql') {
+      // Module "mysql" for PHP deprecated since PHP 5.3 . Use mysqlnd instead.
+      // Check PHP version.
+      if (version_compare(PHP_VERSION, '5.3.0', '<=')) {
+          // Default MySQL.
+          $required_extensions[] = 'mysql';
+          $required_extensions[] = 'mysqli';
+      } else {
+          $required_extensions[] = 'mysqlnd';
+          $required_extensions[] = 'mysqli';
+      }
     }
 
     // Build the requirements.
